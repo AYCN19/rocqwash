@@ -28,14 +28,47 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `watch/` | CI monitoring + pin-IP push + thermal guard | Deterministic workflow vs LLM instability |
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 
+## Repository Layout / 目录结构
+
+```
+rocqwash/
+├── cli/rocqwash          # 统一 CLI 入口 — unified CLI entry (scan/names/wash/verify/seam/certify/watch)
+├── docs/
+│   ├── zh/architecture.md  # 架构文档（中文）— architecture doc (Chinese)
+│   └── en/architecture.md  # 架构文档（英文镜像）— architecture doc (English mirror)
+├── CONTRIBUTING.md       # 贡献指南（流程/代码规范/测试要求/cpu_guard 使用说明）
+├── examples/             # 全链演示样例 + Makefile — single-file full-chain demo (scan→names→wash→verify)
+├── scan/  names/         # 已实现通用逐件工具 — implemented generic tools (mac_stmt_scan.py / mac_stmt_names.py)
+├── tools/                # cpu_guard.sh 温控包裹 + 战役工装 — thermal guard + campaign tools
+├── wash/  verify/        # 模块目录 — module slots（战役工装已落库；通用逐件入口 pending）
+├── seam/  certify/  watch/   # 模块占位 — module placeholders (pending)
+├── tests/  workflows/    # 占位 — placeholders (pending)
+└── README.md  LICENSE  .gitignore
+```
+
+> 状态快照 2026-10-29：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
+> `docs/` 已实现并实测；`wash/`、`verify/` 已落库战役级工装（`_` 前缀·通用逐件入口
+> pending）；`seam/`、`certify/`、`watch/`、`tests/`、`workflows/` 为空占位。
+> 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
+> [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
+> [CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## Quick Start
 
 ```bash
-# Scan a .v file for Prop leakage
-python3 scan/mac_stmt_scan.py --file my_proof.v
+# Scan a .v file for Prop leakage — via the unified CLI entry
+cli/rocqwash scan --file my_proof.v
 
 # Extract statement names and assert N=N against baseline
+cli/rocqwash names my_proof.v --names-out names.txt
+cli/rocqwash names my_proof.v --compare my_proof_washed.v --expect 487
+
+# Equivalent direct invocation
+python3 scan/mac_stmt_scan.py --file my_proof.v
 python3 names/mac_stmt_names.py my_proof.v --names-out names.txt
+
+# Full-chain demo (scan → names → N=N → wash → verify)
+make -C examples demo
 
 # Compile with thermal guard
 bash tools/cpu_guard.sh -Reg /tmp/my_reg -Front 0 -Mid 1 -- rocq c -native-compiler no -Q . "" my_proof.v
