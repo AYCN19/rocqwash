@@ -1,0 +1,26 @@
+name: rocqwash CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  selftest:
+    name: Self-test suite (macOS)
+    runs-on: macos-14
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run self-test suite
+        run: bash tests/run_tests.sh
+
+      - name: Suite verdict
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "ROCQWASH-CI-ALL-GREEN (10/10 fixtures, self-contained, no external toolchain)"
+          else
+            echo "::error::self-test suite red — see the failed step log above"
+          fi
