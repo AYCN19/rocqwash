@@ -11,6 +11,10 @@
 #       verify/gate4_comment_guard.py --file（净样例 PASS=0 / 脏样例 FAIL=1 两判）
 #       verify/retrofit_gate7_irr.py 干跑（tests/test_retrofit_dryrun.py·零落盘）
 #       wash/_abl1_wash.py exact-string+count（tests/test_wash_fixture.py·正/幂等/负三判）
+#       wash/wash_engine.py 通用逐件引擎（tests/test_wash_engine.py·六判 subprocess）
+#       verify/verify_vo.py 绿判四件套（--selftest 九判）
+#       seam/seam_probe.py W13 四机制（--selftest 四正例＋掩蔽负例）
+#       certify/freeze_manifest.py 两层冻结（--selftest 四判）
 #       tools/cpu_guard.sh -Direct 冒烟（探针一发即退＋退出码传播）
 #
 # 用法：
@@ -37,6 +41,10 @@ t_gate4_clean \
 t_gate4_dirty \
 t_retrofit_dryrun \
 t_wash_judgments \
+t_wash_engine \
+t_verify_vo \
+t_seam_probe \
+t_freeze_manifest \
 t_cpu_guard_direct_smoke \
 t_cpu_guard_direct_rc"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
@@ -81,6 +89,22 @@ t_retrofit_dryrun() {
 
 t_wash_judgments() {
   "$PY" -B "$REPO/tests/test_wash_fixture.py"
+}
+
+t_wash_engine() {
+  "$PY" -B "$REPO/tests/test_wash_engine.py"
+}
+
+t_verify_vo() {
+  "$PY" -B "$REPO/verify/verify_vo.py" --selftest
+}
+
+t_seam_probe() {
+  "$PY" -B "$REPO/seam/seam_probe.py" --selftest
+}
+
+t_freeze_manifest() {
+  "$PY" -B "$REPO/certify/freeze_manifest.py" --selftest
 }
 
 t_cpu_guard_direct_smoke() {

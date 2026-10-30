@@ -25,10 +25,11 @@ replay — exact-string + count assertions + skip-if-already-applied.
 
 **中文**：
 
-1. **认领模块槽位**：`wash/`(通用逐件入口)、`seam/`、`certify/`、`watch/`、
-   `workflows/` 为开放槽位（空目录＝未落地；`tests/` 已落自测套件，新增用例直接扩
-   `tests/run_tests.sh`，见 §4）。先在 issue/工单认领，避免
-   与并发席位撞车（本仓库多席位并发开发，提交前 `git log --oneline -5` 看最新盘面）。
+1. **认领模块槽位**：`watch/`、`workflows/` 及各模块深件（R4 提取侧三源、certify
+   推窗四判据＋UNION v2、`verify/` 统一入口收口——需历史件改名，见
+   docs/zh/architecture.md §4 注①②）为开放槽位（空目录＝未落地；`tests/` 已落
+   自测套件，新增用例直接扩 `tests/run_tests.sh`，见 §4）。先在 issue/工单认领，
+   避免与并发席位撞车（本仓库多席位并发开发，提交前 `git log --oneline -5` 看最新盘面）。
 2. **分支与提交**：从默认分支开工作分支；提交信息用 `type: summary` 形制
    （`feat:` / `docs:` / `fix:` / `test:`，参照现有 log）。
 3. **实现**：遵守 §2 代码规范与 §3 模块契约。
@@ -109,31 +110,32 @@ assertions. New subcommands need one `run_module` line in `cli/rocqwash`.
 
 **中文**——交付前必跑全绿。**零构建**：纯 Python 标准库＋bash（Python ≥ 3.9、
 bash ≥ 3.2·macOS 自带），无编译构建步骤；涉编译的演示需 rocq/coqc，缺席时对应段
-显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（2026-10-30 实测
-10 过 / 0 红 / EXIT 0）：
+显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（2026-10-31 实测
+14 过 / 0 红 / EXIT 0）：
 
 ```bash
 # ⓪ 一键自测套件（全仓总闸）
 bash tests/run_tests.sh                              # 全绿 EXIT 0；任一红 EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 10过/1红/EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 14过/1红/EXIT 1
 ```
 
-套件覆盖面与形制（10 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
-净·脏两判／retrofit 干跑／wash 三判／cpu_guard `-Direct` 冒烟＋rc 传播）见
+套件覆盖面与形制（14 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
+净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／
+seam_probe 四机制／freeze_manifest 四判／cpu_guard `-Direct` 冒烟＋rc 传播）见
 [`tests/README.md`](tests/README.md)。以下 ①–④ 为组件级专项命令（① 已由套件覆盖；
-②③④ 未入套件，仍需手跑；②–④ 实测基线 2026-10-29，套件与 ① 于 2026-10-30 复测全绿）：
+②③④ 未入套件，仍需手跑；②–④ 实测基线 2026-10-31）：
 
 ```bash
 # ① 扫描器 E364 冻结向量组（正/负/名道/CAPTURE/混合面全量）→ SELFTEST PASS，exit 0
 python3 scan/mac_stmt_scan.py --selftest
 
-# ② 统一 CLI 冒烟：help / 未知子命令 / pending 模块口径
+# ② 统一 CLI 冒烟：help / 未知子命令 / 空 pending 模块口径
 cli/rocqwash help                      # exit 0
 cli/rocqwash bogus; echo $?            # exit 2
-cli/rocqwash seam;   echo $?           # exit 3（seam/ 空）
+cli/rocqwash watch;  echo $?           # exit 3（watch/ 空目录·无通用入口）
 
 # ③ 全链演示（scan→names→N=N→wash→verify；SKIP 显式标注 NOT-RUN）
-make -C examples demo                  # exit 0；wash/verify 段按盘面 SKIP 或 RUN
+make -C examples demo                  # exit 0；wash 段台账真跑（引擎输出与参照件逐字节恒同）
 make -C examples clean                 # 收尾清 build/
 
 # ④ N=N 名表断言（任何洗/改写类 PR 必附：改前 vs 改后 有序全等）
@@ -154,25 +156,25 @@ cli/rocqwash names examples/demo_prop_leak.v \
 **English**: everything here must pass before delivery. **Zero build**: pure stdlib
 Python + bash (Python ≥ 3.9, bash ≥ 3.2 — macOS stock), no build step; compile demos
 need rocq/coqc, absent → the segment SKIPs explicitly (SKIP = NOT-RUN, never
-green-washed). Run the one-shot suite first (measured 2026-10-30: 10 pass / 0 fail /
+green-washed). Run the one-shot suite first (measured 2026-10-31: 14 pass / 0 fail /
 EXIT 0):
 
 ```bash
 # ⓪ one-shot suite (repo-wide gate)
 bash tests/run_tests.sh                              # all green EXIT 0; any red EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 10 pass / 1 fail / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 14 pass / 1 fail / EXIT 1
 ```
 
-Coverage & format (10 cases) in [`tests/README.md`](tests/README.md). Items ①–④
-below are component-level checks (① is suite-covered; ② ③ ④ are not in the suite and
-stay manual; ②–④ baseline measured 2026-10-29, suite & ① re-measured green
-2026-10-30): scanner selftest (exit 0), CLI smoke (help=0, unknown=2, pending=3),
-`make -C examples demo` (exit 0, SKIPs explicitly labeled), and the N=N ordered
-equality assertion for any wash/rewrite PR. New scanner channels/whitelist entries
-must add paired positive+negative frozen selftest vectors; wash PRs must show
-idempotent replay (`applied=0 skipped=N`); anything compiling goes through
-cpu_guard with the `.vo` magic + freshness checks; doc changes keep zh/en mirrors
-in sync.
+Coverage & format (14 cases) in [`tests/README.md`](tests/README.md). Items ①–④
+below are component-level checks (① is suite-covered; ② ③ ④ stay manual; ②–④
+baseline measured 2026-10-31): scanner selftest (exit 0), CLI smoke (help=0,
+unknown=2, watch pending=3), `make -C examples demo` (exit 0 — the wash step now
+runs for real via the ledger, byte-identical to the reference specimen), and the
+N=N ordered equality assertion for any wash/rewrite PR. New scanner
+channels/whitelist entries must add paired positive+negative frozen selftest
+vectors; wash PRs must show idempotent replay (`applied=0 skipped=N`); anything
+compiling goes through cpu_guard with the `.vo` magic + freshness checks; doc
+changes keep zh/en mirrors in sync.
 
 ## 5. cpu_guard 使用说明 / cpu_guard Usage（v3 温控包裹）
 

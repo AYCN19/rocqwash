@@ -37,18 +37,24 @@ rocqwash/
 │   ├── zh/architecture.md  # 架构文档（中文）— architecture doc (Chinese)
 │   └── en/architecture.md  # 架构文档（英文镜像）— architecture doc (English mirror)
 ├── CONTRIBUTING.md       # 贡献指南（流程/代码规范/测试要求/cpu_guard 使用说明）
-├── examples/             # 全链演示样例 + Makefile — single-file full-chain demo (scan→names→wash→verify)
+├── examples/             # 全链演示样例 + Makefile — single-file full-chain demo (scan→names→N=N→wash→verify)
 ├── scan/  names/         # 已实现通用逐件工具 — implemented generic tools (mac_stmt_scan.py / mac_stmt_names.py)
 ├── tools/                # cpu_guard.sh 温控包裹 + 战役工装 — thermal guard + campaign tools
-├── wash/  verify/        # 模块目录 — module slots（战役工装已落库；通用逐件入口 pending）
-├── seam/  certify/  watch/   # 模块占位 — module placeholders (pending)
-├── tests/  workflows/    # 占位 — placeholders (pending)
+├── wash/                 # wash_engine.py 通用逐件洗引擎 + _abl1_wash.py 战役批洗 — generic ledger wash engine + campaign batch wash
+├── verify/               # verify_vo.py 绿判四件套 + 战役验证工装 — four-pack green verdict + campaign verify tools
+├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
+├── certify/              # freeze_manifest.py 两层冻结清单 — two-tier freeze manifest (push-window/UNION v2 pending)
+├── watch/                # 模块占位 — module placeholder (pending)
+├── tests/  workflows/    # 自测套件（14 例）/ CI 工作流占位 — test suite (14 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
-> 状态快照 2026-10-29：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
-> `docs/` 已实现并实测；`wash/`、`verify/` 已落库战役级工装（`_` 前缀·通用逐件入口
-> pending）；`seam/`、`certify/`、`watch/`、`tests/`、`workflows/` 为空占位。
+> 状态快照 2026-10-31：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
+> `docs/`、`tests/`（14 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
+> 引擎＋`_abl1_wash.py` 战役件）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装）、
+> `seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
+> 两层冻结清单）通用逐件首件已落地；`verify/` 统一入口收口（历史件改名）与 R4 提取
+> 侧三源、certify 推窗四判据＋UNION v2、`watch/` 为待办。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
@@ -62,6 +68,19 @@ cli/rocqwash scan --file my_proof.v
 # Extract statement names and assert N=N against baseline
 cli/rocqwash names my_proof.v --names-out names.txt
 cli/rocqwash names my_proof.v --compare my_proof_washed.v --expect 487
+
+# Wash with an explicit exact-string ledger (idempotent, fail-loud, no guessing)
+cli/rocqwash wash my_proof.v --patch wash_ledger.json --out my_proof_washed.v
+
+# Green-verdict four-pack on a compiled pair (magic / freshness / exit / log)
+python3 verify/verify_vo.py --v my_proof.v --vo my_proof.vo --rc 0 --log build.log
+
+# W13 four-mechanism seam fingerprints (candidate list + prescriptions)
+cli/rocqwash seam --file my_proof.v
+
+# Two-tier freeze manifest (tier1 per-file md5 + tier2 manifest md5)
+python3 certify/freeze_manifest.py freeze . --out manifest.json
+python3 certify/freeze_manifest.py check . --manifest manifest.json
 
 # Equivalent direct invocation
 python3 scan/mac_stmt_scan.py --file my_proof.v

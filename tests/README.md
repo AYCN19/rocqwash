@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 10 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 14 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（10 例）
+## 覆盖面（14 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -24,8 +24,12 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 10 过 / 1 红 / 
 | 6 | `t_gate4_dirty` | 同上（负判） | 脏样例禁词/缺字段齐发 → FAIL，exit 1 |
 | 7 | `t_retrofit_dryrun` | `verify/retrofit_gate7_irr.py` | 干跑（写请求全截获·零落盘）过其全部内建断言 |
 | 8 | `t_wash_judgments` | `wash/_abl1_wash.py` | exact-string+count 正判/幂等重放/破坏反判三判 |
-| 9 | `t_cpu_guard_direct_smoke` | `tools/cpu_guard.sh -Direct` | 探针一发即退 + `DIRECT bypass` 横幅 |
-| 10 | `t_cpu_guard_direct_rc` | 同上 | 探针退出码传播（rc=7） |
+| 9 | `t_wash_engine` | `wash/wash_engine.py`（通用逐件引擎） | `tests/test_wash_engine.py` 六判：pos（APPLY·count 断言·嵌套注释保留）／幂等（applied=0 skipped=N·逐字节恒等）／neg（FAIL·NOT-WRITTEN）／括号反判 2／写隔离 2／CLI 契约 3·3·2·9·9 |
+| 10 | `t_verify_vo` | `verify/verify_vo.py --selftest` | 绿判四件套九判：魔数正负/陈vo负/log双判/exit双判/互斥/缺件 |
+| 11 | `t_seam_probe` | `seam/seam_probe.py --selftest` | W13 四机制各一正例＋注释掩蔽/前奏册负例 |
+| 12 | `t_freeze_manifest` | `certify/freeze_manifest.py --selftest` | freeze 幂等/零漂移/三漂移（changed/added/removed 各1·exit 1）/tier2 篡改必现形 |
+| 13 | `t_cpu_guard_direct_smoke` | `tools/cpu_guard.sh -Direct` | 探针一发即退 + `DIRECT bypass` 横幅 |
+| 14 | `t_cpu_guard_direct_rc` | 同上 | 探针退出码传播（rc=7） |
 
 ## 形制说明
 
