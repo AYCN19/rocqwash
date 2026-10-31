@@ -3,12 +3,21 @@
 """_abl1_4b_compile.py v2 — R4 4b ocamlc 编译器（不动点轮·mli 先行·cwd 显式·fail-loud）
 
 用法: python3 _abl1_4b_compile.py <extract_dir> [driver.ml]
+前置: ocamlc/ocamldep 必须已在 PATH（opam env 激活或 export opam bin）——
+      shutil.which 探测，探测失败即 FATAL 退出，不做机器路径硬编码回退。
 依赖 ocamldep 续行拼接解析；逐轮编译 deps⊆done 的模；driver 链接+实跑。
 """
-import re, os, subprocess, sys
+import re, os, shutil, subprocess, sys
 
-OCAMLC = "/Users/apple/Desktop/ConstructiveWorld/Live/toolchain/opam/live901/bin/ocamlc"
-OCAMLDEP = "/Users/apple/Desktop/ConstructiveWorld/Live/toolchain/opam/live901/bin/ocamldep"
+OCAMLC = shutil.which("ocamlc")
+OCAMLDEP = shutil.which("ocamldep")
+if OCAMLC is None or OCAMLDEP is None:
+    sys.stderr.write(
+        "FATAL toolchain: ocamlc/ocamldep not found on PATH "
+        f"(which ocamlc={OCAMLC!r}, which ocamldep={OCAMLDEP!r}). "
+        "Activate the opam env first (e.g. eval \"$(opam env)\" or "
+        "export PATH=<opam-switch-bin>:$PATH); no hardcoded machine-path fallback.\n")
+    sys.exit(1)
 
 def main():
     d = os.path.abspath(sys.argv[1])

@@ -1,0 +1,57 @@
+{
+ "n_copies": 11,
+ "roots": {
+  "cw": "/Users/apple/Desktop/ConstructiveWorld",
+  "rq": "/Users/apple/Desktop/rocqwash",
+  "set": "/Users/apple/Desktop/ConstructiveWorld-Set",
+  "w1": "/Users/apple/Desktop/S系Prop清除战役工单/work_M_wave1"
+ },
+ "schema": "rocqwash-quad8-manifest/1",
+ "tier1": [
+  [
+   "cw/cpu_guard.sh",
+   "9c5392d6746260f7852fea6f8992fd52"
+  ],
+  [
+   "rq/certify/freeze_manifest.py",
+   "f5eeea458616e24f9867c074c954d267"
+  ],
+  [
+   "rq/names/mac_stmt_names.py",
+   "01dc635ce445b05628bdd6e728990ce3"
+  ],
+  [
+   "rq/scan/mac_stmt_scan.py",
+   "56ff0fb371f9684cc865023f6f5d0f4a"
+  ],
+  [
+   "rq/seam/seam_probe.py",
+   "7a01359a22b8960b352191f1a4490b37"
+  ],
+  [
+   "rq/tools/cpu_guard.sh",
+   "9c5392d6746260f7852fea6f8992fd52"
+  ],
+  [
+   "rq/verify/gate4_comment_guard.py",
+   "d7ab397c5f0243d0c7320f91d0f14481"
+  ],
+  [
+   "rq/verify/verify_vo.py",
+   "81524ed04c2fc7e82a4547972baa7b83"
+  ],
+  [
+   "rq/wash/wash_engine.py",
+   "664446bc717395d8496c8c30a5af9ccf"
+  ],
+  [
+   "set/scripts/gates/gate4_comment_guard.py",
+   "d7ab397c5f0243d0c7320f91d0f14481"
+  ],
+  [
+   "w1/scan/mac_stmt_scan.py",
+   "56ff0fb371f9684cc865023f6f5d0f4a"
+  ]
+ ],
+ "tier2_md5_of_tier1_text": "d12b7e1e0ed6d352513f45c0941e02f6"
+}

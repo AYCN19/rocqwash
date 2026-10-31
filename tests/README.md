@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 16 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 19 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（16 例）
+## 覆盖面（19 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -32,6 +32,11 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 16 过 / 1 红 / 
 | 14 | `t_watch` | `watch/watch.py --selftest` | ci 离线四判（idle 0/在飞 1/未知状态保守计在飞/畸形 1/缺件 9）＋rewrite_host·遮蔽单元＋push 干跑四判（改写 URL/extraheader 入账·url-host 不符 2·缺对 2·原样出账）＋env 遮蔽＋confirm 三判（双读全等 0/不一致 1/单读拒 2·真 ls-remote 本地 path 远端） |
 | 15 | `t_cpu_guard_direct_smoke` | `tools/cpu_guard.sh -Direct` | 探针一发即退 + `DIRECT bypass` 横幅 |
 | 16 | `t_cpu_guard_direct_rc` | 同上 | 探针退出码传播（rc=7） |
+| 17 | `t_scan_station` | `wrapper/scan_station.py` | `tests/test_scan_station.py` 九判（裸调指认卡/断言正负/嵌记/透传 rc=9/正本缺失 9/站自检/文件面透传） |
+| 18 | `t_gate7_wrapper` | `wrapper/gate7_probe.sh` ＋ `wrapper/coqc_shim.sh` | `tests/test_gate7_wrapper.py` 十三判（双 bash -n/shim argv `c` 注入＋逐字透传/shim 缺 rocq 9/probe 用法 2×3/缺件 9×4/`--dry-run` guard 档位与形装账＋order 装配·零编译零写盘） |
+| 19 | `t_verify_born` | `wrapper/verify_born.py` | `tests/test_verify_born.py` 九判（裸调哑成功禁律 2/--help/站自检九判/正本指认 pin/裸形 born.rc 原件直喂正判/前缀形 BORN_RC=0 归一化正判/BORN_RC=1 负判透传 1/--json 逐件账/伪断言败拒 2·临时目录驱动零仓写） |
+| 20 | `t_frozen8` | `certify/frozen8.py --selftest` | 账载四判（判① 账载≡文档·机械收割更新账.md 八件在册值逐件咬合/判② 盘≡账·现盘八件 md5 全等 8/8/判③ 名单≡账·幂等·freeze 名单 tier1/tier2 与账载逐字咬合＋重产逐字节恒同/判④ 对账闭环·篡改现形·名单 md5 篡改与侧册篡改各 rc=1） |
+| 21 | `t_frozen8_check` | `certify/frozen8.py check` | 在册名单四环咬合对账随套件在跑（名单 tier2 自洽/名单≡账载/tier2 侧册咬合/盘≡账载·rc 0 全咬合·只读零写盘·名单与侧册=`certify/frozen8_manifest.json`＋`frozen8_tier2.md5`） |
 
 ## 形制说明
 
@@ -52,3 +57,16 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 16 过 / 1 红 / 
   该 tag 恒不满足（`test_wash_fixture.py` 幂等判按 old⊂new 集合动态断言）。
 - 退出码口径承 [CONTRIBUTING.md §4](../CONTRIBUTING.md)：`0`=通过、`2`=断言失败
   （`--expect` 等）、`9`=缺件；套件层 `0`=全绿、`1`=任一红。
+
+## 五课反馈轮补记（20261101·席 rqsupport·用例 26–29）
+
+> 编号承接套件现势（run_tests.sh 已在册 25 例——其中 22–25（`t_quad8`/`t_quad8_check`/
+> `t_frozen_call`/`t_gate6_born_wrapper`）四行为前轮新增、本表未及同步；本席只补本轮
+> 四行，不代前轮补表）。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 26 | `t_world_hook` | `wash/world_hook.py`（世界基校验钩子·新件①） | `tests/test_world_hook.py` 五判：工具 selftest 十二判／**五课负例①nw5**：偏斜世界 WDIFF→rc 9·引擎零落盘（born 前断言拦下）／WMISS→9／pos 透传洗刀→产物落盘／冻结引擎 md5=`664446bc…` 零触旁证 |
+| 27 | `t_select_audit` | `tools/select_audit.py`（选件审计器·新件②） | `tests/test_select_audit.py` 五判：selftest 九判／**五课负例②nw6**：批内重复→rc 1·DUP-BATCH／**负例③enbig7**：双批同名→rc 1·DUP-CROSS／树外名→NOT-IN-ORDER／pos（含 #代签与 / 路径形）→AUDIT-CLEAN |
+| 28 | `t_verify_gate6` | `verify/verify_gate6.py`（gate6 薄包装＋eum 判例器化·新件③） | `tests/test_verify_gate6.py` 五判：selftest 十判／**五课夹具④gate6 ch1**：eum before(ch1=1)→after(ch1=0·名 5=5)→GREEN／ch1 滞治→RED／薄调正判（正本真扫·夹具树 ch1≥1）／judge 单翼→2 |
+| 29 | `t_recipe_s07` | `recipes/S07_projection_reanchor_E5.md`＋E5 病面机检（新件④⑤） | `tests/test_recipe_s07.py` 五判：处方件判例锚词面齐／**五课夹具⑤**：E5 病面（语句面裸投影·跨行连排）→命中／注释掩蔽→零命中／愈面（real_eq/real_lt/real_le）→零命中／冻结引擎 md5 零触旁证 |

@@ -94,7 +94,11 @@ about dependency & compile-verification status.
 3. **`_` 前缀＝战役/席位专用工装**（路径硬编码、不接逐件 argv，如
    `wash/_abl1_wash.py`、`verify/_parse_fin_mac.py`）——统一入口**不代跑**，防止
    误触外部沙箱写；需要时直接 `python3 <path>` 调用。新战役工装请沿用 `_` 前缀命名。
-4. 无通用入口 → CLI exit 3；多通用入口 → exit 4（列清单人工指认）。
+4. 无通用入口 → CLI exit 3；多通用入口 → exit 4（列清单人工指认）。例外：`certify/`
+   双通用件与 `verify/` 三通用件已由 CLI 显式分派收口——`rocqwash certify
+   freeze|push_gate [args...]`、`rocqwash verify gate4|verify_vo|retrofit [args...]`
+   1:1 透传；无子动词仍走 exit 4 列清单，未知子动词 exit 2（verify 分派·2026-10-31
+   适配席 rqadapt·冻结件零改动）。
 5. 工装**禁写仓库外路径**除非在其 docstring 显眼声明 ROOT 并说明幂等性；批量工装
    必须幂等（已在盘=skip）＋ count 断言。
 6. 新子命令接入：在 `cli/rocqwash` `case` 表加一行 `run_module` 分支即可，无需改 CLI
@@ -105,7 +109,12 @@ non-underscore-prefixed `.py` with an argparse CLI); the unified entry auto-rout
 it with 1:1 passthrough. Underscore-prefixed tools are campaign/seat-specific
 (hardcoded paths, no per-file argv) and are never auto-run by the unified entry —
 use the `_` prefix for new campaign tools. No generic entry → exit 3; multiple →
-exit 4. Tools must not write outside the repo unless their docstring prominently
+exit 4. Exception: `certify/`'s two generic pieces and `verify/`'s three generic
+pieces are unified via explicit CLI dispatch — `rocqwash certify
+freeze|push_gate [args...]` and `rocqwash verify gate4|verify_vo|retrofit [args...]`
+pass through 1:1; no sub-verb still exits 4 with the listing, an unknown sub-verb
+exits 2 (verify dispatch: 2026-10-31, adapter seat, zero frozen-file changes).
+Tools must not write outside the repo unless their docstring prominently
 declares the ROOT and idempotency; batch tools must be idempotent with count
 assertions. New subcommands need one `run_module` line in `cli/rocqwash`.
 
@@ -133,10 +142,16 @@ watch 零网络向量组／cpu_guard `-Direct` 冒烟＋rc 传播）见
 # ① 扫描器 E364 冻结向量组（正/负/名道/CAPTURE/混合面全量）→ SELFTEST PASS，exit 0
 python3 scan/mac_stmt_scan.py --selftest
 
-# ② 统一 CLI 冒烟：help / 未知子命令 / 多通用入口列清单 / watch 已路由
+# ② 统一 CLI 冒烟：help / 未知子命令 / certify 显式分派 / watch 已路由
 cli/rocqwash help; echo $?               # exit 0
 cli/rocqwash bogus; echo $?              # exit 2
-cli/rocqwash certify 2>&1; echo $?       # exit 4（freeze_manifest+push_gate 双通用入口·列清单人工指认）
+cli/rocqwash certify 2>&1; echo $?       # exit 4（无子动词＝freeze_manifest+push_gate 双通用入口不唯一·列清单·与 verify/ 同款契约形）
+cli/rocqwash certify freeze --selftest; echo $?     # exit 0（显式分派→freeze_manifest.py·1:1 透传）
+cli/rocqwash certify push_gate --selftest; echo $?  # exit 0（显式分派→push_gate.py·1:1 透传）
+cli/rocqwash certify bogusverb 2>&1; echo $?        # exit 2（未知子动词·列合法子动词 freeze|push_gate）
+cli/rocqwash verify gate4 --file <clean.v>; echo $?  # exit 0/1/2=gate4 自身口径透传（净件 0·脏件 1·复核项 2）
+cli/rocqwash verify verify_vo --selftest; echo $?    # exit 0（显式分派→verify_vo.py·九判绿）
+cli/rocqwash verify bogusverb 2>&1; echo $?          # exit 2（未知子动词·列合法子动词 gate4|verify_vo|retrofit）
 cli/rocqwash watch ci --runs-json <f>; echo $?  # watch.py 已路由（ci 离线证据判读）
 
 # ③ 全链演示（scan→names→N=N→wash→verify；SKIP 显式标注 NOT-RUN）
@@ -173,7 +188,8 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injecte
 Coverage & format (16 cases) in [`tests/README.md`](tests/README.md). Items ①–④
 below are component-level checks (① is suite-covered; ② ③ ④ stay manual; ②–④
 baseline measured 2026-10-31): scanner selftest (exit 0), CLI smoke (help=0,
-unknown=2, certify=4 ambiguous-entry listing, watch routed), `make -C examples demo`
+unknown=2, bare `certify`=4 ambiguous-entry listing, `certify freeze|push_gate`
+explicit dispatch with 1:1 passthrough, unknown certify sub-verb=2, watch routed), `make -C examples demo`
 (exit 0 — the wash step now
 runs for real via the ledger, byte-identical to the reference specimen), and the
 N=N ordered equality assertion for any wash/rewrite PR. New scanner

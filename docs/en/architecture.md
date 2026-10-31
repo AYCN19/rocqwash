@@ -91,19 +91,20 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 | `tools/` | `cpu_guard.sh` | generic | **implemented** | cpu_guard v3 thermal wrapper (see §6) |
 | `tools/` | `_gen_fin_mac.py` / `_abl1_4b_compile.py` | campaign tools | landed | censusFIN SortAlive probe template generator (parameterized module/world/dep-chain); R4 4b ocamlc compile driver (hardcoded opam paths) |
 | `cli/` | `rocqwash` | unified entry | **implemented** | Seven-subcommand routing (contract in §5; 2026-10-31 fixed the run_module branches missing `shift` — the subcommand name leaked into routed tools, now aligned with the §5 "1:1 passthrough" contract) |
+| `wrapper/` | `coqc_shim.sh` + `gate7_probe.sh` | adapter layer (bash · not CLI-routed) | **implemented** (2026-10-31, seat rqadapt) | Canonical adapter face for the gate7 probe chain (out-of-repo piece `ConstructiveWorld-Set/scripts/gates/gate7_extract_run.py`, read-only frozen in its own repo): `coqc_shim.sh` = canonical argv shim from gate7's `--coqc` parameter to the local Live toolchain `rocq c` (zero-logic 1:1 passthrough; `GATE7_PROBE_ROCQ` override; missing rocq → exit 9; **no guard nesting inside the shim** — gate7 invokes the shim as a per-module subprocess, re-wrapping on the same registry = deadlock, seat_nw8 precedent); `gate7_probe.sh` = canonical launcher (env.sh canonicalization + `unset COQLIB ROCQLIB` + `ulimit -s 65532`; guard wraps the python process only [`-Front 0 -Mid 1 -MaxWaitSec 600`, `GATE7_PROBE_REG` lane split]; `python3 -B` forbids `__pycache__` writes into the read-only original repo; order assembly [`--module`/`--order` exactly one]; args after `--` forwarded verbatim to gate7 [`--gate --baseline …`]; `--dry-run` ledger). **Zero criterion duplication** — green/red, magic counts, erasure candidates are judged solely by the gate7 original; exit codes pass through 1:1 (2 = this layer's usage error, 9 = missing file, otherwise gate7's own 0/1/2). Thirteen-judgment selftest `tests/test_gate7_wrapper.py` (zero compile, zero writes; suite case 18); E2E smoke on a read-only world copy ran S01_BaseRing live: names=69 rc=0 magic=0/0, equal to the committed baseline. Earlier adapter pieces in the same dir: `guard.sh` (pass-through for frozen `tools/cpu_guard.sh`) + `scan_station.py` (scan original-identification wrapper; see `tests/test_scan_station.py` and the update ledger) |
 | `examples/` | `demo_prop_leak.v` et al. | demo | **implemented** | Single-file full-chain demo (see `examples/README.md`, with measured results). Since 2026-10-31 the wash step runs for real: `washed/demo_ledger.json` (16 exact-string patches) drives `wash_engine.py`, and the engine output is **byte-identical** to the reference `washed/demo_prop_leak_washed.v` (cmp assertion; idempotent replay applied=0 skipped=16) |
 | `docs/` | this tree | docs | **implemented** | zh/en bilingual architecture docs |
-| `tests/` | `run_tests.sh` + 5 test files + `fixtures/` | generic | **implemented** | Test-suite master entry: `bash tests/run_tests.sh` (16 cases, positive/negative pairs; all-green exit 0 / any-red exit 1; idempotent, zero repo writes; `ROCQWASH_TESTS_FAIL_PROBE=1` injects an always-red case as suite self-check); covers scan selftest / names `--expect` pos·with-Let·neg / gate4 clean·dirty / retrofit dry-run / wash campaign-tool three-judgment / wash_engine six-judgment / verify_vo nine-judgment / seam_probe four-mechanism / freeze_manifest four-judgment / push_gate UNION six + window four / watch zero-network vectors / cpu_guard `-Direct` smoke + exit-code propagation (see [`tests/README.md`](../../tests/README.md)) |
+| `tests/` | `run_tests.sh` + 5 test files + `fixtures/` | generic | **implemented** | Test-suite master entry: `bash tests/run_tests.sh` (18 cases, positive/negative pairs; all-green exit 0 / any-red exit 1; idempotent, zero repo writes; `ROCQWASH_TESTS_FAIL_PROBE=1` injects an always-red case as suite self-check); covers scan selftest / names `--expect` pos·with-Let·neg / gate4 clean·dirty / retrofit dry-run / wash campaign-tool three-judgment / wash_engine six-judgment / verify_vo nine-judgment / seam_probe four-mechanism / freeze_manifest four-judgment / push_gate UNION six + window four / watch zero-network vectors / cpu_guard `-Direct` smoke + exit-code propagation / scan_station nine-judgment / gate7 adapter thirteen-judgment (see [`tests/README.md`](../../tests/README.md)) |
 | `workflows/` | — (empty) | — | pending | CI workflow placeholder (`.github/workflows/ci.yml` on file: macOS suite gate) |
 
 > Note ①: `verify/` now holds three non-underscore-prefixed files — the historical
 > campaign tools `gate4_comment_guard.py`, `retrofit_gate7_irr.py` plus the generic
-> `verify_vo.py`. Under the §5 routing contract they count as ambiguous generic
-> entries → `cli/rocqwash verify` exits 4 with a listing for manual disambiguation
-> (measured 2026-10-31). **Unifying the entry requires renaming the two historical
-> tools to the `_` prefix — both are in-service/frozen files this round, so the
-> rename is logged as TODO**; until then call `python3 verify/verify_vo.py --v ...
-> --vo ...` directly.
+> `verify_vo.py`. On 2026-10-31 the adapter seat landed an **explicit sub-verb
+> dispatch**: `cli/rocqwash verify gate4|verify_vo|retrofit [args…]` exec-passes
+> 1:1 (same contract shape as certify/); bare `verify` still exits 4 with a
+> listing for manual disambiguation, unknown sub-verbs exit 2, `verify help`
+> prints the sub-help. **Zero frozen-file changes (rename-free unification)**;
+> calling `python3 verify/verify_vo.py --v ... --vo ...` directly still works.
 >
 > Note ②: the extraction side of the full R4 three-source conjunction (bare
 > full-extraction magic=0 + probe dual-face magic=0 + five-pattern grep=0) depends on
@@ -113,17 +114,30 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 > three-source conjunction awaits a later seat.
 >
 > Note ③: `certify/` now holds two generic pieces — `freeze_manifest.py` (frozen)
-> and `push_gate.py` (landed 2026-10-31 by seat rqwash2). Under the §5 routing
-> contract they count as ambiguous generic entries → `cli/rocqwash certify` exits 4
-> with a listing for manual disambiguation (measured 2026-10-31, same contract shape
-> as verify/). Invoke the deep piece directly: `python3 certify/push_gate.py window
-> ...`; the unification (rename one to the `_` prefix, or explicit CLI dispatch)
-> awaits the freeze lift.
+> and `push_gate.py` (landed 2026-10-31 by seat rqwash2). **On 2026-10-31 seat
+> rqadapt landed the explicit CLI dispatch**: `cli/rocqwash certify
+> freeze|push_gate [args...]` routes by sub-verb with 1:1 passthrough (args and
+> exit codes unrewritten; `--help` after a sub-verb reaches each piece's own
+> argparse); with no sub-verb it still exits 4 with a listing for manual
+> disambiguation (same contract shape as verify/); an unknown sub-verb exits 2.
+> The CLI-side unification is done — the `_`-prefix rename route still awaits the
+> freeze lift.
 >
 > Note ④: `watch/watch.py push` defaults to DRY-RUN (prints the ledger, zero network,
 > zero execution); `--yes` actually pushes. This seat's own push discipline =
 > `push_gate.py window` first (CLOSED → no push) → `watch.py push` with the real rc
 > → `watch.py confirm` double ls-remote read.
+>
+> Note ⑤: `wrapper/` = the **adapter-layer family directory** (canonical in-repo
+> adapter faces for frozen / out-of-repo pieces; always new files, never touching
+> the in-service originals). 2026-10-31 seat rqadapt landed the gate7 probe-chain
+> adapter (`coqc_shim.sh` + `gate7_probe.sh`, canonicalizing the hand-made
+> shims/launchers each campaign seat kept in its seat domain — nw7/nw8 precedent;
+> zero criterion duplication, exit codes pass through 1:1); the same seat's earlier
+> rounds landed `guard.sh` (cpu_guard pass-through) + `scan_station.py` (scan
+> identification wrapper). Adapter layers are not routed through `cli/rocqwash`
+> (bash face; invoke as `bash wrapper/…` directly); every compile still goes
+> through the frozen cpu_guard wrapper.
 
 ## 5. `cli/rocqwash` Unified-Entry Routing Contract
 

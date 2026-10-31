@@ -16,8 +16,21 @@
 #       seam/seam_probe.py W13 四机制（--selftest 四正例＋掩蔽负例）
 #       certify/freeze_manifest.py 两层冻结（--selftest 四判）
 #       certify/push_gate.py 推窗四判据＋UNION v2（--selftest UNION 六判＋window 四判）
+#       certify/frozen8.py 八件冻结名单（--selftest 账载四判＋在册名单对账·账载≡文档/盘≡账/篡改现形）
 #       watch/watch.py CI 监控＋钉 IP 推送＋confirm（--selftest 零网络向量组）
 #       tools/cpu_guard.sh -Direct 冒烟（探针一发即退＋退出码传播）
+#       wrapper/scan_station.py 正本指认包装（tests/test_scan_station.py·九判零写盘）
+#       wrapper/gate7_probe.sh＋coqc_shim.sh gate7 探针链适配层（tests/test_gate7_wrapper.py·十三判零编译零写盘）
+#       wrapper/gate6_census.sh＋born_world.sh gate6 普查闸启动层＋born 世界基正形
+#         （tests/test_gate6_born_wrapper.py·二十一判零编译零写盘）
+#       wrapper/verify_born.py born 轮判绿接线（tests/test_verify_born.py·九判零写盘）
+#       wrapper/quad8_reconcile.py 四仓同 md5 副本群对账（--selftest 夹具八判＋
+#         在册四仓名单对账 t_quad8_check·11 副本/六环咬合/audit 只录不判·零写盘）
+#       wrapper/frozen_call.py 逐调断言（--selftest 夹具五判·PASS 透传入账/拒执四向）
+#       wash/world_hook.py 世界基校验钩子（tests/test_world_hook.py·五判·五课负例①nw5）
+#       tools/select_audit.py 选件审计器（tests/test_select_audit.py·五判·五课负例②nw6＋③enbig7）
+#       verify/verify_gate6.py gate6 薄包装＋eum 判例器化（tests/test_verify_gate6.py·五判·五课夹具④）
+#       recipes/S07 处方件＋E5 病面机检（tests/test_recipe_s07.py·五判·五课夹具⑤）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -50,7 +63,20 @@ t_freeze_manifest \
 t_push_gate \
 t_watch \
 t_cpu_guard_direct_smoke \
-t_cpu_guard_direct_rc"
+t_cpu_guard_direct_rc \
+t_scan_station \
+t_gate7_wrapper \
+t_verify_born \
+t_frozen8 \
+t_frozen8_check \
+t_quad8 \
+t_quad8_check \
+t_frozen_call \
+t_gate6_born_wrapper \
+t_world_hook \
+t_select_audit \
+t_verify_gate6 \
+t_recipe_s07"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -134,6 +160,71 @@ t_cpu_guard_direct_rc() {
   "$REPO/tools/cpu_guard.sh" -Direct -- sh -c 'exit 7' >/dev/null 2>&1
   local rc=$?
   [ "$rc" -eq 7 ] || { echo "退出码应传播探针 rc=7，实测 $rc"; return 1; }
+}
+
+t_scan_station() {
+  "$PY" -B "$REPO/tests/test_scan_station.py"
+}
+
+t_gate7_wrapper() {
+  "$PY" -B "$REPO/tests/test_gate7_wrapper.py"
+}
+
+t_verify_born() {
+  "$PY" -B "$REPO/tests/test_verify_born.py"
+}
+
+t_frozen8() {
+  "$PY" -B "$REPO/certify/frozen8.py" --selftest
+}
+
+t_frozen8_check() {
+  # 在册八件冻结名单随套件在跑对账（推送轮 c4 套件绿即含八件对账绿·只读零写盘）
+  "$PY" -B "$REPO/certify/frozen8.py" check \
+    --list "$REPO/certify/frozen8_manifest.json" \
+    --tier2 "$REPO/certify/frozen8_tier2.md5"
+}
+
+t_quad8() {
+  # 四仓同 md5 副本群对账器夹具八判（零触真仓·20261031 席 rqadapt）
+  "$PY" -B "$REPO/wrapper/quad8_reconcile.py" --selftest
+}
+
+t_quad8_check() {
+  # 在册四仓对账名单随套件在跑对账（11 副本·audit 域只录不判·只读零写盘）
+  "$PY" -B "$REPO/wrapper/quad8_reconcile.py" check \
+    --list "$REPO/wrapper/quad8_manifest.json" \
+    --tier2 "$REPO/wrapper/quad8_tier2.md5"
+}
+
+t_frozen_call() {
+  # wrapper 层逐调断言夹具五判（零触真仓真组件·临时账面）
+  "$PY" -B "$REPO/wrapper/frozen_call.py" --selftest
+}
+
+t_gate6_born_wrapper() {
+  # wrapper 层 gate6 普查闸启动层＋born 世界基正形十六判（零编译零写盘）
+  "$PY" -B "$REPO/tests/test_gate6_born_wrapper.py"
+}
+
+t_world_hook() {
+  # 五课反馈轮·负例①nw5 世界偏斜：born 前断言拦下＋冻结引擎零触旁证（零编译零写盘）
+  "$PY" -B "$REPO/tests/test_world_hook.py"
+}
+
+t_select_audit() {
+  # 五课反馈轮·负例②nw6 批内重复＋③enbig7 跨批撞名（零仓库写盘零网络）
+  "$PY" -B "$REPO/tests/test_select_audit.py"
+}
+
+t_verify_gate6() {
+  # 五课反馈轮·夹具④gate6 ch1：eum 判例正判/滞治负例/正本真扫（正本只读·-B 禁 pycache）
+  "$PY" -B "$REPO/tests/test_verify_gate6.py"
+}
+
+t_recipe_s07() {
+  # 五课反馈轮·夹具⑤S07 投影重锚 E5：处方件锚词面＋病面/掩蔽/愈面机检（冻结引擎只读 import）
+  "$PY" -B "$REPO/tests/test_recipe_s07.py"
 }
 
 t_fail_probe() {

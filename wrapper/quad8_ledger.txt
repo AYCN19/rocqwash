@@ -1,0 +1,25 @@
+名单 tier2 自洽（名单未被改）: PASS
+名单口径≡在册（roots+键面）: PASS
+tier2 侧册咬合: PASS
+OK cw/cpu_guard.sh 9c5392d6746260f7852fea6f8992fd52
+OK rq/certify/freeze_manifest.py f5eeea458616e24f9867c074c954d267
+OK rq/names/mac_stmt_names.py 01dc635ce445b05628bdd6e728990ce3
+OK rq/scan/mac_stmt_scan.py 56ff0fb371f9684cc865023f6f5d0f4a
+OK rq/seam/seam_probe.py 7a01359a22b8960b352191f1a4490b37
+OK rq/tools/cpu_guard.sh 9c5392d6746260f7852fea6f8992fd52
+OK rq/verify/gate4_comment_guard.py d7ab397c5f0243d0c7320f91d0f14481
+OK rq/verify/verify_vo.py 81524ed04c2fc7e82a4547972baa7b83
+OK rq/wash/wash_engine.py 664446bc717395d8496c8c30a5af9ccf
+OK set/scripts/gates/gate4_comment_guard.py d7ab397c5f0243d0c7320f91d0f14481
+OK w1/scan/mac_stmt_scan.py 56ff0fb371f9684cc865023f6f5d0f4a
+GROUP certify/freeze_manifest.py copies=1 distinct=1 UNIFORM
+GROUP names/mac_stmt_names.py copies=1 distinct=1 UNIFORM
+GROUP scan/mac_stmt_scan.py copies=2 distinct=1 UNIFORM
+GROUP seam/seam_probe.py copies=1 distinct=1 UNIFORM
+GROUP tools/cpu_guard.sh copies=2 distinct=1 UNIFORM
+GROUP verify/gate4_comment_guard.py copies=2 distinct=1 UNIFORM
+GROUP verify/verify_vo.py copies=1 distinct=1 UNIFORM
+GROUP wash/wash_engine.py copies=1 distinct=1 UNIFORM
+AUDIT-DIVERGED cw-sb /Users/apple/Desktop/ConstructiveWorld/沙箱/现役/_dmregz4_regwave_sb/scripts/gates/gate4_comment_guard.py live=09c504eb0f2a9ac13e039c515a0b59be fam=d7ab397c5f0243d0c7320f91d0f14481（在册四仓外第二 md5 家族·只录不判·他席域）
+AUDIT-DIVERGED main /Users/apple/Desktop/ConstructiveWorld-Main/scripts/gates/gate4_comment_guard.py live=09c504eb0f2a9ac13e039c515a0b59be fam=d7ab397c5f0243d0c7320f91d0f14481（在册四仓外第二 md5 家族·只录不判·他席域）
+quad8 check OK: tier2 自洽/名单≡在册/侧册/盘≡名单/群全等/在册外扫出 · 11 OK / 0 mismatch / 0 missing / 0 unregistered / 0 群漂移 / audit 漂移录 2（只录不判）

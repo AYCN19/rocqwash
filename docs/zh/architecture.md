@@ -82,16 +82,18 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | `tools/` | `cpu_guard.sh` | 通用 | **已实现** | cpu_guard v3 温控包裹（见 §6） |
 | `tools/` | `_gen_fin_mac.py` / `_abl1_4b_compile.py` | 战役专用 | 已落库 | censusFIN 探针模板生成器（参数化模块/世界/依赖链）；R4 4b ocamlc 编译驱动（硬编码 opam 路径） |
 | `cli/` | `rocqwash` | 统一入口 | **已实现** | 七子命令路由（契约见 §5；2026-10-31 修 run_module 分支缺 `shift`——子命令名漏传被路由件的病灶，与 §5「1:1 透传」契约对齐） |
+| `wrapper/` | `coqc_shim.sh` ＋ `gate7_probe.sh` | 适配层（bash·不经 CLI 路由） | **已实现**（2026-10-31·席 rqadapt） | gate7 探针链正典适配面（仓外件 `ConstructiveWorld-Set/scripts/gates/gate7_extract_run.py`·在其仓只读禁改）：`coqc_shim.sh`＝gate7 `--coqc` 形参→本机 Live toolchain `rocq c` 的 argv 正典 shim（零逻辑 1:1 透传·`GATE7_PROBE_ROCQ` 可覆写·rocq 缺失 exit 9·**shim 内禁套 guard**——gate7 逐模块子进程调 shim，同注册表再包＝死锁判例 seat_nw8）；`gate7_probe.sh`＝正典启动层（env.sh canonical 化＋`unset COQLIB ROCQLIB`＋`ulimit -s 65532`·guard 只包 python 进程〔`-Front 0 -Mid 1 -MaxWaitSec 600`·`GATE7_PROBE_REG` 分道〕·`python3 -B` 禁向只读正本仓写 `__pycache__`·order 装配〔`--module`/`--order` 二择一〕·`--` 后 gate7 形参逐字透传〔`--gate --baseline …`〕·`--dry-run` 出账）。**判据零复制**——红绿/魔数/擦除候选唯一判据源仍为 gate7 正本；退出码 1:1 透传（2＝本层用法错·9＝文件缺失·其余＝gate7 自身 0/1/2）。十三判自测 `tests/test_gate7_wrapper.py`（零编译零写盘·套件第 18 例）；E2E 冒烟 world 只读副本 S01_BaseRing 实跑 names=69 rc=0 magic=0/0 与 committed baseline 全等。同目录先行适配件：`guard.sh`（冻结件 `tools/cpu_guard.sh` 直通层）＋`scan_station.py`（scan 正本指认包装·详见 `tests/test_scan_station.py` 与更新账） |
 | `examples/` | `demo_prop_leak.v` 等 | 演示 | **已实现** | 单文件全链演示（见 `examples/README.md`·实跑数据在案）。2026-10-31 起 wash 段真跑：`washed/demo_ledger.json`（16 patch exact-string 台账）驱动 `wash_engine.py`，引擎输出与参照件 `washed/demo_prop_leak_washed.v` **逐字节恒同**（cmp 断言·幂等重放 applied=0 skipped=16） |
 | `docs/` | 本目录 | 文档 | **已实现** | zh/en 双语架构文档 |
-| `tests/` | `run_tests.sh` ＋ 5 测试件 ＋ `fixtures/` | 通用 | **已实现** | 自测套件总入口：`bash tests/run_tests.sh`（16 例正/负两判·全绿 exit 0／任一红 exit 1·幂等零仓库写入·`ROCQWASH_TESTS_FAIL_PROBE=1` 注入恒红例自检）；覆盖 scan selftest／names `--expect` 正·含-Let·负判／gate4 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／watch 零网络向量组／cpu_guard `-Direct` 冒烟＋退出码传播（见 [`tests/README.md`](../../tests/README.md)） |
+| `tests/` | `run_tests.sh` ＋ 5 测试件 ＋ `fixtures/` | 通用 | **已实现** | 自测套件总入口：`bash tests/run_tests.sh`（18 例正/负两判·全绿 exit 0／任一红 exit 1·幂等零仓库写入·`ROCQWASH_TESTS_FAIL_PROBE=1` 注入恒红例自检）；覆盖 scan selftest／names `--expect` 正·含-Let·负判／gate4 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／watch 零网络向量组／cpu_guard `-Direct` 冒烟＋退出码传播／scan_station 九判／gate7 适配层十三判（见 [`tests/README.md`](../../tests/README.md)） |
 | `workflows/` | —（空） | — | pending | CI 工作流占位（`.github/workflows/ci.yml` 在库：macOS 套件闸） |
 
 > 注①：`verify/` 现有三件未带 `_` 前缀件——历史战役工装 `gate4_comment_guard.py`、
-> `retrofit_gate7_irr.py`＋通用件 `verify_vo.py`。按 §5 路由契约「通用入口不唯一」
-> → `cli/rocqwash verify` exit 4 列清单人工指认（2026-10-31 实测）。**统一收口的
-> 前提是把两件历史工装改名为 `_` 前缀——本轮该两件为在役/冻结件禁改，故收口入
-> 待办**；在收口前请直接 `python3 verify/verify_vo.py --v ... --vo ...` 调用。
+> `retrofit_gate7_irr.py`＋通用件 `verify_vo.py`。2026-10-31 适配席 rqadapt 落地
+> **显式子动词分派收口**：`cli/rocqwash verify gate4|verify_vo|retrofit [args…]`
+> exec 1:1 透传（与 certify/ 同款契约形）；无子动词仍 exit 4 列清单人工指认，
+> 未知子动词 exit 2，`verify help` 出子帮助。**冻结件零改动（零改名路径收口）**；
+> 直接 `python3 verify/verify_vo.py --v ... --vo ...` 调用方式继续有效。
 >
 > 注②：R4 全三源（bare 全提取 magic=0＋probe 双面 magic=0＋五式 grep=0）中的提取
 > 侧依赖 `_abl1_4b_compile.py` 的 ocamlc 链接器重活（硬编码 opam 路径），其通用化
@@ -99,14 +101,22 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 > 提取侧三源合取待后续席位。
 >
 > 注③：`certify/` 现有两通用件——`freeze_manifest.py`（冻结中）＋`push_gate.py`
-> （2026-10-31 席 rqwash2 落）。按 §5 路由契约「通用入口不唯一」→
-> `cli/rocqwash certify` exit 4 列清单人工指认（2026-10-31 实测，与 verify/ 同款
-> 契约形）。深件请直接 `python3 certify/push_gate.py window ...` 等方式调用；
-> 收口（其一改名 `_` 前缀或 CLI 显式分派）待冻结解禁后一并入。
+> （2026-10-31 席 rqwash2 落）。**2026-10-31 席 rqadapt 落 CLI 显式分派**：
+> `cli/rocqwash certify freeze|push_gate [args...]` 按子动词 1:1 透传（参数与退出码
+> 不改写·子动词 --help 直达各件 argparse）；无子动词仍 exit 4 列清单人工指认
+> （与 verify/ 同款契约形）；未知子动词 exit 2。原「收口待冻结解禁」的 CLI 侧
+> 已收，`_` 前缀改名路线仍待冻结解禁。
 >
 > 注④：`watch/watch.py` 的 `push` 子命令默认 DRY-RUN（零网络零执行只出账），
 > `--yes` 才真推；本席自身 push 纪律＝先 `push_gate.py window` 判窗（CLOSED 不推）
 > →`watch.py push` 真推取真 rc→`watch.py confirm` ls-remote 双读确证。
+>
+> 注⑤：`wrapper/`＝**适配层族目录**（冻结件/仓外件的仓内正典适配面·一律新文件
+> 不碰在役正本）。2026-10-31 席 rqadapt 落 gate7 探针链适配（`coqc_shim.sh`＋
+> `gate7_probe.sh`·正典化各战役席 seat 域手造 shim/启动器 nw7/nw8 判例·判据零复制
+> 退出码 1:1 透传）；同席先行轮已落 `guard.sh`（cpu_guard 直通）＋`scan_station.py`
+> （scan 指认包装）。适配层不进 `cli/rocqwash` 路由（bash 面·直接 `bash wrapper/…`
+> 调用）；一切编译仍必经冻结件 cpu_guard 包裹。
 
 ## 5. `cli/rocqwash` 统一入口路由契约
 

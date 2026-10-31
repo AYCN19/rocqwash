@@ -27,6 +27,7 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `certify/` | Two-tier freeze system + push-window four-criteria + UNION v2 | LLM cannot replace deterministic process |
 | `watch/` | CI monitoring + pin-IP push + thermal guard | Deterministic workflow vs LLM instability |
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
+| `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
 
 ## Repository Layout / 目录结构
 
@@ -40,22 +41,26 @@ rocqwash/
 ├── examples/             # 全链演示样例 + Makefile — single-file full-chain demo (scan→names→N=N→wash→verify)
 ├── scan/  names/         # 已实现通用逐件工具 — implemented generic tools (mac_stmt_scan.py / mac_stmt_names.py)
 ├── tools/                # cpu_guard.sh 温控包裹 + 战役工装 — thermal guard + campaign tools
+├── wrapper/              # 适配层族（gate7 探针链 shim/启动器＋cpu_guard 直通＋scan 指认包装）— adapter layers (gate7 shim/probe, guard pass-through, scan station)
 ├── wash/                 # wash_engine.py 通用逐件洗引擎 + _abl1_wash.py 战役批洗 — generic ledger wash engine + campaign batch wash
 ├── verify/               # verify_vo.py 绿判四件套 + 战役验证工装 — four-pack green verdict + campaign verify tools
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 — two-tier freeze + push-window gate + UNION v2
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（16 例）/ CI 工作流占位 — test suite (16 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（18 例）/ CI 工作流占位 — test suite (18 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
 > 状态快照 2026-10-31：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
-> `docs/`、`tests/`（16 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
+> `docs/`、`tests/`（18 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
 > 引擎＋`_abl1_wash.py` 战役件）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装）、
 > `seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
 > 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·席 rqwash2）、`watch/`
-> （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）已落地；
-> `verify/` 统一入口收口（历史件改名·冻结解禁后）与 R4 提取侧三源为待办。
+> （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）、`wrapper/`
+> （适配层族：gate7 探针链 `coqc_shim.sh`＋`gate7_probe.sh`·cpu_guard 直通
+> `guard.sh`·scan 指认包装 `scan_station.py`·席 rqadapt）已落地；
+> `verify/` 统一入口已收口（显式子动词分派 `cli/rocqwash verify gate4|verify_vo|retrofit`·
+> 2026-10-31·冻结件零改动）；R4 提取侧三源为待办。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
@@ -74,21 +79,21 @@ cli/rocqwash names my_proof.v --compare my_proof_washed.v --expect 487
 cli/rocqwash wash my_proof.v --patch wash_ledger.json --out my_proof_washed.v
 
 # Green-verdict four-pack on a compiled pair (magic / freshness / exit / log)
-python3 verify/verify_vo.py --v my_proof.v --vo my_proof.vo --rc 0 --log build.log
+cli/rocqwash verify verify_vo --v my_proof.v --vo my_proof.vo --rc 0 --log build.log
 
 # W13 four-mechanism seam fingerprints (candidate list + prescriptions)
 cli/rocqwash seam --file my_proof.v
 
 # Two-tier freeze manifest (tier1 per-file md5 + tier2 manifest md5)
-python3 certify/freeze_manifest.py freeze . --out manifest.json
-python3 certify/freeze_manifest.py check . --manifest manifest.json
+cli/rocqwash certify freeze freeze . --out manifest.json
+cli/rocqwash certify freeze check . --manifest manifest.json
 
 # Push-window four-criteria gate (judges the window, never pushes)
-python3 certify/push_gate.py window --repo . --runs-json runs.json --suite tests/run_tests.sh
+cli/rocqwash certify push_gate window --repo . --runs-json runs.json --suite tests/run_tests.sh
 
 # UNION v2 multi-world manifest (per-world tier1/tier2 + union tier)
-python3 certify/push_gate.py union-freeze --world wa=./world_a --world wb=./world_b --out union.json
-python3 certify/push_gate.py union-check --manifest union.json
+cli/rocqwash certify push_gate union-freeze --world wa=./world_a --world wb=./world_b --out union.json
+cli/rocqwash certify push_gate union-check --manifest union.json
 
 # CI in-flight monitoring (offline evidence mode; online read-only query also available)
 python3 watch/watch.py ci --runs-json runs.json
