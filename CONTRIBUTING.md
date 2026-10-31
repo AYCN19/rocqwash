@@ -25,9 +25,9 @@ replay — exact-string + count assertions + skip-if-already-applied.
 
 **中文**：
 
-1. **认领模块槽位**：`watch/`、`workflows/` 及各模块深件（R4 提取侧三源、certify
-   推窗四判据＋UNION v2、`verify/` 统一入口收口——需历史件改名，见
-   docs/zh/architecture.md §4 注①②）为开放槽位（空目录＝未落地；`tests/` 已落
+1. **认领模块槽位**：`workflows/` 占位与各模块深件（R4 提取侧三源、`verify/`
+   统一入口收口——需历史件改名·冻结解禁后、`certify/` 收口——见
+   docs/zh/architecture.md §4 注①③）为开放槽位（空目录＝未落地；`tests/` 已落
    自测套件，新增用例直接扩 `tests/run_tests.sh`，见 §4）。先在 issue/工单认领，
    避免与并发席位撞车（本仓库多席位并发开发，提交前 `git log --oneline -5` 看最新盘面）。
 2. **分支与提交**：从默认分支开工作分支；提交信息用 `type: summary` 形制
@@ -40,8 +40,11 @@ replay — exact-string + count assertions + skip-if-already-applied.
 6. **评审判据**：评审只认机械证据（退出码、md5、count 断言、selftest PASS），
    不认「我测过了」口头声明。
 
-**English**: (1) claim an open module slot (`wash/` generic per-file entry, `seam/`,
-`certify/`, `watch/`, `workflows/` — empty dir = not landed; `tests/` already hosts
+**English**: (1) claim an open module slot (`workflows/` placeholder and the module
+deep pieces: the R4 extraction-side three-source conjunction, the `verify/` unified
+entry unification (needs a historical-file rename, after the freeze lifts) and the
+`certify/` entry unification (see docs/zh/architecture.md §4 notes ①③) — empty dir =
+not landed; `tests/` already hosts
 the suite, extend `tests/run_tests.sh` for new cases, see §4); check recent commits
 first — this repo
 is developed concurrently by multiple seats. (2) branch from the default branch,
@@ -110,18 +113,19 @@ assertions. New subcommands need one `run_module` line in `cli/rocqwash`.
 
 **中文**——交付前必跑全绿。**零构建**：纯 Python 标准库＋bash（Python ≥ 3.9、
 bash ≥ 3.2·macOS 自带），无编译构建步骤；涉编译的演示需 rocq/coqc，缺席时对应段
-显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（2026-10-31 实测
-14 过 / 0 红 / EXIT 0）：
+显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（2026-10-31 席 rqwash2
+实测 16 过 / 0 红 / EXIT 0）：
 
 ```bash
 # ⓪ 一键自测套件（全仓总闸）
 bash tests/run_tests.sh                              # 全绿 EXIT 0；任一红 EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 14过/1红/EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 16过/1红/EXIT 1
 ```
 
-套件覆盖面与形制（14 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
+套件覆盖面与形制（16 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／
-seam_probe 四机制／freeze_manifest 四判／cpu_guard `-Direct` 冒烟＋rc 传播）见
+seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／
+watch 零网络向量组／cpu_guard `-Direct` 冒烟＋rc 传播）见
 [`tests/README.md`](tests/README.md)。以下 ①–④ 为组件级专项命令（① 已由套件覆盖；
 ②③④ 未入套件，仍需手跑；②–④ 实测基线 2026-10-31）：
 
@@ -129,10 +133,11 @@ seam_probe 四机制／freeze_manifest 四判／cpu_guard `-Direct` 冒烟＋rc 
 # ① 扫描器 E364 冻结向量组（正/负/名道/CAPTURE/混合面全量）→ SELFTEST PASS，exit 0
 python3 scan/mac_stmt_scan.py --selftest
 
-# ② 统一 CLI 冒烟：help / 未知子命令 / 空 pending 模块口径
-cli/rocqwash help                      # exit 0
-cli/rocqwash bogus; echo $?            # exit 2
-cli/rocqwash watch;  echo $?           # exit 3（watch/ 空目录·无通用入口）
+# ② 统一 CLI 冒烟：help / 未知子命令 / 多通用入口列清单 / watch 已路由
+cli/rocqwash help; echo $?               # exit 0
+cli/rocqwash bogus; echo $?              # exit 2
+cli/rocqwash certify 2>&1; echo $?       # exit 4（freeze_manifest+push_gate 双通用入口·列清单人工指认）
+cli/rocqwash watch ci --runs-json <f>; echo $?  # watch.py 已路由（ci 离线证据判读）
 
 # ③ 全链演示（scan→names→N=N→wash→verify；SKIP 显式标注 NOT-RUN）
 make -C examples demo                  # exit 0；wash 段台账真跑（引擎输出与参照件逐字节恒同）
@@ -156,19 +161,20 @@ cli/rocqwash names examples/demo_prop_leak.v \
 **English**: everything here must pass before delivery. **Zero build**: pure stdlib
 Python + bash (Python ≥ 3.9, bash ≥ 3.2 — macOS stock), no build step; compile demos
 need rocq/coqc, absent → the segment SKIPs explicitly (SKIP = NOT-RUN, never
-green-washed). Run the one-shot suite first (measured 2026-10-31: 14 pass / 0 fail /
-EXIT 0):
+green-washed). Run the one-shot suite first (measured 2026-10-31, seat rqwash2:
+16 pass / 0 fail / EXIT 0):
 
 ```bash
 # ⓪ one-shot suite (repo-wide gate)
 bash tests/run_tests.sh                              # all green EXIT 0; any red EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 14 pass / 1 fail / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 16 pass / 1 fail / EXIT 1
 ```
 
-Coverage & format (14 cases) in [`tests/README.md`](tests/README.md). Items ①–④
+Coverage & format (16 cases) in [`tests/README.md`](tests/README.md). Items ①–④
 below are component-level checks (① is suite-covered; ② ③ ④ stay manual; ②–④
 baseline measured 2026-10-31): scanner selftest (exit 0), CLI smoke (help=0,
-unknown=2, watch pending=3), `make -C examples demo` (exit 0 — the wash step now
+unknown=2, certify=4 ambiguous-entry listing, watch routed), `make -C examples demo`
+(exit 0 — the wash step now
 runs for real via the ledger, byte-identical to the reference specimen), and the
 N=N ordered equality assertion for any wash/rewrite PR. New scanner
 channels/whitelist entries must add paired positive+negative frozen selftest

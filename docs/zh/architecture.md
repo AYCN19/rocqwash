@@ -1,10 +1,10 @@
 # rocqwash 架构（Architecture·中文版）
 
-> 状态快照：2026-10-31（wash/verify/seam/certify 四模块通用逐件入口落地＋套件扩至
-> 14 例·席 rqwash 施刀；本文档如实反映仓库当前盘面：已实现组件以源代码逐条核对，
-> 未落地组件以空目录/占位如实标注）。英文镜像见
-> [`docs/en/architecture.md`](../en/architecture.md)。快照后仓库仍在活跃开发
-> （并发席位持续落库），以代码为准。
+> 状态快照：2026-10-31（certify 深件 `push_gate.py` 推窗四判据＋UNION v2 清单落地＋
+> `watch/` 模块首件 `watch.py` 落地＋套件扩至 16 例·席 rqwash2 施刀）。本文档如实
+> 反映仓库当前盘面：已实现组件以源代码逐条核对，未落地组件以空目录/占位如实标注。
+> 英文镜像见 [`docs/en/architecture.md`](../en/architecture.md)。快照后仓库仍在活跃
+> 开发（并发席位持续落库），以代码为准。
 
 ## 1. 定位与核心原则（Positioning & Core Principle）
 
@@ -41,10 +41,10 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
                     └────────────────────────┬─────────────────────────┘
                                              │ 包裹每一次编译
   .v ──▶ scan ──▶ names ──▶ wash ──▶ compile ──▶ verify(R4) ──▶ seam ──▶ certify ──▶ watch
-        已实现   已实现   已实现  (guard)     已实现*      已实现*   首件已落地   规划中
+        已实现   已实现   已实现  (guard)     已实现*      已实现*   已实现    已实现
 
   已实现*＝通用逐件首件落地（wash＝台账执行器·verify＝绿判四件套·seam＝指纹探针；
-          R4 全三源与 certify 深件为待办）
+          R4 全三源为待办）
 
   统一入口：cli/rocqwash（scan / names / wash / verify / seam / certify / watch 七子命令）
 ```
@@ -55,10 +55,10 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | names | 单件或两件 `.v` | 有序语句名清单＋ N=N 有序全等断言 | 已实现 |
 | wash | 单件 `.v` ＋ 台账 JSON | 洗后 `.v`（exact-string+count·幂等） | 已实现（`wash_engine.py`·台账须显式给）；战役批量工装亦在库 |
 | compile | `.v` | `.vo`（魔数 `436f712100015ff4` 咬合） | 经 cpu_guard |
-| verify(R4) | `.v`+`.vo` 对（±rc/log 旁证） | 绿判四件套逐件账＋判定 | 已实现（`verify_vo.py`）；R4 全三源统一入口待办（见 §4 注） |
+| verify(R4) | `.v`+`.vo` 对（±rc/log 旁证） | 绿判四件套逐件账＋判定 | 已实现（`verify_vo.py`）；R4 全三源统一入口待办（见 §4 注②） |
 | seam | 单件 `.v` | W13 四机制指纹候选清单＋处方映射 | 已实现（`seam_probe.py`·候选非定谳） |
-| certify | 目录＋清单 | 两层冻结清单 freeze/check | 首件已实现（`freeze_manifest.py`）；推窗四判据＋UNION v2 待办 |
-| watch | — | CI 监控＋pin-IP 推送＋温控 | 目录占位，pending |
+| certify | 目录/多世界＋清单 | 两层冻结清单 freeze/check＋推窗四判据＋UNION v2 | 已实现（`freeze_manifest.py`＋`push_gate.py`·见注③） |
+| watch | runs 证据/远端 | CI 在飞监控＋钉 IP 推送（干跑默认）＋ls-remote 确证 | 已实现（`watch.py`·零 dispatch 结构保证） |
 
 ## 4. 组件表（Components·以源码核对）
 
@@ -76,14 +76,15 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | `verify/` | `gate4_comment_guard.py` | 战役专用 | 已落库 | 闸④头注五字段机检守卫 v2.1：词面族谱五族＋三域覆盖＋判定原则；零编译零网络零树写 |
 | `verify/` | `retrofit_gate7_irr.py` | 战役专用 | 已落库 | gate7 英化 retrofit：只动注释不动物义 token；md5 冻结断言＋token 流恒等断言，fail-loud 不落盘 |
 | `seam/` | `seam_probe.py` | 通用逐件 | **已实现**（2026-10-31） | W13 四机制代际缝指纹探针：①==语句×rewrite/ring/reflexivity→qeq_imp_qeqT 回向 ②apply(/rewrite( 全应用形→键配实例化 ③rewrite 本文件载前件引理（类型位 depth-0 `->`）→assert-化＋双岸桥 ④Require 跨行/语句面限定名不在 Require 集（前奏豁免册除外）→拓扑补列。分段/词面承 scan 冻结正典本地重实现；E364 盲区律（候选非定谳·0 命中非无缝判词）；`--selftest` 四正例＋掩蔽负例 |
-| `certify/` | `freeze_manifest.py` | 通用逐件 | **已实现**（2026-10-31） | 两层冻结清单：tier1 逐文件 md5（确定性遍历·`relpath  md5` 行账）＋tier2＝tier1 账文 md5（动清单即现形）；freeze 幂等（无时间戳·同盘面重产逐字节恒同）＋check 三分对账（changed/added/removed·零漂移 exit 0）；`.git/` 与清单自身不入账。**推窗四判据＋UNION v2 待办** |
-| `watch/` | —（空） | — | pending | 规划：CI 监控＋pin-IP 推送＋温控 |
+| `certify/` | `freeze_manifest.py` | 通用逐件 | **已实现**（2026-10-31） | 两层冻结清单：tier1 逐文件 md5（确定性遍历·`relpath  md5` 行账）＋tier2＝tier1 账文 md5（动清单即现形）；freeze 幂等（无时间戳·同盘面重产逐字节恒同）＋check 三分对账（changed/added/removed·零漂移 exit 0）；`.git/` 与清单自身不入账 |
+| `certify/` | `push_gate.py` | 通用逐件 | **已实现**（2026-10-31·席 rqwash2） | certify 深件（与冻结 v1 并存·只读 import 其 tier1_lines/tier2_of 承冻结口径）：`window` 推送窗四判据机检——c1 CI 在飞=0（`--runs-json` 预取证据 / `--ci-capped-min` reflog 推送时间线证据·本器零网络·无证据=NOT-RUN=关窗 fail-closed）＋c2 本地≥云端（fetch 后 behind=0）＋c3 fetch 干净（ls-remote 双读同 sha＋远端为 HEAD 祖先）＋c4 认证绿（套件 rc=0 必检＋`--freeze-manifest` 零漂移可选）；只判窗不开推，OPEN exit 0／CLOSED（含 NOT-RUN）exit 1。`union-freeze`/`union-check` UNION v2 多世界清单（schema rocqwash-union-manifest/2）：逐世界 tier1/tier2 承 v1＋第三层 union_tier2（逐世界 tier2 行账文 md5）＋`--tier2` 侧册；freeze 幂等逐字节恒同＋check 逐世界三分对账＋三层咬合；`--selftest` UNION 六判＋window 四判冻结向量（本地 path 远端·零网络） |
+| `watch/` | `watch.py` | 通用逐件 | **已实现**（2026-10-31·席 rqwash2） | watch 首件：`ci` CI 在飞监控（`--runs-json` 离线证据 / `--repo owner/name --online` urllib 只读查询·`--interval/--timeout` 轮询；status≠completed 一律计在飞 fail-closed；NETWORK-UNREACHABLE 如实出账）＋`push` 钉 IP 推送包装器（默认 DRY-RUN 只出账零网络·`--yes` 才真推；远端 URL 主机→`--pin-ip` 改写保留 userinfo/port＋`http.<改写URL>.extraheader=Host:` 承战役口径；输出遮蔽＝`--mask` 串∪URL userinfo 密码部∪env ROCQWASH_MASK→`***MASKED***`·`--ssl-verify-off` 须显式且账面警告）＋`confirm` ls-remote N 读确证（N≥2 双读纪律下限·全等才 PUSH-CONFIRMED）。**结构性零 dispatch**：无 rerun/cancel/workflow_dispatch 任何代码路径——停手律由结构保证；本器零编译，一切编译仍必经冻结件 cpu_guard 包裹。`--selftest` 零网络向量组（ci 四判＋rewrite/mask 单元＋push 干跑＋env 遮蔽＋confirm 三判·本地 path 远端） |
 | `tools/` | `cpu_guard.sh` | 通用 | **已实现** | cpu_guard v3 温控包裹（见 §6） |
 | `tools/` | `_gen_fin_mac.py` / `_abl1_4b_compile.py` | 战役专用 | 已落库 | censusFIN 探针模板生成器（参数化模块/世界/依赖链）；R4 4b ocamlc 编译驱动（硬编码 opam 路径） |
 | `cli/` | `rocqwash` | 统一入口 | **已实现** | 七子命令路由（契约见 §5；2026-10-31 修 run_module 分支缺 `shift`——子命令名漏传被路由件的病灶，与 §5「1:1 透传」契约对齐） |
 | `examples/` | `demo_prop_leak.v` 等 | 演示 | **已实现** | 单文件全链演示（见 `examples/README.md`·实跑数据在案）。2026-10-31 起 wash 段真跑：`washed/demo_ledger.json`（16 patch exact-string 台账）驱动 `wash_engine.py`，引擎输出与参照件 `washed/demo_prop_leak_washed.v` **逐字节恒同**（cmp 断言·幂等重放 applied=0 skipped=16） |
 | `docs/` | 本目录 | 文档 | **已实现** | zh/en 双语架构文档 |
-| `tests/` | `run_tests.sh` ＋ 5 测试件 ＋ `fixtures/` | 通用 | **已实现** | 自测套件总入口：`bash tests/run_tests.sh`（14 例正/负两判·全绿 exit 0／任一红 exit 1·幂等零仓库写入·`ROCQWASH_TESTS_FAIL_PROBE=1` 注入恒红例自检）；覆盖 scan selftest／names `--expect` 正·含-Let·负判／gate4 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／seam_probe 四机制／freeze_manifest 四判／cpu_guard `-Direct` 冒烟＋退出码传播（见 [`tests/README.md`](../../tests/README.md)） |
+| `tests/` | `run_tests.sh` ＋ 5 测试件 ＋ `fixtures/` | 通用 | **已实现** | 自测套件总入口：`bash tests/run_tests.sh`（16 例正/负两判·全绿 exit 0／任一红 exit 1·幂等零仓库写入·`ROCQWASH_TESTS_FAIL_PROBE=1` 注入恒红例自检）；覆盖 scan selftest／names `--expect` 正·含-Let·负判／gate4 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／watch 零网络向量组／cpu_guard `-Direct` 冒烟＋退出码传播（见 [`tests/README.md`](../../tests/README.md)） |
 | `workflows/` | —（空） | — | pending | CI 工作流占位（`.github/workflows/ci.yml` 在库：macOS 套件闸） |
 
 > 注①：`verify/` 现有三件未带 `_` 前缀件——历史战役工装 `gate4_comment_guard.py`、
@@ -96,6 +97,16 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 > 侧依赖 `_abl1_4b_compile.py` 的 ocamlc 链接器重活（硬编码 opam 路径），其通用化
 > 为超标项，**如实转待办**——`verify_vo.py` 现承接四件套机检段（编译产物侧），
 > 提取侧三源合取待后续席位。
+>
+> 注③：`certify/` 现有两通用件——`freeze_manifest.py`（冻结中）＋`push_gate.py`
+> （2026-10-31 席 rqwash2 落）。按 §5 路由契约「通用入口不唯一」→
+> `cli/rocqwash certify` exit 4 列清单人工指认（2026-10-31 实测，与 verify/ 同款
+> 契约形）。深件请直接 `python3 certify/push_gate.py window ...` 等方式调用；
+> 收口（其一改名 `_` 前缀或 CLI 显式分派）待冻结解禁后一并入。
+>
+> 注④：`watch/watch.py` 的 `push` 子命令默认 DRY-RUN（零网络零执行只出账），
+> `--yes` 才真推；本席自身 push 纪律＝先 `push_gate.py window` 判窗（CLOSED 不推）
+> →`watch.py push` 真推取真 rc→`watch.py confirm` ls-remote 双读确证。
 
 ## 5. `cli/rocqwash` 统一入口路由契约
 
@@ -119,6 +130,8 @@ rocqwash <subcommand> [args...]
 | `verify/verify_vo.py` | 四件套 PASS | 用法错（--rc/--exit-file 互斥等） | — | — | 路径缺失（任一红 FAIL＝1） |
 | `seam/seam_probe.py` | 出账（候选是发现不是失败） | `--selftest` 向量失败 | — | — | `--file` 缺失 |
 | `certify/freeze_manifest.py` | freeze 成功／check 零漂移 | 用法错／清单畸形 | — | — | 目录/清单缺失（check 有漂移＝1） |
+| `certify/push_gate.py` | window=OPEN／union-check 零漂移／union-freeze 成 | 用法错／清单畸形（union-check 漂移＝1·window CLOSED 含 NOT-RUN＝1） | — | — | 仓库/清单/世界根缺失 |
+| `watch/watch.py` | ci=CI-IDLE／push DRY-RUN／confirm PUSH-CONFIRMED（真推＝git rc 透传） | 用法错（ci 在飞>0/证据不可用＝1·confirm 不一致＝1） | — | — | 仓库/远端/文件缺失 |
 | `cli/rocqwash` | — | 未知子命令 | 无通用逐件入口 | 通用入口不唯一 | 入口脚本缺失 |
 | `tools/cpu_guard.sh` | — | — | — | — | —（退出码＝被包裹命令退出码） |
 

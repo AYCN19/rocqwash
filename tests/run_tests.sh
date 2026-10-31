@@ -15,6 +15,8 @@
 #       verify/verify_vo.py 绿判四件套（--selftest 九判）
 #       seam/seam_probe.py W13 四机制（--selftest 四正例＋掩蔽负例）
 #       certify/freeze_manifest.py 两层冻结（--selftest 四判）
+#       certify/push_gate.py 推窗四判据＋UNION v2（--selftest UNION 六判＋window 四判）
+#       watch/watch.py CI 监控＋钉 IP 推送＋confirm（--selftest 零网络向量组）
 #       tools/cpu_guard.sh -Direct 冒烟（探针一发即退＋退出码传播）
 #
 # 用法：
@@ -45,6 +47,8 @@ t_wash_engine \
 t_verify_vo \
 t_seam_probe \
 t_freeze_manifest \
+t_push_gate \
+t_watch \
 t_cpu_guard_direct_smoke \
 t_cpu_guard_direct_rc"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
@@ -105,6 +109,14 @@ t_seam_probe() {
 
 t_freeze_manifest() {
   "$PY" -B "$REPO/certify/freeze_manifest.py" --selftest
+}
+
+t_push_gate() {
+  "$PY" -B "$REPO/certify/push_gate.py" --selftest
+}
+
+t_watch() {
+  "$PY" -B "$REPO/watch/watch.py" --selftest
 }
 
 t_cpu_guard_direct_smoke() {

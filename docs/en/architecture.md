@@ -1,7 +1,8 @@
 # rocqwash Architecture (English)
 
-> Status snapshot: 2026-10-31 (generic per-file entries landed for wash/verify/seam/
-> certify + suite extended to 14 cases, seat rqwash). This document faithfully reflects
+> Status snapshot: 2026-10-31 (certify deep piece `push_gate.py` — push-window
+> four-criteria + UNION v2 manifest — and the first `watch/` piece `watch.py` landed,
+> suite extended to 16 cases, seat rqwash2). This document faithfully reflects
 > the current state of the repository: implemented components are checked against the
 > source code, pending components are labeled as such (empty dirs / placeholders).
 > Chinese mirror: [`docs/zh/architecture.md`](../zh/architecture.md). The repo is under
@@ -48,10 +49,10 @@ Derivation Chain (input → wash → verify → land → certify → push)
                   └────────────────────────┬───────────────────────────┘
                                            │ wraps every compile
   .v ──▶ scan ──▶ names ──▶ wash ──▶ compile ──▶ verify(R4) ──▶ seam ──▶ certify ──▶ watch
-        done     done     done    (guard)     done*        done*     piece 1    planned
+        done     done     done    (guard)     done*        done*     done     done
 
   done* = first generic per-file piece landed (wash: ledger executor · verify: four-pack ·
-          seam: fingerprint probe; full R4 three-source & deeper certify pieces are TODO)
+          seam: fingerprint probe; the full R4 three-source conjunction remains TODO)
 
   Unified entry: cli/rocqwash (subcommands scan / names / wash / verify / seam / certify / watch)
 ```
@@ -64,8 +65,8 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | compile | `.v` | `.vo` (magic `436f712100015ff4` check) | via cpu_guard |
 | verify(R4) | `.v`+`.vo` pair (± rc/log evidence) | green-verdict four-pack per-piece ledger + verdict | implemented (`verify_vo.py`); full R4 three-source unified entry is TODO (see §4 note) |
 | seam | single `.v` | W13 four-mechanism fingerprint candidate list + prescription mapping | implemented (`seam_probe.py`, candidates not verdicts) |
-| certify | dir + manifest | two-tier freeze manifest freeze/check | first piece implemented (`freeze_manifest.py`); push-window four-criteria + UNION v2 TODO |
-| watch | — | CI monitoring + pin-IP push + thermal guard | placeholder, pending |
+| certify | dir / multi-world + manifest | two-tier freeze manifest freeze/check + push-window four-criteria + UNION v2 | implemented (`freeze_manifest.py` + `push_gate.py`, see note ③) |
+| watch | runs evidence / remote | CI in-flight monitoring + pin-IP push (dry-run default) + ls-remote confirmation | implemented (`watch.py`, zero-dispatch by construction) |
 
 ## 4. Component Table (verified against source)
 
@@ -84,14 +85,15 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 | `verify/` | `gate4_comment_guard.py` | campaign tool | landed | Gate-4 header-comment five-field mechanical guard v2.1: five lexeme families + three domains + judging principle; zero compile / zero network / zero tree writes |
 | `verify/` | `retrofit_gate7_irr.py` | campaign tool | landed | Gate-7 English retrofit: touches comments only, never code tokens; frozen-md5 + token-stream identity assertions, fail-loud no-write |
 | `seam/` | `seam_probe.py` | generic per-file | **implemented** (2026-10-31) | W13 four-mechanism generation-gap fingerprint probe: ① `==`-statement × rewrite/ring/reflexivity → `qeq_imp_qeqT` flip-back ② `apply (`/`rewrite (` full-application forms → keyed-matching instantiation ③ `rewrite` of a this-file premiss-carrying lemma (depth-0 `->` after colon) → assert-ification + dual-shore bridge ④ multi-line Require / statement-face qualified names absent from the Require set (prelude exemption registry excluded) → topology completion. Segmentation/lexeme canon reimplemented locally from the frozen scan canon; E364 blind-zone law (candidates, not verdicts; 0 hits ≠ "seamless"); `--selftest` four positive vectors + masking negatives |
-| `certify/` | `freeze_manifest.py` | generic per-file | **implemented** (2026-10-31) | Two-tier freeze manifest: tier1 per-file md5 (deterministic walk, `relpath  md5` line ledger) + tier2 = md5 of the tier1 ledger text (tampering with the manifest is detected); freeze idempotent (no timestamps; same tree reproduces a byte-identical manifest) + check three-way reconciliation (changed/added/removed; zero drift exit 0); `.git/` and the manifest itself excluded. **Push-window four-criteria + UNION v2 TODO** |
-| `watch/` | — (empty) | — | pending | Planned: CI monitoring + pin-IP push + thermal guard |
+| `certify/` | `freeze_manifest.py` | generic per-file | **implemented** (2026-10-31) | Two-tier freeze manifest: tier1 per-file md5 (deterministic walk, `relpath  md5` line ledger) + tier2 = md5 of the tier1 ledger text (tampering with the manifest is detected); freeze idempotent (no timestamps; same tree reproduces a byte-identical manifest) + check three-way reconciliation (changed/added/removed; zero drift exit 0); `.git/` and the manifest itself excluded |
+| `certify/` | `push_gate.py` | generic per-file | **implemented** (2026-10-31, seat rqwash2) | certify deep piece (coexists with frozen v1; read-only import of its tier1_lines/tier2_of inherits the frozen accounting format): `window` mechanical check of the push-window four-criteria — c1 CI in-flight = 0 (`--runs-json` pre-fetched evidence / `--ci-capped-min` reflog push-timeline evidence; the tool itself does zero networking; no evidence = NOT-RUN = window closed, fail-closed) + c2 local ≥ remote (behind = 0 after fetch) + c3 fetch clean (ls-remote read twice, same sha, remote sha is an ancestor of HEAD) + c4 cert green (suite rc = 0 mandatory + optional `--freeze-manifest` zero drift); judges the window, never pushes — OPEN exit 0 / CLOSED (incl. NOT-RUN) exit 1. `union-freeze`/`union-check` UNION v2 multi-world manifest (schema rocqwash-union-manifest/2): per-world tier1/tier2 inherits v1 + a third tier union_tier2 (md5 of the per-world tier2 line ledger) + `--tier2` side file; freeze idempotent byte-identical + check per-world three-way reconciliation + three-tier cross-checks; `--selftest` UNION six vectors + window four vectors (local path remotes, zero network) |
+| `watch/` | `watch.py` | generic per-file | **implemented** (2026-10-31, seat rqwash2) | First watch piece: `ci` CI in-flight monitoring (`--runs-json` offline evidence / `--repo owner/name --online` read-only urllib query; `--interval/--timeout` polling; any status≠completed counts as in-flight, fail-closed; NETWORK-UNREACHABLE honestly ledgered) + `push` pin-IP push wrapper (default DRY-RUN: prints the ledger, zero network, zero execution; `--yes` actually pushes; remote URL host rewritten to `--pin-ip` preserving userinfo/port + `http.<rewritten>.extraheader=Host:` per the campaign recipe; output masking = `--mask` strings ∪ URL userinfo password ∪ env ROCQWASH_MASK → `***MASKED***`; `--ssl-verify-off` must be explicit and warns loudly) + `confirm` ls-remote N-read confirmation (N≥2 — the double-read discipline floor; all reads equal → PUSH-CONFIRMED). **Structurally zero dispatch**: no rerun/cancel/workflow_dispatch code paths exist — the no-dispatch rule is guaranteed by construction; the tool compiles nothing, all compiles still go through the frozen cpu_guard wrapper. `--selftest` zero-network vectors (ci four + rewrite/mask units + push dry-run + env masking + confirm three, local path remotes) |
 | `tools/` | `cpu_guard.sh` | generic | **implemented** | cpu_guard v3 thermal wrapper (see §6) |
 | `tools/` | `_gen_fin_mac.py` / `_abl1_4b_compile.py` | campaign tools | landed | censusFIN SortAlive probe template generator (parameterized module/world/dep-chain); R4 4b ocamlc compile driver (hardcoded opam paths) |
 | `cli/` | `rocqwash` | unified entry | **implemented** | Seven-subcommand routing (contract in §5; 2026-10-31 fixed the run_module branches missing `shift` — the subcommand name leaked into routed tools, now aligned with the §5 "1:1 passthrough" contract) |
 | `examples/` | `demo_prop_leak.v` et al. | demo | **implemented** | Single-file full-chain demo (see `examples/README.md`, with measured results). Since 2026-10-31 the wash step runs for real: `washed/demo_ledger.json` (16 exact-string patches) drives `wash_engine.py`, and the engine output is **byte-identical** to the reference `washed/demo_prop_leak_washed.v` (cmp assertion; idempotent replay applied=0 skipped=16) |
 | `docs/` | this tree | docs | **implemented** | zh/en bilingual architecture docs |
-| `tests/` | `run_tests.sh` + 5 test files + `fixtures/` | generic | **implemented** | Test-suite master entry: `bash tests/run_tests.sh` (14 cases, positive/negative pairs; all-green exit 0 / any-red exit 1; idempotent, zero repo writes; `ROCQWASH_TESTS_FAIL_PROBE=1` injects an always-red case as suite self-check); covers scan selftest / names `--expect` pos·with-Let·neg / gate4 clean·dirty / retrofit dry-run / wash campaign-tool three-judgment / wash_engine six-judgment / verify_vo nine-judgment / seam_probe four-mechanism / freeze_manifest four-judgment / cpu_guard `-Direct` smoke + exit-code propagation (see [`tests/README.md`](../../tests/README.md)) |
+| `tests/` | `run_tests.sh` + 5 test files + `fixtures/` | generic | **implemented** | Test-suite master entry: `bash tests/run_tests.sh` (16 cases, positive/negative pairs; all-green exit 0 / any-red exit 1; idempotent, zero repo writes; `ROCQWASH_TESTS_FAIL_PROBE=1` injects an always-red case as suite self-check); covers scan selftest / names `--expect` pos·with-Let·neg / gate4 clean·dirty / retrofit dry-run / wash campaign-tool three-judgment / wash_engine six-judgment / verify_vo nine-judgment / seam_probe four-mechanism / freeze_manifest four-judgment / push_gate UNION six + window four / watch zero-network vectors / cpu_guard `-Direct` smoke + exit-code propagation (see [`tests/README.md`](../../tests/README.md)) |
 | `workflows/` | — (empty) | — | pending | CI workflow placeholder (`.github/workflows/ci.yml` on file: macOS suite gate) |
 
 > Note ①: `verify/` now holds three non-underscore-prefixed files — the historical
@@ -109,6 +111,19 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 > is over the scope of this round and is **honestly logged as TODO** — `verify_vo.py`
 > currently covers the four-pack segment (compiled-artifact side); the extraction-side
 > three-source conjunction awaits a later seat.
+>
+> Note ③: `certify/` now holds two generic pieces — `freeze_manifest.py` (frozen)
+> and `push_gate.py` (landed 2026-10-31 by seat rqwash2). Under the §5 routing
+> contract they count as ambiguous generic entries → `cli/rocqwash certify` exits 4
+> with a listing for manual disambiguation (measured 2026-10-31, same contract shape
+> as verify/). Invoke the deep piece directly: `python3 certify/push_gate.py window
+> ...`; the unification (rename one to the `_` prefix, or explicit CLI dispatch)
+> awaits the freeze lift.
+>
+> Note ④: `watch/watch.py push` defaults to DRY-RUN (prints the ledger, zero network,
+> zero execution); `--yes` actually pushes. This seat's own push discipline =
+> `push_gate.py window` first (CLOSED → no push) → `watch.py push` with the real rc
+> → `watch.py confirm` double ls-remote read.
 
 ## 5. `cli/rocqwash` Unified-Entry Routing Contract
 
@@ -135,6 +150,8 @@ Exit-code table:
 | `verify/verify_vo.py` | four-pack PASS | usage error (--rc/--exit-file mutual exclusion etc.) | — | — | path missing (any red FAIL = 1) |
 | `seam/seam_probe.py` | ledger printed (candidates are findings, not failures) | `--selftest` vector failure | — | — | `--file` missing |
 | `certify/freeze_manifest.py` | freeze done / check zero drift | usage error / malformed manifest | — | — | dir/manifest missing (check drift = 1) |
+| `certify/push_gate.py` | window = OPEN / union-check zero drift / union-freeze done | usage error / malformed manifest (union-check drift = 1; window CLOSED incl. NOT-RUN = 1) | — | — | repo/manifest/world-root missing |
+| `watch/watch.py` | ci = CI-IDLE / push DRY-RUN / confirm PUSH-CONFIRMED (real push = git rc passthrough) | usage error (ci active>0 or unusable evidence = 1; confirm mismatch = 1) | — | — | repo/remote/file missing |
 | `cli/rocqwash` | — | unknown subcommand | no generic per-file entry | ambiguous generic entry | entry script missing |
 | `tools/cpu_guard.sh` | — | — | — | — | — (exit code = wrapped command's) |
 

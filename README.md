@@ -43,18 +43,19 @@ rocqwash/
 ├── wash/                 # wash_engine.py 通用逐件洗引擎 + _abl1_wash.py 战役批洗 — generic ledger wash engine + campaign batch wash
 ├── verify/               # verify_vo.py 绿判四件套 + 战役验证工装 — four-pack green verdict + campaign verify tools
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
-├── certify/              # freeze_manifest.py 两层冻结清单 — two-tier freeze manifest (push-window/UNION v2 pending)
-├── watch/                # 模块占位 — module placeholder (pending)
-├── tests/  workflows/    # 自测套件（14 例）/ CI 工作流占位 — test suite (14 cases) / CI placeholder
+├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 — two-tier freeze + push-window gate + UNION v2
+├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
+├── tests/  workflows/    # 自测套件（16 例）/ CI 工作流占位 — test suite (16 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
 > 状态快照 2026-10-31：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
-> `docs/`、`tests/`（14 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
+> `docs/`、`tests/`（16 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
 > 引擎＋`_abl1_wash.py` 战役件）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装）、
 > `seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
-> 两层冻结清单）通用逐件首件已落地；`verify/` 统一入口收口（历史件改名）与 R4 提取
-> 侧三源、certify 推窗四判据＋UNION v2、`watch/` 为待办。
+> 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·席 rqwash2）、`watch/`
+> （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）已落地；
+> `verify/` 统一入口收口（历史件改名·冻结解禁后）与 R4 提取侧三源为待办。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
@@ -81,6 +82,22 @@ cli/rocqwash seam --file my_proof.v
 # Two-tier freeze manifest (tier1 per-file md5 + tier2 manifest md5)
 python3 certify/freeze_manifest.py freeze . --out manifest.json
 python3 certify/freeze_manifest.py check . --manifest manifest.json
+
+# Push-window four-criteria gate (judges the window, never pushes)
+python3 certify/push_gate.py window --repo . --runs-json runs.json --suite tests/run_tests.sh
+
+# UNION v2 multi-world manifest (per-world tier1/tier2 + union tier)
+python3 certify/push_gate.py union-freeze --world wa=./world_a --world wb=./world_b --out union.json
+python3 certify/push_gate.py union-check --manifest union.json
+
+# CI in-flight monitoring (offline evidence mode; online read-only query also available)
+python3 watch/watch.py ci --runs-json runs.json
+
+# Pin-IP push wrapper (dry-run by default; masked output; --yes actually pushes)
+python3 watch/watch.py push --repo . --remote origin --pin-ip 140.82.113.3 --url-host github.com
+
+# Post-push ls-remote double-read confirmation
+python3 watch/watch.py confirm --repo . --remote origin --branch main --sha <sha>
 
 # Equivalent direct invocation
 python3 scan/mac_stmt_scan.py --file my_proof.v

@@ -31,11 +31,11 @@ rocqwash — Coq/Rocq Constructive Proof Unblocking Engine（统一 CLI 入口 /
            (--file/--json/--manifest/--hits-csv/--baseline/--selftest)
   names    顶层语句名有序清单 + N=N 有序全等断言 -> names/mac_stmt_names.py
            (<file>/--compare/--expect/--kinds/--include-let/--json/--names-out)
-  wash     规范洗引擎（canonical wash engine）        -> wash/     [通用逐件入口 pending]
-  verify   R4 验证（three-source conjunction 等）     -> verify/   [通用逐件入口 pending]
-  seam     代际缝探针（W13 four-mechanism）           -> seam/     [pending]
-  certify  两层冻结 + 推窗判据（two-tier freeze）     -> certify/  [pending]
-  watch    CI 监控 + 温控（CI monitoring + guard）    -> watch/    [pending]
+  wash     规范洗引擎（canonical wash engine）        -> wash/wash_engine.py
+  verify   绿判四件套（green-verdict four-pack）      -> verify/  [verify_vo+gate4+retrofit 三通用件·exit 4 列清单人工指认]
+  seam     代际缝探针（W13 four-mechanism）           -> seam/seam_probe.py
+  certify  两层冻结＋推窗四判据＋UNION v2             -> certify/ [freeze_manifest+push_gate 双通用件·exit 4 列清单人工指认]
+  watch    CI 监控＋钉 IP 推送＋ls-remote 确证        -> watch/watch.py (ci/push/confirm)
   help     本帮助
 
 路由说明 Routing notes:
