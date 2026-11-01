@@ -41,7 +41,7 @@ nn:
 
 wash:
 	@mkdir -p "$(BUILD)"
-	@if $(CLI) wash "$(DEMO)" --patch "$(WASHLG)" --out "$(BUILD)/$(WASHED_BASE)"; then \
+	@if python3 "$(ROOT)/wash/wash_engine.py" "$(DEMO)" --patch "$(WASHLG)" --out "$(BUILD)/$(WASHED_BASE)"; then \
 	  if cmp -s "$(BUILD)/$(WASHED_BASE)" "$(WASHED)"; then \
 	    echo "== [4/5] wash RUN（wash_engine 台账机械执行·16 patch 全 APPLY）"; \
 	    echo "   引擎输出与参照件 $(WASHED) 逐字节恒同（cmp PASS·幂等重放 applied=0 skipped=N）"; \
@@ -50,10 +50,10 @@ wash:
 	  fi; \
 	else rc=$$?; \
 	  if [ "$$rc" -eq 3 ] || [ "$$rc" -eq 4 ]; then \
-	    echo "SKIP [4/5] wash：cli exit rc=$$rc（无台账不洗——SKIP=NOT-RUN 非通过）。"; \
+	    echo "SKIP [4/5] wash：engine exit rc=$$rc （无台账不洗——SKIP=NOT-RUN 非通过）。"; \
 	    echo "     洗后目标形态以对照件提供（规范映射：结论位 bare=→Id / nat≤→NatLe）：$(WASHED)"; \
 	  else \
-	    echo "FAIL [4/5] wash：cli 退出码 $$rc"; exit 1; \
+	    echo "FAIL [4/5] wash：engine 退出码 $$rc"; exit 1; \
 	  fi; \
 	fi
 
@@ -69,11 +69,11 @@ verify:
 	else \
 	  echo "SKIP [5/5a] verify 编译段：本机无 rocq/coqc → NOT-RUN（非通过）。"; \
 	fi
-	@if $(CLI) verify "$(WASHED)"; then \
+	@if $(CLI) verify; then \
 	  echo "== [5/5b] verify R4 RUN =="; \
 	else rc=$$?; \
 	  if [ "$$rc" -eq 3 ] || [ "$$rc" -eq 4 ]; then \
-	    echo "SKIP [5/5b] verify R4 段：cli exit rc=$$rc (verify/ has no unified per-file entry)→ NOT-RUN（非通过）。"; \
+	    echo "SKIP [5/5b] verify R4 段：cli exit rc=$$rc （verify/ 显式子动词分派制·无子动词＝四通用入口不唯一列清单·R4 逐件入口待落地）→ NOT-RUN（非通过）。"; \
 	  else \
 	    echo "FAIL [5/5b] verify：cli 退出码 $$rc"; exit 1; \
 	  fi; \

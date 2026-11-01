@@ -10,7 +10,8 @@
 make demo    # 全链；或分步 make scan names nn wash verify clean
 ```
 
-**实测结果（2026-10-31·撰写机实跑）**：
+**实测结果（2026-10-31·撰写机实跑；2026-11-01 巡检席 rqsup4 六巡全值复跑恒同——
+scan/names/N=N/wash 逐行同值·`make demo` exit 0·build/ 产物与在库版逐字节恒同）**：
 
 | 步骤 | 结果 |
 |---|---|
@@ -18,9 +19,9 @@ make demo    # 全链；或分步 make scan names nn wash verify clean
 | names 原件 | `total: 5`，`--expect 5` OK，anomalies 0，duplicates ∅ |
 | N=N 断言 | `断言 5=5 有序全等 : PASS`（原件 vs 洗后件·`mac_stmt_names.py --compare`） |
 | scan 洗后件 | `RED stations: []`（结论位全迁 Set 载体）；仅 1 处前提位 EXEMPT；md5 `5bf31d2f…` |
-| wash | **RUN**——`washed/demo_ledger.json`（16 patch exact-string 台账）驱动 `wash_engine.py`：16 patch 全 APPLY、幂等重放 `applied=0 skipped=16`、引擎输出与参照件 `washed/demo_prop_leak_washed.v` **逐字节恒同**（`cmp` 断言·漂移即 FAIL） |
+| wash | **RUN**——`washed/demo_ledger.json`（16 patch exact-string 台账）驱动 `wash_engine.py`：16 patch 全 APPLY、幂等重放 `applied=0 skipped=16`、引擎输出与参照件 `washed/demo_prop_leak_washed.v` **逐字节恒同**（`cmp` 断言·漂移即 FAIL）。Makefile 直指认引擎形（wash/ 现 `wash_engine.py`＋`world_hook.py` 双通用入口·裸 `cli wash`＝exit 4 列清单——五课①落件后 demo 步改直调） |
 | verify 编译段 | SKIP——撰写机无 rocq/coqc；有 rocq 的机器上 `make demo` 会自动经 `tools/cpu_guard.sh` 编译洗后件 |
-| verify R4 段 | SKIP——`verify/` 三件未带 `_` 前缀件（两历史战役工装＋`verify_vo.py`）通用入口不唯一（cli exit 4 口径·统一收口待办）；可直跑 `python3 verify/verify_vo.py --v … --vo …` |
+| verify R4 段 | SKIP——`verify/` 显式子动词分派制（`gate4|verify_vo|verify_gate6|retrofit`），无子动词＝四通用入口不唯一（cli exit 4 列清单口径·R4 逐件入口待落地）；可直跑 `cli/rocqwash verify verify_vo --v … --vo …` |
 
 **诚实注记（honest notes）**：
 - SKIP ＝ NOT-RUN，非通过、非绿——本 demo 绝不把未执行步骤标成通过。
@@ -48,8 +49,11 @@ real**: `washed/demo_ledger.json` (16 exact-string patches) drives
 `washed/demo_prop_leak_washed.v` (cmp-asserted; drift fails the demo). The compile
 segment of verify SKIPs (no rocq/coqc here — on a rocq-equipped machine `make demo`
 compiles the specimen under `tools/cpu_guard.sh` automatically); the R4 segment
-SKIPs (three non-underscore files in `verify/` — two historical campaign tools plus
-`verify_vo.py` — leave the generic entry ambiguous, cli exit 4; unification is
-TODO; call `python3 verify/verify_vo.py --v … --vo …` directly). SKIP = NOT-RUN,
+SKIPs (`verify/` uses explicit sub-verb dispatch `gate4|verify_vo|verify_gate6|retrofit` —
+a bare `verify` lists the four generic entries, cli exit 4; the R4 per-file entry is
+still TODO; call `cli/rocqwash verify verify_vo --v … --vo …` directly). Re-measured
+2026-11-01 (rqsup4 round-6 inspection): all values identical, `make demo` exit 0,
+the Makefile designates `wash_engine.py` directly (wash/ now holds two generic
+entries — bare `cli wash` = exit 4 listing). SKIP = NOT-RUN,
 never a pass. Compile-ability of both .v files is **unverified** (no rocq on the
 authoring machine); proofs use prelude-only tactics.
