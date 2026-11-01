@@ -33,7 +33,7 @@ rocqwash — Coq/Rocq Constructive Proof Unblocking Engine（统一 CLI 入口 /
            (<file>/--compare/--expect/--kinds/--include-let/--json/--names-out)
   wash     规范洗引擎＋世界基钩子（双通用入口·exit 4 请直接指认）
            -> wash/wash_engine.py | wash/world_hook.py
-  verify   绿判四件套（green-verdict four-pack）      -> verify/  显式分派 (verify gate4|verify_vo|retrofit ...)
+  verify   绿判四件套＋gate6 普查薄包装      -> verify/  显式分派 (verify gate4|verify_vo|verify_gate6|retrofit ...)
   seam     代际缝探针（W13 four-mechanism）           -> seam/seam_probe.py
   certify  两层冻结＋推窗四判据＋UNION v2             -> certify/ 显式分派 (certify freeze|push_gate ...)
   watch    CI 监控＋钉 IP 推送＋ls-remote 确证        -> watch/watch.py (ci/push/confirm)
@@ -41,9 +41,9 @@ rocqwash — Coq/Rocq Constructive Proof Unblocking Engine（统一 CLI 入口 /
 
 路由说明 Routing notes:
   - 模块目录下唯一非 "_" 前缀 .py = 通用逐件入口，自动路由（参数/退出码透传）。
-  - certify 双通用件（freeze_manifest＋push_gate）与 verify 三通用件（gate4＋
-    verify_vo＋retrofit）走显式子动词分派：`rocqwash certify freeze|push_gate [args...]`、
-    `rocqwash verify gate4|verify_vo|retrofit [args...]` 1:1 透传；无子动词＝入口
+  - certify 双通用件（freeze_manifest＋push_gate）与 verify 四通用件（gate4＋
+    verify_vo＋verify_gate6＋retrofit）走显式子动词分派：`rocqwash certify freeze|push_gate [args...]`、
+    `rocqwash verify gate4|verify_vo|verify_gate6|retrofit [args...]` 1:1 透传；无子动词＝入口
     不唯一 → exit 4 列清单人工指认；未知子动词 → exit 2。
   - "_" 前缀 .py = 战役/席位专用工装（路径硬编码·无逐件接口），统一入口不代跑；
     需要时直接 `python3 wash/_abl1_wash.py` 等方式调用。
@@ -127,12 +127,14 @@ rocqwash verify — 绿判四件套（green-verdict four-pack·显式分派 / ex
              (--file/--tree/--tree-recursive/--baseline/--json/--emit-ledger/--selftest 无·单件/树扫)
   verify_vo  通用逐件绿判四件套（exit/log/魔数/新鲜度）         -> verify/verify_vo.py
              (--v <f.v> --vo <f.vo> [--rc N|--exit-file F] [--log L] [--json out] / --selftest)
+  verify_gate6 gate6 census 薄包装＋eum 判例器化               -> verify/verify_gate6.py
+             (--tree <dir>/--judge-before/--judge-after/--selftest / 形参 rc 1:1 透传正本)
   retrofit   gate7 英化 retrofit（战役工装·硬编码席位路径）     -> verify/retrofit_gate7_irr.py
              (无 argv 接口——统一入口只 1:1 透传，不代跑战役写)
 
 路由说明 Routing notes:
   - 子动词后参数与退出码 1:1 透传（exec 直转·fail-loud，不改写）。
-  - 无子动词＝三通用件入口不唯一 → exit 4 列清单人工指认（与 certify/ 同款契约形）。
+  - 无子动词＝四通用件入口不唯一 → exit 4 列清单人工指认（与 certify/ 同款契约形）。
   - 未知子动词 → exit 2（列合法子动词）。
 
 退出码 Exit codes: 0=pass  1/2=子工具自身口径透传（gate4 违规=1·复核=2）  2=unknown-sub-verb  4=ambiguous-entry  9=file-missing
@@ -148,12 +150,15 @@ case "${1:-}" in
     shift; exec python3 "$NAMES_PY" "$@" ;;
   wash)    shift; run_module wash    "$ROOT/wash"    "$@" ;;
   verify)
-    # 显式分派（gate4|verify_vo|retrofit 子动词·1:1 透传·2026-10-31 适配席 rqadapt）；
-    # 无子动词＝三通用件入口不唯一，仍走 run_module → exit 4 列清单人工指认
-    # （与 certify/ 同款契约形）。冻结件零改动：三个 .py 本体未经本 CLI 修改。
+    # 显式分派（gate4|verify_vo|verify_gate6|retrofit 子动词·1:1 透传·2026-10-31 适配席
+    # rqadapt 立三子动词；20261101 巡检席 rqsup4 四巡补 verify_gate6＝五课轮落件后
+    # 分派表缺件，合法通用入口被 unknown-sub-verb 拦截 exit 2 的契约漂移）；
+    # 无子动词＝四通用件入口不唯一，仍走 run_module → exit 4 列清单人工指认
+    # （与 certify/ 同款契约形）。冻结件零改动：四个 .py 本体未经本 CLI 修改。
     shift
     GATE4_PY="$ROOT/verify/gate4_comment_guard.py"
     VERIFYVO_PY="$ROOT/verify/verify_vo.py"
+    VERIFYG6_PY="$ROOT/verify/verify_gate6.py"
     RETROFIT_PY="$ROOT/verify/retrofit_gate7_irr.py"
     case "${1:-}" in
       gate4)
@@ -162,13 +167,16 @@ case "${1:-}" in
       verify_vo)
         [ -f "$VERIFYVO_PY" ] || { echo "rocqwash verify verify_vo: missing $VERIFYVO_PY" >&2; exit 9; }
         shift; exec python3 "$VERIFYVO_PY" "$@" ;;
+      verify_gate6)
+        [ -f "$VERIFYG6_PY" ] || { echo "rocqwash verify verify_gate6: missing $VERIFYG6_PY" >&2; exit 9; }
+        shift; exec python3 "$VERIFYG6_PY" "$@" ;;
       retrofit)
         [ -f "$RETROFIT_PY" ] || { echo "rocqwash verify retrofit: missing $RETROFIT_PY" >&2; exit 9; }
         shift; exec python3 "$RETROFIT_PY" "$@" ;;
       help|-h|--help) verify_usage; exit 0 ;;
       "") run_module verify "$ROOT/verify" ;;
       *)
-        echo "rocqwash verify: 未知子动词 unknown sub-verb: $1（合法子动词 legal: gate4|verify_vo|retrofit）" >&2
+        echo "rocqwash verify: 未知子动词 unknown sub-verb: $1（合法子动词 legal: gate4|verify_vo|verify_gate6|retrofit）" >&2
         verify_usage >&2
         exit 2 ;;
     esac ;;
