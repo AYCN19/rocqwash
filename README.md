@@ -45,7 +45,7 @@ rocqwash/
 ├── wash/                 # wash_engine.py 通用逐件洗引擎 + _abl1_wash.py 战役批洗 — generic ledger wash engine + campaign batch wash
 ├── verify/               # verify_vo.py 绿判四件套 + 战役验证工装 — four-pack green verdict + campaign verify tools
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
-├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 — two-tier freeze + push-window gate + UNION v2
+├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
 ├── tests/  workflows/    # 自测套件（31 例）/ CI 工作流占位 — test suite (31 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
@@ -56,15 +56,18 @@ rocqwash/
 > （`wash_engine.py` 台账洗引擎＋`_abl1_wash.py` 战役件＋`world_hook.py` 世界基校验钩子·
 > 五课①）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装＋`verify_gate6.py` gate6 薄包装·
 > 五课③）、`seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
-> 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·席 rqwash2）、`watch/`
+> 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·席 rqwash2＋`frozen8.py`
+> 八件冻结名单机检）、`watch/`
 > （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）、`tools/`
 > （`select_audit.py` 选件审计器·五课②）、`recipes/`（`S07_projection_reanchor_E5.md`
 > 五课④＋`ENBIG7_same_domain_collision_PW1.md` 五课③·判例处方件双件）、`wrapper/`
 > （适配层族：gate7 探针链 `coqc_shim.sh`＋`gate7_probe.sh`·cpu_guard 直通
 > `guard.sh`·scan 指认包装 `scan_station.py`·席 rqadapt·三判例验收站
 > `precedent_station.py`·五课⑤ rqsup4）已落地；
-> `verify/` 统一入口已收口（显式子动词分派 `cli/rocqwash verify gate4|verify_vo|retrofit`·
-> 2026-10-31·冻结件零改动）；R4 提取侧三源为待办。
+> `verify/` 统一入口已收口（显式子动词分派 `cli/rocqwash verify gate4|verify_vo|verify_gate6|retrofit`·
+> rqadapt 落三子动词 2026-10-31·rqsup4 四巡补 verify_gate6 20261101）；`certify/`
+> 同款显式分派 `cli/rocqwash certify freeze|push_gate|frozen8`（rqsup4 五巡补
+> frozen8 20261101）——冻结件零改动；R4 提取侧三源为待办。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

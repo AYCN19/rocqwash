@@ -65,7 +65,7 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | compile | `.v` | `.vo` (magic `436f712100015ff4` check) | via cpu_guard |
 | verify(R4) | `.v`+`.vo` pair (± rc/log evidence) | green-verdict four-pack per-piece ledger + verdict | implemented (`verify_vo.py`); full R4 three-source unified entry is TODO (see §4 note) |
 | seam | single `.v` | W13 four-mechanism fingerprint candidate list + prescription mapping | implemented (`seam_probe.py`, candidates not verdicts) |
-| certify | dir / multi-world + manifest | two-tier freeze manifest freeze/check + push-window four-criteria + UNION v2 | implemented (`freeze_manifest.py` + `push_gate.py`, see note ③) |
+| certify | dir / multi-world + manifest | two-tier freeze manifest freeze/check + push-window four-criteria + UNION v2 + frozen-eight registry check | implemented (`freeze_manifest.py` + `push_gate.py` + `frozen8.py`, see note ③) |
 | watch | runs evidence / remote | CI in-flight monitoring + pin-IP push (dry-run default) + ls-remote confirmation | implemented (`watch.py`, zero-dispatch by construction) |
 
 ## 4. Component Table (verified against source)
@@ -87,6 +87,7 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 | `seam/` | `seam_probe.py` | generic per-file | **implemented** (2026-10-31) | W13 four-mechanism generation-gap fingerprint probe: ① `==`-statement × rewrite/ring/reflexivity → `qeq_imp_qeqT` flip-back ② `apply (`/`rewrite (` full-application forms → keyed-matching instantiation ③ `rewrite` of a this-file premiss-carrying lemma (depth-0 `->` after colon) → assert-ification + dual-shore bridge ④ multi-line Require / statement-face qualified names absent from the Require set (prelude exemption registry excluded) → topology completion. Segmentation/lexeme canon reimplemented locally from the frozen scan canon; E364 blind-zone law (candidates, not verdicts; 0 hits ≠ "seamless"); `--selftest` four positive vectors + masking negatives |
 | `certify/` | `freeze_manifest.py` | generic per-file | **implemented** (2026-10-31) | Two-tier freeze manifest: tier1 per-file md5 (deterministic walk, `relpath  md5` line ledger) + tier2 = md5 of the tier1 ledger text (tampering with the manifest is detected); freeze idempotent (no timestamps; same tree reproduces a byte-identical manifest) + check three-way reconciliation (changed/added/removed; zero drift exit 0); `.git/` and the manifest itself excluded |
 | `certify/` | `push_gate.py` | generic per-file | **implemented** (2026-10-31, seat rqwash2) | certify deep piece (coexists with frozen v1; read-only import of its tier1_lines/tier2_of inherits the frozen accounting format): `window` mechanical check of the push-window four-criteria — c1 CI in-flight = 0 (`--runs-json` pre-fetched evidence / `--ci-capped-min` reflog push-timeline evidence; the tool itself does zero networking; no evidence = NOT-RUN = window closed, fail-closed) + c2 local ≥ remote (behind = 0 after fetch) + c3 fetch clean (ls-remote read twice, same sha, remote sha is an ancestor of HEAD) + c4 cert green (suite rc = 0 mandatory + optional `--freeze-manifest` zero drift); judges the window, never pushes — OPEN exit 0 / CLOSED (incl. NOT-RUN) exit 1. `union-freeze`/`union-check` UNION v2 multi-world manifest (schema rocqwash-union-manifest/2): per-world tier1/tier2 inherits v1 + a third tier union_tier2 (md5 of the per-world tier2 line ledger) + `--tier2` side file; freeze idempotent byte-identical + check per-world three-way reconciliation + three-tier cross-checks; `--selftest` UNION six vectors + window four vectors (local path remotes, zero network) |
+| `certify/` | `frozen8.py` | generic per-file | **implemented** (20261101, landed in the v3 collection round; rqsup4 round-5 dispatch fill) | Frozen-eight in-service registry check (schema rocqwash-frozen8-manifest/1, ledger source = the update ledger §三): `--selftest` four in-ledger judgment vectors + `check --list <manifest> --tier2 <side>` four-ring cross-check (tier2 self-consistency / manifest ≡ ledger / disk ≡ ledger / side file; 0 changed / 0 removed); covered by suite cases t_frozen8 + t_frozen8_check. The CLI dispatch `rocqwash certify frozen8` was added by seat rqsup4 round 5 (the piece landed in v3 but the dispatch table lacked it — a legal generic entry was blocked by unknown-sub-verb, a contract drift now fixed) |
 | `watch/` | `watch.py` | generic per-file | **implemented** (2026-10-31, seat rqwash2) | First watch piece: `ci` CI in-flight monitoring (`--runs-json` offline evidence / `--repo owner/name --online` read-only urllib query; `--interval/--timeout` polling; any status≠completed counts as in-flight, fail-closed; NETWORK-UNREACHABLE honestly ledgered) + `push` pin-IP push wrapper (default DRY-RUN: prints the ledger, zero network, zero execution; `--yes` actually pushes; remote URL host rewritten to `--pin-ip` preserving userinfo/port + `http.<rewritten>.extraheader=Host:` per the campaign recipe; output masking = `--mask` strings ∪ URL userinfo password ∪ env ROCQWASH_MASK → `***MASKED***`; `--ssl-verify-off` must be explicit and warns loudly) + `confirm` ls-remote N-read confirmation (N≥2 — the double-read discipline floor; all reads equal → PUSH-CONFIRMED). **Structurally zero dispatch**: no rerun/cancel/workflow_dispatch code paths exist — the no-dispatch rule is guaranteed by construction; the tool compiles nothing, all compiles still go through the frozen cpu_guard wrapper. `--selftest` zero-network vectors (ci four + rewrite/mask units + push dry-run + env masking + confirm three, local path remotes) |
 | `tools/` | `cpu_guard.sh` | generic | **implemented** | cpu_guard v3 thermal wrapper (see §6) |
 | `tools/` | `select_audit.py` | generic per-file | **implemented** (20261101, seat rqsupport lesson-②·rqsup4 real-table audit) | Selection auditor (nw6 + enbig7 lessons tooled): batch selection lists are grepped against the tree's order.txt by **full-table read** (memory forbidden) — DUP-BATCH in-batch duplicates / DUP-CROSS cross-batch claim collisions (same-domain dual-seat precursor) / NOT-IN-ORDER names absent from the table / DUP-ORDER duplicate rows in the registry itself; `--grep` single-name full-table stand-in; name normalization accepts `#gen-tag`/`.v`/bare/`/`-path forms; `--json` ledger. Real-table precedents (rqsup4 inspection 20261101): scripts/order.txt (671 rows) CLEAN / Live table (199 rows) DUP-ORDER×2 on record (UpReqBanachExpAdd·abl_normconv_real each R28+R29 — recorded, not judged). Nine-judgment selftest + `tests/test_select_audit.py` (suite case 27) |
@@ -102,11 +103,14 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 | `tests/` | `run_tests.sh` + 13 test files + `fixtures/` | generic | **implemented** | Test-suite master entry: `bash tests/run_tests.sh` (**31 cases**, positive/negative pairs; all-green exit 0 / any-red exit 1; idempotent, zero repo writes; `ROCQWASH_TESTS_FAIL_PROBE=1` injects an always-red case as suite self-check); covers scan selftest / names `--expect` pos·with-Let·neg / gate4 clean·dirty / retrofit dry-run / wash campaign-tool three-judgment / wash_engine six-judgment / verify_vo nine-judgment / seam_probe four-mechanism / freeze_manifest four-judgment / push_gate UNION six + window four / watch zero-network vectors / cpu_guard `-Direct` smoke + exit-code propagation / scan_station nine-judgment / gate7 adapter thirteen-judgment / verify_born nine-judgment / frozen8 four + check / quad8 eight + check / frozen_call five / gate6·born launcher / world_hook five / select_audit five / verify_gate6 five / recipe_s07 five / recipe_pw1 five / precedent_station seven (per-case criteria in [`tests/README.md`](../../tests/README.md)) |
 | `workflows/` | — (empty) | — | pending | CI workflow placeholder (`.github/workflows/ci.yml` on file: macOS suite gate) |
 
-> Note ①: `verify/` now holds three non-underscore-prefixed files — the historical
+> Note ①: `verify/` now holds four non-underscore-prefixed files — the historical
 > campaign tools `gate4_comment_guard.py`, `retrofit_gate7_irr.py` plus the generic
-> `verify_vo.py`. On 2026-10-31 the adapter seat landed an **explicit sub-verb
-> dispatch**: `cli/rocqwash verify gate4|verify_vo|retrofit [args…]` exec-passes
-> 1:1 (same contract shape as certify/); bare `verify` still exits 4 with a
+> `verify_vo.py` and `verify_gate6.py` (landed 2026-11-01, seat rqsupport lesson-③).
+> On 2026-10-31 the adapter seat landed an **explicit sub-verb
+> dispatch**: `cli/rocqwash verify gate4|verify_vo|verify_gate6|retrofit [args…]` exec-passes
+> 1:1 (same contract shape as certify/; the `verify_gate6` sub-verb was added 2026-11-01
+> by seat rqsup4 round 4 — the post-landing dispatch-gap fix); bare `verify` still
+> exits 4 with a
 > listing for manual disambiguation, unknown sub-verbs exit 2, `verify help`
 > prints the sub-help. **Zero frozen-file changes (rename-free unification)**;
 > calling `python3 verify/verify_vo.py --v ... --vo ...` directly still works.
@@ -118,12 +122,15 @@ NOT auto-run by the unified entry (invoke directly with `python3`).
 > currently covers the four-pack segment (compiled-artifact side); the extraction-side
 > three-source conjunction awaits a later seat.
 >
-> Note ③: `certify/` now holds two generic pieces — `freeze_manifest.py` (frozen)
-> and `push_gate.py` (landed 2026-10-31 by seat rqwash2). **On 2026-10-31 seat
+> Note ③: `certify/` now holds three generic pieces — `freeze_manifest.py` (frozen),
+> `push_gate.py` (landed 2026-10-31 by seat rqwash2) and `frozen8.py` (the frozen-eight
+> registry check, landed in the v3 collection round before the rqsup4 round-5
+> inspection). **On 2026-10-31 seat
 > rqadapt landed the explicit CLI dispatch**: `cli/rocqwash certify
-> freeze|push_gate [args...]` routes by sub-verb with 1:1 passthrough (args and
+> freeze|push_gate|frozen8 [args...]` routes by sub-verb with 1:1 passthrough (args and
 > exit codes unrewritten; `--help` after a sub-verb reaches each piece's own
-> argparse); with no sub-verb it still exits 4 with a listing for manual
+> argparse; the `frozen8` sub-verb was added 2026-11-01 by seat rqsup4 round 5 —
+> the post-landing dispatch-gap fix); with no sub-verb it still exits 4 with a listing for manual
 > disambiguation (same contract shape as verify/); an unknown sub-verb exits 2.
 > The CLI-side unification is done — the `_`-prefix rename route still awaits the
 > freeze lift.

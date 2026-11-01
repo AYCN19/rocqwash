@@ -57,7 +57,7 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | compile | `.v` | `.vo`（魔数 `436f712100015ff4` 咬合） | 经 cpu_guard |
 | verify(R4) | `.v`+`.vo` 对（±rc/log 旁证） | 绿判四件套逐件账＋判定 | 已实现（`verify_vo.py`）；R4 全三源统一入口待办（见 §4 注②） |
 | seam | 单件 `.v` | W13 四机制指纹候选清单＋处方映射 | 已实现（`seam_probe.py`·候选非定谳） |
-| certify | 目录/多世界＋清单 | 两层冻结清单 freeze/check＋推窗四判据＋UNION v2 | 已实现（`freeze_manifest.py`＋`push_gate.py`·见注③） |
+| certify | 目录/多世界＋清单 | 两层冻结清单 freeze/check＋推窗四判据＋UNION v2＋八件冻结名单机检 | 已实现（`freeze_manifest.py`＋`push_gate.py`＋`frozen8.py`·见注③） |
 | watch | runs 证据/远端 | CI 在飞监控＋钉 IP 推送（干跑默认）＋ls-remote 确证 | 已实现（`watch.py`·零 dispatch 结构保证） |
 
 ## 4. 组件表（Components·以源码核对）
@@ -78,6 +78,7 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | `seam/` | `seam_probe.py` | 通用逐件 | **已实现**（2026-10-31） | W13 四机制代际缝指纹探针：①==语句×rewrite/ring/reflexivity→qeq_imp_qeqT 回向 ②apply(/rewrite( 全应用形→键配实例化 ③rewrite 本文件载前件引理（类型位 depth-0 `->`）→assert-化＋双岸桥 ④Require 跨行/语句面限定名不在 Require 集（前奏豁免册除外）→拓扑补列。分段/词面承 scan 冻结正典本地重实现；E364 盲区律（候选非定谳·0 命中非无缝判词）；`--selftest` 四正例＋掩蔽负例 |
 | `certify/` | `freeze_manifest.py` | 通用逐件 | **已实现**（2026-10-31） | 两层冻结清单：tier1 逐文件 md5（确定性遍历·`relpath  md5` 行账）＋tier2＝tier1 账文 md5（动清单即现形）；freeze 幂等（无时间戳·同盘面重产逐字节恒同）＋check 三分对账（changed/added/removed·零漂移 exit 0）；`.git/` 与清单自身不入账 |
 | `certify/` | `push_gate.py` | 通用逐件 | **已实现**（2026-10-31·席 rqwash2） | certify 深件（与冻结 v1 并存·只读 import 其 tier1_lines/tier2_of 承冻结口径）：`window` 推送窗四判据机检——c1 CI 在飞=0（`--runs-json` 预取证据 / `--ci-capped-min` reflog 推送时间线证据·本器零网络·无证据=NOT-RUN=关窗 fail-closed）＋c2 本地≥云端（fetch 后 behind=0）＋c3 fetch 干净（ls-remote 双读同 sha＋远端为 HEAD 祖先）＋c4 认证绿（套件 rc=0 必检＋`--freeze-manifest` 零漂移可选）；只判窗不开推，OPEN exit 0／CLOSED（含 NOT-RUN）exit 1。`union-freeze`/`union-check` UNION v2 多世界清单（schema rocqwash-union-manifest/2）：逐世界 tier1/tier2 承 v1＋第三层 union_tier2（逐世界 tier2 行账文 md5）＋`--tier2` 侧册；freeze 幂等逐字节恒同＋check 逐世界三分对账＋三层咬合；`--selftest` UNION 六判＋window 四判冻结向量（本地 path 远端·零网络） |
+| `certify/` | `frozen8.py` | 通用逐件 | **已实现**（20261101·v3 轮入库·rqsup4 五巡补分派） | 在役八组件冻结名单机检（schema rocqwash-frozen8-manifest/1·账源＝更新账 §三）：`--selftest` 账载四判自证＋`check --list <manifest> --tier2 <side>` 四环咬合（tier2 自洽／名单≡账载／盘≡账载／侧册·0 changed/0 removed）；套件 t_frozen8＋t_frozen8_check 双例覆盖。CLI 分派 `rocqwash certify frozen8`＝rqsup4 五巡补件（v3 轮落件后分派表缺件·合法通用入口被 unknown-sub-verb 拦截的契约漂移修正） |
 | `watch/` | `watch.py` | 通用逐件 | **已实现**（2026-10-31·席 rqwash2） | watch 首件：`ci` CI 在飞监控（`--runs-json` 离线证据 / `--repo owner/name --online` urllib 只读查询·`--interval/--timeout` 轮询；status≠completed 一律计在飞 fail-closed；NETWORK-UNREACHABLE 如实出账）＋`push` 钉 IP 推送包装器（默认 DRY-RUN 只出账零网络·`--yes` 才真推；远端 URL 主机→`--pin-ip` 改写保留 userinfo/port＋`http.<改写URL>.extraheader=Host:` 承战役口径；输出遮蔽＝`--mask` 串∪URL userinfo 密码部∪env ROCQWASH_MASK→`***MASKED***`·`--ssl-verify-off` 须显式且账面警告）＋`confirm` ls-remote N 读确证（N≥2 双读纪律下限·全等才 PUSH-CONFIRMED）。**结构性零 dispatch**：无 rerun/cancel/workflow_dispatch 任何代码路径——停手律由结构保证；本器零编译，一切编译仍必经冻结件 cpu_guard 包裹。`--selftest` 零网络向量组（ci 四判＋rewrite/mask 单元＋push 干跑＋env 遮蔽＋confirm 三判·本地 path 远端） |
 | `tools/` | `cpu_guard.sh` | 通用 | **已实现** | cpu_guard v3 温控包裹（见 §6） |
 | `tools/` | `select_audit.py` | 通用逐件 | **已实现**（20261101·席 rqsupport 五课②·rqsup4 实表核验） | 选件审计器（nw6＋enbig7 课工具化）：批选清单对树 order.txt **全表实读** grep 剔重（禁凭记忆）——DUP-BATCH 批内重复／DUP-CROSS 跨批撞名（同域双席撞名前兆）／NOT-IN-ORDER 树外名／DUP-ORDER 注册表同名多行；`--grep` 单名全表替身；名归一收 `#代签`/`.v`/裸名/`/` 路径形；--json 出账。实表判例（rqsup4 巡检 20261101）：scripts/order.txt 671 行 CLEAN／Live 表 199 行 DUP-ORDER×2 实录（UpReqBanachExpAdd·abl_normconv_real 各 R28+R29 两行·只录不判）。九判 selftest＋`tests/test_select_audit.py`（套件第 27 例） |
@@ -93,24 +94,28 @@ Derivation Chain 推导链（input → wash → verify → land → certify → 
 | `tests/` | `run_tests.sh` ＋ 13 测试件 ＋ `fixtures/` | 通用 | **已实现** | 自测套件总入口：`bash tests/run_tests.sh`（**31 例**正/负两判·全绿 exit 0／任一红 exit 1·幂等零仓库写入·`ROCQWASH_TESTS_FAIL_PROBE=1` 注入恒红例自检）；覆盖 scan selftest／names `--expect` 正·含-Let·负判／gate4 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 九判／seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／watch 零网络向量组／cpu_guard `-Direct` 冒烟＋退出码传播／scan_station 九判／gate7 适配层十三判／verify_born 九判／frozen8 四判＋check／quad8 八判＋check／frozen_call 五判／gate6·born 启动层／world_hook 五判／select_audit 五判／verify_gate6 五判／recipe_s07 五判／recipe_pw1 五判／precedent_station 七判（逐例判据见 [`tests/README.md`](../../tests/README.md)） |
 | `workflows/` | —（空） | — | pending | CI 工作流占位（`.github/workflows/ci.yml` 在库：macOS 套件闸） |
 
-> 注①：`verify/` 现有三件未带 `_` 前缀件——历史战役工装 `gate4_comment_guard.py`、
-> `retrofit_gate7_irr.py`＋通用件 `verify_vo.py`。2026-10-31 适配席 rqadapt 落地
-> **显式子动词分派收口**：`cli/rocqwash verify gate4|verify_vo|retrofit [args…]`
-> exec 1:1 透传（与 certify/ 同款契约形）；无子动词仍 exit 4 列清单人工指认，
-> 未知子动词 exit 2，`verify help` 出子帮助。**冻结件零改动（零改名路径收口）**；
-> 直接 `python3 verify/verify_vo.py --v ... --vo ...` 调用方式继续有效。
+> 注①：`verify/` 现有四件未带 `_` 前缀件——历史战役工装 `gate4_comment_guard.py`、
+> `retrofit_gate7_irr.py`＋通用件 `verify_vo.py`＋`verify_gate6.py`（20261101 席
+> rqsupport 五课③落）。2026-10-31 适配席 rqadapt 落地
+> **显式子动词分派收口**：`cli/rocqwash verify gate4|verify_vo|verify_gate6|retrofit [args…]`
+> exec 1:1 透传（与 certify/ 同款契约形；verify_gate6 子动词 20261101 席 rqsup4
+> 四巡补件——五课轮落件后分派表缺件的契约漂移修正）；无子动词仍 exit 4 列清单
+> 人工指认，未知子动词 exit 2，`verify help` 出子帮助。**冻结件零改动（零改名路径
+> 收口）**；直接 `python3 verify/verify_vo.py --v ... --vo ...` 调用方式继续有效。
 >
 > 注②：R4 全三源（bare 全提取 magic=0＋probe 双面 magic=0＋五式 grep=0）中的提取
 > 侧依赖 `_abl1_4b_compile.py` 的 ocamlc 链接器重活（硬编码 opam 路径），其通用化
 > 为超标项，**如实转待办**——`verify_vo.py` 现承接四件套机检段（编译产物侧），
 > 提取侧三源合取待后续席位。
 >
-> 注③：`certify/` 现有两通用件——`freeze_manifest.py`（冻结中）＋`push_gate.py`
-> （2026-10-31 席 rqwash2 落）。**2026-10-31 席 rqadapt 落 CLI 显式分派**：
-> `cli/rocqwash certify freeze|push_gate [args...]` 按子动词 1:1 透传（参数与退出码
-> 不改写·子动词 --help 直达各件 argparse）；无子动词仍 exit 4 列清单人工指认
-> （与 verify/ 同款契约形）；未知子动词 exit 2。原「收口待冻结解禁」的 CLI 侧
-> 已收，`_` 前缀改名路线仍待冻结解禁。
+> 注③：`certify/` 现有三通用件——`freeze_manifest.py`（冻结中）＋`push_gate.py`
+> （2026-10-31 席 rqwash2 落）＋`frozen8.py`（八件冻结名单机检·20261101 席 rqsup4
+> 五巡前 v3 轮落）。**2026-10-31 席 rqadapt 落 CLI 显式分派**：
+> `cli/rocqwash certify freeze|push_gate|frozen8 [args...]` 按子动词 1:1 透传（参数与
+> 退出码不改写·子动词 --help 直达各件 argparse；frozen8 子动词 20261101 席 rqsup4
+> 五巡补件——v3 轮落件后分派表缺件的契约漂移修正）；无子动词仍 exit 4 列清单
+> 人工指认（与 verify/ 同款契约形）；未知子动词 exit 2。原「收口待冻结解禁」的
+> CLI 侧已收，`_` 前缀改名路线仍待冻结解禁。
 >
 > 注④：`watch/watch.py` 的 `push` 子命令默认 DRY-RUN（零网络零执行只出账），
 > `--yes` 才真推；本席自身 push 纪律＝先 `push_gate.py window` 判窗（CLOSED 不推）
