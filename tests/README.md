@@ -60,7 +60,8 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 31 过 / 1 红 / 
   会再 APPLY 一次——其 `new` 以 `old` 为前缀，工具 SKIP 判据要求 `c_old==0`，
   该 tag 恒不满足（`test_wash_fixture.py` 幂等判按 old⊂new 集合动态断言）。
 - 退出码口径承 [CONTRIBUTING.md §4](../CONTRIBUTING.md)：`0`=通过、`2`=断言失败
-  （`--expect` 等）、`9`=缺件；套件层 `0`=全绿、`1`=任一红。
+  （`--expect` 等）、`9`=缺件；套件层 `0`=全绿（**含 SKIP**——SKIP 不计红）、
+  `1`=任一红；例级 `111`=SKIP（正本环境缺卷让席·正本机恒全量真扫）。
 
 ## 五课反馈轮补记（20261101·席 rqsupport·用例 26–29）
 
