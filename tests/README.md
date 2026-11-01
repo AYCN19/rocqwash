@@ -72,7 +72,7 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 31 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 26 | `t_world_hook` | `wash/world_hook.py`（世界基校验钩子·新件①） | `tests/test_world_hook.py` 五判：工具 selftest 十二判／**五课负例①nw5**：偏斜世界 WDIFF→rc 9·引擎零落盘（born 前断言拦下）／WMISS→9／pos 透传洗刀→产物落盘／冻结引擎 md5=`664446bc…` 零触旁证 |
-| 27 | `t_select_audit` | `tools/select_audit.py`（选件审计器·新件②） | `tests/test_select_audit.py` 五判：selftest 九判／**五课负例②nw6**：批内重复→rc 1·DUP-BATCH／**负例③enbig7**：双批同名→rc 1·DUP-CROSS／树外名→NOT-IN-ORDER／pos（含 #代签与 / 路径形）→AUDIT-CLEAN |
+| 27 | `t_select_audit` | `tools/select_audit.py`（选件审计器·新件②·v6 判据轮扩） | `tests/test_select_audit.py` 二十判：selftest 十一判／**五课负例②nw6**：批内重复→rc 1·DUP-BATCH／**负例③enbig7**：双批同名→rc 1·DUP-CROSS／树外名→NOT-IN-ORDER／pos（含 #代签与 / 路径形）→AUDIT-CLEAN／**v6 判据（nw10/abl6 空账·20261030）15 判**：parse_requires 全形式解析（From X Require Import/Export 多名多行·裸 Require·注释 Ghost 剥·动词/From 逐名在账）→STDLIB_ROOTS 白名单豁免（判例六件对空世界零缺口）→audit_requires 世界 .v/.vo 存在性闭包（缺口恰二·UpReqBanach 不误咬 UpReqBanachExp.v·计数面 8/3/5）→fail-loud 两向（MissingPath）→CLI 四码 0/1/2/9→**实盘补件面**：字符串散文 Require 剥（UpReqIndex.v:2821 判例形）＋裸形 Stdlib 白名单→缺口恰一 LW0QPoly |
 | 28 | `t_verify_gate6` | `verify/verify_gate6.py`（gate6 薄包装＋eum 判例器化·新件③） | `tests/test_verify_gate6.py` 五判：selftest 十判／**五课夹具④gate6 ch1**：eum before(ch1=1)→after(ch1=0·名 5=5)→GREEN／ch1 滞治→RED／薄调正判（正本真扫·夹具树 ch1≥1）／judge 单翼→2 |
 | 29 | `t_recipe_s07` | `recipes/S07_projection_reanchor_E5.md`＋E5 病面机检（新件④⑤） | `tests/test_recipe_s07.py` 五判：处方件判例锚词面齐／**五课夹具⑤**：E5 病面（语句面裸投影·跨行连排）→命中／注释掩蔽→零命中／愈面（real_eq/real_lt/real_le）→零命中／冻结引擎 md5 零触旁证 |
 

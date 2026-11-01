@@ -20,7 +20,7 @@ jobs:
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "ROCQWASH-CI-ALL-GREEN (14/14 fixtures, self-contained, no external toolchain)"
+            echo "ROCQWASH-CI-ALL-GREEN (self-contained suite; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
           else
             echo "::error::self-test suite red — see the failed step log above"
           fi

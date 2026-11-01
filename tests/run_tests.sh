@@ -28,7 +28,9 @@
 #         在册四仓名单对账 t_quad8_check·11 副本/六环咬合/audit 只录不判·零写盘）
 #       wrapper/frozen_call.py 逐调断言（--selftest 夹具五判·PASS 透传入账/拒执四向）
 #       wash/world_hook.py 世界基校验钩子（tests/test_world_hook.py·五判·五课负例①nw5）
-#       tools/select_audit.py 选件审计器（tests/test_select_audit.py·五判·五课负例②nw6＋③enbig7）
+#       tools/select_audit.py 选件审计器（tests/test_select_audit.py·二十判·五课负例②nw6＋③enbig7
+#         ＋v6 判据 nw10/abl6 空账：parse_requires 全形式/STDLIB_ROOTS 豁免/
+#         audit_requires 世界 .v/.vo 存在性闭包/实盘补件面＋CLI 四码）
 #       verify/verify_gate6.py gate6 薄包装＋eum 判例器化（tests/test_verify_gate6.py·五判·五课夹具④）
 #       recipes/S07 处方件＋E5 病面机检（tests/test_recipe_s07.py·五判·五课夹具⑤）
 #
@@ -36,14 +38,30 @@
 #   bash tests/run_tests.sh
 #   ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 套件自检：注入必红例，应 EXIT 1
 #
-# 退出码口径承 CONTRIBUTING §4：0=全绿；1=任一红。
+# 退出码口径承 CONTRIBUTING §4：0=全绿（SKIP 不计红）；1=任一红。
+# 例级 exit 2=SKIP：正本环境缺卷（CI runner 无本机正本）时，依赖正本的
+# 对账/包装例让席不充红不假绿；正本在卷（真本机）恒全量真扫。
 set -u
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 FIX="$REPO/tests/fixtures"
 PY=python3
 
-PASS=0; FAIL=0; TOTAL=0; REDS=""
+# ---------- 正本环境探针（CI 准入）----------
+# 四例（t_gate7_wrapper/t_quad8_check/t_gate6_born_wrapper/t_verify_gate6）的
+# 在跑判据依赖本机正本：Set 仓 gates 正本脚本＋CW rocq 工具链＋四仓副本群。
+# 正本缺卷 → 诸例 exit 2=SKIP；路径可用 ROCWASH_CANON_* 覆写（CI 演练用）。
+CANON_SET=${ROCWASH_CANON_SET:-/Users/apple/Desktop/ConstructiveWorld-Set}
+CANON_CW=${ROCWASH_CANON_CW:-/Users/apple/Desktop/ConstructiveWorld}
+CANON_W1=${ROCWASH_CANON_W1:-/Users/apple/Desktop/S系Prop清除战役工单}
+CANON=0
+if [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ] \
+   && [ -f "$CANON_SET/scripts/gates/gate7_extract_run.py" ] \
+   && [ -x "$CANON_CW/Live/toolchain/opam/live/bin/rocq" ]; then
+  CANON=1
+fi
+
+PASS=0; FAIL=0; SKIP=0; TOTAL=0; REDS=""; SKIPS=""
 LOG=$(mktemp /tmp/rocqwash_tests.XXXXXX)
 trap 'rm -f "$LOG"' EXIT INT TERM
 
@@ -169,6 +187,8 @@ t_scan_station() {
 }
 
 t_gate7_wrapper() {
+  # judge11/13 依赖 Set 仓 gate7 正本；缺卷让席（正判/GATE7_PROBE_SCRIPT 覆写在卷则照跑）
+  [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 正本不在卷（$CANON_SET/scripts/gates/gate7_extract_run.py）"; return 2; }
   "$PY" -B "$REPO/tests/test_gate7_wrapper.py"
 }
 
@@ -194,6 +214,8 @@ t_quad8() {
 
 t_quad8_check() {
   # 在册四仓对账名单随套件在跑对账（11 副本·audit 域只录不判·只读零写盘）
+  # 副本群横跨四仓正本；缺卷让席（夹具八判 t_quad8 无依赖恒跑）
+  [ -d "$CANON_CW" ] && [ -d "$CANON_SET" ] && [ -d "$CANON_W1" ] || { echo "SKIP: 四仓副本群不在卷（quad8 在跑对账仅真本机）"; return 2; }
   "$PY" -B "$REPO/wrapper/quad8_reconcile.py" check \
     --list "$REPO/wrapper/quad8_manifest.json" \
     --tier2 "$REPO/wrapper/quad8_tier2.md5"
@@ -206,6 +228,8 @@ t_frozen_call() {
 
 t_gate6_born_wrapper() {
   # wrapper 层 gate6 普查闸启动层＋born 世界基正形十六判（零编译零写盘）
+  # census 判据依赖 Set 仓 gate6 正本；born 判据依赖 CW rocq 工具链；缺卷让席
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 正本/rocq 工具链不在卷（$CANON_SET/scripts/gates/＋$CANON_CW/Live/toolchain）"; return 2; }
   "$PY" -B "$REPO/tests/test_gate6_born_wrapper.py"
 }
 
@@ -215,12 +239,15 @@ t_world_hook() {
 }
 
 t_select_audit() {
-  # 五课反馈轮·负例②nw6 批内重复＋③enbig7 跨批撞名（零仓库写盘零网络）
+  # 五课反馈轮·负例②nw6 批内重复＋③enbig7 跨批撞名＋v6 判据 nw10/abl6 空账
+  # Require 面（parse_requires/STDLIB_ROOTS/audit_requires·零仓库写盘零网络）
   "$PY" -B "$REPO/tests/test_select_audit.py"
 }
 
 t_verify_gate6() {
   # 五课反馈轮·夹具④gate6 ch1：eum 判例正判/滞治负例/正本真扫（正本只读·-B 禁 pycache）
+  # 「正本真扫」子判依赖 Set 仓 gate6 正本；缺卷让席（自检夹具两子判无依赖恒跑）
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 正本不在卷（$CANON_SET/scripts/gates/gate6_statement_census.py）"; return 2; }
   "$PY" -B "$REPO/tests/test_verify_gate6.py"
 }
 
@@ -256,15 +283,23 @@ for c in $CASES; do
     printf '[%d/%d] %-26s PASS\n' "$TOTAL" "$NCASES" "$c"
   else
     rc=$?
-    FAIL=$((FAIL + 1)); REDS="$REDS $c"
-    printf '[%d/%d] %-26s FAIL (rc=%s)\n' "$TOTAL" "$NCASES" "$c" "$rc"
-    echo "-------- $c 输出（前 40 行）--------"
-    sed -n '1,40p' "$LOG"
-    echo "------------------------------------"
+    if [ "$rc" -eq 2 ]; then
+      SKIP=$((SKIP + 1)); SKIPS="$SKIPS $c"
+      printf '[%d/%d] %-26s SKIP (正本环境缺·rc=2)\n' "$TOTAL" "$NCASES" "$c"
+    else
+      FAIL=$((FAIL + 1)); REDS="$REDS $c"
+      printf '[%d/%d] %-26s FAIL (rc=%s)\n' "$TOTAL" "$NCASES" "$c" "$rc"
+      echo "-------- $c 输出（前 40 行）--------"
+      sed -n '1,40p' "$LOG"
+      echo "------------------------------------"
+    fi
   fi
 done
 
-echo "== 汇总: $PASS 过 / $FAIL 红 / 共 $TOTAL 例 =="
+echo "== 汇总: $PASS 过 / $FAIL 红 / $SKIP 略 / 共 $TOTAL 例 =="
+if [ "$SKIP" -ne 0 ]; then
+  echo "略例（正本环境缺·真本机全跑）:$SKIPS"
+fi
 if [ "$FAIL" -ne 0 ]; then
   echo "红例:$REDS"
   exit 1
