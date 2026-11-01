@@ -38,8 +38,10 @@
 #       verify/verify_vo.py --require-fresh fresh-compile 防线（tests/test_verify_fresh.py·
 #         八节·本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例——魔数＋新鲜度双判 rc=9 fail-loud）
 #       verify/extract_magic_check.py gate7 提取面 Obj.magic 逐件机检闸（tests/test_extract_magic.py·
-#         十节·本轮实战判例工具化③：run97/98 gate7 三件涨账 28/4/1 坑账第十笔工具化——
-#         Separate Extraction 解析→rocq 提取→ocamlc→grep -c Obj.magic→--max 判红绿·假桩全链零真编译）
+#         十一节·本轮实战判例工具化③：run97/98 gate7 三件涨账 28/4/1 坑账第十笔工具化——
+#         Separate Extraction 解析→rocq 提取→ocamlc→grep -c Obj.magic→--max 判红绿·假桩全链零真编译；
+#         v15 增盲区补全节：首战 G09 Class/G13 Extraction 双红→DECL_SKIP_EXT 声明/命令
+#         vernacular 就地扩补·Class 声明夹具 census 不误判·未知 vernacular 仍红 9）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -294,10 +296,12 @@ t_verify_fresh() {
 
 t_extract_magic() {
   # 本轮实战判例工具化③：gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·
-  # run97/98 三件涨账 28/4/1 承工单给料）。tests/test_extract_magic.py 十节：
+  # run97/98 三件涨账 28/4/1 承工单给料）。tests/test_extract_magic.py 十一节：
   # Separate Extraction 解析（inline/driver 双形）→rocq 提取→ocamlc→grep -c
   # Obj.magic→--max 判红绿＋--json 台账·假 rocq/ocamlc 桩全链（零真编译零触真仓·
-  # 夹具含本仓自带 names_sample.v 只读）
+  # 夹具含本仓自带 names_sample.v 只读）；v15 增盲区补全节（首战 G09 Class/
+  # G13 Extraction 双红→声明/命令 vernacular 就地扩补·Class 夹具 census 不误判·
+  # 未知 vernacular 仍红 9）
   "$PY" -B "$REPO/tests/test_extract_magic.py"
 }
 

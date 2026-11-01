@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_extract_magic.py — verify/extract_magic_check.py 自测（tests/·本轮实战判例
-工具化③·gate7 涨账工具化轮·20261101）
+工具化③·gate7 涨账工具化轮·20261101；v15 增第十一节·首战判例盲区补全·20261102）
 
 gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·run97/98 三件涨账 28/4/1 承
-工单给料）十节判：
-  1 工具自证    --selftest 十一判全过（rc 0）
+工单给料）十一节判：
+  1 工具自证    --selftest 十二判全过（rc 0）
   2 E2E 红判    假 rocq/ocamlc 桩全链：魔数 2 > max 0 → rc 1·上下文逐行·VERDICT: FAIL
   3 E2E 绿判    --max 2 → rc 0·VERDICT: PASS·--json 台账咬合（verdict/magic_ml/
                 mode/targets/md5_v）
@@ -19,11 +19,15 @@ gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·run97/98 �
   9 CLI 四码    --help 0／未知形参 2／缺 --world 2／缺件 9×2（--v 缺／world .vo
                 未编译缺）
   10 计数口径   grep -c 语义（行计数·一行多魔数计一）模块级咬合
+  11 盲区补全   v15 首战判例（gate7 四件 2 PASS/2 Class 盲区 fail-loud）：
+                Class 声明夹具 census 不再误判异常（声明/命令不入目标·唯真主
+                定义入账）／DECL_SKIP_EXT 十五 token 在册／G13 `Extraction` 命令
+                形同治／未知 vernacular 仍 fail-loud rc=9（盲区收窄≠静默扩容）
 
 零触律：全部夹具在临时目录自造（假桩脚本＋迷你世界）＋本仓自带 fixtures 只读；
 零真编译（真链 E2E 归席位沙箱不入套件·承 precedent_station 判例口径）·零网络·
 零触外部仓。幂等：python3 -B 禁 __pycache__·临时目录即写即清。
-退出码：0=十节全过；1=任一红。
+退出码：0=十一节全过；1=任一红。
 """
 import importlib.util
 import io
@@ -217,6 +221,57 @@ def main():
         n, hits = emc.grep_count_magic(mlf)
         check("grep_c口径", (n, hits) == (2, [1, 3]), "%s %s" % (n, hits))
 
+        # 11 v15 盲区补全（首战判例·gate7 四件 2 PASS/2 Class 盲区 fail-loud）：
+        #    Class 声明夹具 census 不再误判异常——声明/命令 vernacular 不入目标·
+        #    唯真主定义入账；DECL_SKIP_EXT 在册；未知 vernacular 仍 fail-loud rc=9
+        cls_fixture = (
+            "Declare Scope req_scope.\n"
+            "Class reqord (R : Set) : Set := mk {\n"
+            "  rord_le_dec : forall a b : R, Or (le a b) (Not (le a b));\n"
+            "  rlt_dec : forall a b : R, Or (lt a b) (Not (lt a b))\n"
+            "}.\n"
+            "Record rstore : Set := mkstore { rs_carrier : Set }.\n"
+            "Scheme reqord_ind := Induction for reqord Sort Prop.\n"
+            "Canonical req_can : reqord := reqord_rect.\n"
+            "Section s1.\n"
+            "Context {R : Set} {DO : reqord R}.\n"
+            "Variable tok : R.\n"
+            "Definition cls_pick (x y : R) : R := x.\n"
+            "Instance req_inst : reqord nat.\n"
+            "Extraction cls_pick.\n"
+            "About cls_pick.\n"
+            "Close Scope req_scope.\n"
+            "End s1.\n")
+        stage4, world4, v_cls, _, frocq4, foc4 = make_stage(tmp, "s4", cls_fixture)
+        acc7 = os.path.join(tmp, "acc_cls.json")
+        rc, out = run(["--v", v_cls, "--world", world4, "--max", "2", "--json", acc7,
+                       "--rocq", frocq4, "--ocamlc", foc4],
+                      env={"EMC_FAKE_ML": canned})
+        c_j = json.load(io.open(acc7, encoding="utf-8"))
+        check("class夹具_e2e绿", rc == 0 and "VERDICT: PASS" in out
+              and "语句清单异常" not in out and c_j["verdict"] == "PASS",
+              "rc=%d %s" % (rc, out[-200:]))
+        check("class夹具_账咬合", c_j["mode"] == "driver"
+              and c_j["targets"] == ["cls_pick", "req_inst"]
+              and c_j["statements"] == ["cls_pick", "req_inst"]
+              and "reqord" not in c_j["targets"] and "rstore" not in c_j["targets"],
+              repr(c_j["targets"]))
+        check("盲区在册_十五token", len(emc.DECL_SKIP_EXT) == 15
+              and all(t in emc.mac_stmt_names.SKIP_KINDS for t in emc.DECL_SKIP_EXT),
+              sorted(emc.DECL_SKIP_EXT))
+        # G13 形（首战第二红 token）：裸 Extraction 命令 census 不再异常
+        g13 = wf(tmp, "g13.v", "Definition g_a := 1.\nExtraction g_a.\n")
+        m5, t5, _ = emc.collect_targets(g13)
+        check("G13形_Extraction命令", m5 == "driver" and t5 == ["g_a"],
+              "%s %s" % (m5, t5))
+        # 盲区收窄≠静默扩容：未知 vernacular 仍 fail-loud rc=9
+        unk = wf(tmp, "unk.v", "Frobnicate widget.\nDefinition unk_ok := 1.\n")
+        try:
+            emc.collect_targets(unk)
+            check("未知仍红9", False, "未触发 SystemExit")
+        except SystemExit as e:
+            check("未知仍红9", e.code == 9, "code=%r" % (e.code,))
+
         fails = [c for c in checks if not c[1]]
         for name, ok, detail in checks:
             print("  %-20s %s %s" % (name, "PASS" if ok else "FAIL",
@@ -225,8 +280,9 @@ def main():
             print("TEST-EXTRACT-MAGIC FAIL: %d/%d 红" % (len(fails), len(checks)))
             return 1
         print("TEST-EXTRACT-MAGIC PASS: selftest/E2E红绿+账咬合/inline形/driver形样例件"
-              "7名+稿词面/提取红/ml未产出/ocamlc红+缺卷让席/CLI四码/grep-c口径 "
-              "十节全过（gate7 涨账工具化轮·坑账第十笔工具化）")
+              "7名+稿词面/提取红/ml未产出/ocamlc红+缺卷让席/CLI四码/grep-c口径/"
+              "盲区补全class夹具 "
+              "十一节全过（gate7 涨账工具化轮·坑账第十笔工具化·v15 首战判例盲区补全）")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

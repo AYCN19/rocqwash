@@ -12,7 +12,11 @@ gate7 提取执行闸才现形 Obj.magic 涨账（28/4/1 三件），涨点发�
     strip_comments_strings 状态机掩蔽·注释诱饵不入账）；无 Separate Extraction
     命令则按 census 口径（names/mac_stmt_names.extract_statements·不含 Let·
     与 tools/_gen_fin_mac.py 同核）收文件全部主定义，生成临时提取稿（driver）
-    入临时目录；
+    入临时目录——census 语句 token 集承冻结件 TARGET/SKIP_KINDS，本件 v15 起
+    import 面就地扩补声明/命令 vernacular（DECL_SKIP_EXT·Class/Schema/Scheme/
+    Structure/Canonical/Coercion/Derive/Existing/Primitive/Register/Extraction/
+    Recursive/Separate/About/Close——首战 G09 Class/G13 Extraction 双红盲区
+    工具化·冻结件字节零触碰·未知 vernacular 仍 fail-loud rc=9）；
   ② rocq 提取（`rocq c -native-compiler no -q -Q <world> "" <稿>.v`·cwd=工作目录
     ·世界 .vo 只读供 Require·零写世界）→ ocamlc 编提取产物（逐模 .mli 先 .ml 后
     ·跨模依赖重试轮·承 gate7 4b 面）；
@@ -60,6 +64,31 @@ sys.dont_write_bytecode = True  # import 零 __pycache__（禁向仓写·承 gat
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(_HERE), "names"))
 import mac_stmt_names  # noqa: E402  （冻结件只读 import·提取核同源复用）
+
+# ------------------------------------------------------------------ ⓪ 盲区补全面（v15·首战判例工具化）
+# 首战判例（更新账 v15 §二·本席实机复勘）：gate7 提取闸四件 2 PASS／2 fail-loud——
+# G09_MiscSmall `Class` 声明、G13_EvictFam `Extraction` 命令双双撞 mac_stmt_names
+# 未知 vernacular→「语句清单异常」rc=9（提取闸根本没走到魔数面）。
+# 语句 token 集常量定位＝names/mac_stmt_names.py:38–51 TARGET_KINDS/SKIP_KINDS——
+# 该件系 frozen8 tier1 冻结件（md5 在册·frozen8.py:76/test_precedent_station.py:35/
+# quad8 四仓副本群三重钉）源文件禁改，故本件 import 面就地扩补（进程内·冻结件
+# 字节零触碰）：
+#   声明面＝不产提取物的合法声明 vernacular（工单点名 Class/Record/Context/Schema/
+#   Declare/Instance——其中 Record/Context/Declare 冻结件已在 SKIP_KINDS·Instance
+#   已在 TARGET_KINDS·实缺者 Class/Schema/Scheme 等如下补齐）；
+#   命令面＝首战第二红 G13 `Extraction` 同盲区类（About/Close/Recursive/Separate
+#   同族·本席 live 世界实勘 262/9/102/102 处在卷）——census 流程中皆不产提取物
+#   （目标集只出自 TARGET_KINDS·frozen 零触碰）。
+# 提取消毒面不受影响：既有绿件语句清单逐名不变；未知 vernacular 仍 fail-loud
+# （盲区收窄≠静默扩容）。
+DECL_SKIP_EXT = frozenset({
+    # 声明面（合法声明·不产提取物）
+    "Class", "Schema", "Scheme", "Structure", "Canonical", "Coercion",
+    "Derive", "Existing", "Primitive", "Register",
+    # 命令面（首战 G13 `Extraction` 同盲区·live 世界实勘在卷）
+    "Extraction", "Recursive", "Separate", "About", "Close",
+})
+mac_stmt_names.SKIP_KINDS.update(DECL_SKIP_EXT)
 
 PROG = "extract_magic_check"
 ROQC_DEFAULT = "/Users/apple/Desktop/ConstructiveWorld/Live/toolchain/opam/live/bin/rocq"
@@ -345,7 +374,8 @@ def check(v_path, world, max_magic=0, rocq=ROQC_DEFAULT, ocamlc=OCAMLC_DEFAULT,
 def selftest():
     """内嵌冻结向量组（临时目录驱动·假 rocq/ocamlc 桩全链·零真编译零触真仓）：
     解析正/注释诱饵负／计数 grep-c 口径／上下文形／fallback 主定义收集／driver 稿
-    词面／E2E 红绿双判（假桩）／提取红 fail-loud／ocamlc 双判／CLI 四码。"""
+    词面／E2E 红绿双判（假桩）／提取红 fail-loud／ocamlc 双判／CLI 四码／Class
+    盲区补全（首战判例形 census 不误判·未知 vernacular 仍红 9）。"""
     import shutil
     tmp = tempfile.mkdtemp(prefix="rocqwash_emc_self_")
     try:
@@ -454,8 +484,34 @@ def selftest():
         os.makedirs(w2)
         assert run_args(["--v", v3, "--world", w2, "--rocq", frocq]) == 9, \
             "world 未编译 .vo 缺失应 rc=9"
+        # 12 v15 盲区补全（首战判例形）：Class 声明＋命令面 vernacular census 不再
+        #    误判异常——声明/命令不入目标·唯真主定义入账；未知 vernacular 仍红 9
+        v4 = os.path.join(tmp, "cls.v")
+        with io.open(v4, "w", encoding="utf-8") as fh:
+            fh.write("Declare Scope req_scope.\n"
+                     "Class reqord (R : Set) : Set := mk {\n"
+                     "  rord_le_dec : forall a b : R, Or (le a b) (Not (le a b));\n"
+                     "  rlt_dec : forall a b : R, Or (lt a b) (Not (lt a b))\n"
+                     "}.\n"
+                     "Record rstore : Set := mkstore { rs_carrier : Set }.\n"
+                     "Scheme reqord_ind := Induction for reqord Sort Prop.\n"
+                     "Definition cls_use (x y : reqord nat) := x.\n"
+                     "Extraction cls_use.\n"
+                     "About cls_use.\n")
+        mode4, targets4, extra4 = collect_targets(v4)
+        assert mode4 == "driver" and targets4 == ["cls_use"], (mode4, targets4)
+        assert extra4["statements"] == ["cls_use"], extra4["statements"]
+        v5 = os.path.join(tmp, "unk.v")
+        with io.open(v5, "w", encoding="utf-8") as fh:
+            fh.write("Frobnicate widget.\nDefinition unk_ok := 1.\n")
+        try:
+            collect_targets(v5)
+            raise AssertionError("未知 vernacular 应 fail-loud rc=9")
+        except SystemExit as e:
+            assert e.code == 9, "未知 vernacular 应 rc=9 实测 %r" % (e.code,)
         print("EXTRACT-MAGIC-SELFTEST PASS: 解析正负/注释诱饵/计数grep-c口径/上下文形/"
-              "fallback收集/driver稿词面/E2E红绿/提取红/ocamlc双判/CLI四码 十一判全过")
+              "fallback收集/driver稿词面/E2E红绿/提取红/ocamlc双判/CLI四码/"
+              "Class盲区补全 十二判全过")
         return 0
     finally:
         os.environ.pop("EMC_FAKE_ML", None)
