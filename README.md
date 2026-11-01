@@ -47,18 +47,22 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 — two-tier freeze + push-window gate + UNION v2
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（18 例）/ CI 工作流占位 — test suite (18 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（31 例）/ CI 工作流占位 — test suite (31 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
-> 状态快照 2026-10-31：`scan/`、`names/`、`tools/cpu_guard.sh`、`cli/`、`examples/`、
-> `docs/`、`tests/`（18 例自测套件）已实现并实测；`wash/`（`wash_engine.py` 台账洗
-> 引擎＋`_abl1_wash.py` 战役件）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装）、
-> `seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
+> 状态快照 2026-11-01（巡检打磨席 rqsup4）：`scan/`、`names/`、`tools/cpu_guard.sh`、
+> `cli/`、`examples/`、`docs/`、`tests/`（31 例自测套件）已实现并实测；`wash/`
+> （`wash_engine.py` 台账洗引擎＋`_abl1_wash.py` 战役件＋`world_hook.py` 世界基校验钩子·
+> 五课①）、`verify/`（`verify_vo.py` 绿判四件套＋战役工装＋`verify_gate6.py` gate6 薄包装·
+> 五课③）、`seam/`（`seam_probe.py` W13 四机制指纹探针）、`certify/`（`freeze_manifest.py`
 > 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·席 rqwash2）、`watch/`
-> （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）、`wrapper/`
+> （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 dispatch 结构保证）、`tools/`
+> （`select_audit.py` 选件审计器·五课②）、`recipes/`（`S07_projection_reanchor_E5.md`
+> 五课④＋`ENBIG7_same_domain_collision_PW1.md` 五课③·判例处方件双件）、`wrapper/`
 > （适配层族：gate7 探针链 `coqc_shim.sh`＋`gate7_probe.sh`·cpu_guard 直通
-> `guard.sh`·scan 指认包装 `scan_station.py`·席 rqadapt）已落地；
+> `guard.sh`·scan 指认包装 `scan_station.py`·席 rqadapt·三判例验收站
+> `precedent_station.py`·五课⑤ rqsup4）已落地；
 > `verify/` 统一入口已收口（显式子动词分派 `cli/rocqwash verify gate4|verify_vo|retrofit`·
 > 2026-10-31·冻结件零改动）；R4 提取侧三源为待办。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /

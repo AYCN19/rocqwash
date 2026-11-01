@@ -76,7 +76,9 @@ t_gate6_born_wrapper \
 t_world_hook \
 t_select_audit \
 t_verify_gate6 \
-t_recipe_s07"
+t_recipe_s07 \
+t_recipe_pw1 \
+t_precedent_station"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -225,6 +227,18 @@ t_verify_gate6() {
 t_recipe_s07() {
   # 五课反馈轮·夹具⑤S07 投影重锚 E5：处方件锚词面＋病面/掩蔽/愈面机检（冻结引擎只读 import）
   "$PY" -B "$REPO/tests/test_recipe_s07.py"
+}
+
+t_recipe_pw1() {
+  # 五课打磨轮·课件③dver2-enbig7 同域撞：PW1 处方件锚词面＋前兆 DUP-CROSS/
+  # 入侵置换 WDIFF 拦截（零落盘）＋私占重建 WORLD-BASE-OK（零编译零写盘）
+  "$PY" -B "$REPO/tests/test_recipe_enbig7_pw1.py"
+}
+
+t_precedent_station() {
+  # 五课打磨轮·课件⑤三判例剧本 toolify：三判例验收站十判自检＋轻链正负判
+  # （names 对表/gate4/REVIEW 升格/gate7 形制/刀面记名·零编译零写盘·gate7 实跑不入套件）
+  "$PY" -B "$REPO/tests/test_precedent_station.py"
 }
 
 t_fail_probe() {
