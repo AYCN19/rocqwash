@@ -63,6 +63,18 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 33 过 / 1 红 / 
   （`--expect` 等）、`9`=缺件；套件层 `0`=全绿（**含 SKIP**——SKIP 不计红）、
   `1`=任一红；例级 `111`=SKIP（正本环境缺卷让席·正本机恒全量真扫）。
 
+> **gate4 预扫三铁则（口径段旁注·20261101 v10 轮入册）**——gate4
+> （`verify/gate4_comment_guard.py`）对 Set 仓树预扫描必守三则：
+> ① **预扫必须自 Set 仓根用绝对路径跑**（cwd 错位伪绿判例）：相对 `--tree` 在错位
+> cwd 下解析到别棵在盘树即扫错面出伪绿——工具侧仅对「树不存在」设防（FATAL rc=2，
+> `gate4_comment_guard.py:747-750`），对「存在但非目标树」不设防；
+> ② **头注 ≤30 行硬上限（CI 全树口径）**：`--length-cap` 默认 30
+> （`gate4_comment_guard.py:732`、`check_file` 形参 `:379`、超标检 `:527-534`）；
+> ③ **五字段带点形** `Mission.`／`Dependencies.`／`References.`／`Constructivity.`／
+> `Build.`（`FIELD_SPECS` 五字段英文带点正则：`gate4_comment_guard.py:188-194`）。
+> 〔给料属性：判例面①与「CI 全树口径」承 v10 轮工单；②③上限值与五字段词形为
+> 工具侧在卷锚点。详见 `更新账.md` v10 节。〕
+
 ## 五课反馈轮补记（20261101·席 rqsupport·用例 26–29）
 
 > 编号承接套件现势（run_tests.sh 已在册 25 例——其中 22–25（`t_quad8`/`t_quad8_check`/
