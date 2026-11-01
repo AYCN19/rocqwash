@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 31 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 33 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（31 例）
+## 覆盖面（33 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -83,3 +83,10 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 31 过 / 1 红 / 
 |---|------|------|------|
 | 30 | `t_recipe_pw1` | `recipes/ENBIG7_same_domain_collision_PW1.md`＋PW1 链机检（五课件③） | `tests/test_recipe_enbig7_pw1.py` 五判：处方件判例锚词面齐（PW1/仲裁 36c35816/五步词）／**前兆负例**：双批同名→`select_audit` DUP-CROSS rc 1／**入侵置换负例**：fixture 世界错代→`world_hook` WDIFF rc 9·引擎零落盘／**愈面正判**：认证代世界→WORLD-BASE-OK·透传引擎落盘／冻结引擎 md5 零触旁证 |
 | 31 | `t_precedent_station` | `wrapper/precedent_station.py`（三判例验收站·五课件⑤） | `tests/test_precedent_station.py` 七判：`--station-selftest` 十判／轻链正判烟（fixture 语句面全等·证明体异→exit 0·站账 verdict PASS·knife 记名）／负判（语句面多一句→①rc 2→exit 1·不短路仍出②账）／REVIEW 升格（`--gate4-length-cap 5`→exit 2）／gate7 形制（缺 module→2·缺 .v→9·零开步）／未知刀面拒→2／names·gate4 冻结 md5 零触旁证（gate7 实跑为真编译重步·E2E 归席位沙箱不入套件） |
+
+## 实战判例工具化轮补记（20261101·用例 32–33）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 32 | `t_netname_normalize` | `tools/netname_normalize.py`（.v.v 双后缀名净名归一器·本轮工具化①） | `tests/test_netname_normalize.py` 九节：selftest 八判／干跑默认（MAP 映射表 `<净名>.v.v→<净名>.v` 逐条·零字节落盘）→rc 1 PENDING／`--apply` 归一落盘→rc 0·源亡标在／md5 前后验讫在账（RENAME 行 md5=＋VERIFY-OK·改名不改字节逐字节断言）／COLLIDE 拒覆写（X.v 与 X.v.v 并存→rc 1·对侧件内容保全）／净世界→rc 0 CLEAN／CLI 四码（help 0·未知形参 2·缺 --dir 2·--dir 缺失 9）／`--map` TSV＋`--json` 出账咬合／`.v.v.v` 形一层一归一（临时目录夹具·零触真仓） |
+| 33 | `t_verify_fresh` | `verify/verify_vo.py --require-fresh`（fresh-compile 防线·本轮工具化②） | `tests/test_verify_fresh.py` 八节：verify_vo selftest 十三判（原九判＋防线四判）／正判（9.1 魔数＋vo 新鲜）→rc 0 FRESH-OK／陈 vo 负例（v 拨未来）→rc 9 fail-loud／坏魔数（头 8 字节非 `436f712100015ff4`）→rc 9（新鲜也拦·非本链产物）／缺 v·缺 vo→9／单参与混用→2／help 0·未知形参 2／魔数冻结口径对 `verify_vo.py` VO_MAGIC_HEX 模块级咬合（divmod_gen 陈旧 vo 假绿判例工具化·临时目录夹具零编译零触真仓） |

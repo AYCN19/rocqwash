@@ -78,7 +78,7 @@ LEDGER8 = (
     ("seam/seam_probe.py", "7a01359a22b8960b352191f1a4490b37"),
     ("tools/cpu_guard.sh", "9c5392d6746260f7852fea6f8992fd52"),
     ("verify/gate4_comment_guard.py", "d7ab397c5f0243d0c7320f91d0f14481"),
-    ("verify/verify_vo.py", "81524ed04c2fc7e82a4547972baa7b83"),
+    ("verify/verify_vo.py", "9d061d679dcceb0dcbbeb24e165eac7f"),
     ("wash/wash_engine.py", "664446bc717395d8496c8c30a5af9ccf"),
 )
 LEDGER_MAP = dict(LEDGER8)  # rel -> md5

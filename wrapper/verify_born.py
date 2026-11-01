@@ -59,10 +59,11 @@ import tempfile
 WRAP_NAME = "wrapper/verify_born.py"
 CANONICAL_REL = "verify/verify_vo.py"
 
-# 嵌记（pin）＝20261031 适配席 rqadapt 对正本实测 md5（与更新账 20261031 轮嵌记
-# 81524ed0… 全等复核）——正本若经冻终权威改版，须由适配席对实盘重嵌记。
-PINNED_MD5 = "81524ed04c2fc7e82a4547972baa7b83"
-PINNED_NOTE = "20261031 rqadapt 适配时嵌记"
+# 嵌记（pin）＝对正本实测 md5。初嵌 20261031 rqadapt（81524ed0…）；20261101
+# 工单令正本增补 --require-fresh fresh-compile 防线（divmod_gen 陈 vo 假绿判例
+# 工具化）——冻终权威改版，承上行律对实盘重嵌记（更新账 v9 节解禁重冻在卷）。
+PINNED_MD5 = "9d061d679dcceb0dcbbeb24e165eac7f"
+PINNED_NOTE = "20261101 toolify 轮重嵌记（初嵌 20261031 rqadapt）"
 
 # 正本 --exit-file 读法（承 verify_vo.py:69-70）：全文 strip → 首行 strip。
 # 本件 rc 形核用同一算法，保证裸形原件直喂时正本读数与本件读数恒同。

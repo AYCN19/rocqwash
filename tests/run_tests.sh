@@ -33,6 +33,10 @@
 #         audit_requires 世界 .v/.vo 存在性闭包/实盘补件面＋CLI 四码）
 #       verify/verify_gate6.py gate6 薄包装＋eum 判例器化（tests/test_verify_gate6.py·五判·五课夹具④）
 #       recipes/S07 处方件＋E5 病面机检（tests/test_recipe_s07.py·五判·五课夹具⑤）
+#       tools/netname_normalize.py .v.v 双后缀名净名归一器（tests/test_netname_normalize.py·
+#         九节·本轮实战判例工具化①：干跑默认零落盘/--apply md5 前后验讫/COLLIDE 拒覆写/CLI 四码）
+#       verify/verify_vo.py --require-fresh fresh-compile 防线（tests/test_verify_fresh.py·
+#         八节·本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例——魔数＋新鲜度双判 rc=9 fail-loud）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -96,7 +100,9 @@ t_select_audit \
 t_verify_gate6 \
 t_recipe_s07 \
 t_recipe_pw1 \
-t_precedent_station"
+t_precedent_station \
+t_netname_normalize \
+t_verify_fresh"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -266,6 +272,20 @@ t_precedent_station() {
   # 五课打磨轮·课件⑤三判例剧本 toolify：三判例验收站十判自检＋轻链正负判
   # （names 对表/gate4/REVIEW 升格/gate7 形制/刀面记名·零编译零写盘·gate7 实跑不入套件）
   "$PY" -B "$REPO/tests/test_precedent_station.py"
+}
+
+t_netname_normalize() {
+  # 本轮实战判例工具化①：.v.v 双后缀名净名归一器（tests/test_netname_normalize.py·
+  # 九节：干跑默认零落盘/--apply md5 前后验讫（改名不改字节）/COLLIDE 拒覆写/
+  # CLI 四码 help0·未知形参2·缺dir2·9——零触真仓）
+  "$PY" -B "$REPO/tests/test_netname_normalize.py"
+}
+
+t_verify_fresh() {
+  # 本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例 fresh-compile 防线
+  # （tests/test_verify_fresh.py·八节：--require-fresh 9.1 魔数＋新鲜度双判·
+  # 任一不过 rc=9 fail-loud——零触真仓零编译）
+  "$PY" -B "$REPO/tests/test_verify_fresh.py"
 }
 
 t_fail_probe() {
