@@ -39,7 +39,7 @@
 #   ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 套件自检：注入必红例，应 EXIT 1
 #
 # 退出码口径承 CONTRIBUTING §4：0=全绿（SKIP 不计红）；1=任一红。
-# 例级 exit 2=SKIP：正本环境缺卷（CI runner 无本机正本）时，依赖正本的
+# 例级 exit 111=SKIP：正本环境缺卷（CI runner 无本机正本）时，依赖正本的
 # 对账/包装例让席不充红不假绿；正本在卷（真本机）恒全量真扫。
 set -u
 
@@ -188,7 +188,7 @@ t_scan_station() {
 
 t_gate7_wrapper() {
   # judge11/13 依赖 Set 仓 gate7 正本；缺卷让席（正判/GATE7_PROBE_SCRIPT 覆写在卷则照跑）
-  [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 正本不在卷（$CANON_SET/scripts/gates/gate7_extract_run.py）"; return 2; }
+  [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 正本不在卷（$CANON_SET/scripts/gates/gate7_extract_run.py）"; return 111; }
   "$PY" -B "$REPO/tests/test_gate7_wrapper.py"
 }
 
@@ -215,7 +215,7 @@ t_quad8() {
 t_quad8_check() {
   # 在册四仓对账名单随套件在跑对账（11 副本·audit 域只录不判·只读零写盘）
   # 副本群横跨四仓正本；缺卷让席（夹具八判 t_quad8 无依赖恒跑）
-  [ -d "$CANON_CW" ] && [ -d "$CANON_SET" ] && [ -d "$CANON_W1" ] || { echo "SKIP: 四仓副本群不在卷（quad8 在跑对账仅真本机）"; return 2; }
+  [ -d "$CANON_CW" ] && [ -d "$CANON_SET" ] && [ -d "$CANON_W1" ] || { echo "SKIP: 四仓副本群不在卷（quad8 在跑对账仅真本机）"; return 111; }
   "$PY" -B "$REPO/wrapper/quad8_reconcile.py" check \
     --list "$REPO/wrapper/quad8_manifest.json" \
     --tier2 "$REPO/wrapper/quad8_tier2.md5"
@@ -229,7 +229,7 @@ t_frozen_call() {
 t_gate6_born_wrapper() {
   # wrapper 层 gate6 普查闸启动层＋born 世界基正形十六判（零编译零写盘）
   # census 判据依赖 Set 仓 gate6 正本；born 判据依赖 CW rocq 工具链；缺卷让席
-  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 正本/rocq 工具链不在卷（$CANON_SET/scripts/gates/＋$CANON_CW/Live/toolchain）"; return 2; }
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 正本/rocq 工具链不在卷（$CANON_SET/scripts/gates/＋$CANON_CW/Live/toolchain）"; return 111; }
   "$PY" -B "$REPO/tests/test_gate6_born_wrapper.py"
 }
 
@@ -247,7 +247,7 @@ t_select_audit() {
 t_verify_gate6() {
   # 五课反馈轮·夹具④gate6 ch1：eum 判例正判/滞治负例/正本真扫（正本只读·-B 禁 pycache）
   # 「正本真扫」子判依赖 Set 仓 gate6 正本；缺卷让席（自检夹具两子判无依赖恒跑）
-  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 正本不在卷（$CANON_SET/scripts/gates/gate6_statement_census.py）"; return 2; }
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 正本不在卷（$CANON_SET/scripts/gates/gate6_statement_census.py）"; return 111; }
   "$PY" -B "$REPO/tests/test_verify_gate6.py"
 }
 
@@ -283,9 +283,9 @@ for c in $CASES; do
     printf '[%d/%d] %-26s PASS\n' "$TOTAL" "$NCASES" "$c"
   else
     rc=$?
-    if [ "$rc" -eq 2 ]; then
+    if [ "$rc" -eq 111 ]; then
       SKIP=$((SKIP + 1)); SKIPS="$SKIPS $c"
-      printf '[%d/%d] %-26s SKIP (正本环境缺·rc=2)\n' "$TOTAL" "$NCASES" "$c"
+      printf '[%d/%d] %-26s SKIP (正本环境缺·rc=111)\n' "$TOTAL" "$NCASES" "$c"
     else
       FAIL=$((FAIL + 1)); REDS="$REDS $c"
       printf '[%d/%d] %-26s FAIL (rc=%s)\n' "$TOTAL" "$NCASES" "$c" "$rc"
