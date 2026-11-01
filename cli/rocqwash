@@ -31,7 +31,8 @@ rocqwash — Coq/Rocq Constructive Proof Unblocking Engine（统一 CLI 入口 /
            (--file/--json/--manifest/--hits-csv/--baseline/--selftest)
   names    顶层语句名有序清单 + N=N 有序全等断言 -> names/mac_stmt_names.py
            (<file>/--compare/--expect/--kinds/--include-let/--json/--names-out)
-  wash     规范洗引擎（canonical wash engine）        -> wash/wash_engine.py
+  wash     规范洗引擎＋世界基钩子（双通用入口·exit 4 请直接指认）
+           -> wash/wash_engine.py | wash/world_hook.py
   verify   绿判四件套（green-verdict four-pack）      -> verify/  显式分派 (verify gate4|verify_vo|retrofit ...)
   seam     代际缝探针（W13 four-mechanism）           -> seam/seam_probe.py
   certify  两层冻结＋推窗四判据＋UNION v2             -> certify/ 显式分派 (certify freeze|push_gate ...)
