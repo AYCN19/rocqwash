@@ -8,7 +8,7 @@ on:
 jobs:
   selftest:
     name: Self-test suite (macOS)
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v5
