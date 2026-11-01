@@ -37,6 +37,9 @@
 #         九节·本轮实战判例工具化①：干跑默认零落盘/--apply md5 前后验讫/COLLIDE 拒覆写/CLI 四码）
 #       verify/verify_vo.py --require-fresh fresh-compile 防线（tests/test_verify_fresh.py·
 #         八节·本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例——魔数＋新鲜度双判 rc=9 fail-loud）
+#       verify/extract_magic_check.py gate7 提取面 Obj.magic 逐件机检闸（tests/test_extract_magic.py·
+#         十节·本轮实战判例工具化③：run97/98 gate7 三件涨账 28/4/1 坑账第十笔工具化——
+#         Separate Extraction 解析→rocq 提取→ocamlc→grep -c Obj.magic→--max 判红绿·假桩全链零真编译）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -102,7 +105,8 @@ t_recipe_s07 \
 t_recipe_pw1 \
 t_precedent_station \
 t_netname_normalize \
-t_verify_fresh"
+t_verify_fresh \
+t_extract_magic"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -286,6 +290,15 @@ t_verify_fresh() {
   # （tests/test_verify_fresh.py·八节：--require-fresh 9.1 魔数＋新鲜度双判·
   # 任一不过 rc=9 fail-loud——零触真仓零编译）
   "$PY" -B "$REPO/tests/test_verify_fresh.py"
+}
+
+t_extract_magic() {
+  # 本轮实战判例工具化③：gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·
+  # run97/98 三件涨账 28/4/1 承工单给料）。tests/test_extract_magic.py 十节：
+  # Separate Extraction 解析（inline/driver 双形）→rocq 提取→ocamlc→grep -c
+  # Obj.magic→--max 判红绿＋--json 台账·假 rocq/ocamlc 桩全链（零真编译零触真仓·
+  # 夹具含本仓自带 names_sample.v 只读）
+  "$PY" -B "$REPO/tests/test_extract_magic.py"
 }
 
 t_fail_probe() {

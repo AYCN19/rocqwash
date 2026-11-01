@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 33 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（33 例）
+## 覆盖面（34 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -102,3 +102,10 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 33 过 / 1 红 / 
 |---|------|------|------|
 | 32 | `t_netname_normalize` | `tools/netname_normalize.py`（.v.v 双后缀名净名归一器·本轮工具化①） | `tests/test_netname_normalize.py` 九节：selftest 八判／干跑默认（MAP 映射表 `<净名>.v.v→<净名>.v` 逐条·零字节落盘）→rc 1 PENDING／`--apply` 归一落盘→rc 0·源亡标在／md5 前后验讫在账（RENAME 行 md5=＋VERIFY-OK·改名不改字节逐字节断言）／COLLIDE 拒覆写（X.v 与 X.v.v 并存→rc 1·对侧件内容保全）／净世界→rc 0 CLEAN／CLI 四码（help 0·未知形参 2·缺 --dir 2·--dir 缺失 9）／`--map` TSV＋`--json` 出账咬合／`.v.v.v` 形一层一归一（临时目录夹具·零触真仓） |
 | 33 | `t_verify_fresh` | `verify/verify_vo.py --require-fresh`（fresh-compile 防线·本轮工具化②） | `tests/test_verify_fresh.py` 八节：verify_vo selftest 十三判（原九判＋防线四判）／正判（9.1 魔数＋vo 新鲜）→rc 0 FRESH-OK／陈 vo 负例（v 拨未来）→rc 9 fail-loud／坏魔数（头 8 字节非 `436f712100015ff4`）→rc 9（新鲜也拦·非本链产物）／缺 v·缺 vo→9／单参与混用→2／help 0·未知形参 2／魔数冻结口径对 `verify_vo.py` VO_MAGIC_HEX 模块级咬合（divmod_gen 陈旧 vo 假绿判例工具化·临时目录夹具零编译零触真仓） |
+
+
+## gate7 涨账工具化轮补记（20261101·用例 34）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 34 | `t_extract_magic` | `verify/extract_magic_check.py`（gate7 提取面 Obj.magic 逐件机检闸·本轮工具化③） | `tests/test_extract_magic.py` 十节 18 判：selftest 十一判／E2E 红判（假 rocq/ocamlc 桩全链·默认 max=0 魔数 2→rc 1·上下文逐行 L1/L2·VERDICT: FAIL）＋台账咬合（verdict/magic_ml/max/magic_lines/ocamlc status）／E2E 绿判（--max 2→rc 0 PASS·mode=driver·targets 咬合·md5_v 对模块级）／inline 形（.v 自带 Separate Extraction→mode=inline·commands 逐名）／driver 形（本仓自带 `fixtures/names_sample.v` 只读兜底收 census 7 名含 Unicode 名道＋driver 稿词面 Stdlib Extraction 前奏在盘）／提取红（假 rocq rc=1→fail-loud·rocq_tail 随账）／ml 未产出红（不可计数≠绿）／ocamlc 面红（在卷实跑红→rc 1）＋缺卷让席（NOT-RUN 不计红·魔数面独立判）／CLI 四码（help 0·未知形参 2·缺 --world 2·缺 v 9·world .vo 未编译 9）／grep -c 口径（行计数·一行多魔数计一）模块级咬合。假桩全链零真编译零触真仓（真链 E2E 归席位沙箱不入套件·承 precedent_station 判例口径） |

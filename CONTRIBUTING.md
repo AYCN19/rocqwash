@@ -133,15 +133,15 @@ bash ≥ 3.2·macOS 自带），无编译构建步骤；涉编译的演示需 ro
 ```bash
 # ⓪ 一键自测套件（全仓总闸）
 bash tests/run_tests.sh                              # 全绿 EXIT 0；任一红 EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 33过/1红/EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 34过/1红/EXIT 1
 ```
 
-套件覆盖面与形制（33 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
+套件覆盖面与形制（34 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 十三判
 （含 `--require-fresh` fresh-compile 防线四判）／
 seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／
 watch 零网络向量组／cpu_guard `-Direct` 冒烟＋rc 传播／netname_normalize 九节／
-verify_fresh 八节）见
+verify_fresh 八节／extract_magic 十节）见
 [`tests/README.md`](tests/README.md)。以下 ①–④ 为组件级专项命令（① 已由套件覆盖；
 ②③④ 未入套件，仍需手跑；②–④ 实测基线 2026-10-31）：
 
