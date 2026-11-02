@@ -1,0 +1,54 @@
+{
+  "pack": "consumer-cure canonical pack",
+  "version": "1.0.0",
+  "description": "Five canonical rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex or token-station), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges).",
+  "patterns": [
+    {
+      "id": "cure1_qeqT_imp_qeq_rewrite_wrap",
+      "title": "rewrite-face bridge wrap (qeqT_imp_qeq, two explicit _ args)",
+      "canonical_note": "Rewriting with a lemma whose conclusion lives on the QeqT face requires unwrapping to the eq face first; the sanctioned term form is rewrite (qeqT_imp_qeq _ _ (L args)). Direct term-form apply of the partially applied bridge is forbidden (elaboration solves _ _ as evars before the term unifies).",
+      "engine": "line-regex",
+      "trigger_regex": "rewrite\\s*\\((?!qeqT_imp_qeq)([^()]+?)\\)(\\s+in\\s+[A-Za-z_'][A-Za-z0-9_']*)?\\.",
+      "template": "rewrite (qeqT_imp_qeq _ _ (\\1))\\2.",
+      "idempotence_note": "The trigger skips terms already containing qeqT_imp_qeq, so the wrapped form never matches again."
+    },
+    {
+      "id": "cure2_qeq_imp_qeqT_goal_open",
+      "title": "goal-opening downshift (qeq_imp_qeqT before the ==-face proof)",
+      "canonical_note": "When the goal is on the QeqT face and the available proof operates on the == face, open with apply qeq_imp_qeqT (gate-name reading: the second half names the goal face being produced).",
+      "engine": "proof-first-tactic",
+      "trigger_regex": "^(?P<ind>[ \\t]*)(reflexivity|ring|apply\\s+(?!qeq_imp_qeqT)[A-Za-z_'][A-Za-z0-9_']*(?:\\s+[^.]*)?)\\.[ \\t]*$",
+      "template": "\\g<ind>apply qeq_imp_qeqT. \\g<2>.",
+      "context": "only fires when the enclosing statement face contains QeqT",
+      "idempotence_note": "After the cure the first tactic is apply qeq_imp_qeqT, which the trigger excludes."
+    },
+    {
+      "id": "cure3_qeq_refl_replace_reflexivity",
+      "title": "opaque-reflexivity cure (apply Qeq_refl at door-opened == goals)",
+      "canonical_note": "At a door-opened (apply qeq_imp_qeqT) == goal, the canonical reflexivity proof is apply Qeq_refl rather than bare reflexivity; bare reflexivity on the unopened QeqT face is opaque (the comparison match is stuck) and fails.",
+      "engine": "line-regex",
+      "trigger_regex": "(apply qeq_imp_qeqT\\.)[ \\t]*reflexivity\\.",
+      "template": "\\1 apply Qeq_refl.",
+      "idempotence_note": "Post-cure text contains apply Qeq_refl, not reflexivity, after the door."
+    },
+    {
+      "id": "cure4_datatypes_s_qualify",
+      "title": "qualified successor reference (bare S -> Datatypes.S at stations)",
+      "canonical_note": "Where a record/class field or a local binder is named S, a bare global S reference resolves to the wrong object (field shadowing); the canonical form qualifies the successor constructor as Datatypes.S everywhere. Binder-bound references stay local and are never rewritten.",
+      "engine": "token-station",
+      "trigger": "stations of scan_v4_token (classes shadow-hazard and unqualified-global)",
+      "template": "replace bare token with Datatypes.S",
+      "idempotence_note": "After qualification the tokens are dotted and no longer census stations."
+    },
+    {
+      "id": "cure5_natle_drop_bridge",
+      "title": "NatLe -> nat <= supply bridge (NatLe_drop, two explicit _ args)",
+      "canonical_note": "NatLe and nat <= are different faces; a NatLe-face hypothesis consumed at a nat <= goal goes through exact (NatLe_drop _ _ H). The reverse direction is NatLe_lift. Bare exact/lia across the two faces is forbidden.",
+      "engine": "line-regex",
+      "trigger_regex": "exact\\s+([A-Za-z_'][A-Za-z0-9_']*)\\.",
+      "context": "only fires when the enclosing statement face contains NatLe and the hypothesis name is not already wrapped",
+      "template": "exact (NatLe_drop _ _ \\1).",
+      "idempotence_note": "Post-cure text has exact (NatLe_drop _ _ H); the bare-form trigger no longer matches."
+    }
+  ]
+}

@@ -28,6 +28,9 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `watch/` | CI monitoring + pin-IP push + thermal guard | Deterministic workflow vs LLM instability |
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 | `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
+| `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
+| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: five deterministic idempotent rewrite patterns (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge) | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
 
 ## Repository Layout / 目录结构
 
@@ -71,6 +74,49 @@ rocqwash/
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+## Getting Started (5 minutes)
+
+Prerequisites (three lines):
+
+- `python3` ≥ 3.9 — no third-party packages required
+- a Rocq/Coq 9.x toolchain on `PATH` — needed only for the compile-verification pieces; everything else runs without it
+- Windows: use Git Bash as your shell (the toolchain is bash + python3)
+
+```bash
+git clone https://github.com/hy7pc8gfmf-dotcom/rocqwash.git
+cd rocqwash
+bash tests/run_tests.sh          # self-test suite; exit 0 = all green
+```
+
+First run — scan a demo source for statement-face Prop leakage:
+
+```bash
+python3 scan/mac_stmt_scan.py --file examples/demo_prop_leak.v
+# RED stations: ['demo_eq_self', 'demo_eq_sym', 'demo_le_eq', 'demo_le_self', 'demo_mixed']
+```
+
+First verification — comment-hygiene gate on a clean sample:
+
+```bash
+python3 verify/gate4_comment_guard.py --file tests/fixtures/gate4_clean_sample.v
+# [gate4ext] ... 件数=1  PASS=1  FAIL=0  REVIEW(人工复核)=0  UNREADABLE=0 ...
+```
+
+Token-level successor-qualification census (finds bare constructor references
+that line-level filters miss):
+
+```bash
+python3 scan/scan_v4_token.py --file path/to/file.v --json census.json
+```
+
+## Platform Support
+
+| Platform | Support | Notes |
+|---|---|---|
+| macOS | full | `tools/cpu_guard.sh` thermal gate uses `pmset` (macOS-only); queue/nice lanes are POSIX |
+| Windows | Git Bash + python3 | light-load direct runs; bring your own thermal policy if needed (`cpu_guard.sh` thermal reading degrades gracefully without `pmset`) |
+| Linux | same path as Windows | unverified by this project's CI — reported as-is, no claims |
 
 ## Quick Start
 

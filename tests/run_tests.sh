@@ -42,6 +42,16 @@
 #         Separate Extraction 解析→rocq 提取→ocamlc→grep -c Obj.magic→--max 判红绿·假桩全链零真编译；
 #         v15 增盲区补全节：首战 G09 Class/G13 Extraction 双红→DECL_SKIP_EXT 声明/命令
 #         vernacular 就地扩补·Class 声明夹具 census 不误判·未知 vernacular 仍红 9）
+#       scan/scan_v4_token.py token 级限定名普查（tests/test_scan_v4_token.py·十一判·
+#         W15 实战判例工具化①：混合行遮蔽夹具三站复现＋旧法盲区机械实证＋binder 追踪
+#         零误报；真树抽查经 ROCWASH_TREE_SAMPLES 环境门控·缺省跳过不充红）
+#       wash/cure_pack.json＋cure_applier.py 消费位治愈正典包五式（tests/test_cure_pack.py·
+#         十一判·W15 工具化②：五式触发/幂等/门控自检＋fixture 干跑-apply-二次零变更＋
+#         cure_examples.v 编译 rc=0（ROCWASH_ROCQ 门控·cpu_guard 包裹）＋不透明
+#         reflexivity 负证 rc!=0）
+#       verify/erasure_classifier.py 擦除位分类器六簇（tests/test_erasure_classifier.py·
+#         十三判·W15 工具化③：六簇判定/coq_ 前缀/多行 inner-component/premise 位/
+#         CAPTURE 交叉对拍/resolve 状态；真件回放经 ROCWASH_ERASURE_MLI/SCAN 门控）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -108,7 +118,10 @@ t_recipe_pw1 \
 t_precedent_station \
 t_netname_normalize \
 t_verify_fresh \
-t_extract_magic"
+t_extract_magic \
+t_scan_v4_token \
+t_cure_pack \
+t_erasure_classifier"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -308,6 +321,24 @@ t_extract_magic() {
 t_fail_probe() {
   echo "（套件自检注入例：恒红）"
   return 1
+}
+
+t_scan_v4_token() {
+  # W15 工具化①：token 级普查（混合行遮蔽夹具三站＋旧法盲区实证＋binder 零误报；
+  # 真树抽查 ROCWASH_TREE_SAMPLES 环境门控·零硬编码路径·缺省夹具级恒跑）
+  "$PY" -B "$REPO/tests/test_scan_v4_token.py"
+}
+
+t_cure_pack() {
+  # W15 工具化②：消费位治愈正典包五式（applier 自检＋pack 完整性＋干跑/apply/
+  # 幂等；编译验证 ROCWASH_ROCQ 门控且经 tools/cpu_guard.sh 包裹·缺省跳过）
+  "$PY" -B "$REPO/tests/test_cure_pack.py"
+}
+
+t_erasure_classifier() {
+  # W15 工具化③：擦除位六簇分类器（自检＋合成 interface＋CAPTURE 交叉对拍；
+  # 真件回放 ROCWASH_ERASURE_MLI/SCAN 门控·缺省跳过）
+  "$PY" -B "$REPO/tests/test_erasure_classifier.py"
 }
 
 # ---------- 汇总执行 ----------
