@@ -12,7 +12,7 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（34 例）
+## 覆盖面（40 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -109,3 +109,20 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 34 | `t_extract_magic` | `verify/extract_magic_check.py`（gate7 提取面 Obj.magic 逐件机检闸·本轮工具化③） | `tests/test_extract_magic.py` 十一节 23 判：selftest 十二判／E2E 红判（假 rocq/ocamlc 桩全链·默认 max=0 魔数 2→rc 1·上下文逐行 L1/L2·VERDICT: FAIL）＋台账咬合（verdict/magic_ml/max/magic_lines/ocamlc status）／E2E 绿判（--max 2→rc 0 PASS·mode=driver·targets 咬合·md5_v 对模块级）／inline 形（.v 自带 Separate Extraction→mode=inline·commands 逐名）／driver 形（本仓自带 `fixtures/names_sample.v` 只读兜底收 census 7 名含 Unicode 名道＋driver 稿词面 Stdlib Extraction 前奏在盘）／提取红（假 rocq rc=1→fail-loud·rocq_tail 随账）／ml 未产出红（不可计数≠绿）／ocamlc 面红（在卷实跑红→rc 1）＋缺卷让席（NOT-RUN 不计红·魔数面独立判）／CLI 四码（help 0·未知形参 2·缺 --world 2·缺 v 9·world .vo 未编译 9）／grep -c 口径（行计数·一行多魔数计一）模块级咬合／**v15 盲区补全节（首战判例·gate7 四件 2 PASS/2 Class 盲区 fail-loud）**：Class 声明夹具（Class/Record/Scheme/Canonical/Context/Declare/Extraction/About/Close 全形）census 不再误判异常——声明/命令 vernacular 不入目标·唯真主定义 cls_pick/req_inst 入账·DECL_SKIP_EXT 十五 token 在册／G13 形裸 Extraction 命令同治／未知 vernacular 仍 fail-loud rc=9（盲区收窄≠静默扩容·token 集常量定位＝冻结件 names/mac_stmt_names.py:38–51 frozen8 tier1·扩补落工具 import 面·冻结件字节零触碰）。假桩全链零真编译零触真仓（真链 E2E 归席位沙箱不入套件·承 precedent_station 判例口径） |
+
+
+## v29 判例工具化轮补记（20261103·用例 35–37·v30 轮代补记）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 35 | `t_scan_v4_token` | `scan/scan_v4_token.py`（token 级限定名普查·W15 工具化①） | `tests/test_scan_v4_token.py` 十一判：混合行遮蔽夹具三站复现＋旧法（行级 grep -v 式）同夹具漏站＝盲区机械实证＋binder 追踪零误报＋已洗参照件零站；真树抽查 `ROCWASH_TREE_SAMPLES` 环境门控缺省跳过不充红 |
+| 36 | `t_cure_pack` | `wash/cure_pack.json`＋`cure_applier.py`（消费位治愈正典包五式·W15 工具化②） | `tests/test_cure_pack.py` 十一判：五式触发/幂等/门控自检＋fixture 干跑-apply-二次零变更＋`cure_examples.v` 编译 rc=0（`ROCWASH_ROCQ` 门控·cpu_guard 包裹）＋不透明 reflexivity 负证 rc≠0 |
+| 37 | `t_erasure_classifier` | `verify/erasure_classifier.py`（擦除位六簇分类器·W15 工具化③） | `tests/test_erasure_classifier.py` 十三判：六簇判定/coq_ 前缀/多行 inner-component/premise 位/CAPTURE 交叉对拍/resolve 状态；真件回放 `ROCWASH_ERASURE_MLI/SCAN` 门控缺省跳过 |
+
+## v30 探测战役工具化轮补记（20261103·用例 38–40）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 38 | `t_probe_engine` | `wash/probe_engine.py`（批量闭包相容探针引擎·承 W13 probe_batch.py·v30 工具化①） | `tests/test_probe_engine.py` 九节：工具 selftest 四判／stub 全链三分（WASHABLE rc0+RED>0／BORN-CLEAN rc0+RED=0／RED-MISSING_LIB rc1·missing 库名捕获·red_count/md5_match 回填）＋清场五件出世界入 logdir／NO-SRC 不编译如实出账／TIMEOUT（--timeout 2→rc=124）／resume 幂等（重跑 SKIP(done)＋台账字节恒同）＋--fresh 确定性同账／guard 队列制包裹（rc=7 真取透传＋留证日志 [cpu_guard] 横幅）／RED 缺列→RC0 三分不可判如实出／CLI 四码（help 0·未知形参 2·缺参 2·缺件 9）＋坏清单（缺 md5 列）rc2／真 rocq 全链门控节（`ROCWASH_ROCQ` 缺省 SKIP 不充红；门控轮：fixtures 一绿一红经 cpu_guard 包裹实编译→BORN-CLEAN＋RED-MISSING_LIB＋世界纯度＋logdir 留证全过）。夹具 `fixtures/probe_pass_sample.v`＋`probe_red_sample.v`（临时目录驱动零触真仓·stub 节零真编译） |
+| 39 | `t_chain_graph` | `tools/chain_graph.py`（多账合并链根图·承 W25 w25_merge_ledgers.py·v30 工具化②） | `tests/test_chain_graph.py` 七节：selftest 六判／双形通吃（probe_engine records 壳×W13 裸 dict 混并）／合并语义（后批覆盖·batches 累积·标签取文件名去 .json）／链根自身可洗性三分（washable true/false/UNPROBED 逐字段）／missing 双源（字段直用·red regex 兜底 raw 空格形与「 | 」拼接形双咬合）／TOP 榜（n 降序·`--top` 截断·表头行·json top_order 保秩）＋json/md 重跑字节恒同／CLI 四码。合成双账临时目录夹具零触真仓零网络 |
+| 40 | `t_ledger_sync` | `tools/ledger_sync.py`（probe×状态台账合并同步·v30 工具化③） | `tests/test_ledger_sync.py` 八节：selftest 九判／CLEAN 全链（全覆盖 probe＋零发现 exit 0·UNPROBED 升格 rc0→WASHABLE／rc1→DRIFT-BLOCKED 逐行咬合·probe_engine 全字段记录直吞）／E1 去重（同件名多行保首行·逐笔 FINDING·行数正确）／E3 幽灵（只记账不落行·名单响亮）／特异 tag（rc=124→probe:timeout·NO_SRC→probe:no-src·UNPROBED 不升格）／NO-MD5（W13 老式账只注记不升格）／报告面（--report JSON schema/counts/逐笔发现咬合）／CLI 四码＋列校验两变体（缺必需列 rc2 不产出·行宽不齐 rc2）＋幂等重跑字节恒同。合成夹具临时目录零触真仓零网络 |

@@ -52,6 +52,16 @@
 #       verify/erasure_classifier.py 擦除位分类器六簇（tests/test_erasure_classifier.py·
 #         十三判·W15 工具化③：六簇判定/coq_ 前缀/多行 inner-component/premise 位/
 #         CAPTURE 交叉对拍/resolve 状态；真件回放经 ROCWASH_ERASURE_MLI/SCAN 门控）
+#       wash/probe_engine.py 批量闭包相容探针引擎（tests/test_probe_engine.py·九节·
+#         v30 工具化①·承 W13 probe_batch.py：stub 全链 rc 三分 WASHABLE/BORN-CLEAN/
+#         RED-MISSING_LIB·NO-SRC/TIMEOUT 124·resume 幂等同账字节恒同·guard 包裹
+#         rc 真取·RED 缺列 RC0·CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控缺省 SKIP）
+#       tools/chain_graph.py 多账合并链根图（tests/test_chain_graph.py·七节·
+#         v30 工具化②·承 W25 w25_merge_ledgers.py：双形通吃/后批覆盖/batches 累积/
+#         链根自身可洗性三分/missing 双源/TOP 榜排序截断＋确定性字节恒同/CLI 四码）
+#       tools/ledger_sync.py probe×状态台账合并同步（tests/test_ledger_sync.py·
+#         八节·v30 工具化③：CLEAN 升格全链/E1 去重/E3 幽灵/MD5-DRIFT/NO-MD5/
+#         timeout·no-src 特异 tag/report JSON/列校验 fail-loud/幂等字节恒同/CLI 四码）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -121,7 +131,10 @@ t_verify_fresh \
 t_extract_magic \
 t_scan_v4_token \
 t_cure_pack \
-t_erasure_classifier"
+t_erasure_classifier \
+t_probe_engine \
+t_chain_graph \
+t_ledger_sync"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -339,6 +352,27 @@ t_erasure_classifier() {
   # W15 工具化③：擦除位六簇分类器（自检＋合成 interface＋CAPTURE 交叉对拍；
   # 真件回放 ROCWASH_ERASURE_MLI/SCAN 门控·缺省跳过）
   "$PY" -B "$REPO/tests/test_erasure_classifier.py"
+}
+
+t_probe_engine() {
+  # v30 工具化①：批量闭包相容探针引擎（承 W13 probe_batch.py·tests/
+  # test_probe_engine.py 九节：stub 全链 rc 三分/NO-SRC/TIMEOUT/resume 幂等/
+  # guard 包裹 rc 真取/RED 缺列/CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控缺省 SKIP·
+  # 零触真仓零网络）
+  "$PY" -B "$REPO/tests/test_probe_engine.py"
+}
+
+t_chain_graph() {
+  # v30 工具化②：多账合并链根图（承 W25 w25_merge_ledgers.py·合成双账七节：
+  # 双形通吃/后批覆盖/链根自身可洗性三分/missing 双源/TOP 榜＋确定性/CLI 四码·
+  # 零触真仓零网络）
+  "$PY" -B "$REPO/tests/test_chain_graph.py"
+}
+
+t_ledger_sync() {
+  # v30 工具化③：probe×状态台账合并同步（E1 去重/E3 幽灵/MD5-DRIFT/NO-MD5/
+  # 升格策略/列校验 fail-loud/幂等字节恒同/CLI 四码·合成夹具八节·零触真仓零网络）
+  "$PY" -B "$REPO/tests/test_ledger_sync.py"
 }
 
 # ---------- 汇总执行 ----------

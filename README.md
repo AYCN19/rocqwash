@@ -31,6 +31,9 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
 | `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: five deterministic idempotent rewrite patterns (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge) | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
 | `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
+| `wash/probe_engine.py` | Batch closure-compatibility probe engine: candidates TSV × world dir → per-file `rocq c` under cpu_guard → rc triage (WASHABLE / BORN-CLEAN / red-cause classes incl. MISSING_LIB) → idempotent ledger JSON | Real exit codes + red-cause regex classification are mechanical; LLM guesses at closure compatibility |
+| `tools/chain_graph.py` | Multi-ledger merger → missing-lib chain-root graph (dependents count + root self-washability) → TOP ranking markdown + JSON | Union/override merge and dependents counting are deterministic; LLM loses track across ledgers |
+| `tools/ledger_sync.py` | Probe-ledger × status-ledger TSV sync: E1 dedup / E3 ghost / MD5-drift guards / loud column validation → new TSV, idempotent | Fail-loud bookkeeping with deterministic row upgrades; LLM silently drops or duplicates rows |
 
 ## Repository Layout / 目录结构
 
@@ -45,12 +48,12 @@ rocqwash/
 ├── scan/  names/         # 已实现通用逐件工具 — implemented generic tools (mac_stmt_scan.py / mac_stmt_names.py)
 ├── tools/                # cpu_guard.sh 温控包裹 + 战役工装 — thermal guard + campaign tools
 ├── wrapper/              # 适配层族（gate7 探针链 shim/启动器＋cpu_guard 直通＋scan 指认包装）— adapter layers (gate7 shim/probe, guard pass-through, scan station)
-├── wash/                 # wash_engine.py 通用逐件洗引擎 + _abl1_wash.py 战役批洗 — generic ledger wash engine + campaign batch wash
+├── wash/                 # wash_engine.py 通用逐件洗引擎 + probe_engine.py 批量闭包探针 + 治愈包/战役批洗 — generic wash engine + batch probe engine + cure pack + campaign tools
 ├── verify/               # verify_vo.py 绿判四件套 + 战役验证工装 — four-pack green verdict + campaign verify tools
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（34 例）/ CI 工作流占位 — test suite (34 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（40 例）/ CI 工作流占位 — test suite (40 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -71,6 +74,10 @@ rocqwash/
 > rqadapt 落三子动词 2026-10-31·rqsup4 四巡补 verify_gate6 20261101）；`certify/`
 > 同款显式分派 `cli/rocqwash certify freeze|push_gate|frozen8`（rqsup4 五巡补
 > frozen8 20261101）——冻结件零改动；R4 提取侧三源为待办。
+> v30 增补（20261103·探测战役工具化轮）：`wash/probe_engine.py` 批量闭包相容
+> 探针引擎＋`tools/chain_graph.py` 多账合并链根图＋`tools/ledger_sync.py`
+> probe×状态台账同步器（E1 去重/E3 幽灵/列校验 fail-loud）——承 W13/W25/台账
+> v2 三原型 1:1 泛化，全路径参数化零硬编码；自测套件扩至 40 例全绿。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
