@@ -1,7 +1,7 @@
 {
   "pack": "consumer-cure canonical pack",
-  "version": "1.1.0",
-  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs.",
+  "version": "1.2.0",
+  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs. v1.2 adds the S07-lineage adaptation forms (W66 field report): parameterized-shell drop against an argument-less interface Class, the notation rebind line-insertion, the @field projection-bridge bare form, the predicate-face convergence token map (targets must be the consuming supply lemma's conclusion constant names), and a report-only binder-shell station for the manual binder surgery.",
   "patterns": [
     {
       "id": "cure1_qeqT_imp_qeq_rewrite_wrap",
@@ -161,6 +161,67 @@
       "trigger_regex": "exact\\s*\\((?P<call>[^()]+?)[ \\t]+(?P<hyp>[A-Za-z_'][A-Za-z0-9_']+)[ \\t]*\\)\\.",
       "template": "exact (\\g<call> (S01_BaseRing.NatLe_drop _ _ \\g<hyp>)).",
       "idempotence_note": "The cured call has the bridge wrapping inside the exact; the flat-argument trigger cannot re-match (the inner '(' blocks the call group)."
+    },
+    {
+      "id": "cure32_A_param_shell_drop",
+      "title": "S07 parameterized-shell drop (argument-less Class RealInterfaceEnhancedSetoid applied to a carrier -> bare Class)",
+      "canonical_note": "The -Set lineage world carries the interface Class zero-parameter: applying it to a carrier raises 'Illegal application (Non-functional construction): The expression \"RealInterfaceEnhancedSetoid\" of type \"Type\" cannot be applied to the term \"R\" : \"Set\"'. The mechanical shell drop removes the carrier argument at type-annotation and statement-binder stations (': RealInterfaceEnhancedSetoid Real :=', '{RIS : RealInterfaceEnhancedSetoid R}'). The binding_right_exclude ':=' guard keeps :=-binding right sides untouched while type annotations on the same line survive. The full binder-PAIR removal (dropping '(R : Set)'/'{RIS : ...}' together with the intros lines and call-site argument pairs) touches proof bodies and is NOT a safe single-regex rewrite - it is the manual surgery the binder-shell station reports. Parameterized worlds where the Class genuinely takes the carrier must not run this pattern (dry-run first, --only selection).",
+      "v32_lineage": "S07 param_shell_drop - red-face verbatim: UpAblD1S17_UpReqDpoLoss.v:30 'Illegal application (Non-functional construction)' at ': RealInterfaceEnhancedSetoid Real :='; UpAblT6_UpSigMigrate.v:58 / UpAblT6_UpSigMigrate2.v:59 '{RIS : RealInterfaceEnhancedSetoid R}' binder pair; recurrence = 3 files in the W65 wave (cross-seat: W36 cluster-1 ledger 13 files with the same red). Cured precedents: md5 303781ca / 57422928 / e59d97b5; canonical anchor UpReqSumD.v L58/L68-72 (world's own precedent, noted in the cured file heads).",
+      "engine": "face-regex",
+      "scope": "face",
+      "binding_right_exclude": ":=",
+      "trigger_regex": "(?<![A-Za-z0-9_'.])RealInterfaceEnhancedSetoid(?![A-Za-z0-9_'])[ \\t]+[A-Za-z_'][A-Za-z0-9_']*(?=\\s*(?:,|\\)|\\}|:=|\\.))",
+      "template": "RealInterfaceEnhancedSetoid",
+      "idempotence_note": "After the drop the Class name is no longer followed by a carrier identifier (only ':', ')', ',', ':=' or '.'), so the trigger cannot re-match; the :=-binding-right negative keeps its station on every later run."
+    },
+    {
+      "id": "cure32_B_notation_rebind",
+      "title": "S07 notation rebind (insert 'Notation R := Real.' after the last world import)",
+      "canonical_note": "After the shell drop the carrier is fixed by the world: the canonical rebind is the single notation line 'Notation R := Real.' placed after the last Require/Import line and before the first use (UpReqSumD.v L58 precedent, mirrored verbatim in all three cured W65 files). The applier's line-insert engine places the line after the last top-level Require/Import line; the file_include gate (the interface Class name) scopes the insertion to the lineage that needs it, and the require_token_regex gate demands an actual bare-R use position. The rebind assumes the world exports Real upstream - a file defining its own carrier must not run this pattern. Interaction guard: the rebind shadows any bare projection named R downstream (the cure32_C' qualified-bridge family is the counter-cure when a supply chain brings its own 'Notation R := Real').",
+      "v32_lineage": "S07 notation_rebind - cured lines verbatim: UpAblD1S17_UpReqDpoLoss.v:46, UpAblT6_UpSigMigrate.v:52, UpAblT6_UpSigMigrate2.v:52 all carry 'Notation R := Real.'; canonical anchor UpReqSumD.v L58; recurrence = 3 files in the W65 wave.",
+      "engine": "line-insert",
+      "insert_line": "Notation R := Real.",
+      "insert_after": "last-import",
+      "file_include": "RealInterfaceEnhancedSetoid",
+      "require_token_regex": "(?<![A-Za-z0-9_'.])R(?![A-Za-z0-9_'])",
+      "idempotence_note": "When the notation line is already present the insertion is skipped (count 0); the inserted line never triggers a second insertion."
+    },
+    {
+      "id": "cure32_C_atfield_bridge_bare",
+      "title": "S07 projection-bridge bare form (@field Real instance args -> field args through the global instance)",
+      "canonical_note": "The source face applies class-field projections with the explicit carrier and instance ('@one_pos Real uabd1s17_ren'); in the argument-less world the fields resolve bare through the global instance RealEnhancedReal (UpReqSumD.v L68-72), so the '@<field> Real <instance>' prefix is dropped and the remaining arguments stay. Fires in statement faces AND proof regions (the supply certificates apply the bridges inside their proofs). The field list is the projection family named in the field report; other worlds must not run this pattern (dry-run first). Record-CONSTRUCTOR argument positions ('MkRecord Real inst slot ...' without @) are binder-surgery territory and intentionally out of scope.",
+      "v32_lineage": "S07 projection_bridge_bare (a) - red-face verbatim: UpAblD1S17_UpReqDpoLoss.v base 'lt zero (@Z_align_req Real uabd1s17_ren unit ...)' / '(@one_pos Real uabd1s17_ren)' (8 field names, ~13 stations); cured md5 303781ca rewrites every station to the bare form; world probe first-hand: w65_probe_sigs '@one_pos : RIES -> real_lt zero one'.",
+      "engine": "face-regex",
+      "scope": "all",
+      "file_include": "RealInterfaceEnhancedSetoid",
+      "trigger_regex": "@[ \\t]*(?P<field>mult_positive|exp_neg_pos|Z_align_req|exp_neg|inv_pos|one_pos|mult|opp)[ \\t]+Real[ \\t]+[A-Za-z_'][A-Za-z0-9_']*(?![A-Za-z0-9_'])",
+      "template": "\\g<field>",
+      "idempotence_note": "Post-cure the fields are bare (no '@field Real instance' prefix remains), so the trigger cannot re-match."
+    },
+    {
+      "id": "cure32_C_predicate_face_converge",
+      "title": "S07 predicate-face convergence (bare lt/req -> real_lt/real_eq in statement faces)",
+      "canonical_note": "The source statement face carries the projection-face predicates lt/req; the world's direct faces are real_lt/real_eq (UpReqSumD.v L113-114). EXTRACTION-NAME-CONVERGENCE DISCIPLINE (normative, mechanical consequence at the extraction gate): the replacement name must be the SAME constant name the consuming supply lemma's conclusion carries - two delta-equivalent faces with different constant names compile green but insert Obj.magic at every application position during extraction (the W65 arc: emc_3 FAIL magic_ml=3 -> statement face renamed to the supply lemma's own constant -> emc_3c PASS magic 0/0). Picking any delta-equivalent synonym is forbidden. Scoped to the lineage by file_include; multi-token/dotted references are never touched (word-boundary guards); review before --apply (a file legitimately using bare lt for another order would be rewritten - the gate is the Class reference, not the token semantics).",
+      "v32_lineage": "S07 projection_bridge_bare (b) - red-face verbatim: UpAblT6_UpSigMigrate.v:60 '(forall s : S, req (f s) (g s)) -> req (sumd_sumf S enum f) (sumd_sumf S enum g)' (6 stations x 2 files); UpAblD1S17 'lt zero beta' binder faces; convergence arc first-hand: logs emc_3 FAIL magic_ml=3 -> emc_3c PASS 0/0 (T6_1), canonical UpReqSumD.v L113-114.",
+      "engine": "face-regex",
+      "scope": "face",
+      "file_include": "RealInterfaceEnhancedSetoid",
+      "token_map": {
+        "lt": "real_lt",
+        "req": "real_eq"
+      },
+      "idempotence_note": "Post-cure faces carry only real_lt/real_eq (the lookbehind blocks them as bare lt/req), so the token-map trigger cannot re-match."
+    },
+    {
+      "id": "cure32_station_binder_shell",
+      "title": "S07 binder-shell station (report-only: argumented Class binders awaiting the manual binder surgery)",
+      "canonical_note": "Report-only station (engine station-report, mode report): counts the argumented Class binders ('(RIS : RealInterfaceEnhancedSetoid carrier)' / '{RIS : ... carrier}') whose removal is binder surgery - the pair '(R : Set)'/'{RIS : ...}' goes away together with the intros names and call-site argument pairs (the W65 record form also monomorphises the abstract Set slots to the supplied instance, which is a semantic narrowing and stays manual). The engine never rewrites; the dry-run report surfaces the count and the count assertion is: after the surgery the count returns to zero. Candidates still below the promotion bar (each reproduced once, honest note, not counted in the trigger): the qualified-projection bridge 'Let R := @S01_BaseRing.R (@RI_base RI).' (UpAblT5 cured md5 7f09e776, anchor InvPosLtCompat.v) and the Set-slot monomorphise (D1S17 emc_1 FAIL magic 3 -> emc_1c PASS 0/0).",
+      "v32_lineage": "S07 param_shell_drop (b) - station verbatim: UpAblT6_UpSigMigrate.v:58 '{RIS : RealInterfaceEnhancedSetoid R}' x3 theorems; UpAblD1S17:66 '(RIS : RealInterfaceEnhancedSetoid R)'; scanner-blind-spot note: both word-face scanners report zero stations on these files (the red lives on the application/type face, not the Prop word face) - this station is the blind-spot fill proposed by the W66 dual-scan pass.",
+      "engine": "station-report",
+      "mode": "report",
+      "scope": "face",
+      "station_regex": "[(\\{][A-Za-z_'][A-Za-z0-9_']*[ \\t]*:[ \\t]*RealInterfaceEnhancedSetoid[ \\t]+[A-Za-z_'][A-Za-z0-9_']*[)\\}]",
+      "idempotence_note": "Report-only: the text is never rewritten; the station count drops to zero when the binder surgery (not this pattern) removes the argumented binders."
     },
     {
       "id": "cure5_natle_drop_bridge",

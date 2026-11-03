@@ -66,6 +66,12 @@
 #       wash/comment_pack.json＋comment_sweep.py 注释域 sweep 旁车（tests/test_comment_pack.py·
 #         六节·v31 工具化：嵌套注释+字符串感知状态机/旗词换形/头注换代/
 #         w7 code 行全等/幂等/CLI 四码）
+#       scan/dual_scan.py 双器对拍驱动（tests/test_dual_scan.py·十节·
+#         v32 工具化：scan_v4_token＋mac_stmt_scan 双扫×逐件差异报告
+#         only_v4/only_stmt/common·确定字节恒同·CLI 四码·零触真仓）
+#       wash/cure_pack v1.2 S07 适配式（tests/test_cure_pack.py 扩节·
+#         cure32 壳除/记号重绑/投影桥/谓词面收敛/binder 站型·干跑-apply-
+#         手术-全零复跑＋conflict --json rc4 回归＋门控 S07 编译弧红→绿→提取 0/0）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -139,7 +145,8 @@ t_erasure_classifier \
 t_probe_engine \
 t_chain_graph \
 t_ledger_sync \
-t_comment_pack"
+t_comment_pack \
+t_dual_scan"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -384,6 +391,13 @@ t_comment_pack() {
   # v31 工具化：注释域 sweep 旁车（comment_pack.json＋comment_sweep.py·
   # 嵌套注释+字符串感知状态机/旗词换形/头注换代/w7 code 行全等/幂等·六节零触真仓）
   "$PY" -B "$REPO/tests/test_comment_pack.py"
+}
+
+t_dual_scan() {
+  # v32 工具化：双器对拍驱动（scan/dual_scan.py·scan_v4_token＋mac_stmt_scan
+  # 双扫×逐件差异报告 only_v4/only_stmt/common·确定字节恒同·CLI 四码·
+  # tests/test_dual_scan.py 十节·零触真仓零网络）
+  "$PY" -B "$REPO/tests/test_dual_scan.py"
 }
 
 # ---------- 汇总执行 ----------

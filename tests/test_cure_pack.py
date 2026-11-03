@@ -24,6 +24,16 @@ Vectors:
      carrier face) fails — the opacity the cure3 pattern addresses.  Skipped
      (rc 111) when ROCWASH_ROCQ is unset, so external clones pass without a
      toolchain.
+  6. v1.2 S07-lineage flows: the cure32 adaptation arc — pre-cure station
+     count (report-only, file untouched), full-pack dry-run counts on the
+     base fixture, apply + documented binder surgery + all-zero re-run,
+     and the exclusive-group conflict regression (rc 4 with --json, report
+     written, no traceback).  The env-gated compile section also runs the
+     S07 arc end to end: the miniature world compiles, the base consumer
+     fails with "Illegal application", the cured consumer (after the
+     documented binder surgery) compiles rc=0, and Separate Extraction
+     reports Obj.magic 0 on every .ml/.mli with the bare fields resolved
+     through the global instance.
 """
 import io, os, re, shutil, subprocess, sys, tempfile
 
@@ -65,19 +75,40 @@ want_v31 = {"cure6_qle_token_downshift", "cure7_qle_notation_downshift",
             "cure10_qle_refl_bridge_open", "cure11_import_shadow_delete",
             "cure12_shadow_direct_face_qualify", "cure13_natle_premise_lift",
             "cure14_natle_drop_wrap"}
+want_v32 = {"cure32_A_param_shell_drop", "cure32_B_notation_rebind",
+            "cure32_C_atfield_bridge_bare",
+            "cure32_C_predicate_face_converge",
+            "cure32_station_binder_shell"}
 check("legacy five present", want_legacy <= set(ids))
 check("v1.1 nine present", want_v31 <= set(ids))
-check("pattern count 5+9", len(pack["patterns"]) == 14)
+check("v1.2 five present", want_v32 <= set(ids))
+check("pattern count 5+9+5", len(pack["patterns"]) == 19)
 check("every pattern has trigger+template+idempotence",
-      all(("trigger_regex" in p or "trigger" in p or "token_map" in p)
-          and ("template" in p or "template_fn" in p or "token_map" in p)
+      all(("trigger_regex" in p or "trigger" in p or "token_map" in p
+           or "station_regex" in p or "insert_line" in p)
+          and ("template" in p or "template_fn" in p or "token_map" in p
+               or "insert_line" in p or "station_regex" in p)
           and "idempotence_note" in p for p in pack["patterns"]))
 check("v1.1 patterns carry lineage",
       all("v31_lineage" in p for p in pack["patterns"]
           if p["id"] in want_v31))
+check("v1.2 patterns carry lineage",
+      all("v32_lineage" in p for p in pack["patterns"]
+          if p["id"] in want_v32))
 check("exclusive group declared on both shadow variants",
       [p.get("exclusive_group") for p in pack["patterns"]
        if p["id"].startswith(("cure11", "cure12"))] == ["import-shadow"] * 2)
+check("station pattern is report-only",
+      [p.get("mode") for p in pack["patterns"]
+       if p["id"] == "cure32_station_binder_shell"] == ["report"])
+check("convergence targets the supply lemma's own constant",
+      dict((p["id"], p) for p in pack["patterns"]
+           if p["id"] == "cure32_C_predicate_face_converge"
+           )["cure32_C_predicate_face_converge"]["token_map"]["req"]
+      == "real_eq"
+      and "real_eq x x" in io.open(
+          os.path.join(HERE, "fixtures", "cure32_s07_world.v"),
+          encoding="utf-8").read())
 
 # 3. dry-run + apply on a temp copy (cure4 only)
 tmp = tempfile.mkdtemp(prefix="rw_cure_")
@@ -208,7 +239,88 @@ try:
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
-# 4. compile check (env-gated, thermal-guard wrapped like every compile)
+# 5. v1.2 fixture flows: the S07-lineage adaptation arc (cure32)
+S07_WORLD_F = os.path.join(HERE, "fixtures", "cure32_s07_world.v")
+S07_F = os.path.join(HERE, "fixtures", "cure32_s07_fixture.v")
+
+tmp = tempfile.mkdtemp(prefix="rw_cure32_")
+try:
+    # 5a. pre-cure station count: the report-only station sees the alien
+    #     binder pair and never touches the file (md5 identical)
+    tgt = os.path.join(tmp, "fixture_base.v")
+    shutil.copy(S07_F, tgt)
+    base_txt = io.open(tgt, encoding="utf-8").read()
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt,
+             "--only", "cure32_station_binder_shell", "--json",
+             os.path.join(tmp, "station.json")])
+    dry = json.load(io.open(os.path.join(tmp, "station.json"),
+                            encoding="utf-8"))
+    check("station pre-cure count=1 (report-only)",
+          dry["report"]["cure32_station_binder_shell"]["matches"] == 1)
+    check("station run wrote nothing",
+          io.open(tgt, encoding="utf-8").read() == base_txt)
+
+    # 5b. full-pack dry-run counts on the base fixture
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--json",
+             os.path.join(tmp, "dry32.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry32.json"),
+                            encoding="utf-8"))
+    rep = dry["report"]
+    check("dry-run A=2 B=1 C(a)=5 C(b)=2 residual-station=0",
+          rep["cure32_A_param_shell_drop"]["matches"] == 2
+          and rep["cure32_B_notation_rebind"]["matches"] == 1
+          and rep["cure32_C_atfield_bridge_bare"]["matches"] == 5
+          and rep["cure32_C_predicate_face_converge"]["matches"] == 2
+          and rep["cure32_station_binder_shell"]["matches"] == 0)
+
+    # 5c. apply the mechanical cures, then the documented manual binder
+    #     surgery (the pair (R : Set) {RIS : ...} goes away together with
+    #     the intros names — the station's reported positions), then the
+    #     re-run is all-zero
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply"])
+    check("S07 fixture apply rc=0", r.returncode == 0,
+          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+    cured = io.open(tgt, encoding="utf-8").read()
+    check("shell dropped at annotation and binder",
+          ": RealInterfaceEnhancedSetoid :=" in cured
+          and "{RIS : RealInterfaceEnhancedSetoid}" in cured)
+    check("notation rebind inserted after the import",
+          "Require Import Cure32S07World.\nNotation R := Real." in cured)
+    check("bridges bare + predicate faces converged",
+          "real_lt zero (Z_align_req beta) ->" in cured
+          and "real_eq (Z_align_req beta) (Z_align_req beta)." in cured
+          and "mult (one_pos) (Z_align_req beta)." in cured
+          and "@Z_align_req Real ufx_ren" not in cured)
+    cured = re.sub(r"forall \(R : Set\) \{RIS : RealInterfaceEnhancedSetoid\}"
+                   r"\s*\(beta : R\),", "forall beta : Real,", cured)
+    cured = cured.replace("intros R RIS beta Hz.", "intros beta Hz.")
+    io.open(tgt, "w", encoding="utf-8").write(cured)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--json",
+             os.path.join(tmp, "dry32b.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry32b.json"),
+                            encoding="utf-8"))
+    check("post-surgery re-run all-zero (station residual included)",
+          all(v["matches"] == 0 for v in dry["report"].values()))
+
+    # 5d. exclusive-group conflict regression (v32 fix): with --json the
+    #     conflict path writes the report and exits 4 (no traceback)
+    cfile = os.path.join(tmp, "conflict.v")
+    io.open(cfile, "w", encoding="utf-8").write(
+        "Require Import S02_CauchyComplete.\n"
+        "Import RealInterfaceEnhancedMod.\n"
+        "Theorem r1 : forall u : Real, req u (opp u).\n"
+        "Proof. intros. apply r0. Qed.\n")
+    cj = os.path.join(tmp, "conflict.json")
+    r = run([sys.executable, "-B", APPLIER, "--file", cfile, "--json", cj])
+    check("conflict rc=4 with --json (report written, no traceback)",
+          r.returncode == 4 and os.path.exists(cj)
+          and b"UnboundLocalError" not in r.stdout
+          and json.load(io.open(cj, encoding="utf-8"))
+          .get("exclusive_group_conflict") is not None)
+finally:
+    shutil.rmtree(tmp, ignore_errors=True)
+
+# compile check (env-gated, thermal-guard wrapped like every compile)
 rocq = os.environ.get("ROCWASH_ROCQ", "")
 if rocq and os.path.exists(rocq):
     guard = os.path.join(REPO, "tools", "cpu_guard.sh")
@@ -239,6 +351,67 @@ Qed.
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", tmp, "", negf])
         check("opaque-reflexivity negative fails (rc!=0)", r.returncode != 0)
+
+        # v32 S07 arc: world compiles -> base is the red face of record ->
+        # mechanical cures + documented binder surgery -> green -> the
+        # extraction gate reports Obj.magic 0 on every .ml/.mli.
+        wdir = os.path.join(tmp, "world")
+        os.makedirs(wdir)
+        shutil.copy(S07_WORLD_F, os.path.join(wdir, "Cure32S07World.v"))
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", wdir, "", os.path.join(wdir, "Cure32S07World.v")])
+        check("S07 world compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        basef = os.path.join(wdir, "Cure32S07Fixture.v")
+        shutil.copy(S07_F, basef)
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", wdir, "", basef])
+        sout = r.stdout.decode()
+        check("S07 base fails with Illegal application (red face of record)",
+              r.returncode != 0 and "Illegal application" in sout,
+              sout[-200:])
+        r = run([sys.executable, "-B", APPLIER, "--file", basef, "--apply"])
+        check("S07 mechanical cures apply rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+        t = io.open(basef, encoding="utf-8").read()
+        t = re.sub(r"forall \(R : Set\) \{RIS : RealInterfaceEnhancedSetoid\}"
+                   r"\s*\(beta : R\),", "forall beta : Real,", t)
+        t = t.replace("intros R RIS beta Hz.", "intros beta Hz.")
+        io.open(basef, "w", encoding="utf-8").write(t)
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", wdir, "", basef])
+        check("S07 cured+surgery compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        extdir = os.path.join(tmp, "ext")
+        os.makedirs(extdir)
+        drv = os.path.join(extdir, "ext_driver.v")
+        io.open(drv, "w", encoding="utf-8").write(
+            "From Stdlib Require Import Extraction.\n"
+            "Require Import Cure32S07Fixture.\n"
+            "Separate Extraction Cure32S07Fixture.ufx_sample.\n")
+        # extraction output lands in the driver's cwd — pin it to extdir so
+        # nothing leaks into the repo
+        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+                 "-MaxWaitSec", "600", "--", rocq, "c",
+                 "-native-compiler", "no", "-q", "-Q", wdir, "", drv],
+                cwd=extdir)
+        check("extraction run rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        magics, mfiles = 0, 0
+        for name in os.listdir(extdir):
+            if name.endswith(".ml") or name.endswith(".mli"):
+                mfiles += 1
+                with io.open(os.path.join(extdir, name), encoding="utf-8",
+                             errors="replace") as fh:
+                    magics += fh.read().count("Obj.magic")
+        check("extraction gate Obj.magic=0 on every .ml/.mli",
+              r.returncode == 0 and magics == 0 and mfiles >= 2,
+              "files=%d magics=%d" % (mfiles, magics))
+        mlp = os.path.join(extdir, "Cure32S07Fixture.ml")
+        check("extracted code resolves bare fields via the instance",
+              os.path.exists(mlp)
+              and "coq_RealEnhancedReal" in io.open(
+                  mlp, encoding="utf-8", errors="replace").read())
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 else:

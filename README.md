@@ -29,7 +29,8 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 | `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
 | `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
-| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: fourteen deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge) plus nine v1.1 statement-face patterns from the 20261103 wash-campaign field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), applied by a face/proof-scoped regex engine with per-face token guards | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: nineteen deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge), nine v1.1 statement-face patterns from the 20261103 wash-campaign field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), and five v1.2 S07-lineage adaptation patterns from the W66 field report (parameterized-shell drop with a :=-binding-right guard, notation rebind line-insertion, @field projection-bridge bare form, predicate-face convergence token map whose targets must be the consuming supply lemma's conclusion constant names, and a report-only binder-shell station for the manual binder surgery), applied by a face/proof-scoped regex engine with per-face token guards plus a line-insert and a station-report engine | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `scan/dual_scan.py` | Dual-scanner cross-check driver: runs scan_v4_token + mac_stmt_scan over the same candidate files and reports per-file station counts plus a diff (only_v4 / only_stmt / common) — turns shared scanner blindness (application/type-face red causes) into a mechanical fact per file instead of a silent assumption | Both scanners' exit codes and station line-sets are mechanical; scanner consensus is reported, never blessed as completeness |
 | `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
 | `wash/probe_engine.py` | Batch closure-compatibility probe engine: candidates TSV × world dir → per-file `rocq c` under cpu_guard → rc triage (WASHABLE / BORN-CLEAN / red-cause classes incl. MISSING_LIB) → idempotent ledger JSON | Real exit codes + red-cause regex classification are mechanical; LLM guesses at closure compatibility |
 | `tools/chain_graph.py` | Multi-ledger merger → missing-lib chain-root graph (dependents count + root self-washability) → TOP ranking markdown + JSON | Union/override merge and dependents counting are deterministic; LLM loses track across ledgers |
@@ -46,7 +47,7 @@ rocqwash/
 │   └── en/architecture.md  # 架构文档（英文镜像）— architecture doc (English mirror)
 ├── CONTRIBUTING.md       # 贡献指南（流程/代码规范/测试要求/cpu_guard 使用说明）
 ├── examples/             # 全链演示样例 + Makefile — single-file full-chain demo (scan→names→N=N→wash→verify)
-├── scan/  names/         # 已实现通用逐件工具 — implemented generic tools (mac_stmt_scan.py / mac_stmt_names.py)
+├── scan/  names/         # 已实现通用逐件工具（mac_stmt_scan.py / scan_v4_token.py / dual_scan.py）— implemented generic tools
 ├── tools/                # cpu_guard.sh 温控包裹 + 战役工装 — thermal guard + campaign tools
 ├── wrapper/              # 适配层族（gate7 探针链 shim/启动器＋cpu_guard 直通＋scan 指认包装）— adapter layers (gate7 shim/probe, guard pass-through, scan station)
 ├── wash/                 # wash_engine.py 通用逐件洗引擎 + probe_engine.py 批量闭包探针 + 治愈包/战役批洗 — generic wash engine + batch probe engine + cure pack + campaign tools
@@ -54,7 +55,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（41 例）/ CI 工作流占位 — test suite (41 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（42 例）/ CI 工作流占位 — test suite (42 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -88,6 +89,16 @@ rocqwash/
 > 投影幂等断言）＋`tools/ledger_sync.py` v2.1（items 子键壳识别＋裸 dict 元数据
 > 键响亮滤除＋GEN-DIVERGENCE 双代分歧出账——分歧优先序成文：kept 代＝下游账
 > basis 榜系消费代，dropped 代只注记不弃账）；自测套件扩至 41 例全绿。
+> v32 增补（20261103·S07 世系适配式工具化轮·W66 支撑席提案实装）：
+> `wash/cure_pack.json` v1.1→v1.2 十四式→十九式（cure32_A 参数化壳去除·
+> :=-binding-right 守卫／cure32_B 记号重绑 line-insert 引擎／cure32_C 投影桥
+> 裸名形 face+proof 域／谓词面收敛 token_map——换名目标须取消费供给引理结论面
+> 同一常量名·delta 等价异名编译绿而提取插 Obj.magic／binder 壳 report-only
+> 站型——手刀辖区报站·术后站数归零）＋`scan/dual_scan.py` 双器对拍驱动
+> （scan_v4＋mac_stmt_scan 双扫×逐件差异报告 only_v4/only_stmt）＋cure_applier
+> 器修（exclusive-group 冲突＋--json 路径 report 落盘·rc=4 文档值）；
+> 自测套件扩至 42 例全绿（门控 S07 编译弧：红→机械 cure→binder 手术→绿→
+> 提取 Obj.magic 0/0）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

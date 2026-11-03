@@ -18,6 +18,22 @@ Purpose:
     both matching is a variant-choice conflict and fails loud (exit 4) —
     the caller must pick one variant via --only.
 
+    v32 additions (S07-lineage adaptation forms, W66 field report): the
+    argument-less-interface adaptation family — parameterized-shell drop
+    (cure32_A, face-regex with a :=-binding-right guard), notation rebind
+    (cure32_B, new "line-insert" engine: one line after the last world
+    import), projection-bridge bare form (cure32_C(a), @field carrier
+    instance -> bare field through the global instance) and predicate-face
+    convergence (cure32_C(b), token map whose targets must be the consuming
+    supply lemma's conclusion constant names — a delta-equivalent synonym
+    compiles but leaks Obj.magic at extraction, so the name is normative).
+    A report-only "station-report" engine ships the binder-shell station:
+    it counts the argumented-Class binders whose full removal is manual
+    surgery (intros lines / call sites) and must return to zero after the
+    surgery.  v32 engine fix: the exclusive-group conflict path now writes
+    its --json report before exiting 4 (previously crashed with
+    UnboundLocalError when --json was given).
+
 Inputs:
     --file path/to/file.v           target source (never modified on dry-run)
     --pack path/to/cure_pack.json   pattern pack (default: cure_pack.json
@@ -284,12 +300,39 @@ def _expand_piece(pat, m):
     return m.expand(pat["template"])
 
 
+def _sub_before_marker(trig, repl, seg, marker):
+    """v32: per-match binding-right guard.  A match whose start lies at or
+    after the first occurrence of `marker` (e.g. ":=") on its enclosing line
+    sits on the right side of a binding and is skipped; matches before the
+    marker survive.  Deterministic; used by cure32_A to keep type-annotation
+    stations (``: Class carrier :=``) while excluding :=-binding right sides
+    on the same line."""
+    out = []
+    last = 0
+    n = 0
+    for m in trig.finditer(seg):
+        line_start = seg.rfind("\n", 0, m.start()) + 1
+        line_end = seg.find("\n", m.start())
+        if line_end == -1:
+            line_end = len(seg)
+        cut = seg[line_start:line_end].find(marker)
+        if cut != -1 and (m.start() - line_start) >= cut:
+            continue
+        out.append(seg[last:m.start()])
+        out.append(repl(m))
+        last = m.end()
+        n += 1
+    out.append(seg[last:])
+    return "".join(out), n
+
+
 def apply_face_regex(text, pat, fid):
     """face/proof-scoped trigger with per-face token guards.
 
     Pattern fields beyond trigger_regex/template:
       scope         "face" (default) rewrites inside statement faces only;
-                    "proof" rewrites inside Proof regions only.
+                    "proof" rewrites inside Proof regions only;
+                    "all" (v32) rewrites inside both.
       face_include  list of regexes; every one must match the statement face.
       face_exclude  list of regexes; any match skips the face (guards against
                     rewriting bridge definitions and already-cured faces).
@@ -307,6 +350,10 @@ def apply_face_regex(text, pat, fid):
                     map keys (longest-first) and rewrites via the map.
       target        carrier predicate name used by template_fn.
       qualified_name  fully-qualified carrier name used by template_fn.
+      binding_right_exclude  (v32) marker string (e.g. ":="): a match at or
+                    after the first marker occurrence on its enclosing line
+                    is on a binding right side and is skipped (per-match, not
+                    per-line — type annotations on the same line survive).
     """
     fi = pat.get("file_include")
     if fi and not re.search(fi, text):
@@ -325,6 +372,7 @@ def apply_face_regex(text, pat, fid):
     dexcl = [re.compile(rx) for rx in pat.get("decl_exclude", [])]
     guard = pat.get("guard")
     scope = pat.get("scope", "face")
+    bre = pat.get("binding_right_exclude")
     pieces = []
     total = 0
     for s, face_end, proof_span, decl_line in _face_regions(text):
@@ -338,39 +386,48 @@ def apply_face_regex(text, pat, fid):
         if scope == "proof":
             if proof_span is None:
                 continue
-            seg_off, seg = proof_span[0], text[proof_span[0]:proof_span[1]]
+            spans = [(proof_span[0], text[proof_span[0]:proof_span[1]])]
+        elif scope == "all":
+            spans = [(s, face)]
+            if proof_span is not None:
+                spans.append((proof_span[0],
+                              text[proof_span[0]:proof_span[1]]))
         else:
-            seg_off, seg = s, face
-        if guard == "intros-tail":
-            intros_tails = set()
-            for im in re.finditer(r"(?m)^[ \t]*intros\b[ \t]+([^\n.]*)", seg):
-                toks = re.findall(r"[A-Za-z_'][A-Za-z0-9_']*", im.group(1))
-                if toks:
-                    intros_tails.add(toks[-1])
-            fires = []
-            for m in trig.finditer(seg):
-                groups = m.groups()
-                tail = groups[-1] if groups else None
-                if tail is None or tail not in intros_tails:
-                    continue  # guarded out: tail is not an introduced hypothesis
-                fires.append(m)
-            n = len(fires)
-            if fires:
-                parts = []
-                last = 0
-                for m in fires:
-                    parts.append(seg[last:m.start()])
-                    parts.append(repl(m))
-                    last = m.end()
-                parts.append(seg[last:])
-                new_seg = "".join(parts)
+            spans = [(s, face)]
+        for seg_off, seg in spans:
+            if guard == "intros-tail":
+                intros_tails = set()
+                for im in re.finditer(r"(?m)^[ \t]*intros\b[ \t]+([^\n.]*)",
+                                      seg):
+                    toks = re.findall(r"[A-Za-z_'][A-Za-z0-9_']*", im.group(1))
+                    if toks:
+                        intros_tails.add(toks[-1])
+                fires = []
+                for m in trig.finditer(seg):
+                    groups = m.groups()
+                    tail = groups[-1] if groups else None
+                    if tail is None or tail not in intros_tails:
+                        continue  # guarded out: not an introduced hypothesis
+                    fires.append(m)
+                n = len(fires)
+                if fires:
+                    parts = []
+                    last = 0
+                    for m in fires:
+                        parts.append(seg[last:m.start()])
+                        parts.append(repl(m))
+                        last = m.end()
+                    parts.append(seg[last:])
+                    new_seg = "".join(parts)
+                else:
+                    new_seg = seg
+            elif bre is not None:
+                new_seg, n = _sub_before_marker(trig, repl, seg, bre)
             else:
-                new_seg = seg
-        else:
-            new_seg, n = trig.subn(repl, seg)
-        if n:
-            pieces.append((seg_off, seg_off + len(seg), new_seg))
-            total += n
+                new_seg, n = trig.subn(repl, seg)
+            if n:
+                pieces.append((seg_off, seg_off + len(seg), new_seg))
+                total += n
     if not pieces:
         return text, 0
     out = text
@@ -380,6 +437,83 @@ def apply_face_regex(text, pat, fid):
 
 
 ENGINES["face-regex"] = apply_face_regex
+
+
+# ---------------------------------------------------------------------------
+# v32: S07-lineage adaptation engines (cure_pack v1.2 patterns cure32_*).
+# ---------------------------------------------------------------------------
+
+def apply_line_insert(text, pat, fid):
+    """Insertion engine (v32): insert one verbatim line after the last
+    top-level Require/Import line — the canonical anchor of the S07
+    notation-rebind cure (``Notation R := Real.`` after the world imports;
+    UpReqSumD.v L58 precedent).  Fields:
+      insert_line         the exact line to insert.
+      insert_after        anchor policy, only "last-import" is defined: after
+                          the last line matching ``^[ \\t]*(From x )?Require|
+                          Import``; a file with no such line inserts at the
+                          top (first line).
+      file_include        regex that must match the whole file once (e.g. the
+                          interface Class name — insertion is scoped to the
+                          lineage that needs the rebind).
+      require_token_regex regex that must occur somewhere (e.g. a bare ``R``
+                          use position — no rebind without a consumer).
+    Idempotent: when insert_line is already present the count is 0.
+    """
+    fi = pat.get("file_include")
+    if fi and not re.search(fi, text):
+        return text, 0
+    line = pat["insert_line"]
+    if re.search(r"(?m)^[ \t]*%s[ \t]*\r?$" % re.escape(line), text):
+        return text, 0
+    req = pat.get("require_token_regex")
+    if req and not re.search(req, text):
+        return text, 0
+    anchor_re = re.compile(
+        r"(?m)^[ \t]*(?:From[ \t]+\S+[ \t]+)?(?:Require|Import)\b")
+    last_end = None
+    for m in anchor_re.finditer(text):
+        last_end = m.end()
+    lines = text.split("\n")
+    if last_end is None:
+        lines.insert(0, line)
+    else:
+        lines.insert(text.count("\n", 0, last_end) + 1, line)
+    return "\n".join(lines), 1
+
+
+ENGINES["line-insert"] = apply_line_insert
+
+
+def apply_station_report(text, pat, fid):
+    """Report-only station scanner (v32).  Never rewrites: the text comes
+    back unchanged and the station count surfaces in the dry-run report —
+    the positions needing the manual binder surgery of the S07 lineage
+    (argumented Class binders like ``(RIS : Class carrier)`` / ``{RIS : Class
+    carrier}``, whose full removal touches intros lines and call sites and
+    is therefore NOT a safe single-regex rewrite).  After the surgery the
+    count must return to zero: that is the count assertion.  Fields:
+      station_regex  the station trigger (scanned over statement faces, or
+                     proof regions with "scope": "proof"/"all").
+      file_include   regex that must match the whole file once.
+    Patterns with "mode": "report" never contribute to the --apply
+    idempotence residual (advisory stations, not cures).
+    """
+    fi = pat.get("file_include")
+    if fi and not re.search(fi, text):
+        return text, 0
+    rx = re.compile(pat["station_regex"])
+    scope = pat.get("scope", "face")
+    n = 0
+    for s, face_end, proof_span, _decl_line in _face_regions(text):
+        if scope in ("face", "all"):
+            n += len(rx.findall(text[s:face_end]))
+        if scope in ("proof", "all") and proof_span is not None:
+            n += len(rx.findall(text[proof_span[0]:proof_span[1]]))
+    return text, n
+
+
+ENGINES["station-report"] = apply_station_report
 
 
 def run_pack(text, patterns):
@@ -669,6 +803,103 @@ def selftest():
           {k: x["matches"] for k, x in vr2.items() if x["matches"]})
     ok = ok and c17
 
+    # ---- v32 vectors (cure32 pack: S07-lineage adaptation forms) ----
+    v32 = dict((p["id"], p) for p in pack["patterns"]
+               if p["id"].startswith("cure32"))
+
+    # cure32_A: shell drop on annotation + binder; :=-binding right side kept
+    pA = v32["cure32_A_param_shell_drop"]
+    fA = ("Definition ren : RealInterfaceEnhancedSetoid Real :=\n"
+          "  mkRIES.\n"
+          "Theorem t : forall (R : Set) {RIS : RealInterfaceEnhancedSetoid R}"
+          ", P R.\n"
+          "Definition body_right := RealInterfaceEnhancedSetoid Real.\n")
+    tA, nA = apply_one(fA, pA)
+    c18 = (nA == 2
+           and ": RealInterfaceEnhancedSetoid :=" in tA
+           and "{RIS : RealInterfaceEnhancedSetoid}," in tA
+           and "Definition body_right := RealInterfaceEnhancedSetoid Real."
+           in tA)
+    tAb, nAb = apply_one(tA, pA)
+    c18b = nAb == 0 and tAb == tA
+    print("cure32_A shell drop/binding-right guard/idempotent:", c18, c18b)
+    ok = ok and c18 and c18b
+
+    # cure32_B: notation line after the last import; idempotent; gated
+    pB = v32["cure32_B_notation_rebind"]
+    fB = ("Require Import W.\n"
+          "Import W2.\n"
+          "Definition u : RealInterfaceEnhancedSetoid := mk.\n"
+          "Theorem s : P R.\nProof. exact e. Qed.\n")
+    tB, nB = apply_one(fB, pB)
+    c19 = (nB == 1 and "Import W2.\nNotation R := Real.\nDefinition u :"
+           in tB)
+    tBb, nBb = apply_one(tB, pB)
+    c19b = nBb == 0 and tBb == tB
+    tBc, nBc = apply_one("Definition q := R + 1.\n", pB)
+    c19c = nBc == 0 and tBc == "Definition q := R + 1.\n"
+    print("cure32_B notation rebind/last-import anchor/gated/idempotent:",
+          c19, c19b, c19c)
+    ok = ok and c19 and c19b and c19c
+
+    # cure32_C(a): @field carrier instance -> bare field, faces and proofs
+    pC = v32["cure32_C_atfield_bridge_bare"]
+    fC = ("Definition ren : RealInterfaceEnhancedSetoid := mk.\n"
+          "Theorem c : lt zero (@Z_align_req Real ren unit) -> P.\n"
+          "Proof.\n"
+          "  intros H.\n"
+          "  exact (mult_positive (@exp_neg Real ren zero) "
+          "(@one_pos Real ren)).\n"
+          "Qed.\n")
+    tC, nC = apply_one(fC, pC)
+    c20 = (nC == 3
+           and "lt zero (Z_align_req unit) -> P." in tC
+           and "exact (mult_positive (exp_neg zero) (one_pos))." in tC)
+    tCb, nCb = apply_one(tC, pC)
+    c20b = nCb == 0
+    print("cure32_C(a) bridge bare/face+proof scope/idempotent:", c20, c20b)
+    ok = ok and c20 and c20b
+
+    # cure32_C(b): predicate-face convergence; file gate; mult survives
+    pCb = v32["cure32_C_predicate_face_converge"]
+    fCb = ("Require Import W.\n"
+           "Theorem t2 : RealInterfaceEnhancedSetoid -> req x y.\n"
+           "Proof. intros. apply s. Qed.\n"
+           "Definition keeper := mult 1 2.\n")
+    tCd, nCd = apply_one(fCb, pCb)
+    c21 = (nCd == 1 and "real_eq x y." in tCd
+           and "Definition keeper := mult 1 2." in tCd)
+    tCdb, nCdb = apply_one(tCd, pCb)
+    c21b = nCdb == 0
+    plainb = "Theorem v : req a b.\nProof. apply r. Qed.\n"
+    tCc, nCc = apply_one(plainb, pCb)
+    c21c = nCc == 0 and tCc == plainb
+    print("cure32_C(b) predicate converge/mult-survives/file gate/idempotent:",
+          c21, c21b, c21c)
+    ok = ok and c21 and c21b and c21c
+
+    # binder-shell station: report-only (text unchanged, count asserted)
+    pS = v32["cure32_station_binder_shell"]
+    fS = ("Theorem a : forall (R : Set) {RIS : RealInterfaceEnhancedSetoid R}"
+          " (x : R), P x.\n"
+          "Proof. intros. apply p. Qed.\n"
+          "Definition keeper2 (R : Set) := R.\n")
+    tS, nS = apply_one(fS, pS)
+    c22 = nS == 1 and tS == fS
+    tSb, nSb = apply_one(tA, pS)  # post-cure text: shell gone -> 0 stations
+    c22b = nSb == 0 and tSb == tA
+    print("cure32 station binder-shell/report-only/residual-zero:", c22, c22b)
+    ok = ok and c22 and c22b
+
+    # v32 whole-pack idempotence on a combined S07 sample
+    s32 = fA + fB + fC
+    w1, wr1 = run_pack(s32, pack["patterns"])
+    w2, wr2 = run_pack(w1, pack["patterns"])
+    c23 = (w2 == w1 and all(x["matches"] == 0 for x in wr2.values()))
+    print("v32 whole-pack idempotence:", c23,
+          {k: x["matches"] for k, x in wr2.items() if x["matches"]})
+    ok = ok and c23
+
 
     print("SELFTEST:", "PASS" if ok else "FAIL")
     return ok
@@ -711,6 +942,7 @@ def main():
 
     text = io.open(args.file, "r", encoding="utf-8", errors="replace").read()
     before = md5s(text)
+    mode = "APPLIED" if args.apply else "DRY-RUN"
     try:
         new_text, report = run_pack(text, patterns)
     except ExclusiveGroupConflict as e:
@@ -723,9 +955,9 @@ def main():
                        exclusive_group_conflict=e.groups)
             with io.open(args.json, "w", encoding="utf-8") as f:
                 json.dump(out, f, ensure_ascii=False, indent=1)
+            print("report json -> %s" % args.json)
         sys.exit(4)
     total = sum(v["matches"] for v in report.values())
-    mode = "APPLIED" if args.apply else "DRY-RUN"
     print("file: %s" % args.file)
     print("mode: %s  pack: %s v%s  patterns: %d" % (
         mode, pack.get("pack", "?"), pack.get("version", "?"), len(patterns)))
@@ -736,9 +968,14 @@ def main():
 
     rc = 0
     if args.apply:
-        # idempotence assertion: second pass must find nothing (fail-loud)
+        # idempotence assertion: second pass must find nothing (fail-loud).
+        # report-mode patterns (engine station-report) are advisory stations,
+        # not cures — they never rewrite and are excluded from the residual.
+        report_ids = set(p["id"] for p in patterns
+                         if p.get("mode") == "report")
         _t2, report2 = run_pack(new_text, patterns)
-        resid = dict((k, v["matches"]) for k, v in report2.items())
+        resid = dict((k, v["matches"]) for k, v in report2.items()
+                     if k not in report_ids)
         if any(resid.values()):
             print("IDEMPOTENCE-FAIL residual matches after apply: %s" % resid)
             print("file NOT written; report the residual to the caller")

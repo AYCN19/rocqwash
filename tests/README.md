@@ -12,7 +12,7 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（41 例）
+## 覆盖面（42 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -116,7 +116,7 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 35 | `t_scan_v4_token` | `scan/scan_v4_token.py`（token 级限定名普查·W15 工具化①） | `tests/test_scan_v4_token.py` 十一判：混合行遮蔽夹具三站复现＋旧法（行级 grep -v 式）同夹具漏站＝盲区机械实证＋binder 追踪零误报＋已洗参照件零站；真树抽查 `ROCWASH_TREE_SAMPLES` 环境门控缺省跳过不充红 |
-| 36 | `t_cure_pack` | `wash/cure_pack.json`＋`cure_applier.py`（消费位治愈正典包·五式存量＋v1.1 九式·W15 工具化②·v31 扩） | `tests/test_cure_pack.py`：legacy 五式触发/幂等/门控自检＋v1.1 face-regex 九式自检（face/proof 域守卫·intros-tail guard·exclusive-group rc4）＋fixture 干跑-apply-二次零变更（qle/natle/shadow 三夹具·守卫负例逐字断言）＋`cure_examples.v` 编译 rc=0（`ROCWASH_ROCQ` 门控·cpu_guard 包裹）＋不透明 reflexivity 负证 rc≠0 |
+| 36 | `t_cure_pack` | `wash/cure_pack.json`＋`cure_applier.py`（消费位治愈正典包·五式存量＋v1.1 九式＋v1.2 五式·W15 工具化②·v31/v32 扩） | `tests/test_cure_pack.py`：legacy 五式触发/幂等/门控自检＋v1.1 face-regex 九式自检（face/proof 域守卫·intros-tail guard·exclusive-group rc4）＋v1.2 S07 五式自检（壳除/记号重绑/桥裸名/谓词面收敛/binder 站型·binding-right 守卫·file_include 门）＋fixture 干跑-apply-二次零变更（qle/natle/shadow 三夹具·守卫负例逐字断言）＋S07 夹具流程（术前站数 1 report-only·干跑 A=2/B=1/C(a)=5/C(b)=2·apply＋binder 手术＋全零复跑·conflict --json rc4 器修回归）＋`cure_examples.v` 编译 rc=0（`ROCWASH_ROCQ` 门控·cpu_guard 包裹）＋门控 S07 编译弧（world 绿→base 红面 Illegal application→cured＋手术绿→Separate Extraction .ml/.mli 双面 Obj.magic 0/0·裸字段经全局实例解析）＋不透明 reflexivity 负证 rc≠0 |
 | 37 | `t_erasure_classifier` | `verify/erasure_classifier.py`（擦除位六簇分类器·W15 工具化③） | `tests/test_erasure_classifier.py` 十三判：六簇判定/coq_ 前缀/多行 inner-component/premise 位/CAPTURE 交叉对拍/resolve 状态；真件回放 `ROCWASH_ERASURE_MLI/SCAN` 门控缺省跳过 |
 
 ## v30 探测战役工具化轮补记（20261103·用例 38–40）
@@ -127,3 +127,10 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / 
 | 39 | `t_chain_graph` | `tools/chain_graph.py`（多账合并链根图·承 W25 w25_merge_ledgers.py·v30 工具化②） | `tests/test_chain_graph.py` 七节：selftest 六判／双形通吃（probe_engine records 壳×W13 裸 dict 混并）／合并语义（后批覆盖·batches 累积·标签取文件名去 .json）／链根自身可洗性三分（washable true/false/UNPROBED 逐字段）／missing 双源（字段直用·red regex 兜底 raw 空格形与「 | 」拼接形双咬合）／TOP 榜（n 降序·`--top` 截断·表头行·json top_order 保秩）＋json/md 重跑字节恒同／CLI 四码。合成双账临时目录夹具零触真仓零网络 |
 | 40 | `t_ledger_sync` | `tools/ledger_sync.py`（probe×状态台账合并同步·v30 工具化③·v2.1 增补） | `tests/test_ledger_sync.py` 十节：selftest 十三判／CLEAN 全链（全覆盖 probe＋零发现 exit 0·UNPROBED 升格 rc0→WASHABLE／rc1→DRIFT-BLOCKED 逐行咬合·probe_engine 全字段记录直吞）／E1 去重（同件名多行保首行·逐笔 FINDING·行数正确）／E3 幽灵（只记账不落行·名单响亮）／特异 tag（rc=124→probe:timeout·NO_SRC→probe:no-src·UNPROBED 不升格）／NO-MD5（W13 老式账只注记不升格）／报告面（--report JSON schema/counts/逐笔发现咬合）／CLI 四码＋列校验两变体（缺必需列 rc2 不产出·行宽不齐 rc2）＋幂等重跑字节恒同／items 子键壳＋元数据滤除（PROBE-META-SKIP·全元数据零记录 rc2 拒同步）／GEN-DIVERGENCE 分歧出账（divergence_with 记录逐笔响亮＋行注记 probe:gen-div 洗代名·幂等·md5 咬合升格照常）。合成夹具临时目录零触真仓零网络 |
 | 41 | `t_comment_pack` | `wash/comment_pack.json`＋`comment_sweep.py`（注释域 sweep 旁车·v31 工具化） | `tests/test_comment_pack.py` 六节：selftest 四判（旗词注释域换形＋字符串/嵌套注释免疫＋头注换代＋w7 code 行全等投影＋幂等）／pack 完整（engine=comment-state-machine·旗词表 载体→carrier·header_spec 五字段英形＋行上界 30）／fixture 流程（干跑零写→apply 换形 2 处·字符串字面量逐字保留·嵌套深度可达→重跑零变更）／头注换代（--header-map 数据驱动·换代后 code 行全等·重跑零变更）／头注形校验（五字段缺一报 problem report-only）／CLI 三码（help 0／缺参 2／缺件 9）。夹具临时目录副本驱动·零触真仓零网络 |
+
+## v32 S07 适配式工具化轮补记（20261103·新增用例 42＋用例 36 扩节·W66 支撑席提案实装）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 42 | `t_dual_scan` | `scan/dual_scan.py`（双器对拍驱动·v32 工具化·承 seat_wash66 w66_dual_scan.py） | `tests/test_dual_scan.py` 十节：净样例双器 0/0＋双端空 diff／语句面站 only_stmt 非空 only_v4 空（单侧情·报而不决——器共识非全集证）／token 站 only_v4 非空 only_stmt 空／确定性（同目标两跑报告字节恒同）／CLI 四码（无目标 2·缺 dir 2·缺 file 9·缺器 9·help 0）。临时目录夹具驱动零触真仓零网络 |
+| 36（v32 扩节） | `t_cure_pack` | `wash/cure_pack.json` v1.2＋`cure_applier.py`（S07 世系适配五式＋line-insert/station-report 两引擎＋exclusive-group --json 器修） | cure32_A 壳除（型注＋binder 双站·:=-binding-right 右位排除）／cure32_B 记号重绑（末个 Import 行后插 Notation 行·file_include＋裸 R 门·幂等跳过）／cure32_C(a) 桥裸名（face+proof 域·8 名交替）／cure32_C(b) 谓词面收敛（lt→real_lt/req→real_eq·mult 等含 lt 子串词零触碰·收敛目标=供给引理结论常量名机械断言）／cure32_station binder 壳站（report-only·术前 1/术后残差 0·--apply 幂等残差排除 report 型）／conflict 器修回归（--json 落盘＋rc=4＋零 traceback） |
