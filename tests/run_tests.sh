@@ -60,8 +60,12 @@
 #         v30 工具化②·承 W25 w25_merge_ledgers.py：双形通吃/后批覆盖/batches 累积/
 #         链根自身可洗性三分/missing 双源/TOP 榜排序截断＋确定性字节恒同/CLI 四码）
 #       tools/ledger_sync.py probe×状态台账合并同步（tests/test_ledger_sync.py·
-#         八节·v30 工具化③：CLEAN 升格全链/E1 去重/E3 幽灵/MD5-DRIFT/NO-MD5/
-#         timeout·no-src 特异 tag/report JSON/列校验 fail-loud/幂等字节恒同/CLI 四码）
+#         十节·v30 工具化③·v2.1 增补：CLEAN 升格全链/E1 去重/E3 幽灵/MD5-DRIFT/
+#         NO-MD5/timeout·no-src 特异 tag/report JSON/列校验 fail-loud/幂等字节恒同/
+#         CLI 四码/items 子键壳＋元数据滤除/GEN-DIVERGENCE 分歧出账）
+#       wash/comment_pack.json＋comment_sweep.py 注释域 sweep 旁车（tests/test_comment_pack.py·
+#         六节·v31 工具化：嵌套注释+字符串感知状态机/旗词换形/头注换代/
+#         w7 code 行全等/幂等/CLI 四码）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -134,7 +138,8 @@ t_cure_pack \
 t_erasure_classifier \
 t_probe_engine \
 t_chain_graph \
-t_ledger_sync"
+t_ledger_sync \
+t_comment_pack"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -373,6 +378,12 @@ t_ledger_sync() {
   # v30 工具化③：probe×状态台账合并同步（E1 去重/E3 幽灵/MD5-DRIFT/NO-MD5/
   # 升格策略/列校验 fail-loud/幂等字节恒同/CLI 四码·合成夹具八节·零触真仓零网络）
   "$PY" -B "$REPO/tests/test_ledger_sync.py"
+}
+
+t_comment_pack() {
+  # v31 工具化：注释域 sweep 旁车（comment_pack.json＋comment_sweep.py·
+  # 嵌套注释+字符串感知状态机/旗词换形/头注换代/w7 code 行全等/幂等·六节零触真仓）
+  "$PY" -B "$REPO/tests/test_comment_pack.py"
 }
 
 # ---------- 汇总执行 ----------

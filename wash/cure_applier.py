@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""cure_applier.py — applier for the consumer-cure canonical pack (5 patterns).
+"""cure_applier.py — applier for the consumer-cure canonical pack (5 + 10 patterns).
 
 Purpose:
     Applies the deterministic rewrite patterns from cure_pack.json to a Rocq/Coq
@@ -8,6 +8,15 @@ Purpose:
     supply bridges) exist as canonical, idempotent rewrites: applying the pack
     twice changes nothing on the second run — the applier asserts this
     mechanically after every --apply.
+
+    v31 additions (20261103 wash-campaign field report): statement-face
+    downshift patterns (Qle/Qlt carrier faces, scoped-notation comparisons),
+    Import-shadow direct-face qualification (two exclusive variants), and
+    NatLe premise-lift / drop-wrap pairs.  New engine "face-regex" scopes a
+    trigger to statement faces or proof regions with per-face token guards.
+    Patterns may declare "exclusive_group": two selected patterns of one group
+    both matching is a variant-choice conflict and fails loud (exit 4) —
+    the caller must pick one variant via --only.
 
 Inputs:
     --file path/to/file.v           target source (never modified on dry-run)
@@ -22,7 +31,8 @@ Outputs:
     --json report — {pattern_id: {matches: n, applied: n}} plus file md5s.
     Exit codes: 0 = ran (dry-run or applied with idempotence verified),
     1 = idempotence assertion failed (fail-loud), 2 = usage,
-    5 = pattern id unknown, 9 = file missing.
+    4 = exclusive-group conflict (two variants of one group matched — pick
+        one via --only), 5 = pattern id unknown, 9 = file missing.
 
 Minimal usage:
     python3 cure_applier.py --file path/to/file.v              # dry-run
@@ -146,7 +156,250 @@ ENGINES = {
 }
 
 
+# ---------------------------------------------------------------------------
+# v31: face-scoped regex engine (cure_pack v1.1 patterns cure6..cure14).
+# ---------------------------------------------------------------------------
+
+class ExclusiveGroupConflict(Exception):
+    """Two selected patterns of one exclusive_group both produced matches —
+    the pack carries alternative cures for one red family and the caller
+    must choose a variant (--only).  Never applied silently."""
+
+    def __init__(self, groups):
+        self.groups = groups
+        super(ExclusiveGroupConflict, self).__init__(
+            "exclusive-group conflict: %s" % groups)
+
+
+def _skip_comment_string(text, i):
+    """At a code position: if text[i:] opens a nested comment or string, return
+    the offset just past it; else None.  Comment/string aware period scan."""
+    if text.startswith("(*", i):
+        depth = 0
+        while i < len(text):
+            if text.startswith("(*", i):
+                depth += 1
+                i += 2
+            elif text.startswith("*)", i):
+                depth -= 1
+                i += 2
+                if depth == 0:
+                    return i
+            else:
+                i += 1
+        return len(text)
+    if text.startswith('"', i):
+        i += 1
+        while i < len(text):
+            if text[i] == "\\":
+                i += 2
+            elif text[i] == '"':
+                return i + 1
+            else:
+                i += 1
+        return len(text)
+    return None
+
+
+def _statement_period(text, start, limit):
+    """Offset of the first depth-0 statement terminator '.' (followed by
+    whitespace/EOF), skipping nested comments and string literals — the
+    deterministic end of a Proof-less declaration's statement face."""
+    depth = 0
+    i = start
+    while i < limit:
+        sk = _skip_comment_string(text, i)
+        if sk is not None:
+            i = sk
+            continue
+        c = text[i]
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth = max(0, depth - 1)
+        elif c == "." and depth == 0:
+            if i + 1 >= limit or text[i + 1] in " \t\r\n":
+                return i
+        i += 1
+    return None
+
+
+def _face_regions(text):
+    """[(decl_start, face_end, proof_span, decl_line)] — statement face spans
+    declaration keyword through the Proof line (or, for Proof-less
+    declarations, through the first depth-0 statement terminator); proof_span
+    = (start, end) when a Proof line exists, else None."""
+    decls = [(m.start(), m.end()) for m in DECL_FACE_RE.finditer(text)]
+    out = []
+    for k, (s, e) in enumerate(decls):
+        nxt = decls[k + 1][0] if k + 1 < len(decls) else len(text)
+        pm = PROOF_RE.search(text, e, nxt)
+        if pm:
+            face_end = pm.start()
+            proof_span = (pm.start(), nxt)
+        else:
+            p = _statement_period(text, s, nxt)
+            face_end = (p + 1) if p is not None else nxt
+            proof_span = None
+        decl_line = text[s:text.find("\n", s, face_end)
+                         if text.find("\n", s, face_end) != -1 else face_end]
+        out.append((s, face_end, proof_span, decl_line))
+    return out
+
+
+def _paren_term(t):
+    """Single-token terms stay bare; multi-token applications get parens
+    (mirrors the canonical patched forms, e.g. NatLe (gnPrf f pf) k)."""
+    return "(%s)" % t if " " in t else t
+
+
+def _fn_qle_notation(m, pat):
+    """`X <= Y%Q` -> `QleT' (X) Y%Q`: carrier predicate application with the
+    scope mark retained on the literal RHS operand."""
+    target = pat.get("target", "QleT'")
+    lhs = m.group("lhs").strip()
+    rhs = m.group("rhs").strip()
+    return "%s %s %s%%Q" % (target, _paren_term(lhs), _paren_term(rhs))
+
+
+def _fn_natle_premise_lift(m, pat):
+    """`(X <= Y)%nat` -> `S01_BaseRing.NatLe (X) Y`: premise lifted to the
+    Set-carrier order (scope mark dropped; qualified name per REQNOEXPORT)."""
+    qual = pat.get("qualified_name", "S01_BaseRing.NatLe")
+    lhs = m.group("lhs").strip()
+    rhs = m.group("rhs").strip()
+    return "%s %s %s" % (qual, _paren_term(lhs), _paren_term(rhs))
+
+
+TEMPLATE_FNS = {
+    "qle_notation_downshift": _fn_qle_notation,
+    "natle_premise_lift": _fn_natle_premise_lift,
+}
+
+
+def _expand_piece(pat, m):
+    fn = pat.get("template_fn")
+    if fn:
+        return TEMPLATE_FNS[fn](m, pat)
+    return m.expand(pat["template"])
+
+
+def apply_face_regex(text, pat, fid):
+    """face/proof-scoped trigger with per-face token guards.
+
+    Pattern fields beyond trigger_regex/template:
+      scope         "face" (default) rewrites inside statement faces only;
+                    "proof" rewrites inside Proof regions only.
+      face_include  list of regexes; every one must match the statement face.
+      face_exclude  list of regexes; any match skips the face (guards against
+                    rewriting bridge definitions and already-cured faces).
+      decl_exclude  list of regexes tested against the declaration line
+                    (e.g. skip Definition/Fixpoint faces where binder-shadow
+                    risk is structural — the station scanner owns those).
+      guard         "intros-tail": in proof scope, a match fires only when its
+                    last group names the tail identifier of an `intros ...`
+                    tactic in the same proof region (the hypothesis actually
+                    introduced from the lifted premise) — other exact-call
+                    stations with constant tails are left untouched.
+      file_include  regex that must match the whole file once (precondition,
+                    e.g. the shadowing Import is present).
+      token_map     {bare_token: qualified_form} — builds the trigger from the
+                    map keys (longest-first) and rewrites via the map.
+      target        carrier predicate name used by template_fn.
+      qualified_name  fully-qualified carrier name used by template_fn.
+    """
+    fi = pat.get("file_include")
+    if fi and not re.search(fi, text):
+        return text, 0
+    if "token_map" in pat:
+        toks = sorted(pat["token_map"], key=len, reverse=True)
+        trig = re.compile(r"(?<![A-Za-z0-9_.'])(%s)(?![A-Za-z0-9_'])"
+                          % "|".join(re.escape(t) for t in toks))
+        tmap = pat["token_map"]
+        repl = lambda m: tmap[m.group(1)]
+    else:
+        trig = re.compile(pat["trigger_regex"])
+        repl = lambda m: _expand_piece(pat, m)
+    incl = [re.compile(rx) for rx in pat.get("face_include", [])]
+    excl = [re.compile(rx) for rx in pat.get("face_exclude", [])]
+    dexcl = [re.compile(rx) for rx in pat.get("decl_exclude", [])]
+    guard = pat.get("guard")
+    scope = pat.get("scope", "face")
+    pieces = []
+    total = 0
+    for s, face_end, proof_span, decl_line in _face_regions(text):
+        if any(rx.search(decl_line) for rx in dexcl):
+            continue
+        face = text[s:face_end]
+        if any(not rx.search(face) for rx in incl):
+            continue
+        if any(rx.search(face) for rx in excl):
+            continue
+        if scope == "proof":
+            if proof_span is None:
+                continue
+            seg_off, seg = proof_span[0], text[proof_span[0]:proof_span[1]]
+        else:
+            seg_off, seg = s, face
+        if guard == "intros-tail":
+            intros_tails = set()
+            for im in re.finditer(r"(?m)^[ \t]*intros\b[ \t]+([^\n.]*)", seg):
+                toks = re.findall(r"[A-Za-z_'][A-Za-z0-9_']*", im.group(1))
+                if toks:
+                    intros_tails.add(toks[-1])
+            fires = []
+            for m in trig.finditer(seg):
+                groups = m.groups()
+                tail = groups[-1] if groups else None
+                if tail is None or tail not in intros_tails:
+                    continue  # guarded out: tail is not an introduced hypothesis
+                fires.append(m)
+            n = len(fires)
+            if fires:
+                parts = []
+                last = 0
+                for m in fires:
+                    parts.append(seg[last:m.start()])
+                    parts.append(repl(m))
+                    last = m.end()
+                parts.append(seg[last:])
+                new_seg = "".join(parts)
+            else:
+                new_seg = seg
+        else:
+            new_seg, n = trig.subn(repl, seg)
+        if n:
+            pieces.append((seg_off, seg_off + len(seg), new_seg))
+            total += n
+    if not pieces:
+        return text, 0
+    out = text
+    for seg_off, seg_end, new_seg in sorted(pieces, reverse=True):
+        out = out[:seg_off] + new_seg + out[seg_end:]
+    return out, total
+
+
+ENGINES["face-regex"] = apply_face_regex
+
+
 def run_pack(text, patterns):
+    # variant-conflict pre-pass: exclusive groups are judged against the
+    # ORIGINAL text — sequential application could mask a variant (e.g. the
+    # variant-(a) deletion removing the Import precondition of variant (b)).
+    # Both variants matching the original file is a caller decision (rc 4),
+    # never a silent sequential resolution.
+    groups = {}
+    for pat in patterns:
+        g = pat.get("exclusive_group")
+        if not g:
+            continue
+        eng = ENGINES[pat["engine"]]
+        _t, n = eng(text, pat, pat["id"])
+        if n:
+            groups.setdefault(g, []).append(pat["id"])
+    conflicts = dict((g, ids) for g, ids in groups.items() if len(ids) > 1)
+    if conflicts:
+        raise ExclusiveGroupConflict(conflicts)
     report = {}
     for pat in patterns:
         eng = ENGINES[pat["engine"]]
@@ -252,6 +505,171 @@ def selftest():
     print("whole-pack idempotence:", c6, {k: v["matches"] for k, v in r2.items()})
     ok = ok and c6
 
+    # ---- v31 vectors (cure6..cure14) ----
+    v = dict((p["id"], p) for p in pack["patterns"]
+             if int(p["id"].split("_")[0][4:]) >= 6)
+
+    # cure6/cure8: bare Qle/Qlt token downshift; binder decls, binder uses in
+    # Definition bodies (decl_exclude), declared names, trailing comments and
+    # already-cured faces are all guarded.
+    p6 = v["cure6_qle_token_downshift"]
+    f6 = ("Theorem t1 : forall a b : Q, Qle a b -> Qle (f a) (f b).\n"
+          "Proof. intros. apply Qle_refl. Qed.\n"
+          "Definition bnd (Qle : nat) (n : nat) := n + Qle.\n"
+          "Theorem Qle_pair : forall x : Q, Qle x x.\n"
+          "(* comment mentions Qle freely *)\n"
+          "Definition Qle := 3.\n")
+    t6, n6 = apply_one(f6, p6)
+    c7 = (n6 == 3
+          and "QleT' a b -> QleT' (f a) (f b)" in t6
+          and "QleT' x x." in t6
+          and "Definition bnd (Qle : nat) (n : nat) := n + Qle." in t6
+          and "Definition Qle := 3." in t6
+          and "comment mentions Qle freely" in t6)
+    t6b, n6b = apply_one(t6, p6)
+    c7b = n6b == 0
+    print("cure6 face downshift/guards/idempotent:", c7, c7b)
+    ok = ok and c7 and c7b
+
+    p8 = v["cure8_qlt_token_downshift"]
+    t8, n8 = apply_one("Theorem t2 : forall a b : Q, Qlt a b -> Qlt a a.\n"
+                       "Proof. intros. apply Qlt_refl. Qed.\n"
+                       "Definition bnd2 (Qlt : nat) := Qlt.\n", p8)
+    c8 = (n8 == 2 and "QltT a b -> QltT a a." in t8
+          and "Definition bnd2 (Qlt : nat) := Qlt." in t8)
+    t8b, n8b = apply_one(t8, p8)
+    c8b = n8b == 0
+    print("cure8 Qlt downshift/guards/idempotent:", c8, c8b)
+    ok = ok and c8 and c8b
+
+    # cure7: scoped notation downshift (premise arrow must not be swallowed;
+    # unmarked comparison stays uncovered — station-scanner territory)
+    p7 = v["cure7_qle_notation_downshift"]
+    f7 = ("Theorem t3 : forall x : Q, In x [0; 0; 2] -> Qabs x <= 2%Q.\n"
+          "Proof. intros. apply xq_Qle_bool_le. vm_compute. reflexivity. Qed.\n"
+          "Theorem t4 : forall a y : Q, In y (P0 [a]) -> Qabs y <= Qabs a.\n"
+          "Proof. intros. apply Qle_refl. Qed.\n")
+    t7, n7 = apply_one(f7, p7)
+    c9 = (n7 == 1
+          and "QleT' (Qabs x) 2%Q." in t7
+          and "Qabs y <= Qabs a." in t7)
+    t7b, n7b = apply_one(t7, p7)
+    c9b = n7b == 0
+    print("cure7 notation downshift/unmarked-skip/idempotent:", c9, c9b)
+    ok = ok and c9 and c9b
+
+    # cure9: Qlt scoped-notation variant
+    p9 = v["cure9_qlt_notation_downshift"]
+    t9, n9 = apply_one("Theorem t5 : forall x : Q, P x -> Qabs x < 1%Q.\n"
+                       "Proof. intros. apply xq_Qlt_bool_lt. Qed.\n", p9)
+    c10 = n9 == 1 and "QltT (Qabs x) 1%Q." in t9
+    t9b, n9b = apply_one(t9, p9)
+    c10b = n9b == 0
+    print("cure9 Qlt notation downshift/idempotent:", c10, c10b)
+    ok = ok and c10 and c10b
+
+    # cure10: refl bridge opener inside proofs of already-downshifted faces
+    p10 = v["cure10_qle_refl_bridge_open"]
+    f10 = ("Theorem t6 : forall a b : Q, QleT' a b -> QleT' (f a) (f b).\n"
+           "Proof.\n  intros a b H.\n  apply Qle_refl.\nQed.\n"
+           "Theorem t7 : forall n : nat, n <= n.\n"
+           "Proof. intros. apply Qle_refl. Qed.\n")
+    t10, n10 = apply_one(f10, p10)
+    c11 = (n10 == 1
+           and "apply Qle_to_QleT'. apply Qle_refl." in t10
+           and t10.count("apply Qle_refl.") == 2)
+    t10b, n10b = apply_one(t10, p10)
+    c11b = n10b == 0
+    print("cure10 refl opener/gate/idempotent:", c11, c11b)
+    ok = ok and c11 and c11b
+
+    # cure11/cure12: import-shadow pair, mutually exclusive variants
+    p11 = v["cure11_import_shadow_delete"]
+    shadow = ("Require Import S02_CauchyComplete.\n"
+              "Import RealInterfaceEnhancedMod.\n"
+              "Theorem r1 : forall u : Real, req u (opp u).\n"
+              "Proof. intros. apply r0. Qed.\n")
+    t11, n11 = apply_one(shadow, p11)
+    c12 = n11 == 1 and "Import RealInterfaceEnhancedMod." not in t11 \
+        and "Require Import S02_CauchyComplete." in t11
+    t11b, n11b = apply_one(t11, p11)
+    c12b = n11b == 0
+    print("cure11 import delete/idempotent:", c12, c12b)
+    ok = ok and c12 and c12b
+
+    p12 = v["cure12_shadow_direct_face_qualify"]
+    t12, n12 = apply_one(shadow, p12)
+    c13 = (n12 == 2
+           and "S02_CauchyComplete.real_eq u (S02_CauchyComplete.real_opp u)."
+           in t12
+           and "Import RealInterfaceEnhancedMod." in t12)
+    t12b, n12b = apply_one(t12, p12)
+    c13b = n12b == 0
+    # no-import precondition: bare tokens in a non-shadow file are untouched
+    plain = ("Theorem r2 : forall u : Real, req u (opp u).\n"
+             "Proof. intros. apply r0. Qed.\n")
+    t12c, n12c = apply_one(plain, p12)
+    c13c = n12c == 0 and t12c == plain
+    print("cure12 direct-face qualify/idempotent/no-import guard:", c13, c13b, c13c)
+    ok = ok and c13 and c13b and c13c
+
+    # exclusive-group conflict: variant a + variant b in one run -> fail loud
+    try:
+        run_pack(shadow, [p11, p12])
+        c14 = False
+    except ExclusiveGroupConflict as e:
+        c14 = sorted(e.groups["import-shadow"]) == \
+            ["cure11_import_shadow_delete", "cure12_shadow_direct_face_qualify"]
+    print("exclusive-group conflict fail-loud:", c14)
+    ok = ok and c14
+
+    # cure13/cure14: nat-le premise lift + drop wrap
+    p13 = v["cure13_natle_premise_lift"]
+    f13 = ("Theorem t8 : forall f pf k,\n"
+           "  (gnPrf f pf <= k)%nat -> NatOK f pf k.\n"
+           "Proof. intros. apply g0. Qed.\n"
+           "Theorem t9 : forall n m : nat, (n <= m)%nat -> n < m.\n"
+           "Proof. intros. apply Nat.lt_le_trans. Qed.\n")
+    t13, n13 = apply_one(f13, p13)
+    c15 = (n13 == 2
+           and "S01_BaseRing.NatLe (gnPrf f pf) k -> NatOK f pf k." in t13
+           and "S01_BaseRing.NatLe n m -> n < m." in t13)
+    t13b, n13b = apply_one(t13, p13)
+    c15b = n13b == 0
+    print("cure13 premise lift/idempotent:", c15, c15b)
+    ok = ok and c15 and c15b
+
+    p14 = v["cure14_natle_drop_wrap"]
+    f14 = ("Theorem t10 : forall f pf k,\n"
+           "  S01_BaseRing.NatLe (gnPrf f pf) k -> NatOK f pf k.\n"
+           "Proof.\n  intros f pf k Hk.\n"
+           "  split.\n"
+           "  - exact (gnPrf_replay f pf k Hk).\n"
+           "  - apply loeb_tid_eq. exact (gnPrf_replay_eq abg_fzz abg_axz).\n"
+           "Qed.\n"
+           "Theorem t11 : forall x : nat, x = x.\n"
+           "Proof. intros. exact (eq_refl x). Qed.\n")
+    t14, n14 = apply_one(f14, p14)
+    c16 = (n14 == 1
+           and "exact (gnPrf_replay f pf k (S01_BaseRing.NatLe_drop _ _ Hk))."
+           in t14
+           and "exact (gnPrf_replay_eq abg_fzz abg_axz)." in t14
+           and "exact (eq_refl x)." in t14)
+    t14b, n14b = apply_one(t14, p14)
+    c16b = n14b == 0
+    print("cure14 drop wrap/intros-tail guard/idempotent:", c16, c16b)
+    ok = ok and c16 and c16b
+
+    # v31 whole-pack idempotence on a conflict-free campaign sample
+    vsample = f6 + f7 + f13 + f14
+    v1, vr1 = run_pack(vsample, pack["patterns"])
+    v2, vr2 = run_pack(v1, pack["patterns"])
+    c17 = (v2 == v1 and all(x["matches"] == 0 for x in vr2.values()))
+    print("v31 whole-pack idempotence:", c17,
+          {k: x["matches"] for k, x in vr2.items() if x["matches"]})
+    ok = ok and c17
+
+
     print("SELFTEST:", "PASS" if ok else "FAIL")
     return ok
 
@@ -293,7 +711,19 @@ def main():
 
     text = io.open(args.file, "r", encoding="utf-8", errors="replace").read()
     before = md5s(text)
-    new_text, report = run_pack(text, patterns)
+    try:
+        new_text, report = run_pack(text, patterns)
+    except ExclusiveGroupConflict as e:
+        print("EXCLUSIVE-GROUP-CONFLICT: %s" % e.groups)
+        print("variant cures for one red family both matched — pick one "
+              "via --only (file untouched)")
+        if args.json:
+            out = dict(file=args.file, mode=mode, md5_before=before,
+                       md5_after=before, report={}, idempotence_ok=False,
+                       exclusive_group_conflict=e.groups)
+            with io.open(args.json, "w", encoding="utf-8") as f:
+                json.dump(out, f, ensure_ascii=False, indent=1)
+        sys.exit(4)
     total = sum(v["matches"] for v in report.values())
     mode = "APPLIED" if args.apply else "DRY-RUN"
     print("file: %s" % args.file)

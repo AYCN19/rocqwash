@@ -1,7 +1,7 @@
 {
   "pack": "consumer-cure canonical pack",
-  "version": "1.0.0",
-  "description": "Five canonical rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex or token-station), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges).",
+  "version": "1.1.0",
+  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs.",
   "patterns": [
     {
       "id": "cure1_qeqT_imp_qeq_rewrite_wrap",
@@ -39,6 +39,128 @@
       "trigger": "stations of scan_v4_token (classes shadow-hazard and unqualified-global)",
       "template": "replace bare token with Datatypes.S",
       "idempotence_note": "After qualification the tokens are dotted and no longer census stations."
+    },
+    {
+      "id": "cure6_qle_token_downshift",
+      "title": "Qle statement-face downshift (bare Qle -> QleT' in Theorem/Lemma/Proposition/Corollary/Instance faces)",
+      "canonical_note": "Qle is the stdlib Prop-face order; the Set-carrier face is QleT' := Id (Qle_bool x y) true. The whole statement face is washed (premises and conclusion) per the campaign canonical: every Prop-face Qle in a washed file's statement face moves to QleT'. Faces already carrying QleT' (bridges like Qle_to_QleT'/QleT'_to_Qle, their consumers, cured faces) are excluded; binder declarations `(Qle : T)`, declared names, and `:=`-bound names are guarded by the trigger lookahead; Definition/Fixpoint faces are excluded (binder-shadow territory of the station scanner). Unmarked `<=` comparisons are NOT covered here (scope-ambiguous) - see cure7 for the %-marked form.",
+      "v31_lineage": "cure31_A_qleT_face_wash - red-face verbatim: W45 abl_dtpt_dep_supply 'two Theorem conclusion positions on Qle (stdlib Q order Prop face)'; W50 LW3JointFill lw384_qsum0_abs_nonneg; W27 station ledger 'canonical wash Qle -> QleT''; recurrence W27/W29/W45/W47/W50 (>=4 seats).",
+      "engine": "face-regex",
+      "scope": "face",
+      "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
+      "face_exclude": ["QleT'"],
+      "trigger_regex": "(?<![A-Za-z0-9_'])Qle(?![A-Za-z0-9_'])(?!\\s*:)",
+      "template": "QleT'",
+      "idempotence_note": "Post-cure faces contain QleT', which the face_exclude guard skips on every later run."
+    },
+    {
+      "id": "cure7_qle_notation_downshift",
+      "title": "Qle scoped-notation downshift (X <= Y%Q -> QleT' (X) Y%Q in statement faces)",
+      "canonical_note": "The %Q-scope mark makes the comparison deterministically Q-domain: canonical patched form keeps the scope mark on the literal operand (QleT' (Qabs x) 2%Q). Multi-token operands are parenthesized. Comparisons WITHOUT a scope mark are scope-ambiguous (Q vs nat vs Z) and are intentionally not covered - they remain scanner-station territory. Nested-parenthesis operand forms exceed the flat-operand trigger (documented blind-spot family of regex cures).",
+      "v31_lineage": "cure31_A_qleT_face_wash - red-face verbatim: W45 abl_dtpt_dep_supply patch 'Qabs x <= 2%Q (L123 conclusion)' -> 'QleT' (Qabs x) 2%Q'; W27 station ledger P5_le family.",
+      "engine": "face-regex",
+      "scope": "face",
+      "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
+      "face_exclude": ["QleT'"],
+      "trigger_regex": "(?P<lhs>[^\\n()<>=-]+?)[ \\t]*<=[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
+      "template_fn": "qle_notation_downshift",
+      "target": "QleT'",
+      "idempotence_note": "Post-cure faces carry QleT' (excluded) and no `<=` before %Q remains; the trigger cannot re-match."
+    },
+    {
+      "id": "cure8_qlt_token_downshift",
+      "title": "Qlt statement-face downshift (bare Qlt -> QltT in statement faces)",
+      "canonical_note": "Structurally symmetric to cure6 for the strict order: the Set-carrier face is QltT (QltT_to_Qlt carries two explicit _ args). Same guards: QleT'/QltT-carrying faces excluded, binders/names guarded, Definition/Fixpoint excluded.",
+      "v31_lineage": "cure31_A_qleT_face_wash - canonical wash trio verbatim (W27 station ledger): 'Qle -> QleT' / Qlt -> QltT / == -> QeqT'.",
+      "engine": "face-regex",
+      "scope": "face",
+      "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
+      "face_exclude": ["QltT"],
+      "trigger_regex": "(?<![A-Za-z0-9_'])Qlt(?![A-Za-z0-9_'])(?!\\s*:)",
+      "template": "QltT",
+      "idempotence_note": "Post-cure faces contain QltT, which the face_exclude guard skips."
+    },
+    {
+      "id": "cure9_qlt_notation_downshift",
+      "title": "Qlt scoped-notation downshift (X < Y%Q -> QltT (X) Y%Q in statement faces)",
+      "canonical_note": "Strict-order twin of cure7: the < character must not be the head of <= (negative lookahead), the %Q mark pins the domain, the mark is retained on the literal operand.",
+      "v31_lineage": "cure31_A_qleT_face_wash - Qlt/QltT isomorphism named in the proposal canonical anchors (QltT_to_Qlt _ _, two explicit args).",
+      "engine": "face-regex",
+      "scope": "face",
+      "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
+      "face_exclude": ["QltT"],
+      "trigger_regex": "(?P<lhs>[^\\n()<>=-]+?)[ \\t]*<(?!=)[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
+      "template_fn": "qle_notation_downshift",
+      "target": "QltT",
+      "idempotence_note": "Post-cure faces carry QltT (excluded) and no `<` before %Q remains."
+    },
+    {
+      "id": "cure10_qle_refl_bridge_open",
+      "title": "refl bridge opener (apply Qle_refl. -> apply Qle_to_QleT'. apply Qle_refl. in proofs of QleT'-face statements)",
+      "canonical_note": "After a statement face is washed to QleT', the stdlib reflexivity closer no longer applies directly: the proof must first cross the canonical bridge Qle_to_QleT' (S02_CauchyComplete), then close on the Qle face. When the consuming environment does not re-export the bridge, use the fully-qualified form apply S02_CauchyComplete.Qle_to_QleT'. (REQNOEXPORT family). Fires only inside proofs of statements whose face carries QleT'; other faces keep their proof text untouched.",
+      "v31_lineage": "cure31_A_qleT_face_wash - red-face verbatim: W45 abl_dtpt_dep_supply patch 'apply Qle_refl.' -> 'apply Qle_to_QleT'. apply Qle_refl.' (S02:115 canonical bridge, Arch_PA_02:842 precedent form); W47 hand_wash 'apply S02_CauchyComplete.Qle_to_QleT''.",
+      "engine": "face-regex",
+      "scope": "proof",
+      "face_include": ["QleT'"],
+      "trigger_regex": "(?<!apply Qle_to_QleT'\\. )apply Qle_refl\\.",
+      "template": "apply Qle_to_QleT'. apply Qle_refl.",
+      "idempotence_note": "The cured text has the opener directly before apply Qle_refl.; the fixed-width lookbehind blocks any re-match."
+    },
+    {
+      "id": "cure11_import_shadow_delete",
+      "title": "Import-shadow cure, variant (a): delete the shadowing Import line (Import RealInterfaceEnhancedMod.)",
+      "canonical_note": "A bare req/log/exp_neg/exp_neg_pos/opp statement resolves, under Import RealInterfaceEnhancedMod, to class-field projections; the compiled statement stores the projection face and leaks Obj.magic at extraction. Variant (a) removes the shadowing Import line so bare names resolve to the global direct face. Mutually exclusive with cure12 (variant b) - the pack marks both with exclusive_group \"import-shadow\": running both in one pass fails loud; pick one via --only. Re-adding any Requires the file actually needs is supply wiring, not a cure-pattern concern.",
+      "v31_lineage": "cure31_B_import_shadow_direct_face - red-face verbatim: W45 'L81 Import RealInterfaceEnhancedMod. shadows: the statement word-form req (log (exp_neg u) (exp_neg_pos u)) (opp u) resolves to class-field projections (REPL Print pre-wash), root statement stores a real_eq face -> type-synonym cast Obj.magic x1'; recurrence W45+W47 on the same file (main md5 cbb7a78d).",
+      "engine": "line-regex",
+      "trigger_regex": "(?m)^[ \\t]*Import[ \\t]+RealInterfaceEnhancedMod\\.[ \\t]*\\r?\\n?",
+      "template": "",
+      "exclusive_group": "import-shadow",
+      "idempotence_note": "The line is gone after the first pass; the trigger cannot re-match."
+    },
+    {
+      "id": "cure12_shadow_direct_face_qualify",
+      "title": "Import-shadow cure, variant (b): qualify shadowed projections to the global direct face (bare req/log/exp_neg/exp_neg_pos/opp -> fully-qualified real_eq/real_log/...)",
+      "canonical_note": "Variant (b) keeps the Import and rewrites the statement face to the global direct forms the extraction expects: req -> S02_CauchyComplete.real_eq, opp -> S02_CauchyComplete.real_opp, log -> S07_RealSetoidExpLog.real_log, exp_neg -> S07_RealSetoidExpLog.real_exp_neg, exp_neg_pos -> S07_RealSetoidExpLog.real_exp_neg_pos. Fires only when the shadowing Import is present (file_include); qualified references are never re-matched; Definition/Fixpoint faces are excluded (local binder shadowing is station-scanner territory). Mutually exclusive with cure11 via exclusive_group. Binder names spelled like the shadowed tokens (e.g. u) are outside the token map and survive verbatim.",
+      "v31_lineage": "cure31_B_import_shadow_direct_face - red-face verbatim: W47 hand_wash 'the statement face is rewritten to the fully-qualified direct forms (S02_CauchyComplete.real_eq / S07_RealSetoidExpLog.real_log / real_exp_neg / real_exp_neg_pos / S02_CauchyComplete.real_opp), binder u kept verbatim; extraction-gate magic 1 -> 0 (G3 control: root statement alone extracts magic=0)'.",
+      "engine": "face-regex",
+      "scope": "face",
+      "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
+      "file_include": "Import\\s+RealInterfaceEnhancedMod\\b",
+      "exclusive_group": "import-shadow",
+      "token_map": {
+        "req": "S02_CauchyComplete.real_eq",
+        "opp": "S02_CauchyComplete.real_opp",
+        "log": "S07_RealSetoidExpLog.real_log",
+        "exp_neg_pos": "S07_RealSetoidExpLog.real_exp_neg_pos",
+        "exp_neg": "S07_RealSetoidExpLog.real_exp_neg"
+      },
+      "idempotence_note": "Post-cure faces carry only the dotted global forms; the bare-token trigger (built longest-first from the map) cannot re-match, and the negative lookbehind never touches dotted references."
+    },
+    {
+      "id": "cure13_natle_premise_lift",
+      "title": "nat-le premise lift ((X <= Y)%nat -> S01_BaseRing.NatLe (X) Y in statement faces)",
+      "canonical_note": "A premise on nat <= is a Prop face; the Set-carrier face is NatLe := Id (Nat.leb n m) true. The lift is the premise-side complement of cure5 (which consumes NatLe hypotheses at nat <= goals). The fully-qualified carrier name is canonical: bare NatLe does not resolve through non-transitive Require chains (REQNOEXPORT family - qualify, do not add Import lines). Multi-token operands are parenthesized; the scope mark is dropped with the parens. Faces already carrying NatLe (cured faces, NatLe_drop/NatLe_lift bridge faces) are excluded.",
+      "v31_lineage": "cure31_C_natle_premise_lift - red-face verbatim: W45/W47 abl_audit_base_v7 patch '(gnPrf f pf <= k)%nat -> (L146 premise)' -> 'S01_BaseRing.NatLe (gnPrf f pf) k ->'; W47 hand_wash 'nat-le premise -> S01_BaseRing.NatLe (Id (Nat.leb n m) true, S01:88) - Section 12.2(5) canonical'; recurrence W45+W47 (same file, main md5 5f098369).",
+      "engine": "face-regex",
+      "scope": "face",
+      "face_exclude": ["NatLe"],
+      "trigger_regex": "\\([ \\t]*(?P<lhs>[^\\n()]+?)[ \\t]*<=[ \\t]*(?P<rhs>[^\\n()]+?)[ \\t]*\\)%nat",
+      "template_fn": "natle_premise_lift",
+      "qualified_name": "S01_BaseRing.NatLe",
+      "idempotence_note": "Post-cure faces carry NatLe (excluded) and no `)%nat` comparison remains."
+    },
+    {
+      "id": "cure14_natle_drop_wrap",
+      "title": "nat-le supply drop-wrap (exact (f ... H). -> exact (f ... (S01_BaseRing.NatLe_drop _ _ H)). in proofs of NatLe-face statements)",
+      "canonical_note": "When the premise is lifted to NatLe (cure13) but the consumed lemma still expects a nat <= proof, the hypothesis crosses the bridge at the consumption point: exact (f ... (S01_BaseRing.NatLe_drop _ _ H)). The wrap assumes the final argument is the hypothesis that must cross the face - review matches before --apply (the applier is dry-run first). Flat-argument applications only; nested-parenthesis argument lists exceed the trigger (documented blind-spot family).",
+      "v31_lineage": "cure31_C_natle_premise_lift - red-face verbatim: W45 abl_audit_base_v7 patch 'exact (gnPrf_replay f pf k Hk).' -> 'exact (gnPrf_replay f pf k (S01_BaseRing.NatLe_drop _ _ Hk)).' (S01:91 bridge); W47 hand_wash 'in-proof apply S01_BaseRing.NatLe_drop in Hk as the forward bridge, original exact untouched' (qualified-name variant of the same bridge).",
+      "engine": "face-regex",
+      "scope": "proof",
+      "guard": "intros-tail",
+      "face_include": ["NatLe"],
+      "trigger_regex": "exact\\s*\\((?P<call>[^()]+?)[ \\t]+(?P<hyp>[A-Za-z_'][A-Za-z0-9_']+)[ \\t]*\\)\\.",
+      "template": "exact (\\g<call> (S01_BaseRing.NatLe_drop _ _ \\g<hyp>)).",
+      "idempotence_note": "The cured call has the bridge wrapping inside the exact; the flat-argument trigger cannot re-match (the inner '(' blocks the call group)."
     },
     {
       "id": "cure5_natle_drop_bridge",

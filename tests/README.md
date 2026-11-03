@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（40 例）
+## 覆盖面（41 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -116,7 +116,7 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 35 | `t_scan_v4_token` | `scan/scan_v4_token.py`（token 级限定名普查·W15 工具化①） | `tests/test_scan_v4_token.py` 十一判：混合行遮蔽夹具三站复现＋旧法（行级 grep -v 式）同夹具漏站＝盲区机械实证＋binder 追踪零误报＋已洗参照件零站；真树抽查 `ROCWASH_TREE_SAMPLES` 环境门控缺省跳过不充红 |
-| 36 | `t_cure_pack` | `wash/cure_pack.json`＋`cure_applier.py`（消费位治愈正典包五式·W15 工具化②） | `tests/test_cure_pack.py` 十一判：五式触发/幂等/门控自检＋fixture 干跑-apply-二次零变更＋`cure_examples.v` 编译 rc=0（`ROCWASH_ROCQ` 门控·cpu_guard 包裹）＋不透明 reflexivity 负证 rc≠0 |
+| 36 | `t_cure_pack` | `wash/cure_pack.json`＋`cure_applier.py`（消费位治愈正典包·五式存量＋v1.1 九式·W15 工具化②·v31 扩） | `tests/test_cure_pack.py`：legacy 五式触发/幂等/门控自检＋v1.1 face-regex 九式自检（face/proof 域守卫·intros-tail guard·exclusive-group rc4）＋fixture 干跑-apply-二次零变更（qle/natle/shadow 三夹具·守卫负例逐字断言）＋`cure_examples.v` 编译 rc=0（`ROCWASH_ROCQ` 门控·cpu_guard 包裹）＋不透明 reflexivity 负证 rc≠0 |
 | 37 | `t_erasure_classifier` | `verify/erasure_classifier.py`（擦除位六簇分类器·W15 工具化③） | `tests/test_erasure_classifier.py` 十三判：六簇判定/coq_ 前缀/多行 inner-component/premise 位/CAPTURE 交叉对拍/resolve 状态；真件回放 `ROCWASH_ERASURE_MLI/SCAN` 门控缺省跳过 |
 
 ## v30 探测战役工具化轮补记（20261103·用例 38–40）
@@ -125,4 +125,5 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 34 过 / 1 红 / 
 |---|------|------|------|
 | 38 | `t_probe_engine` | `wash/probe_engine.py`（批量闭包相容探针引擎·承 W13 probe_batch.py·v30 工具化①） | `tests/test_probe_engine.py` 九节：工具 selftest 四判／stub 全链三分（WASHABLE rc0+RED>0／BORN-CLEAN rc0+RED=0／RED-MISSING_LIB rc1·missing 库名捕获·red_count/md5_match 回填）＋清场五件出世界入 logdir／NO-SRC 不编译如实出账／TIMEOUT（--timeout 2→rc=124）／resume 幂等（重跑 SKIP(done)＋台账字节恒同）＋--fresh 确定性同账／guard 队列制包裹（rc=7 真取透传＋留证日志 [cpu_guard] 横幅）／RED 缺列→RC0 三分不可判如实出／CLI 四码（help 0·未知形参 2·缺参 2·缺件 9）＋坏清单（缺 md5 列）rc2／真 rocq 全链门控节（`ROCWASH_ROCQ` 缺省 SKIP 不充红；门控轮：fixtures 一绿一红经 cpu_guard 包裹实编译→BORN-CLEAN＋RED-MISSING_LIB＋世界纯度＋logdir 留证全过）。夹具 `fixtures/probe_pass_sample.v`＋`probe_red_sample.v`（临时目录驱动零触真仓·stub 节零真编译） |
 | 39 | `t_chain_graph` | `tools/chain_graph.py`（多账合并链根图·承 W25 w25_merge_ledgers.py·v30 工具化②） | `tests/test_chain_graph.py` 七节：selftest 六判／双形通吃（probe_engine records 壳×W13 裸 dict 混并）／合并语义（后批覆盖·batches 累积·标签取文件名去 .json）／链根自身可洗性三分（washable true/false/UNPROBED 逐字段）／missing 双源（字段直用·red regex 兜底 raw 空格形与「 | 」拼接形双咬合）／TOP 榜（n 降序·`--top` 截断·表头行·json top_order 保秩）＋json/md 重跑字节恒同／CLI 四码。合成双账临时目录夹具零触真仓零网络 |
-| 40 | `t_ledger_sync` | `tools/ledger_sync.py`（probe×状态台账合并同步·v30 工具化③） | `tests/test_ledger_sync.py` 八节：selftest 九判／CLEAN 全链（全覆盖 probe＋零发现 exit 0·UNPROBED 升格 rc0→WASHABLE／rc1→DRIFT-BLOCKED 逐行咬合·probe_engine 全字段记录直吞）／E1 去重（同件名多行保首行·逐笔 FINDING·行数正确）／E3 幽灵（只记账不落行·名单响亮）／特异 tag（rc=124→probe:timeout·NO_SRC→probe:no-src·UNPROBED 不升格）／NO-MD5（W13 老式账只注记不升格）／报告面（--report JSON schema/counts/逐笔发现咬合）／CLI 四码＋列校验两变体（缺必需列 rc2 不产出·行宽不齐 rc2）＋幂等重跑字节恒同。合成夹具临时目录零触真仓零网络 |
+| 40 | `t_ledger_sync` | `tools/ledger_sync.py`（probe×状态台账合并同步·v30 工具化③·v2.1 增补） | `tests/test_ledger_sync.py` 十节：selftest 十三判／CLEAN 全链（全覆盖 probe＋零发现 exit 0·UNPROBED 升格 rc0→WASHABLE／rc1→DRIFT-BLOCKED 逐行咬合·probe_engine 全字段记录直吞）／E1 去重（同件名多行保首行·逐笔 FINDING·行数正确）／E3 幽灵（只记账不落行·名单响亮）／特异 tag（rc=124→probe:timeout·NO_SRC→probe:no-src·UNPROBED 不升格）／NO-MD5（W13 老式账只注记不升格）／报告面（--report JSON schema/counts/逐笔发现咬合）／CLI 四码＋列校验两变体（缺必需列 rc2 不产出·行宽不齐 rc2）＋幂等重跑字节恒同／items 子键壳＋元数据滤除（PROBE-META-SKIP·全元数据零记录 rc2 拒同步）／GEN-DIVERGENCE 分歧出账（divergence_with 记录逐笔响亮＋行注记 probe:gen-div 洗代名·幂等·md5 咬合升格照常）。合成夹具临时目录零触真仓零网络 |
+| 41 | `t_comment_pack` | `wash/comment_pack.json`＋`comment_sweep.py`（注释域 sweep 旁车·v31 工具化） | `tests/test_comment_pack.py` 六节：selftest 四判（旗词注释域换形＋字符串/嵌套注释免疫＋头注换代＋w7 code 行全等投影＋幂等）／pack 完整（engine=comment-state-machine·旗词表 载体→carrier·header_spec 五字段英形＋行上界 30）／fixture 流程（干跑零写→apply 换形 2 处·字符串字面量逐字保留·嵌套深度可达→重跑零变更）／头注换代（--header-map 数据驱动·换代后 code 行全等·重跑零变更）／头注形校验（五字段缺一报 problem report-only）／CLI 三码（help 0／缺参 2／缺件 9）。夹具临时目录副本驱动·零触真仓零网络 |

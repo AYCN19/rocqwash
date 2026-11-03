@@ -1,0 +1,17 @@
+{
+  "pack": "comment-domain sweep pack",
+  "version": "1.0.0",
+  "description": "Sidecar of cure_pack (statement-face rewrites) for comment-domain-only sweeps: nested-comment-and-string-aware state machine, comment-domain flag-word exchange, and data-driven leading-header replacement. Code lines are never touched; every application asserts code-line equality mechanically (the comment-strip projection of the file must be byte-identical before and after).",
+  "engine": "comment-state-machine",
+  "trigger": "comment-domain occurrences of flag words after the first code character (gate4 comment-guard review findings); optional leading-header replacement keyed by file basename via --header-map",
+  "idempotence": "code-strip projection byte-equal across applications; second application changes nothing",
+  "flag_words": {
+    "载体": "carrier"
+  },
+  "flag_word_note": "Exchange applies only inside comment spans and only after the first code character (leading-header region is owned by the header replacement step). Context-biaised review words exchange to their neutral English term; occurrences inside string literals or code positions are never touched.",
+  "header_spec": {
+    "fields": ["Mission.", "Dependencies.", "References.", "Constructivity.", "Build."],
+    "max_end_line": 30,
+    "note": "Leading comment region is replaced wholesale from --header-map data (per-file authored five-field English form, dotted field names, header end line within max_end_line). The pack ships the shape spec and validates it; header CONTENT is per-file data, never synthesized."
+  }
+}

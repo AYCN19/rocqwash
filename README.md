@@ -29,11 +29,12 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 | `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
 | `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
-| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: five deterministic idempotent rewrite patterns (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge) | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: fourteen deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge) plus nine v1.1 statement-face patterns from the 20261103 wash-campaign field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), applied by a face/proof-scoped regex engine with per-face token guards | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
 | `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
 | `wash/probe_engine.py` | Batch closure-compatibility probe engine: candidates TSV × world dir → per-file `rocq c` under cpu_guard → rc triage (WASHABLE / BORN-CLEAN / red-cause classes incl. MISSING_LIB) → idempotent ledger JSON | Real exit codes + red-cause regex classification are mechanical; LLM guesses at closure compatibility |
 | `tools/chain_graph.py` | Multi-ledger merger → missing-lib chain-root graph (dependents count + root self-washability) → TOP ranking markdown + JSON | Union/override merge and dependents counting are deterministic; LLM loses track across ledgers |
-| `tools/ledger_sync.py` | Probe-ledger × status-ledger TSV sync: E1 dedup / E3 ghost / MD5-drift guards / loud column validation → new TSV, idempotent | Fail-loud bookkeeping with deterministic row upgrades; LLM silently drops or duplicates rows |
+| `wash/comment_pack.json` + `wash/comment_sweep.py` | Comment-domain sweep sidecar (does not impersonate a statement-face pattern): nested-comment-and-string-aware state machine, comment-domain flag-word exchange (review-bias word → neutral English term), data-driven leading-header replacement with a five-field shape spec; every application mechanically asserts the code-line-equality projection (comment-strip per the w7 criterion) and second-run zero-change | Comment-domain-only edits are provable by the code-strip projection; LLM edits leak into code silently |
+| `tools/ledger_sync.py` | Probe-ledger × status-ledger TSV sync: E1 dedup / E3 ghost / MD5-drift / NO-MD5 / generation-divergence findings (v2.1: recognizes the freeze-ledger `items` subkey shell and filters bare-dict metadata keys loudly; divergence-carrying records are surfaced per-entry with an idempotent row note, never silently dropped) / loud column validation → new TSV, idempotent | Fail-loud bookkeeping with deterministic row upgrades; LLM silently drops or duplicates rows |
 
 ## Repository Layout / 目录结构
 
@@ -53,7 +54,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（40 例）/ CI 工作流占位 — test suite (40 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（41 例）/ CI 工作流占位 — test suite (41 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -78,6 +79,15 @@ rocqwash/
 > 探针引擎＋`tools/chain_graph.py` 多账合并链根图＋`tools/ledger_sync.py`
 > probe×状态台账同步器（E1 去重/E3 幽灵/列校验 fail-loud）——承 W13/W25/台账
 > v2 三原型 1:1 泛化，全路径参数化零硬编码；自测套件扩至 40 例全绿。
+> v31 增补（20261103·洗形战役实战判例工具化轮）：`wash/cure_pack.json` v1.1
+> 五式→十四式（Qle/Qlt 载体面降移两形·refl 桥开门·Import 遮蔽直通面双变体
+> exclusive-group fail-loud·NatLe 前提提升＋intros-tail 守卫 drop 包裹）＋
+> `wash/cure_applier.py` face-regex 域引擎（face/proof 域触发·逐面 token 守卫·
+> 文件级前置条件）＋`wash/comment_pack.json`＋`comment_sweep.py` 注释域 sweep
+> 旁车（嵌套注释+字符串感知状态机·旗词换形·数据驱动头注换代·w7 code 行全等
+> 投影幂等断言）＋`tools/ledger_sync.py` v2.1（items 子键壳识别＋裸 dict 元数据
+> 键响亮滤除＋GEN-DIVERGENCE 双代分歧出账——分歧优先序成文：kept 代＝下游账
+> basis 榜系消费代，dropped 代只注记不弃账）；自测套件扩至 41 例全绿。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_ledger_sync.py — tools/ledger_sync.py 自测（tests/·v30 实战判例工具化·
-20261103 台账 v2 底册工艺工具化轮）
+20261103 台账 v2 底册工艺工具化轮；v2.1 20261103 承 W59 支撑席合账草案发现增补
+九/十两节）
 
-probe×状态台账合并同步八节判：
-  1 工具自证    --selftest 九判全过（rc 0）
+probe×状态台账合并同步十节判：
+  1 工具自证    --selftest 十三判全过（rc 0）
   2 CLEAN 全链  全覆盖 probe＋零发现 → exit 0 SYNC-CLEAN·UNPROBED 升格
                 （rc0→WASHABLE／rc1→DRIFT-BLOCKED）逐行咬合
   3 E1 去重     同件名多行 → 保首行＋逐笔 FINDING 计数＋去重后行数正确
@@ -16,9 +17,15 @@ probe×状态台账合并同步八节判：
                 记录（red_count/md5_match）直吞
   8 CLI＋列校验 四码（help0/bogus2/缺参2/缺件9）＋缺必需列 rc2 不产出＋
                 行宽不齐 rc2＋幂等重跑字节恒同
+  9 items 壳    席位冻结账形（items 子键）直吞——records 消费、壳键零幽灵；
+                裸 dict 形 batch_meta 元数据键响亮滤除（PROBE-META-SKIP·零
+                幽灵误报）；全元数据零记录 → rc2 fail-loud 不产出
+  10 分歧出账   divergence_with 记录 → GEN-DIVERGENCE 逐笔响亮＋行注记
+                probe:gen-div:<dropped>（幂等）＋md5 咬合升格照常；重跑
+                字节恒同（发现重fire·台账字节稳定）
 
 零触律：全部夹具临时合成（TSV/JSON 即写即清）·零真编译零网络零触真仓。
-幂等：python3 -B 禁 __pycache__。退出码：0=八节全过；1=任一红。
+幂等：python3 -B 禁 __pycache__。退出码：0=十节全过；1=任一红。
 """
 import importlib.util
 import io
@@ -60,7 +67,8 @@ def sec1_selftest():
     rc, out = run(["--selftest"])
     assert rc == 0, "selftest 应 rc=0 实测 %d\n%s" % (rc, out)
     assert "LEDGER-SYNC-SELFTEST PASS" in out, out
-    return "selftest 九判绿"
+    assert "十三判全过" in out, out
+    return "selftest 十三判绿"
 
 
 def sec2_clean(tmp):
@@ -227,6 +235,91 @@ def sec8_cli_and_idempotent(tmp):
     return "CLI 四码＋列校验两变体 rc2 不产出＋幂等重跑字节恒同"
 
 
+def sec9_items_shell_and_meta(tmp):
+    # 9a: seat freeze-ledger shell (items subkey) consumed directly;
+    # shell keys (schema/queue/world) never become phantom probe names
+    tsv = wf(os.path.join(tmp, "t9.tsv"),
+             "件名\t行数\tmd5\tRED\t状态\t备注\n"
+             "I1\t10\tmi1\t0\tUNPROBED\t\n")
+    probe = os.path.join(tmp, "freeze.json")
+    with io.open(probe, "w", encoding="utf-8") as fh:
+        json.dump({"schema": "seat-freeze/1",
+                   "items": {"I1": {"file": "I1", "md5": "mi1",
+                                    "rc": 0, "red": ""}},
+                   "queue": [], "world": "/tmp/w"}, fh)
+    out = os.path.join(tmp, "t9out.tsv")
+    rc, out_txt = run(["--probe", probe, "--ledger", tsv, "--out", out])
+    assert rc == 0 and "SYNC-CLEAN" in out_txt, "%d %s" % (rc, out_txt)
+    assert "E3-GHOST" not in out_txt, "壳键漏读误报幽灵＝v2.1 前缺陷复现"
+    _, rows = read_rows(out)
+    assert rows[0]["状态"] == "WASHABLE" and rows[0]["备注"] == "probe:rc0", rows[0]
+    # 9b: bare-dict form with batch_meta sibling — meta skipped loudly,
+    # zero phantom ghost, record synced
+    tsv = wf(os.path.join(tmp, "t9b.tsv"),
+             "件名\t行数\tmd5\tRED\t状态\t备注\n"
+             "I2\t10\tmi2\t0\tUNPROBED\t\n")
+    probe = wf(os.path.join(tmp, "bare_meta.json"),
+               json.dumps({"I2": {"file": "I2", "md5": "mi2", "rc": 0,
+                                  "red": ""},
+                           "batch_meta": {"seat": "W9",
+                                          "ledger_basis": "x.tsv"}}))
+    out = os.path.join(tmp, "t9bout.tsv")
+    rc, out_txt = run(["--probe", probe, "--ledger", tsv, "--out", out,
+                       "--report", os.path.join(tmp, "t9rep.json")])
+    assert rc == 0 and "PROBE-META-SKIP" in out_txt, out_txt
+    assert "batch_meta" in out_txt, "元数据键应响亮留痕"
+    assert "E3-GHOST" not in out_txt, out_txt
+    acc = json.load(io.open(os.path.join(tmp, "t9rep.json"), encoding="utf-8"))
+    assert acc["meta_skipped"] == ["batch_meta"], acc.get("meta_skipped")
+    _, rows = read_rows(out)
+    assert rows[0]["状态"] == "WASHABLE", rows[0]
+    # 9c: bare-dict all-meta (zero records) — fail-loud rc2, no output
+    probe = wf(os.path.join(tmp, "all_meta.json"),
+               json.dumps({"schema": "x/1", "batch_meta": {"seat": "W9"}}))
+    out = os.path.join(tmp, "t9cout.tsv")
+    rc, out_txt = run(["--probe", probe, "--ledger",
+                       wf(os.path.join(tmp, "t9c.tsv"),
+                          "件名\t行数\tmd5\tRED\t状态\t备注\n"
+                          "I3\t1\tm\t0\tUNPROBED\t\n"),
+                       "--out", out])
+    assert rc == 2 and "零记录" in out_txt, out_txt
+    assert not os.path.exists(out), "零记录拒同步仍产出＝违例"
+    return "items 壳直吞＋壳键零幽灵＋batch_meta 响亮滤除＋全元数据 rc2 拒同步"
+
+
+def sec10_gen_divergence(tmp):
+    tsv = wf(os.path.join(tmp, "t10.tsv"),
+             "件名\t行数\tmd5\tRED\t状态\t备注\n"
+             "D1\t10\tmd1\t0\tUNPROBED\t\n"
+             "D2\t20\tmd2\t0\tUNPROBED\t\n")
+    probe = wf(os.path.join(tmp, "div.json"),
+               json.dumps({"records": {
+                   "D1": {"file": "D1", "md5": "md1", "rc": 0, "red": "",
+                          "source_seats": ["sA", "sB"],
+                          "divergence_with": "sB",
+                          "divergence_md5": "dmd5"},
+                   "D2": {"file": "D2", "md5": "DIFFERENT", "rc": 0,
+                          "red": "",
+                          "divergence_with": "sC",
+                          "divergence_md5": "dmd6"}}}))
+    out = os.path.join(tmp, "t10out.tsv")
+    rc, out_txt = run(["--probe", probe, "--ledger", tsv, "--out", out])
+    assert rc == 1 and "GEN-DIVERGENCE" in out_txt, out_txt
+    assert out_txt.count("GEN-DIVERGENCE") >= 2, "两笔分歧均应响亮"
+    assert "MD5-DRIFT" in out_txt, "分歧行 md5 漂移应照常出账"
+    _, rows = read_rows(out)
+    by = {r["件名"]: r for r in rows}
+    assert "probe:gen-div:sB" in by["D1"]["备注"], by["D1"]
+    assert by["D1"]["状态"] == "WASHABLE", by["D1"]  # md5 咬合升格照常
+    assert "probe:gen-div:sC" in by["D2"]["备注"], by["D2"]
+    assert by["D2"]["状态"] == "UNPROBED", by["D2"]  # 漂移行不升格
+    # 幂等：重跑台账字节恒同（分歧 tag 在盘即跳过）
+    before = io.open(out, "rb").read()
+    rc2, _ = run(["--probe", probe, "--ledger", tsv, "--out", out])
+    assert rc2 == 1 and io.open(out, "rb").read() == before, "分歧注记重跑漂移"
+    return "GEN-DIVERGENCE 逐笔响亮＋行注记幂等＋升格口径与漂移一致"
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix="rocqwash_lsync_test_")
     try:
@@ -239,13 +332,15 @@ def main():
             ("6 NO-MD5", lambda: sec6_no_md5(tmp)),
             ("7 报告面", lambda: sec7_report(tmp)),
             ("8 CLI＋幂等", lambda: sec8_cli_and_idempotent(tmp)),
+            ("9 items 壳＋元数据", lambda: sec9_items_shell_and_meta(tmp)),
+            ("10 分歧出账", lambda: sec10_gen_divergence(tmp)),
         ]
         n = 0
         for name, fn in secs:
             note = fn()
             n += 1
-            print("  [%d/8] %-12s OK — %s" % (n, name, note))
-        print("TEST-LEDGER-SYNC PASS: 8/8 节全过")
+            print("  [%d/10] %-12s OK — %s" % (n, name, note))
+        print("TEST-LEDGER-SYNC PASS: 10/10 节全过")
         return 0
     except AssertionError as e:
         print("TEST-LEDGER-SYNC FAIL: %s" % e)
