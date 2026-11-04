@@ -34,6 +34,19 @@ Purpose:
     its --json report before exiting 4 (previously crashed with
     UnboundLocalError when --json was given).
 
+    v34 additions (CI #178 extraction-defect families, 20261104 reverse-
+    revision round): the two born-clean fake-green lineages enter the pack
+    as cures.  E3 generic-interface instantiation — the abstract-carrier
+    application stations of a generic supply lemma are rewritten to the
+    concrete-carrier specialization shim call, and the line-insert engine
+    generates the shim Definition after the last import (the station
+    pattern face-excludes the shim's own body, which keeps the canonical
+    abstract application verbatim); E2 record polymorphic field — the
+    un-annotated field-consumption Definition is restated as an explicit-
+    type-annotated middleware, the downstream arity stations follow, and a
+    report-only station asserts the sweep completion.  All five v34
+    patterns reuse the v32 engines; no new engine ships in v34.
+
 Inputs:
     --file path/to/file.v           target source (never modified on dry-run)
     --pack path/to/cure_pack.json   pattern pack (default: cure_pack.json
@@ -899,6 +912,69 @@ def selftest():
     print("v32 whole-pack idempotence:", c23,
           {k: x["matches"] for k, x in wr2.items() if x["matches"]})
     ok = ok and c23
+
+    # ---- v34 vectors (cure34 pack: E2/E3 extraction-defect families) ----
+    v34 = dict((p["id"], p) for p in pack["patterns"]
+               if p["id"].startswith("cure34"))
+
+    # cure34 E3: abstract-carrier stations -> shim call; the shim Definition
+    # is inserted after the last import; the shim's own body (which keeps the
+    # abstract application) is face-excluded on every later pass; idempotent
+    pE3u = v34["cure34_E3_use_station_spec"]
+    pE3s = v34["cure34_E3_spec_shim"]
+    fE3 = ("Require Import Cure34E23World.\n"
+           "Definition ufx_nat (n : Real) : Real := gstep Real natIF n.\n"
+           "Theorem ufx_gstep_mul : forall n : Real,\n"
+           "  gstep Real natIF n = Nat.mul n n.\n"
+           "Proof. intro n. reflexivity. Qed.\n")
+    tE3, nE3u = apply_one(fE3, pE3u)
+    c24 = (nE3u == 2
+           and "gstep_spec n = Nat.mul n n." in tE3
+           and "gstep_spec n." in tE3)
+    tE3b, nE3s = apply_one(tE3, pE3s)
+    c24b = (nE3s == 1
+            and "Require Import Cure34E23World.\n"
+                "Definition gstep_spec (x : Real) : Real := "
+                "gstep Real natIF x." in tE3b)
+    tE3c, rE3 = run_pack(tE3b, [pE3u, pE3s])
+    c24c = (tE3c == tE3b
+            and rE3["cure34_E3_use_station_spec"]["matches"] == 0
+            and rE3["cure34_E3_spec_shim"]["matches"] == 0)
+    print("cure34 E3 station/shim/idempotent:", c24, c24b, c24c)
+    ok = ok and c24 and c24b and c24c
+
+    # cure34 E2: the un-annotated field consumption becomes the annotated
+    # middleware; downstream arity stations follow; the report-only station
+    # counts the pre-form and drops to zero after the cure
+    pE2a = v34["cure34_E2_field_annot"]
+    pE2r = v34["cure34_E2_use_arity"]
+    pE2s = v34["cure34_E2_station_unannot"]
+    fE2 = ("Require Import Cure34E23World.\n"
+           "Definition unann := wf theW.\n"
+           "Definition use_unann (n : nat) : nat := unann nat n.\n")
+    tE2, nE2a = apply_one(fE2, pE2a)
+    c25 = (nE2a == 1
+           and "Definition unann (n : nat) : nat := wf theW nat n." in tE2)
+    tE2b, nE2r = apply_one(tE2, pE2r)
+    c25b = (nE2r == 1 and ":= unann n." in tE2b)
+    tE2c, nE2s = apply_one(fE2, pE2s)
+    c25c = (nE2s == 1 and tE2c == fE2)
+    tE2d, rE2 = run_pack(tE2b, [pE2a, pE2r, pE2s])
+    c25d = (tE2d == tE2b
+            and rE2["cure34_E2_field_annot"]["matches"] == 0
+            and rE2["cure34_E2_use_arity"]["matches"] == 0
+            and rE2["cure34_E2_station_unannot"]["matches"] == 0)
+    print("cure34 E2 annot/arity/station/idempotent:", c25, c25b, c25c, c25d)
+    ok = ok and c25 and c25b and c25c and c25d
+
+    # v34 whole-pack idempotence on a combined E2+E3 sample
+    s34 = fE3 + fE2
+    x1, xr1 = run_pack(s34, pack["patterns"])
+    x2, xr2 = run_pack(x1, pack["patterns"])
+    c26 = (x2 == x1 and all(x["matches"] == 0 for x in xr2.values()))
+    print("v34 whole-pack idempotence:", c26,
+          {k: x["matches"] for k, x in xr2.items() if x["matches"]})
+    ok = ok and c26
 
 
     print("SELFTEST:", "PASS" if ok else "FAIL")

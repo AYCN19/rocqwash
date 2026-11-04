@@ -29,7 +29,7 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 | `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
 | `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
-| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: nineteen deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge), nine v1.1 statement-face patterns from the 20261103 wash-campaign field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), and five v1.2 S07-lineage adaptation patterns from the W66 field report (parameterized-shell drop with a :=-binding-right guard, notation rebind line-insertion, @field projection-bridge bare form, predicate-face convergence token map whose targets must be the consuming supply lemma's conclusion constant names, and a report-only binder-shell station for the manual binder surgery), applied by a face/proof-scoped regex engine with per-face token guards plus a line-insert and a station-report engine | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: twenty-four deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge), nine v1.1 statement-face patterns from the 20261103 wash-campaign field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), five v1.2 S07-lineage adaptation patterns from the W66 field report (parameterized-shell drop with a :=-binding-right guard, notation rebind line-insertion, @field projection-bridge bare form, predicate-face convergence token map whose targets must be the consuming supply lemma's conclusion constant names, and a report-only binder-shell station for the manual binder surgery), and five v1.3 patterns for the CI #178 extraction-defect families (E3 generic-interface instantiation: abstract-carrier application stations rewritten to a concrete-carrier specialization shim generated after the last import; E2 record polymorphic field: the un-annotated field-consumption Definition restated as an explicit-type-annotated middleware with downstream arity adaptation and a report-only sweep-completion station), applied by a face/proof-scoped regex engine with per-face token guards plus a line-insert and a station-report engine | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
 | `scan/dual_scan.py` | Dual-scanner cross-check driver: runs scan_v4_token + mac_stmt_scan over the same candidate files and reports per-file station counts plus a diff (only_v4 / only_stmt / common) — turns shared scanner blindness (application/type-face red causes) into a mechanical fact per file instead of a silent assumption | Both scanners' exit codes and station line-sets are mechanical; scanner consensus is reported, never blessed as completeness |
 | `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
 | `wash/probe_engine.py` | Batch closure-compatibility probe engine: candidates TSV × world dir → per-file `rocq c` under cpu_guard → rc triage (WASHABLE / BORN-CLEAN / red-cause classes incl. MISSING_LIB) → idempotent ledger JSON | Real exit codes + red-cause regex classification are mechanical; LLM guesses at closure compatibility |
@@ -55,7 +55,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（42 例）/ CI 工作流占位 — test suite (42 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（43 例）/ CI 工作流占位 — test suite (43 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -99,6 +99,16 @@ rocqwash/
 > 器修（exclusive-group 冲突＋--json 路径 report 落盘·rc=4 文档值）；
 > 自测套件扩至 42 例全绿（门控 S07 编译弧：红→机械 cure→binder 手术→绿→
 > 提取 Obj.magic 0/0）。
+> v34 增补（20261104·CI #178 提取面缺陷族逆向修订轮）：`wash/cure_pack.json`
+> v1.2→v1.3 十九式→二十四式——工单定谳两类缺陷族入 cure：E3 泛型接口实例化
+> （cure34_E3_use_station_spec 抽象载体应用站改写特化 shim 调用＋cure34_E3_spec_shim
+> line-insert 末个 Import 后生成具体载体中间 Definition；shim 体保留被特化的抽象
+> 应用、face_exclude 护体防二遍自缠）＋E2 记录多态字段（cure34_E2_field_annot
+> 无标注消费面重述为显式类型标注中间 Definition＋cure34_E2_use_arity 下游元数
+> 站随行＋cure34_E2_station_unannot report-only 清账站）——五式全复用 v32 引擎
+> 零新引擎；门控 E2/E3 编译弧第一手：pre-fix 编译绿（提取时缺陷族）、修后绿、
+> E2 消费面 `'a1 -> 'a1`→`nat -> nat`、消费单元 magic 0/0、world 访问器债=1
+> 机械钉（实体修复工作流域·canonical_note 记界）。自测套件 43 例。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

@@ -1,7 +1,7 @@
 {
   "pack": "consumer-cure canonical pack",
-  "version": "1.2.0",
-  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs. v1.2 adds the S07-lineage adaptation forms (W66 field report): parameterized-shell drop against an argument-less interface Class, the notation rebind line-insertion, the @field projection-bridge bare form, the predicate-face convergence token map (targets must be the consuming supply lemma's conclusion constant names), and a report-only binder-shell station for the manual binder surgery.",
+  "version": "1.3.0",
+  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs. v1.2 adds the S07-lineage adaptation forms (W66 field report): parameterized-shell drop against an argument-less interface Class, the notation rebind line-insertion, the @field projection-bridge bare form, the predicate-face convergence token map (targets must be the consuming supply lemma's conclusion constant names), and a report-only binder-shell station for the manual binder surgery. v1.3 adds the two CI #178 extraction-defect families as cures: E3 generic-interface instantiation (the abstract-carrier application stations of a generic supply lemma are rewritten to a concrete-carrier specialization shim inserted after the last import) and E2 record polymorphic field (the un-annotated field-consumption Definition is restated as an explicit-type-annotated middleware, with the downstream arity stations adapted and a report-only station asserting the sweep completion).",
   "patterns": [
     {
       "id": "cure1_qeqT_imp_qeq_rewrite_wrap",
@@ -232,6 +232,66 @@
       "context": "only fires when the enclosing statement face contains NatLe and the hypothesis name is not already wrapped",
       "template": "exact (NatLe_drop _ _ \\1).",
       "idempotence_note": "Post-cure text has exact (NatLe_drop _ _ H); the bare-form trigger no longer matches."
+    },
+    {
+      "id": "cure34_E3_use_station_spec",
+      "title": "E3 generic-interface instantiation -> specialization-shim use (abstract-carrier application stations rewritten to the concrete-carrier shim call)",
+      "canonical_note": "The consumer stations of a generic supply lemma carry the explicit abstract-carrier application form ('gstep Real natIF x' / '@gstep Real natIF x'): the generic lemma's parameters carry abstract types, and at extraction each application rides the polymorphic face (the CI #178 gate7 whole-tree census shape, LW3 four-module family). The mechanical cure rewrites every abstract-carrier application station to the specialization shim call ('gstep_spec x'), the concrete-carrier intermediate Definition inserted by cure34_E3_spec_shim. The shim's own body keeps the abstract application it specializes (that is the canonical specialization form), so this pattern face-excludes 'gstep_spec' - otherwise a second pack pass would rewrite the shim's own body into a self-call and break the idempotence contract. Scope 'all': stations live in statement faces AND proof regions. The miniature extraction-clean world (fixture Cure34E23World) demonstrates the arc end to end; world-side accessor magic of a defect-generation world is the entity-repair workflow's territory and is not reachable by a consumer-side text cure (documented in the fixture world header).",
+      "v34_lineage": "CI #178 gate7 whole-tree census (20261104): LW3ETranscendental 1 / LW3CountEBound 6 / LW3KLegProbe 4 / LW3KnzValue 3 Obj.magic - work-ticket verdict E3 generic-interface instantiation (generic lemma parameters carry abstract types, extraction turns each application into a per-parameter cast); prescription = concrete-carrier intermediate Definition specialization. Gold-standard fixed forms: _wt93_fixmagic/_wt93_reverse ConstructiveWorld_Live LW3 family (statement faces restated on Set carriers, QeqT/Id bridge forms).",
+      "engine": "face-regex",
+      "scope": "all",
+      "file_include": "gstep",
+      "face_exclude": ["gstep_spec"],
+      "trigger_regex": "(?<![A-Za-z0-9_'.])@?gstep[ \\t]+Real[ \\t]+natIF(?![A-Za-z0-9_'])",
+      "template": "gstep_spec",
+      "idempotence_note": "Post-cure no abstract-carrier application station remains outside the shim's own face, and the shim's face carries gstep_spec (excluded), so the trigger cannot re-match."
+    },
+    {
+      "id": "cure34_E3_spec_shim",
+      "title": "E3 specialization shim generation (concrete-carrier intermediate Definition inserted after the last import)",
+      "canonical_note": "The concrete-carrier intermediate Definition is the E3 prescription's deliverable: 'Definition gstep_spec (x : Real) : Real := gstep Real natIF x.' restates the generic supply lemma at the concrete carrier behind a monomorphic Set face, so the consumer's stations extract as concrete calls instead of abstract-carrier applications. The line-insert engine places the line after the last top-level Require/Import anchor and before the first use; the file_include gate (the generic supply lemma's name) scopes the insertion to the lineage that instantiates the generic. Run order: AFTER cure34_E3_use_station_spec in the pack list - on the first pass the stations are rewritten first, so the inserted shim body keeps the abstract application verbatim, and no require_token_regex gate is needed (the station form is gone from the text by insertion time). Empirical anchor (Rocq 9.1, fixture world): the shim user's station extracts monomorphic ('let ufx_nat n = gstep_spec n', magic 0/0); a shim that delegates to an abstract-face original ('Definition s : unit := mzero.') inherits the world-side cast ('Obj.magic mzero') - the shim must restate the concrete-carrier application, which is exactly the form this pattern inserts.",
+      "v34_lineage": "CI #178 gate7 whole-tree census (20261104): UpAblMetaWindow 13 Obj.magic with the born-clean landing record claiming magic=0 (landing self-check vs CI divergence); LW3 four-module family verdict E3; prescription = concrete-carrier intermediate Definition specialization (work-ticket 20261104). Gold-standard fixed forms: _wt93_fixmagic/_wt93_reverse ConstructiveWorld_Live LW3 family.",
+      "engine": "line-insert",
+      "insert_line": "Definition gstep_spec (x : Real) : Real := gstep Real natIF x.",
+      "insert_after": "last-import",
+      "file_include": "gstep",
+      "idempotence_note": "When the shim line is already present the insertion is skipped (count 0); the inserted line is itself the idempotence anchor of the pair."
+    },
+    {
+      "id": "cure34_E2_field_annot",
+      "title": "E2 record polymorphic field -> explicit-type-annotated middleware (un-annotated field-consumption Definition restated with explicit binder and return annotations)",
+      "canonical_note": "A consumer Definition that consumes a record's polymorphic field without an explicit type annotation lets the carrier be inferred from the field's polymorphic type, and the extracted face stays polymorphic ('val unann : 'a1 -> 'a1'); the E2 prescription restates the consumption as an explicit-type-annotated middleware Definition ('Definition unann (n : nat) : nat := wf theW nat n.'), pinning the carrier at the consumer face. The gold-standard fixed form carries exactly this shape (UpAblMetaWindow cured: 'Definition mwi_step (K : bool -> bool -> Real) (mu : bool -> Real) (s' : bool) : Real := ...' / 'Definition mwi_Kunif (s s' : bool) : Real := mtw_half.'). Annotation does NOT clear a defect-generation world's accessor cast (the field projection 'wf' of the miniature world still extracts with 'Obj.magic w.wf __ x' - that is world-generation debt owned by the entity-repair workflow); what the annotation mechanically guarantees is the consumer face: pre-cure the extracted signature is polymorphic, post-cure it is 'val unann : nat -> nat' (asserted in the test arc on the extracted .mli). Review before --apply: the trigger is the canonical un-annotated face 'Definition unann := wf theW.' - a file consuming a different definition named wf must not run this pattern (the gate is the record reference, not the token semantics).",
+      "v34_lineage": "UpAblMetaWindow born-clean landing (commit 4f2006f record claims magic=0) vs CI #178 gate7 census 13 Obj.magic - landing self-check vs CI divergence (fake-green incident); work-ticket verdict E2 record polymorphic field exact, prescription = explicit-type-annotated intermediate Definition. Gold-standard fixed forms: _wt93_fixmagic/_wt93_reverse ConstructiveWorld_Live UpAblMetaWindow.v (mwi_step/mwi_Kunif annotated middleware, md5 ec7cb774).",
+      "engine": "face-regex",
+      "scope": "face",
+      "file_include": "wf[ \\t]+theW",
+      "trigger_regex": "Definition[ \\t]+unann[ \\t]*:=[ \\t]*wf[ \\t]+theW[ \\t]*\\.",
+      "template": "Definition unann (n : nat) : nat := wf theW nat n.",
+      "idempotence_note": "Post-cure the face carries '(n : nat) : nat :=' between the name and ':=', so the trigger (which requires the bare 'Definition unann :=' head) cannot re-match."
+    },
+    {
+      "id": "cure34_E2_use_arity",
+      "title": "E2 middleware arity adaptation (downstream carrier-application stations follow the annotated face)",
+      "canonical_note": "The annotated middleware face 'Definition unann (n : nat) : nat := wf theW nat n.' takes one binder where the un-annotated polymorphic face took a carrier argument ('unann nat n'); every downstream application station follows ('unann n'). Scope 'all': stations live in statement faces AND proof regions. Fires only on the 'unann nat <ident>' application shape; the annotated face itself contains 'unann (n : nat)' which the word-boundary guard never matches, and the middleware body 'wf theW nat n' carries no 'unann' token.",
+      "v34_lineage": "Same E2 lineage as cure34_E2_field_annot (the UpAblMetaWindow cured form consumes the middleware by its own name at every station); fixture-arc first-hand: pre-fix 'Definition use_unann (n : nat) : nat := unann nat n.' -> post-cure ':= unann n.'.",
+      "engine": "face-regex",
+      "scope": "all",
+      "file_include": "wf[ \\t]+theW",
+      "trigger_regex": "(?<![A-Za-z0-9_'.])unann[ \\t]+nat[ \\t]+(?P<x>[A-Za-z_'][A-Za-z0-9_]*)",
+      "template": "unann \\g<x>",
+      "idempotence_note": "Post-cure no 'unann nat <ident>' application remains: the middleware face and body never carry that shape, and downstream stations are one-argument calls."
+    },
+    {
+      "id": "cure34_E2_station_unannot",
+      "title": "E2 un-annotated field-consumption station (report-only: definitions awaiting the middleware restatement)",
+      "canonical_note": "Report-only station (engine station-report, mode report): counts the un-annotated record-field-consumption definitions ('Definition <name> := wf theW.') across statement faces. The engine never rewrites; the dry-run report surfaces the count and the count assertion is: after the middleware restatement (cure34_E2_field_annot) the count returns to zero. The name is left general on purpose - this is the sweep-completion counter, not a cure trigger.",
+      "v34_lineage": "Same E2 lineage as cure34_E2_field_annot; station verbatim in the fixture: 'Definition unann := wf theW.' (pre-cure count 1, post-cure 0).",
+      "engine": "station-report",
+      "mode": "report",
+      "scope": "face",
+      "file_include": "wf[ \\t]+theW",
+      "station_regex": "Definition[ \\t]+[A-Za-z_'][A-Za-z0-9_]*[ \\t]*:=[ \\t]*wf[ \\t]+theW[ \\t]*\\.",
+      "idempotence_note": "Report-only: the text is never rewritten; the station count drops to zero when the middleware restatement (not this pattern) annotates the faces."
     }
   ]
 }

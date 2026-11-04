@@ -34,6 +34,17 @@ Vectors:
      documented binder surgery) compiles rc=0, and Separate Extraction
      reports Obj.magic 0 on every .ml/.mli with the bare fields resolved
      through the global instance.
+  7. v1.3 E2/E3 flows (CI #178 extraction-defect families): pack
+     integrity for the five cure34 patterns, fixture flows for both
+     families (dry-run counts on the pre-fix miniatures, apply, all-zero
+     re-run, report-only station residual), and the env-gated compile arc:
+     the miniature world compiles, both pre-fix consumers compile green
+     (these families are extraction-time defects, not compile-time ones —
+     the red face of record is the extraction census), the cured consumers
+     compile rc=0, and the extraction census shows magic 0/0 with the
+     monomorphic station faces (E3 shim call; E2 "val unann : nat -> nat"
+     on the .mli).  Compile sections are skipped (rc 111) when ROCWASH_ROCQ
+     is unset, so external clones pass without a toolchain.
 """
 import io, os, re, shutil, subprocess, sys, tempfile
 
@@ -79,10 +90,14 @@ want_v32 = {"cure32_A_param_shell_drop", "cure32_B_notation_rebind",
             "cure32_C_atfield_bridge_bare",
             "cure32_C_predicate_face_converge",
             "cure32_station_binder_shell"}
+want_v34 = {"cure34_E3_use_station_spec", "cure34_E3_spec_shim",
+            "cure34_E2_field_annot", "cure34_E2_use_arity",
+            "cure34_E2_station_unannot"}
 check("legacy five present", want_legacy <= set(ids))
 check("v1.1 nine present", want_v31 <= set(ids))
 check("v1.2 five present", want_v32 <= set(ids))
-check("pattern count 5+9+5", len(pack["patterns"]) == 19)
+check("v1.3 five present", want_v34 <= set(ids))
+check("pattern count 5+9+5+5", len(pack["patterns"]) == 24)
 check("every pattern has trigger+template+idempotence",
       all(("trigger_regex" in p or "trigger" in p or "token_map" in p
            or "station_regex" in p or "insert_line" in p)
@@ -95,12 +110,21 @@ check("v1.1 patterns carry lineage",
 check("v1.2 patterns carry lineage",
       all("v32_lineage" in p for p in pack["patterns"]
           if p["id"] in want_v32))
+check("v1.3 patterns carry lineage",
+      all("v34_lineage" in p for p in pack["patterns"]
+          if p["id"] in want_v34))
 check("exclusive group declared on both shadow variants",
       [p.get("exclusive_group") for p in pack["patterns"]
        if p["id"].startswith(("cure11", "cure12"))] == ["import-shadow"] * 2)
 check("station pattern is report-only",
       [p.get("mode") for p in pack["patterns"]
        if p["id"] == "cure32_station_binder_shell"] == ["report"])
+check("v1.3 station pattern is report-only",
+      [p.get("mode") for p in pack["patterns"]
+       if p["id"] == "cure34_E2_station_unannot"] == ["report"])
+check("v1.3 E3 pair ordered station-rewrite before shim-insert",
+      [p["id"] for p in pack["patterns"]
+       if p["id"].startswith("cure34_E3")][0] == "cure34_E3_use_station_spec")
 check("convergence targets the supply lemma's own constant",
       dict((p["id"], p) for p in pack["patterns"]
            if p["id"] == "cure32_C_predicate_face_converge"
@@ -320,6 +344,78 @@ try:
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
+# 6. v1.3 fixture flows: the E2/E3 extraction-defect families (cure34)
+E23_WORLD_F = os.path.join(HERE, "fixtures", "cure34_e23_world.v")
+E3_F = os.path.join(HERE, "fixtures", "cure34_e3_fixture.v")
+E2_F = os.path.join(HERE, "fixtures", "cure34_e2_fixture.v")
+
+tmp = tempfile.mkdtemp(prefix="rw_cure34_")
+try:
+    # 6a. E3 pre-fix miniature: station rewrite (statement faces) + shim
+    #     insert after the import; the shim body keeps the abstract
+    #     application verbatim; re-run all-zero
+    tgt = os.path.join(tmp, "e3.v")
+    shutil.copy(E3_F, tgt)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt,
+             "--only", "cure34_E3_use_station_spec,cure34_E3_spec_shim",
+             "--json", os.path.join(tmp, "dry34e3.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry34e3.json"),
+                            encoding="utf-8"))
+    rep = dry["report"]
+    check("E3 dry-run stations=2 shim=1",
+          rep["cure34_E3_use_station_spec"]["matches"] == 2
+          and rep["cure34_E3_spec_shim"]["matches"] == 1)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
+             "--only", "cure34_E3_use_station_spec,cure34_E3_spec_shim"])
+    check("E3 apply rc=0 (idempotence verified)", r.returncode == 0,
+          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+    cured = io.open(tgt, encoding="utf-8").read()
+    check("E3 shim inserted after the import",
+          "Require Import Cure34E23World.\n"
+          "Definition gstep_spec (x : Real) : Real := gstep Real natIF x."
+          in cured)
+    check("E3 stations reshimmed (faces, shim body intact)",
+          ":= gstep_spec n." in cured
+          and "gstep_spec n = Nat.mul n n." in cured
+          and ":= gstep Real natIF n." not in cured
+          and "Definition gstep_spec (x : Real) : Real := gstep Real natIF x."
+          in cured)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--json",
+             os.path.join(tmp, "dry34e3b.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry34e3b.json"),
+                            encoding="utf-8"))
+    check("E3 re-run zero matches",
+          all(v["matches"] == 0 for v in dry["report"].values()))
+
+    # 6b. E2 pre-fix miniature: annotated middleware + arity stations +
+    #     report-only station residual dropping to zero
+    tgt = os.path.join(tmp, "e2.v")
+    shutil.copy(E2_F, tgt)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt,
+             "--only", "cure34_E2_station_unannot", "--json",
+             os.path.join(tmp, "dry34e2s.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry34e2s.json"),
+                            encoding="utf-8"))
+    check("E2 pre-cure station count=1 (report-only)",
+          dry["report"]["cure34_E2_station_unannot"]["matches"] == 1)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
+             "--only", "cure34_E2_field_annot,cure34_E2_use_arity"])
+    check("E2 apply rc=0 (idempotence verified)", r.returncode == 0,
+          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+    cured = io.open(tgt, encoding="utf-8").read()
+    check("E2 middleware annotated + arity adapted",
+          "Definition unann (n : nat) : nat := wf theW nat n." in cured
+          and ":= unann n." in cured
+          and "unann nat n" not in cured)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--json",
+             os.path.join(tmp, "dry34e2b.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry34e2b.json"),
+                            encoding="utf-8"))
+    check("E2 re-run all-zero (station residual included)",
+          all(v["matches"] == 0 for v in dry["report"].values()))
+finally:
+    shutil.rmtree(tmp, ignore_errors=True)
+
 # compile check (env-gated, thermal-guard wrapped like every compile)
 rocq = os.environ.get("ROCWASH_ROCQ", "")
 if rocq and os.path.exists(rocq):
@@ -412,6 +508,138 @@ Qed.
               os.path.exists(mlp)
               and "coq_RealEnhancedReal" in io.open(
                   mlp, encoding="utf-8", errors="replace").read())
+
+        # v34 E2/E3 arc: the miniature world compiles, both pre-fix
+        # consumers compile green (these families are extraction-time
+        # defects — the red face of record is the extraction census, the
+        # CI #178 shape), the cured consumers compile rc=0, and the
+        # extraction census shows magic 0/0 with the monomorphic station
+        # faces (E3 shim call; E2 "val unann : nat -> nat" on the .mli).
+        w34dir = os.path.join(tmp, "world34")
+        os.makedirs(w34dir)
+        shutil.copy(E23_WORLD_F, os.path.join(w34dir, "Cure34E23World.v"))
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", w34dir, "",
+                     os.path.join(w34dir, "Cure34E23World.v")])
+        check("E23 world compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+
+        e3f = os.path.join(w34dir, "Cure34E3Fixture.v")
+        shutil.copy(E3_F, e3f)
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", w34dir, "", e3f])
+        check("E3 pre-fix compiles green (extraction-time family)",
+              r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        r = run([sys.executable, "-B", APPLIER, "--file", e3f, "--apply"])
+        check("E3 cures apply rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", w34dir, "", e3f])
+        check("E3 cured compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        e3ext = os.path.join(tmp, "ext34e3")
+        os.makedirs(e3ext)
+        drv = os.path.join(e3ext, "ext_driver.v")
+        io.open(drv, "w", encoding="utf-8").write(
+            "From Stdlib Require Import Extraction.\n"
+            "Require Import Cure34E3Fixture.\n"
+            "Separate Extraction Cure34E3Fixture.ufx_nat.\n")
+        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+                 "-MaxWaitSec", "600", "--", rocq, "c",
+                 "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
+                cwd=e3ext)
+        magics = 0
+        for name in ("Cure34E3Fixture.ml", "Cure34E3Fixture.mli"):
+            p = os.path.join(e3ext, name)
+            if os.path.exists(p):
+                with io.open(p, encoding="utf-8", errors="replace") as fh:
+                    magics += fh.read().count("Obj.magic")
+        check("E3 extraction rc=0 magic 0/0 (consumer units)",
+              r.returncode == 0 and magics == 0,
+              "rc=%d magics=%d" % (r.returncode, magics))
+        e3ml = os.path.join(e3ext, "Cure34E3Fixture.ml")
+        e3ml_text = ""
+        if os.path.exists(e3ml):
+            e3ml_text = io.open(e3ml, encoding="utf-8",
+                                errors="replace").read()
+        check("E3 extracted station monomorphic (shim call)",
+              "let ufx_nat =\n  gstep_spec" in e3ml_text
+              and "val ufx_nat : coq_Real -> coq_Real" in e3ml_text,
+              e3ml_text[-160:] if e3ml_text else "ml missing")
+
+        e2f = os.path.join(w34dir, "Cure34E2Fixture.v")
+        shutil.copy(E2_F, e2f)
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", w34dir, "", e2f])
+        check("E2 pre-fix compiles green (extraction-time family)",
+              r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        e2pre_ext = os.path.join(tmp, "ext34e2pre")
+        os.makedirs(e2pre_ext)
+        drv = os.path.join(e2pre_ext, "ext_driver.v")
+        io.open(drv, "w", encoding="utf-8").write(
+            "From Stdlib Require Import Extraction.\n"
+            "Require Import Cure34E2Fixture.\n"
+            "Separate Extraction Cure34E2Fixture.use_unann.\n")
+        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+                 "-MaxWaitSec", "600", "--", rocq, "c",
+                 "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
+                cwd=e2pre_ext)
+        e2mli_pre = os.path.join(e2pre_ext, "Cure34E2Fixture.mli")
+        pre_sig = ""
+        if os.path.exists(e2mli_pre):
+            pre_sig = io.open(e2mli_pre, encoding="utf-8",
+                              errors="replace").read()
+        check("E2 pre-cure face polymorphic ('a -> 'a)",
+              "'a1 -> 'a1" in pre_sig,
+              pre_sig[-120:] if pre_sig else "mli missing")
+        r = run([sys.executable, "-B", APPLIER, "--file", e2f, "--apply"])
+        check("E2 cures apply rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", w34dir, "", e2f])
+        check("E2 cured compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+        e2ext = os.path.join(tmp, "ext34e2")
+        os.makedirs(e2ext)
+        drv = os.path.join(e2ext, "ext_driver.v")
+        io.open(drv, "w", encoding="utf-8").write(
+            "From Stdlib Require Import Extraction.\n"
+            "Require Import Cure34E2Fixture.\n"
+            "Separate Extraction Cure34E2Fixture.use_unann.\n")
+        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+                 "-MaxWaitSec", "600", "--", rocq, "c",
+                 "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
+                cwd=e2ext)
+        magics_cons = 0
+        for name in ("Cure34E2Fixture.ml", "Cure34E2Fixture.mli"):
+            p = os.path.join(e2ext, name)
+            if os.path.exists(p):
+                with io.open(p, encoding="utf-8", errors="replace") as fh:
+                    magics_cons += fh.read().count("Obj.magic")
+        e2mli = os.path.join(e2ext, "Cure34E2Fixture.mli")
+        post_sig = ""
+        if os.path.exists(e2mli):
+            post_sig = io.open(e2mli, encoding="utf-8",
+                               errors="replace").read()
+        check("E2 cured face monomorphic (nat -> nat)",
+              r.returncode == 0 and "nat -> nat" in post_sig,
+              post_sig[-120:] if post_sig else "mli missing")
+        # honesty boundary, mechanically pinned: the consumer unit extracts
+        # clean, while the world-generation accessor cast (the wf projection
+        # of the inside-polymorphic field) stays exactly where the fixture
+        # world header and the pack canonical note document it - world-side
+        # debt owned by the entity-repair workflow, out of reach of
+        # consumer-side text cures
+        e2wml = os.path.join(e2ext, "Cure34E23World.ml")
+        wmagic = 0
+        if os.path.exists(e2wml):
+            wmagic = io.open(e2wml, encoding="utf-8",
+                             errors="replace").read().count("Obj.magic")
+        check("E2 consumer-unit magic 0/0; world accessor debt pinned=1",
+              magics_cons == 0 and wmagic == 1,
+              "consumer magics=%d world magics=%d" % (magics_cons, wmagic))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 else:

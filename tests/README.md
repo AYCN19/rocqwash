@@ -12,7 +12,7 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（42 例）
+## 覆盖面（43 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -134,3 +134,9 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / 
 |---|------|------|------|
 | 42 | `t_dual_scan` | `scan/dual_scan.py`（双器对拍驱动·v32 工具化·承 seat_wash66 w66_dual_scan.py） | `tests/test_dual_scan.py` 十节：净样例双器 0/0＋双端空 diff／语句面站 only_stmt 非空 only_v4 空（单侧情·报而不决——器共识非全集证）／token 站 only_v4 非空 only_stmt 空／确定性（同目标两跑报告字节恒同）／CLI 四码（无目标 2·缺 dir 2·缺 file 9·缺器 9·help 0）。临时目录夹具驱动零触真仓零网络 |
 | 36（v32 扩节） | `t_cure_pack` | `wash/cure_pack.json` v1.2＋`cure_applier.py`（S07 世系适配五式＋line-insert/station-report 两引擎＋exclusive-group --json 器修） | cure32_A 壳除（型注＋binder 双站·:=-binding-right 右位排除）／cure32_B 记号重绑（末个 Import 行后插 Notation 行·file_include＋裸 R 门·幂等跳过）／cure32_C(a) 桥裸名（face+proof 域·8 名交替）／cure32_C(b) 谓词面收敛（lt→real_lt/req→real_eq·mult 等含 lt 子串词零触碰·收敛目标=供给引理结论常量名机械断言）／cure32_station binder 壳站（report-only·术前 1/术后残差 0·--apply 幂等残差排除 report 型）／conflict 器修回归（--json 落盘＋rc=4＋零 traceback） |
+
+## v34 E2/E3 提取面缺陷族 cure 扩节（20261104·用例 36 扩节·CI #178 逆向修订轮）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 36（v34 扩节） | `t_cure_pack` | `wash/cure_pack.json` v1.3＋`cure_applier.py`（E2/E3 缺陷族五式·零新引擎全复用 v32） | pack 完整（5+9+5+5=24·v34_lineage 在册·cure34_E2_station report-only·E3 对式序=站改写先于 shim 插入机械断言）＋selftest v34 向量（E3 站改写 2/shim 插入/shim 体 face_exclude 护体二遍零残差；E2 标注/元数/report 站/幂等；v34 whole-pack 幂等）＋夹具流程（E3 干跑 stations=2 shim=1→apply rc0→shim 行在·站改写·shim 体原样→全零复跑；E2 术前站数 1 report-only→apply→中间件面＋元数随行→全零复跑含 station 残差）＋门控 E2/E3 编译弧（`ROCWASH_ROCQ` 门控·cpu_guard 包裹：world 绿→**pre-fix 消费件编译绿＝提取时缺陷族实锤**→cure→cured 绿→Separate Extraction：E3 消费单元 magic 0/0＋`val ufx_nat : coq_Real -> coq_Real` 单态 shim 站；E2 修前 .mli `'a1 -> 'a1` 多态面→修后 `val unann : nat -> nat` 单态面→消费单元 magic 0/0→**world 访问器债=1 机械钉**〔实体修复工作流域·fixture world 头注与 canonical_note 记界〕）。夹具 `fixtures/cure34_e23_world.v`＋`cure34_e3_fixture.v`＋`cure34_e2_fixture.v`（临时目录驱动零触真仓·干跑永不编译） |
