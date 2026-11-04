@@ -72,6 +72,11 @@
 #       wash/cure_pack v1.2 S07 适配式（tests/test_cure_pack.py 扩节·
 #         cure32 壳除/记号重绑/投影桥/谓词面收敛/binder 站型·干跑-apply-
 #         手术-全零复跑＋conflict --json rc4 回归＋门控 S07 编译弧红→绿→提取 0/0）
+#       cw.sh v29-v32 工具波统一入口（tests/test_cw_entry.sh·v33 工具化·
+#         四节：帮助/路由冒烟＋七工具 --help 透传＋功能透传（scan4/dual-scan/
+#         chain/sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）
+#         ＋零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
+#         夹具只读输出全落 mktemp·零触真仓）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -146,7 +151,8 @@ t_probe_engine \
 t_chain_graph \
 t_ledger_sync \
 t_comment_pack \
-t_dual_scan"
+t_dual_scan \
+t_cw_entry"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -398,6 +404,15 @@ t_dual_scan() {
   # 双扫×逐件差异报告 only_v4/only_stmt/common·确定字节恒同·CLI 四码·
   # tests/test_dual_scan.py 十节·零触真仓零网络）
   "$PY" -B "$REPO/tests/test_dual_scan.py"
+}
+
+t_cw_entry() {
+  # v33 工具化：cw.sh v29-v32 工具波统一入口（tests/test_cw_entry.sh·四节：
+  # 帮助/路由冒烟＋七工具 --help 透传＋功能透传（scan4/dual-scan/chain/
+  # sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）＋
+  # 零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
+  # 夹具只读输出全落 mktemp·零触真仓零网络）
+  bash "$REPO/tests/test_cw_entry.sh"
 }
 
 # ---------- 汇总执行 ----------

@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+# cw.sh — rocqwash v29-v32 工具波统一入口（repo 根·bash 3.2 兼容）
+# cw.sh — unified entry for the rocqwash v29-v32 tool wave (repo root, bash 3.2)
+#
+# 用法 Usage: bash cw.sh <tool> [args...]
+#
+# 工具表 Tools（每工具一行用法提示 + 目标脚本；参数与退出码 1:1 透传）:
+#   scan4       token 级限定名普查                  -> scan/scan_v4_token.py
+#               cw.sh scan4 --file <f.v> [--json out.json] [--ids S] [--text]
+#   cure        消费位治愈正典包（缺省干跑）         -> wash/cure_applier.py
+#               cw.sh cure --file <f.v> [--pack P] [--only IDS] [--json out] [--apply]
+#   probe       批量闭包相容探针引擎                 -> wash/probe_engine.py
+#               cw.sh probe --candidates <tsv> --src DIR --world DIR --out ledger.json [--fresh]
+#   chain       多账合并链根图                       -> tools/chain_graph.py
+#               cw.sh chain <ledger.json...> [--json out] [--md out] [--top N]
+#   sync-ledger probe 台账×状态台账合并同步           -> tools/ledger_sync.py
+#               cw.sh sync-ledger --probe <json> --ledger <tsv> --out <tsv> [--report r.json]
+#   erasure     擦除位分类顾问                       -> verify/erasure_classifier.py
+#               cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]
+#   dual-scan   双器对拍驱动                         -> scan/dual_scan.py
+#               cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]
+#   help        本帮助（help <tool> = 该工具一行提示）
+#
+# 路由契约 Routing contract:
+#   1. 路径全部相对仓根（ROOT 取自本脚本所在目录）——零硬编码绝对路径，仓随迁随用。
+#   2. 参数与退出码 1:1 透传（exec 直转·fail-loud 不改写）；与 cli/rocqwash 同款契约。
+#   3. 退出码：0=通过；2=未知工具；9=目标脚本缺失；其余=各工具自身口径透传
+#      （工具自身口径：--help/--selftest=0；argparse 用法错/FAIL-LOUD 断言=2；目标文件缺失=9）。
+#   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
+#
+# 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
+# wash/verify/seam/certify/watch). The v29-v32 tools live in module directories
+# that now hold several generic entries each, where the auto-router's ambiguity
+# guard (exit 4) deliberately declines to guess — this entry fills that gap by
+# explicit tool name. The two entries are complementary.
+
+set -u
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  cat <<'EOF'
+cw.sh — rocqwash v29-v32 tool-wave unified entry（统一入口·bash 3.2 兼容）
+
+用法 Usage: bash cw.sh <tool> [args...]
+
+工具 Tools:
+  scan4       token 级限定名普查                  -> scan/scan_v4_token.py
+              cw.sh scan4 --file <f.v> [--json out.json] [--ids S] [--text]
+  cure        消费位治愈正典包（缺省干跑）         -> wash/cure_applier.py
+              cw.sh cure --file <f.v> [--pack P] [--only IDS] [--json out] [--apply]
+  probe       批量闭包相容探针引擎                 -> wash/probe_engine.py
+              cw.sh probe --candidates <tsv> --src DIR --world DIR --out ledger.json [--fresh]
+  chain       多账合并链根图                       -> tools/chain_graph.py
+              cw.sh chain <ledger.json...> [--json out] [--md out] [--top N]
+  sync-ledger probe 台账×状态台账合并同步           -> tools/ledger_sync.py
+              cw.sh sync-ledger --probe <json> --ledger <tsv> --out <tsv> [--report r.json]
+  erasure     擦除位分类顾问                       -> verify/erasure_classifier.py
+              cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]
+  dual-scan   双器对拍驱动                         -> scan/dual_scan.py
+              cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]
+  help        本帮助（help <tool> = 该工具一行提示）
+
+退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
+路由说明 Routing notes:
+  - 参数与退出码 1:1 透传（exec 直转·fail-loud 不改写）；与 cli/rocqwash 同款契约。
+  - 路径全部相对仓根（ROOT 取自本脚本所在目录）——仓随迁随用，零硬编码绝对路径。
+  - `cw.sh <tool>`（无参）先打该工具一行提示再透传；`cw.sh help <tool>` 只看提示不执行。
+EOF
+}
+
+# 一行用法提示（help <tool> 与无参透传前置提示共用同一份措辞）
+hint_for() {  # $1=tool
+  case "$1" in
+    scan4)       echo "cw.sh scan4 --file <f.v> [--json out.json] [--ids S] [--text]   # token 级限定名普查 -> scan/scan_v4_token.py" ;;
+    cure)        echo "cw.sh cure --file <f.v> [--pack P] [--only IDS] [--json out] [--apply]   # 消费位治愈正典包（缺省干跑）-> wash/cure_applier.py" ;;
+    probe)       echo "cw.sh probe --candidates <tsv> --src DIR --world DIR --out ledger.json [--fresh]   # 批量闭包相容探针 -> wash/probe_engine.py" ;;
+    chain)       echo "cw.sh chain <ledger.json...> [--json out] [--md out] [--top N]   # 多账合并链根图 -> tools/chain_graph.py" ;;
+    sync-ledger) echo "cw.sh sync-ledger --probe <json> --ledger <tsv> --out <tsv> [--report r.json]   # probe 台账×状态台账合并 -> tools/ledger_sync.py" ;;
+    erasure)     echo "cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]   # 擦除位分类顾问 -> verify/erasure_classifier.py" ;;
+    dual-scan)   echo "cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]   # 双器对拍 -> scan/dual_scan.py" ;;
+    *) return 1 ;;
+  esac
+}
+
+# 透传执行（tool→脚本相对仓根路径映射；缺脚本 exit 9；无参先打一行提示再透传）
+run_tool() {  # $1=tool  $2=target-script (relative to ROOT)  rest=args passthrough
+  local tool="$1" rel="$2"
+  shift 2
+  local script="$ROOT/$rel"
+  if [ ! -f "$script" ]; then
+    echo "cw.sh $tool: missing $rel" >&2
+    exit 9
+  fi
+  if [ "$#" -eq 0 ]; then
+    hint_for "$tool" >&2
+  fi
+  exec python3 "$script" "$@"
+}
+
+case "${1:-}" in
+  scan4)       shift; run_tool scan4       "scan/scan_v4_token.py"        "$@" ;;
+  cure)        shift; run_tool cure        "wash/cure_applier.py"         "$@" ;;
+  probe)       shift; run_tool probe       "wash/probe_engine.py"         "$@" ;;
+  chain)       shift; run_tool chain       "tools/chain_graph.py"         "$@" ;;
+  sync-ledger) shift; run_tool sync-ledger "tools/ledger_sync.py"         "$@" ;;
+  erasure)     shift; run_tool erasure     "verify/erasure_classifier.py" "$@" ;;
+  dual-scan)   shift; run_tool dual-scan   "scan/dual_scan.py"            "$@" ;;
+  help|-h|--help)
+    if [ "$#" -ge 2 ]; then
+      if hint_for "$2"; then
+        exit 0
+      else
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan）" >&2
+        exit 2
+      fi
+    fi
+    usage
+    exit 0 ;;
+  "") usage; exit 0 ;;
+  *)
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|help）" >&2
+    usage >&2
+    exit 2 ;;
+esac
