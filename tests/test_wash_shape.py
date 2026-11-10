@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 """test_wash_shape.py — tools/wash_shape.py 自测壳（tests/·20261111 v37 洗形席挂接）
 
-洗形器（正典形五洗流水·schema rocqwash-shape/1）挂接件：器自带 --selftest 十二判
+洗形器（正典形五洗流水·schema rocqwash-shape/1）挂接件：器自带 --selftest 十六判
 冻结向量组（plan 五洗逐判/正件对照/plan 零写盘/--apply 缺省关/plan-miss 如实/
 apply→rescan clean→shaped/幂等二跑全 clean/锚缺实体/冻结名排除（罐装＋真在册
-红拒）/gate4 罐装判面/CLI 四码/--loop 哨态事件流/确定性字节恒同·全 tmp 夹具零真
-网络零真编译）已由铸席自证，本壳接进套件总入口并加用法面冒烟：
+红拒）/gate4 罐装判面/CLI 四码/--loop 哨态事件流/确定性字节恒同/preset 链（装载
+在位·preset/--header-map 胜 env）/preset 占位替换渲染→apply 端到端/同槽互斥
+（--header-map＋--header-map-preset rc2·未知名 rc2）/无源 plan-miss 如实＋模板库
+缺失 rc9·全 tmp 夹具零真网络零真编译）已由铸席自证，本壳接进套件总入口并加用
+法面冒烟：
   1 --selftest rc=0 且 stdout 含 "WASH-SHAPE-SELFTEST: PASS" 冻结标记
   2 --help rc=0（argparse 用法面在位）
   3 --bogus rc=2／无输入面 rc=2／--file 缺件 rc=9（退出码口径抽验）

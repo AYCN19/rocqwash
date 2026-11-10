@@ -21,7 +21,16 @@
   ③头注形洗 header  两段式＋五字段缺检（gate4 即含：无头注/头注非首块/缺字段/头注
                     超标）→缺失字段方案＝comment_pack 式补写模板（--header-map 逐件
                     数据·comment_sweep --header-map 前导注释区整体替换·内容绝不
-                    合成）；无模板→plan-miss 不硬造。
+                    合成）；或 --header-map-preset 钦名模板（tests/fixtures/
+                    header_map_v1.json 蒸馏库·schema rocqwash-header-map/1·占位
+                    {name}/{deps_stdlib}/{deps_dev} 承目标件 Require 面与件名派生·
+                    {bundle}/{summary}/{mission} 承既有头注逐字携带——任一绑不上
+                    plan-miss 不硬造·渲染后仍经 comment_sweep --header-map 落刀）；
+                    无模板→plan-miss 不硬造。模板源探测次序：--header-map >
+                    --header-map-preset > env ROCWASH_HEADER_MAP（map 文件路径）>
+                    无＝plan-miss 如实；--header-map 与 --header-map-preset 显传
+                    互斥（同槽律 rc 2）。preset 源仅对 gate4 头注域硬项施刀·五字段
+                    齐件不对齐改写（防人工 curated 面被机械卷改写·诚实账）。
   ④行尾洗 eol       CRLF→LF 归一（保末行换行形态；3KB 探测窗承 tools/
                     registry_union.py detect_eol EOL_PROBE_BYTES 形制）。前洗引擎
                     universal-newline 写回会附带归一——本洗 apply 以现盘实测为准·
@@ -56,14 +65,15 @@ plan-miss（洗未尽·响亮出账）·2=用法/断言（冻结件红拒·引�
   python3 tools/wash_shape.py --file A.v [--file B.v ...] [--json OUT]   # plan 段
   python3 tools/wash_shape.py --dir TREE [--exclude 名 ...] [--only 1,3]
   python3 tools/wash_shape.py --file A.v --apply [--header-map M.json] \
-      [--anchor-src DIR] [--json OUT]                                    # 两段全施
+      [--header-map-preset NAME] [--anchor-src DIR] [--json OUT]         # 两段全施
   python3 tools/wash_shape.py --dir TREE --loop [--interval 5] \
       [--max-rounds 0] [--events FILE] [--apply]                         # 哨态
   python3 tools/wash_shape.py --selftest
 
 退出码：0=clean/shaped；1=partial/plan-miss（洗未尽·响亮出账）；2=用法错/断言炸
-（冻结件红拒/引擎形外退出/JSON 畸形）；9=路径缺失（--file/--dir/引擎件/
---header-map/--injector）。schema=rocqwash-shape/1。
+（冻结件红拒/引擎形外退出/JSON 畸形/--header-map 与 --header-map-preset 同槽
+互斥）；9=路径缺失（--file/--dir/引擎件/--header-map/--header-map-preset 模板库/
+env ROCWASH_HEADER_MAP/--injector）。schema=rocqwash-shape/1。
 """
 import argparse
 import hashlib
@@ -116,9 +126,30 @@ LEDGER_NAME = "更新账.md"   # 铁律禁触面（自动排除·显式指认红
 
 ACTION_SWEEP = "wash/comment_sweep.py --apply"
 ACTION_SWEEP_MAP = "wash/comment_sweep.py --header-map <MAP> --apply"
+ACTION_SWEEP_MAP_PRESET = "wash/comment_sweep.py --header-map <preset 渲染> --apply"
 ACTION_CURE = "wash/cure_applier.py --apply"
 ACTION_EOL = "wash_shape:eol-rewrite(CRLF->LF)"
 ACTION_REGU = "tools/registry_union.py --reanchor --apply"
+
+# ③头注模板源（探测次序 --header-map > --header-map-preset > env > 无=plan-miss）
+HEADER_LIB_REL = os.path.join("tests", "fixtures", "header_map_v1.json")
+HEADER_LIB_SCHEMA = "rocqwash-header-map/1"
+ENV_HEADER_MAP = "ROCWASH_HEADER_MAP"
+PH_RE = re.compile(r"\{([a-z_]+)\}")
+RE_BUNDLE_L1 = re.compile(
+    r"^\(\*\s*ConstructiveWorld-Set\s*--\s+(.+?)\.\s*\*\)\s*$")
+RE_TITLE_LINE = re.compile(
+    r"^\(\*\*\s*\*\s*[A-Za-z0-9_']+\s*:\s+(.+?)\.\s*$")
+RE_MISSION_LABEL = re.compile(r"^\s*Mission\.\s*(.*)$")
+RE_NEXT_FIELD = re.compile(
+    r"^\s*(?:Dependencies|References|Constructivity|Build)\.")
+RE_FROM_STDLIB = re.compile(
+    r"^From\s+Stdlib\s+Require(?:\s+(?:Import|Export))?\s+(.+?)\s*\.\s*$")
+RE_FROM_OTHER = re.compile(
+    r"^From\s+(?!Stdlib\b)(\S+)\s+Require(?:\s+(?:Import|Export))?\s+"
+    r"(.+?)\s*\.\s*$")
+RE_BARE_REQUIRE = re.compile(
+    r"^Require(?:\s+(?:Import|Export))?\s+(.+?)\s*\.\s*$")
 
 
 class UsageError(Exception):
@@ -211,6 +242,148 @@ def tail_of(text, n=200):
     return t[-n:] if len(t) > n else t
 
 
+def strip_comment_spans(text):
+    """注释域剥离（留换行·字符串感知）——Require 面抽取前置。
+    1:1 本地重实现 wash/comment_sweep.py strip_comments 形制（不 import——
+    防引擎件漂移牵连·first_code_offset 本地重实现同律）。"""
+    out = []
+    i, n = 0, len(text)
+    depth = 0
+    in_str = False
+    while i < n:
+        c = text[i]
+        if in_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(text[i + 1])
+                i += 2
+                continue
+            if c == '"':
+                in_str = False
+            i += 1
+            continue
+        if depth > 0:
+            if text.startswith("(*", i):
+                depth += 1
+                i += 2
+                continue
+            if text.startswith("*)", i):
+                depth -= 1
+                i += 2
+                continue
+            if c == "\n":
+                out.append(c)
+            i += 1
+            continue
+        if text.startswith("(*", i):
+            depth += 1
+            i += 2
+            continue
+        if c == '"':
+            in_str = True
+            out.append(c)
+            i += 1
+            continue
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def wrap_long_line(line, width=76, sub="      "):
+    """贪心词卷（>width 且含空格才卷·续行缩 6·超长孤词整词保留）——preset
+    渲染卷行形制（战役件卷行宽≈76 续行缩 6·DecBridge6.v:19-29 形制引据）。"""
+    if len(line) <= width or " " not in line.strip():
+        return [line]
+    words = line.split(" ")
+    rows, cur = [], words[0]
+    for w in words[1:]:
+        if len(cur) + 1 + len(w) <= width:
+            cur = cur + " " + w
+        else:
+            rows.append(cur)
+            cur = w
+    rows.append(cur)
+    return [rows[0]] + [sub + r for r in rows[1:]]
+
+
+def require_faces(text):
+    """Require 面双列抽取（③头注形洗 preset 占位 {deps_stdlib}/{deps_dev}
+    数据源·目标件自身语句逐名·绝不合成）。注释感知剥离（strip_comment_spans）
+    后仅取列 0 起顶层语句行：
+      From Stdlib Require [Import|Export] A B.  → stdlib 列
+      Require [Import|Export] A B.              → dev 列
+      From <X> Require [Import|Export] A B.     → dev 列（全名 X.A——战役语料
+        五件 grep 零命中·机械完备臂）。
+    序＝件内出现序·去重保序。语料引据：ConstructiveWorld-Set @6e805d1
+    LW3Kills.v:30-38（From Stdlib 三行＋bare 六行）对照其头注 :13-17 双列；
+    abl_tail_supply_67.v:32-35 对照 :15-16。"""
+    stdlib, dev = [], []
+    for ln in strip_comment_spans(text).split("\n"):
+        ln = ln.rstrip()
+        names, is_std = None, False
+        m = RE_FROM_STDLIB.match(ln)
+        if m:
+            names, is_std = m.group(1).split(), True
+        else:
+            m = RE_FROM_OTHER.match(ln)
+            if m:
+                names = ["%s.%s" % (m.group(1), n) for n in m.group(2).split()]
+            else:
+                m = RE_BARE_REQUIRE.match(ln)
+                if m:
+                    names = m.group(1).split()
+        if not names:
+            continue
+        tgt = stdlib if is_std else dev
+        for nm in names:
+            if nm not in tgt:
+                tgt.append(nm)
+    return stdlib, dev
+
+
+def header_carry(text):
+    """既有前导头注区逐字携带抽取（preset 占位 {bundle}/{summary}/{mission}
+    绑定源）。返回 dict——缺键即该占位绑不上（judge plan-miss 如实·不硬造）：
+      bundle＝L1『(* ConstructiveWorld-Set -- <身>. *)』内文（终句号归模板行）；
+      summary＝『(** * <名>: <身>.』题行内文（终句号归模板行）；
+      mission＝Mission 字段身（标签行余文＋续行至次字段标签/收注符·换行缩进
+      原样逐字携带）。
+    语料引据：ConstructiveWorld-Set @6e805d1 DecBridge6.v:1/:3/:5-14 三身
+    正典位；头注身内容绝不合成（comment_pack header_spec 同律）。"""
+    off = first_code_offset(text)
+    zone = text[:off] if off is not None else text
+    lines = zone.split("\n")
+    carry = {}
+    for ln in lines:
+        if "bundle" not in carry:
+            m = RE_BUNDLE_L1.match(ln)
+            if m:
+                carry["bundle"] = m.group(1).strip()
+        if "summary" not in carry:
+            m = RE_TITLE_LINE.match(ln)
+            if m:
+                carry["summary"] = m.group(1).strip()
+    for i, ln in enumerate(lines):
+        m = RE_MISSION_LABEL.match(ln)
+        if not m:
+            continue
+        parts = [m.group(1).rstrip()] if m.group(1).strip() else []
+        j = i + 1
+        while j < len(lines):
+            l2 = lines[j]
+            if RE_NEXT_FIELD.match(l2) or l2.lstrip().startswith("*)"):
+                break
+            parts.append(l2.rstrip())
+            j += 1
+        while parts and not parts[0].strip():
+            parts.pop(0)
+        while parts and not parts[-1].strip():
+            parts.pop()
+        carry["mission"] = "\n".join(parts)
+        break
+    return carry
+
+
 class Injector(object):
     """--injector 场景：子进程调用层罐装（v37 离线可测纪律）。场景 JSON
     {引擎键: {"rc": int, "stdout": str, "report": obj?}}；命中键的引擎调用
@@ -279,13 +452,45 @@ class WashShape(object):
             raise MissingInput("--anchor-src 目录缺失: %s" % args.anchor_src)
         self.injector = Injector(args.injector) if args.injector else None
         self.flag_words = self._load_flag_words()
-        self.header_map = self._load_header_map()
+        # ③头注模板源探测（互斥已在 main 前置 rc2·次序 map > preset > env > 无）
+        self.header_map = None
+        self.header_source = "none"
+        self.header_map_path = None
+        self.header_preset_name = None
+        self.header_library_path = None
+        self.header_preset = None
+        self._preset_render_cache = {}
+        self._resolve_header_source()
         self.kinds = parse_only(args.only)
         self.frozen_abs, self.frozen_rel, self.frozen_source = \
             self._load_frozen_roster()
         self.excludes = list(args.exclude or [])
 
     # ---- 数据面 ----
+
+    def _resolve_header_source(self):
+        """③头注模板源探测（缺省探测路径次序）：--header-map >
+        --header-map-preset > env ROCWASH_HEADER_MAP（map 文件路径·与
+        --header-map 同构）> 无＝plan-miss 如实（judge_header 缺省臂）。
+        --header-map 与 --header-map-preset 同槽互斥 rc2（main 前置）。"""
+        args = self.args
+        env_map = os.environ.get(ENV_HEADER_MAP)
+        if args.header_map:
+            self.header_source = "map"
+            self.header_map_path = args.header_map
+            self.header_map = self._load_header_map(args.header_map,
+                                                    "--header-map")
+        elif args.header_map_preset:
+            self.header_source = "preset"
+            self.header_preset_name = args.header_map_preset
+            self.header_library_path = os.path.join(self.repo_root,
+                                                    HEADER_LIB_REL)
+            self.header_preset = self._load_header_preset()
+        elif env_map:
+            self.header_source = "map"
+            self.header_map_path = env_map
+            self.header_map = self._load_header_map(env_map,
+                                                    "env " + ENV_HEADER_MAP)
 
     def _load_flag_words(self):
         """comment_pack.json flag_words（正典同义改写式·数据驱动不硬造）。"""
@@ -301,25 +506,146 @@ class WashShape(object):
                              % self.pack_comment)
         return fw
 
-    def _load_header_map(self):
-        """--header-map（comment_pack 式补写模板·逐件数据·缺省无）。"""
-        if not self.args.header_map:
-            return None
-        if not os.path.isfile(self.args.header_map):
-            raise MissingInput("--header-map 缺失: %s" % self.args.header_map)
+    def _load_header_map(self, path, label):
+        """头注 map 装载（comment_pack 式补写模板·逐件数据·{basename: text}）。
+        缺失＝9·畸形＝2（label 标源：--header-map 或 env ROCWASH_HEADER_MAP）。"""
+        if not os.path.isfile(path):
+            raise MissingInput("%s 缺失: %s" % (label, path))
         try:
-            with io.open(self.args.header_map, "r", encoding="utf-8") as fh:
+            with io.open(path, "r", encoding="utf-8") as fh:
                 m = json.load(fh)
         except Exception as e:
-            raise UsageError("--header-map JSON 畸形: %s (%s)"
-                             % (self.args.header_map, e))
+            raise UsageError("%s JSON 畸形: %s (%s)" % (label, path, e))
         if not isinstance(m, dict):
-            raise UsageError("--header-map 须 {basename: header text}: %s"
-                             % self.args.header_map)
+            raise UsageError("%s 须 {basename: header text}: %s" % (label, path))
         return m
 
+    def _load_header_preset(self):
+        """钦名模板装载＋fail-loud 形检（schema rocqwash-header-map/1）：库缺失
+        ＝9·JSON 畸形/schema 不识/preset 名不识/占位出白名单/variants 无 else
+        兜底/任一模板行缺 evidence 金标引据＝2（金标纪律机械化——无据不铸）。"""
+        path = self.header_library_path
+        if not os.path.isfile(path):
+            raise MissingInput("--header-map-preset 模板库缺失: %s" % path)
+        try:
+            with io.open(path, "r", encoding="utf-8") as fh:
+                lib = json.load(fh)
+        except Exception as e:
+            raise UsageError("模板库 JSON 畸形: %s (%s)" % (path, e))
+        if not isinstance(lib, dict) or lib.get("schema") != HEADER_LIB_SCHEMA:
+            raise UsageError("模板库 schema 不识（须 %s）: %s"
+                             % (HEADER_LIB_SCHEMA, path))
+        presets = lib.get("presets")
+        if not isinstance(presets, dict) or not presets:
+            raise UsageError("模板库缺 presets 表: %s" % path)
+        name = self.header_preset_name
+        if name not in presets:
+            raise UsageError("preset 名不识（库 %s 在册: %s）: %s"
+                             % (path, ",".join(sorted(presets)), name))
+        pre = presets[name]
+        known = lib.get("placeholders")
+        if not isinstance(known, dict) or not known:
+            raise UsageError("模板库缺 placeholders 白名单: %s" % path)
+        if not isinstance(pre.get("evidence"), list) or not pre["evidence"]:
+            raise UsageError("preset %r 缺金标 evidence（无据不铸）: %s"
+                             % (name, path))
+        lines = pre.get("lines")
+        if not isinstance(lines, list) or not lines:
+            raise UsageError("preset %r 缺 lines 模板行: %s" % (name, path))
+
+        def ph_scan(s, where):
+            bad = sorted(set(m.group(1) for m in PH_RE.finditer(s)
+                             if m.group(1) not in known))
+            if bad:
+                raise UsageError("占位出白名单（%s）: %s" % (where, ",".join(bad)))
+
+        for ent in lines:
+            if isinstance(ent, str):
+                ph_scan(ent, "行式模板")
+                continue
+            if not isinstance(ent, dict) or not isinstance(
+                    ent.get("variants"), list) or not ent["variants"]:
+                raise UsageError("variants 槽式模板形畸（须 {slot, variants}）: "
+                                 "%s" % path)
+            has_else = False
+            for v in ent["variants"]:
+                if not isinstance(v, dict) or not isinstance(v.get("line"), str):
+                    raise UsageError("variant 形畸（须 {when, line, evidence}）: "
+                                     "%s" % path)
+                ph_scan(v["line"], "variants 式")
+                ev = v.get("evidence")
+                if not isinstance(ev, list) or not ev:
+                    raise UsageError("variant 缺金标 evidence（无据不铸）: %s"
+                                     % path)
+                when = v.get("when")
+                if when == "else":
+                    has_else = True
+                elif isinstance(when, dict) and when:
+                    badk = [k for k in when if k not in known
+                            or not isinstance(when[k], bool)]
+                    if badk:
+                        raise UsageError("when 键出白名单/非布尔: %s"
+                                         % ",".join(sorted(badk)))
+                else:
+                    raise UsageError("when 须 'else' 或非空 bool dict: %s" % path)
+            if not has_else:
+                raise UsageError("variants 无 else 兜底（渲染须全态可决）: %s"
+                                 % path)
+        return {"desc": pre.get("desc", ""), "lines": lines}
+
+    def render_preset_header(self, path, text):
+        """preset 渲染（③头注形洗·占位替换）：模板行逐行替换占位→超宽行贪心
+        卷（wrap_long_line）。占位值全部承目标件自身——{name}＝basename 去 .v·
+        {deps_stdlib}/{deps_dev}＝require_faces 双列·{bundle}/{summary}/
+        {mission}＝header_carry 既有头注逐字携带——绝不合成。任一占位绑不上→
+        (None, 缺位清单)（judge 记 plan-miss 如实）。缓存键＝(abspath, 文面
+        md5)（loop 逐轮重判·同件同文恒同·件变即重渲）。"""
+        key = (os.path.abspath(path), hashlib.md5(
+            text.encode("utf-8", "replace")).hexdigest())
+        if key in self._preset_render_cache:
+            return self._preset_render_cache[key]
+        base = os.path.basename(path)
+        stdlib, dev = require_faces(text)
+        carry = header_carry(text)
+        vals = {"name": base[:-2] if base.endswith(".v") else base,
+                "deps_stdlib": ", ".join("[%s]" % n for n in stdlib),
+                "deps_dev": ", ".join("[%s]" % n for n in dev),
+                "bundle": carry.get("bundle"),
+                "summary": carry.get("summary"),
+                "mission": carry.get("mission")}
+        missing = sorted(k for k, v in vals.items() if v is None)
+        out_rows = []
+        if not missing:
+            for ent in self.header_preset["lines"]:
+                if isinstance(ent, str):
+                    rows = [ent]
+                else:
+                    chosen = None
+                    for v in ent["variants"]:
+                        when = v["when"]
+                        if when == "else" or all(
+                                bool(vals[k]) == w for k, w in when.items()):
+                            chosen = v["line"]
+                            break
+                    rows = [chosen]  # else 兜底装载已验·chosen 恒非 None
+                for row in rows:
+                    filled = PH_RE.sub(lambda m: vals[m.group(1)], row)
+                    for phys in filled.split("\n"):
+                        if phys.startswith("    "):
+                            # 卷行仅施字段身行（4 空格起）——L1 束语行与题行
+                            # 全战役语料恒单行（DecBridge6.v:1 103 列/:3 96 列·
+                            # abl_tail_supply_66.v:1 95 列皆单行）·不卷。
+                            out_rows.extend(wrap_long_line(phys))
+                        else:
+                            out_rows.append(phys)
+            rendered = "\n".join(out_rows) + "\n"
+        self._preset_render_cache[key] = \
+            (rendered, None) if not missing else (None, missing)
+        return self._preset_render_cache[key]
+
     def header_map_entry(self, basename):
-        """映射查得（basename 带/不带 .v 双试·承 comment_sweep.run 同款）。"""
+        """映射查得（basename 带/不带 .v 双试·承 comment_sweep.run 同款）。
+        仅 map 源（--header-map/env）——preset 源走 render_preset_header。"""
         if not self.header_map:
             return None
         keys = [basename, basename[:-2]] if basename.endswith(".v") \
@@ -554,28 +880,48 @@ class WashShape(object):
                        n_miss=n)
 
     def judge_header(self, path, g4, text):
-        """③头注形洗：gate4 头注域硬项＋模板对齐判。"""
+        """③头注形洗：gate4 头注域硬项＋模板判（map 源＝逐件数据·对齐判与
+        补写判并施；preset 源＝钦名模板渲染——仅对硬项施刀·五字段齐件不对齐
+        改写（防人工 curated 面被机械卷改写·诚实账）；无源＝plan-miss 如实）。"""
         items = [it for it in (g4.get("hard") or [])
                  if it[2] in HEADER_ITEM_TYPES]
         item_strs = ["%s:%s" % (it[2], it[3]) for it in items]
-        mapped = self.header_map_entry(os.path.basename(path))
+        miss_ph = None
+        if self.header_source == "map":
+            mapped = self.header_map_entry(os.path.basename(path))
+        elif self.header_source == "preset":
+            mapped, miss_ph = self.render_preset_header(path, text)
+        else:
+            mapped = None
         if mapped is not None:
-            off = first_code_offset(text)
-            cur = text[:off] if off is not None else ""
-            aligned = (cur == mapped)
             if items:
+                how = "comment_pack 式模板整体补写" \
+                    if self.header_source == "map" else "钦名模板渲染整体补写"
                 return self._w(KIND_HEADER, STATUS_WOULD_FIX,
-                               "头注项=%d[%s]·comment_pack 式模板整体补写"
-                               % (len(items), ";".join(item_strs[:6])))
-            if not aligned:
-                return self._w(KIND_HEADER, STATUS_WOULD_FIX,
-                               "头注形与模板差（整体补写对齐）")
+                               "头注项=%d[%s]·%s"
+                               % (len(items), ";".join(item_strs[:6]), how))
+            if self.header_source == "map":
+                off = first_code_offset(text)
+                cur = text[:off] if off is not None else ""
+                if cur != mapped:
+                    return self._w(KIND_HEADER, STATUS_WOULD_FIX,
+                                   "头注形与模板差（整体补写对齐）")
+                return self._w(KIND_HEADER, STATUS_CLEAN,
+                               "头注正典形（模板已在位）")
             return self._w(KIND_HEADER, STATUS_CLEAN,
-                           "头注正典形（模板已在位）")
+                           "头注无项（首块·五字段齐·preset 不对齐改写）")
         if items:
+            if miss_ph:
+                return self._w(KIND_HEADER, STATUS_PLAN_MISS,
+                               "preset 渲染绑不上占位[%s]（承件缺既有头注身）"
+                               "·不硬造: [%s]"
+                               % (",".join(miss_ph),
+                                  ";".join(item_strs[:6])),
+                               n_miss=len(items))
             return self._w(KIND_HEADER, STATUS_PLAN_MISS,
-                           "无补写模板（--header-map 缺条目）·不硬造: "
-                           "[%s]" % ";".join(item_strs[:6]),
+                           "无补写模板（模板源=%s 未配/缺条目）·不硬造: [%s]"
+                           % (self.header_source,
+                              ";".join(item_strs[:6])),
                            n_miss=len(items))
         return self._w(KIND_HEADER, STATUS_CLEAN,
                        "头注无项（首块·五字段齐）")
@@ -735,10 +1081,37 @@ class WashShape(object):
                                                  else "")}
 
     def apply_header(self, path):
-        rc, out, rep, canned = self.run_engine(
-            "sweep", self.tool_sweep,
-            ["--file", path, "--header-map", self.args.header_map, "--apply"],
-            want_json=True)
+        """③落刀：comment_sweep --header-map <具体 map> --apply（引擎恒
+        comment_sweep·编排零新引擎）。map 源＝显传/env 路径；preset 源＝现渲
+        染单件 map 临时落盘（{basename: 渲染文}·用后即删——渲染值承件自身
+        数据·编排不落常盘）。绑不上（件面在 plan 后漂移）→器红 rc2 fail-loud。"""
+        tmp = None
+        try:
+            if self.header_source == "preset":
+                with open(path, "rb") as fh:
+                    text = fh.read().decode("utf-8")
+                rendered, miss_ph = self.render_preset_header(path, text)
+                if rendered is None:
+                    raise UsageError(
+                        "preset 渲染绑不上占位[%s]（apply 时件面漂移）: %s"
+                        % (",".join(miss_ph), path))
+                fd, tmp = tempfile.mkstemp(prefix="wash_shape_hmap_")
+                with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                    json.dump({os.path.basename(path): rendered}, fh,
+                              ensure_ascii=False, sort_keys=True)
+                map_path = tmp
+            else:
+                map_path = self.header_map_path
+            rc, out, rep, canned = self.run_engine(
+                "sweep", self.tool_sweep,
+                ["--file", path, "--header-map", map_path, "--apply"],
+                want_json=True)
+        finally:
+            if tmp:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
         if rc != 0:
             raise UsageError("comment_sweep --header-map --apply 器红 rc=%d: %s"
                              % (rc, tail_of(out)))
@@ -837,6 +1210,10 @@ class WashShape(object):
             "mode": "loop" if self.args.loop else
                     ("apply" if self.args.apply else "plan"),
             "scope": {"only": list(self.kinds),
+                      "header_map": {"source": self.header_source,
+                                     "path": self.header_map_path,
+                                     "preset": self.header_preset_name,
+                                     "library": self.header_library_path},
                       "frozen_roster_source": self.frozen_source,
                       "excluded": sorted(excluded,
                                          key=lambda x: (x["path"],
@@ -977,8 +1354,11 @@ class WashShape(object):
         if status == STATUS_WOULD_FIX:
             action = {KIND_LEXICAL: ACTION_SWEEP,
                       KIND_TOKEN: ACTION_CURE,
-                      KIND_HEADER: (ACTION_SWEEP_MAP if self.header_map
-                                    else "none"),
+                      KIND_HEADER: (ACTION_SWEEP_MAP
+                                    if self.header_source == "map" else
+                                    (ACTION_SWEEP_MAP_PRESET
+                                     if self.header_source == "preset"
+                                     else "none")),
                       KIND_EOL: ACTION_EOL,
                       KIND_ANCHOR: ACTION_REGU}.get(kind, "none")
         ent = {"kind": kind, "action": action, "status": status,
@@ -1065,15 +1445,24 @@ def selftest():
     判10 CLI 四码（help0/bogus2/无输入面2/缺件9）
     判11 --once/--loop 双模（loop --max-rounds 2 事件流两轮＋stop）
     判12 确定性（plan --json 两跑字节恒同）
+    判13 preset 链（--header-map-preset 装载在位·齐件不扰 rc0；探测次序：
+         preset 胜 env·--header-map 胜 env——env ROCWASH_HEADER_MAP 双向）
+    判14 preset 占位替换渲染→apply 端到端（缺字段件渲染整体补写→rescan
+         clean→shaped rc0→二跑幂等 clean·渲染文逐名断言［name/deps 双列/
+         bundle/build 命令/Axioms 豁免面］）
+    判15 同槽互斥（--header-map＋--header-map-preset rc2；preset 未知名 rc2）
+    判16 无源 plan-miss 如实（无旗无 env→缺字段件 header plan-miss）＋
+         模板库缺失 rc9（--repo-root 隔离场·引擎件 symlink 七路）
     """
     import tempfile
 
-    def run(args):
+    def run(args, env=None):
         p = subprocess.run([sys.executable, "-B",
                             os.path.join(os.path.dirname(
                                 os.path.abspath(__file__)),
                                 PROG + ".py")] + args,
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           env=env)
         out = p.stdout.decode("utf-8", "replace") \
             if isinstance(p.stdout, bytes) else (p.stdout or "")
         return p.returncode, out
@@ -1114,6 +1503,34 @@ def selftest():
                         "Ghost.v#R9\n")
         wf(os.path.join(asrc, "ToyA.v"), "Definition ta := 1.\n")
         wf(os.path.join(asrc, "ToyB.v"), "Definition tb := 2.\n")
+        # 判13/14/16 preset 矢量夹具：战役 `**` 形头注缺 构造性/编译 两字段
+        # （gate4 缺字段硬项驱动）·Require 面 From Stdlib 一行＋bare 两行
+        fx_header = (
+            "(* ConstructiveWorld-Set -- fixture bundle for the wash shape "
+            "header-map preset selftest. *)\n"
+            "\n"
+            "(** * hdmap_fx: the render-vector fixture module of the wash "
+            "shape header-map preset.\n"
+            "\n"
+            "    Mission.  Supplies the fixture interface slot for the wash "
+            "shape\n"
+            "      selftest render vector: [tsp_fx_slot] closes the toy slot "
+            "over\n"
+            "      Set data and the companion discharge restates the exit "
+            "shape.\n"
+            "\n"
+            "    Dependencies.  Rocq standard library only.\n"
+            "*)\n")
+        fx_body = ("\nFrom Stdlib Require Import QArith.\n"
+                   "Require Import S01_BaseRing.\n"
+                   "Require Import S02_Cauchy.\n"
+                   "\n"
+                   "Definition fx_slot : True.\n"
+                   "Proof. exact I. Qed.\n")
+        fx_v = wf(os.path.join(src, "hdmap_fx.v"), fx_header + fx_body)
+        # 判16 专用副本（判14 apply 会把 hdmap_fx.v 洗成五字段齐件——plan-miss
+        # 矢量须用未经施刀的缺字段件）
+        fx2_v = wf(os.path.join(src, "hdmap_fx2.v"), fx_header + fx_body)
 
         def load_json(path):
             with io.open(path, "r", encoding="utf-8") as fh:
@@ -1289,8 +1706,106 @@ def selftest():
         print("判12 确定性(plan --json 两跑字节恒同):", c12)
         ok = ok and c12
 
+        # 判13 preset 链（装载在位·齐件不扰·探测次序 preset/--header-map 胜 env）
+        j13a = os.path.join(tmp, "j13a.json")
+        rc, out = run(["--file", clean_v, "--header-map-preset",
+                       "campaign_set_diamond", "--json", j13a])
+        rep13a = load_json(j13a)
+        hm13 = rep13a["scope"]["header_map"]
+        envmap_empty = wf(os.path.join(tmp, "envmap_empty.json"), "{}")
+        envmap_fx = wf(os.path.join(tmp, "envmap_fx.json"), json.dumps(
+            {"hdmap_fx": "(* env-side header *)"}, ensure_ascii=False))
+        env_preset = dict(os.environ)
+        env_preset[ENV_HEADER_MAP] = envmap_empty
+        env_explicit = dict(os.environ)
+        env_explicit[ENV_HEADER_MAP] = envmap_fx
+        rc13b, out13b = run(["--file", fx_v, "--header-map-preset",
+                             "campaign_set_diamond", "--only", "header"],
+                            env=env_preset)
+        rc13c, out13c = run(["--file", fx_v, "--header-map", envmap_empty,
+                             "--only", "header"], env=env_explicit)
+        c13 = (rc == 0 and rep13a["verdict"] == "clean"
+               and hm13["source"] == "preset"
+               and hm13["preset"] == "campaign_set_diamond"
+               and rc13b == 1 and "钦名模板渲染整体补写" in out13b
+               and rc13c == 1 and "无补写模板（模板源=map" in out13c)
+        print("判13 preset 链(装载在位/齐件不扰/preset>--header-map 胜 env):", c13)
+        ok = ok and c13
+
+        # 判14 preset 占位替换渲染→apply 端到端（缺字段件→补写→shaped→幂等）
+        j14a = os.path.join(tmp, "j14a.json")
+        rc, out = run(["--file", fx_v, "--header-map-preset",
+                       "campaign_set_diamond", "--json", j14a])
+        rep14a = load_json(j14a)
+        w14 = washes_of(rep14a, "hdmap_fx.v")
+        c14a = (rc == 1 and rep14a["verdict"] == "partial"
+                and w14["header"]["status"] == "would-fix"
+                and "钦名模板渲染整体补写" in w14["header"]["detail"]
+                and "缺字段" in w14["header"]["detail"]
+                and w14["header"]["action"] == ACTION_SWEEP_MAP_PRESET)
+        rc, out = run(["--file", fx_v, "--header-map-preset",
+                       "campaign_set_diamond", "--apply", "--json",
+                       os.path.join(tmp, "j14b.json")])
+        rep14b = load_json(os.path.join(tmp, "j14b.json"))
+        fx_txt = io.open(fx_v, "r", encoding="utf-8").read()
+        c14b = (rc == 0 and rep14b["verdict"] == "shaped"
+                and "Stdlib [QArith]. Requires [S01_BaseRing]" in fx_txt
+                and "[S02_Cauchy]" in fx_txt
+                and "(* ConstructiveWorld-Set -- fixture bundle" in fx_txt
+                and "coqc -native-compiler no -q -Q . \"\" hdmap_fx.v"
+                in fx_txt
+                and "Axioms: none" in fx_txt
+                and "Rocq standard library only." not in fx_txt)
+        rc, out = run(["--file", fx_v, "--header-map-preset",
+                       "campaign_set_diamond", "--json",
+                       os.path.join(tmp, "j14c.json")])
+        rep14c = load_json(os.path.join(tmp, "j14c.json"))
+        c14c = rc == 0 and rep14c["verdict"] == "clean" and all(
+            w["status"] == "clean"
+            for f in rep14c["plan"]["files"] for w in f["washes"])
+        c14 = c14a and c14b and c14c
+        print("判14 preset 占位替换渲染→apply 端到端(partial→shaped→幂等"
+              "/渲染逐名断言):", c14)
+        ok = ok and c14
+
+        # 判15 同槽互斥（双旗 rc2·preset 未知名 rc2）
+        rc, out = run(["--file", clean_v, "--header-map", envmap_empty,
+                       "--header-map-preset", "campaign_set_diamond"])
+        rc15b, out15b = run(["--file", clean_v, "--header-map-preset",
+                             "no_such_preset"])
+        c15 = (rc == 2 and "互斥" in out
+               and rc15b == 2 and "名不识" in out15b)
+        print("判15 同槽互斥(双旗 rc2/未知名 rc2):", c15)
+        ok = ok and c15
+
+        # 判16 无源 plan-miss 如实＋模板库缺失 rc9（隔离 repo_root）
+        env_clean = dict(os.environ)
+        env_clean.pop(ENV_HEADER_MAP, None)
+        rc, out = run(["--file", fx2_v, "--only", "header"], env=env_clean)
+        iso = os.path.join(tmp, "iso")
+        for sub in ("verify", "scan", "wash", "tools", "certify"):
+            os.makedirs(os.path.join(iso, sub))
+        real_root = os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))
+        for rel in ("verify/gate4_comment_guard.py",
+                    "scan/scan_v4_token.py",
+                    "wash/cure_applier.py",
+                    "wash/comment_sweep.py",
+                    "wash/comment_pack.json",
+                    "tools/registry_union.py",
+                    "certify/frozen8.py"):
+            os.symlink(os.path.join(real_root, rel),
+                       os.path.join(iso, rel))
+        rc16b, out16b = run(["--file", clean_v, "--header-map-preset",
+                             "campaign_set_diamond", "--repo-root", iso])
+        c16 = (rc == 1 and "PLAN-MISS" in out
+               and "无补写模板（模板源=none" in out
+               and rc16b == 9 and "模板库缺失" in out16b)
+        print("判16 无源 plan-miss 如实/模板库缺失 rc9:", c16)
+        ok = ok and c16
+
         print("WASH-SHAPE-SELFTEST:",
-              "PASS（12 判全过）" if ok else "FAIL")
+              "PASS（16 判全过）" if ok else "FAIL")
         return 0 if ok else 1
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -1321,7 +1836,13 @@ def main():
     ap.add_argument("--header-map", dest="header_map", default=None,
                     metavar="MAP.json",
                     help="③头注形洗补写模板（{basename: header text}·逐件数据"
-                         "·缺省无→缺字段项记 plan-miss）")
+                         "·与 --header-map-preset 同槽互斥 rc2）")
+    ap.add_argument("--header-map-preset", dest="header_map_preset",
+                    default=None, metavar="NAME",
+                    help="③头注形洗钦名模板（tests/fixtures/header_map_v1.json "
+                         "蒸馏库内 preset 名·占位承目标件自身派生/既有头注逐字"
+                         "携带·缺省探测次序 --header-map > 本参 > env "
+                         "ROCWASH_HEADER_MAP > 无=plan-miss）")
     ap.add_argument("--anchor-src", dest="anchor_src", default=None,
                     metavar="DIR",
                     help="⑤锚形洗实件源目录（缺省=registry 件同目录）")
@@ -1362,6 +1883,10 @@ def main():
         if args.interval < 0 or args.sleep_scale < 0 or args.max_rounds < 0:
             print("FAIL-LOUD: --interval/--sleep-scale/--max-rounds 须≥0",
                   file=sys.stderr)
+            sys.exit(2)
+        if args.header_map and args.header_map_preset:
+            print("FAIL-LOUD: --header-map 与 --header-map-preset 同槽互斥"
+                  "（rc2 同槽律——③头注模板源二择一显传）", file=sys.stderr)
             sys.exit(2)
         ws = WashShape(args)
         ws.files, ws.excluded_records = ws.collect_files()

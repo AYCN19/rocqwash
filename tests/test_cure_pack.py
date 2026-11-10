@@ -45,6 +45,14 @@ Vectors:
      monomorphic station faces (E3 shim call; E2 "val unann : nat -> nat"
      on the .mli).  Compile sections are skipped (rc 111) when ROCWASH_ROCQ
      is unset, so external clones pass without a toolchain.
+  8. v1.4 corpus-survey flow (cure39, b48-52 wash-wave citation): the
+     interface-quantified connective qualification — dry-run station
+     count on the T13 miniature (10 = two compat statements x five
+     connective stations), apply rc=0 with the qualified faces and the
+     guarded negatives (Definition face, binder declaration, already-
+     qualified face, proof witness call) verbatim, re-run zero, and the
+     differently-named-context negative fixture at zero matches (the
+     file_include gate pins the exact RI0 context face).
 """
 import io, os, re, shutil, subprocess, sys, tempfile
 
@@ -93,11 +101,14 @@ want_v32 = {"cure32_A_param_shell_drop", "cure32_B_notation_rebind",
 want_v34 = {"cure34_E3_use_station_spec", "cure34_E3_spec_shim",
             "cure34_E2_field_annot", "cure34_E2_use_arity",
             "cure34_E2_station_unannot"}
+want_v39 = {"cure39_ifq_connective_qualify"}
 check("legacy five present", want_legacy <= set(ids))
 check("v1.1 nine present", want_v31 <= set(ids))
 check("v1.2 five present", want_v32 <= set(ids))
 check("v1.3 five present", want_v34 <= set(ids))
-check("pattern count 5+9+5+5", len(pack["patterns"]) == 24)
+check("v1.4 one present", want_v39 <= set(ids))
+check("pattern count 5+9+5+5+1", len(pack["patterns"]) == 25)
+check("pack version 1.4.0", pack["version"] == "1.4.0")
 check("every pattern has trigger+template+idempotence",
       all(("trigger_regex" in p or "trigger" in p or "token_map" in p
            or "station_regex" in p or "insert_line" in p)
@@ -113,6 +124,15 @@ check("v1.2 patterns carry lineage",
 check("v1.3 patterns carry lineage",
       all("v34_lineage" in p for p in pack["patterns"]
           if p["id"] in want_v34))
+check("v1.4 patterns carry lineage",
+      all("v39_lineage" in p for p in pack["patterns"]
+          if p["id"] in want_v39))
+check("v1.4 targets are the three interface connectives",
+      dict((p["id"], p) for p in pack["patterns"]
+           if p["id"] == "cure39_ifq_connective_qualify"
+           )["cure39_ifq_connective_qualify"]["token_targets"]
+      == {"lt": "@S01_BaseRing.lt RI0", "le": "@S01_BaseRing.le RI0",
+          "plus": "@S01_BaseRing.plus RI0"})
 check("exclusive group declared on both shadow variants",
       [p.get("exclusive_group") for p in pack["patterns"]
        if p["id"].startswith(("cure11", "cure12"))] == ["import-shadow"] * 2)
@@ -413,6 +433,58 @@ try:
                             encoding="utf-8"))
     check("E2 re-run all-zero (station residual included)",
           all(v["matches"] == 0 for v in dry["report"].values()))
+finally:
+    shutil.rmtree(tmp, ignore_errors=True)
+
+# 8. v1.4 fixture flow: interface-quantified connective qualification
+#    (cure39, b48-52 wash-wave citation commit 9a51c74, UpAblT13
+#    re-anchor form).  --only run: the miniature also carries the
+#    shadowing Import line the campaign added, which cure11 (full pack)
+#    would delete — the interplay is documented in the fixture header.
+T13_F = os.path.join(HERE, "fixtures", "cure39_t13_fixture.v")
+T13_PLAIN_F = os.path.join(HERE, "fixtures", "cure39_plain_fixture.v")
+
+tmp = tempfile.mkdtemp(prefix="rw_cure39_")
+try:
+    tgt = os.path.join(tmp, "t13.v")
+    shutil.copy(T13_F, tgt)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt,
+             "--only", "cure39_ifq_connective_qualify", "--json",
+             os.path.join(tmp, "dry39.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry39.json"),
+                            encoding="utf-8"))
+    check("cure39 dry-run stations=10",
+          dry["report"]["cure39_ifq_connective_qualify"]["matches"] == 10)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
+             "--only", "cure39_ifq_connective_qualify"])
+    check("cure39 apply rc=0 (idempotence verified)", r.returncode == 0,
+          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+    cured = io.open(tgt, encoding="utf-8").read()
+    check("cure39 compat faces qualified",
+          "@S01_BaseRing.lt RI0 a b -> @S01_BaseRing.le RI0 c d ->"
+          in cured
+          and "@S01_BaseRing.lt RI0 (@S01_BaseRing.plus RI0 a c) "
+              "(@S01_BaseRing.plus RI0 b d)." in cured)
+    check("cure39 guarded negatives untouched",
+          "Definition keeper (le : nat) (n : nat) := n + le." in cured
+          and "Lemma bnd_guard (lt : nat) : True." in cured
+          and "Theorem already_qualified :\n  @S01_BaseRing.lt RI0 1 2 -> "
+              "@S01_BaseRing.le RI0 2 3." in cured
+          and "exact (@fa53_lt_plus_compat_lt_le_dec RI0 DO0 a b c d "
+              "Hab Hcd)." in cured)
+    r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--json",
+             os.path.join(tmp, "dry39b.json")])
+    dry = json.load(io.open(os.path.join(tmp, "dry39b.json"),
+                            encoding="utf-8"))
+    check("cure39 re-run zero matches",
+          dry["report"]["cure39_ifq_connective_qualify"]["matches"] == 0)
+    # negative: same bare shape under a differently-named context
+    # variable (RI, not RI0) — the file_include gate keeps it at zero
+    r = run([sys.executable, "-B", APPLIER, "--file", T13_PLAIN_F,
+             "--only", "cure39_ifq_connective_qualify"])
+    check("differently-named context: zero matches (gate)",
+          "total matches: 0" in r.stdout.decode(),
+          r.stdout.decode()[-200:])
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 

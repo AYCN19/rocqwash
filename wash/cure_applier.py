@@ -47,6 +47,22 @@ Purpose:
     report-only station asserts the sweep completion.  All five v34
     patterns reuse the v32 engines; no new engine ships in v34.
 
+    v39 addition (20261111 corpus-survey wave, evidence-gated): one
+    pattern from the b48-52 wash wave (ConstructiveWorld-Set commit
+    9a51c74) — interface-quantified connective qualification.  Bare
+    order connectives (lt/le/plus) in statement faces of files carrying
+    the exact section context 'Context {RI0 : RealInterfaceEnhanced}'
+    are pinned to the @S01_BaseRing.lt/le/plus RI0 projection form.
+    A new template_fn "ifq_conn_qualify" branches the rewrite on the
+    matched connective via the pattern's token_targets map; the
+    face-regex engine is reused unchanged (no new engine), so the
+    file_include gate (the exact context face), the Definition/Fixpoint
+    decl_exclude and the binder-declaration colon lookahead all apply.
+    Survey discipline held: candidate forms with thinner citations
+    (single-file rebind variant, semantic Id-setoid re-casts, witness
+    re-points, the v31/v32 pending families) stayed in the pending
+    list — none cast.
+
 Inputs:
     --file path/to/file.v           target source (never modified on dry-run)
     --pack path/to/cure_pack.json   pattern pack (default: cure_pack.json
@@ -300,9 +316,21 @@ def _fn_natle_premise_lift(m, pat):
     return "%s %s %s" % (qual, _paren_term(lhs), _paren_term(rhs))
 
 
+def _fn_ifq_conn_qualify(m, pat):
+    """v39: bare interface-projection connective -> the @-qualified
+    S01_BaseRing projection applied to the section context variable.
+    The replacement branches on WHICH connective matched (token_targets
+    map keyed by the trigger's named group `conn`); the RI0 context name
+    is part of each target and is pinned by the pattern's file_include
+    gate (the exact `Context {RI0 : RealInterfaceEnhanced}` face)."""
+    targets = pat["token_targets"]
+    return targets[m.group("conn")]
+
+
 TEMPLATE_FNS = {
     "qle_notation_downshift": _fn_qle_notation,
     "natle_premise_lift": _fn_natle_premise_lift,
+    "ifq_conn_qualify": _fn_ifq_conn_qualify,
 }
 
 
@@ -973,8 +1001,68 @@ def selftest():
     x2, xr2 = run_pack(x1, pack["patterns"])
     c26 = (x2 == x1 and all(x["matches"] == 0 for x in xr2.values()))
     print("v34 whole-pack idempotence:", c26,
-          {k: x["matches"] for k, x in xr2.items() if x["matches"]})
+          {k: x["matches"] for k, x in xr2.items()})
     ok = ok and c26
+
+    # ---- v39 vector (cure39: interface-quantified connective
+    # qualification; b48-52 wash-wave re-anchor form, commit 9a51c74) ----
+    v39 = dict((p["id"], p) for p in pack["patterns"]
+               if p["id"].startswith("cure39"))
+
+    # fire: five bare connective stations in the RI0-context compat face;
+    # the keeper Definition face (decl_exclude), the binder declaration
+    # (colon guard), the @-qualified face (lookbehind) and the proof's
+    # @-qualified witness call (proof scope out of range) all survive
+    # verbatim; second pass zero
+    pQ = v39["cure39_ifq_connective_qualify"]
+    fQ = ("Require Import S01_BaseRing.\n"
+          "Section Q.\n"
+          "Context {RI0 : RealInterfaceEnhanced}.\n"
+          "Context {DO0 : DecidableOrder RI0}.\n"
+          "Theorem compat : forall a b c d : @S01_BaseRing.R RI0,\n"
+          "  lt a b -> le c d -> lt (plus a c) (plus b d).\n"
+          "Proof. intros. exact (@fa53_lt_plus_compat_lt_le_dec RI0 DO0 "
+          "a b c d). Qed.\n"
+          "Definition keeper (le : nat) (n : nat) := n + le.\n"
+          "Lemma bnd_guard (lt : nat) : True.\n"
+          "Proof. exact I. Qed.\n"
+          "Theorem qualified_face : @S01_BaseRing.lt RI0 1 2.\n"
+          "Proof. apply q. Qed.\n"
+          "End Q.\n")
+    tQ, nQ = apply_one(fQ, pQ)
+    c27 = (nQ == 5
+           and "@S01_BaseRing.lt RI0 a b -> @S01_BaseRing.le RI0 c d ->"
+               in tQ
+           and "@S01_BaseRing.lt RI0 (@S01_BaseRing.plus RI0 a c) "
+               "(@S01_BaseRing.plus RI0 b d)." in tQ
+           and "Definition keeper (le : nat) (n : nat) := n + le." in tQ
+           and "Lemma bnd_guard (lt : nat) : True." in tQ
+           and "Theorem qualified_face : @S01_BaseRing.lt RI0 1 2." in tQ
+           and "exact (@fa53_lt_plus_compat_lt_le_dec RI0 DO0 a b c d)."
+               in tQ)
+    tQb, nQb = apply_one(tQ, pQ)
+    c27b = nQb == 0 and tQb == tQ
+    # gate: a differently-named context variable (RI, not RI0) is outside
+    # the pattern's scope — the file_include precondition keeps it at zero
+    plainQ = ("Section P.\n"
+              "Context {RI : RealInterfaceEnhanced}.\n"
+              "Theorem plain_compat : forall a b c d : @S01_BaseRing.R RI,\n"
+              "  lt a b -> le c d -> lt (plus a c) (plus b d).\n"
+              "Proof. intros. exact w. Qed.\n"
+              "End P.\n")
+    tQc, nQc = apply_one(plainQ, pQ)
+    c27c = nQc == 0 and tQc == plainQ
+    print("cure39 ifq qualify/guards/idempotent/gate:", c27, c27b, c27c)
+    ok = ok and c27 and c27b and c27c
+
+    # v39 whole-pack idempotence on the RI0 sample (no Import line, so the
+    # import-shadow variants stay out of this sample's face)
+    q1, qr1 = run_pack(fQ, pack["patterns"])
+    q2, qr2 = run_pack(q1, pack["patterns"])
+    c28 = (q2 == q1 and all(x["matches"] == 0 for x in qr2.values()))
+    print("v39 whole-pack idempotence:", c28,
+          {k: x["matches"] for k, x in qr2.items() if x["matches"]})
+    ok = ok and c28
 
 
     print("SELFTEST:", "PASS" if ok else "FAIL")

@@ -97,7 +97,10 @@
 #         哨自身 --selftest 六矢量 canned 注入零真网络零编译）
 #       tools/wash_shape.py 洗形器·正典形五洗流水（tests/test_wash_shape.py·
 #         最小自测壳三判：--selftest 冻结标记 WASH-SHAPE-SELFTEST PASS
-#         十二判向量＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络）
+#         十六判向量（plan/apply/幂等/锚/冻结红拒/CLI/--loop/确定性＋preset
+#         链：模板库装载·preset/--header-map 胜 env·占位渲染→apply 端到端·
+#         同槽互斥 rc2·无源 plan-miss）＋--help 冒烟＋退出码口径抽验 2/2/9·
+#         零编译零网络·v39 轮洗形席扩容）
 #       tools/unclog.py 疏通堵塞闭环引擎（tests/test_unclog.py·最小自测壳
 #         三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十矢量全 --injector
 #         canned 罐装零真编译）＋--help 冒烟＋退出码口径抽验 2/2/9·零网络零触真仓）
@@ -105,6 +108,16 @@
 #         自测壳两判：--selftest 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全
 #         --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译）＋
 #         --help 冒烟·20261111 v38 集成席挂接）
+#       tests/test_relay_e2e.py 接驳实战核 e2e（v39 工装席铸件·集成席挂接·
+#         cw_sentinel --on-red-preset unclog 全链三判：①哨 --once＋injector
+#         canned CI 红炉→ci-red 事件→preset 代跑 unclog rc=9 如实入账·哨退
+#         出码仍 0 ②unclog --audit 干跑 rc=0·--src 全文件 md5 清单跑前跑后
+#         自证零写盘 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍·
+#         全 canned 罐装零真网络零真编译）
+#       tools/doc_lint.py 文档←→实现一致性三查器（tests/test_doc_lint.py·
+#         最小自测壳三判：--selftest 冻结标记 DOC-LINT-SELFTEST PASS（tmp
+#         迷你仓六矢量 V1-V6 由铸席 --selftest 自证）＋--help 冒烟＋退出码
+#         口径抽验 2/2/9·零网络零写盘·20261111 v39 集成席缺壳自补挂接）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -189,7 +202,9 @@ t_dual_scan \
  t_cw_sentinel \
  t_wash_shape \
  t_unclog \
- t_cw_doctor"
+ t_cw_doctor \
+ t_relay_e2e \
+ t_doclint"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -502,12 +517,13 @@ t_cw_sentinel() {
 }
 
 t_wash_shape() {
-  # 20261111 v37 洗形席挂接：洗形器·正典形五洗流水（tools/wash_shape.py·
+  # 20261111 v37 洗形席挂接·v39 扩容：洗形器·正典形五洗流水（tools/wash_shape.py·
   # gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/行尾归一/registry_union
   # 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·schema rocqwash-shape/1·
   # tests/test_wash_shape.py 最小自测壳三判：--selftest 冻结标记
-  # WASH-SHAPE-SELFTEST PASS（十二判向量全 tmp 夹具）＋--help 冒烟＋退出码
-  # 口径抽验 2/2/9·零编译零网络零写盘）
+  # WASH-SHAPE-SELFTEST PASS（十六判向量全 tmp 夹具·v39 轮增 preset 链四判：
+  # 模板库装载在位/preset 胜 env/占位渲染→apply 端到端/同槽互斥 rc2＋模板库
+  # 缺失 rc9）＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络零写盘）
   "$PY" -B "$REPO/tests/test_wash_shape.py"
 }
 
@@ -529,6 +545,26 @@ t_cw_doctor() {
   # 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全 --injector canned 罐装）＋
   # --help 冒烟·缺壳由本集成席自补·零真 otool 零真网络零真编译零触真仓）
   "$PY" -B "$REPO/tests/test_cw_doctor.py"
+}
+
+t_relay_e2e() {
+  # 20261111 v39 工装席铸件·集成席挂接：接驳实战核 e2e（tests/test_relay_e2e.py·
+  # cw_sentinel --on-red-preset unclog 全链三判：①哨 --once＋injector canned
+  # CI 红炉→ci_triage 真判类 A-content-red→ci-red 事件→preset 代跑 unclog
+  # rc=9 如实入账·旁路动作非器面·哨退出码仍 0 ②unclog --audit 干跑 rc=0·
+  # --src 全文件 md5 清单跑前跑后自证零写盘·见红 red_files=["B"]·出可洗链根·
+  # 墙空 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍 schema/verdict
+  # 咬合——全 canned 罐装零真网络零真编译零触真仓）
+  "$PY" -B "$REPO/tests/test_relay_e2e.py"
+}
+
+t_doclint() {
+  # 20261111 v39 集成席缺壳自补挂接：文档←→实现一致性三查器（tools/doc_lint.py·
+  # 工装席铸件·schema rocqwash-doclint/1·tests/test_doc_lint.py 最小自测壳
+  # 三判：--selftest 冻结标记 DOC-LINT-SELFTEST PASS（tmp 迷你仓六矢量 V1-V6
+  # 由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/
+  # --help-cap 0/缺仓·本集成席实跑验证）·零网络零写盘零触真仓）
+  "$PY" -B "$REPO/tests/test_doc_lint.py"
 }
 
 # ---------- 汇总执行 ----------

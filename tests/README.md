@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 52 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 54 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（52 例）
+## 覆盖面（54 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -170,7 +170,7 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 52 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 49 | `t_cw_sentinel` | `tools/cw_sentinel.py`（实时动态哨·三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·零动作是缺省） | `tests/test_cw_sentinel.py` 最小自测壳两判：--selftest rc=0 且含 `CW-SENTINEL-SELFTEST PASS` 冻结标记／--help rc=0（哨自身 --selftest 六矢量 canned 注入零真网络零编译由铸席自证·本壳挂接套件） |
-| 50 | `t_wash_shape` | `tools/wash_shape.py`（洗形器·正典形五洗流水·plan 缺省零写盘） | `tests/test_wash_shape.py` 最小自测壳三判：--selftest rc=0 且含 `WASH-SHAPE-SELFTEST PASS` 冻结标记（十二判向量全 tmp 夹具）／--help rc=0／退出码口径抽验 2/2/9 |
+| 50 | `t_wash_shape` | `tools/wash_shape.py`（洗形器·正典形五洗流水·plan 缺省零写盘） | `tests/test_wash_shape.py` 最小自测壳三判：--selftest rc=0 且含 `WASH-SHAPE-SELFTEST PASS` 冻结标记（十六判向量全 tmp 夹具·v39 轮洗形席扩容：preset 链四判——模板库装载在位／preset·--header-map 胜 env／占位替换渲染→apply 端到端／同槽互斥 rc2·＋无源 plan-miss＋模板库缺失 rc9）／--help rc=0／退出码口径抽验 2/2/9 |
 | 51 | `t_unclog` | `tools/unclog.py`（疏通堵塞闭环引擎·probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒） | `tests/test_unclog.py` 最小自测壳三判：--selftest rc=0 且含 `UNCLOG-SELFTEST PASS` 冻结标记（十矢量全 --injector canned 罐装）／--help rc=0／退出码口径抽验 2/2/9 |
 
 ## v38 综合体检器补记（20261111·用例 52·集成席）
@@ -178,3 +178,15 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 52 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 52 | `t_cw_doctor` | `tools/cw_doctor.py`（综合体检器·四域聚合：环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 抽样真探→综合健康分 0-100＋verdict healthy/degraded＋advice 处置清单·schema rocqwash-cwdoctor/1·只诊断禁代执行） | `tests/test_cw_doctor.py` 最小自测壳两判：--selftest rc=0 且含 `CW-DOCTOR-SELFTEST PASS` 冻结标记（九节向量全 --injector canned 罐装 tmp fixture：四域全绿 100／环境红降 60／注册 skip 归一 86.67／堵账 TOP 注入 88.75／advice 生成／JSON 幂等字节恒同／CLI 四码＋罐装全覆盖／注册审计单元——零真 otool 零真网络零真编译，chain_graph/注册审计真跑纯 stdlib 由铸席自证）／--help rc=0（缺壳由本集成席自补·零触真仓零写盘） |
+
+## v39 文档核与接驳实战轮补记（20261111·用例 53–54·集成席）
+
+> 53（`t_relay_e2e`）为工装席铸件（tests/test_relay_e2e.py 在盘·总套挂接归集成席）；
+> 54（`t_doclint`）为 doc_lint 器自补最小自测壳（缺壳自补——器由工装席铸·壳由
+> 本集成席仿既有最小自测壳形铸）。两例经 run_tests.sh 在跑全绿实证（本轮集成席
+> 全绿验证 54/50/0red/4skip）。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 53 | `t_relay_e2e` | `tests/test_relay_e2e.py`（接驳实战核 e2e：cw_sentinel `--on-red-preset unclog` 全链·工装席铸件） | 三判：①事件触发——哨 --once＋injector canned CI 红炉（run 178 failure→ci_triage 子进程真判类 A-content-red）→ci-red 事件落 --emit JSONL→preset 代跑 unclog：actions 账 cmd=preset 逐字展开（含 unclog report 路径 `{emit_dir}/unclog_{run}.json`）·代跑 rc=9 如实入账（fixture 无 --world·fail-loud·哨退出码仍 0——旁路动作非器面铁律）②unclog 干跑 rc=0 且零写盘——同 fixture 树 unclog --audit（只读堵账基线：final=audit·cures 恒 0·--src 全文件 md5 清单跑前跑后自证恒同）·见红 red_files=["B"]·出可洗链根 A washable·墙空 ③JSONL 同盘 unclog report 路径——判1 actions 账所记路径与判2 实落 report 逐字节对拍（存在·schema=rocqwash-unclog/1·verdict=audit）。全 canned 罐装零真网络零真编译零触真仓（tmp 自管 mkdtemp 进 finally rmtree） |
+| 54 | `t_doclint` | `tools/doc_lint.py`（文档←→实现一致性三查器·工具表查 cw.sh 四处互检＋tools/ 通用入口对账／计数查 CASES vs tests/README.md vs README.md／旗标查 doc 引用旗标 vs 各器 --help 实出·schema rocqwash-doclint/1） | `tests/test_doc_lint.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `DOC-LINT-SELFTEST PASS` 冻结标记（tmp 迷你仓六矢量 V1 一致仓 0 漂／V2 工具表缺一 hint／V3 计数漂／V4 旗标幻引／V5 CLI 三码＋--help-cap 0→2／V6 JSON 幂等字节恒同——由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／--help-cap 0=2／--repo 缺目录=9）。零网络零写盘零触真仓 |

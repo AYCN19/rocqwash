@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器（共十六）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器（共十七）
 #         统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
 #         20261111 five-tool wave plus the v37 three-tool wave plus the v38
-#         aggregate doctor, sixteen tools in total (repo root, bash 3.2)
+#         aggregate doctor, the v39 doc-lint plus netname-normalize/select-audit routing fixes, nineteen tools in total
+#         (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
 #
@@ -39,13 +40,22 @@
 #               cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
 #   wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
 #                                                    -> tools/wash_shape.py
-#               cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
+#               cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
 #   unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
 #                                                    -> tools/unclog.py
 #               cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
 #   cw-doctor   综合体检器·四域聚合（环境/网络/注册/堵账→健康分＋advice·只诊断）
 #                                                    -> tools/cw_doctor.py
 #               cw.sh cw-doctor [--json out.json] [--registry PATH] [--src DIR --sample N] [--injector DIR]
+#   doc-lint    文档←→实现一致性三查器（工具表/计数/旗标·verdict consistent|drift）
+#                                                    -> tools/doc_lint.py
+#               cw.sh doc-lint [--repo DIR] [--json OUT] [--help-cap N]
+#   netname-normalize  .v.v 双后缀名净名归一（映射表＋--apply 改名 md5 验讫）
+#                                                    -> tools/netname_normalize.py
+#               cw.sh netname-normalize [--dir DIR] [--apply] [--map out.tsv] [--json out]
+#   select-audit 批选审计器（批选清单对 order.txt 全表 grep 剔重＋Require 面审计 v6）
+#                                                    -> tools/select_audit.py
+#               cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -59,6 +69,9 @@
 #      rounds-exhausted——红是数据非器红·响亮 stdout）；2=用法错；9=缺/fail-loud。
 #      cw-doctor 同形：0=healthy（综合分≥90）·1=degraded（红是数据非器红·
 #      响亮 stdout）；2=用法错；9=缺/fail-loud。
+#      doc-lint 同形：0=consistent（三查零漂）·1=drift（任一条漂·红是数据
+#      非器红·响亮 stdout）；2=用法错（--help-cap<1）；9=缺（必需输入缺失/
+#      器 --help 红或超时 fail-loud）。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
@@ -76,7 +89,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器统一入口（十六工具·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器统一入口（十七工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -112,13 +125,22 @@ cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器统一�
               cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
   wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
                                                    -> tools/wash_shape.py
-              cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
+              cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
   unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
                                                    -> tools/unclog.py
               cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
   cw-doctor   综合体检器·四域聚合（环境/网络/注册/堵账→健康分＋advice·只诊断）
                                                    -> tools/cw_doctor.py
               cw.sh cw-doctor [--json out.json] [--registry PATH] [--src DIR --sample N] [--injector DIR]
+  doc-lint    文档←→实现一致性三查器（工具表/计数/旗标·verdict consistent|drift）
+                                                   -> tools/doc_lint.py
+              cw.sh doc-lint [--repo DIR] [--json OUT] [--help-cap N]
+  netname-normalize  .v.v 双后缀名净名归一（映射表＋--apply 改名 md5 验讫）
+                                                   -> tools/netname_normalize.py
+              cw.sh netname-normalize [--dir DIR] [--apply] [--map out.tsv] [--json out]
+  select-audit 批选审计器（批选清单对 order.txt 全表 grep 剔重＋Require 面审计 v6）
+                                                   -> tools/select_audit.py
+              cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -145,9 +167,12 @@ hint_for() {  # $1=tool
     union)       echo "cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-base RB --ref-main RM --ref-branch XB   # 注册册 union 手术（缺省干跑）-> tools/registry_union.py" ;;
     pushci)      echo "cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]   # 修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge·七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run）-> tools/pushci.py" ;;
     sentinel)    echo "cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]   # 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·红是数据非器红·零动作是缺省）-> tools/cw_sentinel.py" ;;
-    wash-shape)  echo "cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]   # 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·--apply 落刀后复跑五洗复核）-> tools/wash_shape.py" ;;
+    wash-shape)  echo "cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]   # 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·--apply 落刀后复跑五洗复核·--header-map-preset 钦名头注模板库 tests/fixtures/header_map_v1.json 与 --header-map 同槽互斥）-> tools/wash_shape.py" ;;
     unclog)      echo "cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--top N] [--pack FILE] [--json out] [--events F] [--loop --interval S --loop-max N] [--injector DIR]   # 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→verdict unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒）-> tools/unclog.py" ;;
     cw-doctor)   echo "cw.sh cw-doctor [--json out.json] [--workdir DIR] [--registry PATH] [--src DIR --sample N [--world DIR]] [--worker PATH] [--donor DIR] [--endpoints URL,..] [--guard PATH] [--timeout S] [--injector DIR]   # 综合体检器·四域聚合（环境 dyld/网络 net_probe/注册册锚审计/堵账 probe＋chain_graph→综合健康分 0-100＋verdict healthy/degraded＋advice·只诊断禁代执行·--injector 离线可测）-> tools/cw_doctor.py" ;;
+    doc-lint)    echo "cw.sh doc-lint [--repo DIR] [--json OUT] [--help-cap N]   # 文档←→实现一致性三查器（①cw.sh 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数 ③doc 引用旗标 vs 各器 --help 实出·verdict consistent|drift·红是数据非器红）-> tools/doc_lint.py" ;;
+    netname-normalize) echo "cw.sh netname-normalize [--dir DIR] [--apply] [--map out.tsv] [--json out]   # .v.v 双后缀名净名归一器（映射表＋--apply 改名 md5 验讫）-> tools/netname_normalize.py" ;;
+    select-audit) echo "cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]   # 批选审计器（批选清单对树 order.txt 全表 grep 剔重＋Require 面审计 v6 判据）-> tools/select_audit.py" ;;
     *) return 1 ;;
   esac
 }
@@ -184,12 +209,15 @@ case "${1:-}" in
   wash-shape)  shift; run_tool wash-shape  "tools/wash_shape.py"          "$@" ;;
   unclog)      shift; run_tool unclog      "tools/unclog.py"              "$@" ;;
   cw-doctor)   shift; run_tool cw-doctor   "tools/cw_doctor.py"           "$@" ;;
+  doc-lint)    shift; run_tool doc-lint    "tools/doc_lint.py"            "$@" ;;
+  netname-normalize) shift; run_tool netname-normalize "tools/netname_normalize.py" "$@" ;;
+  select-audit) shift; run_tool select-audit "tools/select_audit.py"        "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit）" >&2
         exit 2
       fi
     fi
@@ -197,7 +225,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|help）" >&2
     usage >&2
     exit 2 ;;
 esac

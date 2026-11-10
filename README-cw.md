@@ -1,6 +1,6 @@
 # cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
 
-`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器（共十六个）的**一键调用入口**（repo 根）：
+`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器（共十七个）的**一键调用入口**（repo 根）：
 
 ```
 bash cw.sh <tool> [args...]
@@ -32,9 +32,10 @@ bash cw.sh <tool> [args...]
 | `union` | `tools/registry_union.py` | 注册册 union 手术（main 为底＋对 merge-base 真独有尾插·**缺省干跑**） | `bash cw.sh union --base b --main m --branch x --kind order --json r.json` |
 | `pushci` | `tools/pushci.py` | 修复后推送 CI 一键流水线（五段管线 preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排零新引擎·verdict 七态 `success\|fix-content\|toolchain\|unstable\|heal-exhausted\|gate4-block\|dry-run` 对应退出码 0/1/2/9） | `bash cw.sh pushci --repo-path . --branch feature/x --json report.json` |
 | `sentinel` | `tools/cw_sentinel.py` | 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·判类全权在 ci_triage·**零动作是缺省**） | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --json r.json` |
-| `wash-shape` | `tools/wash_shape.py` | 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·`--apply` 落刀后复跑五洗复核） | `bash cw.sh wash-shape --file demo.v --json plan.json` |
+| `wash-shape` | `tools/wash_shape.py` | 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·`--apply` 落刀后复跑五洗复核·③头注模板源三路探测：`--header-map` 逐件数据 > `--header-map-preset` 钦名模板库 `tests/fixtures/header_map_v1.json`（战役正典蒸馏·金标引据在册·schema `rocqwash-header-map/1`）> env·同槽显传互斥 rc=2） | `bash cw.sh wash-shape --file demo.v --header-map-preset campaign_set_diamond --json plan.json` |
 | `unclog` | `tools/unclog.py` | 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict `unclogged\|wall\|rounds-exhausted\|audit`·缺省干跑·frozen 在册红拒·`--audit` 只读堵账基线） | `bash cw.sh unclog --src src/ --world world/ --json r.json` |
 | `cw-doctor` | `tools/cw_doctor.py` | 综合体检器·四域聚合（环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 逐域 subprocess 编排既有一器→综合健康分 0-100＋verdict `healthy\|degraded`＋advice 处置清单·**只诊断禁代执行**·红是数据非器红·schema `rocqwash-cwdoctor/1`·`--injector` 离线可测） | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
+| `doc-lint` | `tools/doc_lint.py` | 文档←→实现一致性三查器（①cw.sh 头注/usage/hint/case 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数三处对账 ③doc 引用旗标 vs 各器 `--help` 实出逐枚对照·verdict `consistent\|drift`·红是数据非器红·schema `rocqwash-doclint/1`·`--repo` 被审仓根缺省本仓） | `bash cw.sh doc-lint --repo . --json doclint.json` |
 | `help` | — | 总帮助；`help <tool>` 看该工具一行提示 | `bash cw.sh help probe` |
 
 典型流水线（发现→治愈→复核）：
@@ -67,7 +68,7 @@ bash cw.sh triage --repo ORG/REPO --run ID --logs               # 4 verdict≠su
 | 0 | 通过 |
 | 2 | 未知工具（`cw.sh bogus`）；或工具自身 argparse 用法错/断言失败（透传） |
 | 9 | 目标脚本缺失（`cw.sh xxx: missing <path>`）；或工具自身目标文件缺失（透传） |
-| 其余 | 各工具自身口径 1:1 透传（如 sync-ledger `1`=同步完成带发现·net-probe `1`=不稳窗·doctor `1`=missing-libs·pushci verdict 封册 success/dry-run=0·heal-exhausted/unstable/toolchain=1·fix-content/gate4-block=2·9=目标缺失·cw-doctor `1`=degraded 综合健康分<90 红是数据非器红） |
+| 其余 | 各工具自身口径 1:1 透传（如 sync-ledger `1`=同步完成带发现·net-probe `1`=不稳窗·doctor `1`=missing-libs·pushci verdict 封册 success/dry-run=0·heal-exhausted/unstable/toolchain=1·fix-content/gate4-block=2·9=目标缺失·cw-doctor `1`=degraded 综合健康分<90 红是数据非器红·doc-lint `1`=drift 文档漂移红是数据非器红） |
 
 ## 工作流配合接口（v37 三器共同·配合工作流实时动态提供清洗、洗形、排障、疏通堵塞）
 
@@ -147,7 +148,11 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
   `--dry-run` 只打计划——两预设自动接驳各器缺省干跑铁律）；展开走与 `--on-red`
   **同一执行器**（60s 帽·rc≠0 不改哨退出码·零新执行路径）；必传参数经
   `--on-red-arg K=V` 透传·`{emit_dir}` 取 `--emit` 所在目录；与 `--on-red`
-  **互斥**（同给 rc=2 fail-loud 禁静默择一）。
+  **互斥**（同给 rc=2 fail-loud 禁静默择一）。wash-shape 同形扩面（v39 轮）：
+  ③头注形洗模板源增 `--header-map-preset NAME` 钦名模板（`tests/fixtures/
+  header_map_v1.json` 战役正典蒸馏库·schema `rocqwash-header-map/1`·占位全承
+  目标件自身 Require 面与既有头注逐字·任一绑不上 plan-miss 不硬造；与
+  `--header-map` 同槽互斥 rc=2·模板源探测次序 `--header-map` > preset > env）。
 - **audit**：unclog 增 `--audit` 只读堵账基线（单遍 probe 干跑归集→chain_graph
   →出基线报告·`final.verdict=audit` exit 0 红是基线数据非器红·cures 恒 0＝
   零落刀零复核）；**零写盘硬保证**＝`--src` 全文件 md5 清单跑前跑后自证恒同
@@ -172,13 +177,16 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
   （⑥ unclog 嵌段展开·干跑→人审→`--apply`→复核四判＋诚实墙因分派表）
 - 集成白皮书：[docs/workflow-integration-whitepaper-v1.0-20261111.md](docs/workflow-integration-whitepaper-v1.0-20261111.md)
   （主会话让路模式／后台任务拓扑／双门并立——推窗四判据×发射闸）
+- 实时动态服务运行手册：[docs/ops-realtime-service-v1.0-20261111.md](docs/ops-realtime-service-v1.0-20261111.md)
+  （后台哨标准命令与 JSONL 消费／preset 接驳 unclog 全链三判 e2e＝
+  `tests/test_relay_e2e.py`·tmp 注入演练实跑原文在册·与器 `--help` 冲突时以器为准）
 
 ## English brief
 
 `cw.sh` is the one-command entry for the seven tools introduced in the
 rocqwash v29-v32 waves plus the five tools added on 20261111 plus the three
-v37 tools plus the v38 aggregate doctor (sixteen in total). It lives at the
-repository root:
+v37 tools plus the v38 aggregate doctor plus the v39 doc-lint (seventeen in
+total). It lives at the repository root:
 
 ```
 bash cw.sh <tool> [args...]
@@ -204,7 +212,10 @@ gate4-block|dry-run`), the v37 additions `sentinel`→`tools/cw_sentinel.py`
 tokens → JSONL event stream, once/loop dual mode, report-only by default),
 `wash-shape`→`tools/wash_shape.py` (canonical five-pass shaping pipeline:
 lexical/token/header/EOL/anchor; plan is zero-write by default, `--apply`
-re-runs all five passes for verification), `unclog`→`tools/unclog.py`
+re-runs all five passes for verification; the ③ header-pass template source is
+probed in order `--header-map` per-file data > `--header-map-preset` named
+template library `tests/fixtures/header_map_v1.json` > env, with the two
+explicit flags mutually exclusive rc=2), `unclog`→`tools/unclog.py`
 (blockage-unclogging closed loop: probe collection → chain-root pick →
 cure-applier → re-scan/re-probe → verdict `unclogged|wall|rounds-exhausted`;
 dry-run by default, frozen8 red-refusal), the v38 addition `cw-doctor`→
@@ -212,7 +223,13 @@ dry-run by default, frozen8 red-refusal), the v38 addition `cw-doctor`→
 per domain — dyld environment / net_probe network / registry anchor audit /
 probe_engine+chain_graph clog sampling — into a 0-100 score with verdict
 `healthy|degraded` and per-domain advice; diagnosis only, never executes
-fixes; `--injector`-offline-testable), plus `help`. The v37 tools share a
+fixes; `--injector`-offline-testable), plus the v39 addition
+`doc-lint`→`tools/doc_lint.py` (docs↔implementation consistency linter, three
+checks: cw.sh four-place tool-table cross-check + tools/ generic-entry
+reconciliation, CASES count three-way check against tests/README.md and
+README.md, and doc flag references verified against each tool's real `--help`
+output; verdict `consistent|drift`, red is data not tool failure), plus
+`help`. The v37 tools share a
 common workflow-interface discipline (once/loop dual mode, deterministic
 JSON reports + JSONL event streams, `--injector` offline canned testing,
 exit codes 0/1/2/9 where red is data not tool failure) — see the Chinese
@@ -224,7 +241,10 @@ backoff, net-probe `--jitter/--seed`, pushci `--timeout`, sentinel
 `--subproc-timeout`). Three copy-paste canonical workflow blocks live in
 `examples/workflows/` (`backend-sentinel.md`, `step-pushci.md`,
 `loop-unclog.md`), with the integration whitepaper at
-`docs/workflow-integration-whitepaper-v1.0-20261111.md`.
+`docs/workflow-integration-whitepaper-v1.0-20261111.md`; the ops runbook for
+the realtime service (backend sentinel standard commands, JSONL consumption,
+and the `--on-red-preset unclog` relay e2e in `tests/test_relay_e2e.py`) is at
+`docs/ops-realtime-service-v1.0-20261111.md`.
 
 Design contract: all paths are resolved relative to the repository root from
 the script's own location (no hardcoded paths; the repo can be cloned anywhere);

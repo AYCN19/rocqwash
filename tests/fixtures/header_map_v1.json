@@ -1,0 +1,84 @@
+{
+ "kind": "header-map-library",
+ "name": "rocqwash 头注模板库 v1（战役正典蒸馏·金标引据在册·无据不铸）",
+ "note": "③头注形洗 --header-map-preset 钦名模板库。占位值全部承目标件自身：{name}＝basename 去 .v；{deps_stdlib}/{deps_dev}＝目标件 Require 语句逐名（From Stdlib→stdlib 列·顶层裸 Require→dev 列·去重保序）；{bundle}/{summary}/{mission}＝既有前导头注区逐字携带（身内容绝不合成——wash/comment_pack.json header_spec『header CONTENT is per-file data, never synthesized』同律）。任一占位绑不上→该件 plan-miss 如实不硬造。应用语义＝comment_sweep --header-map 前导注释区整体替换；preset 源仅对 gate4 头注域硬项（缺字段/无头注/头注非首块/头注超标）施刀·五字段齐件不对齐改写（防人工 curated 面被机械卷改写·诚实账）。装载器 fail-loud：schema 不识/preset 名不识/占位出白名单/variants 无 else 兜底/任一模板行缺 evidence 金标引据→exit 2。",
+ "placeholders": {
+  "bundle": "首行束语身：既有前导头注区 L1『(* ConstructiveWorld-Set -- <身>. *)』内文逐字携带（终句号归模板行）——无 L1 骨架即绑不上→plan-miss。引据：DecBridge6.v:1/LW3Kills.v:1/abl_tail_supply_66.v:1 束语行同骨架异身",
+  "deps_dev": "本开发 Require 面清单：目标件顶层『Require [Import] A B.』语句逐名去重保序·渲染『[A], [B]』形。引据：ConstructiveWorld-Set @6e805d1 abl_tail_supply_67.v:32-34（Require Import S01_BaseRing./S02_CauchyComplete./UpAblD1_expf_pack.）对照其头注 :15-16『[S01_BaseRing], [S02_CauchyComplete], [UpAblD1_expf_pack]』逐名同",
+  "deps_stdlib": "Stdlib Require 面清单：目标件『From Stdlib Require [Import] A B.』语句逐名去重保序·渲染『[A], [B]』形。引据：ConstructiveWorld-Set @6e805d1 LW3Kills.v:30-32（From Stdlib Require Import QArith Lia Arith ZArith List./QArith_base./QArith.Qabs.）对照其头注 :13-14『Stdlib [QArith.QArith], [Arith.Arith], …』双列同源（人工缀点名为件级 curated·机械转录取面直名）",
+  "mission": "使命身：既有头注 Mission 字段身（『Mission.』标签行余文＋续行至次字段标签/收注符·内部换行与缩进原样逐字携带）——无 Mission 标签即绑不上→plan-miss。引据：DecBridge6.v:5-14/LW3Kills.v:5-11 正典 Mission 身位",
+  "name": "模块名：目标件 basename 去 .v。引据：DecBridge6.v:3 题行自名与 :19 References 自名、:28 Build 命令名同一（一名三现）",
+  "summary": "题行摘要身：既有『(** * <名>: <身>.』题行内文逐字携带（终句号归模板行）——无题行即绑不上→plan-miss。引据：DecBridge6.v:3/LW3Kills.v:3/UpReqConcB1.v:3 题行同骨架异身"
+ },
+ "presets": {
+  "campaign_set_diamond": {
+   "desc": "Set 仓 20261110 战役正典『**』首块五字段形：L1 束语行＋空行＋题行＋空行＋Mission/Dependencies/References/Constructivity/Build 五字段（英文点标·空行相间·卷行宽≈76 续行缩 6·收注符随 Build 末行）",
+   "evidence": [
+    "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/DecBridge6.v:1-31 形全例（L1 :1·题行 :3·Mission :5-14·Dependencies :16-17·References :19-21·Constructivity :23-26·Build :28-29）",
+    "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/LW3Kills.v:1-33 同形二例（五字段标签位与 :30-38 Require 面逐名对照）",
+    "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/abl_tail_supply_66.v:20-31 同形三例（Build :30『(the 9.3 world convention)』尾注为件级变体）",
+    "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/UpReqConcB1.v:22-29 同形四例（Constructivity :25『Disclosed exceptions』尾缀为件级变体——模板取跨件逐字复现主形）",
+    "rocqwash verify/gate4_comment_guard.py:188-193 FIELD_SPECS 五字段双语正典序（OPTIONAL_FIELDS 唯对标 :195）",
+    "rocqwash wash/comment_pack.json header_spec（五字段英文点标·max_end_line=30·content never synthesized）"
+   ],
+   "lines": [
+    "(* ConstructiveWorld-Set -- {bundle}. *)",
+    "",
+    "(** * {name}: {summary}.",
+    "",
+    "    Mission.  {mission}",
+    "",
+    {
+     "evidence": [
+      "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/LW3Kills.v:13-17（双列俱在形：Stdlib 先列句＋Requires … of this development 句）",
+      "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/DecBridge6.v:16-17（唯 dev 列形：Requires [S01_BaseRing], … of this development——对照 :30-33 顶层 Require 零 Stdlib 行）",
+      "rocqwash tests/fixtures/gate4_clean_sample.v:9（唯 stdlib 形：Rocq standard library only.）"
+     ],
+     "slot": "依赖",
+     "variants": [
+      {
+       "evidence": [
+        "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/LW3Kills.v:13-17（Stdlib [QArith.QArith], … 句＋Requires [S01_BaseRing], … of this development 句·两列俱在）"
+       ],
+       "line": "    Dependencies.  Stdlib {deps_stdlib}. Requires {deps_dev} of this development.",
+       "when": {
+        "deps_dev": true,
+        "deps_stdlib": true
+       }
+      },
+      {
+       "evidence": [
+        "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/DecBridge6.v:16-17（Dependencies.  Requires [S01_BaseRing], [S07_RealSetoidExpLog], [TempSoftmaxInstantiation], [fa53_compat_abs] of this development.——无 Stdlib 句·对照 :30-33 零 From Stdlib 行）"
+       ],
+       "line": "    Dependencies.  Requires {deps_dev} of this development.",
+       "when": {
+        "deps_dev": true,
+        "deps_stdlib": false
+       }
+      },
+      {
+       "evidence": [
+        "rocqwash tests/fixtures/gate4_clean_sample.v:9（Dependencies.  Rocq standard library only.——其 Require 面 :19 唯 QArith 无本开发件；零 Require 件按真空真同此式）"
+       ],
+       "line": "    Dependencies.  Rocq standard library only.",
+       "when": "else"
+      }
+     ]
+    },
+    "",
+    "    References.  This development, {name}.v, the baseline module in\n      ConstructiveWorld-Main whose statement names are carried over here\n      verbatim (statement-face Set-carrier completion).",
+    "",
+    "    Constructivity.  All named statements and fields are carried by [Set]\n      (decidable Q-carriers and boolean identity carriers); statements\n      extract with [Obj.magic] = 0 and no erasure; [coqchk] reports\n      [Axioms: none].",
+    "",
+    "    Build.  [coqc -native-compiler no -q -Q . \"\" {name}.v] compiles cleanly\n      (exit 0); the artifact starts with [436f7121 000160bc]. *)"
+   ],
+   "require_face_rule": "from-stdlib-prefix"
+  }
+ },
+ "schema": "rocqwash-header-map/1",
+ "untemplated_variants": {
+  "boxed_line_labels": "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/abl_tail_supply_69.v:1-38 盒式逐行标签形（(* === *) 围栏·标签行手卷宽随文对齐·使命身为判例叙述）——卷行位非机械可再演·v1 不铸（宁缺毋滥）",
+  "rocqwash_fixture_intro_block": "rocqwash tests/fixtures/gate4_clean_sample.v:1-6 引言块＋:7-17 五字段块——引言定位句与各字段身皆单件特化（非跨件逐字复现·无 boilerplate 可蒸馏）·v1 不铸",
+  "set_deps_dev_first_variant": "ConstructiveWorld-Set @6e805d1 ConstructiveWorld_Live/abl_tail_supply_67.v:15-16 依赖 dev 先列＋『; Stdlib [Extraction]; …』后缀形——与 LW3Kills Stdlib 先列主形并存·v1 模板取后者（跨件复现度更高）"
+ }
+}

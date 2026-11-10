@@ -56,7 +56,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（52 例）/ CI 工作流占位 — test suite (52 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（54 例）/ CI 工作流占位 — test suite (54 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -155,6 +155,25 @@ rocqwash/
 > 只读堵账基线（--src 全文件 md5 跑前跑后自证零写盘·verdict=audit exit 0）；
 > `cw.sh` 入口扩至十六工具（cw-doctor 路由·四处同步）；自测套件扩至 52 例
 > （t_cw_doctor 最小自测壳两判·缺壳集成席自补）。
+> v39 增补（20261111·文档核与接驳实战轮·工装席四铸＋集成席收口）：
+> `tools/doc_lint.py` 文档←→实现一致性三查器（①工具表查＝cw.sh 头注/usage/
+> hint/case 四处互检＋tools/ 通用入口对账 ②计数查＝tests/run_tests.sh CASES
+> vs tests/README.md vs README.md 三处对账 ③旗标查＝docs 引用旗标 vs 各器
+> --help 实出逐枚对照（--help 真跑·帽 20 器）——schema rocqwash-doclint/1·
+> verdict consistent|drift·红是数据非器红·--selftest tmp 迷你仓六矢量·
+> 零网络零写盘）；接驳实战核：`tests/test_relay_e2e.py` cw_sentinel
+> --on-red-preset unclog 全链三判 e2e（事件触发→--audit 干跑 rc=0 零写盘
+> md5 自证→JSONL 同盘 unclog report 路径逐字节对拍·全 canned 罐装·实跑原文
+> 落 docs/ops-realtime-service-v1.0-20261111.md 实时动态服务运行手册）；
+> 洗形器扩容：wash_shape `--header-map-preset NAME` 钦名头注模板库
+> `tests/fixtures/header_map_v1.json`（战役正典蒸馏·金标引据在册·schema
+> rocqwash-header-map/1·与 --header-map 同槽互斥）＋cure_pack v1.4 语料普查
+> 轮单式扩容：`cure39_ifq_connective_qualify` 接口量化连接词限定（20261111
+> 证据门控普查·b48-52 wash-wave 引据 commit 9a51c74·RI0 语境件语句面裸
+> lt/le/plus 钉 @S01_BaseRing 投影形·树正典形；普查纪律 held——引据较薄之形
+> 全数留 pending 不铸·夹具 cure39_t13/cure39_plain）。`cw.sh` 入口扩至十七工具
+> （doc-lint 路由·四处同步）；自测套件扩至 54 例（t_relay_e2e 三判 e2e＋
+> t_doclint 最小自测壳三判·缺壳集成席自补）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
