@@ -1,0 +1,22 @@
+{
+ "total_count": 1,
+ "jobs": [
+  {
+   "id": 2011110101,
+   "run_id": 9026111001,
+   "name": "gate7 / sync-main",
+   "status": "completed",
+   "conclusion": "failure",
+   "runner_name": "ubuntu-24.04",
+   "started_at": "2026-11-10T08:00:00Z",
+   "completed_at": "2026-11-10T08:12:33Z",
+   "steps": [
+    {"number": 1, "name": "Set up job", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:01Z", "completed_at": "2026-11-10T08:00:04Z"},
+    {"number": 2, "name": "Checkout repository", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:04Z", "completed_at": "2026-11-10T08:00:09Z"},
+    {"number": 3, "name": "Build (coqc batch)", "status": "completed", "conclusion": "failure", "started_at": "2026-11-10T08:00:09Z", "completed_at": "2026-11-10T08:12:31Z"},
+    {"number": 4, "name": "COQCHK", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null},
+    {"number": 5, "name": "Upload artifact (gate2 ledger)", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null}
+   ]
+  }
+ ]
+}

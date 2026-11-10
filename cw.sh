@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 工具波统一入口（repo 根·bash 3.2 兼容）
-# cw.sh — unified entry for the rocqwash v29-v32 tool wave (repo root, bash 3.2)
+# cw.sh — rocqwash v29-v32 七工具＋20261111 四工具统一入口（repo 根·bash 3.2 兼容）
+# cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
+#         20261111 four-tool wave (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
 #
@@ -19,6 +20,15 @@
 #               cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]
 #   dual-scan   双器对拍驱动                         -> scan/dual_scan.py
 #               cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]
+#   doctor      dyld 工具链断链诊断（只诊断＋restore 建议·禁代执行）
+#                                                    -> tools/toolchain_dyld_doctor.py
+#               cw.sh doctor [--worker PATH] [--donor DIR] [--json out.json] [--smoke --coqc PATH]
+#   net-probe   网络窗探针（双探稳窗·单探禁发射）     -> tools/net_probe.py
+#               cw.sh net-probe [--endpoints URL,..] [--rounds N] [--interval S] [--stable-window] [--json out]
+#   triage      CI 红炉分诊（五族+绿炉判类谱）       -> tools/ci_triage.py
+#               cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
+#   union       注册册 union 手术（缺省干跑）         -> tools/registry_union.py
+#               cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-*
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -29,9 +39,10 @@
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
-# wash/verify/seam/certify/watch). The v29-v32 tools live in module directories
-# that now hold several generic entries each, where the auto-router's ambiguity
-# guard (exit 4) deliberately declines to guess — this entry fills that gap by
+# wash/verify/seam/certify/watch). The v29-v32 tools and the 20261111 four tools
+# (doctor/net-probe/triage/union in tools/) live in module directories that now
+# hold several generic entries each, where the auto-router's ambiguity guard
+# (exit 4) deliberately declines to guess — this entry fills that gap by
 # explicit tool name. The two entries are complementary.
 
 set -u
@@ -40,7 +51,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32 tool-wave unified entry（统一入口·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 四工具统一入口（统一入口·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -59,6 +70,15 @@ cw.sh — rocqwash v29-v32 tool-wave unified entry（统一入口·bash 3.2 兼�
               cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]
   dual-scan   双器对拍驱动                         -> scan/dual_scan.py
               cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]
+  doctor      dyld 工具链断链诊断（只诊断＋restore 建议·禁代执行）
+                                                   -> tools/toolchain_dyld_doctor.py
+              cw.sh doctor [--worker PATH] [--donor DIR] [--json out.json] [--smoke --coqc PATH]
+  net-probe   网络窗探针（双探稳窗·单探禁发射）     -> tools/net_probe.py
+              cw.sh net-probe [--endpoints URL,..] [--rounds N] [--interval S] [--stable-window] [--json out]
+  triage      CI 红炉分诊（五族+绿炉判类谱）       -> tools/ci_triage.py
+              cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
+  union       注册册 union 手术（缺省干跑）         -> tools/registry_union.py
+              cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-*
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -79,6 +99,10 @@ hint_for() {  # $1=tool
     sync-ledger) echo "cw.sh sync-ledger --probe <json> --ledger <tsv> --out <tsv> [--report r.json]   # probe 台账×状态台账合并 -> tools/ledger_sync.py" ;;
     erasure)     echo "cw.sh erasure --mli <f.mli> [--json scan.json] [--resolve N1,N2] [--md-out f.md]   # 擦除位分类顾问 -> verify/erasure_classifier.py" ;;
     dual-scan)   echo "cw.sh dual-scan --dir DIR | --file <f.v> [--out report.json]   # 双器对拍 -> scan/dual_scan.py" ;;
+    doctor)      echo "cw.sh doctor [--worker PATH] [--donor DIR] [--json out.json] [--smoke --coqc PATH]   # dyld 工具链断链诊断（只诊断＋restore 建议·禁代执行）-> tools/toolchain_dyld_doctor.py" ;;
+    net-probe)   echo "cw.sh net-probe [--endpoints URL,..] [--rounds N] [--interval S] [--stable-window] [--json out]   # 网络窗探针（双探稳窗）-> tools/net_probe.py" ;;
+    triage)      echo "cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI 红炉分诊（五族+绿炉）-> tools/ci_triage.py" ;;
+    union)       echo "cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-base RB --ref-main RM --ref-branch XB   # 注册册 union 手术（缺省干跑）-> tools/registry_union.py" ;;
     *) return 1 ;;
   esac
 }
@@ -106,12 +130,16 @@ case "${1:-}" in
   sync-ledger) shift; run_tool sync-ledger "tools/ledger_sync.py"         "$@" ;;
   erasure)     shift; run_tool erasure     "verify/erasure_classifier.py" "$@" ;;
   dual-scan)   shift; run_tool dual-scan   "scan/dual_scan.py"            "$@" ;;
+  doctor)      shift; run_tool doctor      "tools/toolchain_dyld_doctor.py" "$@" ;;
+  net-probe)   shift; run_tool net-probe   "tools/net_probe.py"           "$@" ;;
+  triage)      shift; run_tool triage      "tools/ci_triage.py"           "$@" ;;
+  union)       shift; run_tool union       "tools/registry_union.py"      "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union）" >&2
         exit 2
       fi
     fi
@@ -119,7 +147,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|help）" >&2
     usage >&2
     exit 2 ;;
 esac

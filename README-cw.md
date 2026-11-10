@@ -1,6 +1,6 @@
 # cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
 
-`cw.sh` 是 rocqwash v29-v32 七个工具的**一键调用入口**（repo 根）：
+`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 四工具（共十一个）的**一键调用入口**（repo 根）：
 
 ```
 bash cw.sh <tool> [args...]
@@ -11,7 +11,8 @@ bash cw.sh <tool> [args...]
 - **bash 3.2 兼容**：macOS 自带 `/bin/bash` 可直接跑；只读路由层，自身零写盘；
 - **与 `cli/rocqwash` 互补**：后者路由 v29 前七模块（scan/names/wash/verify/
   seam/certify/watch）；v29-v32 工具所在目录已含多个通用入口，模块级自动路由
-  的歧义保护（exit 4）不覆盖它们——本入口按工具名显式补位。
+  的歧义保护（exit 4）不覆盖它们——本入口按工具名显式补位。20261111 四工具
+  （doctor/net-probe/triage/union）同落 `tools/` 多入口目录，同此显式名补位路由。
 
 ## 中文速查表
 
@@ -24,6 +25,10 @@ bash cw.sh <tool> [args...]
 | `sync-ledger` | `tools/ledger_sync.py` | probe 台账×状态台账 TSV 合并同步 | `bash cw.sh sync-ledger --probe ledger.json --ledger status.tsv --out new.tsv --report sync.json` |
 | `erasure` | `verify/erasure_classifier.py` | 提取擦除位分类顾问（.mli 逐位归类） | `bash cw.sh erasure --mli out.mli --md-out ledger.md` |
 | `dual-scan` | `scan/dual_scan.py` | 双器对拍（scan_v4_token×mac_stmt_scan 逐件差异） | `bash cw.sh dual-scan --dir src/ --out report.json` |
+| `doctor` | `tools/toolchain_dyld_doctor.py` | dyld 工具链断链诊断（批量 EXIT=134 面·只诊断＋restore 建议·**禁代执行**） | `bash cw.sh doctor --worker PATH --donor DIR --json dyld.json` |
+| `net-probe` | `tools/net_probe.py` | 网络窗探针（双探稳窗·单探禁发射·HTTPError 即可达） | `bash cw.sh net-probe --rounds 2 --interval 60 --stable-window` |
+| `triage` | `tools/ci_triage.py` | CI 红炉分诊（五族+绿炉判类谱·红是数据非器红） | `bash cw.sh triage --repo ORG/REPO --run ID --logs` |
+| `union` | `tools/registry_union.py` | 注册册 union 手术（main 为底＋对 merge-base 真独有尾插·**缺省干跑**） | `bash cw.sh union --base b --main m --branch x --kind order --json r.json` |
 | `help` | — | 总帮助；`help <tool>` 看该工具一行提示 | `bash cw.sh help probe` |
 
 典型流水线（发现→治愈→复核）：
@@ -35,6 +40,16 @@ bash cw.sh cure   --file demo.v --apply               # 3 落刀（写盘）
 bash cw.sh scan4  --file demo.v --json after.json      # 4 复扫应为零
 ```
 
+CI 红炉修复链（doctor→net-probe→push→triage）：
+
+```
+bash cw.sh doctor --json dyld.json                              # 1 dyld 断链诊断（批量 EXIT=134 面·restore 建议只打印禁代执行）
+bash cw.sh net-probe --rounds 2 --interval 60 --stable-window   # 2 双探稳窗（连续两轮全端点可达才准发射·单探禁发射）
+python3 certify/push_gate.py window --repo . --runs-json runs.json --json w.json   # 3 推窗四判据（过闸才 push·亦可 cli/rocqwash certify push_gate）
+git push                                                        #   窗开→发射
+bash cw.sh triage --repo ORG/REPO --run ID --logs               # 4 CI 红炉分诊（红是数据非器红·按族给 action）
+```
+
 ### 退出码
 
 | 码 | 含义 |
@@ -42,12 +57,13 @@ bash cw.sh scan4  --file demo.v --json after.json      # 4 复扫应为零
 | 0 | 通过 |
 | 2 | 未知工具（`cw.sh bogus`）；或工具自身 argparse 用法错/断言失败（透传） |
 | 9 | 目标脚本缺失（`cw.sh xxx: missing <path>`）；或工具自身目标文件缺失（透传） |
-| 其余 | 各工具自身口径 1:1 透传（如 sync-ledger `1`=同步完成带发现） |
+| 其余 | 各工具自身口径 1:1 透传（如 sync-ledger `1`=同步完成带发现·net-probe `1`=不稳窗·doctor `1`=missing-libs） |
 
 ## English brief
 
 `cw.sh` is the one-command entry for the seven tools introduced in the
-rocqwash v29-v32 waves. It lives at the repository root:
+rocqwash v29-v32 waves plus the four tools added on 20261111. It lives at the
+repository root:
 
 ```
 bash cw.sh <tool> [args...]
@@ -60,7 +76,12 @@ Tool names map 1:1 to the underlying scripts: `scan4`→`scan/scan_v4_token.py`
 (multi-ledger chain-root graph), `sync-ledger`→`tools/ledger_sync.py`
 (probe×status-ledger merge), `erasure`→`verify/erasure_classifier.py`
 (extraction erasure advisor), `dual-scan`→`scan/dual_scan.py`
-(dual-scanner cross-check), plus `help`.
+(dual-scanner cross-check), and the 20261111 additions `doctor`→
+`tools/toolchain_dyld_doctor.py` (dyld toolchain-breakage diagnostics; prints
+restore advice, never executes it), `net-probe`→`tools/net_probe.py`
+(network-window probe, double-probe stable window), `triage`→`tools/ci_triage.py`
+(CI red-run triage), `union`→`tools/registry_union.py` (registry union surgery,
+dry-run by default), plus `help`.
 
 Design contract: all paths are resolved relative to the repository root from
 the script's own location (no hardcoded paths; the repo can be cloned anywhere);

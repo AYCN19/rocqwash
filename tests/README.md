@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 47 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（43 例）
+## 覆盖面（47 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -140,3 +140,17 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 41 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 36（v34 扩节） | `t_cure_pack` | `wash/cure_pack.json` v1.3＋`cure_applier.py`（E2/E3 缺陷族五式·零新引擎全复用 v32） | pack 完整（5+9+5+5=24·v34_lineage 在册·cure34_E2_station report-only·E3 对式序=站改写先于 shim 插入机械断言）＋selftest v34 向量（E3 站改写 2/shim 插入/shim 体 face_exclude 护体二遍零残差；E2 标注/元数/report 站/幂等；v34 whole-pack 幂等）＋夹具流程（E3 干跑 stations=2 shim=1→apply rc0→shim 行在·站改写·shim 体原样→全零复跑；E2 术前站数 1 report-only→apply→中间件面＋元数随行→全零复跑含 station 残差）＋门控 E2/E3 编译弧（`ROCWASH_ROCQ` 门控·cpu_guard 包裹：world 绿→**pre-fix 消费件编译绿＝提取时缺陷族实锤**→cure→cured 绿→Separate Extraction：E3 消费单元 magic 0/0＋`val ufx_nat : coq_Real -> coq_Real` 单态 shim 站；E2 修前 .mli `'a1 -> 'a1` 多态面→修后 `val unann : nat -> nat` 单态面→消费单元 magic 0/0→**world 访问器债=1 机械钉**〔实体修复工作流域·fixture world 头注与 canonical_note 记界〕）。夹具 `fixtures/cure34_e23_world.v`＋`cure34_e3_fixture.v`＋`cure34_e2_fixture.v`（临时目录驱动零触真仓·干跑永不编译） |
+
+## 20261111 四工具波补记（集成席·用例 44–47）
+
+> 编号承接套件现势（run_tests.sh 在册 47 例）：44（`t_registry_union`）由铸席随件
+> 在册（run_tests.sh t_registry_union·本表此前未及）、45–47 为本轮集成席补的最小
+> 自测壳三行；43（`t_cw_entry`·v33 轮）此前亦未及入表——遵「不代前轮补表」先例
+> 本轮不代补，留主会话定夺。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 44 | `t_registry_union` | `tools/registry_union.py`（注册册 union 手术器·三席铸件·套件挂接铸席已在册·集成席核认） | `tests/test_registry_union.py` 九节：selftest 八判／coq 夹具组／陷阱组同名不同形对 merge-base 必过滤／重锚 md5 冻结向量 1414cddb／A2·A3 负判零写盘／干跑-apply-幂等／json 确定性／CLI 四码＋用法对偶／git 三 ref 直读（夹具只读输出全落 mktemp·零触真仓零网络零编译） |
+| 45 | `t_toolchain_dyld_doctor` | `tools/toolchain_dyld_doctor.py`（dyld 工具链断链诊断器·只诊断＋restore 建议禁代执行） | `tests/test_toolchain_dyld_doctor.py` 最小自测壳两判：--selftest rc=0 且含 `DYLD-DOCTOR-SELFTEST PASS` 冻结标记／--help rc=0（otool 解析/exists-missing/同名兜底全链离线向量组由铸席 --selftest 自证·本壳挂接套件·零真 otool 零编译零网络零写盘） |
+| 46 | `t_ci_triage` | `tools/ci_triage.py`（CI 红炉分诊器·五族+绿炉判类谱·红是数据非器红） | `tests/test_ci_triage.py` 最小自测壳两判：--selftest rc=0 且含 `CI-TRIAGE-SELFTEST PASS` 冻结标记／--help rc=0（判类谱六样张/基线 13.3x 判例/谱外 UNRECOGNIZED 离线向量由铸席 --selftest 自证·本壳挂接套件·零网络零写盘） |
+| 47 | `t_net_probe` | `tools/net_probe.py`（网络窗探针·双探稳窗律·单探禁发射） | `tests/test_net_probe.py` 最小自测壳两判：--selftest rc=0 且含 `NET-PROBE-SELFTEST PASS` 冻结标记／--help rc=0（classify_error 分类/canned 注入/稳窗判定零网络向量由铸席 --selftest 自证·本壳挂接套件·零网络零写盘） |

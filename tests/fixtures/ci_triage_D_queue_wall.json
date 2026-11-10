@@ -1,0 +1,16 @@
+{
+ "total_count": 1,
+ "jobs": [
+  {
+   "id": 2011110401,
+   "run_id": 9026111004,
+   "name": "sync / shard-2",
+   "status": "completed",
+   "conclusion": "cancelled",
+   "runner_name": null,
+   "started_at": null,
+   "completed_at": "2026-11-10T09:41:12Z",
+   "steps": []
+  }
+ ]
+}

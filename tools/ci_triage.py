@@ -1,0 +1,966 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""ci_triage.py — CI 红炉分诊器（rocqwash tools/·20261110 判类谱代码化·六幕实战判例工具化）
+
+[判类谱]（20261110 六幕实战判例·全部代码化；五族＋绿炉）：
+  A 内容红 A-content-red＝失败步指向具体件：Build/COQCHK 出 Error:/FAIL/
+    ORDER-MISSING/Axioms 非零（COQCHK_EXIT≠0·公理总数≠0）→ action=fix-content。
+  B 网络窗 B-netred＝checkout unable to access / port 443 / Connection was reset；
+    上传步 ENOTFOUND / Upload progress stalled；403 Forbidden: job is completed
+    （中断连坐形：cancelled 有步骤零红步同归此族）→ action=rerun-after-stable-window。
+  C 环境断链 C-toolchain-break＝批量 EXIT=134 / Abort trap: 6（SKIP 件全过）。
+    log 直证：日志抓到 EXIT=134/Abort trap: 6 → 该 job 即 C；run 级批量判：
+    同形内容红（A）≥2 件 → 全数升 C（EXIT=134 日志确证建议 --logs）
+    → action=restore-toolchain。
+  D 排队资源墙 D-queue-wall＝cancelled 且 steps=[]（job 零步骤·logs 404）
+    → action=queue-etiquette。
+  E coqchk-skipped 签名 E-coqchk-skipped＝上传步红＋coqchk 步 skipped（＋gate2
+    GATE-BANNER-ABSENT 日志确证）＝B 族变体·勿当内容红
+    → action=rerun-after-stable-window。
+  绿炉＝无红件 → family=none·action=watch-only。在飞/条件跳过（conclusion 空或
+    skipped/neutral）同记 none·但 evidence 显式注记「判类暂缓非绿判」·绝不充绿。
+  判类谱外红形 → family=UNRECOGNIZED·action=watch-only（不充谱·run 级判类序
+    置顶·人工指认优先·fail-loud）。
+
+  判类序（逐 job·先到先归）：绿/在飞/条件跳过 → D（cancelled·零步骤）→ B 连坐形
+  （cancelled·有步骤零红步）→ log 直证 C（EXIT=134/Abort trap: 6）→ E 签名
+  （上传红＋coqchk skipped）→ log B → 步名 B（checkout/upload/artifact/cache/…）
+  → log A（Error:/FAIL/ORDER-MISSING/COQCHK_EXIT≠0/公理总数≠0）→ 步名 A
+  （build/compile/coqchk/…）→ UNRECOGNIZED。
+
+用途：
+  对 GitHub Actions run 的 jobs 做红/绿分诊：打印步级表（步名/status/conclusion/
+  起止/时长秒），逐 job 归族（family）并给处置（action）；--baseline-seconds 给
+  同 sync 历史时长值则出倍数对表（判例 coqchk 561s vs 7480s=13.3x＝本机挤压
+  嫌疑非卡死）。红是数据非器红：分诊恒 exit 0 响亮出账。
+
+用法（路径全参数化·零硬编码绝对路径）：
+  线上模式（只读 GET·token 取 ~/.netrc machine github.com 行第 6 列 password，
+  --netrc 可换路径）：
+    python3 tools/ci_triage.py --repo ORG/REPO --run ID [--logs] [--netrc PATH]
+        [--baseline-seconds N] [--baseline-step NAME] [--timeout S] [--json out.json]
+    （GET /repos/{repo}/actions/runs/{run}/jobs?per_page=100&page=N 分页到齐；
+      --logs 时对红件再 GET /repos/{repo}/actions/jobs/{job}/logs 抓关键行入证据：
+      COQCHK_EXIT/COQCHK_ALL_PASS/判定=CLEAN/公理总数/GATE-BANNER-ABSENT/
+      ENOTFOUND/ORDER-MISSING/EXIT=134 等；logs GET 404/403 本身入证据——
+      403 Forbidden: job is completed 即判类谱 B 中断连坐 token）
+  离线模式（selftest 与断网环境走此路·零网络）：
+    python3 tools/ci_triage.py --offline JOBS.json [--baseline-seconds N ...]
+        [--json out.json]
+    （canned jobs JSON 同 API 真形 {"total_count":N,"jobs":[...]}；
+      fixtures 见 tests/fixtures/ci_triage_*.json 六件套）
+  python3 tools/ci_triage.py --selftest
+
+退出码：0=分诊完成（红是数据非器红·响亮 stdout）；2=用法错（参数缺失/互斥/
+  形不对）；9=API/文件不可达或形坏（netrc 缺失·token 空·HTTP 4xx/5xx·连接
+  失败·jobs 文件缺失或 JSON 形坏·时间戳形不识别）。--selftest：0=全过／2=断言
+  失败。
+
+report schema（--json）= rocqwash-ci-triage/1：
+  {"schema","mode","source",
+   "run"{repo,run_id,total_count,jobs_total,red_job_ids,family,action,evidence},
+   "jobs"[{id,name,status,conclusion,started_at,completed_at,duration_sec,
+     "steps"[{number,name,status,conclusion,started_at,completed_at,duration_sec}],
+     "classification"{family,action,evidence,red_steps}}],
+   "family","action","evidence","baseline_note"?}
+  family ∈ A-content-red / B-netred / C-toolchain-break / D-queue-wall /
+    E-coqchk-skipped / none / UNRECOGNIZED；
+  action ∈ rerun-after-stable-window / fix-content / restore-toolchain /
+    queue-etiquette / watch-only；
+  baseline_note（仅 --baseline-seconds 时在册）：{applied,step_query,
+    baseline_seconds,matched?,current_seconds?,ratio?,note|reason}
+    （applied=false＝基线步未在场或未完·响亮注记非静默·rc 仍 0）。
+
+诚实律（承 CONTRIBUTING §0）：只认机械证据；判类谱外不充谱；红是数据非器红
+  （分诊 exit 0）；--json 落盘 sorted+sort_keys·同输入重跑字节级恒同；stdout 全
+  数据驱动（零 now() 零随机）；零第三方依赖（纯 stdlib）；fail-loud 禁静默降级。
+"""
+import argparse
+import datetime
+import io
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.request
+
+PROG = "ci_triage"
+SCHEMA = "rocqwash-ci-triage/1"
+API_ROOT = "https://api.github.com"
+
+# ---- 判类谱词面（冻结向量·正负判见 --selftest）-----------------------------
+
+# 日志关键行抓取器（tag, regex）——命中行原样入 evidence（≤200 字符·去重保序·帽 60）
+KEY_LOG_PATTERNS = [
+    ("COQCHK_EXIT", re.compile(r"COQCHK_EXIT=(-?\d+)")),
+    ("COQCHK_ALL_PASS", re.compile(r"COQCHK_ALL_PASS=(\d+)")),
+    ("判定=CLEAN", re.compile(r"判定=CLEAN")),
+    ("公理总数", re.compile(r"公理总数=(\d+)")),
+    ("GATE-BANNER-ABSENT", re.compile(r"GATE-BANNER-ABSENT")),
+    ("ORDER-MISSING", re.compile(r"ORDER-MISSING")),
+    ("ENOTFOUND", re.compile(r"ENOTFOUND")),
+    ("EXIT=134", re.compile(r"EXIT=134")),
+    ("Abort-trap-6", re.compile(r"Abort trap: 6")),
+    ("NET-ACCESS", re.compile(r"unable to access|port 443|Connection was reset")),
+    ("UPLOAD-STALL", re.compile(r"Upload progress stalled")),
+    ("JOB-COMPLETED-403", re.compile(r"403 Forbidden: job is completed")),
+    ("Error", re.compile(r"\bError:")),
+]
+
+# 家族判定 regex（log 直证）
+RED_CONTENT_RE = re.compile(
+    r"\bError:|ORDER-MISSING|(?<![A-Za-z])FAIL(?![A-Za-z])"
+    r"|COQCHK_EXIT=(?!0\b)\d+|公理总数=(?!0\b)\d+")
+RED_NET_RE = re.compile(
+    r"unable to access|port 443|Connection was reset|ENOTFOUND"
+    r"|Upload progress stalled|403 Forbidden: job is completed")
+RED_ABORT_RE = re.compile(r"EXIT=134|Abort trap: 6")
+GATE_BANNER_ABSENT_RE = re.compile(r"GATE-BANNER-ABSENT")
+
+# 步名族 regex（步级推断·无日志时的兜底判面）
+CONTENT_STEP_RE = re.compile(r"(?i)build|compile|coqchk|coqc|rocq|check|verify|make")
+NET_STEP_RE = re.compile(r"(?i)checkout|upload|artifact|cache|download|publish")
+UPLOAD_STEP_RE = re.compile(r"(?i)upload|artifact")
+COQCHK_STEP_RE = re.compile(r"(?i)coqchk")
+
+RED_STEP_CONCLUSIONS = ("failure", "timed_out")
+
+# family → action（判类谱处置表）
+ACTION_OF = {
+    "A-content-red": "fix-content",
+    "B-netred": "rerun-after-stable-window",
+    "C-toolchain-break": "restore-toolchain",
+    "D-queue-wall": "queue-etiquette",
+    "E-coqchk-skipped": "rerun-after-stable-window",
+    "none": "watch-only",
+    "UNRECOGNIZED": "watch-only",
+}
+
+FAMILY_LABEL = {
+    "A-content-red": "内容红",
+    "B-netred": "网络窗",
+    "C-toolchain-break": "环境断链",
+    "D-queue-wall": "排队资源墙",
+    "E-coqchk-skipped": "coqchk-skipped 签名（B 族变体）",
+    "none": "绿/无红",
+    "UNRECOGNIZED": "判类谱外未识别红形",
+}
+
+# run 级判类序（先到先取）：谱外红形置顶（人工指认优先·不被已识别族遮蔽）
+RUN_FAMILY_PRECEDENCE = ["UNRECOGNIZED", "C-toolchain-break", "A-content-red",
+                         "E-coqchk-skipped", "B-netred", "D-queue-wall"]
+
+BASELINE_SQUEEZE_RATIO = 3.0   # 倍数≥此阈→「本机挤压嫌疑非卡死」（判例 13.3x 远超阈）
+LOG_EVIDENCE_CAP = 60          # 单 job 日志证据行帽
+LOGS_FETCH_CAP = 20            # --logs 红件日志抓取件数帽（超额响亮注记）
+
+
+class TriageError(Exception):
+    """带退出码的 fail-loud 异常（code: 2=用法错·9=API/文件不可达或形坏）。"""
+
+    def __init__(self, msg, code=9):
+        super(TriageError, self).__init__(msg)
+        self.code = code
+
+
+class ApiHTTPError(Exception):
+    """只读 GET 的 HTTP 错误（body 头入账·由调用方决定转 9 还是入 evidence）。"""
+
+    def __init__(self, code, body, url):
+        super(ApiHTTPError, self).__init__("HTTP %d: %s" % (code, url))
+        self.code = code
+        self.body = body or ""
+        self.url = url
+
+
+# ---- 时间与时长 -------------------------------------------------------------
+
+def parse_iso(ts):
+    """ISO8601 → aware datetime（UTC 缺省）；空/None → None；形不识别 → fail-loud 9。"""
+    if ts is None:
+        return None
+    t = str(ts).strip()
+    if not t:
+        return None
+    if t.endswith("Z"):
+        t = t[:-1] + "+00:00"
+    dt = None
+    try:
+        dt = datetime.datetime.fromisoformat(t)
+    except ValueError:
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+            try:
+                dt = datetime.datetime.strptime(t, fmt)
+                break
+            except ValueError:
+                pass
+    if dt is None:
+        raise TriageError("时间形不识别: %r" % ts, 9)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+    return dt
+
+
+def duration_sec(started_at, completed_at):
+    """起止 → 整秒（None/未完 → None；负值钳 0）。"""
+    s = parse_iso(started_at)
+    e = parse_iso(completed_at)
+    if s is None or e is None:
+        return None
+    return max(0, int(round((e - s).total_seconds())))
+
+
+def fmt_dur(sec):
+    if sec is None:
+        return "-"
+    h, rem = divmod(sec, 3600)
+    m, s = divmod(rem, 60)
+    if h:
+        return "%dh%02dm%02ds" % (h, m, s)
+    return "%dm%02ds" % (m, s)
+
+
+# ---- 凭据（netrc machine github.com 第 6 列）--------------------------------
+
+def netrc_token(path, machine="github.com"):
+    """netrc 手动解析：machine <m> login <l> password <p>（单行 6 列形与多行形
+    通吃）→ password token。缺文件/无条目/空值 → fail-loud 9（token 永不回显）。"""
+    if not os.path.isfile(path):
+        raise TriageError("netrc 缺失: %s（线上模式需 machine %s ... password 形凭据）"
+                          % (path, machine), 9)
+    toks = []
+    with io.open(path, "r", encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            if line.lstrip().startswith("#"):
+                continue
+            toks.extend(line.split())
+    cur = None
+    i = 0
+    while i < len(toks):
+        t = toks[i]
+        if t == "machine" and i + 1 < len(toks):
+            cur = toks[i + 1]
+            i += 2
+            continue
+        if t == "password" and i + 1 < len(toks):
+            if cur == machine:
+                tok = toks[i + 1]
+                if len(tok) >= 2 and tok.startswith('"') and tok.endswith('"'):
+                    tok = tok[1:-1]
+                if not tok:
+                    raise TriageError("netrc machine %s password 为空" % machine, 9)
+                return tok
+            i += 2
+            continue
+        i += 1
+    raise TriageError("netrc 无 machine %s password 形条目（单行 6 列形：第 6 列=token）: %s"
+                      % (machine, path), 9)
+
+
+# ---- 只读 GET（唯一网络动作）-------------------------------------------------
+
+def http_get(url, token, timeout, accept="application/vnd.github+json"):
+    """只读 GET → bytes。HTTPError → ApiHTTPError（body 头随行）；连接失败 → 9。"""
+    req = urllib.request.Request(url, headers={
+        "Accept": accept,
+        "User-Agent": "rocqwash-ci-triage",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Authorization": "token %s" % token,
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        try:
+            body = (e.read() or b"").decode("utf-8", errors="replace")
+        except Exception:
+            body = ""
+        raise ApiHTTPError(e.code, body, url)
+    except (urllib.error.URLError, OSError) as e:
+        raise TriageError("API 不可达: %s (%s)" % (url, e), 9)
+
+
+def jobs_url(repo, run_id):
+    return "%s/repos/%s/actions/runs/%d/jobs" % (API_ROOT, repo, run_id)
+
+
+def fetch_jobs_online(repo, run_id, token, timeout):
+    """GET jobs（per_page=100 分页到齐）→ (jobs, total_count)。HTTP 4xx/5xx → 9。"""
+    jobs = []
+    total = None
+    page = 1
+    while True:
+        url = "%s?per_page=100&page=%d" % (jobs_url(repo, run_id), page)
+        data = json.loads(http_get(url, token, timeout).decode("utf-8"))
+        if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+            raise TriageError("API 形坏（无 jobs 列表）: %s" % url, 9)
+        if total is None:
+            total = data.get("total_count")
+        jobs.extend(data["jobs"])
+        if len(data["jobs"]) < 100:
+            break
+        if total is not None and len(jobs) >= total:
+            break
+        page += 1
+        if page > 50:
+            raise TriageError("jobs 分页超帽（50 页）·拒绝续拉", 9)
+    return jobs, (total if total is not None else len(jobs))
+
+
+def fetch_job_log(repo, job_id, token, timeout):
+    """GET 单 job 日志原文 → (text, None)；HTTP 4xx/5xx → (None, 证据注记)——
+    logs 404 与 403 Forbidden: job is completed（判类谱 B 中断连坐）本身即证据。
+    连接失败仍 TriageError 9（API 不可达）。"""
+    url = "%s/repos/%s/actions/jobs/%s/logs" % (API_ROOT, repo, job_id)
+    try:
+        return http_get(url, token, timeout, accept="text/plain").decode(
+            "utf-8", errors="replace"), None
+    except ApiHTTPError as e:
+        note = "logs-GET: HTTP %d %s（日志不可达·入证据）" % (
+            e.code, e.body.strip()[:120])
+        return None, note
+
+
+# ---- 离线装载 ---------------------------------------------------------------
+
+def load_jobs_offline(path):
+    """canned jobs JSON（同 API 真形 {"total_count":N,"jobs":[...]}）→ (jobs, total)。
+    缺文件/解析败/形坏 → fail-loud 9。"""
+    if not os.path.isfile(path):
+        raise TriageError("jobs JSON 缺失: %s" % path, 9)
+    try:
+        with io.open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except (ValueError, UnicodeDecodeError) as e:
+        raise TriageError("jobs JSON 形坏（解析失败）: %s (%s)" % (path, e), 9)
+    if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+        raise TriageError(
+            "jobs JSON 形坏（须 {\"total_count\":N,\"jobs\":[...]} 同 API 形）: %s" % path, 9)
+    for idx, j in enumerate(data["jobs"]):
+        if not isinstance(j, dict) or not isinstance(j.get("name"), str) \
+                or not isinstance(j.get("steps") or [], list):
+            raise TriageError("jobs JSON 形坏（jobs[%d] 非 job 形）: %s" % (idx, path), 9)
+    return data["jobs"], data.get("total_count", len(data["jobs"]))
+
+
+# ---- 判类器 -----------------------------------------------------------------
+
+def scan_log_evidence(text):
+    """日志原文 → 关键行证据表（tag＋命中行原样 ≤200 字符·去重保序·帽 60）。"""
+    out = []
+    for line in text.splitlines():
+        s = line.strip()
+        if not s:
+            continue
+        for tag, rx in KEY_LOG_PATTERNS:
+            if rx.search(s):
+                if len(s) > 200:
+                    s = s[:197] + "..."
+                out.append("log[%s] %s" % (tag, s))
+                break
+    seen = set()
+    ded = []
+    for e in out:
+        if e not in seen:
+            seen.add(e)
+            ded.append(e)
+    return ded[:LOG_EVIDENCE_CAP]
+
+
+def classify(job, log_text=None):
+    """判类谱逐 job 判类 → {"family","action","evidence","red_steps"}（判类序见
+    模块 docstring·失败步名与 redSteps 全入 evidence）。"""
+    ev = []
+    status = str(job.get("status") or "")
+    conclusion = job.get("conclusion")
+    steps = job.get("steps") or []
+    red_steps = [s for s in steps
+                 if s.get("conclusion") in RED_STEP_CONCLUSIONS]
+    red_names = [str(s.get("name") or "(unnamed)") for s in red_steps]
+
+    if conclusion == "success":
+        return {"family": "none", "action": "watch-only",
+                "evidence": ["conclusion=success（绿）"], "red_steps": []}
+    if conclusion is None or status != "completed":
+        return {"family": "none", "action": "watch-only",
+                "evidence": ["在飞/未完（status=%s conclusion=%s）·判类暂缓非绿判"
+                             % (status or "-", conclusion or "-")],
+                "red_steps": []}
+    if conclusion in ("skipped", "neutral"):
+        return {"family": "none", "action": "watch-only",
+                "evidence": ["conclusion=%s（条件跳过/中立·非红）" % conclusion],
+                "red_steps": []}
+
+    ev.append("job conclusion=%s status=%s" % (conclusion, status or "-"))
+    for n in red_names:
+        ev.append("failure-step: %s" % n)
+
+    # D：cancelled 且零步骤（logs 404 形）
+    if conclusion == "cancelled" and not steps:
+        ev.append("steps=0（零步骤）·logs 404 形（排队资源墙判例）")
+        return {"family": "D-queue-wall", "action": ACTION_OF["D-queue-wall"],
+                "evidence": ev, "red_steps": []}
+    # B 连坐形：cancelled·有步骤·零红步
+    if conclusion == "cancelled" and not red_steps:
+        ev.append("cancelled·有步骤零红步＝中断连坐形（判类谱 B·"
+                  "403 Forbidden: job is completed 同族）")
+        return {"family": "B-netred", "action": ACTION_OF["B-netred"],
+                "evidence": ev, "red_steps": []}
+
+    # log 直证 C：EXIT=134 / Abort trap: 6（判类谱 C·SKIP 件全过）
+    if log_text and RED_ABORT_RE.search(log_text):
+        ev.append("log 直证：EXIT=134/Abort trap: 6（判类谱 C·环境断链）")
+        return {"family": "C-toolchain-break",
+                "action": ACTION_OF["C-toolchain-break"],
+                "evidence": ev + scan_log_evidence(log_text),
+                "red_steps": red_names}
+
+    # E 签名：上传步红＋coqchk 步 skipped（B 族变体·勿当内容红）
+    upload_red = [s for s in red_steps if UPLOAD_STEP_RE.search(str(s.get("name") or ""))]
+    coqchk_skipped = [s for s in steps
+                      if s.get("conclusion") == "skipped"
+                      and COQCHK_STEP_RE.search(str(s.get("name") or ""))]
+    if upload_red and coqchk_skipped:
+        ev.append("coqchk 步 skipped＝gate2 未达（E 签名·GATE-BANNER-ABSENT 同义·"
+                  "--logs 可确证）")
+        if log_text:
+            if GATE_BANNER_ABSENT_RE.search(log_text):
+                ev.append("log 确证：GATE-BANNER-ABSENT（E 签名第三件齐）")
+            ev.extend(scan_log_evidence(log_text))
+        return {"family": "E-coqchk-skipped",
+                "action": ACTION_OF["E-coqchk-skipped"],
+                "evidence": ev, "red_steps": red_names}
+
+    if log_text:
+        ev.extend(scan_log_evidence(log_text))
+        if RED_NET_RE.search(log_text):
+            ev.append("log 命中网络窗词面（判类谱 B）")
+            return {"family": "B-netred", "action": ACTION_OF["B-netred"],
+                    "evidence": ev, "red_steps": red_names}
+    for s in red_steps:
+        if NET_STEP_RE.search(str(s.get("name") or "")):
+            ev.append("红步名∈网络邻接步（checkout/upload/artifact/cache/…）: %s"
+                      % s.get("name"))
+            return {"family": "B-netred", "action": ACTION_OF["B-netred"],
+                    "evidence": ev, "red_steps": red_names}
+    if log_text and RED_CONTENT_RE.search(log_text):
+        ev.append("log 命中内容红词面（Error:/FAIL/ORDER-MISSING/EXIT≠0/公理≠0·判类谱 A）")
+        return {"family": "A-content-red", "action": ACTION_OF["A-content-red"],
+                "evidence": ev, "red_steps": red_names}
+    for s in red_steps:
+        if CONTENT_STEP_RE.search(str(s.get("name") or "")):
+            ev.append("红步名∈内容步（build/compile/coqchk/…·判类谱 A·具体件见 --logs）: %s"
+                      % s.get("name"))
+            return {"family": "A-content-red", "action": ACTION_OF["A-content-red"],
+                    "evidence": ev, "red_steps": red_names}
+
+    ev.append("step-conclusions: %s" % ",".join(
+        "%s=%s" % (s.get("name") or "(unnamed)", s.get("conclusion") or "-")
+        for s in steps))
+    ev.append("判类谱外红形·不充谱·人工看日志指认")
+    return {"family": "UNRECOGNIZED", "action": "watch-only",
+            "evidence": ev, "red_steps": red_names}
+
+
+def batch_upgrade_c(per, jobs):
+    """run 级批量判（判类谱 C）：同形内容红（A）≥2 件 → 全数升 C
+    （判例：批量 EXIT=134/Abort trap: 6·SKIP 件全过·--logs 可确证）。"""
+    idxs = [i for i, c in enumerate(per) if c["family"] == "A-content-red"]
+    if len(idxs) < 2:
+        return
+    for i in idxs:
+        c = per[i]
+        c["family"] = "C-toolchain-break"
+        c["action"] = ACTION_OF["C-toolchain-break"]
+        c["evidence"].append(
+            "run 级批量判：同形内容红 %d 件（判例 C：批量 EXIT=134/Abort trap: 6·"
+            "SKIP 件全过）·EXIT=134 确证建议 --logs" % len(idxs))
+
+
+def run_verdict(per, jobs, extra_evidence=None):
+    """run 级判类：按 RUN_FAMILY_PRECEDENCE 取先（谱外置顶）→ {family,action,
+    evidence,red_job_ids}。"""
+    reds = [(j, c) for j, c in zip(jobs, per) if c["family"] != "none"]
+    fams = set(c["family"] for _, c in reds)
+    ev = list(extra_evidence or [])
+    if not fams:
+        ev.append("全绿：0 红件（watch-only）")
+        return {"family": "none", "action": ACTION_OF["none"],
+                "evidence": ev, "red_job_ids": []}
+    fam = next(f for f in RUN_FAMILY_PRECEDENCE if f in fams)
+    ev.append("红件 %d/%d：ids=%s" % (len(reds), len(jobs),
+                                      [j.get("id") for j, _ in reds]))
+    ev.append("在册族：%s（判类序取先）" % ",".join(sorted(fams)))
+    if "UNRECOGNIZED" in fams:
+        ev.append("UNRECOGNIZED 在册·判类谱外红形人工指认优先（不充谱）")
+    return {"family": fam, "action": ACTION_OF[fam],
+            "evidence": ev, "red_job_ids": [j.get("id") for j, _ in reds]}
+
+
+# ---- 时长对表（--baseline-seconds）------------------------------------------
+
+def build_baseline_note(jobs, baseline_seconds, baseline_step):
+    """基线对表：现值（--baseline-step 名含匹配·多命中取最长者·全部在册）
+    vs 基线秒 → 倍数；≥BASELINE_SQUEEZE_RATIO → 本机挤压嫌疑非卡死注记。
+    基线步未在场或未完（skipped/未跑）→ applied=false 响亮注记（rc 仍 0）。"""
+    query = str(baseline_step or "coqchk")
+    matches = []
+    for j in jobs:
+        for s in j.get("steps") or []:
+            if query.lower() in str(s.get("name") or "").lower():
+                d = duration_sec(s.get("started_at"), s.get("completed_at"))
+                if d is not None:
+                    matches.append({"job": j.get("name"), "step": s.get("name"),
+                                    "duration_sec": d})
+    if not matches:
+        return {"applied": False, "step_query": query,
+                "baseline_seconds": baseline_seconds,
+                "reason": "基线步未在场或未完（skipped/未跑）·对表未施（响亮注记非静默）"}
+    cur = max(m["duration_sec"] for m in matches)
+    ratio = round(cur / float(baseline_seconds), 1)
+    note = "步 %s 现 %ds vs 基线 %ds = %.1fx" % (query, cur, baseline_seconds, ratio)
+    if ratio >= BASELINE_SQUEEZE_RATIO:
+        note += "（≥%.0fx＝本机挤压嫌疑非卡死·判例 coqchk 561s vs 7480s=13.3x）" \
+                % BASELINE_SQUEEZE_RATIO
+    else:
+        note += "（＜%.0fx·时长量级如常）" % BASELINE_SQUEEZE_RATIO
+    return {"applied": True, "step_query": query,
+            "baseline_seconds": baseline_seconds,
+            "matched": sorted(matches, key=lambda m: (str(m["job"]),
+                                                      str(m["step"]),
+                                                      m["duration_sec"])),
+            "current_seconds": cur, "ratio": ratio, "note": note}
+
+
+# ---- 出账 -------------------------------------------------------------------
+
+def build_report(mode, source, repo, run_id, total, jobs, per, verdict, baseline):
+    rep = {
+        "schema": SCHEMA,
+        "mode": mode,
+        "source": source,
+        "run": {"repo": repo, "run_id": run_id, "total_count": total,
+                "jobs_total": len(jobs), "red_job_ids": verdict["red_job_ids"],
+                "family": verdict["family"], "action": verdict["action"],
+                "evidence": verdict["evidence"]},
+        "jobs": [],
+        "family": verdict["family"],
+        "action": verdict["action"],
+        "evidence": verdict["evidence"],
+    }
+    for j, c in zip(jobs, per):
+        rep["jobs"].append({
+            "id": j.get("id"), "name": j.get("name"),
+            "status": j.get("status"), "conclusion": j.get("conclusion"),
+            "started_at": j.get("started_at"), "completed_at": j.get("completed_at"),
+            "duration_sec": duration_sec(j.get("started_at"), j.get("completed_at")),
+            "steps": [{
+                "number": s.get("number"), "name": s.get("name"),
+                "status": s.get("status"), "conclusion": s.get("conclusion"),
+                "started_at": s.get("started_at"),
+                "completed_at": s.get("completed_at"),
+                "duration_sec": duration_sec(s.get("started_at"),
+                                             s.get("completed_at")),
+            } for s in (j.get("steps") or [])],
+            "classification": {"family": c["family"], "action": c["action"],
+                               "evidence": c["evidence"],
+                               "red_steps": c["red_steps"]},
+        })
+    if baseline is not None:
+        rep["baseline_note"] = baseline
+    return rep
+
+
+def render_stdout(source_desc, jobs, per, verdict, baseline):
+    print("=== ROCQWASH CI-TRIAGE（20261110 判类谱·六幕实战代码化）===")
+    print(source_desc)
+    print("jobs total=%d" % len(jobs))
+    for j, c in zip(jobs, per):
+        jd = duration_sec(j.get("started_at"), j.get("completed_at"))
+        print("--- JOB #%s 「%s」 status=%s conclusion=%s dur=%s ---"
+              % (j.get("id"), j.get("name"), j.get("status"), j.get("conclusion"),
+                 fmt_dur(jd)))
+        print("    #  status     conclusion  started(UTC)         ended(UTC)"
+              "           sec    step")
+        for s in (j.get("steps") or []):
+            sd = duration_sec(s.get("started_at"), s.get("completed_at"))
+            num = s.get("number") if isinstance(s.get("number"), int) else 0
+            print("  %3d  %-9s  %-10s  %-19s  %-19s  %6s  %s"
+                  % (num, str(s.get("status") or "-")[:9],
+                     str(s.get("conclusion") or "-")[:10],
+                     str(s.get("started_at") or "-")[:19],
+                     str(s.get("completed_at") or "-")[:19],
+                     sd if sd is not None else "-",
+                     s.get("name") or "(unnamed)"))
+        print("  判类: family=%s（%s） action=%s"
+              % (c["family"], FAMILY_LABEL.get(c["family"], ""), c["action"]))
+        for e in c["evidence"]:
+            print("    - %s" % e)
+    print("=== RUN VERDICT: family=%s（%s） action=%s ==="
+          % (verdict["family"], FAMILY_LABEL.get(verdict["family"], ""),
+             verdict["action"]))
+    for e in verdict["evidence"]:
+        print("  - %s" % e)
+    if baseline is not None:
+        print("baseline: %s" % (baseline.get("note") or baseline.get("reason") or ""))
+    print("（分诊完成·红是数据非器红·exit 0）")
+
+
+# ---- 主流程 -----------------------------------------------------------------
+
+def run_triage(args):
+    """装载（线上/离线）→ 逐 job 判类 → run 级批量判 C → run 判类 → 基线对表
+    → (report, jobs, per, verdict, baseline, source_desc)。用法错 → 2·不可达 → 9。"""
+    online = args.repo is not None or args.run is not None
+    if args.offline and online:
+        raise TriageError("--offline 与 --repo/--run 互斥（二选一）", 2)
+    if not args.offline and not online:
+        raise TriageError("须给 --offline JOBS.json（离线）或 --repo ORG/REPO "
+                          "--run ID（线上）", 2)
+    if online and (args.repo is None or args.run is None):
+        raise TriageError("线上模式须 --repo ORG/REPO 与 --run ID 成对", 2)
+    if args.repo is not None and not re.match(r"^[^/\s]+/[^/\s]+$", args.repo):
+        raise TriageError("--repo 形须 ORG/REPO", 2)
+    if args.offline and args.logs:
+        raise TriageError("--logs 仅线上模式（离线零网络·日志证据走 canned 形或 "
+                          "--selftest regex 单元）", 2)
+    if args.baseline_seconds is not None and args.baseline_seconds <= 0:
+        raise TriageError("--baseline-seconds 须正整数", 2)
+
+    log_notes = {}
+    if args.offline:
+        jobs, total = load_jobs_offline(args.offline)
+        mode, source, repo, run_id = "offline", args.offline, None, None
+        source_desc = "mode=offline source=%s" % args.offline
+    else:
+        token = netrc_token(args.netrc)
+        try:
+            jobs, total = fetch_jobs_online(args.repo, args.run, token, args.timeout)
+        except ApiHTTPError as e:
+            raise TriageError("API HTTP %d: %s（GET jobs 失败·%s）"
+                              % (e.code, e.body.strip()[:160], e.url), 9)
+        mode, source, repo, run_id = "online", jobs_url(args.repo, args.run), \
+            args.repo, args.run
+        source_desc = ("mode=online repo=%s run=%d api=%s token=***MASKED***"
+                       "（netrc machine github.com·%s）"
+                       % (repo, run_id, source, args.netrc))
+
+    logs_by_id = {}
+    if mode == "online" and args.logs:
+        reds = [j for j in jobs
+                if j.get("conclusion") in ("failure", "timed_out", "cancelled")
+                and (j.get("steps") or [])]
+        if len(reds) > LOGS_FETCH_CAP:
+            log_notes["_meta"] = "logs 抓取帽 %d：仅抓前 %d 红件（余 %d 件未抓·响亮非静默）" \
+                % (LOGS_FETCH_CAP, LOGS_FETCH_CAP, len(reds) - LOGS_FETCH_CAP)
+        for j in reds[:LOGS_FETCH_CAP]:
+            text, note = fetch_job_log(repo, j.get("id"), token, args.timeout)
+            logs_by_id[j.get("id")] = text or ""
+            if note:
+                log_notes[j.get("id")] = note
+
+    per = [classify(j, logs_by_id.get(j.get("id"))) for j in jobs]
+    for j, c in zip(jobs, per):
+        note = log_notes.get(j.get("id"))
+        if note:
+            c["evidence"].append(note)
+    batch_upgrade_c(per, jobs)
+    verdict = run_verdict(per, jobs, extra_evidence=[
+        v for k, v in sorted(log_notes.items()) if k == "_meta"])
+    baseline = None
+    if args.baseline_seconds is not None:
+        baseline = build_baseline_note(jobs, args.baseline_seconds,
+                                       args.baseline_step)
+    report = build_report(mode, source, repo, run_id, total, jobs, per,
+                          verdict, baseline)
+    return report, jobs, per, verdict, baseline, source_desc
+
+
+def main():
+    argv = sys.argv[1:]
+    if "--selftest" in argv:
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+        sys.exit(selftest())
+    ap = argparse.ArgumentParser(
+        prog=PROG,
+        description="CI 红炉分诊器（20261110 判类谱代码化）——步级表＋五族＋绿炉"
+                    "判类＋处置 action＋可选时长基线对表")
+    ap.add_argument("--offline", default=None, metavar="JOBS.json",
+                    help="离线模式：canned jobs JSON（同 API 真形）——selftest 与"
+                         "断网环境走此路")
+    ap.add_argument("--repo", default=None, metavar="ORG/REPO",
+                    help="线上模式：仓库形 ORG/REPO（与 --run 成对）")
+    ap.add_argument("--run", type=int, default=None, metavar="ID",
+                    help="线上模式：Actions run id（与 --repo 成对）")
+    ap.add_argument("--logs", action="store_true",
+                    help="线上模式加抓红件日志抓关键行入证据（仅线上·离线拒）")
+    ap.add_argument("--netrc",
+                    default=os.path.join(os.path.expanduser("~"), ".netrc"),
+                    metavar="PATH",
+                    help="netrc 路径（默认 ~/.netrc·machine github.com 第 6 列"
+                         "=token）")
+    ap.add_argument("--baseline-seconds", type=int, default=None, metavar="N",
+                    help="同 sync 历史时长秒（判例 coqchk 561s）→ 出倍数对表")
+    ap.add_argument("--baseline-step", default="coqchk", metavar="NAME",
+                    help="对表步名（名含匹配·默认 coqchk=判例形）")
+    ap.add_argument("--timeout", type=int, default=30, metavar="S",
+                    help="单请求超时秒（默认 30）")
+    ap.add_argument("--json", default=None, metavar="out.json",
+                    help="分诊 report 出账（rocqwash-ci-triage/1·sort_keys）")
+    args = ap.parse_args(argv)
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
+    try:
+        report, jobs, per, verdict, baseline, source_desc = run_triage(args)
+    except ApiHTTPError as e:
+        print("FAIL-LOUD: API HTTP %d: %s（%s）" % (e.code, e.body.strip()[:200],
+                                                    e.url), file=sys.stderr)
+        sys.exit(9)
+    except TriageError as e:
+        print("FAIL-LOUD: %s" % e, file=sys.stderr)
+        sys.exit(e.code)
+
+    render_stdout(source_desc, jobs, per, verdict, baseline)
+    if args.json:
+        with io.open(args.json, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(report, fh, indent=1, ensure_ascii=False, sort_keys=True)
+        print("json ->", args.json)
+    sys.exit(0)
+
+
+# ---- 自测（--offline fixtures·零真网络零编译·纯逻辑向量）---------------------
+
+def selftest():
+    """内嵌冻结向量组：五族＋绿炉六 canned 样张全命中＋基线 13.3x 判例＋基线步
+    缺席响亮注记＋分类器单元（关键行 regex 正负判·连坐/在飞/UNRECOGNIZED 分流·
+    E 勿当内容红负证）＋netrc 解析单元＋确定性字节恒同＋CLI 四码。
+    全程 --offline fixtures 零真网络零编译。"""
+    import shutil
+    import subprocess
+    import tempfile
+
+    def run(args):
+        p = subprocess.run([sys.executable, "-B",
+                            os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                         PROG + ".py")] + args,
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p.stdout = p.stdout.decode("utf-8", errors="replace") \
+            if isinstance(p.stdout, bytes) else (p.stdout or "")
+        return p
+
+    fxdir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         "tests", "fixtures")
+
+    def fx(name):
+        return os.path.join(fxdir, "ci_triage_%s.json" % name)
+
+    tmp = tempfile.mkdtemp(prefix="rocqwash_ci_triage_self_")
+    try:
+        # 〔一〕五族＋绿炉六样张全命中（family/action 逐张咬合）
+        six = [("A_content_red", "A-content-red", "fix-content"),
+               ("B_netred", "B-netred", "rerun-after-stable-window"),
+               ("C_toolchain_break", "C-toolchain-break", "restore-toolchain"),
+               ("D_queue_wall", "D-queue-wall", "queue-etiquette"),
+               ("E_coqchk_skipped", "E-coqchk-skipped",
+                "rerun-after-stable-window"),
+               ("green", "none", "watch-only")]
+        outs = {}
+        for stem, fam, act in six:
+            path = fx(stem)
+            assert os.path.isfile(path), "fixture 缺失（六件套须在卷）: %s" % path
+            out = os.path.join(tmp, stem + ".json")
+            p = run(["--offline", path, "--json", out])
+            assert p.returncode == 0, (stem, p.stdout[-400:])
+            rep = json.load(io.open(out, encoding="utf-8"))
+            assert rep["schema"] == SCHEMA, rep.get("schema")
+            assert rep["family"] == fam and rep["action"] == act, \
+                (stem, rep["family"], rep["action"])
+            outs[stem] = out
+        # A：红步名入 evidence·且非 B/E（内容红正判）
+        repA = json.load(io.open(outs["A_content_red"], encoding="utf-8"))
+        cjA = repA["jobs"][0]["classification"]
+        assert cjA["family"] == "A-content-red" and any(
+            e.startswith("failure-step: Build") for e in cjA["evidence"]), cjA
+        # B：checkout 红步归 B；cancelled 连坐形（有步骤零红步）亦归 B
+        repB = json.load(io.open(outs["B_netred"], encoding="utf-8"))
+        assert repB["jobs"][0]["classification"]["family"] == "B-netred"
+        assert repB["jobs"][1]["classification"]["family"] == "B-netred", \
+            "连坐形应归 B"
+        assert any("连坐" in e
+                   for e in repB["jobs"][1]["classification"]["evidence"])
+        # C：run 级批量升 C（三红 job 全 C·绿控制件仍 none·批量注记在 per-job 证据）
+        repC = json.load(io.open(outs["C_toolchain_break"], encoding="utf-8"))
+        famsC = [j["classification"]["family"] for j in repC["jobs"]]
+        assert famsC == ["C-toolchain-break"] * 3 + ["none"], famsC
+        assert any("批量" in e
+                   for e in repC["jobs"][0]["classification"]["evidence"]), repC["jobs"][0]
+        # D：零步骤（steps=[]）在册·证据含 steps=0
+        repD = json.load(io.open(outs["D_queue_wall"], encoding="utf-8"))
+        assert repD["jobs"][0]["steps"] == []
+        assert "steps=0" in "".join(
+            repD["jobs"][0]["classification"]["evidence"])
+        # E：E 签名命中·且勿当内容红（family≠A·coqchk skipped 注记在册）
+        repE = json.load(io.open(outs["E_coqchk_skipped"], encoding="utf-8"))
+        cjE = repE["jobs"][0]["classification"]
+        assert cjE["family"] == "E-coqchk-skipped" \
+            and cjE["family"] != "A-content-red", cjE
+        assert any("coqchk" in e for e in cjE["evidence"]), cjE
+        # 绿炉：family=none·action=watch-only
+        repG = json.load(io.open(outs["green"], encoding="utf-8"))
+        assert repG["family"] == "none" and repG["action"] == "watch-only"
+
+        # 〔二〕基线对表：绿炉 COQCHK 7480s vs 基线 561s = 13.3x（判例）
+        out = os.path.join(tmp, "baseline.json")
+        p = run(["--offline", fx("green"), "--baseline-seconds", "561",
+                 "--json", out])
+        assert p.returncode == 0, p.stdout[-400:]
+        bn = json.load(io.open(out, encoding="utf-8"))["baseline_note"]
+        assert bn["applied"] is True and bn["current_seconds"] == 7480 \
+            and bn["ratio"] == 13.3, bn
+        assert "本机挤压嫌疑非卡死" in bn["note"] and "561" in bn["note"], bn
+        # 基线步缺席（A 夹具 COQCHK skipped）→ applied=False 响亮注记·rc 仍 0
+        p = run(["--offline", fx("A_content_red"), "--baseline-seconds", "561",
+                 "--json", out])
+        assert p.returncode == 0, p.stdout[-400:]
+        bn = json.load(io.open(out, encoding="utf-8"))["baseline_note"]
+        assert bn["applied"] is False and "响亮" in bn["reason"], bn
+
+        # 〔三〕确定性：C 夹具同输入重跑 --json 字节级恒同
+        before = io.open(outs["C_toolchain_break"], "rb").read()
+        p = run(["--offline", fx("C_toolchain_break"),
+                 "--json", outs["C_toolchain_break"]])
+        assert p.returncode == 0, p.stdout[-400:]
+        assert io.open(outs["C_toolchain_break"], "rb").read() == before, \
+            "json 字节漂移＝违例"
+
+        # 〔四〕CLI 四码＋互斥形
+        p = run(["--help"])
+        assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
+        p = run(["--bogus"])
+        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        p = run([])
+        assert p.returncode == 2, "缺模式应 rc=2 实测 %d" % p.returncode
+        p = run(["--offline", os.path.join(tmp, "nope.json")])
+        assert p.returncode == 9, "缺 jobs 文件应 rc=9 实测 %d" % p.returncode
+        p = run(["--offline", fx("green"), "--logs"])
+        assert p.returncode == 2, "--logs 离线拒应 rc=2 实测 %d" % p.returncode
+        p = run(["--repo", "org/repo"])
+        assert p.returncode == 2, "repo 缺 run 应 rc=2 实测 %d" % p.returncode
+        p = run(["--repo", "justname", "--run", "1"])
+        assert p.returncode == 2, "repo 形错应 rc=2 实测 %d" % p.returncode
+        p = run(["--offline", fx("green"), "--repo", "o/r", "--run", "1"])
+        assert p.returncode == 2, "双模式互斥应 rc=2 实测 %d" % p.returncode
+
+        # 〔五〕分类器单元（零网络·直接调）
+        def mkjob(**kw):
+            base = {"id": 1, "name": "j", "status": "completed",
+                    "conclusion": "failure",
+                    "started_at": "2026-11-10T08:00:00Z",
+                    "completed_at": "2026-11-10T08:01:00Z", "steps": []}
+            base.update(kw)
+            return base
+
+        def mkstep(n, name, concl, **kw):
+            d = {"number": n, "name": name, "status": "completed",
+                 "conclusion": concl,
+                 "started_at": "2026-11-10T08:00:01Z",
+                 "completed_at": "2026-11-10T08:00:30Z"}
+            d.update(kw)
+            return d
+
+        c = classify(mkjob(conclusion="success"))
+        assert c["family"] == "none" and c["action"] == "watch-only"
+        c = classify(mkjob(status="in_progress", conclusion=None))
+        assert c["family"] == "none" and any("在飞" in e for e in c["evidence"]), c
+        c = classify(mkjob(conclusion="cancelled"))
+        assert c["family"] == "D-queue-wall" and c["action"] == "queue-etiquette"
+        c = classify(mkjob(conclusion="cancelled",
+                           steps=[mkstep(1, "Build (coqc batch)", "cancelled")]))
+        assert c["family"] == "B-netred" and any("连坐" in e for e in c["evidence"]), c
+        c = classify(mkjob(steps=[mkstep(1, "Build (coqc batch)", "failure")]))
+        assert c["family"] == "A-content-red"
+        c = classify(mkjob(id=7, steps=[mkstep(1, "Build (coqc batch)", "failure")]),
+                     log_text="EXIT=134\nAbort trap: 6\n")
+        assert c["family"] == "C-toolchain-break", c
+        c = classify(mkjob(id=11, steps=[mkstep(1, "Build (coqc batch)", "failure")]),
+                     log_text="Error: LibX.v:12: The reference eqR lacks\nCOQCHK_EXIT=1\n")
+        assert c["family"] == "A-content-red" \
+            and any("log[Error" in e for e in c["evidence"]) \
+            and any("COQCHK_EXIT=1" in e for e in c["evidence"]), c
+        c = classify(mkjob(steps=[mkstep(1, "Checkout repository", "failure")]))
+        assert c["family"] == "B-netred"
+        e_steps = [mkstep(1, "Build (coqc batch)", "success"),
+                   mkstep(2, "Upload artifact (gate2 ledger)", "failure"),
+                   mkstep(3, "COQCHK", "skipped",
+                          started_at=None, completed_at=None)]
+        c = classify(mkjob(id=9, steps=e_steps))
+        assert c["family"] == "E-coqchk-skipped", c
+        c = classify(mkjob(id=9, steps=e_steps),
+                     log_text="GATE-BANNER-ABSENT\n")
+        assert c["family"] == "E-coqchk-skipped" and any(
+            "GATE-BANNER-ABSENT" in e for e in c["evidence"]), c
+        c = classify(mkjob(steps=[mkstep(1, "Upload artifact (gate2 ledger)",
+                                         "failure"),
+                                  mkstep(2, "COQCHK", "success")]))
+        assert c["family"] == "B-netred", "上传红无 E 签名（coqchk 非 skipped）→B"
+        c = classify(mkjob(steps=[mkstep(1, "Report coverage", "failure")]))
+        assert c["family"] == "UNRECOGNIZED" and c["action"] == "watch-only", c
+
+        # 〔六〕关键行 regex 正负判（判类谱词面冻结向量）
+        for s in ["Error: LibX.v:12: syntax", "ORDER-MISSING: names",
+                  "COQCHK_EXIT=1", "公理总数=3", "task FAIL at step 2"]:
+            assert RED_CONTENT_RE.search(s), "内容红正例应命中: %s" % s
+        for s in ["COQCHK_EXIT=0", "公理总数=0", "0 FAILURES found",
+                  "no error today", "all good"]:
+            assert not RED_CONTENT_RE.search(s), "内容红负例不应命中: %s" % s
+        for s in ["fatal: unable to access 'https://github.com/o/r.git/'",
+                  "connect to github.com port 443 failed",
+                  "ssh: Connection was reset",
+                  "upload ENOTFOUND on github.com",
+                  "Upload progress stalled at 90%",
+                  "403 Forbidden: job is completed"]:
+            assert RED_NET_RE.search(s), "网络窗正例应命中: %s" % s
+        for s in ["Upload artifact success (3 files)",
+                  "listening on port 8080", "connected ok"]:
+            assert not RED_NET_RE.search(s), "网络窗负例不应命中: %s" % s
+        for s in ["EXIT=134", "Abort trap: 6"]:
+            assert RED_ABORT_RE.search(s), "断链正例应命中: %s" % s
+        for s in ["EXIT=0", "EXIT=139", "Abort trap: 8"]:
+            assert not RED_ABORT_RE.search(s), "断链负例不应命中: %s" % s
+        assert GATE_BANNER_ABSENT_RE.search("GATE-BANNER-ABSENT")
+        assert not GATE_BANNER_ABSENT_RE.search("gate banner ok")
+
+        # 〔七〕netrc 解析单元（单行 6 列形＋多行形＋负例·零网络）
+        nf = os.path.join(tmp, "netrc")
+        with io.open(nf, "w", encoding="utf-8") as fh:
+            fh.write("machine api.github.com login octo password AAAA\n"
+                     "machine github.com login octocat password TOK-1234\n")
+        assert netrc_token(nf) == "TOK-1234", "单行 6 列形应取 github.com 行第 6 列"
+        with io.open(nf, "w", encoding="utf-8") as fh:
+            fh.write("machine github.com\nlogin octocat\npassword TOK-9\n")
+        assert netrc_token(nf) == "TOK-9", "多行形应同解析"
+        with io.open(nf, "w", encoding="utf-8") as fh:
+            fh.write("machine gitlab.com login x password Y\n")
+        try:
+            netrc_token(nf)
+            assert False, "无 github.com 条目应 fail-loud"
+        except TriageError as e:
+            assert e.code == 9, e.code
+
+        print("CI-TRIAGE-SELFTEST PASS: 五族+绿炉六样张全命中/基线 13.3x 判例+缺席"
+              "响亮注记/分类器单元（regex 正负·连坐·在飞·E 勿当内容红·UNRECOGNIZED）/"
+              "netrc 解析/确定性字节恒同/CLI 四码 全过")
+        return 0
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    main()

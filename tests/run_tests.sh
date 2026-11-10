@@ -77,6 +77,17 @@
 #         chain/sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）
 #         ＋零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
 #         夹具只读输出全落 mktemp·零触真仓）
+#       tools/toolchain_dyld_doctor.py dyld 工具链断链诊断器（tests/
+#         test_toolchain_dyld_doctor.py·最小自测壳两判：--selftest 冻结标记
+#         DYLD-DOCTOR-SELFTEST PASS＋--help 冒烟·零真 otool 零编译零网络零写盘）
+#       tools/ci_triage.py CI 红炉分诊器（tests/test_ci_triage.py·最小自测壳
+#         两判：--selftest 冻结标记 CI-TRIAGE-SELFTEST PASS＋--help 冒烟·
+#         零网络零写盘）
+#       tools/net_probe.py 网络窗探针（tests/test_net_probe.py·最小自测壳两判：
+#         --selftest 冻结标记 NET-PROBE-SELFTEST PASS＋--help 冒烟·零网络零写盘）
+#       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
+#         九节：selftest/coq 夹具组/陷阱组同名不同形/重锚 md5 冻结向量/干跑-
+#         apply-幂等/json 确定性/CLI 四码＋git 三 ref 直读·零触真仓零网络零编译）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -152,7 +163,11 @@ t_chain_graph \
 t_ledger_sync \
 t_comment_pack \
 t_dual_scan \
-t_cw_entry"
+ t_cw_entry \
+ t_registry_union \
+ t_toolchain_dyld_doctor \
+ t_ci_triage \
+ t_net_probe"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -413,6 +428,36 @@ t_cw_entry() {
   # 零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
   # 夹具只读输出全落 mktemp·零触真仓零网络）
   bash "$REPO/tests/test_cw_entry.sh"
+}
+
+t_registry_union() {
+  # 20261110 实战手术工具化：注册册 union 手术器（tools/registry_union.py·
+  # tests/test_registry_union.py 九节：selftest 八判/coq 夹具组/陷阱组同名不同形
+  # 对 merge-base 必过滤/重锚 md5 冻结向量 1414cddb/A2·A3 负判零写盘/干跑-apply-
+  # 幂等/json 确定性/CLI 四码＋用法对偶/git 三 ref 直读·夹具只读输出全落 mktemp·
+  # 零触真仓零网络零编译）
+  "$PY" -B "$REPO/tests/test_registry_union.py"
+}
+
+t_toolchain_dyld_doctor() {
+  # 20261111 集成席挂接：dyld 工具链断链诊断器（tools/toolchain_dyld_doctor.py·
+  # 铸席 --selftest 全链离线向量组已自证·tests/test_toolchain_dyld_doctor.py
+  # 最小自测壳两判：--selftest 冻结标记＋--help 冒烟·零真 otool 零编译零网络）
+  "$PY" -B "$REPO/tests/test_toolchain_dyld_doctor.py"
+}
+
+t_ci_triage() {
+  # 20261111 集成席挂接：CI 红炉分诊器（tools/ci_triage.py·五族+绿炉判类谱·
+  # 铸席 --selftest 离线样张已自证·tests/test_ci_triage.py 最小自测壳两判：
+  # --selftest 冻结标记＋--help 冒烟·零网络零写盘）
+  "$PY" -B "$REPO/tests/test_ci_triage.py"
+}
+
+t_net_probe() {
+  # 20261111 集成席挂接：网络窗探针（tools/net_probe.py·双探稳窗律·铸席
+  # --selftest 零网络向量组已自证·tests/test_net_probe.py 最小自测壳两判：
+  # --selftest 冻结标记＋--help 冒烟·零网络零写盘）
+  "$PY" -B "$REPO/tests/test_net_probe.py"
 }
 
 # ---------- 汇总执行 ----------

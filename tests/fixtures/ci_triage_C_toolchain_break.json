@@ -1,0 +1,71 @@
+{
+ "total_count": 4,
+ "jobs": [
+  {
+   "id": 2011110301,
+   "run_id": 9026111003,
+   "name": "gate7 / shard-1",
+   "status": "completed",
+   "conclusion": "failure",
+   "runner_name": "ubuntu-24.04",
+   "started_at": "2026-11-10T08:00:00Z",
+   "completed_at": "2026-11-10T08:04:02Z",
+   "steps": [
+    {"number": 1, "name": "Set up job", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:01Z", "completed_at": "2026-11-10T08:00:04Z"},
+    {"number": 2, "name": "Checkout repository", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:04Z", "completed_at": "2026-11-10T08:00:09Z"},
+    {"number": 3, "name": "Build (coqc batch)", "status": "completed", "conclusion": "failure", "started_at": "2026-11-10T08:00:09Z", "completed_at": "2026-11-10T08:04:00Z"},
+    {"number": 4, "name": "COQCHK", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null},
+    {"number": 5, "name": "Upload artifact (gate2 ledger)", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null}
+   ]
+  },
+  {
+   "id": 2011110302,
+   "run_id": 9026111003,
+   "name": "gate7 / shard-2",
+   "status": "completed",
+   "conclusion": "failure",
+   "runner_name": "ubuntu-24.04",
+   "started_at": "2026-11-10T08:00:00Z",
+   "completed_at": "2026-11-10T08:04:11Z",
+   "steps": [
+    {"number": 1, "name": "Set up job", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:01Z", "completed_at": "2026-11-10T08:00:04Z"},
+    {"number": 2, "name": "Checkout repository", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:04Z", "completed_at": "2026-11-10T08:00:09Z"},
+    {"number": 3, "name": "Build (coqc batch)", "status": "completed", "conclusion": "failure", "started_at": "2026-11-10T08:00:09Z", "completed_at": "2026-11-10T08:04:09Z"},
+    {"number": 4, "name": "COQCHK", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null},
+    {"number": 5, "name": "Upload artifact (gate2 ledger)", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null}
+   ]
+  },
+  {
+   "id": 2011110303,
+   "run_id": 9026111003,
+   "name": "gate7 / shard-3",
+   "status": "completed",
+   "conclusion": "failure",
+   "runner_name": "ubuntu-24.04",
+   "started_at": "2026-11-10T08:00:00Z",
+   "completed_at": "2026-11-10T08:03:58Z",
+   "steps": [
+    {"number": 1, "name": "Set up job", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:01Z", "completed_at": "2026-11-10T08:00:04Z"},
+    {"number": 2, "name": "Checkout repository", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:04Z", "completed_at": "2026-11-10T08:00:09Z"},
+    {"number": 3, "name": "Build (coqc batch)", "status": "completed", "conclusion": "failure", "started_at": "2026-11-10T08:00:09Z", "completed_at": "2026-11-10T08:03:56Z"},
+    {"number": 4, "name": "COQCHK", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null},
+    {"number": 5, "name": "Upload artifact (gate2 ledger)", "status": "completed", "conclusion": "skipped", "started_at": null, "completed_at": null}
+   ]
+  },
+  {
+   "id": 2011110304,
+   "run_id": 9026111003,
+   "name": "gate7 / skip-files-control",
+   "status": "completed",
+   "conclusion": "success",
+   "runner_name": "ubuntu-24.04",
+   "started_at": "2026-11-10T08:00:00Z",
+   "completed_at": "2026-11-10T08:02:41Z",
+   "steps": [
+    {"number": 1, "name": "Set up job", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:01Z", "completed_at": "2026-11-10T08:00:04Z"},
+    {"number": 2, "name": "Checkout repository", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:04Z", "completed_at": "2026-11-10T08:00:09Z"},
+    {"number": 3, "name": "Skip-files census (green control)", "status": "completed", "conclusion": "success", "started_at": "2026-11-10T08:00:09Z", "completed_at": "2026-11-10T08:02:39Z"}
+   ]
+  }
+ ]
+}
