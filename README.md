@@ -56,7 +56,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（54 例）/ CI 工作流占位 — test suite (54 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（56 例）/ CI 工作流占位 — test suite (56 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -174,6 +174,29 @@ rocqwash/
 > 全数留 pending 不铸·夹具 cure39_t13/cure39_plain）。`cw.sh` 入口扩至十七工具
 > （doc-lint 路由·四处同步）；自测套件扩至 54 例（t_relay_e2e 三判 e2e＋
 > t_doclint 最小自测壳三判·缺壳集成席自补）。
+> v40 增补（20261111·正典化巩固波·四席并铸＋集成席收口）：`tools/baseline_diff.py`
+> 堵账基线对比器（两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/
+> resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/
+> stable/incomparable·账面自洽预检拒手编基线·候选面四元组两账比对跨集如实拒判·
+> timing 段不入对比＝基线唯一非确定段——schema rocqwash-baseline-diff/1·红是
+> 数据非器红）＋`examples/baselines/` 堵账基线入仓规程（命名律
+> audit-<域>-<yyyymmdd>.json·真树干跑产·timing 注记·工装席铸）；破坏面复核矩阵
+> `tests/test_destructive_matrix.py` 17 行拒写判据一行一拒写（会写盘器×写面×护栏
+> 锚 file:line：unclog×4/wash_shape×4/pushci×3/cw_sentinel×2/registry_union×2/
+> cure_applier×2·全 tmp fixture＋injector 罐装零真网络零真仓零真编译·矩阵红＝
+> 护栏破响亮列破口·破坏面席铸）；稳态三器扩容：cw_sentinel `--emit-max-bytes`
+> JSONL 轮转（.1/.2 保留 2 代·seq 跨代续号）＋`--rebuild-state` 崩溃恢复
+> （损坏 state 红拒 9 禁静默重建·显式重建唯一合法路）、unclog `--state-file`
+> 同形哨态 seen 差分（red-new 事件 only-new·与 cw_sentinel state 同形互读写·
+> --rounds/--loop 与 --audit/--state-file 两组互斥 rc=2·损坏红拒 9）、
+> wash_shape --loop 事件流同形对齐（rocqwash-sentinel-event/1·seq 跨进程续号
+> ＋ts=off 注记）＋plan 跨轮缓存（源件 md5 变→重算·恒同→hit 复用·plan_cache
+> 响亮出账）（稳态席铸·selftest 十二/十三/十八矢量扩容）；`cw.sh` 入口扩至
+> 二十工具（baseline-diff 路由·六处同步含 legal 两清单与计数行）；服务层总览
+> [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)
+> （三链一图全景＋器面索引·docs 席铸）；自测套件扩至 56 例
+> （t_destructive_matrix 17 行判据＋t_baseline_diff 最小自测壳三判·缺壳集成席
+> 自补）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

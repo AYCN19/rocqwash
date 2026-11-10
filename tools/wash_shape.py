@@ -55,11 +55,26 @@ plan-miss（任一无对应式项在册即 plan-miss——非器力所能及·�
 接口纪律（v37 三器共同）：JSON-in/JSON-out（--json report·schema rocqwash-shape/1·
 sort_keys 确定性·无时间戳·同输入重跑字节恒同）；退出码 0=clean/shaped·1=partial/
 plan-miss（洗未尽·响亮出账）·2=用法/断言（冻结件红拒·引擎形外退出·JSON 畸形）·
-9=缺；--once/--loop 双模（--loop 实时哨态·--interval 可调·JSONL 事件流逐轮一行·
---max-rounds 界定·--apply 可与 loop 并用逐轮落刀）；离线可测（--injector 子进程
+9=缺；--once/--loop 双模（--loop 实时哨态·--interval 可调·--max-rounds 界定·
+--apply 可与 loop 并用逐轮落刀）；离线可测（--injector 子进程
 调用层罐装 {rc,stdout,report}·--sleep-scale 缩睡·--selftest 全矢量零真网络零真
 编译）；编排而非重造（五洗引擎全 subprocess 调用·先读各器 CLI 与 JSON schema 再
 编排）。
+
+--loop 事件流（同形对齐·承 cw_sentinel 事件形——三器共同事件解析面）：
+  JSONL 逐行 schema=rocqwash-sentinel-event/1·键 sort_keys 规范式·seq 事件流
+  内单调（--events 在位以现有行数为基跨进程续号·缺省进程内从 1）·kind∈
+  {round,stop}·ts 由 time 钟出（--sleep-scale 0 时关 ts·note「ts=off」注记
+  ——确定性同哨）；stdout 镜像恒流＋--events 追加落账（逐行 flush+fsync）。
+  round 事件携 round/apply/verdict/五洗计数/n_applied/plan_cache_hit；
+  stop 事件携 round/reason=max-rounds/verdict。
+plan 缓存失效语义（--loop 跨轮·源件 md5 变→plan 重算）：失效域＝范围件
+  （--file/--dir 收件）∪⑤锚实体件（order.txt 行锚实体·anchor_src 解析——
+  实体 md5 变/实体出现消失/歧义化亦域变）的 {abspath: md5} 集；逐轮重测域
+  （廉价 md5·引擎零重跑）：域恒同→复用上轮 plan（缓存命中·命中轮五洗引擎
+  零重判）；任一源件 md5 变→失效重算并刷新域。首轮必重算；--once 单段不走
+  缓存；rescan 恒直算（落刀后新鲜盘面·不复用）。响亮出账＝report["plan_cache"]
+  {hit}（仅 loop 模式在账）＋round 事件 plan_cache_hit。
 
 用法（全部路径参数化·零硬编码绝对路径）：
   python3 tools/wash_shape.py --file A.v [--file B.v ...] [--json OUT]   # plan 段
@@ -73,9 +88,10 @@ plan-miss（洗未尽·响亮出账）·2=用法/断言（冻结件红拒·引�
 退出码：0=clean/shaped；1=partial/plan-miss（洗未尽·响亮出账）；2=用法错/断言炸
 （冻结件红拒/引擎形外退出/JSON 畸形/--header-map 与 --header-map-preset 同槽
 互斥）；9=路径缺失（--file/--dir/引擎件/--header-map/--header-map-preset 模板库/
-env ROCWASH_HEADER_MAP/--injector）。schema=rocqwash-shape/1。
+env ROCWASH_HEADER_MAP/--injector/--events 出账写败）。schema=rocqwash-shape/1。
 """
 import argparse
+import datetime
 import hashlib
 import io
 import json
@@ -89,6 +105,7 @@ import time
 
 PROG = "wash_shape"
 SCHEMA = "rocqwash-shape/1"
+EVENT_SCHEMA = "rocqwash-sentinel-event/1"   # --loop 事件流同形承 cw_sentinel
 
 # 五洗 kind（正典序·--only 序号映射 1..5）
 KIND_LEXICAL = "lexical"    # ①词面洗
@@ -171,6 +188,37 @@ def md5_of(path):
 def sleep_scaled(sec, scale):
     """time.sleep(sec*scale)·scale=0 零真睡（selftest 矢量依赖·承 pushci 同款）。"""
     time.sleep(max(0.0, float(sec) * float(scale)))
+
+
+def now_iso():
+    """UTC ISO8601 秒精度 Z 形（事件 ts 字段·承 cw_sentinel.now_iso 同形）。"""
+    return datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+
+
+def make_event(seq, kind, fields, ts_enabled):
+    """--loop 事件组装（同形承 cw_sentinel.make_event）：schema/seq/kind 头＋
+    fields；ts 由 time 钟出·ts_enabled=False（--sleep-scale 0）时关 ts 并以
+    note「ts=off」注记（确定性·fields 自带 note 时并入不打架）。"""
+    ev = {"schema": EVENT_SCHEMA, "seq": seq, "kind": kind}
+    ev.update(fields)
+    if ts_enabled:
+        ev["ts"] = now_iso()
+    else:
+        off = "ts=off（--sleep-scale 0·确定性输出）"
+        base = ev.pop("note", None)
+        ev["note"] = (off + "｜" + base) if base else off
+    return ev
+
+
+def events_seq_base(path):
+    """--events 现有非空行数（seq 跨进程续基·承 cw_sentinel emit_seq_base
+    同律——追加流以现有行数为基续号）。读败 → 9。"""
+    try:
+        with io.open(path, "r", encoding="utf-8") as fh:
+            return sum(1 for ln in fh if ln.strip())
+    except OSError as e:
+        raise MissingInput("--events 读基失败: %s (%s)" % (path, e))
 
 
 def first_code_offset(text):
@@ -465,6 +513,10 @@ class WashShape(object):
         self.frozen_abs, self.frozen_rel, self.frozen_source = \
             self._load_frozen_roster()
         self.excludes = list(args.exclude or [])
+        # --loop 事件流 seq（跨进程续基在 run_loop 定）＋plan 跨轮缓存
+        self._seq = 1
+        self._plan_cache = None
+        self._plan_md5s = None
 
     # ---- 数据面 ----
 
@@ -1049,6 +1101,62 @@ class WashShape(object):
         entries = [self.plan_file(p) for p in self.files]
         return {"files": entries, "stats": stats_of(entries)}
 
+    # ---- plan 缓存（--loop 跨轮·源件 md5 变→重算）----------------------------
+
+    def plan_scope_md5s(self):
+        """plan 缓存失效域 {abspath: md5}：范围件（--file/--dir 收件）∪⑤锚
+        实体件（order.txt 行锚实体·anchor_src 解析——实体 md5 变亦源变）。
+        实体出现/消失/歧义化以记号键入域（域集变即失效）；件不可读记 None
+        （态变触发重算·fail-soft 域账）。逐轮重测此域＝廉价 md5（五洗引擎
+        零重跑）·域恒同→缓存命中。"""
+        out = {}
+        for p in self.files:
+            ap = os.path.abspath(p)
+            try:
+                out[ap] = md5_of(p)
+            except OSError:
+                out[ap] = None
+        asrc = self.args.anchor_src
+        for p in self.files:
+            if os.path.basename(p) != "order.txt":
+                continue
+            try:
+                with open(p, "rb") as fh:
+                    text = fh.read().decode("utf-8", errors="replace")
+            except OSError:
+                continue            # 件不可读已在范围域记 None
+            anchor_src = asrc or os.path.dirname(os.path.abspath(p))
+            for ln in text.split("\n"):
+                head = ln.split("#", 1)[0].strip()
+                if not head or ANCHOR_RE.search(ln) is None:
+                    continue
+                module = head[:-2] if head.endswith(".v") else head
+                ent = resolve_entity(module, anchor_src)
+                if ent is None:
+                    out["<missing:%s>" % module] = None
+                elif ent.startswith("AMBIGUOUS:"):
+                    out[ent] = ent  # 歧义集串本身入域（集变即域变）
+                else:
+                    ap = os.path.abspath(ent)
+                    try:
+                        out[ap] = md5_of(ent)
+                    except OSError:
+                        out[ap] = None
+        return out
+
+    def plan_cached(self):
+        """plan 跨轮缓存（--loop 哨态）：失效域（plan_scope_md5s）恒同→复用
+        上轮 plan（缓存命中·五洗引擎零重判）；任一源件 md5 变→失效重算并
+        刷新域（源件 md5 变→plan 重算·钦定语义）。首轮缓存空必重算。
+        返回 (plan, hit)。"""
+        cur = self.plan_scope_md5s()
+        if self._plan_cache is not None and cur == self._plan_md5s:
+            return self._plan_cache, True
+        plan = self.compute_plan()
+        self._plan_cache = plan
+        self._plan_md5s = cur
+        return plan, False
+
     # ---- 逐洗施（apply·两段第二段）----
 
     def apply_lexical(self, path):
@@ -1204,7 +1312,8 @@ class WashShape(object):
             return VERDICT_SHAPED
         return VERDICT_CLEAN
 
-    def report_of(self, plan, applied, rescan, verdict, excluded):
+    def report_of(self, plan, applied, rescan, verdict, excluded,
+                  cache_hit=None):
         rep = {
             "schema": SCHEMA,
             "mode": "loop" if self.args.loop else
@@ -1220,6 +1329,8 @@ class WashShape(object):
                                                         x["reason"]))},
             "verdict": verdict,
         }
+        if cache_hit is not None:   # --loop 跨轮 plan 缓存（响亮出账）
+            rep["plan_cache"] = {"hit": bool(cache_hit)}
         if self.args.apply:
             rep["apply"] = {"applied": applied,
                             "rescan": project_plan(rescan) if rescan else None}
@@ -1246,9 +1357,13 @@ class WashShape(object):
     # ---- 主流程 ----
 
     def one_pass(self, round_no=None):
-        """一段完整流水：plan→(--apply? 落刀→复跑五洗复核)→(verdict, report)。
-        返回 (verdict, report, n_applied)。"""
-        plan = self.compute_plan()
+        """一段完整流水：plan（--loop 走跨轮缓存·源件 md5 恒同命中复用/任一
+        变重算；--once 直算不走缓存）→(--apply? 落刀→复跑五洗复核——rescan
+        恒直算不复用缓存)→(verdict, report, n_applied)。"""
+        if self.args.loop:
+            plan, cache_hit = self.plan_cached()
+        else:
+            plan, cache_hit = self.compute_plan(), None
         applied = []
         rescan = None
         if self.args.apply:
@@ -1263,7 +1378,7 @@ class WashShape(object):
         verdict = self.verdict_of(current["files"], len(applied),
                                   self.args.apply)
         report = self.report_of(plan, applied, rescan, verdict,
-                                self.excluded_records)
+                                self.excluded_records, cache_hit=cache_hit)
         return verdict, report, len(applied)
 
     def run_once(self):
@@ -1273,9 +1388,31 @@ class WashShape(object):
         self.print_summary(report, verdict, n_applied)
         return exit_code_of(verdict)
 
+    def _emit_event(self, ev):
+        """事件出账（stdout 镜像＋--events 追加·sort_keys 规范式一行·逐行
+        flush+fsync 承 cw_sentinel.emit_event 同律）。写败 → 9。"""
+        line = json.dumps(ev, ensure_ascii=False, sort_keys=True)
+        print(line)
+        sys.stdout.flush()
+        if self.args.events:
+            try:
+                with io.open(self.args.events, "a", encoding="utf-8",
+                             newline="\n") as fh:
+                    fh.write(line + "\n")
+                    fh.flush()
+                    os.fsync(fh.fileno())
+            except OSError as e:
+                raise MissingInput("--events 出账失败: %s (%s)"
+                                   % (self.args.events, e))
+
     def run_loop(self):
-        """哨态：逐轮 one_pass·JSONL 事件流（逐轮一行·sort_keys）·--events
-        追加落账·--max-rounds 界定（0=无限）。"""
+        """哨态：逐轮 one_pass（plan 跨轮缓存·源件 md5 变→重算）·JSONL 事件
+        流同形对齐（rocqwash-sentinel-event/1·schema/seq/kind·sort_keys 规范
+        式·seq 以 --events 现有行数为基跨进程续号·ts 承 --sleep-scale 0 关）·
+        --events 追加落账·--max-rounds 界定（0=无限·到帽出 stop 事件）。"""
+        ts_enabled = self.args.sleep_scale != 0
+        if self.args.events and os.path.isfile(self.args.events):
+            self._seq = events_seq_base(self.args.events) + 1
         rnd = 0
         last_rc = 0
         while True:
@@ -1286,29 +1423,26 @@ class WashShape(object):
             stats = (report.get("apply") or {}).get("rescan", {}) \
                 if self.args.apply else report["plan"]
             st = stats.get("stats", {})
-            event = {"event": "round", "round": rnd, "mode": "loop",
-                     "apply": bool(self.args.apply), "verdict": verdict,
-                     "files": st.get("files", 0),
-                     "n_would_fix": st.get("would_fix", 0),
-                     "n_plan_miss": st.get("plan_miss", 0),
-                     "n_plan_miss_items": st.get("plan_miss_items", 0),
-                     "n_applied": n_applied}
-            line = json.dumps(event, ensure_ascii=False, sort_keys=True)
-            print(line)
-            sys.stdout.flush()
-            if self.args.events:
-                with io.open(self.args.events, "a", encoding="utf-8") as fh:
-                    fh.write(line + "\n")
+            event = make_event(self._seq, "round", {
+                "round": rnd, "mode": "loop",
+                "apply": bool(self.args.apply), "verdict": verdict,
+                "files": st.get("files", 0),
+                "n_would_fix": st.get("would_fix", 0),
+                "n_plan_miss": st.get("plan_miss", 0),
+                "n_plan_miss_items": st.get("plan_miss_items", 0),
+                "n_applied": n_applied,
+                "plan_cache_hit": bool(
+                    (report.get("plan_cache") or {}).get("hit", False))},
+                ts_enabled)
+            self._seq += 1
+            self._emit_event(event)
             last_rc = exit_code_of(verdict)
             if self.args.max_rounds and rnd >= self.args.max_rounds:
-                stop = {"event": "stop", "round": rnd,
-                        "reason": "max-rounds", "verdict": verdict}
-                sline = json.dumps(stop, ensure_ascii=False, sort_keys=True)
-                print(sline)
-                if self.args.events:
-                    with io.open(self.args.events, "a",
-                                 encoding="utf-8") as fh:
-                        fh.write(sline + "\n")
+                stop = make_event(self._seq, "stop", {
+                    "round": rnd, "reason": "max-rounds",
+                    "verdict": verdict}, ts_enabled)
+                self._seq += 1
+                self._emit_event(stop)
                 break
             sleep_scaled(self.args.interval, self.args.sleep_scale)
         return last_rc
@@ -1453,6 +1587,10 @@ def selftest():
     判15 同槽互斥（--header-map＋--header-map-preset rc2；preset 未知名 rc2）
     判16 无源 plan-miss 如实（无旗无 env→缺字段件 header plan-miss）＋
          模板库缺失 rc9（--repo-root 隔离场·引擎件 symlink 七路）
+    判17 --loop 事件流同形对齐（rocqwash-sentinel-event/1·--events 落盘逐行
+         sort_keys 范式·seq 跨进程续号不重号·kind round/stop·ts=off 注记）
+    判18 plan 缓存失效语义（a 范围件 md5 变→重算 miss/恒同→hit 复用
+         [F,F,T]；b ⑤锚实体件 md5 变亦源变 [F,F,F,T]——实体域缺位即假 hit）
     """
     import tempfile
 
@@ -1685,14 +1823,30 @@ def selftest():
         print("判10 CLI 四码(help0/bogus2/无输入面2/缺件9):", c10)
         ok = ok and c10
 
-        # 判11 --once/--loop 双模（哨态两轮＋stop 事件）
+        # 判11 --once/--loop 双模（哨态两轮＋stop 事件·事件流同形对齐：
+        # schema/seq/kind·sort_keys 规范式·ts=off 注记）
         rc, out = run(["--file", clean_v, "--only", "eol", "--loop",
                        "--interval", "0", "--sleep-scale", "0",
                        "--max-rounds", "2"])
-        rounds = out.count('"event": "round"')
-        stops = out.count('"event": "stop"')
-        c11 = rc == 0 and rounds == 2 and stops == 1
-        print("判11 --loop 哨态(max-rounds 2/JSONL 事件流):", c11)
+        ev_pairs = []
+        for ln in out.splitlines():
+            ln = ln.strip()
+            if not ln.startswith("{"):
+                continue
+            try:
+                e = json.loads(ln)
+            except ValueError:
+                continue
+            if isinstance(e, dict) and e.get("schema") == EVENT_SCHEMA:
+                ev_pairs.append((ln, e))     # stdout 镜像逐行（响亮）
+        evs11 = [e for _, e in ev_pairs]
+        c11 = (rc == 0 and len(evs11) == 3
+               and [e["kind"] for e in evs11] == ["round", "round", "stop"]
+               and [e["seq"] for e in evs11] == [1, 2, 3]
+               and all(ln == json.dumps(e, ensure_ascii=False,
+                                        sort_keys=True) for ln, e in ev_pairs)
+               and all("ts=off" in e.get("note", "") for e in evs11))
+        print("判11 --loop 哨态(max-rounds 2/事件流同形 schema+seq+kind):", c11)
         ok = ok and c11
 
         # 判12 确定性（plan --json 两跑字节恒同）
@@ -1804,8 +1958,88 @@ def selftest():
         print("判16 无源 plan-miss 如实/模板库缺失 rc9:", c16)
         ok = ok and c16
 
+        # 判17 --loop 事件流同形对齐（--events 落盘逐行范式·flush+fsync·seq
+        # 跨进程续号不重号）
+        ev17 = os.path.join(tmp, "ev17.jsonl")
+        rc, out = run(["--file", clean_v, "--only", "eol", "--loop",
+                       "--interval", "0", "--sleep-scale", "0",
+                       "--max-rounds", "2", "--events", ev17])
+        rc17b, out17b = run(["--file", clean_v, "--only", "eol", "--loop",
+                             "--interval", "0", "--sleep-scale", "0",
+                             "--max-rounds", "1", "--events", ev17])
+        lines17 = [ln for ln in
+                   io.open(ev17, encoding="utf-8").read().splitlines() if ln]
+        evs17 = [json.loads(ln) for ln in lines17]
+        c17 = (rc == 0 and rc17b == 0
+               and [e["seq"] for e in evs17] == [1, 2, 3, 4, 5]
+               and [e["kind"] for e in evs17] == ["round", "round", "stop",
+                                                  "round", "stop"]
+               and all(e["schema"] == EVENT_SCHEMA for e in evs17)
+               and all(ln == json.dumps(json.loads(ln), ensure_ascii=False,
+                                        sort_keys=True) for ln in lines17))
+        print("判17 事件流同形对齐(--events 逐行范式/seq 跨进程续号):", c17)
+        ok = ok and c17
+
+        # 判18 plan 缓存失效语义（源件 md5 变→plan 重算·恒同→命中复用）：
+        # a) 范围件 md5 变——loop --apply 三轮：轮1 miss→落刀 CRLF→LF（文件
+        #    变）→轮2 必 miss（重算后 eol clean）→轮3 恒同 hit 复用；
+        # b) ⑤锚实体件 md5 变亦源变——ToyE.v（实体）轮1 被 eol 落刀而
+        #    order_e.txt 未动→轮2 miss 纯实体域驱动（域缺实体即假 hit）→
+        #    轮2 落刀改 order_e.txt→轮3 miss→轮4 恒同 hit（序列 [F,F,F,T]）。
+        cache_v = wf(os.path.join(src, "cache_probe.v"),
+                     header + "Definition z := 0.\r\n", newline="")
+        ev18 = os.path.join(tmp, "ev18.jsonl")
+        j18 = os.path.join(tmp, "j18.json")
+        rc, out = run(["--file", cache_v, "--only", "eol", "--loop", "--apply",
+                       "--interval", "0", "--sleep-scale", "0",
+                       "--max-rounds", "3", "--events", ev18, "--json", j18])
+        evs18 = [json.loads(ln) for ln in io.open(ev18, encoding="utf-8")
+                 if ln.strip() and json.loads(ln)["kind"] == "round"]
+        rep18 = load_json(j18)
+        c18a = (rc == 0
+                and [e["plan_cache_hit"] for e in evs18] == [False, False, True]
+                and rep18["plan_cache"]["hit"] is True
+                and evs18[0]["n_applied"] == 1     # 轮1 落刀 CRLF→LF
+                and evs18[1]["n_applied"] == 0     # 轮2 重算后已 clean
+                and all(w["status"] == "clean"
+                        for f in rep18["plan"]["files"]
+                        for w in f["washes"]))
+        print("判18a plan 缓存（范围件 md5 变→重算 miss/恒同→hit 复用）:", c18a)
+        ok = ok and c18a
+
+        asrc18 = os.path.join(tmp, "asrc18")
+        os.makedirs(asrc18)
+        src18 = os.path.join(tmp, "src18")
+        os.makedirs(src18)
+        toy_e = wf(os.path.join(asrc18, "ToyE.v"),
+                   "Definition te := 1.\r\nDefinition tf := 2.\r\n",
+                   newline="")
+        order_e = wf(os.path.join(src18, "order.txt"),
+                     "ToyE.v#R9-%s\n" % md5_8_of(toy_e))
+        ev18b = os.path.join(tmp, "ev18b.jsonl")
+        j18b = os.path.join(tmp, "j18b.json")
+        rc, out = run(["--file", order_e, "--file", toy_e,
+                       "--anchor-src", asrc18, "--only", "eol,anchor",
+                       "--loop", "--apply", "--interval", "0",
+                       "--sleep-scale", "0", "--max-rounds", "4",
+                       "--events", ev18b, "--json", j18b])
+        evs18b = [json.loads(ln) for ln in io.open(ev18b, encoding="utf-8")
+                  if ln.strip() and json.loads(ln)["kind"] == "round"]
+        rep18b = load_json(j18b)
+        c18b = (rc == 0
+                and [e["plan_cache_hit"] for e in evs18b]
+                == [False, False, False, True]
+                and [e["n_applied"] for e in evs18b] == [1, 1, 0, 0]
+                and rep18b["plan_cache"]["hit"] is True
+                and all(w["status"] == "clean"
+                        for f in rep18b["plan"]["files"]
+                        for w in f["washes"]))
+        print("判18b plan 缓存（锚实体件 md5 变→重算 miss·序列 [F,F,F,T]）:",
+              c18b)
+        ok = ok and c18b
+
         print("WASH-SHAPE-SELFTEST:",
-              "PASS（16 判全过）" if ok else "FAIL")
+              "PASS（18 判全过）" if ok else "FAIL")
         return 0 if ok else 1
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

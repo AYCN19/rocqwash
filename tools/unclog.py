@@ -53,7 +53,8 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   /frozen-in-service 逐根·零链根红账补 no-chain-root 目禁哑墙·
   cures_planned/cures_applied 恒 0＝零落刀零复核·exit 0 红是基线数据非器红）。
   互斥：--audit 与 --apply 同给 rc=2（审计只读）·与 --loop 同给 rc=2（单遍
-  基线·哨态循环非审计语义）·--rounds 不适用单遍。
+  基线·哨态循环非审计语义）·与 --state-file 同给 rc=2（seen 哨态差分非审计
+  语义）·--rounds 不适用单遍。
   零写盘硬保证＝--src 全文件 md5 清单跑前跑后自证恒同（probe_engine 本就
   copyfile 出树编译·wash/probe_engine.py:163·产物清场 py:194——清单违同即
   fail-loud 9·染污基线不出账）；workdir/--json/events 出账系审计本职不在保域。
@@ -67,6 +68,15 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   --sleep-scale 乘数·selftest 用 0＝零真睡），轮事件＋周事件 JSONL 流写
   --events（缺省 <workdir>/events.jsonl）；终局 verdict（unclogged/wall）即停
   即退；rounds-exhausted 非终局 → 歇 --interval 再下一周（--loop-max 帽·0=不限）。
+  互斥明义：--rounds 与 --loop 同给 rc=2（--rounds 是单遍闭环轮帽·哨态周循环
+  非其语义·周内轮帽恒缺省 5——同 --audit/--loop 同给律·禁静默择一）。
+--state-file 哨态 seen 状态（rocqwash-sentinel-state/1·与 cw_sentinel
+  --state-file 同形——同 schema 同键形 repos/ledgers/buildlogs·互读写兼容）：
+  轮间红账差分事件 only-new——每轮归集红账对 state.red_seen 差分，新现红件
+  emit {"event":"red-new", new_red:[...]}（已 seen 红不再报·seen 单调只增）；
+  事件先 emit 后存 state（宁重复不丢件·承哨纪律）；缺省 None＝差分关（零行
+  为变）；损坏 state（解析失败/键形坏）→ fail-loud 9 红拒禁静默重建（恢复＝
+  人工删件·器不吞）。
 
 离线可测（硬要求·子进程调用层可注入·零真网络零真编译于 selftest）：
   --injector DIR  DIR/scenario.json＝{"probe":[probe_ledger...],
@@ -102,14 +112,16 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
       --guard-front N --guard-mid N --guard-maxwait N --timeout S]
       [--pack cure_pack.json] [--workdir DIR] [--json out.json] [--events out.jsonl]
       [--once | --loop [--interval 60] [--loop-max 0]] [--sleep-scale 1.0]
-      [--injector DIR]
+      [--injector DIR] [--state-file STATE.json]
   python3 tools/unclog.py --src DIR [--world DIR] --audit [--injector DIR] \\
       [--repo-path DIR] [--top 25] [--workdir DIR] [--json out.json]
   python3 tools/unclog.py --selftest
 
 退出码：0=unclogged／audit；1=wall／rounds-exhausted（红是数据非器红·响亮
-stdout）；2=用法错／注入场景形错；9=fail-loud（路径缺失／器红：引擎子进程非
-数据性非零退／frozen 在册不可得／全树枚举零候选／audit 零写盘自证破）。
+stdout）；2=用法错／注入场景形错（--rounds 与 --loop 同给/--audit 与
+--apply·--loop·--state-file 同给/--state-file 目录缺）；9=fail-loud（路径缺
+失／器红：引擎子进程非数据性非零退／frozen 在册不可得／全树枚举零候选／
+audit 零写盘自证破／state 文件损坏红拒禁静默重建）。
 --selftest：0=全过／2=断言失败。
 
 世界纪律：本器零写 --world（世界 .vo 基座由调用方按 wash/world_hook.py 认证代
@@ -129,6 +141,7 @@ import time
 PROG = "unclog"
 SCHEMA = "rocqwash-unclog/1"
 CHAIN_SCHEMA = "rocqwash-chain-graph/1"
+STATE_SCHEMA = "rocqwash-sentinel-state/1"   # --state-file 同形承 cw_sentinel
 VERDICT_EXIT = {"unclogged": 0, "wall": 1, "rounds-exhausted": 1, "audit": 0}
 TERMINAL_VERDICTS = ("unclogged", "wall")
 
@@ -232,6 +245,51 @@ def tree_manifest(src):
             fp = os.path.join(dirpath, fn)
             out[os.path.relpath(fp, src).replace(os.sep, "/")] = md5_of(fp)
     return out
+
+
+# ---- state（--loop 哨态 seen 持久层·与 cw_sentinel --state-file 同形）--------
+
+def new_state():
+    """零态账（同形 cw_sentinel.new_state：三域 dict＋本器差分域 red_seen）。"""
+    return {"schema": STATE_SCHEMA, "repos": {}, "ledgers": {},
+            "buildlogs": {}, "red_seen": []}
+
+
+def load_state(path):
+    """state 装载（同形 cw_sentinel.load_state）：缺省 None/文件缺失＝零态
+    起步；损坏（JSON 解析失败/repos/ledgers/buildlogs 键缺 dict/red_seen 非
+    list）→ fail-loud 9 红拒·禁静默重建（seen 是差分账·静默重建＝红事件
+    重报面失守·损坏原件原样不动——恢复＝人工删件下轮零态起步）。"""
+    if path is None:
+        return new_state()
+    if not os.path.isfile(path):
+        return new_state()
+    try:
+        with io.open(path, "r", encoding="utf-8") as fh:
+            st = json.load(fh)
+    except (ValueError, UnicodeDecodeError) as e:
+        raise UnclogError("state 文件形坏（解析失败·禁静默重建）: %s (%s)"
+                          % (path, e), 9)
+    for k in ("repos", "ledgers", "buildlogs"):
+        if not isinstance(st.get(k), dict):
+            raise UnclogError("state 文件形坏（缺 %s dict·禁静默重建）: %s"
+                              % (k, path), 9)
+    if not isinstance(st.get("red_seen", []), list):
+        raise UnclogError("state 文件形坏（red_seen 须 list·禁静默重建）: %s"
+                          % path, 9)
+    return st
+
+
+def save_state(path, st):
+    """state 落盘（sort_keys 规范式·差分事件先 emit 后存本函数——宁重复不
+    丢件承哨纪律）。目录缺 → 9。"""
+    if path is None:
+        return
+    d = os.path.dirname(os.path.abspath(path))
+    if d and not os.path.isdir(d):
+        raise UnclogError("state 文件目录缺失: %s" % d, 9)
+    with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(st, fh, indent=1, ensure_ascii=False, sort_keys=True)
 
 
 # ---- 注入点：probe/resprobe 两类探针调用 canned（离线零真编译）----------------
@@ -413,6 +471,7 @@ def args_summary(a):
             "chain_ledgers": [basename_of(p) for p in (a.chain_ledgers or [])],
             "pack": basename_of(a.pack),
             "injector": basename_of(a.injector) if a.injector else None,
+            "state_file": basename_of(a.state_file) if a.state_file else None,
             "guard": basename_of(a.guard) if a.guard else None,
             "rocq_cmd": a.rocq_cmd, "timeout": a.timeout}
 
@@ -422,7 +481,7 @@ class UnclogRun(object):
     rounds-exhausted（终判探在轮尽后补一发①）。"""
 
     def __init__(self, args, engines, frozen_hit, events_fh, cycle, source,
-                 cands_tsv, workdir):
+                 cands_tsv, workdir, state=None, state_path=None):
         self.a = args
         self.engines = engines
         self.frozen_hit = frozen_hit
@@ -431,6 +490,8 @@ class UnclogRun(object):
         self.source = source
         self.cands_tsv = cands_tsv
         self.workdir = workdir
+        self.state = state          # 同形哨态 seen 账（--state-file 在场时）
+        self.state_path = state_path
         self.resprobe_ledgers = []
         self.last_red = []
         self.report = {
@@ -492,6 +553,27 @@ class UnclogRun(object):
                    "n_red": len(red), "red_files": red, "ledgers": led_bns}
         return graph, red, summary
 
+    # -- 红账差分（--state-file 同形哨态 seen·only-new）------------------------
+    def red_diff(self, red):
+        """轮间红账差分事件 only-new：新现红件（不在 state.red_seen）→ emit
+        {"event":"red-new", new_red:[...], red_total, seen_before}·seen 并账
+        落盘（事件先 emit 后存 state——宁重复不丢件承哨纪律）。已 seen 红
+        不再报（seen 单调只增·only-new 语义）；缺省无 --state-file＝差分关
+        （零事件零写盘·行为不变）。"""
+        if self.state_path is None:
+            return
+        seen = self.state.setdefault("red_seen", [])
+        known = set(seen)
+        new_red = [f for f in red if f not in known]
+        if new_red:
+            emit(self.events_fh, {"event": "red-new", "cycle": self.cycle,
+                                  "new_red": list(new_red),
+                                  "red_total": len(red),
+                                  "seen_before": len(known)})
+            seen.extend(new_red)
+            seen.sort()
+            save_state(self.state_path, self.state)
+
     # -- ②链根挑根（frozen 预检红拒内嵌）---------------------------------------
     def pick_root(self, graph):
         """取 self.washable=true 之首（跳过已在墙者·frozen 红拒入墙续挑）。
@@ -520,6 +602,7 @@ class UnclogRun(object):
         self.last_red = red
         print("[round %d/%d] 归集: %s 红账 %d: %s"
               % (k, a.rounds, summary["source"], len(red), ",".join(red) or "-"))
+        self.red_diff(red)   # 轮间红账差分事件 only-new（--state-file 在场时）
 
         # ⑤判定口：红账空＝疏通（终判探含轮尽后补探）
         if not red:
@@ -814,6 +897,12 @@ def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
 
 def run(args, holder):
     # 值校验（2）
+    if args.loop and args.rounds is not None:
+        raise UnclogError("--rounds 与 --loop 互斥（--rounds 是单遍闭环轮帽·"
+                          "哨态周循环非其语义·周内轮帽恒缺省 5——同给 rc=2 "
+                          "禁静默择一）", 2)
+    if args.rounds is None:
+        args.rounds = 5           # 缺省轮帽（--rounds 未给·once/loop 同值）
     if args.rounds < 1:
         raise UnclogError("--rounds 须≥1 实测 %d" % args.rounds, 2)
     if args.top < 1:
@@ -829,6 +918,9 @@ def run(args, holder):
     if args.audit and args.loop:
         raise UnclogError("--audit 与 --loop 互斥（审计单遍基线·哨态循环非"
                           "审计语义）", 2)
+    if args.audit and args.state_file:
+        raise UnclogError("--audit 与 --state-file 互斥（审计单遍基线·seen "
+                          "哨态差分非审计语义）", 2)
     if args.candidates and args.chain_ledgers:
         raise UnclogError("--candidates 与 --chain-ledgers 互斥（候选面三源任选）", 2)
 
@@ -851,6 +943,16 @@ def run(args, holder):
         raise UnclogError("--pack 路径缺失: %s" % args.pack, 9)
     if args.injector and not os.path.isdir(args.injector):
         raise UnclogError("--injector 目录缺失: %s" % args.injector, 9)
+    if args.state_file:
+        d = os.path.dirname(os.path.abspath(args.state_file))
+        if d and not os.path.isdir(d):
+            raise UnclogError("--state-file 目录缺失: %s" % d, 9)
+
+    # state 装载（--state-file 同形哨态 seen·损坏红拒 9 fail-loud）
+    state = load_state(args.state_file)
+    if args.state_file:
+        print("state -> %s（seen %d 件·rocqwash-sentinel-state/1 同形）"
+              % (args.state_file, len(state.get("red_seen", []))))
 
     # workdir
     if args.workdir:
@@ -914,7 +1016,8 @@ def run(args, holder):
             while True:
                 cycle = len(cycles) + 1
                 u = UnclogRun(args, engines, frozen_hit, events_fh, cycle,
-                              source, cands_tsv, workdir)
+                              source, cands_tsv, workdir, state=state,
+                              state_path=args.state_file)
                 verdict, report = u.run()
                 holder["report"] = report
                 cycles.append({"cycle": cycle, "verdict": verdict})
@@ -968,8 +1071,9 @@ def main():
                     help="既有 probe 台账（源②·argv 序=合并序·后批覆盖前批）")
     ap.add_argument("--repo-path", default=REPO_ROOT, metavar="DIR",
                     help="frozen 在册文件解析根（默认本件所在仓）")
-    ap.add_argument("--rounds", type=int, default=5, metavar="N",
-                    help="闭环轮帽（默认 5·轮尽红未清=rounds-exhausted）")
+    ap.add_argument("--rounds", type=int, default=None, metavar="N",
+                    help="单遍闭环轮帽（缺省 5·轮尽红未清=rounds-exhausted·"
+                         "与 --loop 互斥同给 rc=2）")
     ap.add_argument("--apply", action="store_true",
                     help="落刀开关（缺省关＝全干跑零写盘·单开关 --yes 不需要）")
     ap.add_argument("--audit", action="store_true",
@@ -1015,6 +1119,11 @@ def main():
     ap.add_argument("--injector", default=None, metavar="DIR",
                     help="离线注入：DIR/scenario.json（probe/resprobe canned "
                          "probe_ledger 按序严格消费·零真编译）")
+    ap.add_argument("--state-file", dest="state_file", default=None,
+                    metavar="FILE",
+                    help="哨态 seen 状态文件（rocqwash-sentinel-state/1·与 "
+                         "cw_sentinel --state-file 同形互读写·轮间红账差分"
+                         "事件 only-new·损坏红拒 9 禁静默重建）")
     args = ap.parse_args(argv)
 
     try:
@@ -1045,14 +1154,17 @@ NOMATCH_BODY = "Lemma ok : True.\n"
 
 
 def selftest():
-    """十一矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
+    """十三矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
     注入零真编译·chain/cure/scan/frozen8 真跑）：①绿径两轮疏通（--apply 落刀→
     次轮红账空 exit 0）②诚实墙（self-unwashable·零落刀）＋②b 零链根红账
     （no-chain-root 墙目·禁哑墙）③cure-miss 入墙④轮尽（--apply 已落刀而世界
     仍红→rounds-exhausted 附各轮账）⑤--apply 缺省关实证（零字节动）⑥JSON 幂等
     （字节恒同）⑦frozen 在册红拒 ⑧--loop 哨态 JSONL ⑨CLI 四码 ⑩--audit 只读
     基线（零写盘自证/final=audit/cures 恒空/墙账 graph 判例/frozen 预检/互斥
-    rc=2·真树 audit 活跑归主会话本席只证 fixture 级）。"""
+    rc=2·真树 audit 活跑归主会话本席只证 fixture 级）⑪--state-file 同形哨态
+    seen（轮间红账差分事件 only-new 三连跑：新现红报/复现红不报/新红再报·
+    state red_seen 跨进程续账·损坏 state 红拒 9 禁静默重建）⑫--rounds 与
+    --loop 互斥 rc=2＋--audit 与 --state-file 互斥 rc=2。"""
     tmp = tempfile.mkdtemp(prefix="rocqwash_unclog_self_")
 
     def run(aargs):
@@ -1412,9 +1524,96 @@ def selftest():
             % p.returncode
         print("矢量⑩d audit 互斥（--apply/--loop 同给 rc=2）: PASS")
 
-        print("UNCLOG-SELFTEST PASS: 十一矢量全过（绿径/诚实墙＋零链根补判/"
+        # 矢量⑪ --state-file 同形哨态 seen：轮间红账差分事件 only-new 三连跑
+        # （新现红报／复现红不报／新红再报）＋state 跨进程续账＋损坏红拒 9
+        # （chain-ledgers 源·零注入零真编译：根 A NOMATCH→cure-miss 墙·零
+        # rescan/resprobe 路径）
+        d, src, world, wd = fixture("v11_state", a_body=NOMATCH_BODY)
+        led1 = os.path.join(d, "led1.json")
+        dump_json({"A": rec0("A"), "B": rec1("B", "A")}, led1)
+        led2 = os.path.join(d, "led2.json")
+        dump_json({"A": rec0("A"), "B": rec1("B", "A"), "C": rec1("C", "A")},
+                  led2)
+        st11 = os.path.join(d, "sentinel_state.json")
+
+        def loop_run(ledger, ev_path, j_path):
+            return run(["--src", src, "--chain-ledgers", ledger, "--loop",
+                        "--interval", "7", "--sleep-scale", "0",
+                        "--state-file", st11, "--events", ev_path,
+                        "--json", j_path, "--workdir",
+                        os.path.join(wd, "w_%s" % os.path.basename(ledger))])
+
+        def red_news(ev_path):
+            return [json.loads(ln) for ln in io.open(ev_path, encoding="utf-8")
+                    if ln.strip() and json.loads(ln).get("event") == "red-new"]
+
+        # 跑 1：红账 {B} 全新 → red-new [B]·state 记 seen
+        ev1 = os.path.join(d, "ev1.jsonl")
+        j11 = os.path.join(d, "j11.json")
+        p = loop_run(led1, ev1, j11)
+        assert p.returncode == 1, p.stdout[-600:]   # 红是数据非器红（wall）
+        rep = json.load(io.open(j11, encoding="utf-8"))
+        assert rep["mode"]["loop"] is True, rep["mode"]
+        assert rep["args"]["state_file"] == "sentinel_state.json", rep["args"]
+        rn = red_news(ev1)
+        assert len(rn) == 1 and rn[0]["new_red"] == ["B"] \
+            and rn[0]["red_total"] == 1 and rn[0]["seen_before"] == 0 \
+            and rn[0]["cycle"] == 1, rn
+        st = json.load(io.open(st11, encoding="utf-8"))
+        assert st["schema"] == STATE_SCHEMA and st["red_seen"] == ["B"] \
+            and st["repos"] == {} and st["ledgers"] == {} \
+            and st["buildlogs"] == {}, st
+        # 跑 2：红账 {B,C}·B 已 seen → red-new 只 [C]（only-new）
+        ev2 = os.path.join(d, "ev2.jsonl")
+        p = loop_run(led2, ev2, os.path.join(d, "j11b.json"))
+        assert p.returncode == 1, p.stdout[-600:]
+        rn = red_news(ev2)
+        assert len(rn) == 1 and rn[0]["new_red"] == ["C"] \
+            and rn[0]["red_total"] == 2 and rn[0]["seen_before"] == 1, rn
+        st = json.load(io.open(st11, encoding="utf-8"))
+        assert st["red_seen"] == ["B", "C"], st
+        # 跑 3：红账 {B,C} 全已 seen → 零 red-new（复现红不再报）
+        ev3 = os.path.join(d, "ev3.jsonl")
+        p = loop_run(led2, ev3, os.path.join(d, "j11c.json"))
+        assert p.returncode == 1, p.stdout[-600:]
+        assert red_news(ev3) == [], "复现红应零差分事件: %s" % red_news(ev3)
+        st = json.load(io.open(st11, encoding="utf-8"))
+        assert st["red_seen"] == ["B", "C"], st
+        # 损坏 state 红拒 9（禁静默重建·原件不动）
+        stc = os.path.join(d, "corrupt_state.json")
+        corrupt = '{"red_seen": BROKEN{{{'
+        with io.open(stc, "w", encoding="utf-8") as fh:
+            fh.write(corrupt)
+        p = run(["--src", src, "--chain-ledgers", led1, "--state-file", stc,
+                 "--sleep-scale", "0"])
+        assert p.returncode == 9, "损坏 state 应红拒 rc=9 实测 %d" % p.returncode
+        assert "形坏" in p.stdout, p.stdout[-300:]
+        assert io.open(stc, encoding="utf-8").read() == corrupt, \
+            "损坏 state 被静默改写＝违例"
+        print("矢量⑪ --state-file 同形哨态 seen（差分 only-new 三连跑/"
+              "跨进程续账/损坏红拒 9 禁静默重建）: PASS")
+
+        # 矢量⑫ --rounds 与 --loop 互斥明义 rc=2＋--audit 与 --state-file 互斥
+        d, src, world, wd = fixture("v12_mutex")
+        p = run(["--src", src, "--loop", "--rounds", "3"])
+        assert p.returncode == 2, "--rounds --loop 同给应 rc=2 实测 %d" \
+            % p.returncode
+        assert "互斥" in p.stdout, p.stdout[-300:]
+        p = run(["--src", src, "--loop", "--rounds", "0"])
+        assert p.returncode == 2, "--rounds 0 带 --loop 仍应 rc=2 实测 %d" \
+            % p.returncode
+        p = run(["--src", src, "--audit", "--state-file",
+                 os.path.join(d, "aud_state.json")])
+        assert p.returncode == 2, "--audit --state-file 同给应 rc=2 实测 %d" \
+            % p.returncode
+        assert "互斥" in p.stdout, p.stdout[-300:]
+        print("矢量⑫ --rounds/--loop 互斥明义＋--audit/--state-file 互斥"
+              "（同给 rc=2）: PASS")
+
+        print("UNCLOG-SELFTEST PASS: 十三矢量全过（绿径/诚实墙＋零链根补判/"
               "cure-miss/轮尽/缺省关实证/JSON 幂等/frozen 红拒/loop 哨态/"
-              "CLI 四码/audit 只读基线零写盘自证）")
+              "CLI 四码/audit 只读基线零写盘自证/state-file 差分 only-new/"
+              "--rounds·--loop 互斥）")
         return 0
     except AssertionError as e:
         print("UNCLOG-SELFTEST FAIL: %s" % e)

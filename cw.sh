@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器（共十七）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器（共二十）
 #         统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
 #         20261111 five-tool wave plus the v37 three-tool wave plus the v38
-#         aggregate doctor, the v39 doc-lint plus netname-normalize/select-audit routing fixes, nineteen tools in total
+#         aggregate doctor, the v39 doc-lint plus netname-normalize/select-audit routing fixes plus the v40
+#         baseline-diff, twenty tools in total
 #         (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
@@ -56,6 +57,9 @@
 #   select-audit 批选审计器（批选清单对 order.txt 全表 grep 剔重＋Require 面审计 v6）
 #                                                    -> tools/select_audit.py
 #               cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]
+#   baseline-diff 堵账基线对比（两份 unclog --audit 基线→增减三清单＋verdict 四态·argv 序=旧→新）
+#                                                    -> tools/baseline_diff.py
+#               cw.sh baseline-diff OLD.json NEW.json [--json out.json] [--md out.md]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -72,6 +76,9 @@
 #      doc-lint 同形：0=consistent（三查零漂）·1=drift（任一条漂·红是数据
 #      非器红·响亮 stdout）；2=用法错（--help-cap<1）；9=缺（必需输入缺失/
 #      器 --help 红或超时 fail-loud）。
+#      baseline-diff 同形：0=improved/stable（红减/持平）·1=degraded/
+#      incomparable（红增/候选集异如实拒判·红是数据非器红·响亮 stdout）；
+#      2=用法错/输入形坏（schema 不对/账面自洽破）；9=路径缺失。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
@@ -89,7 +96,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器统一入口（十七工具·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器统一入口（二十工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -141,6 +148,9 @@ cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 
   select-audit 批选审计器（批选清单对 order.txt 全表 grep 剔重＋Require 面审计 v6）
                                                    -> tools/select_audit.py
               cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]
+  baseline-diff 堵账基线对比（两份 unclog --audit 基线→增减三清单＋verdict 四态·argv 序=旧→新）
+                                                   -> tools/baseline_diff.py
+              cw.sh baseline-diff OLD.json NEW.json [--json out.json] [--md out.md]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -173,6 +183,7 @@ hint_for() {  # $1=tool
     doc-lint)    echo "cw.sh doc-lint [--repo DIR] [--json OUT] [--help-cap N]   # 文档←→实现一致性三查器（①cw.sh 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数 ③doc 引用旗标 vs 各器 --help 实出·verdict consistent|drift·红是数据非器红）-> tools/doc_lint.py" ;;
     netname-normalize) echo "cw.sh netname-normalize [--dir DIR] [--apply] [--map out.tsv] [--json out]   # .v.v 双后缀名净名归一器（映射表＋--apply 改名 md5 验讫）-> tools/netname_normalize.py" ;;
     select-audit) echo "cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]   # 批选审计器（批选清单对树 order.txt 全表 grep 剔重＋Require 面审计 v6 判据）-> tools/select_audit.py" ;;
+    baseline-diff) echo "cw.sh baseline-diff OLD.json NEW.json [--json out.json] [--md out.md]   # 堵账基线对比器（两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/stable/incomparable·账面自洽预检拒手编·timing 不入对比·红是数据非器红）-> tools/baseline_diff.py" ;;
     *) return 1 ;;
   esac
 }
@@ -212,12 +223,13 @@ case "${1:-}" in
   doc-lint)    shift; run_tool doc-lint    "tools/doc_lint.py"            "$@" ;;
   netname-normalize) shift; run_tool netname-normalize "tools/netname_normalize.py" "$@" ;;
   select-audit) shift; run_tool select-audit "tools/select_audit.py"        "$@" ;;
+  baseline-diff) shift; run_tool baseline-diff "tools/baseline_diff.py"     "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff）" >&2
         exit 2
       fi
     fi
@@ -225,7 +237,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|help）" >&2
     usage >&2
     exit 2 ;;
 esac

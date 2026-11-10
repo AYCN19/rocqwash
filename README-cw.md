@@ -1,6 +1,6 @@
 # cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
 
-`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器（共十七个）的**一键调用入口**（repo 根）：
+`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器（共二十个）的**一键调用入口**（repo 根）：
 
 ```
 bash cw.sh <tool> [args...]
@@ -36,6 +36,7 @@ bash cw.sh <tool> [args...]
 | `unclog` | `tools/unclog.py` | 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict `unclogged\|wall\|rounds-exhausted\|audit`·缺省干跑·frozen 在册红拒·`--audit` 只读堵账基线） | `bash cw.sh unclog --src src/ --world world/ --json r.json` |
 | `cw-doctor` | `tools/cw_doctor.py` | 综合体检器·四域聚合（环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 逐域 subprocess 编排既有一器→综合健康分 0-100＋verdict `healthy\|degraded`＋advice 处置清单·**只诊断禁代执行**·红是数据非器红·schema `rocqwash-cwdoctor/1`·`--injector` 离线可测） | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
 | `doc-lint` | `tools/doc_lint.py` | 文档←→实现一致性三查器（①cw.sh 头注/usage/hint/case 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数三处对账 ③doc 引用旗标 vs 各器 `--help` 实出逐枚对照·verdict `consistent\|drift`·红是数据非器红·schema `rocqwash-doclint/1`·`--repo` 被审仓根缺省本仓） | `bash cw.sh doc-lint --repo . --json doclint.json` |
+| `baseline-diff` | `tools/baseline_diff.py` | 堵账基线对比器（两份 unclog `--audit` 基线 argv 序=旧→新→`new_blocks`/`resolved_blocks`/`persistent` 三清单＋`score_delta`·verdict 四态 `improved\|degraded\|stable\|incomparable`·账面自洽预检拒手编·timing 不入对比·红是数据非器红·schema `rocqwash-baseline-diff/1`·入仓规程见 [examples/baselines/README.md](examples/baselines/README.md)） | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
 | `help` | — | 总帮助；`help <tool>` 看该工具一行提示 | `bash cw.sh help probe` |
 
 典型流水线（发现→治愈→复核）：
@@ -180,13 +181,18 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
 - 实时动态服务运行手册：[docs/ops-realtime-service-v1.0-20261111.md](docs/ops-realtime-service-v1.0-20261111.md)
   （后台哨标准命令与 JSONL 消费／preset 接驳 unclog 全链三判 e2e＝
   `tests/test_relay_e2e.py`·tmp 注入演练实跑原文在册·与器 `--help` 冲突时以器为准）
+- 服务层总览（v40）：[docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)
+  （三链一图全景＋器面索引·docs 席铸）
+- 堵账基线入仓规程（v40）：[examples/baselines/README.md](examples/baselines/README.md)
+  （`unclog --audit` 基线命名律 `audit-<域>-<yyyymmdd>.json`／timing 非确定段
+  注记／baseline-diff 对比判读与红线纪律·工装席铸）
 
 ## English brief
 
 `cw.sh` is the one-command entry for the seven tools introduced in the
 rocqwash v29-v32 waves plus the five tools added on 20261111 plus the three
-v37 tools plus the v38 aggregate doctor plus the v39 doc-lint (seventeen in
-total). It lives at the repository root:
+v37 tools plus the v38 aggregate doctor plus the v39 doc-lint plus the v40
+baseline-diff (twenty in total). It lives at the repository root:
 
 ```
 bash cw.sh <tool> [args...]
@@ -228,7 +234,13 @@ fixes; `--injector`-offline-testable), plus the v39 addition
 checks: cw.sh four-place tool-table cross-check + tools/ generic-entry
 reconciliation, CASES count three-way check against tests/README.md and
 README.md, and doc flag references verified against each tool's real `--help`
-output; verdict `consistent|drift`, red is data not tool failure), plus
+output; verdict `consistent|drift`, red is data not tool failure), plus the
+v40 addition `baseline-diff`→`tools/baseline_diff.py` (clog-baseline differ:
+two `unclog --audit` baselines in argv order old→new → `new_blocks` /
+`resolved_blocks` / `persistent` block lists plus `score_delta`, verdict
+`improved|degraded|stable|incomparable` with honest refusal on candidate-set
+mismatch; red is data, not tool failure; intake protocol at
+`examples/baselines/README.md`), plus
 `help`. The v37 tools share a
 common workflow-interface discipline (once/loop dual mode, deterministic
 JSON reports + JSONL event streams, `--injector` offline canned testing,

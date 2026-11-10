@@ -258,3 +258,85 @@ code = wrapped command's. Smoke check:
 **English**: commit as `type: summary`, one verifiable unit per commit. Review asks
 three questions: where is the evidence (exit codes/output)? are assertions
 fail-loud? are both doc mirrors synced? Any "no" sends it back.
+
+## 7. 接口五纪律 / Interface Five Disciplines（工作流配合面·v37 起共同契约）
+
+**中文**——凡「工作流配合面」器（现役：`tools/cw_sentinel.py`（sentinel）／
+`tools/wash_shape.py`（wash-shape）／`tools/unclog.py`（unclog）／
+`tools/pushci.py`（pushci）·v38 起 `tools/cw_doctor.py` 同形扩面）接口必须五纪律
+全承。本节与
+[`docs/workflow-integration-whitepaper-v1.0-20261111.md`](docs/workflow-integration-whitepaper-v1.0-20261111.md)
+§1 同源（逐器机理与命令正本在彼）；速查在 [`README-cw.md`](README-cw.md)
+「工作流配合接口」节。
+
+1. **JSON-in/JSON-out·schema 钦名·确定性**：出账一律 `--json OUT`，schema 钦名——
+   `rocqwash-sentinel/1`／`rocqwash-shape/1`／`rocqwash-unclog/1`／
+   `rocqwash-pushci/1`（v38 起 `rocqwash-cwdoctor/1`·v39 起
+   `rocqwash-doclint/1`）；loop 态事件流 `--events FILE` 逐行 JSONL（sentinel 行
+   schema `rocqwash-sentinel-event/1`·键含 `seq` 事件流内单调）。`--json` 落盘
+   `sort_keys`，同输入重跑字节级恒同；报告零墙钟零绝对路径（路径只出基名；
+   `--sleep-scale 0` 时事件行 `ts` 关闭并以 note 注记）。
+2. **退出码 0/1/2/9 口径（红是数据非器红·响亮 stdout）**：0=绿／巡检完成／
+   unclogged（pushci success/dry-run=0）；1=数据性未竟（洗未尽 partial/plan-miss·
+   诚实墙 wall／轮尽 rounds-exhausted·pushci
+   heal-exhausted/unstable/toolchain）；2=用法错（含冻结件红拒·注入场景形错）；
+   9=缺/fail-loud（源不可达·injector 未覆盖·路径缺失·子进程 rc≠0）。数据红
+   （CI 红/堵塞/墙）走事件流与 report 红账，**不进退出码**；工作流分流两级：
+   先按退出码分器面（2=改调用·9=补目标），再读 JSON 按 verdict/kind 分数据面。
+3. **--once/--loop 双模**：`--once` 单轮出账即退（工作流步骤内联用·wash-shape
+   缺省即 once，plan 段零写盘）；`--loop --interval S` 长驻哨态（后台 bash 任务
+   用）＋轮帽可自停（sentinel/wash-shape `--max-rounds N`·unclog `--loop-max N`
+   命周数）；`--sleep-scale F` 全部 sleep 乘 F（0=零真睡＋关事件 ts）——离线
+   演练/确定性钉，生产形不给。
+4. **--injector 离线可测**：工作流自测/CI 演练一律注入形＋`--sleep-scale 0`——
+   零真网络零真编译。injector 未覆盖＝fail-loud 9，**绝不静默走真网络**
+   （pushci 须 `--injector DIR`＋`--git-caller FILE` 成对·单边给出=用法错 2）；
+   unclog 注入下 chain_graph/cure_applier/scan_v4_token/frozen8 照旧真跑
+   （真编排非傀儡）。三器 `--selftest` 与套件挂接件（`tests/test_cw_sentinel.py`／
+   `test_wash_shape.py`／`test_unclog.py`／`test_pushci.py`）全部零真网络零真
+   编译，即此纪律的自证。
+5. **编排零新引擎**：器内部全 subprocess 直调既有引擎——sentinel 判类全权在
+   `ci_triage`、链根全权在 `chain_graph`；wash-shape 五洗引擎（gate4/scan_v4/
+   cure_applier/comment_sweep/registry_union）；unclog 五步（probe_engine/
+   chain_graph/cure_applier/scan_v4_token/frozen8）；pushci 编排 v35 四器。
+   此律双向：**工作流侧也不为「再判一次红/再挑一次根」写新逻辑**——调器，
+   读它的 JSON。真编译一律经 cpu_guard（§5）；unclog 以 `--guard PATH
+   --guard-reg DIR --guard-front N --guard-mid N --guard-maxwait N` 透传。
+
+补：python3 纯 stdlib＋fail-loud＋零硬编码路径（§2 同律）。`cw.sh` 是 1:1 透传
+入口（exec·不改写参数与退出码）——工作流里 `bash cw.sh <tool>` 与直调
+`python3 tools/<tool>.py` 语义全同（嵌段一律走 cw.sh 形，少一处路径耦合）。
+
+**新增器入既有流程图景**（v35-v39 五波在既有流程中的落点）：
+
+- **贡献自证链（§1.4／§4）**：新器一律补 `--selftest` 冻结矢量＋挂接
+  `tests/run_tests.sh`（v39 现势 54 例）＋过 `tools/doc_lint.py` 三查
+  （文档←→实现一致性：工具表/计数/旗标——旗标逐枚对照各器 `--help` 实出）。
+- **CI 红炉修复链（README-cw 同款）**：doctor→net-probe→pushci（内嵌
+  watch+heal）→triage——v35 四诊断器与 v36 编排器即此链的构件化与一键化。
+- **实时服务面（v37-v39 新增）**：sentinel 三路信号源→JSONL 事件流→人审→
+  unclog（`--audit` 只读基线→`--apply` 白名单落刀）／wash-shape（plan 人审→
+  `--apply`）；体检预检 cw-doctor；接驳预设 `--on-red-preset`（unclog=干跑·
+  pushci=--dry-run·缺省安全态铁律）。运行规程见
+  [`docs/ops-realtime-service-v1.0-20261111.md`](docs/ops-realtime-service-v1.0-20261111.md)。
+- **文档收口链（v39）**：文档改动交付前跑 `bash cw.sh doc-lint --repo .`
+  三查零漂（verdict consistent·exit 0）。
+
+**English**: tools on the workflow-facing surface (sentinel / wash-shape /
+unclog / pushci; cw-doctor in the same shape since v38) must honor the five
+interface disciplines of the workflow-integration whitepaper §1: (1) JSON-in/out
+with named schemas (rocqwash-sentinel/1, rocqwash-shape/1, rocqwash-unclog/1,
+rocqwash-pushci/1; rocqwash-cwdoctor/1, rocqwash-doclint/1 since v38/v39),
+sort_keys byte-identical reports and JSONL event streams; (2) exit codes 0/1/2/9
+where red is data, not tool failure — workflows branch on exit codes first
+(2=fix the call, 9=fix the target), then on JSON verdicts; (3) --once/--loop
+dual mode with round caps and `--sleep-scale` as an offline determinism pin;
+(4) --injector offline canned testing — uncovered responses fail loudly, the real
+network is never touched silently, and pushci requires the injector/git-caller
+pair; (5) zero new engines — orchestration of existing engines via subprocess
+only, and the same holds on the workflow side: call the tool, read its JSON,
+never re-implement a verdict. New tools enter the existing flows as: --selftest
+frozen vectors + suite hookup + doc_lint three checks; the CI repair chain
+doctor→net-probe→pushci→triage; the realtime service surface (sentinel events →
+human review → unclog audit/apply, wash-shape plan/apply, cw-doctor checkup,
+--on-red-preset relays); and the doc-closing chain (`bash cw.sh doc-lint --repo .`).

@@ -30,9 +30,15 @@
 
 事件流：--emit FILE（JSONL append·逐行 flush+fsync）＋stdout 镜像（响亮）。
 事件行 schema=rocqwash-sentinel-event/1·键 sort_keys·行序＝产出序·seq 事件流
-内单调（--emit 在位时以文件现有行数为基跨进程续号·缺省时进程内单调）——
-消费方按 seq 排序即恢复全局序。ts 由 time 钟出·--sleep-scale 0 时关 ts
+内单调（--emit 在位时以本体＋轮转代现有行数为基跨进程续号·缺省时进程内单调）
+——消费方按 seq 排序即恢复全局序。ts 由 time 钟出·--sleep-scale 0 时关 ts
 （selftest 确定性依赖）·事件以 note「ts=off」注记。
+JSONL 轮转（--emit-max-bytes N·长驻盘面防无界）：追加前查——emit 本体现有
+字节＋新行字节＞N → 先轮转再追加：FILE.1→FILE.2（旧 FILE.2 覆盖弃·保留 2
+代）→FILE→FILE.1→新 FILE 空。单行本身超 N＝行不可分割·空档直写（轮转后
+仍可能单行超帽·下轮追加前即再轮转）；轮转走 stdout 响亮注记＋report
+emit_rotations 计数·rename 失败 → 9。seq 跨代续号（本体＋.1/.2 行数和为基
+——轮转代同属一条事件流·按 seq 排序跨代恢复全局序）。
 
 --on-red 'CMD 模板'：{family}／{run}／{repo} 占位替换（事件字段直替·缺字段
 替空串）→ subprocess shell 执行（超时帽 60s·rc≠0/超时响亮入 actions 账与
@@ -72,16 +78,19 @@ __init__ 包结构；injector canned 路径零真网络一律不重试——离�
 退出码：0=巡检完成（红是数据非器红·响亮 stdout）；2=用法错（缺模式/双模
 同给/三源全缺/--branch 先于 --watch-repo/repo 形坏/负参/once 带 loop 专属
 参/--on-red-preset 与 --on-red 同给/preset 不识别/预设参数缺·重·形坏·
---emit 缺/--on-red-arg 孤儿）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·
+--emit 缺/--on-red-arg 孤儿/--emit-max-bytes 须与 --emit 同给或 N<1/
+--rebuild-state 缺 --state-file）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·
 token 空·runs/jobs 形坏·预设器件缺·
 injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·ci_triage/
-chain_graph 子进程 rc≠0·子进程超时被杀〔--subproc-timeout〕）。
+chain_graph 子进程 rc≠0·子进程超时被杀〔--subproc-timeout〕·事件流轮转
+rename 失败）。
 --selftest：0=全过／2=断言失败。
 
 report schema（--json·每轮覆盖写·rocqwash-sentinel/1）：
   {"schema","mode","round","sources"{ci[],ledgers{},buildlog{}},"events"[],
-   "actions"[](on-red 执行账),"state_file"?,"interval"?,"sleep_scale",
-   "ts_enabled","injector"?,"on_red_preset"?}
+   "actions"[](on-red 执行账),"state_file"?,"state_rebuilt"?,"interval"?,
+   "sleep_scale","ts_enabled","injector"?,"on_red_preset"?,
+   "emit_max_bytes"?,"emit_rotations"?}
   events/actions 元素与事件流逐字节同源（确定性：--sleep-scale 0 时同输入
   重跑字节级恒同）。
 
@@ -99,6 +108,12 @@ state 文件（--state-file·schema=rocqwash-sentinel-state/1）：seen 幂等�
   {"repos":{"ORG/REPO":{"seen_runs":{"<id>":{conclusion,run_number,family}}}},
    "ledgers":{"<名>":{"mtime_ns","size"}},"buildlogs":{"<路径>":{"offset"}}}
   缺省 None=内存态（once 单轮无跨轮幂等·loop 须给）。
+崩溃恢复语义（禁静默重建）：state 损坏（JSON 解析失败/键形坏）→ fail-loud 9
+  红拒——器不吞不重建（seen 是幂等账·静默重建＝红事件重报面失守·原件原样
+  不动）；恢复唯二路＝人工删件（下轮零态起步）或 --rebuild-state 显式重建
+  （弃既有 seen 从零起·stdout 响亮 STATE-REBUILD 注记＋report
+  state_rebuilt=true；须与 --state-file 同给否则 rc=2——无 state 即无物可
+  重建）。
 
 编排律（承 v37 用户令⑤）：ci_triage／chain_graph 全 subprocess 直调（pushci
 _run_py 同款·py:591——纯逻辑零编译故不经 cpu_guard·真编译才须 guard 包裹，
@@ -337,8 +352,12 @@ def new_state():
     return {"schema": STATE_SCHEMA, "repos": {}, "ledgers": {}, "buildlogs": {}}
 
 
-def load_state(path):
-    if path is None:
+def load_state(path, rebuild=False):
+    """state 装载（崩溃恢复语义）：缺省/文件缺失＝零态起步；损坏（JSON 解析
+    失败/键形坏）→ fail-loud 9 红拒·禁静默重建（seen 是幂等账·静默重建＝
+    红事件重报面失守·损坏原件原样不动）；rebuild=True（--rebuild-state 显式
+    重建）＝唯一合法重建路——弃既有内容从零起（响亮注记由 run_sentry 出）。"""
+    if path is None or rebuild:
         return new_state()
     if not os.path.isfile(path):
         return new_state()
@@ -346,10 +365,12 @@ def load_state(path):
         with io.open(path, "r", encoding="utf-8") as fh:
             st = json.load(fh)
     except (ValueError, UnicodeDecodeError) as e:
-        raise SentryError("state 文件形坏（解析失败）: %s (%s)" % (path, e), 9)
+        raise SentryError("state 文件形坏（解析失败·禁静默重建）: %s (%s)"
+                          % (path, e), 9)
     for k in ("repos", "ledgers", "buildlogs"):
         if not isinstance(st.get(k), dict):
-            raise SentryError("state 文件形坏（缺 %s dict）: %s" % (k, path), 9)
+            raise SentryError("state 文件形坏（缺 %s dict·禁静默重建）: %s"
+                              % (k, path), 9)
     return st
 
 
@@ -381,13 +402,57 @@ def make_event(sentry, kind, fields):
     return ev
 
 
+def rotate_emit(path):
+    """JSONL 轮转一代（--emit-max-bytes 超限触发·保留 2 代）：FILE.1→FILE.2
+    （旧 FILE.2 覆盖弃）→FILE→FILE.1→新 FILE 空。rename 失败 → 9。"""
+    gen1, gen2 = path + ".1", path + ".2"
+    try:
+        if os.path.exists(gen1):
+            os.replace(gen1, gen2)
+        if os.path.exists(path):
+            os.replace(path, gen1)
+    except OSError as e:
+        raise SentryError("事件流轮转失败（%s → %s/%s）: %s"
+                          % (path, gen1, gen2, e), 9)
+
+
+def emit_seq_base(emit_path):
+    """seq 跨进程续基（--emit 在位）：本体＋轮转代（.1/.2）现有非空行数和——
+    轮转代同属一条事件流·跨代续号不重号（消费方按 seq 排序恢复全局序）。
+    读败 → 9。"""
+    base = 0
+    for p in (emit_path, emit_path + ".1", emit_path + ".2"):
+        if os.path.isfile(p):
+            try:
+                with io.open(p, "r", encoding="utf-8") as fh:
+                    base += sum(1 for ln in fh if ln.strip())
+            except OSError as e:
+                raise SentryError("事件流读基失败: %s (%s)" % (p, e), 9)
+    return base
+
+
 def emit_event(sentry, ev):
-    """--emit JSONL append（flush+fsync）＋stdout 镜像（响亮）。emit 写败 → 9。"""
+    """--emit JSONL append（flush+fsync）＋stdout 镜像（响亮）。--emit-max-bytes
+    在位时追加前查超限（本体现有字节＋新行字节＞帽）→ 先轮转再追加（.1/.2
+    保留 2 代·stdout 响亮注记·rotations 计数入 report）；单行超帽＝行不可
+    分割·空档直写。emit 写败/轮转败 → 9。"""
     line = json.dumps(ev, ensure_ascii=False, sort_keys=True)
     sys.stdout.write(line + "\n")
     sys.stdout.flush()
     path = sentry["emit"]
     if path:
+        cap = sentry["emit_max_bytes"]
+        if cap:
+            nbytes = len(line.encode("utf-8")) + 1
+            try:
+                size = os.path.getsize(path) if os.path.isfile(path) else 0
+            except OSError as e:
+                raise SentryError("事件流大小探测失败: %s (%s)" % (path, e), 9)
+            if size > 0 and size + nbytes > cap:
+                rotate_emit(path)
+                sentry["rotations"] += 1
+                sys.stdout.write("emit 轮转: %s → %s.1（旧 .1→.2 弃·保留 2 代）\n"
+                                 % (path, path))
         try:
             with io.open(path, "a", encoding="utf-8", newline="\n") as fh:
                 fh.write(line + "\n")
@@ -718,6 +783,11 @@ def poll_round(sentry, st, round_no):
     rep["actions"] = list(sentry["actions"])
     if a.state_file:
         rep["state_file"] = a.state_file
+    if a.rebuild_state:
+        rep["state_rebuilt"] = True
+    if a.emit_max_bytes:
+        rep["emit_max_bytes"] = a.emit_max_bytes
+        rep["emit_rotations"] = sentry["rotations"]
     if a.injector:
         rep["injector"] = a.injector
     if sentry["on_red_preset"]:
@@ -812,6 +882,16 @@ def build_sentry(args):
     if args.subproc_timeout < 1:
         raise SentryError("--subproc-timeout 须≥1 实测 %s"
                           % args.subproc_timeout, 2)
+    if args.emit_max_bytes is not None:
+        if not args.emit:
+            raise SentryError("--emit-max-bytes 须与 --emit 同给（轮转只属"
+                              "事件流本体）", 2)
+        if args.emit_max_bytes < 1:
+            raise SentryError("--emit-max-bytes 须≥1 实测 %d"
+                              % args.emit_max_bytes, 2)
+    if args.rebuild_state and not args.state_file:
+        raise SentryError("--rebuild-state 须与 --state-file 同给（无 state "
+                          "即无物可重建）", 2)
     on_red = args.on_red
     if args.on_red_preset:
         on_red = expand_on_red_preset(args.on_red_preset, args.on_red_args,
@@ -821,6 +901,7 @@ def build_sentry(args):
         "seq": 1, "events": [], "actions": [],
         "emit": args.emit, "on_red": on_red,
         "on_red_preset": args.on_red_preset,
+        "emit_max_bytes": args.emit_max_bytes, "rotations": 0,
         "timeout": args.timeout, "injector": None, "token": None,
         "retry_max": args.retry_max,
         "subproc_timeout": args.subproc_timeout,
@@ -828,12 +909,8 @@ def build_sentry(args):
     }
     if args.injector:
         sentry["injector"] = load_injector(args.injector)
-    if args.emit and os.path.isfile(args.emit):
-        try:
-            with io.open(args.emit, "r", encoding="utf-8") as fh:
-                sentry["seq"] = sum(1 for ln in fh if ln.strip()) + 1
-        except OSError as e:
-            raise SentryError("事件流读基失败: %s (%s)" % (args.emit, e), 9)
+    if args.emit:
+        sentry["seq"] = emit_seq_base(args.emit) + 1   # 跨代续号（本体＋.1/.2）
     return sentry
 
 
@@ -843,7 +920,13 @@ def run_sentry(args):
     病运行·任务书 9 口径）。state 每轮末落盘（事件先 emit 后存 state·宁重复
     不丢件）。"""
     sentry = build_sentry(args)
-    st = load_state(args.state_file)
+    if args.rebuild_state:
+        existed = os.path.isfile(args.state_file)
+        sys.stdout.write("STATE-REBUILD: %s（--rebuild-state 显式重建·%s）\n"
+                         % (args.state_file,
+                            "既有 seen 弃·从零起" if existed
+                            else "原无 state·从零起"))
+    st = load_state(args.state_file, rebuild=bool(args.rebuild_state))
     interval = args.interval if args.interval is not None else 60.0
     round_no = 0
     try:
@@ -907,6 +990,15 @@ def main():
                                          "rocqwash-sentinel-state/1）")
     ap.add_argument("--emit", default=None, metavar="FILE",
                     help="事件流 JSONL append（fsync）·缺省仅 stdout 镜像")
+    ap.add_argument("--emit-max-bytes", dest="emit_max_bytes", type=int,
+                    default=None, metavar="N",
+                    help="事件流轮转帽（追加前超限即轮转 .1/.2 保留 2 代·seq "
+                         "跨代续号·须与 --emit 同给）")
+    ap.add_argument("--rebuild-state", dest="rebuild_state",
+                    action="store_true",
+                    help="显式重建 state（弃既有 seen 从零起·唯一合法重建路·"
+                         "损坏 state 缺省红拒 9 禁静默重建·须与 --state-file "
+                         "同给）")
     ap.add_argument("--on-red", dest="on_red", default=None, metavar="CMD",
                     help="红事件命令模板（{family}/{run}/{repo} 占位）·缺省"
                          "无=report-only 零动作是缺省")
@@ -968,7 +1060,10 @@ def selftest():
     ＋确定性字节恒同＋CLI 四码＋injector 未覆盖 9＋目录缺 9⑨--on-red-preset
     展开 sugar＋触发捕获＋与 --on-red 互斥 rc=2＋预设参数缺误 rc=2
     ⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·耗尽 9·401 不重试·run_py
-    canned sleep 子进程超时杀 9 报调用名）。"""
+    canned sleep 子进程超时杀 9 报调用名）⑪--state-file 崩溃恢复（损坏红拒
+    9 禁静默重建·原件不动／--rebuild-state 显式重建红事件复现／缺
+    --state-file rc=2）⑫--emit-max-bytes JSONL 轮转（超限先轮转再追加·
+    .1/.2 保留 2 代·seq 跨代续号不重·缺 --emit/N<1 rc=2）。"""
     import shutil
 
     def run(args, cwd=None):
@@ -1183,6 +1278,9 @@ def selftest():
         assert p.returncode == 2, "repo 形错应 rc=2 实测 %d" % p.returncode
         p = run(["--once", "--watch-repo", REPO, "--interval", "5"])
         assert p.returncode == 2, "once 带 interval 应 rc=2 实测 %d" % p.returncode
+        p = run(["--once", "--max-rounds", "3", "--watch-ledgers", ldir])
+        assert p.returncode == 2, "once 带 max-rounds 应 rc=2 实测 %d" \
+            % p.returncode
         p = run(["--once", "--watch-ledgers",
                  os.path.join(tmp, "no_dir")])
         assert p.returncode == 9, "目录缺应 rc=9 实测 %d" % p.returncode
@@ -1361,6 +1459,82 @@ def selftest():
         rc10, out10 = run_py(fastpy, [], timeout=5)
         assert rc10 == 0 and "ok" in out10, (rc10, out10)
 
+        # 〔十一〕--state-file 崩溃恢复语义：损坏红拒 9 禁静默重建（原件原样
+        # 不动）／--rebuild-state 显式重建（弃 seen 从零起·红事件复现）
+        statec = os.path.join(tmp, "state_corrupt.json")
+        corrupt = '{"repos": BROKEN-JSON{{{'
+        with io.open(statec, "w", encoding="utf-8") as fh:
+            fh.write(corrupt)
+        emitc = os.path.join(tmp, "events_c.jsonl")
+        p = run(["--once", "--watch-repo", REPO, "--injector", inj_path,
+                 "--state-file", statec, "--emit", emitc, "--sleep-scale", "0"])
+        assert p.returncode == 9, "损坏 state 应红拒 rc=9 实测 %d" % p.returncode
+        assert "形坏" in p.stdout, p.stdout[-300:]
+        assert "STATE-REBUILD" not in p.stdout, p.stdout[-300:]
+        assert io.open(statec, encoding="utf-8").read() == corrupt, \
+            "损坏 state 被静默改写＝违例（禁静默重建）"
+        # --rebuild-state 显式重建：同损坏件 → rc0·红事件复现（seen 弃）
+        emitr = os.path.join(tmp, "events_r.jsonl")
+        repr_ = os.path.join(tmp, "rep_rebuild.json")
+        p = run(["--once", "--watch-repo", REPO, "--injector", inj_path,
+                 "--state-file", statec, "--emit", emitr, "--json", repr_,
+                 "--rebuild-state", "--sleep-scale", "0"])
+        assert p.returncode == 0, p.stdout[-600:]
+        assert "STATE-REBUILD" in p.stdout, p.stdout[-300:]
+        rep = json.load(io.open(repr_, encoding="utf-8"))
+        assert rep.get("state_rebuilt") is True, rep.get("state_rebuilt")
+        evs = [json.loads(l) for l in io.open(emitr, encoding="utf-8")
+               if l.strip()]
+        assert len(evs) == 1 and evs[0]["kind"] == "ci-red", \
+            "重建后 seen 弃应复现 ci-red: %s" % evs
+        st = json.load(io.open(statec, encoding="utf-8"))
+        assert st["schema"] == STATE_SCHEMA \
+            and st["repos"][REPO]["seen_runs"], "重建后 state 应为合法新账"
+        # --rebuild-state 缺 --state-file → 2（无 state 即无物可重建）
+        p = run(["--once", "--watch-ledgers", ldir, "--rebuild-state"])
+        assert p.returncode == 2, "rebuild 缺 state-file 应 rc=2 实测 %d" \
+            % p.returncode
+
+        # 〔十二〕--emit-max-bytes JSONL 轮转（超限先轮转再追加·.1/.2 保留
+        # 2 代·seq 跨代续号不重）
+        rot_emit = os.path.join(tmp, "events_rot.jsonl")
+        repx = os.path.join(tmp, "rep_rot.json")
+        for i in range(3):
+            ldir_i = os.path.join(tmp, "rot_ledgers_%d" % i)
+            os.mkdir(ldir_i)
+            ledger_i = {"LibX": {"file": "LibX", "rc": 0, "red": ""},
+                        "B%d" % i: {"file": "B%d" % i, "rc": 1,
+                                    "red": "Error: Unable to locate library "
+                                           "| LibX"}}
+            with io.open(os.path.join(ldir_i, "ledgerR.json"), "w",
+                         encoding="utf-8") as fh:
+                json.dump(ledger_i, fh)
+            p = run(["--once", "--watch-ledgers", ldir_i, "--emit", rot_emit,
+                     "--emit-max-bytes", "300", "--json", repx,
+                     "--sleep-scale", "0"])
+            assert p.returncode == 0, p.stdout[-600:]
+        assert "emit 轮转" in p.stdout, "末轮应响亮轮转注记: %s" % p.stdout[-300:]
+        assert os.path.isfile(rot_emit + ".1") \
+            and os.path.isfile(rot_emit + ".2"), "轮转应产 .1/.2 两代"
+        seqs = []
+        for gpath in (rot_emit + ".2", rot_emit + ".1", rot_emit):
+            for ln in io.open(gpath, encoding="utf-8"):
+                if ln.strip():
+                    ev = json.loads(ln)          # 代内逐行可解析
+                    assert ev["schema"] == EVENT_SCHEMA, ev
+                    seqs.append(ev["seq"])
+        assert sorted(seqs) == [1, 2, 3], "seq 跨代应续号不重: %s" % seqs
+        rep = json.load(io.open(repx, encoding="utf-8"))
+        assert rep.get("emit_max_bytes") == 300 \
+            and rep.get("emit_rotations") == 1, \
+            (rep.get("emit_max_bytes"), rep.get("emit_rotations"))
+        # 负面：缺 --emit / N<1 → 2
+        p = run(["--once", "--watch-ledgers", ldir, "--emit-max-bytes", "300"])
+        assert p.returncode == 2, "轮转缺 --emit 应 rc=2 实测 %d" % p.returncode
+        p = run(["--once", "--watch-ledgers", ldir, "--emit", rot_emit,
+                 "--emit-max-bytes", "0"])
+        assert p.returncode == 2, "轮转 N=0 应 rc=2 实测 %d" % p.returncode
+
         print("CW-SENTINEL-SELFTEST PASS: ①once ci-red+二跑 seen 幂等零事件/"
               "②ledger 新件 blocking+幂等/③buildlog 增量 grep+半行不误报/"
               "④on-red 占位替换执行实证+缺省零动作/⑤loop 三轮 JSONL 序贯/"
@@ -1368,7 +1542,11 @@ def selftest():
               "401→9+canned 未覆盖→9+目录缺→9/"
               "⑨on-red-preset 展开+触发捕获+同给互斥 rc=2+参数缺误 rc=2/"
               "⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·503 耗尽 9·401 "
-              "不重试·canned sleep 子进程超时杀 9 报调用名） 全过")
+              "不重试·canned sleep 子进程超时杀 9 报调用名）/"
+              "⑪state 崩溃恢复（损坏红拒 9 禁静默重建原件不动·--rebuild-state "
+              "显式重建红事件复现·缺 --state-file rc=2）/"
+              "⑫emit 轮转（--emit-max-bytes 超限先轮转再追加·.1/.2 保留 2 代·"
+              "seq 跨代续号·缺 --emit/N<1 rc=2） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

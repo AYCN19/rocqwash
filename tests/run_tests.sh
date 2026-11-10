@@ -118,6 +118,21 @@
 #         最小自测壳三判：--selftest 冻结标记 DOC-LINT-SELFTEST PASS（tmp
 #         迷你仓六矢量 V1-V6 由铸席 --selftest 自证）＋--help 冒烟＋退出码
 #         口径抽验 2/2/9·零网络零写盘·20261111 v39 集成席缺壳自补挂接）
+#       tests/test_destructive_matrix.py 破坏面复核矩阵（20261111 v40 破坏面席
+#         铸件·集成席挂接·17 行拒写判据一行一拒写：器×写面×护栏锚 file:line
+#         ——unclog×4（缺 --apply 零写盘/--audit 零写盘＋互斥/frozen 红拒/
+#         非链根件零被动）＋wash_shape×4（plan 零写盘/rescan partial 不谎报
+#         shaped/冻结名红拒/同槽互斥）＋pushci×3（dry-run 零副作用/内容红零
+#         rerun/heal 帽尽停）＋cw_sentinel×2（缺省 report-only/preset 缺
+#         --emit rc=2）＋registry_union×2＋cure_applier×2（干跑零写盘/
+#         --apply 才落刀＋幂等断言拒写）·全 tmp fixture＋injector 罐装零真
+#         网络零真仓零真编译·矩阵红＝护栏破响亮列破口）
+#       tools/baseline_diff.py 堵账基线对比器（tests/test_baseline_diff.py·
+#         最小自测壳三判：--selftest 冻结标记 BASELINE-DIFF-SELFTEST PASS
+#         （六矢量 improved/degraded＋墙因变/stable＋timing 不入对比＋幂等/
+#         incomparable/md 输出/CLI 四码＋形坏拒判由铸席自证）＋--help 冒烟
+#         ＋退出码口径抽验 2/2/9·零网络零编译零触真仓·20261111 v40 集成席
+#         缺壳自补挂接）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -204,7 +219,9 @@ t_dual_scan \
  t_unclog \
  t_cw_doctor \
  t_relay_e2e \
- t_doclint"
+ t_doclint \
+ t_destructive_matrix \
+ t_baseline_diff"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -512,28 +529,34 @@ t_cw_sentinel() {
   # 本地台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·ci_triage/
   # chain_graph subprocess 编排零新引擎·tests/test_cw_sentinel.py 最小自测壳
   # 两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
-  # 零真网络零编译零触真仓）
+  # 哨自身 --selftest 十二矢量 canned 注入零真网络零编译（v40 稳态席扩容
+  # ⑪--state-file 崩溃恢复/⑫--emit-max-bytes JSONL 轮转）·零真网络零编译
+  # 零触真仓）
   "$PY" -B "$REPO/tests/test_cw_sentinel.py"
 }
 
 t_wash_shape() {
-  # 20261111 v37 洗形席挂接·v39 扩容：洗形器·正典形五洗流水（tools/wash_shape.py·
-  # gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/行尾归一/registry_union
-  # 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·schema rocqwash-shape/1·
-  # tests/test_wash_shape.py 最小自测壳三判：--selftest 冻结标记
-  # WASH-SHAPE-SELFTEST PASS（十六判向量全 tmp 夹具·v39 轮增 preset 链四判：
-  # 模板库装载在位/preset 胜 env/占位渲染→apply 端到端/同槽互斥 rc2＋模板库
-  # 缺失 rc9）＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络零写盘）
+  # 20261111 v37 洗形席挂接·v39 扩容·v40 稳态席再扩：洗形器·正典形五洗流水
+  # （tools/wash_shape.py·gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/
+  # 行尾归一/registry_union 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·
+  # schema rocqwash-shape/1·tests/test_wash_shape.py 最小自测壳三判：--selftest
+  # 冻结标记 WASH-SHAPE-SELFTEST PASS（十八判向量全 tmp 夹具·v39 轮增 preset
+  # 链四判：模板库装载在位/preset 胜 env/占位渲染→apply 端到端/同槽互斥 rc2
+  # ＋模板库缺失 rc9·v40 轮增判17 --loop 事件流同形对齐（rocqwash-sentinel-event/1·
+  # seq 跨进程续号）/判18 plan 缓存失效语义（源件 md5 变→重算·恒同→hit 复用））
+  # ＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络零写盘）
   "$PY" -B "$REPO/tests/test_wash_shape.py"
 }
 
 t_unclog() {
-  # 20261111 v37 集成席挂接：疏通堵塞闭环引擎（tools/unclog.py·手工五步闭环
-  # probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→
-  # verdict 判定·schema rocqwash-unclog/1·tests/test_unclog.py 最小自测壳
-  # 三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十矢量全 --injector
-  # canned 罐装）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无参/缺路
-  # 本集成席实跑验证）·零真编译零网络零触真仓）
+  # 20261111 v37 集成席挂接·v40 稳态席扩容：疏通堵塞闭环引擎（tools/unclog.py·
+  # 手工五步闭环 probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe
+  # 复核→verdict 判定·schema rocqwash-unclog/1·tests/test_unclog.py 最小自测壳
+  # 三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十三矢量全 --injector
+  # canned 罐装·v40 轮增⑪--state-file 同形哨态 seen 差分（red-new 事件
+  # only-new·损坏 state 红拒 9 禁静默重建）⑫--rounds/--loop 与 --audit/
+  # --state-file 两组互斥 rc=2）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/
+  # 无参/缺路本集成席实跑验证）·零真编译零网络零触真仓）
   "$PY" -B "$REPO/tests/test_unclog.py"
 }
 
@@ -565,6 +588,29 @@ t_doclint() {
   # 由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/
   # --help-cap 0/缺仓·本集成席实跑验证）·零网络零写盘零触真仓）
   "$PY" -B "$REPO/tests/test_doc_lint.py"
+}
+
+t_destructive_matrix() {
+  # 20261111 v40 破坏面席铸件·集成席挂接：破坏面复核矩阵·一行一拒写判据
+  # （tests/test_destructive_matrix.py·17 行会写盘器×写面×护栏锚 file:line
+  # 逐行断言拒写护栏：unclog×4/wash_shape×4/pushci×3/cw_sentinel×2/
+  # registry_union×2/cure_applier×2——干跑零写盘/--apply 才落刀/frozen 红拒/
+  # 内容红零 rerun/heal 帽尽停/report-only 缺省零动作等；全 tmp fixture＋
+  # injector 罐装·零真网络零真仓零真编译（唯一例外 W3 递真在册件路径·
+  # 收件即拒零读零写）·矩阵红＝护栏破·exit 1 响亮列破口 file:line＋违据）
+  "$PY" -B "$REPO/tests/test_destructive_matrix.py"
+}
+
+t_baseline_diff() {
+  # 20261111 v40 工装席铸件·集成席缺壳自补挂接：堵账基线对比器（tools/
+  # baseline_diff.py·两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/
+  # resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/
+  # stable/incomparable·账面自洽预检拒手编·候选面四元组比对·timing 段不入
+  # 对比·schema rocqwash-baseline-diff/1·tests/test_baseline_diff.py 最小自测壳
+  # 三判：--selftest 冻结标记 BASELINE-DIFF-SELFTEST PASS（六矢量由铸席
+  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/缺参=2·
+  # 缺账文件=9·本集成席实跑验证）·零网络零编译零触真仓）
+  "$PY" -B "$REPO/tests/test_baseline_diff.py"
 }
 
 # ---------- 汇总执行 ----------
