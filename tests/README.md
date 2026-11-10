@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 47 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 48 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（47 例）
+## 覆盖面（48 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -154,3 +154,9 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 47 过 / 1 红 / 
 | 45 | `t_toolchain_dyld_doctor` | `tools/toolchain_dyld_doctor.py`（dyld 工具链断链诊断器·只诊断＋restore 建议禁代执行） | `tests/test_toolchain_dyld_doctor.py` 最小自测壳两判：--selftest rc=0 且含 `DYLD-DOCTOR-SELFTEST PASS` 冻结标记／--help rc=0（otool 解析/exists-missing/同名兜底全链离线向量组由铸席 --selftest 自证·本壳挂接套件·零真 otool 零编译零网络零写盘） |
 | 46 | `t_ci_triage` | `tools/ci_triage.py`（CI 红炉分诊器·五族+绿炉判类谱·红是数据非器红） | `tests/test_ci_triage.py` 最小自测壳两判：--selftest rc=0 且含 `CI-TRIAGE-SELFTEST PASS` 冻结标记／--help rc=0（判类谱六样张/基线 13.3x 判例/谱外 UNRECOGNIZED 离线向量由铸席 --selftest 自证·本壳挂接套件·零网络零写盘） |
 | 47 | `t_net_probe` | `tools/net_probe.py`（网络窗探针·双探稳窗律·单探禁发射） | `tests/test_net_probe.py` 最小自测壳两判：--selftest rc=0 且含 `NET-PROBE-SELFTEST PASS` 冻结标记／--help rc=0（classify_error 分类/canned 注入/稳窗判定零网络向量由铸席 --selftest 自证·本壳挂接套件·零网络零写盘） |
+
+## 20261111 pushci 轮补记（集成席·用例 48）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 48 | `t_pushci` | `tools/pushci.py`（推送 CI 一键流水线编排器·五段管线 preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排零新引擎·verdict 七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run） | `tests/test_pushci.py` 十节：selftest 冻结矢量（rc 0·`PUSHCI-SELFTEST PASS`）／tmp-git 仓 helper 自证（repo_path 由夹具建仓·push 永不真跑——场景层 git 全走 --git-caller canned）／S1 绿径（preflight 双闸→push 四调 get-url/rev-parse/push/ls-remote 远端为准→watch 2 轮 success→verdict success exit 0·零 heal 零 merge）／S2 NETRED 愈合（B 族 canned.jobs 真判类→probe STABLE→rerun 201 run_id 咬合→attempt2 success exit 0·heal_rounds==1）／S3 内容红（A 族→verdict fix-content exit 2·零 rerun 实证＝rounds 空＋fired_total==0＋api_calls 零 POST·判类 outcome 在册 last_triage）／S4 heal 耗尽（NETRED×3·--max-heal 2→heal-exhausted exit 1）／S5 merge 流（--pr 42 PUT merge 200→merge_sha 非空 exit 0）／S6 dry-run（计划输出·api_calls.json==[] 零 git calls.json==[]→verdict dry-run exit 0）／幂等（六场景各两跑 report 字节恒同·漂移叶限墙钟类窄键名）／CLI 五码（help 0·未知形参 2·缺必给 2·repo 缺失 9·injector-git-caller 单边 2）。夹具 `fixtures/pushci_scenarios/s1…s6` GitHub API 真形 canned 按轮次序列·远端恒指不可达假域 pushci.invalid·--sleep-scale 0＋--netrc 恒指不存在路径——结构性零真网络零真 push 零编译零写盘 |

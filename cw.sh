@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 四工具统一入口（repo 根·bash 3.2 兼容）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具（共十二）统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
-#         20261111 four-tool wave (repo root, bash 3.2)
+#         20261111 five-tool wave, twelve tools in total (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
 #
@@ -29,6 +29,9 @@
 #               cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
 #   union       注册册 union 手术（缺省干跑）         -> tools/registry_union.py
 #               cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-*
+#   pushci      修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge）
+#                                                    -> tools/pushci.py
+#               cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -36,11 +39,13 @@
 #   2. 参数与退出码 1:1 透传（exec 直转·fail-loud 不改写）；与 cli/rocqwash 同款契约。
 #   3. 退出码：0=通过；2=未知工具；9=目标脚本缺失；其余=各工具自身口径透传
 #      （工具自身口径：--help/--selftest=0；argparse 用法错/FAIL-LOUD 断言=2；目标文件缺失=9）。
+#      pushci 透传 verdict 封册（success/dry-run=0·heal-exhausted/unstable/toolchain=1·
+#      fix-content/gate4-block=2·9=目标缺失）。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
-# wash/verify/seam/certify/watch). The v29-v32 tools and the 20261111 four tools
-# (doctor/net-probe/triage/union in tools/) live in module directories that now
+# wash/verify/seam/certify/watch). The v29-v32 tools and the 20261111 five tools
+# (doctor/net-probe/triage/union/pushci in tools/) live in module directories that now
 # hold several generic entries each, where the auto-router's ambiguity guard
 # (exit 4) deliberately declines to guess — this entry fills that gap by
 # explicit tool name. The two entries are complementary.
@@ -51,7 +56,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 四工具统一入口（统一入口·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具统一入口（十二工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -79,6 +84,9 @@ cw.sh — rocqwash v29-v32＋20261111 四工具统一入口（统一入口·bash
               cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
   union       注册册 union 手术（缺省干跑）         -> tools/registry_union.py
               cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-*
+  pushci      修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge）
+                                                   -> tools/pushci.py
+              cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -103,6 +111,7 @@ hint_for() {  # $1=tool
     net-probe)   echo "cw.sh net-probe [--endpoints URL,..] [--rounds N] [--interval S] [--stable-window] [--json out]   # 网络窗探针（双探稳窗）-> tools/net_probe.py" ;;
     triage)      echo "cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI 红炉分诊（五族+绿炉）-> tools/ci_triage.py" ;;
     union)       echo "cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-base RB --ref-main RM --ref-branch XB   # 注册册 union 手术（缺省干跑）-> tools/registry_union.py" ;;
+    pushci)      echo "cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]   # 修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge·七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run）-> tools/pushci.py" ;;
     *) return 1 ;;
   esac
 }
@@ -134,12 +143,13 @@ case "${1:-}" in
   net-probe)   shift; run_tool net-probe   "tools/net_probe.py"           "$@" ;;
   triage)      shift; run_tool triage      "tools/ci_triage.py"           "$@" ;;
   union)       shift; run_tool union       "tools/registry_union.py"      "$@" ;;
+  pushci)      shift; run_tool pushci      "tools/pushci.py"              "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci）" >&2
         exit 2
       fi
     fi
@@ -147,7 +157,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|help）" >&2
     usage >&2
     exit 2 ;;
 esac

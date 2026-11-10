@@ -88,6 +88,10 @@
 #       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
 #         九节：selftest/coq 夹具组/陷阱组同名不同形/重锚 md5 冻结向量/干跑-
 #         apply-幂等/json 确定性/CLI 四码＋git 三 ref 直读·零触真仓零网络零编译）
+#       tools/pushci.py 推送 CI 一键流水线编排器（tests/test_pushci.py·
+#         六场景壳十节：selftest 冻结矢量/tmp 仓 helper/S1 绿径/S2 NETRED 愈合/
+#         S3 内容红零 rerun/S4 heal 耗尽/S5 merge/S6 dry-run/幂等字节恒同/
+#         CLI 五码·全离线全注入零真网络零真 push 零编译）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -167,7 +171,8 @@ t_dual_scan \
  t_registry_union \
  t_toolchain_dyld_doctor \
  t_ci_triage \
- t_net_probe"
+ t_net_probe \
+ t_pushci"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -458,6 +463,16 @@ t_net_probe() {
   # --selftest 零网络向量组已自证·tests/test_net_probe.py 最小自测壳两判：
   # --selftest 冻结标记＋--help 冒烟·零网络零写盘）
   "$PY" -B "$REPO/tests/test_net_probe.py"
+}
+
+t_pushci() {
+  # 20261111 集成席挂接：推送 CI 一键流水线编排器（tools/pushci.py·五段管线
+  # preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排
+  # 零新引擎·tests/test_pushci.py 六场景壳十节：selftest 冻结矢量＋tmp 仓
+  # helper＋S1 绿径＋S2 NETRED 愈合＋S3 内容红零 rerun＋S4 heal 耗尽＋S5
+  # merge＋S6 dry-run＋六场景幂等字节恒同＋CLI 五码——全离线全注入零真网络
+  # 零真 push 零编译零写盘）
+  "$PY" -B "$REPO/tests/test_pushci.py"
 }
 
 # ---------- 汇总执行 ----------

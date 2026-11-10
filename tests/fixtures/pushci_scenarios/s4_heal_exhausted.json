@@ -1,0 +1,344 @@
+{
+ "argv": {
+  "dry_run": false,
+  "max_heal": 2,
+  "merge": false,
+  "pr": null
+ },
+ "branch": "topic-pushci-s4",
+ "canned": {
+  "jobs": [
+   {
+    "jobs": [
+     {
+      "completed_at": "2026-11-10T08:02:59Z",
+      "conclusion": "failure",
+      "id": 2100000031,
+      "name": "gate7 / shard-1",
+      "run_id": 9100000031,
+      "runner_name": "ubuntu-24.04",
+      "started_at": "2026-11-10T08:00:01Z",
+      "status": "completed",
+      "steps": [
+       {
+        "completed_at": "2026-11-10T08:00:04Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-11-10T08:00:01Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:02:30Z",
+        "conclusion": "success",
+        "name": "Build (coqc batch)",
+        "number": 2,
+        "started_at": "2026-11-10T08:00:10Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:02:59Z",
+        "conclusion": "failure",
+        "name": "Upload artifact (gate2 ledger)",
+        "number": 3,
+        "started_at": "2026-11-10T08:02:40Z",
+        "status": "completed"
+       }
+      ]
+     }
+    ],
+    "total_count": 1
+   },
+   {
+    "jobs": [
+     {
+      "completed_at": "2026-11-10T08:13:59Z",
+      "conclusion": "failure",
+      "id": 2100000032,
+      "name": "gate7 / shard-1",
+      "run_id": 9100000031,
+      "runner_name": "ubuntu-24.04",
+      "started_at": "2026-11-10T08:12:01Z",
+      "status": "completed",
+      "steps": [
+       {
+        "completed_at": "2026-11-10T08:12:04Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-11-10T08:12:01Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:13:30Z",
+        "conclusion": "success",
+        "name": "Build (coqc batch)",
+        "number": 2,
+        "started_at": "2026-11-10T08:12:10Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:13:59Z",
+        "conclusion": "failure",
+        "name": "Upload artifact (gate2 ledger)",
+        "number": 3,
+        "started_at": "2026-11-10T08:13:40Z",
+        "status": "completed"
+       }
+      ]
+     }
+    ],
+    "total_count": 1
+   },
+   {
+    "jobs": [
+     {
+      "completed_at": "2026-11-10T08:24:59Z",
+      "conclusion": "failure",
+      "id": 2100000033,
+      "name": "gate7 / shard-1",
+      "run_id": 9100000031,
+      "runner_name": "ubuntu-24.04",
+      "started_at": "2026-11-10T08:23:01Z",
+      "status": "completed",
+      "steps": [
+       {
+        "completed_at": "2026-11-10T08:23:04Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-11-10T08:23:01Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:24:30Z",
+        "conclusion": "success",
+        "name": "Build (coqc batch)",
+        "number": 2,
+        "started_at": "2026-11-10T08:23:10Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:24:59Z",
+        "conclusion": "failure",
+        "name": "Upload artifact (gate2 ledger)",
+        "number": 3,
+        "started_at": "2026-11-10T08:24:40Z",
+        "status": "completed"
+       }
+      ]
+     }
+    ],
+    "total_count": 1
+   }
+  ],
+  "logs": {
+   "2100000031": "2026-11-10T08:02:10Z Upload artifact (gate2 ledger) [attempt 1]\nupload ENOTFOUND on productionresultssa1.blob.core.windows.net\nUpload progress stalled at 90%\nfatal: unable to access 'https://productionresultssa1.blob.core.windows.net/': Connection was reset\n",
+   "2100000032": "2026-11-10T08:13:10Z Upload artifact (gate2 ledger) [attempt 2]\nupload ENOTFOUND on productionresultssa1.blob.core.windows.net\nUpload progress stalled at 78%\nfatal: unable to access 'https://productionresultssa1.blob.core.windows.net/': Connection was reset\n",
+   "2100000033": "2026-11-10T08:24:40Z Upload artifact (gate2 ledger) [attempt 3]\nconnect to productionresultssa1.blob.core.windows.net port 443 failed: Operation timed out\nUpload progress stalled at 64%\n"
+  },
+  "merge": null,
+  "probe": [
+   {
+    "rounds": [
+     {
+      "at": "2026-11-10T08:10:00Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     },
+     {
+      "at": "2026-11-10T08:11:00Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     }
+    ],
+    "schema": "rocqwash-net-probe/1",
+    "verdict": "STABLE"
+   },
+   {
+    "rounds": [
+     {
+      "at": "2026-11-10T08:21:00Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     },
+     {
+      "at": "2026-11-10T08:22:00Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     }
+    ],
+    "schema": "rocqwash-net-probe/1",
+    "verdict": "STABLE"
+   }
+  ],
+  "rerun": [
+   {
+    "run_id": 9100000031,
+    "status": 201
+   },
+   {
+    "run_id": 9100000031,
+    "status": 201
+   }
+  ],
+  "runs": [
+   {
+    "total_count": 1,
+    "workflow_runs": [
+     {
+      "conclusion": "failure",
+      "created_at": "2026-11-10T08:00:00Z",
+      "event": "push",
+      "head_branch": "topic-pushci-s4",
+      "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee04",
+      "html_url": "https://github.com/octo-org/rocqwash-verify/actions/runs/9100000031",
+      "id": 9100000031,
+      "name": "gate7",
+      "run_attempt": 1,
+      "run_number": 181,
+      "status": "completed",
+      "updated_at": "2026-11-10T08:03:00Z",
+      "workflow_id": 7000001
+     }
+    ]
+   },
+   {
+    "total_count": 1,
+    "workflow_runs": [
+     {
+      "conclusion": "failure",
+      "created_at": "2026-11-10T08:00:00Z",
+      "event": "push",
+      "head_branch": "topic-pushci-s4",
+      "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee04",
+      "html_url": "https://github.com/octo-org/rocqwash-verify/actions/runs/9100000031/attempts/2",
+      "id": 9100000031,
+      "name": "gate7",
+      "run_attempt": 2,
+      "run_number": 181,
+      "status": "completed",
+      "updated_at": "2026-11-10T08:14:00Z",
+      "workflow_id": 7000001
+     }
+    ]
+   },
+   {
+    "total_count": 1,
+    "workflow_runs": [
+     {
+      "conclusion": "failure",
+      "created_at": "2026-11-10T08:00:00Z",
+      "event": "push",
+      "head_branch": "topic-pushci-s4",
+      "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee04",
+      "html_url": "https://github.com/octo-org/rocqwash-verify/actions/runs/9100000031/attempts/3",
+      "id": 9100000031,
+      "name": "gate7",
+      "run_attempt": 3,
+      "run_number": 181,
+      "status": "completed",
+      "updated_at": "2026-11-10T08:25:00Z",
+      "workflow_id": 7000001
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "api_calls": 5,
+  "attempts": 3,
+  "exit": 1,
+  "final_conclusion": "failure",
+  "git_calls": 4,
+  "heal_rounds": 2,
+  "merge_enabled": false,
+  "run_id": 9100000031,
+  "verdict": "heal-exhausted",
+  "watch_rounds": 3
+ },
+ "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee04",
+ "scenario": "s4_heal_exhausted",
+ "schema": "rocqwash-pushci-scenario/1",
+ "summary": "S4 heal 耗尽：NETRED×3（--max-heal 2·attempt1+2 次愈合 rerun 皆 NETRED）→verdict heal-exhausted exit 1（probe 每轮 STABLE 但 rerun 后仍 NETRED）"
+}

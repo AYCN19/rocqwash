@@ -1,0 +1,171 @@
+{
+ "argv": {
+  "dry_run": false,
+  "max_heal": null,
+  "merge": false,
+  "pr": null
+ },
+ "branch": "topic-pushci-s3",
+ "canned": {
+  "jobs": [
+   {
+    "jobs": [
+     {
+      "completed_at": "2026-11-10T08:01:59Z",
+      "conclusion": "failure",
+      "id": 2100000021,
+      "name": "gate7 / shard-1",
+      "run_id": 9100000021,
+      "runner_name": "ubuntu-24.04",
+      "started_at": "2026-11-10T08:00:01Z",
+      "status": "completed",
+      "steps": [
+       {
+        "completed_at": "2026-11-10T08:00:04Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-11-10T08:00:01Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:00:10Z",
+        "conclusion": "success",
+        "name": "Checkout repository",
+        "number": 2,
+        "started_at": "2026-11-10T08:00:04Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:01:50Z",
+        "conclusion": "failure",
+        "name": "Build (coqc batch)",
+        "number": 3,
+        "started_at": "2026-11-10T08:00:10Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": null,
+        "conclusion": "skipped",
+        "name": "COQCHK",
+        "number": 4,
+        "started_at": null,
+        "status": "completed"
+       },
+       {
+        "completed_at": null,
+        "conclusion": "skipped",
+        "name": "Upload artifact (gate2 ledger)",
+        "number": 5,
+        "started_at": null,
+        "status": "completed"
+       }
+      ]
+     }
+    ],
+    "total_count": 1
+   }
+  ],
+  "logs": {
+   "2100000021": "2026-11-10T08:01:20Z Build (coqc batch)\nError: LibX.v:12: The reference eqR lacks an implementation.\nORDER-MISSING: ChainRoot in names ledger\nCOQCHK_EXIT=0\n公理总数=0\n"
+  },
+  "merge": null,
+  "probe": [
+   {
+    "rounds": [
+     {
+      "at": "2026-11-10T08:00:30Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     },
+     {
+      "at": "2026-11-10T08:00:31Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     }
+    ],
+    "schema": "rocqwash-net-probe/1",
+    "verdict": "STABLE"
+   }
+  ],
+  "rerun": [],
+  "runs": [
+   {
+    "total_count": 1,
+    "workflow_runs": [
+     {
+      "conclusion": "failure",
+      "created_at": "2026-11-10T08:00:00Z",
+      "event": "push",
+      "head_branch": "topic-pushci-s3",
+      "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee03",
+      "html_url": "https://github.com/octo-org/rocqwash-verify/actions/runs/9100000021",
+      "id": 9100000021,
+      "name": "gate7",
+      "run_attempt": 1,
+      "run_number": 180,
+      "status": "completed",
+      "updated_at": "2026-11-10T08:02:00Z",
+      "workflow_id": 7000001
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "api_calls": 1,
+  "exit": 2,
+  "final_conclusion": "failure",
+  "git_calls": 4,
+  "heal_rounds": 0,
+  "heal_rounds_empty": true,
+  "merge_enabled": false,
+  "run_id": 9100000021,
+  "verdict": "fix-content",
+  "watch_rounds": 1
+ },
+ "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee03",
+ "scenario": "s3_content_red",
+ "schema": "rocqwash-pushci-scenario/1",
+ "summary": "S3 内容红：run failure A-content-red→verdict fix-content exit 2·零 rerun 实证＝report.heal.rounds 空（无 probe 无 rerun）"
+}

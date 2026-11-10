@@ -1,0 +1,33 @@
+{
+ "argv": {
+  "dry_run": true,
+  "max_heal": null,
+  "merge": false,
+  "pr": null
+ },
+ "branch": "topic-pushci-s6",
+ "canned": {
+  "jobs": [],
+  "logs": {},
+  "merge": null,
+  "probe": [],
+  "rerun": [],
+  "runs": []
+ },
+ "expect": {
+  "api_calls": 0,
+  "exit": 0,
+  "final_conclusion": null,
+  "git_calls": 0,
+  "merge_enabled": false,
+  "run_id": null,
+  "verdict": "dry-run",
+  "watch_rounds": 0,
+  "zero_api_calls": true,
+  "zero_git_calls": true
+ },
+ "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee06",
+ "scenario": "s6_dry_run",
+ "schema": "rocqwash-pushci-scenario/1",
+ "summary": "S6 dry-run：--dry-run 计划输出·零 API 调用零 git 调用实证（injector 零消耗·git shim 账空）→verdict dry-run exit 0"
+}

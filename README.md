@@ -36,6 +36,7 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `tools/chain_graph.py` | Multi-ledger merger → missing-lib chain-root graph (dependents count + root self-washability) → TOP ranking markdown + JSON | Union/override merge and dependents counting are deterministic; LLM loses track across ledgers |
 | `wash/comment_pack.json` + `wash/comment_sweep.py` | Comment-domain sweep sidecar (does not impersonate a statement-face pattern): nested-comment-and-string-aware state machine, comment-domain flag-word exchange (review-bias word → neutral English term), data-driven leading-header replacement with a five-field shape spec; every application mechanically asserts the code-line-equality projection (comment-strip per the w7 criterion) and second-run zero-change | Comment-domain-only edits are provable by the code-strip projection; LLM edits leak into code silently |
 | `tools/ledger_sync.py` | Probe-ledger × status-ledger TSV sync: E1 dedup / E3 ghost / MD5-drift / NO-MD5 / generation-divergence findings (v2.1: recognizes the freeze-ledger `items` subkey shell and filters bare-dict metadata keys loudly; divergence-carrying records are surfaced per-entry with an idempotent row note, never silently dropped) / loud column validation → new TSV, idempotent | Fail-loud bookkeeping with deterministic row upgrades; LLM silently drops or duplicates rows |
+| `tools/pushci.py` | Push-CI one-shot pipeline orchestrator: five stages — preflight emission gate (dyld doctor verdict + net-probe stable window + optional gate4 comment pre-scan; the no-emission-on-single-probe discipline is codified here), push (retry ×3 + ghproxy re-route for https://github.com/ remotes; pushed_sha = ls-remote remote tip), CI watch (status-only polling — a frozen updated_at is not a zombie verdict), heal (ci_triage family dispatch: NETRED/coqchk-skipped → stable-window → rerun, capped; content-red is never auto-fixed; off-table families are never auto-rerun), verdict ± PR merge — seven-state verdict (`success|fix-content|toolchain|unstable|heal-exhausted|gate4-block|dry-run`), exit codes 0/1/2/9; orchestrates the v35 four tools via subprocess, zero new engines; fully offline-injectable (`--injector`/`--git-caller`/`--sleep-scale`) | Deterministic state machine over mechanical gates; LLM cannot be trusted to decide emission windows or auto-heal policies |
 
 ## Repository Layout / 目录结构
 
@@ -55,7 +56,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（43 例）/ CI 工作流占位 — test suite (43 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（48 例）/ CI 工作流占位 — test suite (48 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -109,6 +110,17 @@ rocqwash/
 > 零新引擎；门控 E2/E3 编译弧第一手：pre-fix 编译绿（提取时缺陷族）、修后绿、
 > E2 消费面 `'a1 -> 'a1`→`nat -> nat`、消费单元 magic 0/0、world 访问器债=1
 > 机械钉（实体修复工作流域·canonical_note 记界）。自测套件 43 例。
+> v36 增补（20261111·推送 CI 一键流水线轮）：`tools/pushci.py` 修复后推送 CI
+> 一键流水线编排器——五段管线：preflight 发射闸（dyld doctor verdict＋net-probe
+> 稳窗双闸·可选 gate4 头注预扫·禁发射律代码化）→push（重试 3 发×45s＋
+> https://github.com/ 形 ghproxy 换路·pushed_sha=ls-remote 远端 tip）→watch
+> （status-only 口径轮询·updated_at 冻结非僵尸判据）→heal（ci_triage family
+> 分派：B/E 族→稳窗过→rerun·帽 --max-heal 3·A 内容红禁代修·C toolchain 停·
+> 表外族禁自动 rerun 人工指认）→verdict±merge（七态 success/fix-content/
+> toolchain/unstable/heal-exhausted/gate4-block/dry-run·退出码 0/1/2/9）——
+> v35 四器（doctor/net-probe/triage/union）subprocess 编排零新引擎；离线可测
+> 注入内建（--injector/--git-caller/--sleep-scale·零真网络零真 push）；自测
+> 套件扩至 48 例。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

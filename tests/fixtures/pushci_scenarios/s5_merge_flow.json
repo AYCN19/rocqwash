@@ -1,0 +1,179 @@
+{
+ "argv": {
+  "dry_run": false,
+  "max_heal": null,
+  "merge": true,
+  "pr": 42
+ },
+ "branch": "topic-pushci-s5",
+ "canned": {
+  "jobs": [
+   {
+    "jobs": [
+     {
+      "completed_at": "2026-11-10T08:04:59Z",
+      "conclusion": "success",
+      "id": 2100000041,
+      "name": "gate7 / shard-1",
+      "run_id": 9100000041,
+      "runner_name": "ubuntu-24.04",
+      "started_at": "2026-11-10T08:00:01Z",
+      "status": "completed",
+      "steps": [
+       {
+        "completed_at": "2026-11-10T08:00:04Z",
+        "conclusion": "success",
+        "name": "Set up job",
+        "number": 1,
+        "started_at": "2026-11-10T08:00:01Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:00:10Z",
+        "conclusion": "success",
+        "name": "Checkout repository",
+        "number": 2,
+        "started_at": "2026-11-10T08:00:04Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:03:40Z",
+        "conclusion": "success",
+        "name": "Build (coqc batch)",
+        "number": 3,
+        "started_at": "2026-11-10T08:00:10Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:04:40Z",
+        "conclusion": "success",
+        "name": "COQCHK",
+        "number": 4,
+        "started_at": "2026-11-10T08:03:40Z",
+        "status": "completed"
+       },
+       {
+        "completed_at": "2026-11-10T08:04:59Z",
+        "conclusion": "success",
+        "name": "Upload artifact (gate2 ledger)",
+        "number": 5,
+        "started_at": "2026-11-10T08:04:40Z",
+        "status": "completed"
+       }
+      ]
+     }
+    ],
+    "total_count": 1
+   }
+  ],
+  "logs": {
+   "2100000041": "2026-11-10T08:00:05Z ##[group]Run actions/checkout@v4\n##[endgroup]\nBuild (coqc batch): 14 files compiled, 0 errors\nCOQCHK_EXIT=0\nCOQCHK_ALL_PASS=1\n判定=CLEAN\n公理总数=0\nUpload artifact (gate2 ledger): 3 files uploaded\n"
+  },
+  "merge": {
+   "body": {
+    "merged": true,
+    "message": "Pull Request successfully merged",
+    "sha": "d0e0d0e0d0e0d0e0d0e0d0e0d0e0d0e0d0e0d005"
+   },
+   "status": 200
+  },
+  "probe": [
+   {
+    "rounds": [
+     {
+      "at": "2026-11-10T08:00:30Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     },
+     {
+      "at": "2026-11-10T08:00:31Z",
+      "endpoints": [
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://results-receiver-actions.githubusercontent.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://productionresultssa1.blob.core.windows.net"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://api.github.com"
+       },
+       {
+        "http_code": 200,
+        "ok": true,
+        "url": "https://github.com"
+       }
+      ]
+     }
+    ],
+    "schema": "rocqwash-net-probe/1",
+    "verdict": "STABLE"
+   }
+  ],
+  "rerun": [],
+  "runs": [
+   {
+    "total_count": 1,
+    "workflow_runs": [
+     {
+      "conclusion": "success",
+      "created_at": "2026-11-10T08:00:00Z",
+      "event": "push",
+      "head_branch": "topic-pushci-s5",
+      "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee05",
+      "html_url": "https://github.com/octo-org/rocqwash-verify/actions/runs/9100000041",
+      "id": 9100000041,
+      "name": "gate7",
+      "run_attempt": 1,
+      "run_number": 182,
+      "status": "completed",
+      "updated_at": "2026-11-10T08:05:00Z",
+      "workflow_id": 7000001
+     }
+    ]
+   }
+  ]
+ },
+ "expect": {
+  "api_calls": 2,
+  "exit": 0,
+  "final_conclusion": "success",
+  "git_calls": 4,
+  "heal_rounds": 0,
+  "merge_enabled": true,
+  "merge_sha": "d0e0d0e0d0e0d0e0d0e0d0e0d0e0d0e0d0e0d005",
+  "pr_number": 42,
+  "run_id": 9100000041,
+  "verdict": "success",
+  "watch_rounds": 1
+ },
+ "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee05",
+ "scenario": "s5_merge_flow",
+ "schema": "rocqwash-pushci-scenario/1",
+ "summary": "S5 merge 流：run success→PUT merge 200（PR 42）→report.merge.merge_sha 非空 exit 0"
+}
