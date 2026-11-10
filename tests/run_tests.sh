@@ -92,6 +92,15 @@
 #         六场景壳十节：selftest 冻结矢量/tmp 仓 helper/S1 绿径/S2 NETRED 愈合/
 #         S3 内容红零 rerun/S4 heal 耗尽/S5 merge/S6 dry-run/幂等字节恒同/
 #         CLI 五码·全离线全注入零真网络零真 push 零编译）
+#       tools/cw_sentinel.py 实时动态哨（tests/test_cw_sentinel.py·最小自测壳
+#         两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
+#         哨自身 --selftest 六矢量 canned 注入零真网络零编译）
+#       tools/wash_shape.py 洗形器·正典形五洗流水（tests/test_wash_shape.py·
+#         最小自测壳三判：--selftest 冻结标记 WASH-SHAPE-SELFTEST PASS
+#         十二判向量＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络）
+#       tools/unclog.py 疏通堵塞闭环引擎（tests/test_unclog.py·最小自测壳
+#         三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十矢量全 --injector
+#         canned 罐装零真编译）＋--help 冒烟＋退出码口径抽验 2/2/9·零网络零触真仓）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -172,7 +181,10 @@ t_dual_scan \
  t_toolchain_dyld_doctor \
  t_ci_triage \
  t_net_probe \
- t_pushci"
+ t_pushci \
+ t_cw_sentinel \
+ t_wash_shape \
+ t_unclog"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -473,6 +485,35 @@ t_pushci() {
   # merge＋S6 dry-run＋六场景幂等字节恒同＋CLI 五码——全离线全注入零真网络
   # 零真 push 零编译零写盘）
   "$PY" -B "$REPO/tests/test_pushci.py"
+}
+
+t_cw_sentinel() {
+  # 20261111 v37 挂接：实时动态哨（tools/cw_sentinel.py·三路信号源 CI runs/
+  # 本地台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·ci_triage/
+  # chain_graph subprocess 编排零新引擎·tests/test_cw_sentinel.py 最小自测壳
+  # 两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
+  # 零真网络零编译零触真仓）
+  "$PY" -B "$REPO/tests/test_cw_sentinel.py"
+}
+
+t_wash_shape() {
+  # 20261111 v37 洗形席挂接：洗形器·正典形五洗流水（tools/wash_shape.py·
+  # gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/行尾归一/registry_union
+  # 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·schema rocqwash-shape/1·
+  # tests/test_wash_shape.py 最小自测壳三判：--selftest 冻结标记
+  # WASH-SHAPE-SELFTEST PASS（十二判向量全 tmp 夹具）＋--help 冒烟＋退出码
+  # 口径抽验 2/2/9·零编译零网络零写盘）
+  "$PY" -B "$REPO/tests/test_wash_shape.py"
+}
+
+t_unclog() {
+  # 20261111 v37 集成席挂接：疏通堵塞闭环引擎（tools/unclog.py·手工五步闭环
+  # probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→
+  # verdict 判定·schema rocqwash-unclog/1·tests/test_unclog.py 最小自测壳
+  # 三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十矢量全 --injector
+  # canned 罐装）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无参/缺路
+  # 本集成席实跑验证）·零真编译零网络零触真仓）
+  "$PY" -B "$REPO/tests/test_unclog.py"
 }
 
 # ---------- 汇总执行 ----------

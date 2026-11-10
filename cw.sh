@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具（共十二）统一入口（repo 根·bash 3.2 兼容）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器（共十五）统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
-#         20261111 five-tool wave, twelve tools in total (repo root, bash 3.2)
+#         20261111 five-tool wave plus the v37 three-tool wave, fifteen tools
+#         in total (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
 #
@@ -32,6 +33,15 @@
 #   pushci      修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge）
 #                                                    -> tools/pushci.py
 #               cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
+#   sentinel    实时动态哨（三路信号源→JSONL 事件流·once/loop 双模）
+#                                                    -> tools/cw_sentinel.py
+#               cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
+#   wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
+#                                                    -> tools/wash_shape.py
+#               cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
+#   unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
+#                                                    -> tools/unclog.py
+#               cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -40,12 +50,15 @@
 #   3. 退出码：0=通过；2=未知工具；9=目标脚本缺失；其余=各工具自身口径透传
 #      （工具自身口径：--help/--selftest=0；argparse 用法错/FAIL-LOUD 断言=2；目标文件缺失=9）。
 #      pushci 透传 verdict 封册（success/dry-run=0·heal-exhausted/unstable/toolchain=1·
-#      fix-content/gate4-block=2·9=目标缺失）。
+#      fix-content/gate4-block=2·9=目标缺失）。v37 三器口径同形：0=绿/巡检完成/
+#      unclogged；1=数据性未竟（洗未尽 partial/plan-miss·墙 wall/轮尽
+#      rounds-exhausted——红是数据非器红·响亮 stdout）；2=用法错；9=缺/fail-loud。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
 # wash/verify/seam/certify/watch). The v29-v32 tools and the 20261111 five tools
-# (doctor/net-probe/triage/union/pushci in tools/) live in module directories that now
+# (doctor/net-probe/triage/union/pushci in tools/) plus the v37 three tools
+# (cw_sentinel/wash_shape/unclog) live in module directories that now
 # hold several generic entries each, where the auto-router's ambiguity guard
 # (exit 4) deliberately declines to guess — this entry fills that gap by
 # explicit tool name. The two entries are complementary.
@@ -56,7 +69,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 五工具统一入口（十二工具·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器统一入口（十五工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -87,6 +100,15 @@ cw.sh — rocqwash v29-v32＋20261111 五工具统一入口（十二工具·bash
   pushci      修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge）
                                                    -> tools/pushci.py
               cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
+  sentinel    实时动态哨（三路信号源→JSONL 事件流·once/loop 双模）
+                                                   -> tools/cw_sentinel.py
+              cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
+  wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
+                                                   -> tools/wash_shape.py
+              cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
+  unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
+                                                   -> tools/unclog.py
+              cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -112,6 +134,9 @@ hint_for() {  # $1=tool
     triage)      echo "cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI 红炉分诊（五族+绿炉）-> tools/ci_triage.py" ;;
     union)       echo "cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-base RB --ref-main RM --ref-branch XB   # 注册册 union 手术（缺省干跑）-> tools/registry_union.py" ;;
     pushci)      echo "cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]   # 修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge·七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run）-> tools/pushci.py" ;;
+    sentinel)    echo "cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]   # 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·红是数据非器红·零动作是缺省）-> tools/cw_sentinel.py" ;;
+    wash-shape)  echo "cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]   # 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·--apply 落刀后复跑五洗复核）-> tools/wash_shape.py" ;;
+    unclog)      echo "cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--top N] [--pack FILE] [--json out] [--events F] [--loop --interval S --loop-max N] [--injector DIR]   # 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→verdict unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒）-> tools/unclog.py" ;;
     *) return 1 ;;
   esac
 }
@@ -144,12 +169,15 @@ case "${1:-}" in
   triage)      shift; run_tool triage      "tools/ci_triage.py"           "$@" ;;
   union)       shift; run_tool union       "tools/registry_union.py"      "$@" ;;
   pushci)      shift; run_tool pushci      "tools/pushci.py"              "$@" ;;
+  sentinel)    shift; run_tool sentinel    "tools/cw_sentinel.py"         "$@" ;;
+  wash-shape)  shift; run_tool wash-shape  "tools/wash_shape.py"          "$@" ;;
+  unclog)      shift; run_tool unclog      "tools/unclog.py"              "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog）" >&2
         exit 2
       fi
     fi
@@ -157,7 +185,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|help）" >&2
     usage >&2
     exit 2 ;;
 esac

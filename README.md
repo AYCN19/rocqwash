@@ -56,7 +56,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（48 例）/ CI 工作流占位 — test suite (48 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（51 例）/ CI 工作流占位 — test suite (51 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -121,6 +121,22 @@ rocqwash/
 > v35 四器（doctor/net-probe/triage/union）subprocess 编排零新引擎；离线可测
 > 注入内建（--injector/--git-caller/--sleep-scale·零真网络零真 push）；自测
 > 套件扩至 48 例。
+> v37 增补（20261111·实时动态三器轮·用户令：配合工作流实时动态提供清洗、洗形、
+> 排障、疏通堵塞）：`tools/cw_sentinel.py` 实时动态哨（三路信号源 CI runs/台账
+> 链根/buildlog 词面→JSONL 事件流·once/loop 双模·判类全权在 ci_triage·链根
+> 全权在 chain_graph·零动作是缺省）＋`tools/wash_shape.py` 洗形器·正典形五洗
+> 流水（词面/token/头注/行尾/锚五洗全 subprocess 编排既有引擎·plan 缺省零写盘·
+> --apply 落刀后复跑五洗复核）＋`tools/unclog.py` 疏通堵塞闭环引擎（probe 归集
+> →chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→verdict
+> unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒·诚实墙禁硬凑）——
+> 三器共同接口纪律五条：JSON-in/JSON-out（--json report·schema 钦名
+> rocqwash-sentinel/1·rocqwash-shape/1·rocqwash-unclog/1·sort_keys 字节恒同）·
+> 退出码 0/1/2/9（红是数据非器红·响亮 stdout）·--once/--loop 双模（--interval
+> 可调·JSONL 事件流 --events）·离线可测（--injector 子进程调用层罐装＋
+> --sleep-scale·零真网络零真编译于 selftest）·编排而非重造（零新引擎）；
+> `cw.sh` 入口扩至十五工具（sentinel/wash-shape/unclog 三路由·四处同步）·
+> 工作流配合接口速查见 [README-cw.md](README-cw.md)「工作流配合接口」节；
+> 自测套件扩至 51 例（47 过/4 例正本缺卷让席·真本机全跑）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
