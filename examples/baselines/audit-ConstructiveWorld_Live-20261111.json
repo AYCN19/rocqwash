@@ -1,0 +1,71 @@
+{
+ "args": {
+  "apply": false,
+  "candidates": "audit27.tsv",
+  "chain_ledgers": [],
+  "guard": null,
+  "injector": null,
+  "interval": 60.0,
+  "loop": false,
+  "loop_max": 0,
+  "pack": "cure_pack.json",
+  "probe_resume": false,
+  "repo_path": "rocqwash",
+  "rocq_cmd": "/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/coqc -native-compiler no -q -Q . \"\" {name}.v",
+  "rounds": 5,
+  "scan_ids": "S",
+  "sleep_scale": 1.0,
+  "src": "ConstructiveWorld_Live",
+  "state_file": null,
+  "timeout": 1500,
+  "top": 25,
+  "world": "probe_world_v38"
+ },
+ "final": {
+  "cures_applied_total": 0,
+  "cures_planned_total": 0,
+  "red_files": [],
+  "rounds_run": 1,
+  "verdict": "audit",
+  "wall_count": 0
+ },
+ "mode": {
+  "apply": false,
+  "audit": true,
+  "injector": false,
+  "loop": false,
+  "source": "tsv"
+ },
+ "rounds": [
+  {
+   "chain_top": [],
+   "cure": null,
+   "cures_applied": 0,
+   "cures_planned": 0,
+   "log": "[audit] root=- cures=0 (audit baseline·red=0)",
+   "probe_summary": {
+    "ledgers": [
+     "audit.probe.json"
+    ],
+    "n_records": 27,
+    "n_red": 0,
+    "red_files": [],
+    "source": "probe"
+   },
+   "rescan": null,
+   "resprobe": null,
+   "root": null,
+   "root_file": null,
+   "round": 1
+  }
+ ],
+ "schema": "rocqwash-unclog/1",
+ "timing": {
+  "enumerate_s": null,
+  "manifest_s": 1.289,
+  "probe_chain_s": 190.728,
+  "total_s": 194.086
+ },
+ "verdict": "audit",
+ "wall": {}
+}

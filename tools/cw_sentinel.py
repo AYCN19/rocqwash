@@ -42,24 +42,47 @@ emit_rotations 计数·rename 失败 → 9。seq 跨代续号（本体＋.1/.2 �
 
 --on-red 'CMD 模板'：{family}／{run}／{repo} 占位替换（事件字段直替·缺字段
 替空串）→ subprocess shell 执行（超时帽 60s·rc≠0/超时响亮入 actions 账与
-stdout·不改哨退出码——on-red 是旁路动作非器面）。缺省无＝report-only·
-**零动作是缺省**（承 cure_applier 干跑缺省同纪律）。
+stdout·不改哨退出码——on-red 是旁路动作非器面）。须 --emit（旁路动作必伴
+随事件流落盘——触发证据与动作账可审计·无 --emit → 2·与 --on-red-preset
+同款守卫·v41 矩阵判据转正）。缺省无＝report-only·**零动作是缺省**（承
+cure_applier 干跑缺省同纪律）。
 
---on-red-preset NAME：红事件预设动作——预设即模板 sugar：展开为内部命令模板
-后走与 --on-red **同一执行器**（60s 帽·rc≠0/超时响亮入 actions 账·不改哨
-退出码·占位替换复用现有 --on-red 路径·零新执行路径）。与 --on-red 互斥
-（同给 rc=2 fail-loud·禁静默择一——「preset 优先」＝preset 在场即占 on-red
-动作槽·同给即用法歧义报错）：
+--on-red-preset NAME：红事件预设动作（**可重复＝链式**·见下）——预设即模板
+sugar：展开为内部命令模板后走与 --on-red **同一执行器**（60s 帽·rc≠0/超时
+响亮入 actions 账·不改哨退出码·占位替换复用现有 --on-red 路径·零新执行
+路径）。与 --on-red 互斥（同给 rc=2 fail-loud·禁静默择一——「preset 优先」
+＝preset 在场即占 on-red 动作槽·同给即用法歧义报错）。预设五件
+（ON_RED_PRESETS 表·程序路径按哨自身相对定位承 TOOLS_DIR 先例）：
   unclog＝python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json
-    （--src 必经 --on-red-arg src=... 透传·**--apply 缺省不加＝疏通只干跑·
-    人审后再 apply——自动接驳缺省干跑是铁律**）
+    （**--apply 缺省不加＝疏通只干跑·人审后再 apply——自动接驳缺省干跑是
+    铁律**）
   pushci＝python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch}
-    --json {emit_dir}/pushci_{run}.json --dry-run
-    （repo_path/branch 必经 --on-red-arg 透传·--dry-run 缺省＝只打计划零副作用）
-静态占位 {src}/{repo_path}/{branch} 展开时由 --on-red-arg K=V 实替（缺/重/
-无 '='/未知键/孤儿 --on-red-arg → 2）；{emit_dir} 取 --emit 所在目录（预设
-出账与事件流同盘·--emit 必给否则 2）；动态 {run} 原样留给 fire_on_red 事件
-直替（缺字段替空串·既有语义）。预设器件缺失 → 9。
+    --json {emit_dir}/pushci_{run}.json --dry-run（--dry-run 缺省＝只打计划
+    零副作用）
+  wash-shape＝python3 -B tools/wash_shape.py --dir {src} --json
+    {emit_dir}/wash_shape_{run}.json（**--apply 不入模板＝洗形只出 plan·
+    plan 零写盘·人审后再 apply——缺省干跑同铁律**）
+  triage＝python3 -B tools/ci_triage.py --repo {repo} --run {run} --json
+    {emit_dir}/triage_{run}.json（红事件自带 repo/run 事件直替流入＝对本
+    红 run 复诊重判类）
+  cw-doctor＝python3 -B tools/cw_doctor.py --json {emit_dir}/doctor_{run}.json
+    （零参面＝全缺省体检）
+必传参数表（PRESET_REQUIRED_ARGS·声明化）：{unclog:[src]·pushci:[repo_path,
+branch]·wash-shape:[src]·triage:[repo,run]·cw-doctor:[]}。占位两族：静态族
+{src}/{repo_path}/{branch} 展开时由 --on-red-arg K=V 实替；动态族
+{family}/{run}/{repo}（＝fire_on_red 事件直替既有键）原样留给事件直替
+（缺字段替空串·既有语义）。必传守卫逐键判（同款 fail-loud）：--on-red-arg
+已给即静态实替·未给而键属动态族即事件直替（triage 的 repo/run 即此——
+红事件出值·展开期无可查非缺）·二者皆非 → 缺 rc=2；无 '='/空 K·V/重键/
+未知键（键不在参数面——链式＝全链参数面并集）/孤儿 --on-red-arg → 2；
+{emit_dir} 取 --emit 所在目录（预设出账与事件流同盘·--emit 必给否则 2）。
+预设器件缺失 → 9。
+链式：--on-red-preset 可重复（如 --on-red-preset unclog --on-red-preset
+triage）＝链式同触发——按给定序逐个展开·红事件逐件**按序执行·一败续行**
+（某条 rc≠0/超时只响亮入账不裁停后条·旁路动作非器面·哨退出码不变）；
+actions 账每条模板一笔（链 N 条=N 笔·schema 同单条）；--on-red-arg 命名
+空间全链共享（未知键判全链并集面·必传缺逐预设判）。report on_red_preset
+＝单预设名串·链式名列表（按给定序）。
 
 双模：--once（单轮巡检出账退出·工作流步骤用）｜--loop --interval S（长驻·
 JSONL 追加·工作流后台 bash 任务用）·--max-rounds N 轮帽（0=无限·selftest
@@ -77,8 +100,10 @@ __init__ 包结构；injector canned 路径零真网络一律不重试——离�
 
 退出码：0=巡检完成（红是数据非器红·响亮 stdout）；2=用法错（缺模式/双模
 同给/三源全缺/--branch 先于 --watch-repo/repo 形坏/负参/once 带 loop 专属
-参/--on-red-preset 与 --on-red 同给/preset 不识别/预设参数缺·重·形坏·
---emit 缺/--on-red-arg 孤儿/--emit-max-bytes 须与 --emit 同给或 N<1/
+参/--on-red-preset 与 --on-red 同给/preset 不识别/预设参数缺·重·形坏
+〔链式未知键判全链并集面〕/--emit 缺/--on-red 缺 --emit（plain 与 preset
+双路同守卫）/--on-red-arg 孤儿/
+--emit-max-bytes 须与 --emit 同给或 N<1/
 --rebuild-state 缺 --state-file）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·
 token 空·runs/jobs 形坏·预设器件缺·
 injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·ci_triage/
@@ -89,8 +114,8 @@ rename 失败）。
 report schema（--json·每轮覆盖写·rocqwash-sentinel/1）：
   {"schema","mode","round","sources"{ci[],ledgers{},buildlog{}},"events"[],
    "actions"[](on-red 执行账),"state_file"?,"state_rebuilt"?,"interval"?,
-   "sleep_scale","ts_enabled","injector"?,"on_red_preset"?,
-   "emit_max_bytes"?,"emit_rotations"?}
+   "sleep_scale","ts_enabled","injector"?,"on_red_preset"?(单预设串·链式
+   列表),"emit_max_bytes"?,"emit_rotations"?}
   events/actions 元素与事件流逐字节同源（确定性：--sleep-scale 0 时同输入
   重跑字节级恒同）。
 
@@ -153,6 +178,8 @@ TRIAGE_TOOL = os.path.join(TOOLS_DIR, "ci_triage.py")
 CHAIN_TOOL = os.path.join(TOOLS_DIR, "chain_graph.py")
 UNCLOG_TOOL = os.path.join(TOOLS_DIR, "unclog.py")
 PUSHCI_TOOL = os.path.join(TOOLS_DIR, "pushci.py")
+WASH_SHAPE_TOOL = os.path.join(TOOLS_DIR, "wash_shape.py")
+CW_DOCTOR_TOOL = os.path.join(TOOLS_DIR, "cw_doctor.py")
 
 if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)   # 同目录共享退避小模块（无 __init__ 包结构）
@@ -160,18 +187,37 @@ import _http_backoff
 
 # --on-red-preset 预设表（任务书钦定模板·程序路径按哨自身相对定位承 TOOLS_DIR
 # 先例·零硬编码绝对路径）：静态占位 {src}/{repo_path}/{branch}/{emit_dir} 展开
-# 时实替·动态 {run} 留给 fire_on_red 事件直替。unclog 不带 --apply＝疏通只干
-# 跑（自动接驳缺省干跑铁律）·pushci 带 --dry-run＝只打计划零副作用。
+# 时实替·动态 {run}/{repo}/{family} 留给 fire_on_red 事件直替。unclog 不带
+# --apply＝疏通只干跑·wash-shape 不带 --apply＝洗形只出 plan（两干跑缺省铁律）
+# ·pushci 带 --dry-run＝只打计划零副作用·triage 事件直替 {repo}/{run}＝对本
+# 红 run 复诊·cw-doctor 零参面＝全缺省体检。
 ON_RED_PRESETS = {
     "unclog": "python3 -B %s --src {src} --json {emit_dir}/unclog_{run}.json"
               % UNCLOG_TOOL,
     "pushci": "python3 -B %s --repo-path {repo_path} --branch {branch} "
               "--json {emit_dir}/pushci_{run}.json --dry-run" % PUSHCI_TOOL,
+    "wash-shape": "python3 -B %s --dir {src} --json "
+                  "{emit_dir}/wash_shape_{run}.json" % WASH_SHAPE_TOOL,
+    "triage": "python3 -B %s --repo {repo} --run {run} "
+              "--json {emit_dir}/triage_{run}.json" % TRIAGE_TOOL,
+    "cw-doctor": "python3 -B %s --json {emit_dir}/doctor_{run}.json"
+                 % CW_DOCTOR_TOOL,
 }
-ON_RED_PRESET_TOOLS = {"unclog": UNCLOG_TOOL, "pushci": PUSHCI_TOOL}
-# 各预设必传透传参数（--on-red-arg K=V·缺/重/无 '='/未知键 → 2）
-ON_RED_PRESET_PARAMS = {"unclog": ("src",),
-                        "pushci": ("repo_path", "branch")}
+ON_RED_PRESET_TOOLS = {"unclog": UNCLOG_TOOL, "pushci": PUSHCI_TOOL,
+                       "wash-shape": WASH_SHAPE_TOOL, "triage": TRIAGE_TOOL,
+                       "cw-doctor": CW_DOCTOR_TOOL}
+# 各预设必传参数表（声明化·--on-red-arg K=V 静态族实替面）：缺（非动态族）/
+# 重/无 '='/未知键 → 2。triage 的 repo/run 属动态事件直替族（fire_on_red
+# 既有键·红事件自带·pushci 静态键命名 repo_path 正为避开 {repo} 动态名）——
+# 未给 --on-red-arg 即事件直替非缺。
+PRESET_REQUIRED_ARGS = {"unclog": ("src",),
+                        "pushci": ("repo_path", "branch"),
+                        "wash-shape": ("src",),
+                        "triage": ("repo", "run"),
+                        "cw-doctor": ()}
+# 动态占位族（fire_on_red 事件直替键·缺字段替空串既有语义）——必传守卫对
+# 此族放行（事件出值·展开期无可查）。
+PRESET_DYNAMIC_KEYS = ("family", "run", "repo")
 
 # buildlog 词面（判类谱 token·ci_triage.py:95-108 同源）：BUILD-FAIL／
 # EXIT=134（C 环境断链）／Error:（A 内容红）
@@ -687,17 +733,11 @@ def poll_buildlog(sentry, log_path, st):
 
 # ---- on-red（旁路动作·零动作是缺省）------------------------------------------
 
-def expand_on_red_preset(name, arg_pairs, emit_path):
-    """--on-red-preset 展开 → on-red 命令模板串（ON_RED_PRESETS 表·预设即模板
-    sugar）。静态占位 {src}/{repo_path}/{branch} 由 --on-red-arg K=V 实替·
-    {emit_dir} 取 --emit 所在目录（预设出账与事件流同盘）；动态 {run}/{family}/
-    {repo} 原样留给 fire_on_red 事件直替（占位替换复用现有 --on-red 路径·
-    零新执行路径）。preset 不识别/参数缺·重·无 '='/空 K·V/未知键/--emit 缺
-    → 2·预设器件缺 → 9。"""
-    if name not in ON_RED_PRESETS:
-        raise SentryError("--on-red-preset 不识别: %r（可选 %s）"
-                          % (name, "/".join(sorted(ON_RED_PRESETS))), 2)
-    need = ON_RED_PRESET_PARAMS[name]
+def parse_on_red_args(arg_pairs, face, face_label):
+    """--on-red-arg K=V 解析＋形守卫（无 '='/空 K·V/重键/未知键 → 2）。face=
+    合法键面（单预设＝其必传表·链式＝全链参数面并集——链中任一预设声明即
+    合法·单预设并集＝其面与既有守卫同款）。→ params dict（替换按 sort_keys
+    序·确定性）。"""
     params = {}
     for pair in (arg_pairs or []):
         if "=" not in pair:
@@ -707,14 +747,35 @@ def expand_on_red_preset(name, arg_pairs, emit_path):
             raise SentryError("--on-red-arg K/V 皆须非空: %r" % pair, 2)
         if k in params:
             raise SentryError("--on-red-arg 重键: %r" % k, 2)
-        if k not in need:
-            raise SentryError("--on-red-arg 键 %r 不属 preset %s（须 %s）"
-                              % (k, name, "/".join(need)), 2)
+        if k not in face:
+            raise SentryError("--on-red-arg 键 %r 不属 %s（参数面 %s）"
+                              % (k, face_label,
+                                 "/".join(face) if face else "空"), 2)
         params[k] = v
-    missing = [k for k in need if k not in params]
+    return params
+
+
+def check_preset_required(name, params):
+    """必传守卫（PRESET_REQUIRED_ARGS[name] 逐键·同款 fail-loud）：--on-red-arg
+    已给即静态实替；未给而键属动态族（PRESET_DYNAMIC_KEYS＝fire_on_red 事件
+    直替既有键）即事件直替（triage 的 repo/run——红事件自带·展开期原样保留·
+    非缺）；二者皆非 → 缺 rc=2。"""
+    missing = [k for k in PRESET_REQUIRED_ARGS[name]
+               if k not in params and k not in PRESET_DYNAMIC_KEYS]
     if missing:
-        raise SentryError("--on-red-preset %s 必传透传参数缺（--on-red-arg "
-                          "%s=...）: %s" % (name, missing[0], "/".join(need)), 2)
+        raise SentryError("--on-red-preset %s 必传参数缺（--on-red-arg "
+                          "%s=...·动态族 %s 事件直替免传）: %s"
+                          % (name, missing[0],
+                             "/".join(PRESET_DYNAMIC_KEYS),
+                             "/".join(PRESET_REQUIRED_ARGS[name])), 2)
+
+
+def expand_preset_cmd(name, params, emit_path):
+    """单预设命令展开（必传守卫 → --emit 守卫 → 器件在盘 → 占位实替）。静态
+    键按 sort_keys 序实替·{emit_dir} 取 --emit 所在目录（预设出账与事件流
+    同盘）；动态族原样保留给 fire_on_red 事件直替（占位替换复用现有 --on-red
+    路径·零新执行路径）。--emit 缺 → 2·预设器件缺 → 9。"""
+    check_preset_required(name, params)
     if not emit_path:
         raise SentryError("--on-red-preset 需 --emit（{emit_dir} 取事件流所在"
                           "目录·预设出账同盘）", 2)
@@ -728,31 +789,65 @@ def expand_on_red_preset(name, arg_pairs, emit_path):
     return cmd
 
 
+def expand_on_red_preset(name, arg_pairs, emit_path):
+    """--on-red-preset 单预设展开 → on-red 命令模板串（ON_RED_PRESETS 表·
+    预设即模板 sugar）。preset 不识别/参数缺·重·无 '='/空 K·V/未知键/
+    --emit 缺 → 2·预设器件缺 → 9。"""
+    if name not in ON_RED_PRESETS:
+        raise SentryError("--on-red-preset 不识别: %r（可选 %s）"
+                          % (name, "/".join(sorted(ON_RED_PRESETS))), 2)
+    params = parse_on_red_args(arg_pairs, PRESET_REQUIRED_ARGS[name],
+                               "preset %s" % name)
+    return expand_preset_cmd(name, params, emit_path)
+
+
+def expand_on_red_presets(names, arg_pairs, emit_path):
+    """--on-red-preset 链式展开（旗可重复·v41 任务书③）：逐名不识别 → 2；
+    --on-red-arg 命名空间全链共享——未知键判**全链参数面并集**（链式示例
+    unclog+triage 仅传 src 即成链·triage 的 repo/run 走事件直替）；必传缺
+    逐预设判（动态族放行）--emit/器件守卫同单预设。→ 命令模板列表（按给定
+    序零重排——按序执行契约·sort_keys 确定性不受影响）。"""
+    for name in names:
+        if name not in ON_RED_PRESETS:
+            raise SentryError("--on-red-preset 不识别: %r（可选 %s）"
+                              % (name, "/".join(sorted(ON_RED_PRESETS))), 2)
+    face = sorted({k for name in names for k in PRESET_REQUIRED_ARGS[name]})
+    params = parse_on_red_args(arg_pairs, face,
+                               "preset 链 %s" % "+".join(names))
+    return [expand_preset_cmd(name, params, emit_path) for name in names]
+
+
 def fire_on_red(sentry, ev):
-    """--on-red 模板占位替换（{family}/{run}/{repo}·事件字段直替缺字段空串）
-    → subprocess shell 执行。rc≠0/超时响亮入账·不改哨退出码（旁路动作非
-    器面）。"""
-    cmd = str(sentry["on_red"])
-    for key in ("family", "run", "repo"):
-        cmd = cmd.replace("{%s}" % key, str(ev.get(key) if ev.get(key)
-                                            is not None else ""))
-    entry = {"seq": ev.get("seq"), "kind": ev.get("kind"), "cmd": cmd}
-    try:
-        p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT, timeout=ON_RED_TIMEOUT)
-        out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
-            else (p.stdout or "")
-        entry["rc"] = p.returncode
-        entry["output"] = clip(out, 400)
-        if p.returncode != 0:
-            sys.stdout.write("on-red 注记: cmd rc=%d（旁路动作·不改哨退出码）"
-                             "\n" % p.returncode)
-    except subprocess.TimeoutExpired:
-        entry["rc"] = None
-        entry["output"] = "timeout（%ds 帽）" % ON_RED_TIMEOUT
-        sys.stdout.write("on-red 注记: cmd 超时（旁路动作·不改哨退出码）\n")
-    sentry["actions"].append(entry)
-    return entry
+    """红事件旁路动作执行（--on-red 单模板与 --on-red-preset 链展开表同一
+    入口同一执行器）：模板逐条占位替换（{family}/{run}/{repo}·事件字段直替
+    缺字段空串）→ subprocess shell 执行。**按序执行·一败续行**——某条
+    rc≠0/超时只响亮入账（stdout 注记＋actions 笔）不裁停后条·不改哨退出码
+    （旁路动作非器面）。每条模板一笔 actions 账（链 N 条=N 笔·schema 同
+    单条）。→ 本事件出账笔列表。"""
+    entries = []
+    for tpl in sentry["on_red"]:
+        cmd = str(tpl)
+        for key in ("family", "run", "repo"):
+            cmd = cmd.replace("{%s}" % key, str(ev.get(key) if ev.get(key)
+                                                is not None else ""))
+        entry = {"seq": ev.get("seq"), "kind": ev.get("kind"), "cmd": cmd}
+        try:
+            p = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, timeout=ON_RED_TIMEOUT)
+            out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
+                else (p.stdout or "")
+            entry["rc"] = p.returncode
+            entry["output"] = clip(out, 400)
+            if p.returncode != 0:
+                sys.stdout.write("on-red 注记: cmd rc=%d（旁路动作·不改哨退出码）"
+                                 "\n" % p.returncode)
+        except subprocess.TimeoutExpired:
+            entry["rc"] = None
+            entry["output"] = "timeout（%ds 帽）" % ON_RED_TIMEOUT
+            sys.stdout.write("on-red 注记: cmd 超时（旁路动作·不改哨退出码）\n")
+        sentry["actions"].append(entry)
+        entries.append(entry)
+    return entries
 
 
 # ---- 单轮巡检 ----------------------------------------------------------------
@@ -877,6 +972,10 @@ def build_sentry(args):
                           "preset 即占 on-red 动作槽·禁静默择一）", 2)
     if args.on_red_args and not args.on_red_preset:
         raise SentryError("--on-red-arg 只服务 --on-red-preset", 2)
+    if args.on_red and not args.emit:
+        raise SentryError("--on-red 须 --emit（旁路动作必伴随事件流落盘·"
+                          "触发证据与动作账可审计·与 --on-red-preset 同款"
+                          "守卫）", 2)
     if args.retry_max < 0:
         raise SentryError("--retry-max 须≥0 实测 %s" % args.retry_max, 2)
     if args.subproc_timeout < 1:
@@ -892,15 +991,21 @@ def build_sentry(args):
     if args.rebuild_state and not args.state_file:
         raise SentryError("--rebuild-state 须与 --state-file 同给（无 state "
                           "即无物可重建）", 2)
-    on_red = args.on_red
+    on_red = None
     if args.on_red_preset:
-        on_red = expand_on_red_preset(args.on_red_preset, args.on_red_args,
-                                      args.emit)
+        on_red = expand_on_red_presets(args.on_red_preset, args.on_red_args,
+                                       args.emit)
+    elif args.on_red:
+        on_red = [args.on_red]          # plain 单模板同表形（执行器同入口）
     sentry = {
         "args": args, "mode": mode, "specs": specs,
         "seq": 1, "events": [], "actions": [],
         "emit": args.emit, "on_red": on_red,
-        "on_red_preset": args.on_red_preset,
+        "on_red_preset": (args.on_red_preset[0]
+                          if args.on_red_preset
+                          and len(args.on_red_preset) == 1
+                          else (list(args.on_red_preset)
+                                if args.on_red_preset else None)),
         "emit_max_bytes": args.emit_max_bytes, "rotations": 0,
         "timeout": args.timeout, "injector": None, "token": None,
         "retry_max": args.retry_max,
@@ -1000,17 +1105,22 @@ def main():
                          "损坏 state 缺省红拒 9 禁静默重建·须与 --state-file "
                          "同给）")
     ap.add_argument("--on-red", dest="on_red", default=None, metavar="CMD",
-                    help="红事件命令模板（{family}/{run}/{repo} 占位）·缺省"
-                         "无=report-only 零动作是缺省")
-    ap.add_argument("--on-red-preset", dest="on_red_preset", default=None,
-                    metavar="NAME",
-                    help="红事件预设动作模板（unclog=疏通只干跑·pushci=推送"
-                         "dry-run·参数经 --on-red-arg 透传·与 --on-red 互斥"
-                         "同给 rc=2·同一执行器零新执行路径）")
+                    help="红事件命令模板（{family}/{run}/{repo} 占位）·须 "
+                         "--emit（与 preset 同款守卫）·缺省无=report-only "
+                         "零动作是缺省")
+    ap.add_argument("--on-red-preset", dest="on_red_preset", action="append",
+                    default=None, metavar="NAME",
+                    help="红事件预设动作模板（可重复＝链式·按序执行一败续行："
+                         "unclog=疏通只干跑·pushci=推送 dry-run·wash-shape="
+                         "洗形只出 plan·triage=红 run 重判类〔repo/run 事件"
+                         "直替〕·cw-doctor=零参体检·参数经 --on-red-arg 透传"
+                         "·与 --on-red 互斥同给 rc=2·同一执行器零新执行路径）")
     ap.add_argument("--on-red-arg", dest="on_red_args", action="append",
                     default=None, metavar="K=V",
-                    help="预设必传透传参数（可重复·unclog 需 src·pushci 需 "
-                         "repo_path+branch·{emit_dir} 取 --emit 所在目录）")
+                    help="预设透传参数（可重复·静态族：unclog/wash-shape 需 "
+                         "src·pushci 需 repo_path+branch；triage 的 repo/"
+                         "run 属动态族事件直替免传·{emit_dir} 取 --emit 所在"
+                         "目录）")
     ap.add_argument("--netrc",
                     default=os.path.join(os.path.expanduser("~"), ".netrc"),
                     metavar="PATH",
@@ -1058,7 +1168,12 @@ def selftest():
     ③buildlog 增量 grep（半行不误报）④--on-red 占位替换执行实证（canned 命令
     写 tmp 标记文件）⑤loop 三轮 JSONL 序贯 ⑥--emit JSONL 可解析逐行合法
     ＋确定性字节恒同＋CLI 四码＋injector 未覆盖 9＋目录缺 9⑨--on-red-preset
-    展开 sugar＋触发捕获＋与 --on-red 互斥 rc=2＋预设参数缺误 rc=2
+    展开 sugar＋触发捕获＋与 --on-red 互斥 rc=2＋预设参数缺误 rc=2＋plain
+    --on-red 缺 --emit rc=2（双路同守卫·preset 路径回归同节）
+    ⑬预设表数据化扩展（新三预设 wash-shape/triage/cw-doctor 占位替换＋
+    triage repo/run 事件直替族＋静态覆盖＋必传缺/重/形坏/未知键/空参面
+    rc2＋链式双预设展开〔全链并集面·按序零重排〕＋链式触发按序一败续行
+    rc=9→rc=0 双笔入账）
     ⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·耗尽 9·401 不重试·run_py
     canned sleep 子进程超时杀 9 报调用名）⑪--state-file 崩溃恢复（损坏红拒
     9 禁静默重建·原件不动／--rebuild-state 显式重建红事件复现／缺
@@ -1374,9 +1489,109 @@ def selftest():
         p = run(base9 + ["--on-red-preset", "unclog", "--on-red-arg",
                          "src=" + psrc])
         assert p.returncode == 2, "缺 --emit 应 rc=2 实测 %d" % p.returncode
+        # plain 同款守卫（v41 矩阵判据转正）：--on-red 缺 --emit → 2；
+        # preset 路径回归＝本节首两展开断言＋触发捕获＋上行 preset 缺 --emit
+        # rc=2，皆不受新守卫扰动（守卫只查 plain 路径 --emit 在位）。
+        p = run(base9 + ["--on-red", "echo x"])
+        assert p.returncode == 2, "plain --on-red 缺 --emit 应 rc=2 实测 %d" \
+            % p.returncode
+        assert "--emit" in p.stdout, p.stdout[-300:]
         p = run(base9 + ["--on-red-arg", "src=" + psrc, "--emit", emit9b])
         assert p.returncode == 2, "孤儿 --on-red-arg 应 rc=2 实测 %d" \
             % p.returncode
+
+        # 〔九b〕预设表数据化扩展（v41 任务书①②③④）：新三预设占位替换＋
+        # 必传缺 rc2＋链式双预设展开＋链式触发（按序·一败续行 rc=9→rc=0
+        # 双笔入账·哨退出码仍 0）。triage/cw-doctor 只做展开级矢量（触发起
+        # 真网络/真体检——零真网络铁律不破）·触发捕获用 [unclog,wash-shape]
+        # 链（两腿皆离线速断）。
+        ev9b = os.path.join(tmp, "events9b.jsonl")
+        cmd = expand_on_red_preset("wash-shape", ["src=/abs/ws_src"], ev9b)
+        assert cmd == ("python3 -B %s --dir /abs/ws_src --json "
+                       "%s/wash_shape_{run}.json" % (WASH_SHAPE_TOOL, tmp)), \
+            cmd
+        assert "{run}" in cmd, cmd                    # 动态族留给事件直替
+        cmd = expand_on_red_preset("triage", [], ev9b)
+        assert cmd == ("python3 -B %s --repo {repo} --run {run} --json "
+                       "%s/triage_{run}.json" % (TRIAGE_TOOL, tmp)), cmd
+        assert "{repo}" in cmd and "{run}" in cmd, cmd  # 事件直替族原样保留
+        cmd = expand_on_red_preset("triage", ["repo=o/r", "run=178"], ev9b)
+        assert cmd == ("python3 -B %s --repo o/r --run 178 --json "
+                       "%s/triage_178.json" % (TRIAGE_TOOL, tmp)), cmd  # 静态覆盖
+        cmd = expand_on_red_preset("cw-doctor", [], ev9b)
+        assert cmd == ("python3 -B %s --json %s/doctor_{run}.json"
+                       % (CW_DOCTOR_TOOL, tmp)), cmd
+        # 必传缺/形坏/重键/未知键/空参面 → 2（同款守卫·动态族放行不豁免静态族）
+        for bad in (lambda: expand_on_red_preset("wash-shape", [], ev9b),
+                    lambda: expand_on_red_preset("wash-shape",
+                                                 ["src=/a", "src=/b"], ev9b),
+                    lambda: expand_on_red_preset("wash-shape", ["src"], ev9b),
+                    lambda: expand_on_red_preset("wash-shape",
+                                                 ["world=/w"], ev9b),
+                    lambda: expand_on_red_preset("cw-doctor",
+                                                 ["src=/a"], ev9b)):
+            try:
+                bad()
+                assert False, "新预设负面展开应 rc=2"
+            except SentryError as e:
+                assert e.code == 2, "新预设负面展开应 2 实测 %d" % e.code
+        p = run(base9 + ["--on-red-preset", "wash-shape", "--emit", emit9b])
+        assert p.returncode == 2, "CLI 预设参数缺应 rc=2 实测 %d" % p.returncode
+        # 链式展开：--on-red-arg 命名空间全链共享（未知键判全链并集面·
+        # unclog+triage 仅传 src 即成链——triage 的 repo/run 走事件直替）·
+        # 按给定序零重排
+        cmds = expand_on_red_presets(["unclog", "triage"], ["src=/s"], ev9b)
+        assert cmds == [
+            "python3 -B %s --src /s --json %s/unclog_{run}.json"
+            % (UNCLOG_TOOL, tmp),
+            "python3 -B %s --repo {repo} --run {run} --json "
+            "%s/triage_{run}.json" % (TRIAGE_TOOL, tmp)], cmds
+        for bad in (lambda: expand_on_red_presets(["unclog", "cw-doctor"],
+                                                  ["world=/w"], ev9b),
+                    lambda: expand_on_red_presets(["pushci", "cw-doctor"],
+                                                  [], ev9b),
+                    lambda: expand_on_red_presets(["bogus", "unclog"],
+                                                  [], ev9b)):
+            try:
+                bad()
+                assert False, "链式负面展开应 rc=2"
+            except SentryError as e:
+                assert e.code == 2, "链式负面展开应 2 实测 %d" % e.code
+        # 链式触发捕获：canned CI 红事件 → 链 [unclog, wash-shape] 按序执行·
+        # 一败续行——leg1 unclog（空 src 零候选）rc=9 响亮入账不裁停·leg2
+        # wash-shape 干跑 plan（空树 clean）rc=0·两笔同 schema 入账·哨退出码
+        # 仍 0（旁路动作非器面铁律）
+        esrc = os.path.join(tmp, "empty_src")
+        os.mkdir(esrc)
+        state9b = os.path.join(tmp, "state9b.json")
+        emit9c = os.path.join(tmp, "events9c.jsonl")
+        rep9b = os.path.join(tmp, "rep9b.json")
+        p = run(["--once", "--watch-repo", REPO, "--injector", inj_path,
+                 "--state-file", state9b, "--emit", emit9c,
+                 "--on-red-preset", "unclog", "--on-red-preset", "wash-shape",
+                 "--on-red-arg", "src=" + esrc,
+                 "--json", rep9b, "--sleep-scale", "0"])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(rep9b, encoding="utf-8"))
+        assert rep.get("on_red_preset") == ["unclog", "wash-shape"], \
+            rep.get("on_red_preset")
+        assert len(rep["actions"]) == 2, rep["actions"]
+        act1, act2 = rep["actions"]
+        assert act1["cmd"] == ("python3 -B %s --src %s --json "
+                               "%s/unclog_178.json"
+                               % (UNCLOG_TOOL, esrc, tmp)), act1["cmd"]
+        assert act1["rc"] == 9, "leg1 unclog（空 src）应 rc=9 入账: %r" % act1
+        assert act2["cmd"] == ("python3 -B %s --dir %s --json "
+                               "%s/wash_shape_178.json"
+                               % (WASH_SHAPE_TOOL, esrc, tmp)), act2["cmd"]
+        assert act2["rc"] == 0, "leg2 wash-shape 干跑 plan 应 rc=0" \
+            "（一败续行实证·leg1 rc=9 不裁停）: %r" % act2
+        assert act1["seq"] == act2["seq"] == 1, (act1["seq"], act2["seq"])
+        assert os.path.isfile(os.path.join(tmp, "wash_shape_178.json")), \
+            "leg2 预设钦定路径应实落 report"
+        mw = re.search(r"workdir -> (\S+)", act1.get("output") or "")
+        if mw:
+            shutil.rmtree(mw.group(1), ignore_errors=True)  # 清 leg1 mkdtemp
 
         # 〔十〕韧性层：退避序列＋Retry-After 尊重＋api_get_json 重试 runner＋
         # run_py 超时杀（零网络零编译·_open/_sleep 注入·判例 403×3→[2,4,8]）
@@ -1540,7 +1755,11 @@ def selftest():
               "④on-red 占位替换执行实证+缺省零动作/⑤loop 三轮 JSONL 序贯/"
               "⑥emit 逐行合法 sort_keys+seq 序贯/确定性字节恒同/CLI 四码+"
               "401→9+canned 未覆盖→9+目录缺→9/"
-              "⑨on-red-preset 展开+触发捕获+同给互斥 rc=2+参数缺误 rc=2/"
+              "⑨on-red-preset 展开+触发捕获+同给互斥 rc=2+参数缺误 rc=2+"
+              "plain 缺 --emit rc=2（双路同守卫·preset 回归）/"
+              "⑬预设表扩展（wash-shape/triage/cw-doctor 占位替换·triage "
+              "repo/run 事件直替族·必传缺/未知键/空参面 rc2·链式双预设展开"
+              "全链并集面·链式触发按序一败续行 rc=9→rc=0 双笔入账）/"
               "⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·503 耗尽 9·401 "
               "不重试·canned sleep 子进程超时杀 9 报调用名）/"
               "⑪state 崩溃恢复（损坏红拒 9 禁静默重建原件不动·--rebuild-state "

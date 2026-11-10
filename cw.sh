@@ -38,13 +38,13 @@
 #               cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
 #   sentinel    实时动态哨（三路信号源→JSONL 事件流·once/loop 双模）
 #                                                    -> tools/cw_sentinel.py
-#               cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
+#               cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--on-red-preset NAME]... [--on-red-arg K=V] [--injector F] [--json out]
 #   wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
 #                                                    -> tools/wash_shape.py
 #               cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
 #   unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
 #                                                    -> tools/unclog.py
-#               cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
+#               cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--audit] [--probe-parallel K] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
 #   cw-doctor   综合体检器·四域聚合（环境/网络/注册/堵账→健康分＋advice·只诊断）
 #                                                    -> tools/cw_doctor.py
 #               cw.sh cw-doctor [--json out.json] [--registry PATH] [--src DIR --sample N] [--injector DIR]
@@ -129,13 +129,13 @@ cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 
               cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]
   sentinel    实时动态哨（三路信号源→JSONL 事件流·once/loop 双模）
                                                    -> tools/cw_sentinel.py
-              cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]
+              cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--on-red-preset NAME]... [--on-red-arg K=V] [--injector F] [--json out]
   wash-shape  洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘）
                                                    -> tools/wash_shape.py
               cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]
   unclog      疏通堵塞闭环引擎（probe 归集→链根挑根→cure 落刀→复核→verdict·缺省干跑）
                                                    -> tools/unclog.py
-              cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
+              cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--audit] [--probe-parallel K] [--rounds N] [--json out] [--events F] [--loop --interval S] [--injector DIR]
   cw-doctor   综合体检器·四域聚合（环境/网络/注册/堵账→健康分＋advice·只诊断）
                                                    -> tools/cw_doctor.py
               cw.sh cw-doctor [--json out.json] [--registry PATH] [--src DIR --sample N] [--injector DIR]
@@ -176,9 +176,9 @@ hint_for() {  # $1=tool
     triage)      echo "cw.sh triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI 红炉分诊（五族+绿炉）-> tools/ci_triage.py" ;;
     union)       echo "cw.sh union --base B --main M --branch X --kind order [--out o --apply] | --git REPO --ref-base RB --ref-main RM --ref-branch XB   # 注册册 union 手术（缺省干跑）-> tools/registry_union.py" ;;
     pushci)      echo "cw.sh pushci --repo-path DIR --branch B [--pre-scan-gate4] [--merge] [--max-heal N] [--json out] [--dry-run]   # 修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge·七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run）-> tools/pushci.py" ;;
-    sentinel)    echo "cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--injector F] [--json out]   # 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·红是数据非器红·零动作是缺省）-> tools/cw_sentinel.py" ;;
+    sentinel)    echo "cw.sh sentinel --once | --loop [--interval S] [--watch-repo ORG/REPO [--branch B]...] [--watch-ledgers DIR] [--watch-buildlog FILE] [--state-file F] [--emit F] [--on-red 'CMD'] [--on-red-preset NAME]... [--on-red-arg K=V] [--injector F] [--json out]   # 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·红是数据非器红·零动作是缺省·--on-red-preset 五预设 unclog/pushci/wash-shape/triage/cw-doctor 可重复链式按序一败续行·与 --on-red 互斥·旁路动作必伴 --emit 双路同守卫）-> tools/cw_sentinel.py" ;;
     wash-shape)  echo "cw.sh wash-shape --file A.v [--file B.v...] | --dir TREE [--only KINDS] [--apply] [--header-map M] [--header-map-preset NAME] [--anchor-src DIR] [--json OUT] [--loop --interval S --events F] [--injector SCEN.json]   # 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·--apply 落刀后复跑五洗复核·--header-map-preset 钦名头注模板库 tests/fixtures/header_map_v1.json 与 --header-map 同槽互斥）-> tools/wash_shape.py" ;;
-    unclog)      echo "cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--rounds N] [--top N] [--pack FILE] [--json out] [--events F] [--loop --interval S --loop-max N] [--injector DIR]   # 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→verdict unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒）-> tools/unclog.py" ;;
+    unclog)      echo "cw.sh unclog --src DIR --world DIR [--candidates TSV | --chain-ledgers JSON...] [--apply] [--audit] [--probe-parallel K] [--rounds N] [--top N] [--pack FILE] [--json out] [--events F] [--loop --interval S --loop-max N] [--injector DIR]   # 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/resprobe 复核→verdict unclogged/wall/rounds-exhausted/audit·缺省干跑·frozen 在册红拒·--audit 只读堵账基线零写盘自证与 --apply/--loop 互斥·--probe-parallel K 探针并行度透传 timing 段 jobs 维度入账）-> tools/unclog.py" ;;
     cw-doctor)   echo "cw.sh cw-doctor [--json out.json] [--workdir DIR] [--registry PATH] [--src DIR --sample N [--world DIR]] [--worker PATH] [--donor DIR] [--endpoints URL,..] [--guard PATH] [--timeout S] [--injector DIR]   # 综合体检器·四域聚合（环境 dyld/网络 net_probe/注册册锚审计/堵账 probe＋chain_graph→综合健康分 0-100＋verdict healthy/degraded＋advice·只诊断禁代执行·--injector 离线可测）-> tools/cw_doctor.py" ;;
     doc-lint)    echo "cw.sh doc-lint [--repo DIR] [--json OUT] [--help-cap N]   # 文档←→实现一致性三查器（①cw.sh 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数 ③doc 引用旗标 vs 各器 --help 实出·verdict consistent|drift·红是数据非器红）-> tools/doc_lint.py" ;;
     netname-normalize) echo "cw.sh netname-normalize [--dir DIR] [--apply] [--map out.tsv] [--json out]   # .v.v 双后缀名净名归一器（映射表＋--apply 改名 md5 验讫）-> tools/netname_normalize.py" ;;

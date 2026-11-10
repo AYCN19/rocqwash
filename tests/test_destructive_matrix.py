@@ -41,9 +41,12 @@
      S1 缺省 report-only：无 --on-red 无 --on-red-preset 时零子进程动作
         （actions 账空·见红出事件而不动手）
         锚 tools/cw_sentinel.py:713-715（fire_on_red 门在 sentry["on_red"]）
-     S2 --on-red-preset 缺 --emit rc=2（预设出账 {emit_dir} 系 --emit 派生·
-        缺盘即拒）
-        锚 tools/cw_sentinel.py:653-655（expand_on_red_preset）
+     S2 on-red 双路同守卫：plain --on-red 与 --on-red-preset 缺 --emit 皆
+        rc=2（旁路动作必伴随事件流落盘·触发证据与动作账可审计；{emit_dir}
+        系 --emit 派生缺盘即拒）——v40 登记缺口（plain 路径缺同款守卫）v41
+        补齐转正
+        锚 tools/cw_sentinel.py:722-723（expand_on_red_preset）＋:884-886
+        （build_sentry plain 守卫）
   ⑤ tools/registry_union.py（注册册手术器·写面＝--out union 稿）
      R1 干跑缺省零写盘：--out 已给而缺省不落盘
         锚 tools/registry_union.py:881-885（mode 总闸·if args.apply 才写）
@@ -567,14 +570,20 @@ def row_s1(tmp):
 
 
 def row_s2(tmp):
-    """--on-red-preset 缺 --emit → rc=2（{emit_dir} 取事件流所在目录·缺盘即拒
-    ·build_sentry 前置·零巡检零动作）。"""
+    """on-red 双路同守卫：plain --on-red 与 --on-red-preset 缺 --emit 皆
+    → rc=2（旁路动作必伴随事件流落盘·触发证据与动作账可审计；{emit_dir} 系
+    --emit 派生缺盘即拒）——v40 矩阵登记缺口（plain 路径缺同款守卫）v41 补齐
+    转正·build_sentry 前置·零巡检零动作。"""
     rc, out = sh(SENTINEL, ["--once", "--watch-repo", "org/repo",
-                            "--on-red-preset", "unclog",
-                            "--on-red-arg", "src=" + os.path.join(tmp, "s2"),
-                            "--sleep-scale", "0"])
-    assert rc == 2, "preset 缺 --emit 应 rc=2 实测 %d\n%s" % (rc, out[-400:])
+                            "--on-red", "echo x", "--sleep-scale", "0"])
+    assert rc == 2, "plain 缺 --emit 应 rc=2 实测 %d\n%s" % (rc, out[-400:])
     assert "--emit" in out, out[-300:]
+    rc2, out2 = sh(SENTINEL, ["--once", "--watch-repo", "org/repo",
+                              "--on-red-preset", "unclog",
+                              "--on-red-arg", "src=" + os.path.join(tmp, "s2"),
+                              "--sleep-scale", "0"])
+    assert rc2 == 2, "preset 缺 --emit 应 rc=2 实测 %d\n%s" % (rc2, out2[-400:])
+    assert "--emit" in out2, out2[-300:]
 
 
 # ---- ⑤ registry_union／cure_applier 四行 --------------------------------------
@@ -699,8 +708,8 @@ ROWS = [
      "tools/pushci.py:966-969", row_p3),
     ("S1", "cw_sentinel", "缺省 report-only（无 on-red 旗零子进程动作）",
      "tools/cw_sentinel.py:713-715", row_s1),
-    ("S2", "cw_sentinel", "--on-red-preset 缺 --emit rc=2",
-     "tools/cw_sentinel.py:653-655", row_s2),
+    ("S2", "cw_sentinel", "on-red 双路同守卫（plain/preset 缺 --emit 皆 rc=2）",
+     "tools/cw_sentinel.py:722-723,884-886", row_s2),
     ("R1", "registry_union", "干跑缺省零写盘（--out 给而不落）",
      "tools/registry_union.py:881-885", row_r1),
     ("R2", "registry_union", "--apply 才落刀（＋无 --out rc=2 禁隐式覆写）",

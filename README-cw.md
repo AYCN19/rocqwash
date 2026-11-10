@@ -31,9 +31,9 @@ bash cw.sh <tool> [args...]
 | `triage` | `tools/ci_triage.py` | CI 红炉分诊（五族+绿炉判类谱·红是数据非器红） | `bash cw.sh triage --repo ORG/REPO --run ID --logs` |
 | `union` | `tools/registry_union.py` | 注册册 union 手术（main 为底＋对 merge-base 真独有尾插·**缺省干跑**） | `bash cw.sh union --base b --main m --branch x --kind order --json r.json` |
 | `pushci` | `tools/pushci.py` | 修复后推送 CI 一键流水线（五段管线 preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排零新引擎·verdict 七态 `success\|fix-content\|toolchain\|unstable\|heal-exhausted\|gate4-block\|dry-run` 对应退出码 0/1/2/9） | `bash cw.sh pushci --repo-path . --branch feature/x --json report.json` |
-| `sentinel` | `tools/cw_sentinel.py` | 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·判类全权在 ci_triage·**零动作是缺省**） | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --json r.json` |
+| `sentinel` | `tools/cw_sentinel.py` | 实时动态哨（三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·判类全权在 ci_triage·**零动作是缺省**·`--on-red-preset` 五预设可重复链式按序一败续行——unclog/pushci/wash-shape/triage/cw-doctor·各承缺省干跑铁律·与 `--on-red` 互斥·旁路动作必伴 `--emit` 双路同守卫 rc=2） | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --on-red-preset unclog --on-red-arg src=src/ --emit events.jsonl --json r.json` |
 | `wash-shape` | `tools/wash_shape.py` | 洗形器·正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·`--apply` 落刀后复跑五洗复核·③头注模板源三路探测：`--header-map` 逐件数据 > `--header-map-preset` 钦名模板库 `tests/fixtures/header_map_v1.json`（战役正典蒸馏·金标引据在册·schema `rocqwash-header-map/1`）> env·同槽显传互斥 rc=2） | `bash cw.sh wash-shape --file demo.v --header-map-preset campaign_set_diamond --json plan.json` |
-| `unclog` | `tools/unclog.py` | 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict `unclogged\|wall\|rounds-exhausted\|audit`·缺省干跑·frozen 在册红拒·`--audit` 只读堵账基线） | `bash cw.sh unclog --src src/ --world world/ --json r.json` |
+| `unclog` | `tools/unclog.py` | 疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict `unclogged\|wall\|rounds-exhausted\|audit`·缺省干跑·frozen 在册红拒·`--audit` 只读堵账基线零写盘自证·与 `--apply`/`--loop` 互斥·`--probe-parallel K` 探针并行度透传 probe_engine `--jobs`·timing 段 jobs 维度入账同候选面异 K 前后跑可比） | `bash cw.sh unclog --src src/ --world world/ --audit --probe-parallel 2 --json r.json` |
 | `cw-doctor` | `tools/cw_doctor.py` | 综合体检器·四域聚合（环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 逐域 subprocess 编排既有一器→综合健康分 0-100＋verdict `healthy\|degraded`＋advice 处置清单·**只诊断禁代执行**·红是数据非器红·schema `rocqwash-cwdoctor/1`·`--injector` 离线可测） | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
 | `doc-lint` | `tools/doc_lint.py` | 文档←→实现一致性三查器（①cw.sh 头注/usage/hint/case 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数三处对账 ③doc 引用旗标 vs 各器 `--help` 实出逐枚对照·verdict `consistent\|drift`·红是数据非器红·schema `rocqwash-doclint/1`·`--repo` 被审仓根缺省本仓） | `bash cw.sh doc-lint --repo . --json doclint.json` |
 | `baseline-diff` | `tools/baseline_diff.py` | 堵账基线对比器（两份 unclog `--audit` 基线 argv 序=旧→新→`new_blocks`/`resolved_blocks`/`persistent` 三清单＋`score_delta`·verdict 四态 `improved\|degraded\|stable\|incomparable`·账面自洽预检拒手编·timing 不入对比·红是数据非器红·schema `rocqwash-baseline-diff/1`·入仓规程见 [examples/baselines/README.md](examples/baselines/README.md)） | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
@@ -145,11 +145,17 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
 **⑦ v38 注记（preset／audit／韧性层·20261111）**——三器接口在上述五条纪律上扩面：
 
 - **preset**：sentinel 增 `--on-red-preset NAME`（红事件预设动作·预设即模板
-  sugar：`unclog`＝干跑疏通（**不带 --apply**·人审后再落刀）、`pushci`＝
-  `--dry-run` 只打计划——两预设自动接驳各器缺省干跑铁律）；展开走与 `--on-red`
-  **同一执行器**（60s 帽·rc≠0 不改哨退出码·零新执行路径）；必传参数经
-  `--on-red-arg K=V` 透传·`{emit_dir}` 取 `--emit` 所在目录；与 `--on-red`
-  **互斥**（同给 rc=2 fail-loud 禁静默择一）。wash-shape 同形扩面（v39 轮）：
+  sugar·v41 预设表数据化扩至五预设：`unclog`＝干跑疏通（**不带 --apply**·
+  人审后再落刀）、`pushci`＝`--dry-run` 只打计划、`wash-shape`＝只出 plan
+  （**不带 --apply**·plan 零写盘）、`triage`＝对红 run 复诊重判类（repo/run
+  事件直替族）、`cw-doctor`＝全缺省体检——各预设自动接驳各器缺省干跑铁律；
+  **可重复＝链式**按给定序逐件执行·一败续行不改哨退出码·actions 账每条
+  一笔）；展开走与 `--on-red` **同一执行器**（60s 帽·rc≠0 不改哨退出码·
+  零新执行路径）；必传参数经 `--on-red-arg K=V` 透传（链式参数面＝全链
+  并集）·`{emit_dir}` 取 `--emit` 所在目录；与 `--on-red` **互斥**（同给
+  rc=2 fail-loud 禁静默择一）；**旁路动作必伴事件流**——plain `--on-red`
+  与 preset 缺 `--emit` 双路同守卫 rc=2（v41 破坏面矩阵 S2 判据转正）。
+  wash-shape 同形扩面（v39 轮）：
   ③头注形洗模板源增 `--header-map-preset NAME` 钦名模板（`tests/fixtures/
   header_map_v1.json` 战役正典蒸馏库·schema `rocqwash-header-map/1`·占位全承
   目标件自身 Require 面与既有头注逐字·任一绑不上 plan-miss 不硬造；与
@@ -158,7 +164,9 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
   →出基线报告·`final.verdict=audit` exit 0 红是基线数据非器红·cures 恒 0＝
   零落刀零复核）；**零写盘硬保证**＝`--src` 全文件 md5 清单跑前跑后自证恒同
   （违同 fail-loud 9·染污基线不出账）；与 `--apply`/`--loop` 互斥 rc=2；
-  timing 段实测墙钟为报告唯一非确定段。
+  timing 段实测墙钟为报告唯一非确定段——v41 增 `--probe-parallel K` 探针
+  并行度透传 probe_engine `--jobs`（timing 段 jobs 维度入账·同候选面异 K
+  前后跑可比·--guard 同给建议 K≤2 温控自裁）。
 - **韧性层**：CI GET 403/429/5xx 指数退避重试抽公共件 `tools/_http_backoff.py`
   纯函数（`ci_triage`/`cw_sentinel`/`pushci` 三器共享·`--retry-max` 缺省 3·
   Retry-After 秒数头尊重·4xx 语义面不重试）；net-probe 增 `--jitter/--seed`
@@ -245,10 +253,19 @@ mismatch; red is data, not tool failure; intake protocol at
 common workflow-interface discipline (once/loop dual mode, deterministic
 JSON reports + JSONL event streams, `--injector` offline canned testing,
 exit codes 0/1/2/9 where red is data not tool failure) — see the Chinese
-section 「工作流配合接口」 above. v38 extensions to that interface: sentinel
-`--on-red-preset` (canned red-event actions: unclog dry-run / pushci
-dry-run), unclog `--audit` (read-only clog baseline with an md5 no-write
-proof), and a shared resilience layer (`tools/_http_backoff.py` exponential
+section 「工作流配合接口」 above. v38 extensions to that interface (preset
+table expanded in v41): sentinel
+`--on-red-preset` (five canned red-event actions — unclog dry-run / pushci
+dry-run / wash-shape plan-only / triage re-triage / cw-doctor checkup —
+each honoring its tool's dry-run-by-default discipline, repeatable for
+chained sequential fire where one failure continues the chain without
+touching the sentinel exit code; mutually exclusive with `--on-red`;
+both plain and preset forms require `--emit`, rc=2 otherwise), unclog
+`--audit` (read-only clog baseline with an md5 no-write proof;
+`--probe-parallel K` threads the probe fan-out through probe_engine
+`--jobs` with a jobs dimension recorded in the timing section for
+cross-K comparisons), and a shared resilience layer
+(`tools/_http_backoff.py` exponential
 backoff, net-probe `--jitter/--seed`, pushci `--timeout`, sentinel
 `--subproc-timeout`). Three copy-paste canonical workflow blocks live in
 `examples/workflows/` (`backend-sentinel.md`, `step-pushci.md`,

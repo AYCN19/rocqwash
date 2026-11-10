@@ -37,19 +37,36 @@ rc 分流（verdict 字段）：
 md5 同 ⇒ skip 不重炮；--fresh 推倒重探。同候选集重跑产出同账（记录无时间戳/
 无绝对路径·sort_keys 落盘·字节级可复现）。
 
+并行（--jobs K·缺省 1＝逐件串行·零行为漂移）：
+  K>1 时候选件分片 concurrent.futures.ThreadPool 并行探针（真编译仍逐件经
+  --guard cpu_guard 包裹·guard FRONT 档自带并发钳位——同 -Reg 登记表下 FRONT/
+  MID 槽位天然限流·K 超出槽位的排队件 MaxWaitSec 到点降 BACK 档放行不占 FRONT
+  全速位）。台账记录序恒按候选典序（主线程按典序收账落盘·并行完成序不改变
+  输出序·确定性铁律；sort_keys 落盘同输入重跑字节恒同）；md5_match/verdict
+  逻辑零改；per-件 build log 仍独立落 logdir（<件名>.stderr.log 逐件异名互不
+  撞）。resume 幂等语义不变（skip 先行·余件入池）。候选重名＋K>1 → fail-loud
+  rc=2（同名件并发 copyfile/编译清场世界写竞争禁入）。
+  ⚠ 温控警示（显著·注记不强制·用户自裁）：K>1 时机内多 rocqworker 并发＝热
+  负载↑——机内同时活跃编译进程即 K 路（无 --guard 时零钳位全速并发·尤须自
+  裁）；--jobs 与 --guard 同给时建议 K≤2（guard FRONT 档缺省 2 槽·K 超出部分
+  排队降档·热负载受钳但仍在机内）。
+
 用法（全部路径参数化·零硬编码）：
   python3 wash/probe_engine.py --candidates cands.tsv --src <源树> --world <世界目录> \
       --out probe_ledger.json --logdir probe_logs/ \
       [--rocq-cmd 'rocq c -Q . "" {name}.v'] [--guard tools/cpu_guard.sh \
        --guard-reg /tmp/cw_reg_probe_engine --guard-front 0 --guard-mid 1 \
-       --guard-maxwait 600] [--timeout 1500] [--ulimit-stack 65532] [--fresh]
+       --guard-maxwait 600] [--timeout 1500] [--ulimit-stack 65532] \
+      [--jobs 1] [--fresh]
   python3 wash/probe_engine.py --selftest
 
 退出码：0=批完成台账落盘（rc1 候选是探针产出数据非器红·计数响亮入 stdout）；
-2=用法错（--help rc=0／缺必需参数）；9=--candidates/--src/--world/--guard
-路径缺失；1=--selftest 红处。台账 schema=rocqwash-probe-ledger/1。
+2=用法错（--help rc=0／缺必需参数／--jobs<1／K>1 候选重名）；9=--candidates/
+--src/--world/--guard 路径缺失；1=--selftest 红处。台账 schema=
+rocqwash-probe-ledger/1。
 """
 import argparse
+import concurrent.futures
 import hashlib
 import io
 import json
@@ -214,12 +231,77 @@ def save_ledger(out_path, args, records):
         json.dump(acc, fh, indent=1, ensure_ascii=False, sort_keys=True)
 
 
+def _run_batch_parallel(cands, src_dir, world_dir, logdir, args, records):
+    """--jobs K>1 并行分片批（K=1 恒走 run_batch 原串行循环·零行为漂移）。
+
+    resume skip 先行→余件入 concurrent.futures.ThreadPool（max_workers=K·每件
+    一 probe_one·真编译仍逐件经 --guard 包裹·同 -Reg 登记表下 guard FRONT 档
+    自带钳位）→主线程按候选典序收账落盘（fut 序＝pending 序＝候选典序·并行
+    完成序不改变输出序·确定性铁律；records/skipped/probes 与串行同义同构·
+    逐件增量落盘同工艺）。候选重名 fail-loud rc=2（同名件并发 copyfile/编译
+    清场世界写竞争禁入）。"""
+    skipped, probes = 0, 0
+    pending = []
+    for name, md5_decl, red_count in cands:
+        prev = records.get(name)
+        if prev is not None and prev.get("md5") == md5_decl and not args.fresh:
+            skipped += 1
+            print("SKIP(done) %s rc=%s verdict=%s"
+                  % (name, prev.get("rc"), prev.get("verdict")))
+            continue
+        pending.append((name, md5_decl, red_count))
+    seen, dupes = set(), []
+    for n in (t[0] for t in pending):
+        if n in seen and n not in dupes:
+            dupes.append(n)
+        seen.add(n)
+    if dupes:
+        print("FAIL-LOUD: --jobs %d 并行分片候选重名禁入（同名件并发世界写"
+              "竞争）: %s" % (args.jobs, ",".join(sorted(set(dupes)))),
+              file=sys.stderr)
+        sys.exit(2)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
+        futs = [ex.submit(probe_one, name, src_dir, world_dir, logdir,
+                          args.rocq_cmd, args.guard, args.guard_reg,
+                          args.guard_front, args.guard_mid, args.guard_maxwait,
+                          args.timeout, args.ulimit_stack)
+                for name, _md5_decl, _red in pending]
+        try:
+            # 主线程按候选典序收账（完成序不侵入输出序·记录序恒典序）
+            for (name, md5_decl, red_count), fut in zip(pending, futs):
+                rec = fut.result()
+                rec["red_count"] = red_count
+                rec["md5_match"] = (md5_decl == rec["md5"]) if rec["md5"] \
+                    else None
+                if rec["rc"] == 0:
+                    rec["verdict"] = verdict_of_rc(0, red_count)
+                records[name] = rec
+                probes += 1
+                print("PROBE %-42s rc=%s verdict=%s%s"
+                      % (name, rec["rc"], rec["verdict"],
+                         (" RED: " + rec["red"]) if rec["red"] else ""))
+                # 逐件增量落盘（中断可续·承原型工艺·与串行同）
+                save_ledger(args.out, args, records)
+        except BaseException:
+            for f in futs:
+                f.cancel()          # 未起者即撤·在跑者自然收尾（fail-loud 不吞）
+            raise
+    return records, skipped, probes
+
+
 def run_batch(cands, src_dir, world_dir, logdir, args):
-    """批量探针（resume 幂等）→ (records, skipped, probes)。"""
+    """批量探针（resume 幂等）→ (records, skipped, probes)。
+
+    --jobs K（缺省 1）：K=1 走下方原串行循环（逐字保留·零行为漂移）；K>1 分片
+    并行走 _run_batch_parallel（典序收账·输出序不随完成序漂移·温控警示见
+    docstring 并行节）。"""
     records = {}
     if not args.fresh and os.path.exists(args.out):
         with io.open(args.out, "r", encoding="utf-8") as fh:
             records = json.load(fh).get("records", {})
+    if args.jobs > 1:
+        return _run_batch_parallel(cands, src_dir, world_dir, logdir, args,
+                                   records)
     skipped, probes = 0, 0
     for name, md5_decl, red_count in cands:
         prev = records.get(name)
@@ -257,7 +339,9 @@ def run_args(argv):
 
 def selftest():
     """内嵌冻结向量组（临时目录＋桩探针·零真编译零触真仓）：rc 分流三分
-    （BORN-CLEAN/RED-MISSING_LIB）＋resume 幂等同账字节恒同＋CLI 四码。"""
+    （BORN-CLEAN/RED-MISSING_LIB/WASHABLE）＋resume 幂等同账字节恒同＋--jobs
+    并行矢量（K=1 对拍缺省串行旧输出字节恒同／K=3 结果集等价序不变·canned
+    stub 注入并行路径／--jobs 0 rc=2）＋CLI 四码。"""
     import tempfile
 
     def run(args):
@@ -281,17 +365,20 @@ def selftest():
             fh.write("Lemma ok : True.\n")
         with io.open(os.path.join(src, "RedMe.v"), "w", encoding="utf-8") as fh:
             fh.write("Require Import Nope.\n")
+        with io.open(os.path.join(src, "Third.v"), "w", encoding="utf-8") as fh:
+            fh.write("Lemma Third_ok : True.\n")
         stub = os.path.join(tmp, "stub.sh")
         with io.open(stub, "w", encoding="utf-8") as fh:
-            fh.write('#!/bin/bash\ncase "$1" in PassMe*) exit 0;; *)\n'
+            fh.write('#!/bin/bash\ncase "$1" in PassMe*|Third*) exit 0;; *)\n'
                      'echo "Error: Unable to locate library | Nope (while'
                      ' searching for a .vos file)." >&2; exit 1;; esac\n')
         os.chmod(stub, 0o755)
         cands = os.path.join(tmp, "cands.tsv")
         with io.open(cands, "w", encoding="utf-8") as fh:
-            fh.write("件名\tmd5\tRED\nPassMe\t%s\t0\nRedMe\t%s\t3\n"
+            fh.write("件名\tmd5\tRED\nPassMe\t%s\t0\nRedMe\t%s\t3\nThird\t%s\t2\n"
                      % (md5_of(os.path.join(src, "PassMe.v")),
-                        md5_of(os.path.join(src, "RedMe.v"))))
+                        md5_of(os.path.join(src, "RedMe.v")),
+                        md5_of(os.path.join(src, "Third.v"))))
         led = os.path.join(tmp, "ledger.json")
         tpl = stub + " {name}.v"
         p = run(["--candidates", cands, "--src", src, "--world", world,
@@ -307,6 +394,33 @@ def selftest():
                  "--out", led, "--logdir", logdir, "--rocq-cmd", tpl])
         assert p.returncode == 0 and "SKIP(done)" in p.stdout, p.stdout
         assert io.open(led, "rb").read() == before, "重跑同账字节漂移＝违例"
+        # --jobs 并行矢量（canned stub 注入并行路径·零真编译）：K=1 显式对拍
+        # 缺省串行旧输出→字节恒同（缺省＝现行为·零漂移实证）；K=3 结果集等价
+        # （并行完成序不改变台账字节·记录序恒典序·三分 verdict 并池）
+        p = run(["--candidates", cands, "--src", src, "--world", world,
+                 "--out", led, "--logdir", logdir, "--rocq-cmd", tpl,
+                 "--jobs", "1", "--fresh"])
+        assert p.returncode == 0, p.stdout
+        assert io.open(led, "rb").read() == before, \
+            "K=1 对拍缺省串行旧输出字节漂移＝违例"
+        p = run(["--candidates", cands, "--src", src, "--world", world,
+                 "--out", led, "--logdir", logdir, "--rocq-cmd", tpl,
+                 "--jobs", "3", "--fresh"])
+        assert p.returncode == 0, p.stdout
+        assert io.open(led, "rb").read() == before, \
+            "K=3 结果集等价破（台账字节漂移＝完成序侵入输出序）"
+        acc3 = json.load(io.open(led, encoding="utf-8"))
+        assert acc3["records"]["Third"]["verdict"] == "WASHABLE" \
+            and acc3["records"]["Third"]["red_count"] == 2 \
+            and acc3["records"]["Third"]["md5_match"] is True, \
+            "K=3 并池三分缺 WASHABLE: %r" % acc3["records"]["Third"]
+        assert acc3["records"]["PassMe"]["verdict"] == "BORN-CLEAN" \
+            and acc3["records"]["RedMe"]["verdict"] == "RED-MISSING_LIB", acc3
+        # --jobs<1 用法红 rc=2（fail-loud）
+        p = run(["--candidates", cands, "--src", src, "--world", world,
+                 "--out", os.path.join(tmp, "j0.json"), "--logdir", logdir,
+                 "--jobs", "0"])
+        assert p.returncode == 2, "--jobs 0 应 rc=2 实测 %d" % p.returncode
         # CLI 四码
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
@@ -318,8 +432,10 @@ def selftest():
                  "--world", world, "--out", os.path.join(tmp, "x.json"),
                  "--logdir", logdir])
         assert p.returncode == 9, "缺清单应 rc=9 实测 %d" % p.returncode
-        print("PROBE-ENGINE-SELFTEST PASS: rc 三分(BORN-CLEAN/RED-MISSING_LIB)/"
-              "missing 捕获/resume 幂等同账字节恒同/CLI 四码 四判全过")
+        print("PROBE-ENGINE-SELFTEST PASS: rc 三分(BORN-CLEAN/RED-MISSING_LIB/"
+              "WASHABLE 并池)/missing 捕获/resume 幂等同账字节恒同/--jobs K=1 "
+              "对拍缺省串行旧输出字节恒同＋K=3 结果集等价序不变(canned stub "
+              "并行路径)＋--jobs 0 rc=2/CLI 四码 六判全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -356,6 +472,10 @@ def main():
                     help="单件探针 subprocess 超时秒（到点 rc=124 TIMEOUT）")
     ap.add_argument("--ulimit-stack", dest="ulimit_stack", type=int, default=None,
                     help="内层 ulimit -s 值（缺省不设·正本机惯例 65532）")
+    ap.add_argument("--jobs", type=int, default=1, metavar="K",
+                    help="并行分片度（缺省 1＝逐件串行零漂移；K>1 ThreadPool "
+                         "并行·典序收账·真编译仍逐件经 --guard 包裹·与 --guard"
+                         " 同给建议 K≤2 温控自裁）")
     ap.add_argument("--fresh", action="store_true",
                     help="推倒重探（缺省 resume：既有记录 md5 同即 skip）")
     args = ap.parse_args(argv)
@@ -365,6 +485,9 @@ def main():
     except Exception:
         pass
 
+    if args.jobs < 1:
+        print("FAIL-LOUD: --jobs 须≥1 实测 %d" % args.jobs, file=sys.stderr)
+        sys.exit(2)
     for req, val in (("candidates", args.candidates), ("src", args.src),
                      ("world", args.world), ("out", args.out)):
         if not val:
@@ -380,6 +503,9 @@ def main():
         sys.exit(9)
     logdir = args.logdir or (args.out + ".logs")
     os.makedirs(logdir, exist_ok=True)
+    if args.jobs > 1:
+        print("ADVISE(温控): --jobs %d>1＝机内多 rocqworker 并发·热负载↑"
+              "（--guard 同给建议 K≤2·注记不强制·用户自裁）" % args.jobs)
 
     try:
         cands = load_candidates(args.candidates)

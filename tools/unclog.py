@@ -59,9 +59,21 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   copyfile 出树编译·wash/probe_engine.py:163·产物清场 py:194——清单违同即
   fail-loud 9·染污基线不出账）；workdir/--json/events 出账系审计本职不在保域。
   耗时各段（enumerate/manifest/probe+chain/total）入 report["timing"]＝实测
-  墙钟·报告唯一非确定段（「同输入重跑字节恒同」除 timing 段外仍全成立）。
+  墙钟·报告唯一非确定段（「同输入重跑字节恒同」除 timing 段外仍全成立）；
+  timing 段另录 jobs 维度＝--probe-parallel K 实参（probe_engine --jobs 透传
+  值·缺省 1）入账——同候选面异 K 前后跑 timing 段可比（并行剖面采集口·
+  examples/baselines/perf-README.md 规程；injector 罐装模式本参旁路照记）。
   离线可测同闭环：--injector canned probe 即 audit 探针罐装（selftest 矢量⑩）；
   **真树 audit 活跑归主会话**（本器只证 fixture 级）。
+
+--probe-parallel K（probe_engine --jobs 并行度透传·缺省 1＝逐件串行零漂移）：
+  ①归集真探针/④复探 resprobe/--audit 同享同参——候选件分片 ThreadPool 并行
+  （台账记录序恒按候选典序·并行完成序不改变输出序·确定性铁律；md5_match/
+  verdict 逻辑零改·per-件 build log 仍独立落 logdir；真编译仍逐件经 --guard
+  cpu_guard 包裹·guard FRONT 档自带钳位）。K>1＝机内多 rocqworker 并发＝热
+  负载↑——--guard 同给时建议 K≤2（注记不强制·用户自裁·温控警示详见
+  wash/probe_engine.py docstring 并行节）。injector 罐装模式零真编译·本参
+  旁路（canned 直落 workdir）。
 
 --once/--loop 双模（v37 三器共同接口纪律③）：
   --once（缺省）单次闭环；--loop 实时哨态：闭环周而复始（--interval 秒间隔·
@@ -98,7 +110,7 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
              md5_after,on_disk_md5_match,reason}?, cures_planned, cures_applied,
              rescan{rc,ids,station_count,residual_zero}?,
              resprobe{rc,rc_ok,n_records,md5_match}?}],
-     wall{root:{root,reason,detail}}, timing?（audit·耗时各段）,
+     wall{root:{root,reason,detail}}, timing?（audit·耗时各段＋jobs 维度）,
      final{verdict,rounds_run,red_files,
      cures_planned_total,cures_applied_total,wall_count}, verdict}
   verdict ∈ unclogged|wall|rounds-exhausted|audit（audit=只读基线·exit 0）。
@@ -108,20 +120,22 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   python3 tools/unclog.py --src DIR --world DIR \\
       [--candidates TSV | --chain-ledgers LEDGER.json ...] \\
       [--repo-path DIR] [--rounds 5] [--apply] [--top 25] [--scan-ids S]
-      [--probe-resume] [--rocq-cmd TPL] [--guard PATH --guard-reg DIR
-      --guard-front N --guard-mid N --guard-maxwait N --timeout S]
+      [--probe-resume] [--probe-parallel K] [--rocq-cmd TPL] [--guard PATH
+      --guard-reg DIR --guard-front N --guard-mid N --guard-maxwait N
+      --timeout S]
       [--pack cure_pack.json] [--workdir DIR] [--json out.json] [--events out.jsonl]
       [--once | --loop [--interval 60] [--loop-max 0]] [--sleep-scale 1.0]
       [--injector DIR] [--state-file STATE.json]
   python3 tools/unclog.py --src DIR [--world DIR] --audit [--injector DIR] \\
-      [--repo-path DIR] [--top 25] [--workdir DIR] [--json out.json]
+      [--repo-path DIR] [--top 25] [--probe-parallel K] [--workdir DIR] \\
+      [--json out.json]
   python3 tools/unclog.py --selftest
 
 退出码：0=unclogged／audit；1=wall／rounds-exhausted（红是数据非器红·响亮
 stdout）；2=用法错／注入场景形错（--rounds 与 --loop 同给/--audit 与
---apply·--loop·--state-file 同给/--state-file 目录缺）；9=fail-loud（路径缺
-失／器红：引擎子进程非数据性非零退／frozen 在册不可得／全树枚举零候选／
-audit 零写盘自证破／state 文件损坏红拒禁静默重建）。
+--apply·--loop·--state-file 同给/--probe-parallel<1/--state-file 目录缺）；
+9=fail-loud（路径缺失／器红：引擎子进程非数据性非零退／frozen 在册不可得／
+全树枚举零候选／audit 零写盘自证破／state 文件损坏红拒禁静默重建）。
 --selftest：0=全过／2=断言失败。
 
 世界纪律：本器零写 --world（世界 .vo 基座由调用方按 wash/world_hook.py 认证代
@@ -355,7 +369,8 @@ class Engines(object):
         cli = ["--candidates", cands_tsv, "--src", a.src, "--world", a.world,
                "--out", out_json,
                "--logdir", os.path.join(self.workdir, "probe-logs"),
-               "--rocq-cmd", a.rocq_cmd, "--timeout", str(a.timeout)]
+               "--rocq-cmd", a.rocq_cmd, "--timeout", str(a.timeout),
+               "--jobs", str(a.probe_parallel)]   # --probe-parallel 透传（缺省 1）
         if a.guard:
             cli += ["--guard", a.guard, "--guard-reg", a.guard_reg,
                     "--guard-front", str(a.guard_front),
@@ -465,6 +480,7 @@ def args_summary(a):
             "apply": bool(a.apply), "loop": bool(a.loop),
             "loop_max": a.loop_max, "interval": a.interval,
             "sleep_scale": a.sleep_scale, "probe_resume": bool(a.probe_resume),
+            "probe_parallel": a.probe_parallel,
             "src": basename_of(a.src), "world": basename_of(a.world) if a.world else None,
             "repo_path": basename_of(a.repo_path),
             "candidates": basename_of(a.candidates) if a.candidates else None,
@@ -785,7 +801,9 @@ def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
     基线数据非器红）。零写盘硬保证＝--src 全文件 md5 清单跑前跑后自证恒同
     （probe_engine 本就 copyfile 出树编译·wash/probe_engine.py:163·产物清场
     py:194——清单违同即 fail-loud 9·染污基线不出账）。耗时各段入
-    report["timing"]＝实测墙钟·报告唯一非确定段。"""
+    report["timing"]＝实测墙钟·报告唯一非确定段；jobs 维度（--probe-parallel
+    K 实参·probe_engine --jobs 透传值·缺省 1）同段入账——同候选面异 K
+    前后跑可比（并行剖面采集口）。"""
     a = args
     print("=== AUDIT 只读基线（单遍 probe 归集→chain_graph·零落刀零写树）===")
     t0 = time.time()
@@ -870,9 +888,11 @@ def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
                               if enum_sec is not None else None),
               "manifest_s": round(manifest_sec, 3),
               "probe_chain_s": round(probe_chain_sec, 3),
-              "total_s": round(time.time() - t0, 3)}
-    print("[audit] timing: enumerate=%s manifest=%gs probe+chain=%gs total=%gs"
-          % (timing["enumerate_s"], timing["manifest_s"],
+              "total_s": round(time.time() - t0, 3),
+              "jobs": a.probe_parallel}
+    print("[audit] timing: jobs=%d enumerate=%s manifest=%gs probe+chain=%gs"
+          " total=%gs"
+          % (a.probe_parallel, timing["enumerate_s"], timing["manifest_s"],
              timing["probe_chain_s"], timing["total_s"]))
     report = {
         "schema": SCHEMA,
@@ -905,6 +925,9 @@ def run(args, holder):
         args.rounds = 5           # 缺省轮帽（--rounds 未给·once/loop 同值）
     if args.rounds < 1:
         raise UnclogError("--rounds 须≥1 实测 %d" % args.rounds, 2)
+    if args.probe_parallel < 1:
+        raise UnclogError("--probe-parallel 须≥1 实测 %d（probe_engine --jobs "
+                          "透传·缺省 1）" % args.probe_parallel, 2)
     if args.top < 1:
         raise UnclogError("--top 须≥1 实测 %d" % args.top, 2)
     if args.interval < 0:
@@ -989,6 +1012,10 @@ def run(args, holder):
               % (args.injector, len(inj.canned["probe"]),
                  len(inj.canned["resprobe"]) if inj.canned["resprobe"] is not None
                  else "缺列"))
+    if args.probe_parallel > 1 and not inj and source != "chain-ledgers":
+        print("ADVISE(温控): --probe-parallel %d>1＝机内多 rocqworker 并发·"
+              "热负载↑（--guard 同给建议 K≤2·注记不强制·用户自裁）"
+              % args.probe_parallel)
 
     # frozen 在册（fail-closed 预检）
     frozen_hit, frozen_n = build_frozen_hit(args.src, args.repo_path)
@@ -1088,6 +1115,10 @@ def main():
                     help="正典 cure_pack（默认 wash/cure_pack.json v1.3）")
     ap.add_argument("--probe-resume", dest="probe_resume", action="store_true",
                     help="probe_engine 用 resume（缺省每轮 --fresh 真探当前红账）")
+    ap.add_argument("--probe-parallel", dest="probe_parallel", type=int,
+                    default=1, metavar="K",
+                    help="probe_engine --jobs 并行度透传（缺省 1＝逐件串行零"
+                         "漂移·--audit 同享·--guard 同给建议 K≤2 温控自裁）")
     ap.add_argument("--rocq-cmd", dest="rocq_cmd",
                     default='rocq c -Q . "" {name}.v', metavar="TPL",
                     help="探针命令模板透传 probe_engine")
@@ -1154,7 +1185,7 @@ NOMATCH_BODY = "Lemma ok : True.\n"
 
 
 def selftest():
-    """十三矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
+    """十四矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
     注入零真编译·chain/cure/scan/frozen8 真跑）：①绿径两轮疏通（--apply 落刀→
     次轮红账空 exit 0）②诚实墙（self-unwashable·零落刀）＋②b 零链根红账
     （no-chain-root 墙目·禁哑墙）③cure-miss 入墙④轮尽（--apply 已落刀而世界
@@ -1164,7 +1195,8 @@ def selftest():
     rc=2·真树 audit 活跑归主会话本席只证 fixture 级）⑪--state-file 同形哨态
     seen（轮间红账差分事件 only-new 三连跑：新现红报/复现红不报/新红再报·
     state red_seen 跨进程续账·损坏 state 红拒 9 禁静默重建）⑫--rounds 与
-    --loop 互斥 rc=2＋--audit 与 --state-file 互斥 rc=2。"""
+    --loop 互斥 rc=2＋--audit 与 --state-file 互斥 rc=2⑬--jobs 维度（audit
+    timing 段 jobs=K 入账·缺省 1/--probe-parallel 2 各录其值·前后跑可比）。"""
     tmp = tempfile.mkdtemp(prefix="rocqwash_unclog_self_")
 
     def run(aargs):
@@ -1594,6 +1626,7 @@ def selftest():
               "跨进程续账/损坏红拒 9 禁静默重建）: PASS")
 
         # 矢量⑫ --rounds 与 --loop 互斥明义 rc=2＋--audit 与 --state-file 互斥
+        # ＋--probe-parallel<1 用法闸 rc=2（透传参数缺省 1·零漂移）
         d, src, world, wd = fixture("v12_mutex")
         p = run(["--src", src, "--loop", "--rounds", "3"])
         assert p.returncode == 2, "--rounds --loop 同给应 rc=2 实测 %d" \
@@ -1607,13 +1640,43 @@ def selftest():
         assert p.returncode == 2, "--audit --state-file 同给应 rc=2 实测 %d" \
             % p.returncode
         assert "互斥" in p.stdout, p.stdout[-300:]
-        print("矢量⑫ --rounds/--loop 互斥明义＋--audit/--state-file 互斥"
-              "（同给 rc=2）: PASS")
+        p = run(["--src", src, "--probe-parallel", "0",
+                 "--candidates", os.path.join(d, "cands.tsv")])
+        assert p.returncode == 2, "--probe-parallel 0 应 rc=2 实测 %d" \
+            % p.returncode
+        assert "probe-parallel" in p.stdout, p.stdout[-300:]
+        print("矢量⑫ --rounds/--loop 互斥明义＋--audit/--state-file 互斥＋"
+              "--probe-parallel 0 用法闸（同给/越界 rc=2）: PASS")
 
-        print("UNCLOG-SELFTEST PASS: 十三矢量全过（绿径/诚实墙＋零链根补判/"
+        # 矢量⑬ --jobs 维度：audit timing 段记 jobs=K（--probe-parallel 实参·
+        # probe_engine --jobs 透传值·缺省 1）——同候选面异 K 前后跑可比
+        # （并行剖面采集口·injector 罐装模式本参旁路照记·零真编译）
+        d, src, world, wd = fixture("v13_jobs")
+        j13a = os.path.join(wd, "report_k1.json")
+        p = run(["--src", src, "--world", world, "--audit", "--injector",
+                 scenario(os.path.join(d, "inj"), [L1]),
+                 "--workdir", wd, "--json", j13a])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(j13a, encoding="utf-8"))
+        assert rep["timing"]["jobs"] == 1 and rep["args"]["probe_parallel"] == 1, \
+            (rep["timing"], rep["args"])
+        assert "timing: jobs=1" in p.stdout, p.stdout[-300:]
+        j13b = os.path.join(wd, "report_k2.json")
+        p = run(["--src", src, "--world", world, "--audit", "--injector",
+                 scenario(os.path.join(d, "inj"), [L1]), "--probe-parallel", "2",
+                 "--workdir", wd, "--json", j13b])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(j13b, encoding="utf-8"))
+        assert rep["timing"]["jobs"] == 2 and rep["args"]["probe_parallel"] == 2, \
+            (rep["timing"], rep["args"])
+        assert "timing: jobs=2" in p.stdout, p.stdout[-300:]
+        print("矢量⑬ --jobs 维度（audit timing 段 jobs=K 入账·缺省 1/K=2 各录"
+              "其值·前后跑可比）: PASS")
+
+        print("UNCLOG-SELFTEST PASS: 十四矢量全过（绿径/诚实墙＋零链根补判/"
               "cure-miss/轮尽/缺省关实证/JSON 幂等/frozen 红拒/loop 哨态/"
               "CLI 四码/audit 只读基线零写盘自证/state-file 差分 only-new/"
-              "--rounds·--loop 互斥）")
+              "--rounds·--loop 互斥＋--probe-parallel 用法闸＋--jobs 维度）")
         return 0
     except AssertionError as e:
         print("UNCLOG-SELFTEST FAIL: %s" % e)

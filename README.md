@@ -197,6 +197,18 @@ rocqwash/
 > （三链一图全景＋器面索引·docs 席铸）；自测套件扩至 56 例
 > （t_destructive_matrix 17 行判据＋t_baseline_diff 最小自测壳三判·缺壳集成席
 > 自补）。
+> v41 增补（20261111·四席并铸＋集成席收口）：cw_sentinel 预设表数据化扩至
+> 五预设（unclog/pushci/wash-shape/triage/cw-doctor·各承缺省干跑铁律）＋
+> `--on-red-preset` 可重复链式（按给定序逐件执行·一败续行不改哨退出码）＋
+> on-red 双路同守卫（plain `--on-red` 与 preset 缺 `--emit` 皆 rc=2·破坏面
+> 矩阵 S2 判据转正·矩阵仍 17 行）；probe_engine `--jobs` K 并行分片（缺省
+> 1 逐件串行零漂移·典序收账输出序不随完成序漂移·候选重名 fail-loud rc=2）；
+> unclog `--probe-parallel` 探针并行度透传（audit timing 段 jobs 维度入账·
+> 同候选面异 K 前后跑可比）；性能剖面规程 docs/perf-profile-v1.0-20261111.md
+> ＋examples/baselines/perf-README.md（K=1/2/3 三跑采集·两轴分离律·工装席
+> 铸）；push_gate 推窗四判据×pushci preflight 发射闸双门归一评估
+> docs/push-gate-dual-door-assessment-v1.0-20261111.md（只评估零代码变更·
+> 护栏席铸）。自测套件保持 56 例（52 过/4 例正本缺卷让席）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
