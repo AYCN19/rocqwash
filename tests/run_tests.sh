@@ -101,6 +101,10 @@
 #       tools/unclog.py 疏通堵塞闭环引擎（tests/test_unclog.py·最小自测壳
 #         三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十矢量全 --injector
 #         canned 罐装零真编译）＋--help 冒烟＋退出码口径抽验 2/2/9·零网络零触真仓）
+#       tools/cw_doctor.py 综合体检器·四域聚合（tests/test_cw_doctor.py·最小
+#         自测壳两判：--selftest 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全
+#         --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译）＋
+#         --help 冒烟·20261111 v38 集成席挂接）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -184,7 +188,8 @@ t_dual_scan \
  t_pushci \
  t_cw_sentinel \
  t_wash_shape \
- t_unclog"
+ t_unclog \
+ t_cw_doctor"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -514,6 +519,16 @@ t_unclog() {
   # canned 罐装）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无参/缺路
   # 本集成席实跑验证）·零真编译零网络零触真仓）
   "$PY" -B "$REPO/tests/test_unclog.py"
+}
+
+t_cw_doctor() {
+  # 20261111 v38 集成席挂接：综合体检器·四域聚合（tools/cw_doctor.py·四域
+  # subprocess 编排既有一器（dyld/net_probe/probe_engine+chain_graph/注册册锚
+  # 审计）→综合健康分 0-100＋verdict healthy/degraded＋advice·schema
+  # rocqwash-cwdoctor/1·tests/test_cw_doctor.py 最小自测壳两判：--selftest
+  # 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全 --injector canned 罐装）＋
+  # --help 冒烟·缺壳由本集成席自补·零真 otool 零真网络零真编译零触真仓）
+  "$PY" -B "$REPO/tests/test_cw_doctor.py"
 }
 
 # ---------- 汇总执行 ----------

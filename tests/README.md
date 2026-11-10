@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 48 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 52 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（48 例）
+## 覆盖面（52 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -160,3 +160,21 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 48 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 48 | `t_pushci` | `tools/pushci.py`（推送 CI 一键流水线编排器·五段管线 preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排零新引擎·verdict 七态 success/fix-content/toolchain/unstable/heal-exhausted/gate4-block/dry-run） | `tests/test_pushci.py` 十节：selftest 冻结矢量（rc 0·`PUSHCI-SELFTEST PASS`）／tmp-git 仓 helper 自证（repo_path 由夹具建仓·push 永不真跑——场景层 git 全走 --git-caller canned）／S1 绿径（preflight 双闸→push 四调 get-url/rev-parse/push/ls-remote 远端为准→watch 2 轮 success→verdict success exit 0·零 heal 零 merge）／S2 NETRED 愈合（B 族 canned.jobs 真判类→probe STABLE→rerun 201 run_id 咬合→attempt2 success exit 0·heal_rounds==1）／S3 内容红（A 族→verdict fix-content exit 2·零 rerun 实证＝rounds 空＋fired_total==0＋api_calls 零 POST·判类 outcome 在册 last_triage）／S4 heal 耗尽（NETRED×3·--max-heal 2→heal-exhausted exit 1）／S5 merge 流（--pr 42 PUT merge 200→merge_sha 非空 exit 0）／S6 dry-run（计划输出·api_calls.json==[] 零 git calls.json==[]→verdict dry-run exit 0）／幂等（六场景各两跑 report 字节恒同·漂移叶限墙钟类窄键名）／CLI 五码（help 0·未知形参 2·缺必给 2·repo 缺失 9·injector-git-caller 单边 2）。夹具 `fixtures/pushci_scenarios/s1…s6` GitHub API 真形 canned 按轮次序列·远端恒指不可达假域 pushci.invalid·--sleep-scale 0＋--netrc 恒指不存在路径——结构性零真网络零真 push 零编译零写盘 |
+
+## v37 工作流三器补记（20261111·用例 49–51·集成席本轮补表）
+
+> 三例随 v37 轮已在 run_tests.sh 在册（run_tests.sh t_cw_sentinel/t_wash_shape/
+> t_unclog）；本表此前未及——本轮集成席据 run_tests.sh 在册注释补表，判据描述
+> 以 run_tests.sh 为准（遵「不代前轮补表」例外：本轮任务书钦定「计数同步」）。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 49 | `t_cw_sentinel` | `tools/cw_sentinel.py`（实时动态哨·三路信号源 CI runs/台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·零动作是缺省） | `tests/test_cw_sentinel.py` 最小自测壳两判：--selftest rc=0 且含 `CW-SENTINEL-SELFTEST PASS` 冻结标记／--help rc=0（哨自身 --selftest 六矢量 canned 注入零真网络零编译由铸席自证·本壳挂接套件） |
+| 50 | `t_wash_shape` | `tools/wash_shape.py`（洗形器·正典形五洗流水·plan 缺省零写盘） | `tests/test_wash_shape.py` 最小自测壳三判：--selftest rc=0 且含 `WASH-SHAPE-SELFTEST PASS` 冻结标记（十二判向量全 tmp 夹具）／--help rc=0／退出码口径抽验 2/2/9 |
+| 51 | `t_unclog` | `tools/unclog.py`（疏通堵塞闭环引擎·probe 归集→chain_graph 挑根→cure_applier 落刀→复核→verdict unclogged/wall/rounds-exhausted·缺省干跑·frozen 在册红拒） | `tests/test_unclog.py` 最小自测壳三判：--selftest rc=0 且含 `UNCLOG-SELFTEST PASS` 冻结标记（十矢量全 --injector canned 罐装）／--help rc=0／退出码口径抽验 2/2/9 |
+
+## v38 综合体检器补记（20261111·用例 52·集成席）
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 52 | `t_cw_doctor` | `tools/cw_doctor.py`（综合体检器·四域聚合：环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 抽样真探→综合健康分 0-100＋verdict healthy/degraded＋advice 处置清单·schema rocqwash-cwdoctor/1·只诊断禁代执行） | `tests/test_cw_doctor.py` 最小自测壳两判：--selftest rc=0 且含 `CW-DOCTOR-SELFTEST PASS` 冻结标记（九节向量全 --injector canned 罐装 tmp fixture：四域全绿 100／环境红降 60／注册 skip 归一 86.67／堵账 TOP 注入 88.75／advice 生成／JSON 幂等字节恒同／CLI 四码＋罐装全覆盖／注册审计单元——零真 otool 零真网络零真编译，chain_graph/注册审计真跑纯 stdlib 由铸席自证）／--help rc=0（缺壳由本集成席自补·零触真仓零写盘） |

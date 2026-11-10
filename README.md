@@ -56,7 +56,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（51 例）/ CI 工作流占位 — test suite (51 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（52 例）/ CI 工作流占位 — test suite (52 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -137,6 +137,24 @@ rocqwash/
 > `cw.sh` 入口扩至十五工具（sentinel/wash-shape/unclog 三路由·四处同步）·
 > 工作流配合接口速查见 [README-cw.md](README-cw.md)「工作流配合接口」节；
 > 自测套件扩至 51 例（47 过/4 例正本缺卷让席·真本机全跑）。
+> v38 增补（20261111·工作流集成与综合体检轮·四席并铸＋集成席收口）：
+> `tools/cw_doctor.py` 综合体检器·四域聚合（①环境＝toolchain_dyld_doctor 编排
+> ②网络＝net_probe --rounds 1 ③注册册锚正典形审计 ④堵账＝probe_engine 真探
+> ＋chain_graph 链根——逐域 subprocess 编排既有一器零新引擎→综合健康分 0-100
+> ＋per-domain verdict＋advice 处置清单·schema rocqwash-cwdoctor/1·--injector
+> 离线可测·只诊断禁代执行·红是数据非器红 healthy=0/degraded=1）；工作流集成
+> 面：`examples/workflows/` 三嵌段正典样例（backend-sentinel 后台哨／step-pushci
+> 单步推 CI／loop-unclog 堵账疏通·全部离线可注入形）＋
+> `docs/workflow-integration-whitepaper-v1.0-20261111.md` 集成白皮书（主会话
+> 让路模式／后台任务拓扑／推窗四判据×发射闸双门并立）；韧性层：共享退避纯函数
+> `tools/_http_backoff.py`（CI GET 403/429/5xx 指数退避·Retry-After 尊重·
+> ci_triage/cw_sentinel/pushci 三器接入）＋net_probe `--jitter/--seed` 抖散
+> ＋pushci `--timeout`／sentinel `--subproc-timeout` 子进程防挂（injector
+> canned 路径一律零重试零真网络）；接口扩面：sentinel `--on-red-preset`
+> （unclog 干跑/pushci dry-run 预设动作·与 --on-red 互斥）＋unclog `--audit`
+> 只读堵账基线（--src 全文件 md5 跑前跑后自证零写盘·verdict=audit exit 0）；
+> `cw.sh` 入口扩至十六工具（cw-doctor 路由·四处同步）；自测套件扩至 52 例
+> （t_cw_doctor 最小自测壳两判·缺壳集成席自补）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

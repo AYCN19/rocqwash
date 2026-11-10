@@ -39,20 +39,49 @@
 stdout·不改哨退出码——on-red 是旁路动作非器面）。缺省无＝report-only·
 **零动作是缺省**（承 cure_applier 干跑缺省同纪律）。
 
+--on-red-preset NAME：红事件预设动作——预设即模板 sugar：展开为内部命令模板
+后走与 --on-red **同一执行器**（60s 帽·rc≠0/超时响亮入 actions 账·不改哨
+退出码·占位替换复用现有 --on-red 路径·零新执行路径）。与 --on-red 互斥
+（同给 rc=2 fail-loud·禁静默择一——「preset 优先」＝preset 在场即占 on-red
+动作槽·同给即用法歧义报错）：
+  unclog＝python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json
+    （--src 必经 --on-red-arg src=... 透传·**--apply 缺省不加＝疏通只干跑·
+    人审后再 apply——自动接驳缺省干跑是铁律**）
+  pushci＝python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch}
+    --json {emit_dir}/pushci_{run}.json --dry-run
+    （repo_path/branch 必经 --on-red-arg 透传·--dry-run 缺省＝只打计划零副作用）
+静态占位 {src}/{repo_path}/{branch} 展开时由 --on-red-arg K=V 实替（缺/重/
+无 '='/未知键/孤儿 --on-red-arg → 2）；{emit_dir} 取 --emit 所在目录（预设
+出账与事件流同盘·--emit 必给否则 2）；动态 {run} 原样留给 fire_on_red 事件
+直替（缺字段替空串·既有语义）。预设器件缺失 → 9。
+
 双模：--once（单轮巡检出账退出·工作流步骤用）｜--loop --interval S（长驻·
 JSONL 追加·工作流后台 bash 任务用）·--max-rounds N 轮帽（0=无限·selftest
 矢量⑤三轮序贯依赖）。
 
+韧性层（v37·承任务书①②）：真 urllib CI GET 403/429/5xx → 指数退避重试
+（--retry-max 缺省 3·base 2s·Retry-After 秒数头优先替当次延迟·HTTP-date 形
+不猜落回指数；耗尽原错 9·4xx 语义面 401/404 等不重试；延迟计算抽公共件
+tools/_http_backoff.py 纯函数·三器共享·同目录 sys.path 注入 import·无
+__init__ 包结构；injector canned 路径零真网络一律不重试——离线可测铁律）。
+子进程防挂＝--subproc-timeout S（缺省 120s）：ci_triage／chain_graph run_py
+调用超时=子进程杀＋fail-loud 9 报调用名（--timeout 另承 HTTP 单请求超时
+缺省 30——两钟不同物不并铃）；on-red 旁路动作（含 --on-red-preset 展开·
+同一执行器）仍承 ON_RED_TIMEOUT 60s 帽不改哨退出码（v37 既约口径不动）。
+
 退出码：0=巡检完成（红是数据非器红·响亮 stdout）；2=用法错（缺模式/双模
 同给/三源全缺/--branch 先于 --watch-repo/repo 形坏/负参/once 带 loop 专属
-参）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·token 空·runs/jobs 形坏·
+参/--on-red-preset 与 --on-red 同给/preset 不识别/预设参数缺·重·形坏·
+--emit 缺/--on-red-arg 孤儿）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·
+token 空·runs/jobs 形坏·预设器件缺·
 injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·ci_triage/
-chain_graph 子进程 rc≠0）。--selftest：0=全过／2=断言失败。
+chain_graph 子进程 rc≠0·子进程超时被杀〔--subproc-timeout〕）。
+--selftest：0=全过／2=断言失败。
 
 report schema（--json·每轮覆盖写·rocqwash-sentinel/1）：
   {"schema","mode","round","sources"{ci[],ledgers{},buildlog{}},"events"[],
    "actions"[](on-red 执行账),"state_file"?,"interval"?,"sleep_scale",
-   "ts_enabled","injector"?}
+   "ts_enabled","injector"?,"on_red_preset"?}
   events/actions 元素与事件流逐字节同源（确定性：--sleep-scale 0 时同输入
   重跑字节级恒同）。
 
@@ -107,6 +136,27 @@ TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(TOOLS_DIR)
 TRIAGE_TOOL = os.path.join(TOOLS_DIR, "ci_triage.py")
 CHAIN_TOOL = os.path.join(TOOLS_DIR, "chain_graph.py")
+UNCLOG_TOOL = os.path.join(TOOLS_DIR, "unclog.py")
+PUSHCI_TOOL = os.path.join(TOOLS_DIR, "pushci.py")
+
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)   # 同目录共享退避小模块（无 __init__ 包结构）
+import _http_backoff
+
+# --on-red-preset 预设表（任务书钦定模板·程序路径按哨自身相对定位承 TOOLS_DIR
+# 先例·零硬编码绝对路径）：静态占位 {src}/{repo_path}/{branch}/{emit_dir} 展开
+# 时实替·动态 {run} 留给 fire_on_red 事件直替。unclog 不带 --apply＝疏通只干
+# 跑（自动接驳缺省干跑铁律）·pushci 带 --dry-run＝只打计划零副作用。
+ON_RED_PRESETS = {
+    "unclog": "python3 -B %s --src {src} --json {emit_dir}/unclog_{run}.json"
+              % UNCLOG_TOOL,
+    "pushci": "python3 -B %s --repo-path {repo_path} --branch {branch} "
+              "--json {emit_dir}/pushci_{run}.json --dry-run" % PUSHCI_TOOL,
+}
+ON_RED_PRESET_TOOLS = {"unclog": UNCLOG_TOOL, "pushci": PUSHCI_TOOL}
+# 各预设必传透传参数（--on-red-arg K=V·缺/重/无 '='/未知键 → 2）
+ON_RED_PRESET_PARAMS = {"unclog": ("src",),
+                        "pushci": ("repo_path", "branch")}
 
 # buildlog 词面（判类谱 token·ci_triage.py:95-108 同源）：BUILD-FAIL／
 # EXIT=134（C 环境断链）／Error:（A 内容红）
@@ -182,14 +232,22 @@ def netrc_token(path, machine="github.com"):
                       "第 6 列=token）: %s" % (machine, path), 9)
 
 
-def run_py(tool_path, cli):
+def run_py(tool_path, cli, timeout=None):
     """python3 -B <tool> <cli> 子进程（stdout+stderr 合流·pushci.py:591 同款）。
     纯逻辑引擎零编译故不经 cpu_guard（probe_engine.py:10 判例：真编译才须
-    guard）·缺件 → 9。"""
+    guard）·缺件 → 9。韧性层 v37：timeout 给定时防挂（--subproc-timeout·
+    缺省 120s）——超时=子进程杀＋fail-loud 9 报调用名（零悬挂）。"""
     if not os.path.isfile(tool_path):
         raise SentryError("工具链件缺失: %s" % tool_path, 9)
-    p = subprocess.run([sys.executable, "-B", tool_path] + list(cli),
-                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    try:
+        p = subprocess.run([sys.executable, "-B", tool_path] + list(cli),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise SentryError("子进程超时被杀（--subproc-timeout=%ss·调用: "
+                          "python3 -B %s %s）"
+                          % (timeout, os.path.basename(tool_path),
+                             " ".join(str(c) for c in cli[:1])), 9)
     out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
         else (p.stdout or "")
     return p.returncode, out
@@ -217,11 +275,15 @@ def load_injector(path):
     return data
 
 
-def api_get_json(url, token, timeout, injector):
+def api_get_json(url, token, timeout, injector, retry_max=3, sleep_scale=1.0,
+                 _open=None, _sleep=None):
     """只读 GET → (status, parsed_json)。唯一网络动作·注入点单函数：
     injector 在场按 url_contains 首中即用（可循环复用·哨轮询幂等语义）·未命中
-    fail-loud 9 绝不静默走真网络；缺席真 urllib（HTTP 4xx/5xx → 9·连接失败
-    → 9·body 非合法 JSON → 9）。"""
+    fail-loud 9 绝不静默走真网络·且 canned 路径零重试（离线可测铁律）；缺席真
+    urllib（韧性层 v37：403/429/5xx 指数退避重试·base 2s·帽 retry_max·
+    Retry-After 秒数头优先替当次延迟·_http_backoff 纯函数；耗尽或 4xx 语义面
+    → 9·连接失败 → 9·body 非合法 JSON → 9）。_open/_sleep 注入位（selftest
+    零网络矢量）。"""
     if injector is not None:
         for r in injector["responses"]:
             if r["url_contains"] in url:
@@ -233,24 +295,36 @@ def api_get_json(url, token, timeout, injector):
                 return 200, body
         raise SentryError("injector canned 未覆盖 GET %s（canned 表须全覆盖·"
                           "禁静默走真网络）" % url, 9)
-    req = urllib.request.Request(url, headers={
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "rocqwash-cw-sentinel",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Authorization": "token %s" % token,
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            raw = resp.read()
-    except urllib.error.HTTPError as e:
+    do_open = urllib.request.urlopen if _open is None else _open
+    do_sleep = (lambda s: sleep_scaled(s, sleep_scale)) if _sleep is None \
+        else _sleep
+    delays = _http_backoff.backoff_delays(retry_max)
+    attempt = 0
+    while True:
+        req = urllib.request.Request(url, headers={
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "rocqwash-cw-sentinel",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Authorization": "token %s" % token,
+        })
         try:
-            body = (e.read() or b"").decode("utf-8", errors="replace")
-        except Exception:
-            body = ""
-        raise SentryError("CI API HTTP %d: %s（%s）"
-                          % (e.code, body.strip()[:160], url), 9)
-    except (urllib.error.URLError, OSError) as e:
-        raise SentryError("CI API 不可达: %s (%s)" % (url, e), 9)
+            with do_open(req, timeout=timeout) as resp:
+                raw = resp.read()
+            break
+        except urllib.error.HTTPError as e:
+            if attempt >= retry_max or not _http_backoff.is_retry_status(e.code):
+                try:
+                    body = (e.read() or b"").decode("utf-8", errors="replace")
+                except Exception:
+                    body = ""
+                raise SentryError("CI API HTTP %d: %s（%s）"
+                                  % (e.code, body.strip()[:160], url), 9)
+            ra = _http_backoff.parse_retry_after(
+                e.headers.get("Retry-After") if e.headers is not None else None)
+            do_sleep(ra if ra is not None else delays[attempt])
+            attempt += 1
+        except (urllib.error.URLError, OSError) as e:
+            raise SentryError("CI API 不可达: %s (%s)" % (url, e), 9)
     try:
         return 200, json.loads(raw.decode("utf-8"))
     except ValueError as e:
@@ -334,10 +408,11 @@ def jobs_api_path(repo, run_id):
     return "/repos/%s/actions/runs/%s/jobs?per_page=100&page=1" % (repo, run_id)
 
 
-def triage_run_offline(repo, run_id, jobs_body):
+def triage_run_offline(repo, run_id, jobs_body, timeout=None):
     """哨取 jobs（api_get_json·injector 可注入）→ 落盘 tmp → subprocess
     ci_triage --offline（pushci.py:969 run_triage injector 同款·真子进程真
-    判类·零网络）→ rocqwash-ci-triage/1 report。ci_triage rc≠0 → 9。"""
+    判类·零网络）→ rocqwash-ci-triage/1 report。ci_triage rc≠0 → 9；
+    timeout 给定时 --subproc-timeout 防挂（超时=杀＋9 报调用名）。"""
     fdj, jobs_path = tempfile.mkstemp(prefix="cw_sentinel_jobs_")
     os.close(fdj)
     fd, out_path = tempfile.mkstemp(prefix="cw_sentinel_triage_")
@@ -345,7 +420,8 @@ def triage_run_offline(repo, run_id, jobs_body):
     try:
         with io.open(jobs_path, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(jobs_body, fh, sort_keys=True)
-        rc, out = run_py(TRIAGE_TOOL, ["--offline", jobs_path, "--json", out_path])
+        rc, out = run_py(TRIAGE_TOOL, ["--offline", jobs_path, "--json", out_path],
+                         timeout=timeout)
         if rc != 0:
             raise SentryError("ci_triage 子进程 rc=%d: %s" % (rc, out[-300:]), 9)
         try:
@@ -372,7 +448,8 @@ def poll_ci_repo(sentry, spec, st):
     repo = spec["repo"]
     token = sentry["token"]            # injector 在场为 None·惰性已取
     _, body = api_get_json(runs_url(repo), token, sentry["timeout"],
-                           sentry["injector"])
+                           sentry["injector"], retry_max=sentry["retry_max"],
+                           sleep_scale=sentry["args"].sleep_scale)
     runs = None
     if isinstance(body, dict):
         runs = body.get("workflow_runs")     # GitHub API 真形
@@ -403,12 +480,14 @@ def poll_ci_repo(sentry, spec, st):
         else:
             _, jobs_body = api_get_json(
                 API_ROOT + jobs_api_path(repo, rid), token, sentry["timeout"],
-                sentry["injector"])
+                sentry["injector"], retry_max=sentry["retry_max"],
+                sleep_scale=sentry["args"].sleep_scale)
             if not isinstance(jobs_body, dict) \
                     or not isinstance(jobs_body.get("jobs"), list):
                 raise SentryError("jobs API 形坏（须 {\"total_count\":N,"
                                   "\"jobs\":[...]}）: run=%s" % rid, 9)
-            rep = triage_run_offline(repo, rid, jobs_body)
+            rep = triage_run_offline(repo, rid, jobs_body,
+                                     timeout=sentry["subproc_timeout"])
             runv = rep.get("run") or {}
             family = runv.get("family")
             action = runv.get("action")
@@ -462,7 +541,8 @@ def poll_ledgers(sentry, ledgers_dir, st):
         fd, gpath = tempfile.mkstemp(prefix="cw_sentinel_chain_")
         os.close(fd)
         try:
-            rc, cout = run_py(CHAIN_TOOL, [path, "--json", gpath])
+            rc, cout = run_py(CHAIN_TOOL, [path, "--json", gpath],
+                              timeout=sentry["subproc_timeout"])
             if rc != 0:
                 raise SentryError("chain_graph 子进程 rc=%d（件 %s）: %s"
                                   % (rc, path, cout[-300:]), 9)
@@ -542,6 +622,47 @@ def poll_buildlog(sentry, log_path, st):
 
 # ---- on-red（旁路动作·零动作是缺省）------------------------------------------
 
+def expand_on_red_preset(name, arg_pairs, emit_path):
+    """--on-red-preset 展开 → on-red 命令模板串（ON_RED_PRESETS 表·预设即模板
+    sugar）。静态占位 {src}/{repo_path}/{branch} 由 --on-red-arg K=V 实替·
+    {emit_dir} 取 --emit 所在目录（预设出账与事件流同盘）；动态 {run}/{family}/
+    {repo} 原样留给 fire_on_red 事件直替（占位替换复用现有 --on-red 路径·
+    零新执行路径）。preset 不识别/参数缺·重·无 '='/空 K·V/未知键/--emit 缺
+    → 2·预设器件缺 → 9。"""
+    if name not in ON_RED_PRESETS:
+        raise SentryError("--on-red-preset 不识别: %r（可选 %s）"
+                          % (name, "/".join(sorted(ON_RED_PRESETS))), 2)
+    need = ON_RED_PRESET_PARAMS[name]
+    params = {}
+    for pair in (arg_pairs or []):
+        if "=" not in pair:
+            raise SentryError("--on-red-arg 形须 K=V: %r" % pair, 2)
+        k, v = pair.split("=", 1)
+        if not k or not v:
+            raise SentryError("--on-red-arg K/V 皆须非空: %r" % pair, 2)
+        if k in params:
+            raise SentryError("--on-red-arg 重键: %r" % k, 2)
+        if k not in need:
+            raise SentryError("--on-red-arg 键 %r 不属 preset %s（须 %s）"
+                              % (k, name, "/".join(need)), 2)
+        params[k] = v
+    missing = [k for k in need if k not in params]
+    if missing:
+        raise SentryError("--on-red-preset %s 必传透传参数缺（--on-red-arg "
+                          "%s=...）: %s" % (name, missing[0], "/".join(need)), 2)
+    if not emit_path:
+        raise SentryError("--on-red-preset 需 --emit（{emit_dir} 取事件流所在"
+                          "目录·预设出账同盘）", 2)
+    if not os.path.isfile(ON_RED_PRESET_TOOLS[name]):
+        raise SentryError("预设器件缺失: %s" % ON_RED_PRESET_TOOLS[name], 9)
+    cmd = ON_RED_PRESETS[name]
+    for k in sorted(params):
+        cmd = cmd.replace("{%s}" % k, params[k])
+    cmd = cmd.replace("{emit_dir}",
+                      os.path.dirname(os.path.abspath(emit_path)))
+    return cmd
+
+
 def fire_on_red(sentry, ev):
     """--on-red 模板占位替换（{family}/{run}/{repo}·事件字段直替缺字段空串）
     → subprocess shell 执行。rc≠0/超时响亮入账·不改哨退出码（旁路动作非
@@ -599,6 +720,8 @@ def poll_round(sentry, st, round_no):
         rep["state_file"] = a.state_file
     if a.injector:
         rep["injector"] = a.injector
+    if sentry["on_red_preset"]:
+        rep["on_red_preset"] = sentry["on_red_preset"]
     if a.interval is not None and sentry["mode"] == "loop":
         rep["interval"] = a.interval
     if sentry["events"]:
@@ -679,11 +802,28 @@ def build_sentry(args):
         raise SentryError("--interval 只属 --loop（once 单轮无轮间隔）", 2)
     if args.once and args.max_rounds:
         raise SentryError("--max-rounds 只属 --loop", 2)
+    if args.on_red_preset and args.on_red:
+        raise SentryError("--on-red-preset 与 --on-red 互斥（同给 rc=2·"
+                          "preset 即占 on-red 动作槽·禁静默择一）", 2)
+    if args.on_red_args and not args.on_red_preset:
+        raise SentryError("--on-red-arg 只服务 --on-red-preset", 2)
+    if args.retry_max < 0:
+        raise SentryError("--retry-max 须≥0 实测 %s" % args.retry_max, 2)
+    if args.subproc_timeout < 1:
+        raise SentryError("--subproc-timeout 须≥1 实测 %s"
+                          % args.subproc_timeout, 2)
+    on_red = args.on_red
+    if args.on_red_preset:
+        on_red = expand_on_red_preset(args.on_red_preset, args.on_red_args,
+                                      args.emit)
     sentry = {
         "args": args, "mode": mode, "specs": specs,
         "seq": 1, "events": [], "actions": [],
-        "emit": args.emit, "on_red": args.on_red,
+        "emit": args.emit, "on_red": on_red,
+        "on_red_preset": args.on_red_preset,
         "timeout": args.timeout, "injector": None, "token": None,
+        "retry_max": args.retry_max,
+        "subproc_timeout": args.subproc_timeout,
         "ts_enabled": args.sleep_scale != 0,
     }
     if args.injector:
@@ -770,6 +910,15 @@ def main():
     ap.add_argument("--on-red", dest="on_red", default=None, metavar="CMD",
                     help="红事件命令模板（{family}/{run}/{repo} 占位）·缺省"
                          "无=report-only 零动作是缺省")
+    ap.add_argument("--on-red-preset", dest="on_red_preset", default=None,
+                    metavar="NAME",
+                    help="红事件预设动作模板（unclog=疏通只干跑·pushci=推送"
+                         "dry-run·参数经 --on-red-arg 透传·与 --on-red 互斥"
+                         "同给 rc=2·同一执行器零新执行路径）")
+    ap.add_argument("--on-red-arg", dest="on_red_args", action="append",
+                    default=None, metavar="K=V",
+                    help="预设必传透传参数（可重复·unclog 需 src·pushci 需 "
+                         "repo_path+branch·{emit_dir} 取 --emit 所在目录）")
     ap.add_argument("--netrc",
                     default=os.path.join(os.path.expanduser("~"), ".netrc"),
                     metavar="PATH",
@@ -777,6 +926,16 @@ def main():
                          "列=token·ci_triage 同款）")
     ap.add_argument("--timeout", type=int, default=30, metavar="S",
                     help="单请求超时秒（默认 30）")
+    ap.add_argument("--retry-max", dest="retry_max", type=int, default=3,
+                    metavar="N",
+                    help="CI API 403/429/5xx 退避重试帽（默认 3·指数 base 2s·"
+                         "Retry-After 秒数头尊重·仅真 urllib 路·injector "
+                         "canned 不重试）")
+    ap.add_argument("--subproc-timeout", dest="subproc_timeout", type=int,
+                    default=120, metavar="S",
+                    help="子进程防挂超时秒（默认 120·ci_triage/chain_graph 调用"
+                         "超时=杀＋fail-loud 9 报调用名；--timeout 另承 HTTP "
+                         "单请求超时）")
     ap.add_argument("--injector", default=None, metavar="FILE",
                     help="canned API 响应 JSON（rocqwash-sentinel-injector/1·"
                          "零真网络离线可测·须与 --watch-repo 同给）")
@@ -806,7 +965,10 @@ def selftest():
     ①once 新 run 出 ci-red 事件·二跑 seen 幂等零事件 ②ledger 新件出 blocking
     ③buildlog 增量 grep（半行不误报）④--on-red 占位替换执行实证（canned 命令
     写 tmp 标记文件）⑤loop 三轮 JSONL 序贯 ⑥--emit JSONL 可解析逐行合法
-    ＋确定性字节恒同＋CLI 四码＋injector 未覆盖 9＋目录缺 9。"""
+    ＋确定性字节恒同＋CLI 四码＋injector 未覆盖 9＋目录缺 9⑨--on-red-preset
+    展开 sugar＋触发捕获＋与 --on-red 互斥 rc=2＋预设参数缺误 rc=2
+    ⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·耗尽 9·401 不重试·run_py
+    canned sleep 子进程超时杀 9 报调用名）。"""
     import shutil
 
     def run(args, cwd=None):
@@ -1050,11 +1212,163 @@ def selftest():
         p = run(["--once", "--watch-ledgers", ldir, "--injector", inj_path])
         assert p.returncode == 2, "injector 单边应 rc=2 实测 %d" % p.returncode
 
+        # 〔九〕--on-red-preset：展开 sugar 单元断言＋触发捕获（canned 命令
+        # 落 actions 账·占位替换断言）＋与 --on-red 互斥 rc=2＋参数缺误 rc=2
+        ev9 = os.path.join(tmp, "events9.jsonl")
+        cmd = expand_on_red_preset("unclog", ["src=/abs/fake_src"], ev9)
+        assert cmd == ("python3 -B %s --src /abs/fake_src --json "
+                       "%s/unclog_{run}.json" % (UNCLOG_TOOL, tmp)), cmd
+        cmd = expand_on_red_preset("pushci", ["repo_path=/r", "branch=main"],
+                                   ev9)
+        assert cmd == ("python3 -B %s --repo-path /r --branch main --json "
+                       "%s/pushci_{run}.json --dry-run" % (PUSHCI_TOOL, tmp)), \
+            cmd
+        assert cmd.endswith("--dry-run") and "{run}" in cmd, cmd  # 干跑缺省·{run} 留执行器
+        for bad in (lambda: expand_on_red_preset("bogus", [], ev9),
+                    lambda: expand_on_red_preset("unclog", [], ev9),
+                    lambda: expand_on_red_preset("unclog", ["src=/a",
+                                                            "src=/b"], ev9),
+                    lambda: expand_on_red_preset("unclog", ["src"], ev9),
+                    lambda: expand_on_red_preset("unclog", ["world=/w"], ev9),
+                    lambda: expand_on_red_preset("pushci",
+                                                 ["repo_path=/r"], ev9)):
+            try:
+                bad()
+                assert False, "负面展开应 rc=2"
+            except SentryError as e:
+                assert e.code == 2, "负面展开应 2 实测 %d" % e.code
+        # 触发捕获：真子进程链（canned CI 红事件 → 同一执行器代跑 unclog
+        # 干跑命令·rc≠0 响亮入账·哨退出码仍 0——旁路动作非器面铁律实证）
+        psrc = os.path.join(tmp, "preset_src")
+        os.mkdir(psrc)
+        with io.open(os.path.join(psrc, "A.v"), "w", encoding="utf-8") as fh:
+            fh.write("Lemma ok : True.\n")
+        state9 = os.path.join(tmp, "state9.json")
+        emit9b = os.path.join(tmp, "events9b.jsonl")
+        rep9 = os.path.join(tmp, "rep9.json")
+        p = run(["--once", "--watch-repo", REPO, "--injector", inj_path,
+                 "--state-file", state9, "--emit", emit9b,
+                 "--on-red-preset", "unclog", "--on-red-arg", "src=" + psrc,
+                 "--json", rep9, "--sleep-scale", "0"])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(rep9, encoding="utf-8"))
+        assert rep.get("on_red_preset") == "unclog", rep.get("on_red_preset")
+        assert len(rep["actions"]) == 1, rep["actions"]
+        act = rep["actions"][0]
+        assert act["cmd"] == ("python3 -B %s --src %s --json %s/unclog_178.json"
+                              % (UNCLOG_TOOL, psrc, tmp)), \
+            "预设展开失真: %r" % act["cmd"]
+        assert act["rc"] == 9, "代跑 unclog（fixture 无 --world）应 rc=9 入账: %r" \
+            % act
+        mw = re.search(r"workdir -> (\S+)", act.get("output") or "")
+        if mw:
+            shutil.rmtree(mw.group(1), ignore_errors=True)  # 清代跑 mkdtemp
+        # 同给 --on-red → 2；preset 不识别/参数缺/缺 --emit/孤儿 --on-red-arg → 2
+        base9 = ["--once", "--watch-repo", REPO, "--injector", inj_path,
+                 "--sleep-scale", "0"]
+        p = run(base9 + ["--on-red", "echo x", "--on-red-preset", "unclog",
+                         "--on-red-arg", "src=" + psrc, "--emit", emit9b])
+        assert p.returncode == 2, "同给 --on-red 应 rc=2 实测 %d" % p.returncode
+        p = run(base9 + ["--on-red-preset", "bogus", "--emit", emit9b])
+        assert p.returncode == 2, "preset 不识别应 rc=2 实测 %d" % p.returncode
+        p = run(base9 + ["--on-red-preset", "unclog", "--emit", emit9b])
+        assert p.returncode == 2, "预设参数缺应 rc=2 实测 %d" % p.returncode
+        p = run(base9 + ["--on-red-preset", "unclog", "--on-red-arg",
+                         "src=" + psrc])
+        assert p.returncode == 2, "缺 --emit 应 rc=2 实测 %d" % p.returncode
+        p = run(base9 + ["--on-red-arg", "src=" + psrc, "--emit", emit9b])
+        assert p.returncode == 2, "孤儿 --on-red-arg 应 rc=2 实测 %d" \
+            % p.returncode
+
+        # 〔十〕韧性层：退避序列＋Retry-After 尊重＋api_get_json 重试 runner＋
+        # run_py 超时杀（零网络零编译·_open/_sleep 注入·判例 403×3→[2,4,8]）
+        assert _http_backoff.backoff_delays(3) == [2.0, 4.0, 8.0]
+        assert _http_backoff.backoff_delays(0) == []
+        assert _http_backoff.parse_retry_after("30") == 30.0
+        assert _http_backoff.parse_retry_after(
+            "Wed, 21 Oct 2026 07:28:00 GMT") is None, "HTTP-date 不猜"
+
+        class _Resp(object):
+            """canned 响应体（urlopen 假件·零网络·上下文管理器形）。"""
+            def __init__(self, payload=b"{}"):
+                self._p = payload
+            def read(self):
+                return self._p
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        def _api_err(code, ra=None):
+            hd = {"Retry-After": ra} if ra else {}
+            return urllib.error.HTTPError(
+                "https://x", code, "HTTP Error %d" % code, hd,
+                io.BytesIO(b'{"message":"x"}'))
+
+        def _seq_open(resps):
+            it = iter(resps)
+            def _open(req, timeout=None):
+                r = next(it)
+                if isinstance(r, Exception):
+                    raise r          # canned 错件须抛（urlopen 同语义）
+                return r
+            return _open
+
+        slept = []
+        st10, body10 = api_get_json("https://x", "tok", 5, None, retry_max=3,
+                                    _open=_seq_open([_api_err(403)] * 3
+                                                    + [_Resp(b'{"ok":1}')]),
+                                    _sleep=slept.append)
+        assert st10 == 200 and body10 == {"ok": 1} \
+            and slept == [2.0, 4.0, 8.0], (st10, body10, slept)
+        slept = []
+        st10, _ = api_get_json("https://x", "tok", 5, None, retry_max=3,
+                               _open=_seq_open([_api_err(429, ra="9"),
+                                                _Resp()]),
+                               _sleep=slept.append)
+        assert st10 == 200 and slept == [9.0], \
+            (st10, slept)                      # Retry-After 头尊重（替指数）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None, retry_max=3,
+                         _open=_seq_open([_api_err(503)] * 4),
+                         _sleep=slept.append)
+            assert False, "503×4 重试耗尽应 9"
+        except SentryError as e:
+            assert e.code == 9 and "HTTP 503" in str(e), e
+        assert slept == [2.0, 4.0, 8.0], slept
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None, retry_max=3,
+                         _open=_seq_open([_api_err(401)]), _sleep=slept.append)
+            assert False, "401 语义面应不重试直 9"
+        except SentryError as e:
+            assert e.code == 9, e.code
+        assert slept == [], "401 零重试零睡"
+        # run_py 超时杀（canned sleep 子进程·fail-loud 9 报调用名）
+        sleepy = os.path.join(tmp, "sleepy_sentinel.py")
+        with io.open(sleepy, "w", encoding="utf-8") as fh:
+            fh.write("import time\ntime.sleep(30)\n")
+        try:
+            run_py(sleepy, ["--hang"], timeout=2)
+            assert False, "超时应 fail-loud 9"
+        except SentryError as e:
+            assert e.code == 9 and "sleepy_sentinel.py" in str(e) \
+                and "2s" in str(e), e
+        fastpy = os.path.join(tmp, "fast_sentinel.py")
+        with io.open(fastpy, "w", encoding="utf-8") as fh:
+            fh.write("print('ok')\n")
+        rc10, out10 = run_py(fastpy, [], timeout=5)
+        assert rc10 == 0 and "ok" in out10, (rc10, out10)
+
         print("CW-SENTINEL-SELFTEST PASS: ①once ci-red+二跑 seen 幂等零事件/"
               "②ledger 新件 blocking+幂等/③buildlog 增量 grep+半行不误报/"
               "④on-red 占位替换执行实证+缺省零动作/⑤loop 三轮 JSONL 序贯/"
               "⑥emit 逐行合法 sort_keys+seq 序贯/确定性字节恒同/CLI 四码+"
-              "401→9+canned 未覆盖→9+目录缺→9 全过")
+              "401→9+canned 未覆盖→9+目录缺→9/"
+              "⑨on-red-preset 展开+触发捕获+同给互斥 rc=2+参数缺误 rc=2/"
+              "⑩韧性层退避（403×3→[2,4,8]·Retry-After 尊重·503 耗尽 9·401 "
+              "不重试·canned sleep 子进程超时杀 9 报调用名） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

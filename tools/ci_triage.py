@@ -38,12 +38,20 @@
   线上模式（只读 GET·token 取 ~/.netrc machine github.com 行第 6 列 password，
   --netrc 可换路径）：
     python3 tools/ci_triage.py --repo ORG/REPO --run ID [--logs] [--netrc PATH]
-        [--baseline-seconds N] [--baseline-step NAME] [--timeout S] [--json out.json]
+        [--baseline-seconds N] [--baseline-step NAME] [--timeout S]
+        [--retry-max N] [--json out.json]
     （GET /repos/{repo}/actions/runs/{run}/jobs?per_page=100&page=N 分页到齐；
       --logs 时对红件再 GET /repos/{repo}/actions/jobs/{job}/logs 抓关键行入证据：
       COQCHK_EXIT/COQCHK_ALL_PASS/判定=CLEAN/公理总数/GATE-BANNER-ABSENT/
       ENOTFOUND/ORDER-MISSING/EXIT=134 等；logs GET 404/403 本身入证据——
-      403 Forbidden: job is completed 即判类谱 B 中断连坐 token）
+      403 Forbidden: job is completed 即判类谱 B 中断连坐 token·重试耗尽后
+      原码照旧入证据）
+  韧性层（v37 限流退避·承任务书①）：线上 GET 遇 403/429/5xx → 指数退避重试
+    （base 2s·帽 --retry-max 缺省 3·Retry-After 秒数头尊重——可解析秒数替当
+    次指数延迟·HTTP-date 形不猜落回指数；重试耗尽或 4xx 语义面（401/404 等）
+    原错原样上抛 9 不重试）。延迟计算抽公共件 tools/_http_backoff.py 纯函数
+    backoff_delays()/parse_retry_after()/is_retry_status()（三器共享·同目录
+    sys.path 注入 import·无 __init__ 包结构）。
   离线模式（selftest 与断网环境走此路·零网络）：
     python3 tools/ci_triage.py --offline JOBS.json [--baseline-seconds N ...]
         [--json out.json]
@@ -82,12 +90,18 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
 PROG = "ci_triage"
 SCHEMA = "rocqwash-ci-triage/1"
 API_ROOT = "https://api.github.com"
+
+TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)   # 同目录共享退避小模块（无 __init__ 包结构）
+import _http_backoff
 
 # ---- 判类谱词面（冻结向量·正负判见 --selftest）-----------------------------
 
@@ -260,39 +274,55 @@ def netrc_token(path, machine="github.com"):
 
 # ---- 只读 GET（唯一网络动作）-------------------------------------------------
 
-def http_get(url, token, timeout, accept="application/vnd.github+json"):
-    """只读 GET → bytes。HTTPError → ApiHTTPError（body 头随行）；连接失败 → 9。"""
-    req = urllib.request.Request(url, headers={
-        "Accept": accept,
-        "User-Agent": "rocqwash-ci-triage",
-        "X-GitHub-Api-Version": "2022-11-28",
-        "Authorization": "token %s" % token,
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            return resp.read()
-    except urllib.error.HTTPError as e:
+def http_get(url, token, timeout, accept="application/vnd.github+json",
+             retry_max=3, _open=None, _sleep=None):
+    """只读 GET → bytes。403/429/5xx 指数退避重试（_http_backoff 纯函数：
+    base 2s·帽 retry_max·Retry-After 秒数头优先替当次延迟）；重试耗尽或
+    4xx 语义面原错上抛——HTTPError → ApiHTTPError（body 头随行）；连接失败
+    → 9。_open/_sleep 注入位（selftest 零网络矢量·缺省真 urlopen/真 sleep）。"""
+    do_open = urllib.request.urlopen if _open is None else _open
+    do_sleep = time.sleep if _sleep is None else _sleep
+    delays = _http_backoff.backoff_delays(retry_max)
+    attempt = 0
+    while True:
+        req = urllib.request.Request(url, headers={
+            "Accept": accept,
+            "User-Agent": "rocqwash-ci-triage",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Authorization": "token %s" % token,
+        })
         try:
-            body = (e.read() or b"").decode("utf-8", errors="replace")
-        except Exception:
-            body = ""
-        raise ApiHTTPError(e.code, body, url)
-    except (urllib.error.URLError, OSError) as e:
-        raise TriageError("API 不可达: %s (%s)" % (url, e), 9)
+            with do_open(req, timeout=timeout) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            if attempt >= retry_max or not _http_backoff.is_retry_status(e.code):
+                try:
+                    body = (e.read() or b"").decode("utf-8", errors="replace")
+                except Exception:
+                    body = ""
+                raise ApiHTTPError(e.code, body, url)
+            ra = _http_backoff.parse_retry_after(
+                e.headers.get("Retry-After") if e.headers is not None else None)
+            do_sleep(ra if ra is not None else delays[attempt])
+            attempt += 1
+        except (urllib.error.URLError, OSError) as e:
+            raise TriageError("API 不可达: %s (%s)" % (url, e), 9)
 
 
 def jobs_url(repo, run_id):
     return "%s/repos/%s/actions/runs/%d/jobs" % (API_ROOT, repo, run_id)
 
 
-def fetch_jobs_online(repo, run_id, token, timeout):
-    """GET jobs（per_page=100 分页到齐）→ (jobs, total_count)。HTTP 4xx/5xx → 9。"""
+def fetch_jobs_online(repo, run_id, token, timeout, retry_max=3):
+    """GET jobs（per_page=100 分页到齐）→ (jobs, total_count)。HTTP 4xx/5xx
+    → 9（403/429/5xx 先经 http_get 指数退避重试·耗尽才判 9）。"""
     jobs = []
     total = None
     page = 1
     while True:
         url = "%s?per_page=100&page=%d" % (jobs_url(repo, run_id), page)
-        data = json.loads(http_get(url, token, timeout).decode("utf-8"))
+        data = json.loads(http_get(url, token, timeout,
+                                   retry_max=retry_max).decode("utf-8"))
         if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
             raise TriageError("API 形坏（无 jobs 列表）: %s" % url, 9)
         if total is None:
@@ -308,13 +338,15 @@ def fetch_jobs_online(repo, run_id, token, timeout):
     return jobs, (total if total is not None else len(jobs))
 
 
-def fetch_job_log(repo, job_id, token, timeout):
+def fetch_job_log(repo, job_id, token, timeout, retry_max=3):
     """GET 单 job 日志原文 → (text, None)；HTTP 4xx/5xx → (None, 证据注记)——
-    logs 404 与 403 Forbidden: job is completed（判类谱 B 中断连坐）本身即证据。
+    logs 404 与 403 Forbidden: job is completed（判类谱 B 中断连坐）本身即证据
+    （403/429/5xx 先经 http_get 指数退避重试·耗尽才落证据注记·原码照旧在册）。
     连接失败仍 TriageError 9（API 不可达）。"""
     url = "%s/repos/%s/actions/jobs/%s/logs" % (API_ROOT, repo, job_id)
     try:
-        return http_get(url, token, timeout, accept="text/plain").decode(
+        return http_get(url, token, timeout, accept="text/plain",
+                        retry_max=retry_max).decode(
             "utf-8", errors="replace"), None
     except ApiHTTPError as e:
         note = "logs-GET: HTTP %d %s（日志不可达·入证据）" % (
@@ -627,6 +659,8 @@ def run_triage(args):
                           "--selftest regex 单元）", 2)
     if args.baseline_seconds is not None and args.baseline_seconds <= 0:
         raise TriageError("--baseline-seconds 须正整数", 2)
+    if args.retry_max < 0:
+        raise TriageError("--retry-max 须≥0 实测 %d" % args.retry_max, 2)
 
     log_notes = {}
     if args.offline:
@@ -636,7 +670,9 @@ def run_triage(args):
     else:
         token = netrc_token(args.netrc)
         try:
-            jobs, total = fetch_jobs_online(args.repo, args.run, token, args.timeout)
+            jobs, total = fetch_jobs_online(args.repo, args.run, token,
+                                            args.timeout,
+                                            retry_max=args.retry_max)
         except ApiHTTPError as e:
             raise TriageError("API HTTP %d: %s（GET jobs 失败·%s）"
                               % (e.code, e.body.strip()[:160], e.url), 9)
@@ -655,7 +691,8 @@ def run_triage(args):
             log_notes["_meta"] = "logs 抓取帽 %d：仅抓前 %d 红件（余 %d 件未抓·响亮非静默）" \
                 % (LOGS_FETCH_CAP, LOGS_FETCH_CAP, len(reds) - LOGS_FETCH_CAP)
         for j in reds[:LOGS_FETCH_CAP]:
-            text, note = fetch_job_log(repo, j.get("id"), token, args.timeout)
+            text, note = fetch_job_log(repo, j.get("id"), token, args.timeout,
+                                       retry_max=args.retry_max)
             logs_by_id[j.get("id")] = text or ""
             if note:
                 log_notes[j.get("id")] = note
@@ -709,6 +746,9 @@ def main():
                     help="对表步名（名含匹配·默认 coqchk=判例形）")
     ap.add_argument("--timeout", type=int, default=30, metavar="S",
                     help="单请求超时秒（默认 30）")
+    ap.add_argument("--retry-max", type=int, default=3, metavar="N",
+                    help="403/429/5xx 退避重试帽（默认 3·指数 base 2s·"
+                         "Retry-After 秒数头尊重·耗尽原错 9）")
     ap.add_argument("--json", default=None, metavar="out.json",
                     help="分诊 report 出账（rocqwash-ci-triage/1·sort_keys）")
     args = ap.parse_args(argv)
@@ -740,7 +780,9 @@ def main():
 def selftest():
     """内嵌冻结向量组：五族＋绿炉六 canned 样张全命中＋基线 13.3x 判例＋基线步
     缺席响亮注记＋分类器单元（关键行 regex 正负判·连坐/在飞/UNRECOGNIZED 分流·
-    E 勿当内容红负证）＋netrc 解析单元＋确定性字节恒同＋CLI 四码。
+    E 勿当内容红负证）＋netrc 解析单元＋确定性字节恒同＋CLI 四码＋韧性层退避
+    （403×3→[2,4,8]·Retry-After 尊重·耗尽上抛·401 不重试·_open/_sleep 注入
+    零网络）。
     全程 --offline fixtures 零真网络零编译。"""
     import shutil
     import subprocess
@@ -954,9 +996,78 @@ def selftest():
         except TriageError as e:
             assert e.code == 9, e.code
 
+        # 〔八〕韧性层：退避序列＋Retry-After 尊重＋http_get canned 重试 runner
+        # （零网络·_open/_sleep 注入位·判例 403×3→[2,4,8]）
+        assert _http_backoff.backoff_delays(3) == [2.0, 4.0, 8.0]
+        assert _http_backoff.backoff_delays(0) == []
+        try:
+            _http_backoff.backoff_delays(-1)
+            assert False, "负帽应 ValueError"
+        except ValueError:
+            pass
+        assert _http_backoff.parse_retry_after("60") == 60.0
+        assert _http_backoff.parse_retry_after(
+            "Wed, 21 Oct 2026 07:28:00 GMT") is None, "HTTP-date 不猜"
+
+        class _Resp(object):
+            """canned 响应体（urlopen 假件·零网络·上下文管理器形）。"""
+            def __init__(self, payload=b"JOBS"):
+                self._p = payload
+            def read(self):
+                return self._p
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        def _http_err(code, ra=None):
+            hd = {"Retry-After": ra} if ra else {}
+            return urllib.error.HTTPError(
+                "https://x", code, "HTTP Error %d" % code, hd,
+                io.BytesIO(b'{"message":"x"}'))
+
+        def _seq_open(resps):
+            it = iter(resps)
+            def _open(req, timeout=None):
+                r = next(it)
+                if isinstance(r, Exception):
+                    raise r          # canned 错件须抛（urlopen 同语义）
+                return r
+            return _open
+
+        slept = []
+        got = http_get("https://x", "tok", 5, retry_max=3,
+                       _open=_seq_open([_http_err(403)] * 3 + [_Resp()]),
+                       _sleep=slept.append)
+        assert got == b"JOBS" and slept == [2.0, 4.0, 8.0], \
+            (got, slept)                       # 403×3→[2,4,8] 判例
+        slept = []
+        got = http_get("https://x", "tok", 5, retry_max=3,
+                       _open=_seq_open([_http_err(429, ra="7"), _Resp(b"OK2")]),
+                       _sleep=slept.append)
+        assert got == b"OK2" and slept == [7.0], \
+            (got, slept)                       # Retry-After 头尊重（替指数）
+        slept = []
+        try:
+            http_get("https://x", "tok", 5, retry_max=3,
+                     _open=_seq_open([_http_err(403)] * 4), _sleep=slept.append)
+            assert False, "403×4 重试耗尽应上抛"
+        except ApiHTTPError as e:
+            assert e.code == 403, e.code
+        assert slept == [2.0, 4.0, 8.0], slept
+        slept = []
+        try:
+            http_get("https://x", "tok", 5, retry_max=3,
+                     _open=_seq_open([_http_err(401)]), _sleep=slept.append)
+            assert False, "401 语义面应不重试直上抛"
+        except ApiHTTPError as e:
+            assert e.code == 401, e.code
+        assert slept == [], "401 零重试零睡"
+
         print("CI-TRIAGE-SELFTEST PASS: 五族+绿炉六样张全命中/基线 13.3x 判例+缺席"
               "响亮注记/分类器单元（regex 正负·连坐·在飞·E 勿当内容红·UNRECOGNIZED）/"
-              "netrc 解析/确定性字节恒同/CLI 四码 全过")
+              "netrc 解析/确定性字节恒同/CLI 四码/韧性层退避（403×3→[2,4,8]·"
+              "Retry-After 尊重·403 耗尽 9·401 不重试） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

@@ -71,27 +71,38 @@
                     单边给出即用法错 exit 2）。
   --sleep-scale F   全部 sleep 乘 F（selftest 用 0＝零真睡）。
   _api(method,path,body) 单函数化（ApiClient.__call__）便于注入替换。
-  --selftest        八矢量＋单元向量＋CLI 四码＋确定性（零真网络零真 push
-                    零编译；--netrc 故意指向不存在路径——凭据惰性读证）。
+  --selftest        八矢量＋单元向量＋韧性层退避/超时杀矢量＋CLI 四码＋确定性
+                    （零真网络零真 push 零编译；--netrc 故意指向不存在路径——
+                    凭据惰性读证）。
 
 用法（路径全参数化·零硬编码绝对路径·env 兜底只认 ROCQWASH_MASK〔遮蔽串·
 承 watch.py 惯例〕）：
   python3 tools/pushci.py --repo-path DIR --branch B [--base-ref main]
       [--remote origin] [--pre-scan-gate4] [--pr N] [--merge]
       [--merge-method merge|squash] [--max-heal 3] [--watch-interval 150]
-      [--probe-interval 60] [--watch-max-rounds 0]
+      [--probe-interval 60] [--watch-max-rounds 0] [--timeout 120]
+      [--retry-max 3]
       [--steps preflight,push,watch,heal,verdict]
       [--injector DIR] [--git-caller FILE] [--sleep-scale 1.0] [--netrc PATH]
       [--json out] [--dry-run]
   python3 tools/pushci.py --selftest
   --dry-run=只打计划零副作用 exit 0（零 git 零 API 零工具子进程）。
   --watch-max-rounds（增补安全阀·默认 0=不限）＝轮询轮帽·超帽 fail-loud 9。
+  --timeout S（韧性层 v37·缺省 120）＝全部真子进程防挂帽（git 四调＋四器工具
+  _run_py）：超时=子进程杀＋fail-loud 9 报调用名（零悬挂）；canned 注入路径
+  零真子进程不受此帽。
+  --retry-max N（韧性层 v37·缺省 3）＝真 urllib _api 403/429/5xx 指数退避重试
+  帽（base 2s·Retry-After 秒数头优先替当次延迟·HTTP-date 不猜落回指数；耗尽
+  原码上交语义裁决·4xx 语义面 401/404/409 等不重试；延迟计算抽公共件
+  tools/_http_backoff.py 纯函数·三器共享·同目录 sys.path 注入 import·
+  无 __init__ 包结构；injector canned 路径零真网络一律不重试——离线可测铁律）。
   段依赖（用法错 2）：watch⇒push·heal⇒watch·--merge⇒watch。
 
 退出码：0=success/dry-run；1=heal-exhausted/unstable/toolchain〔toolchain 停＝
   环境件·任务书退出码表未钦·比照 unstable 归 1 响亮入档〕；2=fix-content/
   gate4-block/用法错；9=目标缺失（repo/remote/分支/PR/工具链件缺失·netrc 缺·
-  API 不可达·API 4xx/5xx 硬错·watch 轮帽达）。--selftest：0=全过／2=断言失败。
+  API 不可达·API 4xx/5xx 硬错·watch 轮帽达·真子进程超时被杀〔--timeout〕）。
+  --selftest：0=全过／2=断言失败。
 
 report schema（--json）= rocqwash-pushci/1：
   {schema, mode: online|injector|dry-run, steps, args,
@@ -160,6 +171,10 @@ PROBE_TOOL = os.path.join(TOOLS_DIR, "net_probe.py")
 TRIAGE_TOOL = os.path.join(TOOLS_DIR, "ci_triage.py")
 GATE4_TOOL = os.path.join(REPO_ROOT, "verify", "gate4_comment_guard.py")
 
+if TOOLS_DIR not in sys.path:
+    sys.path.insert(0, TOOLS_DIR)   # 同目录共享退避小模块（无 __init__ 包结构）
+import _http_backoff
+
 
 class PushciError(Exception):
     """带退出码的 fail-loud 异常（code: 2=用法/场景形错·9=目标缺失/API 硬错）。"""
@@ -177,6 +192,19 @@ class StopVerdict(Exception):
         self.verdict = verdict
         self.code = code
         self.evidence = list(evidence or [])
+
+
+def subproc_run(cmd, timeout, what, merge_stderr=False):
+    """统一真子进程执行＋--timeout 防挂（韧性层 v37·缺省 120s）：超时=子进程
+    杀（subprocess.run 超时即杀后 raises·零悬挂）＋fail-loud 9 报调用名。
+    timeout=None 传穿为无帽（canned 路径零真子进程不受此帽）。"""
+    try:
+        return subprocess.run(cmd, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT if merge_stderr
+                              else subprocess.PIPE, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise PushciError("子进程超时被杀（--timeout=%ss·调用: %s）"
+                          % (timeout, what), 9)
 
 
 # ---- 小件（确定性 helpers）---------------------------------------------------
@@ -323,12 +351,14 @@ def parse_body(raw):
 # ---- 注入点①：git caller（缺省真 subprocess·--git-caller 换 canned）-----------
 
 class GitCaller(object):
-    """git 调用单点。canned=None → 真 git 子进程；canned=list → 场景脚本严格
-    按序消费（首条未用响应必须命中 args_contains 全部子串·否则 fail-loud——
-    场景序bug 当场现形）。调用流水全记 self.calls 供 .calls.json 实证。"""
+    """git 调用单点。canned=None → 真 git 子进程（--timeout 防挂帽·超时杀＋9
+    报调用名）；canned=list → 场景脚本严格按序消费（首条未用响应必须命中
+    args_contains 全部子串·否则 fail-loud——场景序bug 当场现形）。调用流水全记
+    self.calls 供 .calls.json 实证。"""
 
-    def __init__(self, canned=None):
+    def __init__(self, canned=None, timeout=120):
         self.canned = canned
+        self.timeout = timeout
         self.calls = []
 
     def __call__(self, args):
@@ -348,8 +378,8 @@ class GitCaller(object):
             rc = resp.get("rc", 0)
             self.calls.append({"args": [str(a) for a in args], "rc": rc})
             return rc, resp.get("stdout", ""), resp.get("stderr", "")
-        p = subprocess.run(["git"] + list(args),
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        what = "git " + " ".join(str(a) for a in args)
+        p = subproc_run(["git"] + list(args), self.timeout, what)
         so = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
             else (p.stdout or "")
         se = p.stderr.decode("utf-8", "replace") if isinstance(p.stderr, bytes) \
@@ -363,13 +393,21 @@ class ApiClient(object):
     """_api(method, path, body) 单函数化。canned=steps 形场景（按 at_round 严格
     按序消费）·flat=flat 形 canned（runs 逐 poll·rerun 逐 POST·merge 单发·并行
     席契约形）·皆 None → 真 urllib（token 惰性取 netrc·HTTP 4xx/5xx 返回
-    (code, body) 交语义裁决·连接失败 fail-loud 9）。调用流水全记 self.calls。"""
+    (code, body) 交语义裁决·连接失败 fail-loud 9）。韧性层 v37：真 urllib 路
+    403/429/5xx 指数退避重试（_http_backoff 纯函数·帽 retry_max·Retry-After
+    秒数头优先·耗尽原码上交语义裁决·4xx 语义面不重试）；injector/canned 路径
+    零真网络一律不重试。调用流水全记 self.calls。"""
 
-    def __init__(self, canned=None, flat=None, netrc_path=None, timeout=30):
+    def __init__(self, canned=None, flat=None, netrc_path=None, timeout=30,
+                 retry_max=3, sleep_scale=1.0, _urlopen=None, _sleep=None):
         self.canned = canned
         self.flat = flat
         self.netrc_path = netrc_path
         self.timeout = timeout
+        self.retry_max = retry_max
+        self.sleep_scale = sleep_scale
+        self._urlopen = _urlopen
+        self._sleep = _sleep
         self._token = None
         self._flat_runs_i = 0
         self._flat_rerun_i = 0
@@ -462,23 +500,38 @@ class ApiClient(object):
         if body is not None:
             data = json.dumps(body).encode("utf-8")
             headers["Content-Type"] = "application/json"
-        req = urllib.request.Request(url, data=data, headers=headers,
-                                     method=method)
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
-                code = getattr(resp, "status", None)
-                if code is None and hasattr(resp, "getcode"):
-                    code = resp.getcode()
-                raw = resp.read()
-        except urllib.error.HTTPError as e:
-            code = e.code
+        do_open = urllib.request.urlopen if self._urlopen is None \
+            else self._urlopen
+        do_sleep = (lambda s: sleep_scaled(s, self.sleep_scale)) \
+            if self._sleep is None else self._sleep
+        delays = _http_backoff.backoff_delays(self.retry_max)
+        attempt = 0
+        while True:
+            req = urllib.request.Request(url, data=data, headers=headers,
+                                         method=method)
             try:
-                raw = e.read() or b""
-            except Exception:
-                raw = b""
-        except (urllib.error.URLError, OSError) as e:
-            raise PushciError("API 不可达: %s (%s)" % (url, e), 9)
-        return code, parse_body(raw)
+                with do_open(req, timeout=self.timeout) as resp:
+                    code = getattr(resp, "status", None)
+                    if code is None and hasattr(resp, "getcode"):
+                        code = resp.getcode()
+                    raw = resp.read()
+            except urllib.error.HTTPError as e:
+                code = e.code
+                try:
+                    raw = e.read() or b""
+                except Exception:
+                    raw = b""
+                if attempt < self.retry_max \
+                        and _http_backoff.is_retry_status(code):
+                    ra = _http_backoff.parse_retry_after(
+                        e.headers.get("Retry-After")
+                        if e.headers is not None else None)
+                    do_sleep(ra if ra is not None else delays[attempt])
+                    attempt += 1
+                    continue
+            except (urllib.error.URLError, OSError) as e:
+                raise PushciError("API 不可达: %s (%s)" % (url, e), 9)
+            return code, parse_body(raw)
 
 
 # ---- 管线本体 ----------------------------------------------------------------
@@ -520,10 +573,11 @@ class Pipeline(object):
                 raise PushciError("git-caller 场景形坏（须 {\"responses\":[...]}）: %s"
                                   % args.git_caller, 2)
             canned_git = [dict(r) for r in gscen["responses"]]
-        self.git = GitCaller(canned=canned_git)
+        self.git = GitCaller(canned=canned_git, timeout=args.timeout)
         self.api = ApiClient(
             canned=self.scen if self.injector_kind == "steps" else None,
-            flat=flat_canned, netrc_path=args.netrc)
+            flat=flat_canned, netrc_path=args.netrc,
+            retry_max=args.retry_max, sleep_scale=args.sleep_scale)
         self.report = {
             "schema": SCHEMA,
             "mode": mode,
@@ -589,11 +643,15 @@ class Pipeline(object):
     # -- 工具子进程（四器编排·零新引擎）---------------------------------------
 
     def _run_py(self, tool_path, cli):
-        """python3 -B <tool> <cli> 子进程（stdout+stderr 合流）。缺件 → 9。"""
+        """python3 -B <tool> <cli> 子进程（stdout+stderr 合流）。缺件 → 9；
+        --timeout 防挂（缺省 120s）：超时=子进程杀＋fail-loud 9 报调用名。"""
         if not os.path.isfile(tool_path):
             raise PushciError("工具链件缺失: %s" % tool_path, 9)
-        p = subprocess.run([sys.executable, "-B", tool_path] + list(cli),
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p = subproc_run([sys.executable, "-B", tool_path] + list(cli),
+                        self.args.timeout,
+                        "python3 -B %s %s" % (os.path.basename(tool_path),
+                                              " ".join(str(c) for c in cli[:2])),
+                        merge_stderr=True)
         out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
             else (p.stdout or "")
         return p.returncode, out
@@ -1265,6 +1323,10 @@ def validate(args):
         raise PushciError("--watch-max-rounds 须≥0 实测 %d" % args.watch_max_rounds, 2)
     if args.sleep_scale < 0:
         raise PushciError("--sleep-scale 须≥0 实测 %s" % args.sleep_scale, 2)
+    if args.timeout < 1:
+        raise PushciError("--timeout 须≥1 实测 %d" % args.timeout, 2)
+    if args.retry_max < 0:
+        raise PushciError("--retry-max 须≥0 实测 %d" % args.retry_max, 2)
     if args.pr is not None and args.pr < 1:
         raise PushciError("--pr 须≥1 实测 %d" % args.pr, 2)
     if (args.injector is None) != (args.git_caller is None):
@@ -1756,6 +1818,96 @@ def selftest():
         assert VERDICT_EXIT["fix-content"] == 2 \
             and VERDICT_EXIT["gate4-block"] == 2
 
+        # 〔韧性层〕退避序列＋Retry-After 尊重＋真 urllib _api 重试 runner＋
+        # 子进程超时杀（零网络零真 push·_urlopen/_sleep 注入·判例 403×3→[2,4,8]）
+        assert _http_backoff.backoff_delays(3) == [2.0, 4.0, 8.0]
+        assert _http_backoff.backoff_delays(0) == []
+        assert _http_backoff.parse_retry_after("45") == 45.0
+        assert _http_backoff.parse_retry_after(
+            "Wed, 21 Oct 2026 07:28:00 GMT") is None, "HTTP-date 不猜"
+
+        class _Resp(object):
+            """canned 响应体（urlopen 假件·零网络·上下文管理器形）。"""
+            def __init__(self, payload=b"{}"):
+                self.status = 200
+                self._p = payload
+                self.headers = {}
+            def read(self):
+                return self._p
+            def __enter__(self):
+                return self
+            def __exit__(self, *a):
+                return False
+
+        def _api_err(code, ra=None):
+            hd = {"Retry-After": ra} if ra else {}
+            return urllib.error.HTTPError(
+                "https://api.github.com/x", code, "HTTP Error %d" % code, hd,
+                io.BytesIO(b'{"message":"x"}'))
+
+        def _seq_open(resps):
+            it = iter(resps)
+            def _open(req, timeout=None):
+                r = next(it)
+                if isinstance(r, Exception):
+                    raise r          # canned 错件须抛（urlopen 同语义）
+                return r
+            return _open
+
+        api_netrc = os.path.join(tmp, "api.netrc")
+        with io.open(api_netrc, "w", encoding="utf-8") as fh:
+            fh.write("machine github.com login o password TOK\n")
+        slept = []
+        ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
+                       _urlopen=_seq_open([_api_err(403)] * 3
+                                          + [_Resp(b'{"ok":1}')]),
+                       _sleep=slept.append)
+        code, body = ac("GET", "/repos/o/r/actions/runs?per_page=30")
+        assert code == 200 and body == {"ok": 1} \
+            and slept == [2.0, 4.0, 8.0], (code, body, slept)
+        slept = []
+        ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
+                       _urlopen=_seq_open([_api_err(503, ra="9"),
+                                           _api_err(503), _api_err(503),
+                                           _Resp(b'{"ok":2}')]),
+                       _sleep=slept.append)
+        code, body = ac("PUT", "/repos/o/r/pulls/1/merge",
+                        body={"merge_method": "merge"})
+        assert code == 200 and slept == [9.0, 4.0, 8.0], \
+            (code, slept)                      # Retry-After 头尊重（替指数）
+        slept = []
+        ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
+                       _urlopen=_seq_open([_api_err(429)] * 4),
+                       _sleep=slept.append)
+        code, body = ac("GET", "/repos/o/r/x")
+        assert code == 429 and slept == [2.0, 4.0, 8.0], \
+            (code, slept)                      # 耗尽原码上交语义裁决
+        slept = []
+        ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
+                       _urlopen=_seq_open([_api_err(401)]), _sleep=slept.append)
+        code, body = ac("GET", "/repos/o/r/x")
+        assert code == 401 and slept == [], (code, slept)   # 401 不重试
+        slept = []
+        ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
+                       _urlopen=_seq_open([_api_err(409)]), _sleep=slept.append)
+        code, body = ac("PUT", "/repos/o/r/pulls/1/merge")
+        assert code == 409 and slept == [], (code, slept)   # merge 409 不重试
+
+        # 子进程超时杀（canned sleep 子进程·fail-loud 9 报调用名）
+        sleepy = os.path.join(tmp, "sleepy_pushci.py")
+        with io.open(sleepy, "w", encoding="utf-8") as fh:
+            fh.write("import time\ntime.sleep(30)\n")
+        try:
+            subproc_run([sys.executable, "-B", sleepy], 2,
+                        "canned-sleep 子进程")
+            assert False, "超时应 fail-loud 9"
+        except PushciError as e:
+            assert e.code == 9 and "canned-sleep" in str(e) \
+                and "2s" in str(e), e
+        p = subproc_run([sys.executable, "-B", "-c", "print('fast')"], 10,
+                        "fast-proc")
+        assert p.returncode == 0, p.returncode
+
         # 〔CLI 四码〕（真模式·全部在副作用之前 fail-loud）
         def raw(argv):
             p = subprocess.run([sys.executable, "-B", pushci] + argv,
@@ -1767,7 +1919,8 @@ def selftest():
         empty_repo = os.path.join(tmp, "empty_repo")
         os.makedirs(empty_repo)
         p, o = raw(["--help"])
-        assert p == 0 and "usage" in o, o[-200:]
+        assert p == 0 and "usage" in o and "--timeout" in o \
+            and "--retry-max" in o, o[-200:]
         p, o = raw(["--bogus"])
         assert p == 2, "未知形参应 rc=2 实测 %d" % p
         p, o = raw([])
@@ -1793,6 +1946,12 @@ def selftest():
                     "--sleep-scale", "-1"])
         assert p == 2, "负 sleep-scale 应 rc=2 实测 %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
+                    "--timeout", "0"])
+        assert p == 2, "timeout<1 应 rc=2 实测 %d" % p
+        p, o = raw(["--repo-path", empty_repo, "--branch", "x",
+                    "--retry-max", "-1"])
+        assert p == 2, "负 retry-max 应 rc=2 实测 %d" % p
+        p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--max-heal", "-1"])
         assert p == 2, "负 max-heal 应 rc=2 实测 %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
@@ -1815,7 +1974,9 @@ def selftest():
               "愈合/内容红零 rerun/heal×3 耗尽/merge 200/409 重拉/dry-run 零副作用/"
               "gate4-block 真守卫）＋flat 咬合双矢（并行席 s1/s2 夹具原件 verbatim "
               "直跑）＋重试纪律双矢（ghproxy 换路成/push 全败 unstable）＋单元（repo "
-              "推导/ghproxy/遮蔽/netrc/verdict 封册）＋CLI 四码 全过（零真网络零真 "
+              "推导/ghproxy/遮蔽/netrc/verdict 封册）＋韧性层（退避 403×3→[2,4,8]·"
+              "Retry-After 尊重·429 耗尽上交·401/409 不重试·canned sleep 子进程"
+              "超时杀 9 报调用名）＋CLI 四码 全过（零真网络零真 "
               "push 零编译·--netrc 惰性读证）")
         return 0
     finally:
@@ -1862,6 +2023,12 @@ def main():
                     help="net_probe 轮间隔秒（默认 60）")
     ap.add_argument("--watch-max-rounds", type=int, default=0, metavar="N",
                     help="watch 轮帽安全阀（默认 0=不限·超帽 fail-loud 9）")
+    ap.add_argument("--timeout", type=int, default=120, metavar="S",
+                    help="子进程防挂超时秒（默认 120·git/四器工具真子进程超时"
+                         "=杀＋fail-loud 9 报调用名）")
+    ap.add_argument("--retry-max", type=int, default=3, metavar="N",
+                    help="真 urllib API 403/429/5xx 退避重试帽（默认 3·指数 "
+                         "base 2s·Retry-After 秒数头尊重·canned 路径不重试）")
     ap.add_argument("--steps", default=",".join(STAGE_ALL), metavar="LIST",
                     help="段独选（默认全跑：%s）" % ",".join(STAGE_ALL))
     ap.add_argument("--injector", default=None, metavar="DIR",

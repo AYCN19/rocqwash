@@ -15,8 +15,15 @@ Upload progress stalled）→ rerun 发射前须「双探稳窗」：连续两�
 
 用法（端点全参数化·除下述缺省四端点外零硬编码·selftest 零网络）：
   python3 tools/net_probe.py [--endpoints URL[,URL...]] [--rounds N]
-      [--interval S] [--stable-window] [--json out.json]
+      [--interval S] [--stable-window] [--jitter S] [--seed N]
+      [--json out.json]
   python3 tools/net_probe.py --selftest
+
+--jitter S（韧性层 v37·缺省 0=关·须≥0）：每端点探测前随机微抖 sleep
+  uniform(0, S) 秒（抖散对齐性重试风暴·每端点独立一抖）；--seed N 固定
+  jitter 随机 seed（缺省系统熵·selftest 用固定 seed 保证确定性）。抖值如实
+  入报告 endpoints[].jitter_sec（加法式键·--jitter 缺省 0 时零键零行为
+  变化——既有报告面逐字节不漂）。
 
 缺省四端点（判例 artifact 上传面＋API 面·--endpoints 逗号分隔可覆盖）：
   https://results-receiver-actions.githubusercontent.com
@@ -32,7 +39,8 @@ Upload progress stalled）→ rerun 发射前须「双探稳窗」：连续两�
 
 退出码：0=probe 完成且（若 --stable-window）稳窗成立；1=不稳窗；2=用法错／
 报告落盘失败。--json 报告 schema=rocqwash-net-probe/1：
-  rounds[{at, endpoints[{url, http_code, ok}]}] / verdict
+  rounds[{at, endpoints[{url, http_code, ok(, jitter_sec)}]}] / verdict
+  （jitter_sec 仅 --jitter>0 时在册·加法式）
 verdict：--stable-window 时＝STABLE|UNSTABLE；否则＝all-up|partial|all-down。
 落盘 json.dump(indent=1, ensure_ascii=False, sort_keys=True)＋newline="\\n"；
 诚实注记：rounds[].at 为墙钟 UTC（活体探测逐轮可变——本轮报告即本轮证据·不跨
@@ -42,6 +50,7 @@ import argparse
 import io
 import json
 import os
+import random
 import socket
 import sys
 import time
@@ -86,13 +95,27 @@ def probe_once(url, timeout=TIMEOUT_SEC, _open=None):
     return code, True, ""
 
 
-def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None):
-    """一轮全端点探测（入参序）→ (entries[{url,http_code,ok}], reasons{url:原因})
-    （reasons 只收 down·仅诊断 stdout 用·不入 JSON）。"""
+def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
+                rng=None, _sleep=None):
+    """一轮全端点探测（入参序）→ (entries[{url,http_code,ok(,jitter_sec)}],
+    reasons{url:原因})（reasons 只收 down·仅诊断 stdout 用·不入 JSON）。
+    韧性层 v37：jitter>0 时每端点探测前随机微抖 sleep uniform(0, jitter) 秒
+    （每端点独立一抖·rng 缺省 random 模块·_sleep 注入位供 selftest 固定
+    seed 确定性矢量）；抖值入 entry jitter_sec（加法式·jitter=0 零键零睡
+    零行为变化）。"""
     entries, reasons = [], {}
+    do_sleep = _sleep if _sleep is not None else time.sleep
+    r = rng if rng is not None else random
     for url in endpoints:
+        jit = 0.0
+        if jitter and jitter > 0:
+            jit = r.uniform(0, jitter)
+            do_sleep(jit)
         code, ok, reason = probe_once(url, timeout=timeout, _open=_open)
-        entries.append({"url": url, "http_code": code, "ok": ok})
+        entry = {"url": url, "http_code": code, "ok": ok}
+        if jitter and jitter > 0:
+            entry["jitter_sec"] = jit
+        entries.append(entry)
         if not ok:
             reasons[url] = reason
     return entries, reasons
@@ -155,8 +178,10 @@ def selftest():
     V3 verdict 三档：all-up/partial/all-down（单轮＋跨轮混装＋空集防御）
     V4 稳窗三判：两轮全过→True·首轮掉→False·次轮掉→False（空集→False）
     V5 CLI 用法码：--help→0·--bogus→2·--rounds 0→2·--stable-window --rounds 1→2·
-       --endpoints 空表→2·--endpoints 缺 scheme→2·--interval 负→2
+       --endpoints 空表→2·--endpoints 缺 scheme→2·--interval 负→2·--jitter 负→2
     V6 报告落盘确定性：canned 定轮报告两写字节恒同
+    V7 jitter 固定 seed 确定性：同 seed 同抖序·异 seed 异抖序·界 [0,S]·
+       每端点一抖·抖值入账 jitter_sec·缺省 jitter=0 零键零睡零行为变化
     """
     import shutil
     import tempfile
@@ -234,7 +259,8 @@ def selftest():
                     ["--stable-window", "--rounds", "1"],
                     ["--endpoints", "  "],
                     ["--endpoints", "ftp://x.example,https://y.example"],
-                    ["--interval", "-1"]):
+                    ["--interval", "-1"],
+                    ["--jitter", "-1"]):
             p = run_args(vec)
             assert p.returncode == 2, "用法错应 rc=2 实测 %d: %s" \
                 % (p.returncode, vec)
@@ -253,9 +279,35 @@ def selftest():
         rep = json.load(io.open(j1, encoding="utf-8"))
         assert rep["schema"] == SCHEMA and rep["verdict"] == "all-up", rep
 
+        # ---- V7 jitter 固定 seed 确定性（零网络·canned 全通探针）----
+        eps = ["https://a.example", "https://b.example", "https://c.example"]
+
+        def up_open(url, timeout=None):
+            return FakeResp(200)
+
+        slept_a, slept_b, slept_c = [], [], []
+        ea, _ = probe_round(eps, _open=up_open, jitter=0.5,
+                            rng=random.Random(2026), _sleep=slept_a.append)
+        eb, _ = probe_round(eps, _open=up_open, jitter=0.5,
+                            rng=random.Random(2026), _sleep=slept_b.append)
+        ec, _ = probe_round(eps, _open=up_open, jitter=0.5,
+                            rng=random.Random(7), _sleep=slept_c.append)
+        assert slept_a == slept_b, "同 seed 须同抖序: %s vs %s" \
+            % (slept_a, slept_b)
+        assert slept_c != slept_a, "异 seed 须异抖序"
+        assert len(slept_a) == 3, "每端点一抖·实测 %d" % len(slept_a)
+        assert all(0.0 <= s <= 0.5 for s in slept_a), slept_a
+        assert [e["jitter_sec"] for e in ea] == slept_a, "抖值须入账"
+        assert all(set(e) == {"url", "http_code", "ok", "jitter_sec"}
+                   for e in ea), ea
+        ed, _ = probe_round(eps, _open=up_open)   # 缺省 jitter=0
+        assert all(set(e) == {"url", "http_code", "ok"} for e in ed), \
+            "缺省零键零行为变化"
+        assert ed == [{"url": u, "http_code": 200, "ok": True} for u in eps], ed
+
         print("NET-PROBE-SELFTEST PASS: 分类（HTTPError 可达/URLError·超时不可达/"
               "canned 200·500）/round 形制＋reasons/verdict 三档/稳窗三判/"
-              "CLI 用法七码/落盘字节恒同 七节全过")
+              "CLI 用法八码/落盘字节恒同/jitter 固定 seed 确定性 八节全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -278,6 +330,11 @@ def main():
     ap.add_argument("--stable-window", action="store_true",
                     dest="stable_window",
                     help="稳窗闸：rounds≥2 且全轮全端点可达才 exit 0")
+    ap.add_argument("--jitter", type=float, default=0.0, metavar="S",
+                    help="每端点探测前随机微抖秒（uniform(0,S)·默认 0=关·"
+                         "须≥0）")
+    ap.add_argument("--seed", type=int, default=None, metavar="N",
+                    help="jitter 随机 seed（缺省系统熵·固定 seed 保证确定性）")
     ap.add_argument("--json", default=None, metavar="out.json",
                     help="探测报告出账（schema rocqwash-net-probe/1）")
     args = ap.parse_args(argv)
@@ -309,17 +366,23 @@ def main():
         print("FAIL-LOUD: --stable-window 须 --rounds ≥2（双探稳窗·单探禁发射）",
               file=sys.stderr)
         sys.exit(2)
+    if args.jitter < 0:
+        print("FAIL-LOUD: --jitter 须≥0 实测 %s" % args.jitter, file=sys.stderr)
+        sys.exit(2)
+    rng = random.Random(args.seed)
 
     print("=== NET-PROBE ===")
     print("rounds=%d interval=%ss timeout=%ss stable_window=%s endpoints=%d"
           % (args.rounds, args.interval, TIMEOUT_SEC, args.stable_window,
-             len(endpoints)))
+             len(endpoints))
+          + (" jitter=%gs seed=%s" % (args.jitter, args.seed)
+             if args.jitter > 0 else ""))
     rounds = []
     for i in range(args.rounds):
         if i > 0:
             time.sleep(args.interval)
         at = now_iso()
-        entries, reasons = probe_round(endpoints)
+        entries, reasons = probe_round(endpoints, jitter=args.jitter, rng=rng)
         rounds.append({"at": at, "endpoints": entries})
         ups = sum(1 for e in entries if e["ok"])
         print("round %d @%s: %d/%d up" % (i + 1, at, ups, len(entries)))

@@ -46,6 +46,22 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   预检红拒：根名撞在册 rel／基名／去扩展名，或根件 realpath 撞在册文件
   （--src 与 --repo-path 双侧解析）即拒——入墙账 reason=frozen-in-service·零落刀。
 
+--audit 只读审计（真树堵账基线·20261111 任务书）：
+  单遍 probe 干跑归集→chain_graph→出「堵账基线报告」供 v38 真实树基线
+  （schema 同 rocqwash-unclog/1：final.verdict=audit·rounds 单轮
+  probe_summary/chain_top 全在·墙账 graph 判例全记——unprobed/self-unwashable
+  /frozen-in-service 逐根·零链根红账补 no-chain-root 目禁哑墙·
+  cures_planned/cures_applied 恒 0＝零落刀零复核·exit 0 红是基线数据非器红）。
+  互斥：--audit 与 --apply 同给 rc=2（审计只读）·与 --loop 同给 rc=2（单遍
+  基线·哨态循环非审计语义）·--rounds 不适用单遍。
+  零写盘硬保证＝--src 全文件 md5 清单跑前跑后自证恒同（probe_engine 本就
+  copyfile 出树编译·wash/probe_engine.py:163·产物清场 py:194——清单违同即
+  fail-loud 9·染污基线不出账）；workdir/--json/events 出账系审计本职不在保域。
+  耗时各段（enumerate/manifest/probe+chain/total）入 report["timing"]＝实测
+  墙钟·报告唯一非确定段（「同输入重跑字节恒同」除 timing 段外仍全成立）。
+  离线可测同闭环：--injector canned probe 即 audit 探针罐装（selftest 矢量⑩）；
+  **真树 audit 活跑归主会话**（本器只证 fixture 级）。
+
 --once/--loop 双模（v37 三器共同接口纪律③）：
   --once（缺省）单次闭环；--loop 实时哨态：闭环周而复始（--interval 秒间隔·
   --sleep-scale 乘数·selftest 用 0＝零真睡），轮事件＋周事件 JSONL 流写
@@ -62,18 +78,20 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
   --sleep-scale F 全部 sleep 乘 F（selftest 用 0＝零真睡）。
 
 输出（确定性·sort_keys·同输入重跑 --json 字节级恒同·报告零墙钟零绝对路径——
-路径只出基名·全路径走 stdout 响亮）：
+路径只出基名·全路径走 stdout 响亮；audit 模式 timing 段例外＝实测墙钟逐跑
+必异·余段仍恒同）：
   --json report·schema=rocqwash-unclog/1：
-    {schema, mode{source,apply,injector,loop}, args, cycles?,
+    {schema, mode{source,apply,injector,loop[,audit]}, args, cycles?,
      rounds[{round, probe_summary{source,n_records,n_red,red_files,ledgers},
              chain_top[{lib,n,dependents,self{probed,rc,verdict,washable}}],
              root, root_file, cure{stage,rc,total_matches,patterns,md5_before,
              md5_after,on_disk_md5_match,reason}?, cures_planned, cures_applied,
              rescan{rc,ids,station_count,residual_zero}?,
              resprobe{rc,rc_ok,n_records,md5_match}?}],
-     wall{root:{root,reason,detail}}, final{verdict,rounds_run,red_files,
+     wall{root:{root,reason,detail}}, timing?（audit·耗时各段）,
+     final{verdict,rounds_run,red_files,
      cures_planned_total,cures_applied_total,wall_count}, verdict}
-  verdict ∈ unclogged|wall|rounds-exhausted。
+  verdict ∈ unclogged|wall|rounds-exhausted|audit（audit=只读基线·exit 0）。
   每轮进度 log 行（响亮 stdout）：[round k/N] root=X cures=Y。
 
 用法（路径全参数化·零硬编码绝对路径；器件路径由本件所在仓派生·pushci 判例）：
@@ -85,11 +103,14 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
       [--pack cure_pack.json] [--workdir DIR] [--json out.json] [--events out.jsonl]
       [--once | --loop [--interval 60] [--loop-max 0]] [--sleep-scale 1.0]
       [--injector DIR]
+  python3 tools/unclog.py --src DIR [--world DIR] --audit [--injector DIR] \\
+      [--repo-path DIR] [--top 25] [--workdir DIR] [--json out.json]
   python3 tools/unclog.py --selftest
 
-退出码：0=unclogged；1=wall／rounds-exhausted（红是数据非器红·响亮 stdout）；
-2=用法错／注入场景形错；9=fail-loud（路径缺失／器红：引擎子进程非数据性非零退／
-frozen 在册不可得／全树枚举零候选）。--selftest：0=全过／2=断言失败。
+退出码：0=unclogged／audit；1=wall／rounds-exhausted（红是数据非器红·响亮
+stdout）；2=用法错／注入场景形错；9=fail-loud（路径缺失／器红：引擎子进程非
+数据性非零退／frozen 在册不可得／全树枚举零候选／audit 零写盘自证破）。
+--selftest：0=全过／2=断言失败。
 
 世界纪律：本器零写 --world（世界 .vo 基座由调用方按 wash/world_hook.py 认证代
 纪律播种；洗后复探红是否清账取决于世界换代·本器如实出账禁硬凑）。
@@ -108,7 +129,7 @@ import time
 PROG = "unclog"
 SCHEMA = "rocqwash-unclog/1"
 CHAIN_SCHEMA = "rocqwash-chain-graph/1"
-VERDICT_EXIT = {"unclogged": 0, "wall": 1, "rounds-exhausted": 1}
+VERDICT_EXIT = {"unclogged": 0, "wall": 1, "rounds-exhausted": 1, "audit": 0}
 TERMINAL_VERDICTS = ("unclogged", "wall")
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -198,6 +219,18 @@ def enumerate_tree(src):
                 fp = os.path.join(dirpath, fn)
                 rel = os.path.relpath(fp, src).replace(os.sep, "/")
                 out.append((rel[:-2], md5_of(fp)))
+    return out
+
+
+def tree_manifest(src):
+    """--src 全文件 {rel(POSIX 形): md5} 清单（audit 零写盘自证用·全文件非仅
+    .v——增删改一字节即现形）。"""
+    out = {}
+    for dirpath, dirnames, filenames in os.walk(src):
+        dirnames.sort()
+        for fn in sorted(filenames):
+            fp = os.path.join(dirpath, fn)
+            out[os.path.relpath(fp, src).replace(os.sep, "/")] = md5_of(fp)
     return out
 
 
@@ -368,6 +401,22 @@ def chain_top_of(graph, top_n):
     return out
 
 
+def args_summary(a):
+    """args → report["args"] 摘要（路径只出基名·零绝对路径·闭环/audit 共用）。"""
+    return {"rounds": a.rounds, "top": a.top, "scan_ids": a.scan_ids,
+            "apply": bool(a.apply), "loop": bool(a.loop),
+            "loop_max": a.loop_max, "interval": a.interval,
+            "sleep_scale": a.sleep_scale, "probe_resume": bool(a.probe_resume),
+            "src": basename_of(a.src), "world": basename_of(a.world) if a.world else None,
+            "repo_path": basename_of(a.repo_path),
+            "candidates": basename_of(a.candidates) if a.candidates else None,
+            "chain_ledgers": [basename_of(p) for p in (a.chain_ledgers or [])],
+            "pack": basename_of(a.pack),
+            "injector": basename_of(a.injector) if a.injector else None,
+            "guard": basename_of(a.guard) if a.guard else None,
+            "rocq_cmd": a.rocq_cmd, "timeout": a.timeout}
+
+
 class UnclogRun(object):
     """单周闭环。红账空→unclogged；无正典可洗根/全根碰壁→wall；轮尽红未清→
     rounds-exhausted（终判探在轮尽后补一发①）。"""
@@ -398,19 +447,7 @@ class UnclogRun(object):
         }
 
     def _args_summary(self):
-        a = self.a
-        return {"rounds": a.rounds, "top": a.top, "scan_ids": a.scan_ids,
-                "apply": bool(a.apply), "loop": bool(a.loop),
-                "loop_max": a.loop_max, "interval": a.interval,
-                "sleep_scale": a.sleep_scale, "probe_resume": bool(a.probe_resume),
-                "src": basename_of(a.src), "world": basename_of(a.world) if a.world else None,
-                "repo_path": basename_of(a.repo_path),
-                "candidates": basename_of(a.candidates) if a.candidates else None,
-                "chain_ledgers": [basename_of(p) for p in (a.chain_ledgers or [])],
-                "pack": basename_of(a.pack),
-                "injector": basename_of(a.injector) if a.injector else None,
-                "guard": basename_of(a.guard) if a.guard else None,
-                "rocq_cmd": a.rocq_cmd, "timeout": a.timeout}
+        return args_summary(self.a)
 
     # -- 墙账（按根去重·确定性）------------------------------------------------
     def wall_add(self, root, reason, detail):
@@ -652,6 +689,127 @@ class UnclogRun(object):
         return verdict, self.report
 
 
+# ---- --audit 只读审计（真树堵账基线·单遍·零落刀零写树）------------------------
+
+def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
+              workdir, enum_sec, holder):
+    """--audit 单遍只读基线（v38 真实树基线数据用）：全树 probe 干跑归集→
+    chain_graph→堵账基线报告。schema 同 rocqwash-unclog/1：final.verdict=
+    audit·rounds 单轮（probe_summary/chain_top 全在·cure/rescan/resprobe
+    恒 None·cures_planned/cures_applied 恒 0）·墙账 graph 判例全记——
+    unprobed/self-unwashable/frozen-in-service 逐根（数据入账非停机条件·
+    audit 不挑根不落刀）·零链根红账补 no-chain-root 目禁哑墙·exit 0（红是
+    基线数据非器红）。零写盘硬保证＝--src 全文件 md5 清单跑前跑后自证恒同
+    （probe_engine 本就 copyfile 出树编译·wash/probe_engine.py:163·产物清场
+    py:194——清单违同即 fail-loud 9·染污基线不出账）。耗时各段入
+    report["timing"]＝实测墙钟·报告唯一非确定段。"""
+    a = args
+    print("=== AUDIT 只读基线（单遍 probe 归集→chain_graph·零落刀零写树）===")
+    t0 = time.time()
+    before = tree_manifest(a.src)
+    manifest_sec = time.time() - t0
+    rd = {"round": 1}
+    t1 = time.time()
+    if source == "chain-ledgers":
+        graph, _out = engines.chain(list(a.chain_ledgers),
+                                    os.path.join(workdir, "audit.chain.json"))
+        summary = {"source": "merge",
+                   "ledgers": [basename_of(p) for p in a.chain_ledgers]}
+    else:
+        pj = os.path.join(workdir, "audit.probe.json")
+        _rc, _out, _led = engines.probe("probe", cands_tsv, pj)
+        graph, _out = engines.chain([pj],
+                                    os.path.join(workdir, "audit.chain.json"))
+        summary = {"source": "probe", "ledgers": [os.path.basename(pj)]}
+    probe_chain_sec = time.time() - t1
+    red = sorted(set(graph["stats"]["rc1"]) | set(graph["stats"]["other"]))
+    summary.update({"n_records": graph["stats"]["merged_total"],
+                    "n_red": len(red), "red_files": red})
+    rd["probe_summary"] = summary
+    rd["chain_top"] = chain_top_of(graph, a.top)
+    print("[audit] 归集: %s 红账 %d: %s"
+          % (summary["source"], len(red), ",".join(red) or "-"))
+    print("chain_top: " + (", ".join(
+        "%s(n=%d,washable=%s)" % (t["lib"], t["n"], t["self"]["washable"])
+        for t in rd["chain_top"][:3]) or "-"))
+
+    # 墙账（graph 判例全记·含 frozen 预检——数据入账非停机条件）
+    wall = {}
+
+    def wall_add(root, reason, detail):
+        if root not in wall:
+            wall[root] = {"root": root, "reason": reason, "detail": detail}
+            print("WALL: %s — %s（%s）" % (root, reason, detail))
+
+    for lib in graph.get("top_order", []):
+        s = graph["libs"][lib]["self"]
+        if not s.get("probed"):
+            wall_add(lib, "unprobed", "根件未入候选集（UNPROBED·候补探）")
+        elif not s.get("washable"):
+            wall_add(lib, "self-unwashable",
+                     "根件自身被阻 rc=%s verdict=%s（链中环·先治根的因）"
+                     % (s.get("rc"), s.get("verdict")))
+        elif frozen_hit(lib, os.path.join(a.src,
+                                          lib.replace("/", os.sep) + ".v")):
+            wall_add(lib, "frozen-in-service",
+                     "根名/根件撞 frozen8 在册（预检红拒·人审域）")
+    if red and not graph.get("top_order"):
+        wall_add("-", "no-chain-root",
+                 "红账 %d 件无一缺库链根（代差型/器因红·禁硬凑）: %s"
+                 % (len(red), ",".join(red)))
+
+    # 零写盘硬保证（--src 全文件 md5 清单前后自证·违即 fail-loud 9）
+    after = tree_manifest(a.src)
+    if after != before:
+        added = sorted(set(after) - set(before))
+        removed = sorted(set(before) - set(after))
+        changed = sorted(k for k in set(before) & set(after)
+                         if before[k] != after[k])
+        raise UnclogError(
+            "audit 零写盘硬保证破：--src 树被动（改 %d/增 %d/删 %d: %s）"
+            % (len(changed), len(added), len(removed),
+               ",".join((changed + added + removed)[:8])), 9)
+
+    rd["root"] = None
+    rd["root_file"] = None
+    rd["cure"] = None
+    rd["cures_planned"] = 0
+    rd["cures_applied"] = 0
+    rd["rescan"] = None
+    rd["resprobe"] = None
+    rd["log"] = "[audit] root=- cures=0 (audit baseline·red=%d)" % len(red)
+    print(rd["log"])
+    emit(events_fh, {"event": "round", "cycle": 1, "round": 1, "root": None,
+                     "cures": 0, "audit": True, "red_empty": not red})
+    emit(events_fh, {"event": "cycle_end", "cycle": 1, "verdict": "audit",
+                     "rounds_run": 1})
+    timing = {"enumerate_s": (round(enum_sec, 3)
+                              if enum_sec is not None else None),
+              "manifest_s": round(manifest_sec, 3),
+              "probe_chain_s": round(probe_chain_sec, 3),
+              "total_s": round(time.time() - t0, 3)}
+    print("[audit] timing: enumerate=%s manifest=%gs probe+chain=%gs total=%gs"
+          % (timing["enumerate_s"], timing["manifest_s"],
+             timing["probe_chain_s"], timing["total_s"]))
+    report = {
+        "schema": SCHEMA,
+        "mode": {"source": source, "apply": False, "audit": True,
+                 "injector": a.injector is not None, "loop": False},
+        "args": args_summary(a),
+        "rounds": [rd],
+        "wall": wall,
+        "timing": timing,
+        "final": {"verdict": "audit", "rounds_run": 1, "red_files": list(red),
+                  "cures_planned_total": 0, "cures_applied_total": 0,
+                  "wall_count": len(wall)},
+        "verdict": "audit",
+    }
+    holder["report"] = report
+    print("AUDIT: 红账 %d·墙 %d——基线报告零落刀零写树（exit 0）"
+          % (len(red), len(wall)))
+    return "audit", report
+
+
 # ---- 总控（--once/--loop 哨态）------------------------------------------------
 
 def run(args, holder):
@@ -666,6 +824,11 @@ def run(args, holder):
         raise UnclogError("--sleep-scale 须≥0 实测 %s" % args.sleep_scale, 2)
     if args.loop_max < 0:
         raise UnclogError("--loop-max 须≥0 实测 %d" % args.loop_max, 2)
+    if args.audit and args.apply:
+        raise UnclogError("--audit 与 --apply 互斥（审计只读零落刀·同给 rc=2）", 2)
+    if args.audit and args.loop:
+        raise UnclogError("--audit 与 --loop 互斥（审计单遍基线·哨态循环非"
+                          "审计语义）", 2)
     if args.candidates and args.chain_ledgers:
         raise UnclogError("--candidates 与 --chain-ledgers 互斥（候选面三源任选）", 2)
 
@@ -698,6 +861,7 @@ def run(args, holder):
     print("workdir -> %s" % workdir)
 
     # 候选面三源
+    enum_sec = None
     if args.candidates:
         source, cands_tsv = "tsv", args.candidates
         print("候选面: --candidates %s" % args.candidates)
@@ -706,7 +870,9 @@ def run(args, holder):
         print("候选面: --chain-ledgers %s（merge 模式·无逐轮全量重探）"
               % " ".join(args.chain_ledgers))
     else:
+        _t0 = time.time()
         pairs = enumerate_tree(args.src)
+        enum_sec = time.time() - _t0
         if not pairs:
             raise UnclogError("--src 全树枚举零 .v 候选: %s" % args.src, 9)
         cands_tsv = os.path.join(workdir, "tree-cands.tsv")
@@ -738,22 +904,29 @@ def run(args, holder):
     verdict = None
     report = None
     try:
-        while True:
-            cycle = len(cycles) + 1
-            u = UnclogRun(args, engines, frozen_hit, events_fh, cycle, source,
-                          cands_tsv, workdir)
-            verdict, report = u.run()
-            holder["report"] = report
-            cycles.append({"cycle": cycle, "verdict": verdict})
-            if verdict in TERMINAL_VERDICTS:
-                break
-            if not args.loop:
-                break
-            if args.loop_max and cycle >= args.loop_max:
-                break
-            print("[cycle %d] %s — 哨态歇 %g s 后再巡"
-                  % (cycle, verdict, args.interval * args.sleep_scale))
-            sleep_scaled(args.interval, args.sleep_scale)
+        if args.audit:
+            # --audit 单遍只读基线（不进闭环·零落刀·--src md5 前后自证）
+            verdict, report = run_audit(args, engines, frozen_hit, events_fh,
+                                        source, cands_tsv, workdir, enum_sec,
+                                        holder)
+            cycles.append({"cycle": 1, "verdict": verdict})
+        else:
+            while True:
+                cycle = len(cycles) + 1
+                u = UnclogRun(args, engines, frozen_hit, events_fh, cycle,
+                              source, cands_tsv, workdir)
+                verdict, report = u.run()
+                holder["report"] = report
+                cycles.append({"cycle": cycle, "verdict": verdict})
+                if verdict in TERMINAL_VERDICTS:
+                    break
+                if not args.loop:
+                    break
+                if args.loop_max and cycle >= args.loop_max:
+                    break
+                print("[cycle %d] %s — 哨态歇 %g s 后再巡"
+                      % (cycle, verdict, args.interval * args.sleep_scale))
+                sleep_scaled(args.interval, args.sleep_scale)
     finally:
         if events_fh is not None:
             events_fh.close()
@@ -799,6 +972,10 @@ def main():
                     help="闭环轮帽（默认 5·轮尽红未清=rounds-exhausted）")
     ap.add_argument("--apply", action="store_true",
                     help="落刀开关（缺省关＝全干跑零写盘·单开关 --yes 不需要）")
+    ap.add_argument("--audit", action="store_true",
+                    help="只读审计：单遍 probe 归集→chain_graph→堵账基线报告"
+                         "（final=audit·零落刀·--src 全文件 md5 前后自证恒同·"
+                         "cures 恒空·与 --apply/--loop 互斥）")
     ap.add_argument("--top", type=int, default=25, metavar="N",
                     help="链根 TOP 榜截断（默认 25·chain_graph 同款）")
     ap.add_argument("--scan-ids", dest="scan_ids", default="S", metavar="IDS",
@@ -868,12 +1045,14 @@ NOMATCH_BODY = "Lemma ok : True.\n"
 
 
 def selftest():
-    """十矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
+    """十一矢量（tmp fixture 树＋injector canned probe_ledger 序列·probe/resprobe
     注入零真编译·chain/cure/scan/frozen8 真跑）：①绿径两轮疏通（--apply 落刀→
     次轮红账空 exit 0）②诚实墙（self-unwashable·零落刀）＋②b 零链根红账
     （no-chain-root 墙目·禁哑墙）③cure-miss 入墙④轮尽（--apply 已落刀而世界
     仍红→rounds-exhausted 附各轮账）⑤--apply 缺省关实证（零字节动）⑥JSON 幂等
-    （字节恒同）⑦frozen 在册红拒 ⑧--loop 哨态 JSONL ⑨CLI 四码。"""
+    （字节恒同）⑦frozen 在册红拒 ⑧--loop 哨态 JSONL ⑨CLI 四码 ⑩--audit 只读
+    基线（零写盘自证/final=audit/cures 恒空/墙账 graph 判例/frozen 预检/互斥
+    rc=2·真树 audit 活跑归主会话本席只证 fixture 级）。"""
     tmp = tempfile.mkdtemp(prefix="rocqwash_unclog_self_")
 
     def run(aargs):
@@ -1147,8 +1326,95 @@ def selftest():
         assert p.returncode == 9, "缺 injector 场景应 rc=9 实测 %d" % p.returncode
         print("矢量⑨ CLI 四码（0/2/9·互斥·injector 缺场景）: PASS")
 
-        print("UNCLOG-SELFTEST PASS: 十矢量全过（绿径/诚实墙＋零链根补判/cure-miss/"
-              "轮尽/缺省关实证/JSON 幂等/frozen 红拒/loop 哨态/CLI 四码）")
+        # 矢量⑩ --audit 只读基线：全树 probe 干跑归集→chain_graph→基线报告
+        # （零写盘自证·final=audit·cures 恒空·墙账 graph 判例·exit 0）
+        d, src, world, wd = fixture("v10_audit")
+        j10 = os.path.join(wd, "report.json")
+        m_before = tree_manifest(src)
+        p = run(["--src", src, "--world", world, "--audit", "--injector",
+                 scenario(os.path.join(d, "inj"), [L1]),
+                 "--workdir", wd, "--json", j10])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(j10, encoding="utf-8"))
+        assert rep["schema"] == SCHEMA and rep["verdict"] == "audit" \
+            and rep["final"]["verdict"] == "audit", rep["verdict"]
+        assert rep["mode"]["audit"] is True and rep["mode"]["apply"] is False \
+            and rep["mode"]["loop"] is False, rep["mode"]
+        assert rep["final"]["rounds_run"] == 1, rep["final"]
+        assert rep["final"]["red_files"] == ["B"], rep["final"]  # L1: B 缺 A
+        assert rep["final"]["cures_planned_total"] == 0 \
+            and rep["final"]["cures_applied_total"] == 0, rep["final"]
+        assert rep["rounds"][0]["cures_planned"] == 0 \
+            and rep["rounds"][0]["cures_applied"] == 0 \
+            and rep["rounds"][0]["cure"] is None \
+            and rep["rounds"][0]["rescan"] is None \
+            and rep["rounds"][0]["resprobe"] is None, rep["rounds"][0]
+        assert rep["rounds"][0]["chain_top"][0]["lib"] == "A" \
+            and rep["rounds"][0]["chain_top"][0]["self"]["washable"] is True, \
+            rep["rounds"][0]["chain_top"]
+        assert rep["wall"] == {}, rep["wall"]   # 可洗非 frozen·墙空
+        assert rep["timing"]["enumerate_s"] is not None \
+            and rep["timing"]["probe_chain_s"] >= 0 \
+            and rep["timing"]["total_s"] >= 0, rep["timing"]
+        assert tree_manifest(src) == m_before, "audit 源树字节被动＝违例"
+        assert "NatLe" not in io.open(os.path.join(src, "A.v"),
+                                      encoding="utf-8").read(), "链根件被动＝违例"
+        print("矢量⑩ audit 只读基线（零写盘自证·final=audit·cures 恒空·"
+              "timing 段）: PASS")
+
+        # 矢量⑩b audit 墙账：self-unwashable 入墙（数据非停机·exit 0）
+        d, src, world, wd = fixture("v10b_auditwall")
+        baseb = os.path.join(d, "baseb.json")
+        dump_json({"Y": {"file": "Y", "md5": None, "rc": 1,
+                         "red": "Error: Illegal application", "missing": None,
+                         "red_class": None, "verdict": "RED-OTHER",
+                         "red_count": None, "md5_match": None},
+                   "C1": rec1("C1", "Y")}, baseb)
+        j10b = os.path.join(wd, "report.json")
+        p = run(["--src", src, "--chain-ledgers", baseb, "--audit",
+                 "--workdir", wd, "--json", j10b])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(j10b, encoding="utf-8"))
+        assert rep["verdict"] == "audit" \
+            and rep["wall"]["Y"]["reason"] == "self-unwashable", rep["wall"]
+        assert rep["final"]["wall_count"] == 1 \
+            and rep["final"]["red_files"] == ["C1", "Y"], rep["final"]  # Y 自身 rc1 亦红
+        print("矢量⑩b audit 墙账（self-unwashable 入墙·exit 0 数据非停机）: PASS")
+
+        # 矢量⑩c audit frozen 预检：可洗根撞在册 → frozen-in-service 入墙
+        d, src, world, wd = fixture("v10c_frozen")
+        with io.open(os.path.join(src, "wash_engine.v"), "w",
+                     encoding="utf-8") as fh:
+            fh.write(CURE13_BODY)
+        LF = led({"wash_engine": rec0("wash_engine"),
+                  "D": rec1("D", "wash_engine")})
+        j10c = os.path.join(wd, "report.json")
+        p = run(["--src", src, "--world", world, "--audit", "--injector",
+                 scenario(os.path.join(d, "inj"), [LF]),
+                 "--workdir", wd, "--json", j10c])
+        assert p.returncode == 0, p.stdout[-600:]
+        rep = json.load(io.open(j10c, encoding="utf-8"))
+        assert rep["verdict"] == "audit" and \
+            rep["wall"]["wash_engine"]["reason"] == "frozen-in-service", \
+            rep["wall"]
+        assert "NatLe" not in io.open(os.path.join(src, "wash_engine.v"),
+                                      encoding="utf-8").read(), \
+            "frozen 件被落刀＝违例"
+        print("矢量⑩c audit frozen 预检（frozen8 实取入墙·零落刀）: PASS")
+
+        # 矢量⑩d audit 互斥：--apply／--loop 同给 rc=2
+        d, src, world, wd = fixture("v10d_cli")
+        p = run(["--src", src, "--audit", "--apply"])
+        assert p.returncode == 2, "--audit --apply 同给应 rc=2 实测 %d" \
+            % p.returncode
+        p = run(["--src", src, "--audit", "--loop"])
+        assert p.returncode == 2, "--audit --loop 同给应 rc=2 实测 %d" \
+            % p.returncode
+        print("矢量⑩d audit 互斥（--apply/--loop 同给 rc=2）: PASS")
+
+        print("UNCLOG-SELFTEST PASS: 十一矢量全过（绿径/诚实墙＋零链根补判/"
+              "cure-miss/轮尽/缺省关实证/JSON 幂等/frozen 红拒/loop 哨态/"
+              "CLI 四码/audit 只读基线零写盘自证）")
         return 0
     except AssertionError as e:
         print("UNCLOG-SELFTEST FAIL: %s" % e)
