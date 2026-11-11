@@ -117,13 +117,14 @@ K=1/2/3 各一跑（`--probe-parallel K`·真编译经 `--guard` 包裹·温控 
 建议）·各 `--json` 出账·timing 段差分（`probe_chain_s` 主指标·`jobs` 维度
 在账前后可比）。
 
-占位（真树 27 件面·待主会话三跑回填）：
+实测（真树 27 件面·三行已回填实数——K=1/K=2 照录 20261111 账·K=3 为
+20261112 实跑回填·回填段详注）：
 
 | 跑 | K | timing.jobs | probe_chain_s | total_s | 备注 |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 1 | （待补） | （待补） | （待补） | 串行基线——DS1 同面参照 190.728 |
-| 2 | 2 | （待补） | （待补） | （待补） | 温控 K≤2 建议 |
-| 3 | 3 | （待补） | （待补） | （待补） | 建议与跑 2 错峰 |
+| 1 | 1 | （缺位＝1 语义） | 190.728 | 194.086 | 串行基线——DS1 同面参照 190.728（20261111 账照录） |
+| 2 | 2 | 2 | 101.916 | 105.436 | 温控 K≤2 建议——v43 双跑回填（20261111 08:1x） |
+| 3 | 3 | 3 | 165.202 | 169.684 | 建议与跑 2 错峰——20261112 实跑·负边际（回填段详注） |
 
 判读参照（定性·禁以参照代实测）：DS2/DS3 已证 K>1 真并发且台账确定性零漂
 ——真编译墙钟收益面取决于逐件编译并行度（probe 段近似逐件独立·理想加速
@@ -159,5 +160,15 @@ K=1/2/3 各一跑（`--probe-parallel K`·真编译经 `--guard` 包裹·温控 
 |---|---|---|---|---|---|---|
 | DS1（v41 基线） | 1 | 190.728 | 194.086 | 27 | 0 | examples/baselines/audit-ConstructiveWorld_Live-20261111.json |
 | DS4（本轮回填） | 2 | 101.916 | 105.436 | 27 | 0 | examples/baselines/perf-ConstructiveWorld_Live-k2-20261111.json |
+| DS4-k3（20261112 实测席） | 3 | 165.202 | 169.684 | 27 | 0 | examples/baselines/audit-k3-20261112.json |
 
 **实测加速比＝1.87×**（probe_chain 口径·27 件同候选面·同世界 /tmp/probe_world_v38·同 rocq-cmd 9.3 coqc 模板·cpu_guard 包裹）。jobs 维度字段（v41 增）双跑实测在账（K=1 缺位语义/K=2 显式 2）。两次 n_red=0 互证＝27 件新落位面在现役世界代际 RC0 稳定复现（非偶然单跑）。
+
+## 20261112 K=3 回填：三账齐·负边际加速如实录（DS4 收口）
+
+K=3 真跑（rc=0·cpu_guard FRONT pos=1 waited=0s·`--probe-parallel 3`·同候选面 /tmp/audit27.tsv·同世界 /tmp/probe_world_v38·同 K=1/K=2 字面 rocq-cmd coqc 模板）：
+`timing = {enumerate_s: null, jobs: 3, manifest_s: 2.574, probe_chain_s: 165.202, total_s: 169.684}`·27/27 RC0·red=0·墙=0·probe 台账 md5_match 27/27 全真。
+
+**加速比三账对表（probe_chain 口径）：K1/K2/K3＝190.728/101.916/165.202 → K1/K2＝1.87×·K1/K3＝1.15×·K3 较 K2 慢 1.62×（K2/K3＝0.62）＝负边际加速·DS4 纪律如实录·禁编数字禁凑绿**。total 口径同向（194.086/105.436/169.684）。判读（单跑读数·律 1 噪声带未复跑采样＝趋势级）：**并行收益在 K=2 档位现拐点——现机（4 CPU）现职守面 K=3 无收益**。挤压嫌疑注记（如实·不作开脱）：跑时另一席 nice-19 coqchk 17 件后台在飞·guard 热态预检 tlevel=58→launch 60（K=2 跑为 0）·pmset CPU_Speed_Limit=100% 无热钳位；K=3 与 K=2（前日 08:14）错峰合规。
+
+口径可比性机检（本席实跑）：恒同面 K=3 vs K=2 除 timing 段＋`args.probe_parallel` 外逐键恒同（0 键差）；`baseline_diff` 双向（K1↔K3·K2↔K3）verdict=stable·候选面四元组 `source=tsv·src=ConstructiveWorld_Live·candidates=audit27.tsv·chain_ledgers=-` 恒同·rc=0。账名按任务书指定 `audit-k3-20261112.json` 落仓（perf-README §2 命名律本名形 `perf-ConstructiveWorld_Live-k3-*.json`·四元组内嵌恒同·diff 实测无误配·如实注记）；rocq-cmd 取 K=1/K=2 同字面 coqc 模板而非 bin/rocq（args 段一致为先决·perf-README §2——模板词「rocq」系 rocq93 套件泛指）。

@@ -5,7 +5,7 @@
 > **Core Principle**: 凡可用类型论结构性判据机检的，一律不交给概率模型猜。
 > (What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models.)
 
-> **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-campaign-total-v1.0-20261111.md](docs/rocqwash-service-campaign-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（收口三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·候令未排程）
+> **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-campaign-total-v1.0-20261111.md](docs/rocqwash-service-campaign-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（收口三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·候令未排程）· [docs/ops-sentinel-长驻手册-v1.0-20261112.md](docs/ops-sentinel-长驻手册-v1.0-20261112.md)（哨长驻运维手册 v1.0·部署/消费/轮转恢复）· [docs/勘形-multi-repo-Main仓适配-20261112.md](docs/勘形-multi-repo-Main仓适配-20261112.md)（路线图⑦ Main 仓 CI 形制勘察·适配分级即用 4／小改 3／中改 2）
 >
 > **v42 快照（2026-11-11·收口总档波·四席并铸＋集成席收口）**: 总报告/演练实录/路线图三档入 docs/（服务层总览 v40 在库续用）·cw_paths v1.x 双件入 ConstructiveWorld·rocqwash v41 `c5df4d4`——三闸收口基准：doc_lint drift=0／破坏面矩阵 17 判全过／总套零红（SKIP 不计红）。
 
@@ -249,6 +249,19 @@ rocqwash/
 > v46 红事件路由消费面实战）；`cw.sh` 入口扩至二十四工具（registry-fix 路由·
 > 四处同步）；自测套件扩至 59 例（t_registry_fix 直挂器 --selftest 八矢量·
 > 集成席直挂）。
+> v48 增补（20261112·DS4 三账收口＋哨长驻运维手册＋Main 仓勘形轮·三席铸＋集成席收口）：
+> 路线图① DS4 K=3 账 `examples/baselines/audit-k3-20261112.json` 真树堵账基线落仓
+> （27 件 RC0 red=0·timing jobs=3·probe_chain_s=165.202/total_s=169.684）——与 K=1/K=2
+> 同候选面经 baseline_diff 双向 verdict=stable 三账齐（190.728/101.916/165.202·
+> 加速比 1.87× 于 K=2 档位现拐点·K=3 负边际加速如实录·perf-profile §五三行占位
+> 主会话已回填实数）；
+> 路线图② `docs/ops-sentinel-长驻手册-v1.0-20261112.md` 哨长驻运维手册成档
+> （部署落位规范／事件流消费与 render_events/red_dispatch 接驳／轮转与恢复纪律／
+> v44-v48 实证账引用——零码改零新器零新旗标）；
+> 路线图⑦ `docs/勘形-multi-repo-Main仓适配-20261112.md` Main 仓 CI 形制勘察档
+> （只读零动码·api.github.com 实取现役 coq93.yml 形·适配分级 verdict＝
+> 即用 4／小改 3／中改 2——pushci PR 路线 mirror-blind 咬合失配为最大缺口·
+> 跨仓越权写盘红线保持）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
