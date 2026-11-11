@@ -151,3 +151,13 @@ K=1/2/3 各一跑（`--probe-parallel K`·真编译经 `--guard` 包裹·温控 
 
 ——第 8 项结果以最终回归实跑为准（本席交割时回填账面）；§二~§五数字全部
 来自 §一所列文件逐字照录。
+
+
+## 20261111 08:1x 回填：DS4 真树实测（主会话·路线图①收口）
+
+| 跑 | K | probe_chain_s | total_s | n_records | n_red | 证据 |
+|---|---|---|---|---|---|---|
+| DS1（v41 基线） | 1 | 190.728 | 194.086 | 27 | 0 | examples/baselines/audit-ConstructiveWorld_Live-20261111.json |
+| DS4（本轮回填） | 2 | 101.916 | 105.436 | 27 | 0 | examples/baselines/perf-ConstructiveWorld_Live-k2-20261111.json |
+
+**实测加速比＝1.87×**（probe_chain 口径·27 件同候选面·同世界 /tmp/probe_world_v38·同 rocq-cmd 9.3 coqc 模板·cpu_guard 包裹）。jobs 维度字段（v41 增）双跑实测在账（K=1 缺位语义/K=2 显式 2）。两次 n_red=0 互证＝27 件新落位面在现役世界代际 RC0 稳定复现（非偶然单跑）。
