@@ -94,7 +94,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 20     # ③ --help 真跑器帽（任务书钦定 20·现势 19 器有余）
+DEFAULT_HELP_CAP = 24     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代）
 HELP_TIMEOUT = 60         # --help 子进程秒帽（本地件防挂·fail-loud）
 DETAIL_CAP = 300          # checks[].detail 截断（cw_doctor non_form ln[:120] 同款）
 DRIFT_LINE_CAP = 20       # ③ 每文件幻引/悬引列帽（总数如实·cw_doctor 帽 20 同款）

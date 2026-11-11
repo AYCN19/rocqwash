@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器（共二十）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器（共二十三）
 #         统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
 #         20261111 five-tool wave plus the v37 three-tool wave plus the v38
 #         aggregate doctor, the v39 doc-lint plus netname-normalize/select-audit routing fixes plus the v40
-#         baseline-diff and the v45 render-events ledger renderer, twenty-one tools in total
+#         baseline-diff, the v45 render-events ledger renderer plus the v46
+#         red-dispatch and registry-audit pair, twenty-three tools in total
 #         (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
@@ -63,6 +64,12 @@
 #   render-events  哨事件 JSONL→markdown 台账（三维分布＋逐事件表·坏行容错）
 #                                                    -> tools/render_events.py
 #               cw.sh render-events --events F.jsonl [--dir DIR] [--md out.md] [--json out] [--top N]
+#   dispatch    红事件路由器（哨红事件→动作预设·三档 report-only/suggest/auto）
+#                                                    -> tools/red_dispatch.py
+#               cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
+#   audit       注册册卫生审计器（双册只读四账＋确定性处方·--apply 不存在）
+#                                                    -> tools/registry_audit.py
+#               cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -82,6 +89,13 @@
 #      baseline-diff 同形：0=improved/stable（红减/持平）·1=degraded/
 #      incomparable（红增/候选集异如实拒判·红是数据非器红·响亮 stdout）；
 #      2=用法错/输入形坏（schema 不对/账面自洽破）；9=路径缺失。
+#      dispatch 同形：0=处理完成（红是数据非器红·派发 rc≠0/超时/防重跳过
+#      皆入账不改退出码）；2=用法错（--param 守卫/--dry-run 误档/
+#      --cooldown 负）；9=输入缺失（事件文件缺/字段缺逐件列明/参数无解/
+#      元字符拒构造/state 形坏红拒）。
+#      audit 同形：0=出账（病灶是数据·count>0 仍 0·响亮 stdout）；2=用法错
+#      （形参咬合/无输入面/半册）；9=输入缺（册件/git show/live-src/
+#      anchor-src 缺）。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
@@ -99,7 +113,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器统一入口（二十工具·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器统一入口（二十三工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -157,6 +171,12 @@ cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 
   render-events  哨事件 JSONL→markdown 台账（三维分布＋逐事件表·坏行容错）
                                                    -> tools/render_events.py
               cw.sh render-events --events F.jsonl [--dir DIR] [--md out.md] [--json out] [--top N]
+  dispatch    红事件路由器（哨红事件→动作预设·三档 report-only/suggest/auto）
+                                                   -> tools/red_dispatch.py
+              cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
+  audit       注册册卫生审计器（双册只读四账＋确定性处方·--apply 不存在）
+                                                   -> tools/registry_audit.py
+              cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -191,6 +211,8 @@ hint_for() {  # $1=tool
     select-audit) echo "cw.sh select-audit [--order ORDER] [--select 清单] [--grep RX] [--requires F.v] [--json out]   # 批选审计器（批选清单对树 order.txt 全表 grep 剔重＋Require 面审计 v6 判据）-> tools/select_audit.py" ;;
     render-events) echo "cw.sh render-events --events F.jsonl [--dir DIR] [--md out.md] [--json out] [--top N]   # 哨事件 JSONL→markdown 台账（kind/family/action 三维分布＋逐事件表·坏行容错 rc1·红是数据非器红）-> tools/render_events.py" ;;
     baseline-diff) echo "cw.sh baseline-diff OLD.json NEW.json [--json out.json] [--md out.md]   # 堵账基线对比器（两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/stable/incomparable·账面自洽预检拒手编·timing 不入对比·红是数据非器红）-> tools/baseline_diff.py" ;;
+    dispatch)    echo "cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]   # 红事件路由器（哨红事件→动作预设·三档 preset report-only 缺省零执行/suggest 复制块/auto 显式代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·红是数据非器红）-> tools/red_dispatch.py" ;;
+    audit)       echo "cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]   # 注册册卫生审计器（order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据 exit 0）-> tools/registry_audit.py" ;;
     *) return 1 ;;
   esac
 }
@@ -232,12 +254,14 @@ case "${1:-}" in
   select-audit) shift; run_tool select-audit "tools/select_audit.py"        "$@" ;;
   render-events) shift; run_tool render-events "tools/render_events.py"     "$@" ;;
   baseline-diff) shift; run_tool baseline-diff "tools/baseline_diff.py"     "$@" ;;
+  dispatch)    shift; run_tool dispatch    "tools/red_dispatch.py"          "$@" ;;
+  audit)       shift; run_tool audit       "tools/registry_audit.py"        "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit）" >&2
         exit 2
       fi
     fi
@@ -245,7 +269,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|help）" >&2
     usage >&2
     exit 2 ;;
 esac

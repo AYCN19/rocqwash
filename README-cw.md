@@ -1,6 +1,6 @@
 # cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
 
-`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 一器＋v40 一器（共二十个）的**一键调用入口**（repo 根）：
+`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器（doc-lint/netname-normalize/select-audit）＋v40 一器＋v45 一器＋v46 两器（dispatch/audit·共二十三个）的**一键调用入口**（repo 根）：
 
 ```
 bash cw.sh <tool> [args...]
@@ -37,6 +37,8 @@ bash cw.sh <tool> [args...]
 | `cw-doctor` | `tools/cw_doctor.py` | 综合体检器·四域聚合（环境 dyld／网络 net_probe／注册册锚正典形审计／堵账 probe_engine＋chain_graph 逐域 subprocess 编排既有一器→综合健康分 0-100＋verdict `healthy\|degraded`＋advice 处置清单·**只诊断禁代执行**·红是数据非器红·schema `rocqwash-cwdoctor/1`·`--injector` 离线可测） | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
 | `doc-lint` | `tools/doc_lint.py` | 文档←→实现一致性三查器（①cw.sh 头注/usage/hint/case 四处工具表互检＋tools/ 通用入口对账 ②CASES vs tests/README.md vs README.md 计数三处对账 ③doc 引用旗标 vs 各器 `--help` 实出逐枚对照·verdict `consistent\|drift`·红是数据非器红·schema `rocqwash-doclint/1`·`--repo` 被审仓根缺省本仓） | `bash cw.sh doc-lint --repo . --json doclint.json` |
 | `baseline-diff` | `tools/baseline_diff.py` | 堵账基线对比器（两份 unclog `--audit` 基线 argv 序=旧→新→`new_blocks`/`resolved_blocks`/`persistent` 三清单＋`score_delta`·verdict 四态 `improved\|degraded\|stable\|incomparable`·账面自洽预检拒手编·timing 不入对比·红是数据非器红·schema `rocqwash-baseline-diff/1`·入仓规程见 [examples/baselines/README.md](examples/baselines/README.md)） | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
+| `dispatch` | `tools/red_dispatch.py` | 红事件路由器（哨红事件→动作预设·三档 preset `report-only\|suggest\|auto`·**缺省 report-only 零执行**·suggest 出可复制命令块·auto 显式才代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·schema `rocqwash-red-dispatch/1`） | `bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json` |
+| `audit` | `tools/registry_audit.py` | 注册册卫生审计器（order.txt/_CoqProject 双册**只读**四账出账：重复行/锚撞文本/顺序号形/形怪/缺锚/孤儿/live 拓扑引用＋`--fix-plan` 确定性处方零写盘·**`--apply` 不存在**·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·schema `rocqwash-registry-audit/1`·真仓活跑前置注记（v40 基线规程同律 [examples/baselines/README.md](examples/baselines/README.md)：真树活跑归主会话·席面只证器 selftest/夹具级）） | `bash cw.sh audit --order order.txt --project _CoqProject --live-src src/ --fix-plan --json audit.json` |
 | `help` | — | 总帮助；`help <tool>` 看该工具一行提示 | `bash cw.sh help probe` |
 
 典型流水线（发现→治愈→复核）：
@@ -195,12 +197,33 @@ bash cw.sh wash-shape --file demo.v --apply --json shaped.json   # 落刀＋复�
   （`unclog --audit` 基线命名律 `audit-<域>-<yyyymmdd>.json`／timing 非确定段
   注记／baseline-diff 对比判读与红线纪律·工装席铸）
 
+**⑨ 红事件路由嵌段（v46·red_dispatch 配对例·哨红事件→动作预设路由）**：
+
+```
+# 哨态红事件→路由器接驳（--on-red 模板配对例·<json> 取 --emit 事件流同盘
+# 路径——哨每遇红事件即以事件流整盘喂路由器·suggest 档零执行出复制块）
+bash cw.sh sentinel --once --watch-ledgers ledgers/ --emit events.jsonl \
+  --on-red 'python3 tools/red_dispatch.py --event-file <json> --preset suggest'
+
+# 单步直调（不经哨·对既有事件流补一轮路由账·report-only 缺省零执行）
+bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json
+```
+
+> dispatch 是路由而非引擎：五路由（B/E 族→pushci 重派·A 族→manual-fix-note
+> 禁代修出 fix 清单·C 族→doctor·blocking→unclog·build-signal→wash-shape）
+> 全挂既有 cw.sh 路由零新引擎；三档 preset 缺省 report-only 零执行（红是
+> 数据），auto 显式才代跑（60s 帽·rc≠0 响亮入账不改退出码·防重 state＋
+> cooldown）；与哨 `--on-red` 配对时占位替换 `{family}/{run}/{repo}` 既有
+> 语义不动——路由器自行从事件流读全事件。
+
 ## English brief
 
 `cw.sh` is the one-command entry for the seven tools introduced in the
 rocqwash v29-v32 waves plus the five tools added on 20261111 plus the three
-v37 tools plus the v38 aggregate doctor plus the v39 doc-lint plus the v40
-baseline-diff (twenty in total). It lives at the repository root:
+v37 tools plus the v38 aggregate doctor plus the v39 trio (doc-lint plus
+netname-normalize/select-audit) plus the v40 baseline-diff plus the v45
+render-events plus the v46 dispatch/audit pair (twenty-three in total). It
+lives at the repository root:
 
 ```
 bash cw.sh <tool> [args...]
@@ -248,7 +271,22 @@ two `unclog --audit` baselines in argv order old→new → `new_blocks` /
 `resolved_blocks` / `persistent` block lists plus `score_delta`, verdict
 `improved|degraded|stable|incomparable` with honest refusal on candidate-set
 mismatch; red is data, not tool failure; intake protocol at
-`examples/baselines/README.md`), plus
+`examples/baselines/README.md`), plus the v45 addition
+`render-events`→`tools/render_events.py` (sentinel-event JSONL → markdown
+ledger renderer), plus the v46 additions
+`dispatch`→`tools/red_dispatch.py` (red-event router: sentinel red events →
+action presets in three presets `report-only|suggest|auto` — report-only
+zero-execution by default, suggest prints a copy-paste command block, auto
+executes only when explicit under a 60s cap with rc≠0 recorded loudly without
+touching the exit code; dedup state + cooldown; all five routes wired onto
+existing cw.sh routes, zero new engines; family-A content-red is never
+auto-fixed — it emits a fix list), and
+`audit`→`tools/registry_audit.py` (registry hygiene auditor: order.txt/
+_CoqProject dual-book read-only four-account output — duplicate rows / anchor
+collisions / seq-form / malformed / missing anchors / orphans / live topology —
+plus a `--fix-plan` deterministic prescription with zero writes; `--apply`
+does not exist; keys and the anchor canon are reused from registry_union,
+zero re-invention; findings are data, always exit 0), plus
 `help`. The v37 tools share a
 common workflow-interface discipline (once/loop dual mode, deterministic
 JSON reports + JSONL event streams, `--injector` offline canned testing,

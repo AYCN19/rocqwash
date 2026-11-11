@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 56 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 58 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（56 例）
+## 覆盖面（58 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -202,3 +202,14 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 56 过 / 1 红 / 
 |---|------|------|------|
 | 55 | `t_destructive_matrix` | `tests/test_destructive_matrix.py`（破坏面复核矩阵·一行一拒写判据·破坏面席铸件） | 17 行拒写判据：器×写面×护栏锚 file:line 逐行断言——unclog×4（U1 缺 --apply 零写盘 tmp 树 md5 恒同／U2 --audit 零写盘＋与 --apply 互斥 rc2／U3 frozen 在册红拒 frozen8 实取／U4 非链根件零被动）＋wash_shape×4（W1 plan 零写盘／W2 --apply 后 rescan partial 不谎报 shaped／W3 冻结名显式指认红拒 rc2 收件即拒／W4 同槽互斥 rc2）＋pushci×3（P1 --dry-run api_calls/git-caller 双流水空／P2 内容红零 rerun heal.rounds 空＋api 零 POST／P3 heal 帽尽停 --max-heal 3 恰 3 发）＋cw_sentinel×2（S1 缺省 report-only actions 账空／S2 --on-red-preset 缺 --emit rc2）＋registry_union×2（R1 干跑 --out 给而不落／R2 --apply 才落刀＋无 --out rc2）＋cure_applier×2（C1 干跑目标件 md5 恒同／C2 --apply 才落刀＋幂等断言败 IDEMPOTENCE-FAIL rc1 零字节动）。全 tmp fixture＋injector 罐装零真网络零真仓零真编译；红＝护栏破 exit 1 响亮列破口 file:line |
 | 56 | `t_baseline_diff` | `tools/baseline_diff.py`（堵账基线对比器·两份 unclog --audit 基线→三清单＋score_delta·verdict 四态·工装席铸件） | `tests/test_baseline_diff.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `BASELINE-DIFF-SELFTEST PASS` 冻结标记（六矢量①improved 红减②degraded 红增＋墙因变③stable＋timing 不入对比＋json/md 幂等字节恒同＋零写输入④incomparable 候选集异＋非 audit 形⑤md 输出⑥CLI 四码＋形坏拒判零出账——tmp 合成基线由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／缺两账=2／缺账文件=9）。零网络零编译零触真仓 |
+
+## v46 红事件路由与注册册卫生审计轮补记（20261112·用例 57–58·集成席）
+
+> 57/58 两器均为本轮铸席铸件（tools/red_dispatch.py·tools/registry_audit.py 在
+> 盘·套件挂接与最小自测壳均归集成席缺壳自补）。两例经 run_tests.sh 在跑全绿
+> 实证（本轮集成席全绿验证·见 submit 账）。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 57 | `t_red_dispatch` | `tools/red_dispatch.py`（红事件路由器·哨红事件→动作预设路由·三档 preset report-only/suggest/auto·缺省零执行·auto 显式才代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·五路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修） | `tests/test_red_dispatch.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `RED-DISPATCH-SELFTEST PASS` 冻结标记（十二矢量①路由表全族覆盖②占位替换③auto 执行实证④state 防重⑤cooldown⑥report-only 缺省零执行⑦JSONL stdin 多事件⑧fail-loud 面⑨rc≠0 不改退出码⑩A 族 fix 清单＋C 族定令⑪确定性⑫整体单对象兜底——tmp 假仓根标记文件实证·由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／--dry-run 缺 auto 档=2／事件文件缺=9）。零网络零编译零触真仓 |
+| 58 | `t_registry_audit` | `tools/registry_audit.py`（注册册卫生审计器·order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·v35 判例代码化） | `tests/test_registry_audit.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `REGISTRY-AUDIT-SELFTEST PASS` 冻结标记（五判矢量：四账判类全谱 total=19／处方保首＋77c2b9a8 md5 冻结向量＋占位／只读实证双册与 live 树前后 md5 恒同＋--apply 不存在 rc2／确定性重跑字节恒同／git 直读 tmp clone＋坏 ref 9／CLI 四码——tmp 合成 v35 真账形态由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／无输入面=2／半册=2／缺册=9）。零网络零编译零触真仓 |

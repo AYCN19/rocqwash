@@ -60,7 +60,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（56 例）/ CI 工作流占位 — test suite (56 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（58 例）/ CI 工作流占位 — test suite (58 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -213,6 +213,24 @@ rocqwash/
 > 铸）；push_gate 推窗四判据×pushci preflight 发射闸双门归一评估
 > docs/push-gate-dual-door-assessment-v1.0-20261111.md（只评估零代码变更·
 > 护栏席铸）。自测套件保持 56 例（52 过/4 例正本缺卷让席）。
+> v46 增补（20261112·红事件路由与注册册卫生审计集成轮·三席铸＋集成席收口）：
+> `tools/red_dispatch.py` 红事件路由器（哨红事件→动作预设路由·三档 preset
+> report-only/suggest/auto·**缺省零执行**·suggest 出可复制命令块·auto 显式
+> 才代跑 60s 帽 rc≠0 响亮入账不改退出码·防重 state＋cooldown·五路由全挂
+> 既有 cw.sh 路由零新引擎：B/E 族→pushci 重派·A 族内容红禁代修出 fix 清单·
+> C 族→doctor·blocking→unclog·build-signal→wash-shape·schema
+> rocqwash-red-dispatch/1·铸席铸）＋`tools/registry_audit.py` 注册册卫生
+> 审计器（order.txt/_CoqProject 双册**只读**四账出账：重复行/锚撞文本/顺序
+> 号形/形怪/缺锚/孤儿/live 拓扑引用＋`--fix-plan` 确定性处方零写盘·
+> **`--apply` 不存在**留执行器·键式/锚正典直用 registry_union 零重造·病灶
+> 是数据恒 exit 0·schema rocqwash-registry-audit/1·铸席铸·真仓活跑前置
+> 注记承 v40 基线规程律 examples/baselines/README.md「真树活跑归主会话·席面
+> 只证器级」）＋`docs/评估-push_gate推窗四判据与pushci归一-20261111.md`
+> 推窗四判据×pushci 归一可行性评估（只评估零代码变更·评估席铸·与 v41
+> 护栏席同题独立成文两判互证·裁决同为保持双门并立）；`cw.sh` 入口扩至
+> 二十三工具（dispatch/audit 两路由·四处同步·评估文档为文档无路由）；
+> 自测套件扩至 58 例（t_red_dispatch/t_registry_audit 两例最小自测壳·
+> 缺壳集成席自补）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。

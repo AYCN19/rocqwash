@@ -137,6 +137,18 @@
 #         incomparable/md 输出/CLI 四码＋形坏拒判由铸席自证）＋--help 冒烟
 #         ＋退出码口径抽验 2/2/9·零网络零编译零触真仓·20261111 v40 集成席
 #         缺壳自补挂接）
+#       tools/red_dispatch.py 红事件路由器（tests/test_red_dispatch.py·
+#         最小自测壳三判：--selftest 冻结标记 RED-DISPATCH-SELFTEST PASS
+#         （十二矢量路由全族/占位/auto 执行实证/state 防重/cooldown/
+#         report-only 零执行/stdin 多事件/fail-loud/rc≠0 不改退出码/fix 清单/
+#         确定性/单对象兜底由铸席 --selftest 自证）＋--help 冒烟＋退出码
+#         口径抽验 2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补
+#         挂接）
+#       tools/registry_audit.py 注册册卫生审计器（tests/test_registry_audit.py·
+#         最小自测壳三判：--selftest 冻结标记 REGISTRY-AUDIT-SELFTEST PASS
+#         （四账判类全谱/处方保首＋md5 冻结向量/只读实证/确定性/git 直读/
+#         CLI 四码由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验
+#         2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补挂接）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -225,7 +237,9 @@ t_dual_scan \
  t_relay_e2e \
  t_doclint \
  t_destructive_matrix \
- t_baseline_diff"
+ t_baseline_diff \
+ t_red_dispatch \
+ t_registry_audit"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -617,7 +631,7 @@ t_destructive_matrix() {
 
 t_baseline_diff() {
   # 20261111 v40 工装席铸件·集成席缺壳自补挂接：堵账基线对比器（tools/
-  # baseline_diff.py·两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/
+  # baseline_diff.py·两份 unclog --audit 基线 argv 序=旧→新→new_blocks/
   # resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/
   # stable/incomparable·账面自洽预检拒手编·候选面四元组比对·timing 段不入
   # 对比·schema rocqwash-baseline-diff/1·tests/test_baseline_diff.py 最小自测壳
@@ -625,6 +639,30 @@ t_baseline_diff() {
   # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/缺参=2·
   # 缺账文件=9·本集成席实跑验证）·零网络零编译零触真仓）
   "$PY" -B "$REPO/tests/test_baseline_diff.py"
+}
+
+t_red_dispatch() {
+  # 20261112 v46 铸席铸件·集成席缺壳自补挂接：红事件路由器（tools/
+  # red_dispatch.py·哨红事件→动作预设路由·三档 preset report-only/suggest/
+  # auto·缺省零执行·auto 显式代跑 60s 帽 rc≠0 入账不改退出码·防重 state
+  # ＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·
+  # schema rocqwash-red-dispatch/1·tests/test_red_dispatch.py 最小自测壳
+  # 三判：--selftest 冻结标记 RED-DISPATCH-SELFTEST PASS（十二矢量由铸席
+  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/dry-run
+  # 误档=2·事件文件缺=9·本集成席实跑验证）·零网络零编译零触真仓）
+  "$PY" -B "$REPO/tests/test_red_dispatch.py"
+}
+
+t_registry_audit() {
+  # 20261112 v46 铸席铸件·集成席缺壳自补挂接：注册册卫生审计器（tools/
+  # registry_audit.py·order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/
+  # 顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply
+  # 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·
+  # schema rocqwash-registry-audit/1·tests/test_registry_audit.py 最小自测壳
+  # 三判：--selftest 冻结标记 REGISTRY-AUDIT-SELFTEST PASS（五判矢量由铸席
+  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无输入面/
+  # 半册=2·缺册=9·本集成席实跑验证）·零网络零编译零触真仓）
+  "$PY" -B "$REPO/tests/test_registry_audit.py"
 }
 
 # ---------- 汇总执行 ----------
