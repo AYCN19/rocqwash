@@ -47,15 +47,16 @@
 #         零误报；真树抽查经 ROCWASH_TREE_SAMPLES 环境门控·缺省跳过不充红）
 #       wash/cure_pack.json＋cure_applier.py 消费位治愈正典包五式（tests/test_cure_pack.py·
 #         十一判·W15 工具化②：五式触发/幂等/门控自检＋fixture 干跑-apply-二次零变更＋
-#         cure_examples.v 编译 rc=0（ROCWASH_ROCQ 门控·cpu_guard 包裹）＋不透明
-#         reflexivity 负证 rc!=0）
+#         cure_examples.v 编译 rc=0（ROCWASH_ROCQ 门控·cpu_guard 包裹·v47 ⑧A 案
+#         总开关缺省探测自动跑）＋不透明 reflexivity 负证 rc!=0）
 #       verify/erasure_classifier.py 擦除位分类器六簇（tests/test_erasure_classifier.py·
 #         十三判·W15 工具化③：六簇判定/coq_ 前缀/多行 inner-component/premise 位/
 #         CAPTURE 交叉对拍/resolve 状态；真件回放经 ROCWASH_ERASURE_MLI/SCAN 门控）
 #       wash/probe_engine.py 批量闭包相容探针引擎（tests/test_probe_engine.py·九节·
 #         v30 工具化①·承 W13 probe_batch.py：stub 全链 rc 三分 WASHABLE/BORN-CLEAN/
 #         RED-MISSING_LIB·NO-SRC/TIMEOUT 124·resume 幂等同账字节恒同·guard 包裹
-#         rc 真取·RED 缺列 RC0·CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控缺省 SKIP）
+#         rc 真取·RED 缺列 RC0·CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控·套件缺省
+#         探测自动跑（v47 ⑧A 案）·env 缺且 9.3 缺卷仍 SKIP）
 #       tools/chain_graph.py 多账合并链根图（tests/test_chain_graph.py·七节·
 #         v30 工具化②·承 W25 w25_merge_ledgers.py：双形通吃/后批覆盖/batches 累积/
 #         链根自身可洗性三分/missing 双源/TOP 榜排序截断＋确定性字节恒同/CLI 四码）
@@ -149,6 +150,12 @@
 #         （四账判类全谱/处方保首＋md5 冻结向量/只读实证/确定性/git 直读/
 #         CLI 四码由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验
 #         2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补挂接）
+#       tools/registry_fix.py 注册册处方执行器（tools/registry_fix.py --selftest
+#         直挂八矢量：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑
+#         字节恒同②--apply 12 重复块→0＋断言三过＋md5 账对盘③77c2b9a8 锚刷
+#         md5 冻结向量＋同输同出④注入炸点回滚⑤自然炸点 A-fix-2 回滚⑥staging
+#         炸零写盘⑦CLI 四码⑧落刀确定性——registry_audit --fix-plan 处方逐条
+#         落刀·缺省干跑·20261112 v47 集成席直挂）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -175,6 +182,37 @@ if [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ] \
    && [ -f "$CANON_SET/scripts/gates/gate7_extract_run.py" ] \
    && [ -x "$CANON_CW/Live/toolchain/opam/live/bin/rocq" ]; then
   CANON=1
+fi
+
+# ---------- 门控编译弧总开关（v47 波⑧A 案·缺省探测 20261112）----------
+# env 已设则尊（外部 clone 显式指认不受扰）；否则探测在卷正典/代役路径即 export
+# ——诸闸位判据语义不变（在即跑·缺才 SKIP），只翻缺省面：
+#   ROCWASH_ROCQ        t_cure_pack 编译 check 段＋t_probe_engine 真 rocq 节
+#                       （探测 9.3 多路器·v43 第三发 27/27 同源实证 更新账.md:3753）
+#   GATE7_PROBE_SCRIPT  t_gate7_wrapper（Set 仓 gate7 正本·judge13 缺省解析同路径）
+#   GATE6_SCRIPT        t_verify_gate6＋t_gate6_born_wrapper census 段（Set 仓 gate6 正本）
+#   BORN_WORLD_ROCQ     t_gate6_born_wrapper born 段（born_world.sh:114 存在性闸·
+#                       该测试零编译不触代差语义；CW Live rocq 缺卷→9.3 代役）
+GATE93_ROCQ=/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/rocq
+if [ -z "${ROCWASH_ROCQ:-}" ] && [ -x "$GATE93_ROCQ" ]; then
+  export ROCWASH_ROCQ="$GATE93_ROCQ"
+  echo "（探测注记）ROCWASH_ROCQ 未设→9.3 多路器在卷·缺省指认 ${ROCWASH_ROCQ}（⑧A 案）"
+fi
+if [ -z "${GATE7_PROBE_SCRIPT:-}" ] && [ -f "$CANON_SET/scripts/gates/gate7_extract_run.py" ]; then
+  export GATE7_PROBE_SCRIPT="$CANON_SET/scripts/gates/gate7_extract_run.py"
+  echo "（探测注记）GATE7_PROBE_SCRIPT 未设→Set 仓 gate7 正本在卷·缺省指认（t_gate7_wrapper 解锁）"
+fi
+if [ -z "${GATE6_SCRIPT:-}" ] && [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ]; then
+  export GATE6_SCRIPT="$CANON_SET/scripts/gates/gate6_statement_census.py"
+  echo "（探测注记）GATE6_SCRIPT 未设→Set 仓 gate6 正本在卷·缺省指认（t_verify_gate6/t_gate6_born_wrapper census 段解锁）"
+fi
+if [ -z "${BORN_WORLD_ROCQ:-}" ]; then
+  if [ -x "$CANON_CW/Live/toolchain/opam/live/bin/rocq" ]; then
+    export BORN_WORLD_ROCQ="$CANON_CW/Live/toolchain/opam/live/bin/rocq"
+  elif [ -x "$GATE93_ROCQ" ]; then
+    export BORN_WORLD_ROCQ="$GATE93_ROCQ"
+    echo "（探测注记）BORN_WORLD_ROCQ 未设且 CW Live rocq 缺卷→9.3 多路器代役（t_gate6_born_wrapper 解锁·该测试零编译仅存在性闸）"
+  fi
 fi
 
 PASS=0; FAIL=0; SKIP=0; TOTAL=0; REDS=""; SKIPS=""
@@ -239,7 +277,8 @@ t_dual_scan \
  t_destructive_matrix \
  t_baseline_diff \
  t_red_dispatch \
- t_registry_audit"
+ t_registry_audit \
+ t_registry_fix"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -449,7 +488,8 @@ t_scan_v4_token() {
 
 t_cure_pack() {
   # W15 工具化②：消费位治愈正典包五式（applier 自检＋pack 完整性＋干跑/apply/
-  # 幂等；编译验证 ROCWASH_ROCQ 门控且经 tools/cpu_guard.sh 包裹·缺省跳过）
+  # 幂等；编译验证 ROCWASH_ROCQ 门控且经 tools/cpu_guard.sh 包裹·套件缺省探测
+  # 自动跑（v47 ⑧A 案·run_tests.sh 总开关）·env 缺且 9.3 缺卷仍 SKIP）
   "$PY" -B "$REPO/tests/test_cure_pack.py"
 }
 
@@ -462,7 +502,8 @@ t_erasure_classifier() {
 t_probe_engine() {
   # v30 工具化①：批量闭包相容探针引擎（承 W13 probe_batch.py·tests/
   # test_probe_engine.py 九节：stub 全链 rc 三分/NO-SRC/TIMEOUT/resume 幂等/
-  # guard 包裹 rc 真取/RED 缺列/CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控缺省 SKIP·
+  # guard 包裹 rc 真取/RED 缺列/CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控·套件缺省
+  # 探测自动跑（v47 ⑧A 案）·env 缺且 9.3 缺卷仍 SKIP·
   # 零触真仓零网络）
   "$PY" -B "$REPO/tests/test_probe_engine.py"
 }
@@ -663,6 +704,16 @@ t_registry_audit() {
   # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无输入面/
   # 半册=2·缺册=9·本集成席实跑验证）·零网络零编译零触真仓）
   "$PY" -B "$REPO/tests/test_registry_audit.py"
+}
+
+t_registry_fix() {
+  # 20261112 v47 集成席直挂：注册册处方执行器（tools/registry_fix.py·
+  # registry_audit --fix-plan 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD
+  # skip·缺省干跑·--apply 落刀后断言三判（dup 零残留/锚撞零增/孤儿不增）炸即
+  # 回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema
+  # rocqwash-registry-fix/1——器 --selftest 八矢量全 canned tmp fixture·
+  # 零网络零编译零触真仓）
+  "$PY" -B "$REPO/tools/registry_fix.py" --selftest
 }
 
 # ---------- 汇总执行 ----------

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器（共二十三）
+# cw.sh — rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器＋v47 一器（共二十四）
 #         统一入口（repo 根·bash 3.2 兼容）
 # cw.sh — unified entry for the rocqwash v29-v32 seven-tool wave plus the
 #         20261111 five-tool wave plus the v37 three-tool wave plus the v38
 #         aggregate doctor, the v39 doc-lint plus netname-normalize/select-audit routing fixes plus the v40
 #         baseline-diff, the v45 render-events ledger renderer plus the v46
-#         red-dispatch and registry-audit pair, twenty-three tools in total
+#         red-dispatch and registry-audit pair plus the v47 registry-fix
+#         prescription applier, twenty-four tools in total
 #         (repo root, bash 3.2)
 #
 # 用法 Usage: bash cw.sh <tool> [args...]
@@ -70,6 +71,9 @@
 #   audit       注册册卫生审计器（双册只读四账＋确定性处方·--apply 不存在）
 #                                                    -> tools/registry_audit.py
 #               cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
+#   registry-fix 注册册处方执行器（audit fix-plan 逐条落刀·缺省干跑）
+#                                                    -> tools/registry_fix.py
+#               cw.sh registry-fix --audit-json AUDIT.json --order ORDER.txt --project _CoqProject [--anchor-src DIR] [--json REPORT.json] [--apply] [--work-dir DIR]
 #   help        本帮助（help <tool> = 该工具一行提示）
 #
 # 路由契约 Routing contract:
@@ -96,6 +100,9 @@
 #      audit 同形：0=出账（病灶是数据·count>0 仍 0·响亮 stdout）；2=用法错
 #      （形参咬合/无输入面/半册）；9=输入缺（册件/git show/live-src/
 #      anchor-src 缺）。
+#      registry-fix 同形：0=干跑出账或 --apply 落盘＋断言三过；2=用法错（schema
+#      不合/缺 fix_plan/同参破/条目缺键/AssertBlast 断言炸——已回滚则报告带
+#      证据）；9=输入缺（audit JSON/双册/audit 器/anchor-src 目录缺）。
 #   4. bash 3.2 兼容（无关联数组、无 bash4+ 特性）；只读路由层，自身零写盘。
 #
 # 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
@@ -113,7 +120,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器统一入口（二十三工具·bash 3.2 兼容）
+cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器＋v40 一器＋v45 一器＋v46 两器＋v47 一器统一入口（二十四工具·bash 3.2 兼容）
 
 用法 Usage: bash cw.sh <tool> [args...]
 
@@ -177,6 +184,9 @@ cw.sh — rocqwash v29-v32＋20261111 五工具＋v37 三器＋v38 一器＋v39 
   audit       注册册卫生审计器（双册只读四账＋确定性处方·--apply 不存在）
                                                    -> tools/registry_audit.py
               cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
+  registry-fix 注册册处方执行器（audit fix-plan 逐条落刀·缺省干跑）
+                                                   -> tools/registry_fix.py
+              cw.sh registry-fix --audit-json AUDIT.json --order ORDER.txt --project _CoqProject [--anchor-src DIR] [--json REPORT.json] [--apply] [--work-dir DIR]
   help        本帮助（help <tool> = 该工具一行提示）
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  其余=各工具自身口径透传
@@ -213,6 +223,7 @@ hint_for() {  # $1=tool
     baseline-diff) echo "cw.sh baseline-diff OLD.json NEW.json [--json out.json] [--md out.md]   # 堵账基线对比器（两份 unclog --audit 堵账基线 argv 序=旧→新→new_blocks/resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/stable/incomparable·账面自洽预检拒手编·timing 不入对比·红是数据非器红）-> tools/baseline_diff.py" ;;
     dispatch)    echo "cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]   # 红事件路由器（哨红事件→动作预设·三档 preset report-only 缺省零执行/suggest 复制块/auto 显式代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·红是数据非器红）-> tools/red_dispatch.py" ;;
     audit)       echo "cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]   # 注册册卫生审计器（order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据 exit 0）-> tools/registry_audit.py" ;;
+    registry-fix) echo "cw.sh registry-fix --audit-json AUDIT.json --order ORDER.txt --project _CoqProject [--anchor-src DIR] [--json REPORT.json] [--apply] [--work-dir DIR]   # 注册册处方执行器（registry_audit --fix-plan 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD skip·缺省干跑·--apply 落刀后断言三判炸即回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合）-> tools/registry_fix.py" ;;
     *) return 1 ;;
   esac
 }
@@ -256,12 +267,13 @@ case "${1:-}" in
   baseline-diff) shift; run_tool baseline-diff "tools/baseline_diff.py"     "$@" ;;
   dispatch)    shift; run_tool dispatch    "tools/red_dispatch.py"          "$@" ;;
   audit)       shift; run_tool audit       "tools/registry_audit.py"        "$@" ;;
+  registry-fix) shift; run_tool registry-fix "tools/registry_fix.py"        "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit）" >&2
+        echo "cw.sh help: 未知工具 unknown tool: $2（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix）" >&2
         exit 2
       fi
     fi
@@ -269,7 +281,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|help）" >&2
+    echo "cw.sh: 未知工具 unknown tool: $1（合法 legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|help）" >&2
     usage >&2
     exit 2 ;;
 esac

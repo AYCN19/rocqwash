@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 58 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 59 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（58 例）
+## 覆盖面（59 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -213,3 +213,16 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 58 过 / 1 红 / 
 |---|------|------|------|
 | 57 | `t_red_dispatch` | `tools/red_dispatch.py`（红事件路由器·哨红事件→动作预设路由·三档 preset report-only/suggest/auto·缺省零执行·auto 显式才代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·五路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修） | `tests/test_red_dispatch.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `RED-DISPATCH-SELFTEST PASS` 冻结标记（十二矢量①路由表全族覆盖②占位替换③auto 执行实证④state 防重⑤cooldown⑥report-only 缺省零执行⑦JSONL stdin 多事件⑧fail-loud 面⑨rc≠0 不改退出码⑩A 族 fix 清单＋C 族定令⑪确定性⑫整体单对象兜底——tmp 假仓根标记文件实证·由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／--dry-run 缺 auto 档=2／事件文件缺=9）。零网络零编译零触真仓 |
 | 58 | `t_registry_audit` | `tools/registry_audit.py`（注册册卫生审计器·order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·v35 判例代码化） | `tests/test_registry_audit.py` 最小自测壳三判（缺壳由本集成席自补）：--selftest rc=0 且含 `REGISTRY-AUDIT-SELFTEST PASS` 冻结标记（五判矢量：四账判类全谱 total=19／处方保首＋77c2b9a8 md5 冻结向量＋占位／只读实证双册与 live 树前后 md5 恒同＋--apply 不存在 rc2／确定性重跑字节恒同／git 直读 tmp clone＋坏 ref 9／CLI 四码——tmp 合成 v35 真账形态由铸席 --selftest 自证）／--help rc=0／退出码口径抽验 2/2/9（--bogus=2／无输入面=2／半册=2／缺册=9）。零网络零编译零触真仓 |
+
+## v47 门控编译弧翻绿与注册册处方执行器轮补记（20261112·用例 59·集成席）
+
+> 门控编译弧总开关（路线图④⑧A 案）已入 run_tests.sh（翻绿席铸·缺省探测四路径
+> ROCWASH_ROCQ/GATE7_PROBE_SCRIPT/GATE6_SCRIPT/BORN_WORLD_ROCQ·env 已设则尊·
+> 诸闸位判据语义零改动·env 缺且缺卷仍 SKIP）——门控弧两例（t_cure_pack 编译
+> check 段/t_probe_engine 真 rocq 节）本在册恒跑，翻绿面以套件实跑 SKIP 现势为准；
+> t_quad8_check 系四仓副本群缺卷族（另族）不在本案。59 例为集成席直挂
+> （tools/registry_fix.py 在库·器 --selftest 八矢量全 canned tmp fixture·零触真仓）。
+
+| # | 用例 | 被测 | 判据 |
+|---|------|------|------|
+| 59 | `t_registry_fix` | `tools/registry_fix.py`（注册册处方执行器·registry_audit `--fix-plan` 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD skip·**缺省干跑**·`--apply` 落刀后断言三判炸即回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema `rocqwash-registry-fix/1`） | 器 `--selftest` 直挂八矢量 rc=0 且含 `REGISTRY-FIX-SELFTEST PASS` 冻结标记：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑字节恒同②--apply 12 重复块→0＋断言三过（dup 零残留/锚撞零增/孤儿不增）＋md5 账对盘③77c2b9a8 锚刷 md5 冻结向量＋同输同出（registry_union CLI 逐字节恒同）④注入炸点 INJECT_ENV=post-write 回滚⑤自然炸点 A-fix-2 新撞锚回滚⑥staging 炸零写盘（work-dir 不建）⑦CLI 四码（help0/bogus2/无输入2/缺audit9/缺册9/坏schema2/无fix_plan2/同参破2/缺anchor-src9）⑧落刀确定性（双 fresh 夹具册面 bytes＋逐条 md5 账恒同）。全 canned tmp fixture·零网络零编译零触真仓 |

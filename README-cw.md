@@ -1,6 +1,6 @@
 # cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
 
-`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器（doc-lint/netname-normalize/select-audit）＋v40 一器＋v45 一器＋v46 两器（dispatch/audit·共二十三个）的**一键调用入口**（repo 根）：
+`cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器（doc-lint/netname-normalize/select-audit）＋v40 一器＋v45 一器＋v46 两器（dispatch/audit）＋v47 一器（registry-fix·共二十四个）的**一键调用入口**（repo 根）：
 
 ```
 bash cw.sh <tool> [args...]
@@ -39,6 +39,7 @@ bash cw.sh <tool> [args...]
 | `baseline-diff` | `tools/baseline_diff.py` | 堵账基线对比器（两份 unclog `--audit` 基线 argv 序=旧→新→`new_blocks`/`resolved_blocks`/`persistent` 三清单＋`score_delta`·verdict 四态 `improved\|degraded\|stable\|incomparable`·账面自洽预检拒手编·timing 不入对比·红是数据非器红·schema `rocqwash-baseline-diff/1`·入仓规程见 [examples/baselines/README.md](examples/baselines/README.md)） | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
 | `dispatch` | `tools/red_dispatch.py` | 红事件路由器（哨红事件→动作预设·三档 preset `report-only\|suggest\|auto`·**缺省 report-only 零执行**·suggest 出可复制命令块·auto 显式才代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·schema `rocqwash-red-dispatch/1`） | `bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json` |
 | `audit` | `tools/registry_audit.py` | 注册册卫生审计器（order.txt/_CoqProject 双册**只读**四账出账：重复行/锚撞文本/顺序号形/形怪/缺锚/孤儿/live 拓扑引用＋`--fix-plan` 确定性处方零写盘·**`--apply` 不存在**·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·schema `rocqwash-registry-audit/1`·真仓活跑前置注记（v40 基线规程同律 [examples/baselines/README.md](examples/baselines/README.md)：真树活跑归主会话·席面只证器 selftest/夹具级）） | `bash cw.sh audit --order order.txt --project _CoqProject --live-src src/ --fix-plan --json audit.json` |
+| `registry-fix` | `tools/registry_fix.py` | 注册册处方执行器（`audit --fix-plan` 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD skip·**缺省干跑**·`--apply` 落刀后断言三判（dup 零残留/锚撞零增/孤儿不增）炸即回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema `rocqwash-registry-fix/1`） | `bash cw.sh registry-fix --audit-json audit.json --order order.txt --project _CoqProject --anchor-src src/ --json fix.json` |
 | `help` | — | 总帮助；`help <tool>` 看该工具一行提示 | `bash cw.sh help probe` |
 
 典型流水线（发现→治愈→复核）：
@@ -63,6 +64,20 @@ bash cw.sh triage --repo ORG/REPO --run ID --logs               # 4 verdict≠su
 > ＋裸 `git push`。pushci 的 preflight 发射闸只复跑 doctor＋net-probe 两闸（可选
 > `--pre-scan-gate4` 头注预扫）——套件绿/behind=0 等推窗四判据不在此册，过闸
 > 纪律仍归 `certify/push_gate.py`。
+
+注册册卫生闭环（audit→fix·两器两态·干跑先行·v47）：
+
+```
+bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ --fix-plan --json audit.json   # 1 只读审计出四账＋确定性 fix-plan 处方（零写盘）
+bash cw.sh registry-fix --audit-json audit.json --order order.txt --project _CoqProject --anchor-src src/ --json plan.json   # 2 干跑预演（逐条 md5 账＋skip 清单·零写盘·断言 NOT-RUN）
+bash cw.sh registry-fix --audit-json audit.json --order order.txt --project _CoqProject --anchor-src src/ --apply --json fixed.json   # 3 落刀（断言三判：dup 零残留/锚撞零增/孤儿不增·炸即回滚）
+bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ --json after.json   # 4 复审对账（duplicates 应清零）
+```
+
+> `--audit-json` 须为同参 `audit --fix-plan` 产出（处方行号系绑定被审册面·
+> 异册即用法错 exit 2）；ORPHAN-ADD 缺模板序号/缺 md5 与 anchor-missing 病灶
+> 归 skip 清单如实直传人工分判（禁机械造锚）；audit 计数>0 恒 exit 0（红是
+> 数据非器红）。真树 `--apply` 活跑归主会话（器 selftest/夹具级全验在册）。
 
 ### 退出码
 
@@ -222,7 +237,8 @@ bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json
 rocqwash v29-v32 waves plus the five tools added on 20261111 plus the three
 v37 tools plus the v38 aggregate doctor plus the v39 trio (doc-lint plus
 netname-normalize/select-audit) plus the v40 baseline-diff plus the v45
-render-events plus the v46 dispatch/audit pair (twenty-three in total). It
+render-events plus the v46 dispatch/audit pair plus the v47 registry-fix
+prescription applier (twenty-four in total). It
 lives at the repository root:
 
 ```
@@ -287,6 +303,14 @@ collisions / seq-form / malformed / missing anchors / orphans / live topology �
 plus a `--fix-plan` deterministic prescription with zero writes; `--apply`
 does not exist; keys and the anchor canon are reused from registry_union,
 zero re-invention; findings are data, always exit 0), plus
+the v47 addition `registry-fix`→`tools/registry_fix.py` (registry
+prescription applier: executes the `audit --fix-plan` prescription item by
+item in three prescription kinds — DEDUP keep-first / anchor re-stamp /
+ORPHAN-ADD skip; dry-run by default; `--apply` writes with three post-write
+assertions (duplicates zero-residue / anchor-collision text zero-addition /
+orphans non-increasing) and rolls back on any blast; staging is fully
+in-memory zero-write; same-parameter discipline binds the audit JSON to the
+applier's `--order`/`--project` verbatim), plus
 `help`. The v37 tools share a
 common workflow-interface discipline (once/loop dual mode, deterministic
 JSON reports + JSONL event streams, `--injector` offline canned testing,

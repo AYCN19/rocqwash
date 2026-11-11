@@ -60,7 +60,7 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（58 例）/ CI 工作流占位 — test suite (58 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（59 例）/ CI 工作流占位 — test suite (59 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
@@ -231,6 +231,24 @@ rocqwash/
 > 二十三工具（dispatch/audit 两路由·四处同步·评估文档为文档无路由）；
 > 自测套件扩至 58 例（t_red_dispatch/t_registry_audit 两例最小自测壳·
 > 缺壳集成席自补）。
+> v47 增补（20261112·门控编译弧翻绿与注册册处方执行器轮·三席铸＋集成席收口）：
+> 门控编译弧总开关翻绿（路线图候选④·任务书编号 ⑧A 案·两路径取 A＝指 9.3
+> 多路器 `mac93_install_work/opam93/rocq93/bin/rocq`·v43 第三发 27/27 同源
+> 实证）——`tests/run_tests.sh` 总开关缺省探测四路径（env 已设则尊·外部 clone
+> 显式指认不受扰）：`ROCWASH_ROCQ`→t_cure_pack 编译 check 段＋t_probe_engine
+> 真 rocq 节；`GATE7_PROBE_SCRIPT`/`GATE6_SCRIPT`→Set 仓 gate7/gate6 正本在卷
+> 指认解锁 t_gate7_wrapper/t_verify_gate6；`BORN_WORLD_ROCQ`→CW Live rocq 缺卷
+> 9.3 代役解锁 t_gate6_born_wrapper——诸闸位判据语义零改动（在即跑·缺才 SKIP·
+> env 缺且缺卷仍 SKIP）只翻缺省面；t_quad8_check 系四仓副本群缺卷族（另族）
+> 不在本案；翻绿是「现役世界代际」绿·非 9.1 复绿（诚实记界承 v43 9.3 门控弧
+> 27/27 同口径）。＋`tools/registry_fix.py` 注册册处方执行器（registry_audit
+> `--fix-plan` 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD skip·**缺省
+> 干跑**·`--apply` 落刀后断言三判炸即回滚·staging 全内存零写盘·schema
+> `rocqwash-registry-fix/1`·真树 `--apply` 候令不入本波）；＋哨真仓首战
+> （`tools/cw_sentinel.py --loop` 真实战役窗口挂哨·JSONL 事件流 events=33·
+> v46 红事件路由消费面实战）；`cw.sh` 入口扩至二十四工具（registry-fix 路由·
+> 四处同步）；自测套件扩至 59 例（t_registry_fix 直挂器 --selftest 八矢量·
+> 集成席直挂）。
 > 组件级细节见 [docs/zh/architecture.md](docs/zh/architecture.md) /
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
