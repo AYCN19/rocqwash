@@ -86,7 +86,10 @@
 #         零网络零写盘；selftest〔十〕gate2-only E 变体矢直挂
 #         tests/fixtures/ci_triage_gate2_only_{cancelled,failure}.json
 #         真形两件（v50 20261112 工装席入谱·retro 台账 run#7/#10 誊录·
-#         fixtures 九件套＝六件套＋Main 形＋gate2-only 两件））
+#         fixtures 九件套＝六件套＋Main 形＋gate2-only 两件；v51 20261112
+#         集成席登记：复核台账 token 二分限形——#10 认证态形转正 UNREC·
+#         banner-absent 形保持 E·两 fixture 增 canned job_logs 真执行行
+#         誊录＋dump 行滤除矢＋五 token 在册矢）
 #       tools/net_probe.py 网络窗探针（tests/test_net_probe.py·最小自测壳两判：
 #         --selftest 冻结标记 NET-PROBE-SELFTEST PASS＋--help 冒烟·零网络零写盘）
 #       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
@@ -100,8 +103,11 @@
 #         assessment-v1.0-20261111.md 只评估零代码变更）
 #       tools/cw_sentinel.py 实时动态哨（tests/test_cw_sentinel.py·最小自测壳
 #         两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
-#         哨自身 --selftest 十三矢量 canned 注入零真网络零编译·v41 波⑨on-red
-#         双路同守卫/⑬预设表扩展五预设链式）
+#         哨自身 --selftest 十五矢量 canned 注入零真网络零编译·v41 波⑨on-red
+#         双路同守卫/⑬预设表扩展五预设链式·v51 波⑭韧性层传输层瞬断有界重试
+#         （--net-retries 退避 5s/15s/45s）＋loop 逐源 skip 宁跳轮不崩驻/
+#         ⑮监督壳部署形冒烟 examples/sentinel_supervisor.sh bash -n＋关键行
+#         静态断言零执行零网络）
 #       tools/wash_shape.py 洗形器·正典形五洗流水（tests/test_wash_shape.py·
 #         最小自测壳三判：--selftest 冻结标记 WASH-SHAPE-SELFTEST PASS
 #         十六判向量（plan/apply/幂等/锚/冻结红拒/CLI/--loop/确定性＋preset

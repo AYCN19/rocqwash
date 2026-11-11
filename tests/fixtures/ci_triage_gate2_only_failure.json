@@ -189,13 +189,16 @@
    ]
   }
  ],
+ "job_logs": {
+  "128320751675": "2026-11-07T17:18:49.5000000Z \u001b[36;1mif [ ! -f \"_chk_all.log\" ]; then echo \"GATE-BANNER-ABSENT _chk_all.log 不在盘——coqchk 未产出日志\"; exit 1; fi\u001b[0m\n2026-11-07T17:18:52Z [gate2] 日志=_chk_all.log mtime=2026-11-07T17:18:19Z（日志在盘）\n2026-11-07T17:18:52Z 判定=CLEAN(exit 0) Axioms段数=14 公理总数=0 日志完整=True\n2026-11-07T17:18:53Z GATE2-ATTEST-RED: 认证态覆盖断言不备\n2026-11-07T17:18:53Z R4 覆盖划分破: skipped∪sent != surface 或交集非空或面空\n2026-11-07T17:18:53Z appendix={present:false}\n"
+ },
  "_provenance": {
-  "source": "Main 全史 retro 实测台账 docs/retro-triage-Main仓全史-20261112.md §二主表 run#10（rocqwash-ci-triage/1 真形逐字段誊录·20261112）",
+  "source": "Main 全史 retro 实测台账 docs/retro-triage-Main仓全史-20261112.md §二主表 run#10（rocqwash-ci-triage/1 真形逐字段誊录·20261112）＋复核台账 docs/复核-UNREC-14事件-20261112.md §二 S6/§三-4 token 级真执行行誊录（20261112 二次增补）",
   "run_id": 42345007340,
   "job_id": 128320751675,
   "event": "push",
   "branch": "main",
-  "shape": "gate2-only 连坐形：唯 gate2 axioms sentinel 红·前置 build/coqchk 非 content 红·无其他红步（UNREC 六事件 #7/#8/#10/#20/#26 五发同构）",
-  "log_confirm": "该 job 日志未实抓（本席 --logs 真发对象为 run#7）·GATE-BANNER-ABSENT 词面如实不作断言"
+  "shape": "gate2-only 形·认证态红相（复核台账 §四-2 ②相）：唯 gate2 axioms sentinel 红·coqchk success 40398s 完走·parser CLEAN 公理=0·R4 覆盖划分破·appendix 缺——器判 UNRECOGNIZED（20261112 token 二分转正验收判·器判=复核判词·E 假阳性已清偿）",
+  "log_confirm": "复核台账 §二 S6/§三-6 raw log（job 128320751675·1.56MB）真执行行：日志在盘 17:18:52Z／判定=CLEAN 公理总数=0 17:18:52Z／GATE2-ATTEST-RED 17:18:53Z；GATE-BANNER-ABSENT 仅 dump 行（青色脚本回显·步内该分支实际未执行——复核台账 §三-2 证据陷阱原形·本 canned 件如实含 1 行 dump 供滤除矢验证）；R4 覆盖划分破/appendix={present:false} 自 artifact gate2_attest.json（ID 13583203422·§三-4）"
  }
 }

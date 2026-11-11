@@ -57,3 +57,29 @@ the Makefile designates `wash_engine.py` directly (wash/ now holds two generic
 entries — bare `cli wash` = exit 4 listing). SKIP = NOT-RUN,
 never a pass. Compile-ability of both .v files is **unverified** (no rocq on the
 authoring machine); proofs use prelude-only tactics.
+
+---
+
+## sentinel_supervisor.sh — 哨长驻监督壳（部署工件·v1.0 补 20261112）
+
+（中文）`sentinel_supervisor.sh` 是 `tools/cw_sentinel.py` 长驻（`--loop`）的**崩溃
+自动重启补偿壳**（正典部署形·自本机 /tmp 运行态版 1:1 泛化：重启帽／×2 指数退避／
+state 续接注记／定时收兵钩位留空·路径全参数化零硬编码绝对路径·自身退出码 0/1/2/9）。
+判例源＝v50 崩溃判例（哨长驻 round10 IncompleteRead 传输层断流崩·**state 零损失续接**：
+崩后重启 seen 幂等账咬合零重报）——部署正本＝`docs/ops-sentinel-长驻手册-v1.0-20261112.md`
+§1.6「监督壳部署形」（判例源／泛化点对照表／rc 分诊／部署命令形全表）。部署形冒烟
+（`bash -n`＋关键行 grep 断言·**非真跑**零执行零网络）入 `cw_sentinel --selftest`
+部署形矢。
+
+(English) `sentinel_supervisor.sh` is the **crash-auto-restart compensation shell**
+for the long-running sentinel (`tools/cw_sentinel.py --loop`) — canonical deployment
+form generalized 1:1 from the live /tmp runtime version (restart cap / ×2
+exponential backoff / state-continuation annotation / empty scheduled-withdrawal
+hook slot; fully path-parameterized, no hardcoded absolute paths; own exit codes
+0/1/2/9). Precedent: the v50 round-10 IncompleteRead transport-layer crash with
+**zero-loss state continuation** (seen idempotency account carried across restart,
+zero duplicate re-reporting). The deployment manual (precedent source, generalization
+table, rc triage, deploy command forms) is §1.6 of
+`docs/ops-sentinel-长驻手册-v1.0-20261112.md`; a **non-executing** smoke vector
+(`bash -n` + key-line grep assertions) lives in the deployment-form vector of
+`cw_sentinel --selftest`.

@@ -17,14 +17,22 @@
   E coqchk-skipped 签名 E-coqchk-skipped＝上传步红＋coqchk 步 skipped（＋gate2
     GATE-BANNER-ABSENT 日志确证）＝B 族变体·勿当内容红
     → action=rerun-after-stable-window。
-  E 变体（gate2-only 连坐形·20261112 Main retro 六事件证据人工指认入谱）＝
-    红步集 ⊆ {gate2＋上传族} 且纯 gate2 红步在册（gate2 名非上传名——防
-    「Upload artifact (gate2 ledger)」gate2 子串词面搭便误吞上传红）·前置
-    build/coqchk 非 content 红＝「coqchk 产物缺·gate2 连坐」（GATE-BANNER-ABSENT
-    同义·run#7 job 127903477736 日志 200 实测确证在册）＝E 族内变体
+  E 变体（gate2-only 连坐形·banner-absent 限形·20261112 Main retro 六事件证据
+    人工指认入谱＋20261112 复核台账 token 二分限形）＝红步集 ⊆ {gate2＋上传族}
+    且纯 gate2 红步在册（gate2 名非上传名——防「Upload artifact (gate2 ledger)」
+    gate2 子串词面搭便误吞上传红）·前置 build/coqchk 非 content 红，结论位校验
+    （复核台账 §四-2 token 二分·dump 行滤除后真执行 token 为准）：
+    ①GATE2-ATTEST-RED/判定=CLEAN 真执行 token 在＝认证态红形（run#10 判例：
+    coqchk success 40398s·parser CLEAN 公理=0·R4 覆盖划分破）→ E 变体不成立·
+    留 UNRECOGNIZED 不充谱（人工指认优先）；②coqchk 步 success＝完走·非
+    「coqchk 产物缺」连坐机理（分叉判据件二·无日志时器面唯一旁证）→ 同留
+    UNRECOGNIZED；③GATE-BANNER-ABSENT 真执行行在＝banner-absent 连坐 E
+    （run#7/8/20/26 四发·log 确证第三件入账）；④无日志且 coqchk 未完走＝
+    步名规则维持 E（banner token 未确证·如实注记）。
     → family=E-coqchk-skipped·action=rerun-after-stable-window。
     判类谱序 UNRECOGNIZED>C>A>E>B>D 不动（E 变体在 E 内·出处六事件中
-    #7/#8/#10/#20/#26 五发 gate2-only 形入谱·#3 runner 失联形仍谱外不充谱）。
+    #7/#8/#20/#26 四发 banner-absent 形入谱·#10 认证态形转正留 UNREC＝
+    复核判词·#3 runner 失联形仍谱外不充谱）。
   绿炉＝无红件 → family=none·action=watch-only。在飞/条件跳过（conclusion 空或
     skipped/neutral）同记 none·但 evidence 显式注记「判类暂缓非绿判」·绝不充绿。
   判类谱外红形 → family=UNRECOGNIZED·action=watch-only（不充谱·run 级判类序
@@ -33,9 +41,10 @@
   判类序（逐 job·先到先归）：绿/在飞/条件跳过 → D（cancelled·零步骤）→ B 连坐形
   （cancelled·有步骤零红步）→ log 直证 C（EXIT=134/Abort trap: 6）→ E 签名
   （上传红＋coqchk skipped）→ E 变体（gate2-only 连坐：红步集 ⊆ {gate2+上传族}·
-  build/coqchk 非 content 红）→ log B → 步名 B（checkout/upload/artifact/cache/…）
-  → log A（Error:/FAIL/ORDER-MISSING/COQCHK_EXIT≠0/公理总数≠0）→ 步名 A
-  （build/compile/coqchk/…）→ UNRECOGNIZED。
+  build/coqchk 非 content 红·banner-absent 限形——认证态 token/coqchk 完走形
+  留 UNRECOGNIZED 不充谱·复核台账 token 二分）→ log B → 步名 B
+  （checkout/upload/artifact/cache/…）→ log A（Error:/FAIL/ORDER-MISSING/
+  COQCHK_EXIT≠0/公理总数≠0）→ 步名 A（build/compile/coqchk/…）→ UNRECOGNIZED。
 
 用途：
   对 GitHub Actions run 的 jobs 做红/绿分诊：打印步级表（步名/status/conclusion/
@@ -52,7 +61,14 @@
     （GET /repos/{repo}/actions/runs/{run}/jobs?per_page=100&page=N 分页到齐；
       --logs 时对红件再 GET /repos/{repo}/actions/jobs/{job}/logs 抓关键行入证据：
       COQCHK_EXIT/COQCHK_ALL_PASS/判定=CLEAN/公理总数/GATE-BANNER-ABSENT/
-      ENOTFOUND/ORDER-MISSING/EXIT=134 等；取日志两跳形（20261112 415 修法·
+      GATE2-ATTEST-RED/R4 覆盖划分/appendix 缺/ENOTFOUND/ORDER-MISSING/
+      EXIT=134 等（20261112 复核台账 §三候选 token 增补：GATE2-ATTEST-RED/
+      R4 覆盖划分/appendix 缺 三枚新增·判定=CLEAN/公理总数= 两枚开工态已在册
+      咬合复核——五 token 全员在册）；dump 行滤除（复核台账 §三-2 证据陷阱）：
+      evidence 收集与判据 token 检索前先滤青色脚本回显（[36;1m）与
+      ##[group]/##[endgroup] 组指令行——脚本回显非真执行行·「log 确证」须为
+      真执行行（滤除规则如实注记：命中行数入 evidence）；--no-dump-filter 可关
+      （关闭时陷阱形原样入证据·run 级响亮注记）；取日志两跳形（20261112 415 修法·
       实测定）：第一跳 Accept: application/vnd.github+json（text/plain 现 415 拒）
       禁自动重定向 GET → 302 Location 签名 URL；第二跳对签名 URL 零 Authorization
       再 GET（签名自带凭据——带 token 转发 403 Azure AuthenticationFailed·实测）；
@@ -66,13 +82,15 @@
     sys.path 注入 import·无 __init__ 包结构）。
   离线模式（selftest 与断网环境走此路·零网络）：
     python3 tools/ci_triage.py --offline JOBS.json [--baseline-seconds N ...]
-        [--json out.json]
-    （canned jobs JSON 同 API 真形 {"total_count":N,"jobs":[...]}；
+        [--no-dump-filter] [--json out.json]
+    （canned jobs JSON 同 API 真形 {"total_count":N,"jobs":[...]}＋可选顶层
+      job_logs 扩展位 {"<job_id>": "日志文本"}＝离线日志注入专用·非 API 真形
+      如实注记·复核台账 token 二分验收判的 canned 通路·形坏 fail-loud 9；
       fixtures 见 tests/fixtures/ci_triage_*.json 六件套＋Main 形 coq93
       真形一件 ci_triage_main_coq93.json（v48 勘形小改①·单 Windows job
       「Main CI 9.3」16 步真名·绿样张）＋gate2-only 真形两件
       ci_triage_gate2_only_{cancelled,failure}.json（20261112 retro 台账
-      run#7/#10 逐字段誊录）＝九件）
+      run#7/#10 逐字段誊录＋复核台账真执行行 canned job_logs 誊录）＝九件）
   python3 tools/ci_triage.py --selftest
 
 退出码：0=分诊完成（红是数据非器红·响亮 stdout）；2=用法错（参数缺失/互斥/
@@ -129,13 +147,19 @@ import _http_backoff
 
 # ---- 判类谱词面（冻结向量·正负判见 --selftest）-----------------------------
 
-# 日志关键行抓取器（tag, regex）——命中行原样入 evidence（≤200 字符·去重保序·帽 60）
+# 日志关键行抓取器（tag, regex）——命中行原样入 evidence（≤200 字符·去重保序·帽 60）。
+# 20261112 复核台账 §三候选五 token：GATE2-ATTEST-RED/R4 覆盖划分/appendix 缺
+# 三枚新增（逐 token 自 retro 真账——S6 raw log 真执行行/artifact gate2_attest.json
+# reasons/appendix 字段双形），判定=CLEAN/公理总数= 两枚开工态已在册复核咬合
 KEY_LOG_PATTERNS = [
     ("COQCHK_EXIT", re.compile(r"COQCHK_EXIT=(-?\d+)")),
     ("COQCHK_ALL_PASS", re.compile(r"COQCHK_ALL_PASS=(\d+)")),
     ("判定=CLEAN", re.compile(r"判定=CLEAN")),
     ("公理总数", re.compile(r"公理总数=(\d+)")),
     ("GATE-BANNER-ABSENT", re.compile(r"GATE-BANNER-ABSENT")),
+    ("GATE2-ATTEST-RED", re.compile(r"GATE2-ATTEST-RED")),
+    ("R4-覆盖划分", re.compile(r"R4 覆盖划分")),
+    ("APPENDIX-缺", re.compile(r"appendix 缺|appendix=\{present:false\}")),
     ("ORDER-MISSING", re.compile(r"ORDER-MISSING")),
     ("ENOTFOUND", re.compile(r"ENOTFOUND")),
     ("EXIT=134", re.compile(r"EXIT=134")),
@@ -155,6 +179,21 @@ RED_NET_RE = re.compile(
     r"|Upload progress stalled|403 Forbidden: job is completed")
 RED_ABORT_RE = re.compile(r"EXIT=134|Abort trap: 6")
 GATE_BANNER_ABSENT_RE = re.compile(r"GATE-BANNER-ABSENT")
+# gate2-only 形结论位校验 token（复核台账 §四-2 token 二分·认证态红形判据——
+# GATE2-ATTEST-RED 真执行行 17:18:53Z／判定=CLEAN parser 结论行 17:18:52Z·任一
+# 真执行在册即认证态形·E 变体不成立留 UNRECOGNIZED 不充谱）
+GATE2_ATTEST_RE = re.compile(r"GATE2-ATTEST-RED|判定=CLEAN")
+# coqchk 步完走判据（复核台账 §四-2 分叉判据件二·run#10 形 coqchk success
+# 40398s＝非「产物缺」连坐机理）：步名起首 coqchk 方算——防「gate5 vo-binary
+# quarantine (pre-coqchk…)」「Upload coqchk logs」coqchk 子串词面搭便误判完走
+# （勘形 §3.1/retro §2.3-1 同款搭便暗礁律）
+COQCHK_DONE_RE = re.compile(r"(?i)^coqchk")
+# dump/telemetry 行滤除（复核台账 §三-2 证据陷阱·20261112）：GitHub 步日志以青色
+# 回显整段脚本（[36;1m…[0m·ESC 形或字面残留形）＋##[group]/##[endgroup] 组指令
+# 行——脚本回显非真执行行（run#10 形：banner-absent 分支实际未执行·仅 dump 行在）
+# ·「log 确证」须为真执行行。滤除规则如实注记（命中行数入 evidence）·
+# --no-dump-filter 可关（关闭时陷阱形原样入证据·run 级响亮注记）
+DUMP_LINE_RE = re.compile(r"\[36;1m|##\[(?:group|endgroup)\]")
 
 # 步名族 regex（步级推断·无日志时的兜底判面）
 CONTENT_STEP_RE = re.compile(r"(?i)build|compile|coqchk|coqc|rocq|check|verify|make")
@@ -448,8 +487,11 @@ def fetch_job_log(repo, job_id, token, timeout, retry_max=3, _open=None,
 # ---- 离线装载 ---------------------------------------------------------------
 
 def load_jobs_offline(path):
-    """canned jobs JSON（同 API 真形 {"total_count":N,"jobs":[...]}）→ (jobs, total)。
-    缺文件/解析败/形坏 → fail-loud 9。"""
+    """canned jobs JSON → (jobs, total, job_logs)。同 API 真形
+    {"total_count":N,"jobs":[...]}＋可选顶层 job_logs 扩展位 {"<job_id>":
+    "日志文本"}（离线日志注入专用·非 API 真形如实注记——复核台账 token 二分
+    验收判的 canned 通路·数字键归一 int 咬合 job.id）。缺文件/解析败/形坏
+    （jobs 形坏或 job_logs 非 {str: str} 形）→ fail-loud 9。"""
     if not os.path.isfile(path):
         raise TriageError("jobs JSON 缺失: %s" % path, 9)
     try:
@@ -464,15 +506,45 @@ def load_jobs_offline(path):
         if not isinstance(j, dict) or not isinstance(j.get("name"), str) \
                 or not isinstance(j.get("steps") or [], list):
             raise TriageError("jobs JSON 形坏（jobs[%d] 非 job 形）: %s" % (idx, path), 9)
-    return data["jobs"], data.get("total_count", len(data["jobs"]))
+    logs_raw = data.get("job_logs") or {}
+    if not isinstance(logs_raw, dict) or any(
+            not isinstance(v, str) for v in logs_raw.values()):
+        raise TriageError(
+            "jobs JSON 形坏（job_logs 须 {\"<job_id>\": \"日志文本\"} 扩展位形）: %s"
+            % path, 9)
+    logs = {}
+    for k, v in logs_raw.items():
+        try:
+            logs[int(k)] = v
+        except (TypeError, ValueError):
+            logs[k] = v
+    return data["jobs"], data.get("total_count", len(data["jobs"])), logs
 
 
 # ---- 判类器 -----------------------------------------------------------------
 
-def scan_log_evidence(text):
-    """日志原文 → 关键行证据表（tag＋命中行原样 ≤200 字符·去重保序·帽 60）。"""
+def filter_dump_lines(text):
+    """日志原文 → 滤除 dump/telemetry 行后文本（复核台账 §三-2 证据陷阱）。
+
+    滤除规则（如实注记·DUMP_LINE_RE）：青色脚本回显行（[36;1m·ESC 形或字面
+    残留形）＋##[group]/##[endgroup] 组指令行——脚本回显非真执行行，run#10 形
+    banner-absent 分支实际未执行仅 dump 行在册，若不过滤则「log 确证」被 dump
+    行冒充（S6 证据陷阱原形）。真执行行（mojibake GBK 实跑行/无色前缀行）全数
+    保留。--no-dump-filter 可关（关闭时本函数不入链·陷阱形如实再现）。"""
+    if not text:
+        return text
+    return "\n".join(ln for ln in text.splitlines()
+                     if not DUMP_LINE_RE.search(ln))
+
+
+def scan_log_evidence(text, dump_filter=True):
+    """日志原文 → 关键行证据表（tag＋命中行原样 ≤200 字符·去重保序·帽 60）。
+    dump_filter=True（缺省）时先滤 dump/telemetry 行（青色脚本回显/组指令行·
+    复核台账 §三-2 证据陷阱——「log 确证」须为真执行行）。"""
     out = []
-    for line in text.splitlines():
+    if dump_filter and text:
+        text = filter_dump_lines(text)
+    for line in (text or "").splitlines():
         s = line.strip()
         if not s:
             continue
@@ -491,9 +563,11 @@ def scan_log_evidence(text):
     return ded[:LOG_EVIDENCE_CAP]
 
 
-def classify(job, log_text=None):
+def classify(job, log_text=None, dump_filter=True):
     """判类谱逐 job 判类 → {"family","action","evidence","red_steps"}（判类序见
-    模块 docstring·失败步名与 redSteps 全入 evidence）。"""
+    模块 docstring·失败步名与 redSteps 全入 evidence）。dump_filter=True（缺省）
+    时 log_text 先滤 dump/telemetry 行（青色脚本回显/组指令·复核台账 §三-2 证据
+    陷阱——滤除行数响亮入 evidence·滤后文本方入判据检索与 evidence 收集）。"""
     ev = []
     status = str(job.get("status") or "")
     conclusion = job.get("conclusion")
@@ -501,6 +575,12 @@ def classify(job, log_text=None):
     red_steps = [s for s in steps
                  if s.get("conclusion") in RED_STEP_CONCLUSIONS]
     red_names = [str(s.get("name") or "(unnamed)") for s in red_steps]
+
+    dump_dropped = 0
+    if log_text and dump_filter:
+        _raw_lines = log_text.splitlines()
+        log_text = filter_dump_lines(log_text)
+        dump_dropped = len(_raw_lines) - len(log_text.splitlines())
 
     if conclusion == "success":
         return {"family": "none", "action": "watch-only",
@@ -518,6 +598,9 @@ def classify(job, log_text=None):
     ev.append("job conclusion=%s status=%s" % (conclusion, status or "-"))
     for n in red_names:
         ev.append("failure-step: %s" % n)
+    if dump_dropped:
+        ev.append("dump 行滤除 %d 行（青色脚本回显/组指令·非真执行行·复核台账"
+                  " §三-2 证据陷阱·--no-dump-filter 可关）" % dump_dropped)
 
     # D：cancelled 且零步骤（logs 404 形）
     if conclusion == "cancelled" and not steps:
@@ -536,7 +619,7 @@ def classify(job, log_text=None):
         ev.append("log 直证：EXIT=134/Abort trap: 6（判类谱 C·环境断链）")
         return {"family": "C-toolchain-break",
                 "action": ACTION_OF["C-toolchain-break"],
-                "evidence": ev + scan_log_evidence(log_text),
+                "evidence": ev + scan_log_evidence(log_text, dump_filter),
                 "red_steps": red_names}
 
     # E 签名：上传步红＋coqchk 步 skipped（B 族变体·勿当内容红）
@@ -550,21 +633,33 @@ def classify(job, log_text=None):
         if log_text:
             if GATE_BANNER_ABSENT_RE.search(log_text):
                 ev.append("log 确证：GATE-BANNER-ABSENT（E 签名第三件齐）")
-            ev.extend(scan_log_evidence(log_text))
+            ev.extend(scan_log_evidence(log_text, dump_filter))
         return {"family": "E-coqchk-skipped",
                 "action": ACTION_OF["E-coqchk-skipped"],
                 "evidence": ev, "red_steps": red_names}
 
-    # E 变体（gate2-only 连坐形·20261112 Main retro 六事件证据人工指认入谱）：
+    # E 变体（gate2-only 连坐形·banner-absent 限形·20261112 Main retro 六事件
+    # 证据人工指认入谱＋20261112 复核台账 token 二分限形——#10 假阳性清偿）：
     # 红步集 ⊆ {gate2＋上传族} 且纯 gate2 红步在册（gate2 名非上传名——防
     # 「Upload artifact (gate2 ledger)」gate2 子串词面搭便误吞上传红）＝前置
     # build/coqchk 非 content 红（Build/coqchk proper 步名既不沾 gate2 也不沾
-    # 上传族·在红步集即破子集条件）＝「coqchk 产物缺·gate2 连坐」（GATE-BANNER-
-    # ABSENT 同义·run#7 job 127903477736 日志 200 实测确证）
-    # → family=E-coqchk-skipped（E 族内变体·判类谱序 UNRECOGNIZED>C>A>E>B>D
-    #   不动）·action=rerun-after-stable-window。出处：retro 台账 §二主表
-    #   UNREC 六事件中 #7/#8/#10/#20/#26 五发 gate2-only 形·#3 runner 失联形
-    #   （零红步）仍走 UNRECOGNIZED 不充谱。
+    # 上传族·在红步集即破子集条件）。结论位校验（复核台账 §四-2 token 二分·
+    # dump 行滤除后真执行 token 为准——run#7 job 127903477736 日志 200 实测
+    # banner-absent 真执行行 13:22:43Z·run#10 job 128320751675 raw log 真执行
+    # 判定=CLEAN(exit 0) 公理总数=0 17:18:52Z＋GATE2-ATTEST-RED 17:18:53Z）：
+    #   ①GATE2-ATTEST-RED/判定=CLEAN 真执行 token 在＝认证态红形（run#10 判例
+    #     coqchk success 40398s parser CLEAN 公理=0 R4 覆盖划分破）→ E 变体不
+    #     成立·留 UNRECOGNIZED 不充谱（人工指认优先）；
+    #   ②coqchk 步 success＝完走·非「coqchk 产物缺」连坐机理（复核台账 §四-2
+    #     分叉判据件二·无日志时器面唯一旁证）→ 同留 UNRECOGNIZED；
+    #   ③GATE-BANNER-ABSENT 真执行行在＝banner-absent 连坐 E（run#7/8/20/26
+    #     四发·coqchk skipped/cancelled·log 确证第三件入账）；
+    #   ④无日志且 coqchk 未完走＝步名规则维持 E（banner token 未确证·如实注记）。
+    # → family=E-coqchk-skipped·action=rerun-after-stable-window（E 族内变体·
+    #   判类谱序 UNRECOGNIZED>C>A>E>B>D 不动）。出处：retro 台账 §二主表 UNREC
+    #   六事件中 #7/#8/#20/#26 四发 banner-absent 形入谱·#10 认证态形转正留
+    #   UNREC＝复核判词（器判=复核判·验收判）·#3 runner 失联形（零红步）仍走
+    #   UNRECOGNIZED 不充谱。
     gate2_only_red = [s for s in red_steps
                       if GATE2_STEP_RE.search(str(s.get("name") or ""))
                       and not UPLOAD_STEP_RE.search(str(s.get("name") or ""))]
@@ -572,21 +667,46 @@ def classify(job, log_text=None):
         GATE2_STEP_RE.search(str(s.get("name") or ""))
         or UPLOAD_STEP_RE.search(str(s.get("name") or ""))
         for s in red_steps)
+    gate2_excl_note = None
     if gate2_only_red and subset_gate2_upload:
-        ev.append("gate2-only 连坐形（E 变体）：红步集 ⊆ {gate2+上传族}·纯 gate2"
-                  " 红步在册·前置 build/coqchk 非 content 红＝coqchk 产物缺·"
-                  "gate2 连坐（GATE-BANNER-ABSENT 同义·20261112 Main retro "
-                  "#7/#8/#10/#20/#26 五事件形入谱）")
+        att_hit = bool(log_text and GATE2_ATTEST_RE.search(log_text))
+        banner_hit = bool(log_text and GATE_BANNER_ABSENT_RE.search(log_text))
+        coqchk_done = any(
+            s.get("conclusion") == "success"
+            and COQCHK_DONE_RE.search(str(s.get("name") or ""))
+            for s in steps)
+        if att_hit and not banner_hit:
+            gate2_excl_note = (
+                "gate2-only 形·结论位校验：GATE2-ATTEST-RED/判定=CLEAN 真执行"
+                " token 在（dump 行滤除后）＝认证态红形（复核台账 §四-2 ②相·"
+                "run#10 判例 coqchk success 40398s parser CLEAN 公理=0 R4 覆盖"
+                "划分破）→ E 变体不成立·留 UNRECOGNIZED 不充谱（人工指认）")
+        elif coqchk_done:
+            gate2_excl_note = (
+                "gate2-only 红步而 coqchk 步 success（完走）＝非「coqchk 产物缺」"
+                "连坐机理（复核台账 §四-2 分叉判据件二·run#10 形·认证态红候选·"
+                "token 面未证）→ E 变体不成立·留 UNRECOGNIZED 不充谱")
+    if gate2_only_red and subset_gate2_upload and gate2_excl_note is None:
+        banner_hit = bool(log_text and GATE_BANNER_ABSENT_RE.search(log_text))
+        ev.append("gate2-only 连坐形（E 变体·banner-absent 限形）：红步集 ⊆ "
+                  "{gate2+上传族}·纯 gate2 红步在册·前置 build/coqchk 非 content "
+                  "红＝coqchk 产物缺·gate2 连坐（20261112 Main retro #7/#8/#20/"
+                  "#26 四事件 banner-absent 真执行形入谱·#10 认证态形已除外）")
+        if banner_hit:
+            ev.append("log 确证：GATE-BANNER-ABSENT（banner-absent 真执行行·"
+                      "E 变体第三件）")
+        else:
+            ev.append("banner token 未确证（无日志或真执行行缺·如实注记·步级形）")
         if log_text:
-            if GATE_BANNER_ABSENT_RE.search(log_text):
-                ev.append("log 确证：GATE-BANNER-ABSENT（gate2-only E 变体第三件）")
-            ev.extend(scan_log_evidence(log_text))
+            ev.extend(scan_log_evidence(log_text, dump_filter))
         return {"family": "E-coqchk-skipped",
                 "action": ACTION_OF["E-coqchk-skipped"],
                 "evidence": ev, "red_steps": red_names}
+    if gate2_excl_note is not None:
+        ev.append(gate2_excl_note)
 
     if log_text:
-        ev.extend(scan_log_evidence(log_text))
+        ev.extend(scan_log_evidence(log_text, dump_filter))
         if RED_NET_RE.search(log_text):
             ev.append("log 命中网络窗词面（判类谱 B）")
             return {"family": "B-netred", "action": ACTION_OF["B-netred"],
@@ -784,10 +904,14 @@ def run_triage(args):
         raise TriageError("--retry-max 须≥0 实测 %d" % args.retry_max, 2)
 
     log_notes = {}
+    logs_by_id = {}
+    dump_filter = not args.no_dump_filter
     if args.offline:
-        jobs, total = load_jobs_offline(args.offline)
+        jobs, total, canned_logs = load_jobs_offline(args.offline)
         mode, source, repo, run_id = "offline", args.offline, None, None
-        source_desc = "mode=offline source=%s" % args.offline
+        source_desc = "mode=offline source=%s dump_filter=%s canned_logs=%d" \
+            % (args.offline, "on" if dump_filter else "off", len(canned_logs))
+        logs_by_id = dict(canned_logs)
     else:
         token = netrc_token(args.netrc)
         try:
@@ -800,10 +924,10 @@ def run_triage(args):
         mode, source, repo, run_id = "online", jobs_url(args.repo, args.run), \
             args.repo, args.run
         source_desc = ("mode=online repo=%s run=%d api=%s token=***MASKED***"
-                       "（netrc machine github.com·%s）"
-                       % (repo, run_id, source, args.netrc))
+                       "（netrc machine github.com·%s）dump_filter=%s"
+                       % (repo, run_id, source, args.netrc,
+                          "on" if dump_filter else "off"))
 
-    logs_by_id = {}
     if mode == "online" and args.logs:
         reds = [j for j in jobs
                 if j.get("conclusion") in ("failure", "timed_out", "cancelled")
@@ -818,14 +942,24 @@ def run_triage(args):
             if note:
                 log_notes[j.get("id")] = note
 
-    per = [classify(j, logs_by_id.get(j.get("id"))) for j in jobs]
+    per = [classify(j, logs_by_id.get(j.get("id")), dump_filter=dump_filter)
+           for j in jobs]
     for j, c in zip(jobs, per):
         note = log_notes.get(j.get("id"))
         if note:
             c["evidence"].append(note)
     batch_upgrade_c(per, jobs)
-    verdict = run_verdict(per, jobs, extra_evidence=[
-        v for k, v in sorted(log_notes.items()) if k == "_meta"])
+    verdict_notes = []
+    if mode == "offline" and logs_by_id:
+        verdict_notes.append(
+            "offline canned 日志 %d 件（job_logs 顶层扩展位·非 API 真形·"
+            "同输入重跑字节恒同）" % len(logs_by_id))
+    if not dump_filter:
+        verdict_notes.append(
+            "dump 行滤除已关（--no-dump-filter）·青色脚本回显/组指令行原样入"
+            "证据与判据（复核台账 §三-2 证据陷阱形如实再现·缺省滤除开启）")
+    verdict = run_verdict(per, jobs, extra_evidence=verdict_notes + [
+        v for k, v in log_notes.items() if k == "_meta"])
     baseline = None
     if args.baseline_seconds is not None:
         baseline = build_baseline_note(jobs, args.baseline_seconds,
@@ -856,6 +990,10 @@ def main():
                     help="线上模式：Actions run id（与 --repo 成对）")
     ap.add_argument("--logs", action="store_true",
                     help="线上模式加抓红件日志抓关键行入证据（仅线上·离线拒）")
+    ap.add_argument("--no-dump-filter", action="store_true",
+                    help="关 dump 行滤除（青色脚本回显 [36;1m／##[group] 行原样"
+                         "入证据与判据——复核台账 §三-2 证据陷阱形如实再现·"
+                         "缺省滤除开启·run 级响亮注记）")
     ap.add_argument("--netrc",
                     default=os.path.join(os.path.expanduser("~"), ".netrc"),
                     metavar="PATH",
@@ -905,8 +1043,14 @@ def selftest():
     （403×3→[2,4,8]·Retry-After 尊重·耗尽上抛·401 不重试·_open/_sleep 注入
     零网络）＋〔九〕Main 形判读矢（v48 勘形小改①·coq93.yml 真形步名×五族
     判类兼容机检钉——勘形 §3.1「即用」判据的机械实证）＋〔十〕gate2-only
-    E 变体矢（两 fixture 全命中＋规则正负判·出处六事件 #7/#8/#10/#20/#26
-    入谱 #3 不充谱）＋logs 两跳 415 修法矢（302→零 Authorization 第二跳
+    E 变体矢（复核台账 token 二分验收线：#7 fixture banner-absent 真执行行
+    canned →E 保持＋#8/#20/#26 形矢 E＋#10 fixture 认证态 token canned →
+    UNRECOGNIZED 转正验收判（器判=复核判词）＋coqchk-success 旁证矢＋认证态
+    token 零红词面机检＋规则负判四发·出处六事件四入一转一留）＋dump 行滤除矢
+    （复核台账 §三-2 证据陷阱：dump-only banner 不确证·真执行行确证·
+    --no-dump-filter 陷阱形如实再现）＋〔十一〕五 token 在册矢（复核台账 §三
+    候选逐 token 真账形正判）＋job_logs 扩展位形坏 fail-loud 矢＋canned 日志
+    确定性字节恒同矢＋logs 两跳 415 修法矢（302→零 Authorization 第二跳
     200·415/403/无 Location 原码入证据·canned 零网络）。
     全程 --offline fixtures 零真网络零编译。"""
     import shutil
@@ -1300,63 +1444,167 @@ def selftest():
         assert c["family"] == "E-coqchk-skipped", c
         assert any("coqchk" in e for e in c["evidence"]), c
 
-        # 〔十〕gate2-only E 变体判读矢＋logs 两跳 415 修法矢（20261112·
-        # Main retro 六事件证据人工指认入谱·全部 canned 零网络）
-        # 1) 两件新 fixture（真形自 retro 台账 run#7 cancelled／run#10 failure）
-        #    全命中 E 变体（family/action/连坐注记/红步咬合）
-        for stem, concl in (("gate2_only_cancelled", "cancelled"),
-                            ("gate2_only_failure", "failure")):
+        # 〔十〕gate2-only E 变体判读矢（20261112 复核台账 token 二分验收线·
+        # banner-absent=E×4／ATTEST-RED=UNREC×1）＋logs 两跳 415 修法矢
+        # （全部 canned 零网络）
+        G2_RED = ("gate2 axioms sentinel (block-state-machine, fail-loud;"
+                  " attest branch)")
+        # 1) 两件 fixture 真形判读（canned job_logs 真执行行入判）：cancelled
+        #    （run#7·banner-absent 真执行行 13:22:43Z＋2 行 dump）→E 保持；
+        #    failure（run#10·GATE2-ATTEST-RED/判定=CLEAN 真执行行＋banner-absent
+        #    仅 dump 行·coqchk success）→UNRECOGNIZED 转正验收判（器判=复核判词·
+        #    E 假阳性清偿）
+        for stem, fam, act, concl in (
+                ("gate2_only_cancelled", "E-coqchk-skipped",
+                 "rerun-after-stable-window", "cancelled"),
+                ("gate2_only_failure", "UNRECOGNIZED", "watch-only",
+                 "failure")):
             path = fx(stem)
             assert os.path.isfile(path), "gate2-only fixture 缺失: %s" % path
             out = os.path.join(tmp, stem + ".json")
             p = run(["--offline", path, "--json", out])
             assert p.returncode == 0, p.stdout[-400:]
             rep = json.load(io.open(out, encoding="utf-8"))
-            assert rep["schema"] == SCHEMA and rep["family"] \
-                == "E-coqchk-skipped" \
-                and rep["action"] == "rerun-after-stable-window", \
-                (stem, rep["family"], rep["action"])
+            assert rep["schema"] == SCHEMA and rep["family"] == fam \
+                and rep["action"] == act, (stem, rep["family"], rep["action"])
             assert rep["jobs"][0]["conclusion"] == concl, \
                 (stem, rep["jobs"][0]["conclusion"])
             cj = rep["jobs"][0]["classification"]
-            assert cj["family"] == "E-coqchk-skipped" and any(
-                "gate2-only 连坐" in e for e in cj["evidence"]), cj
-            assert cj["red_steps"] == [
-                "gate2 axioms sentinel (block-state-machine, fail-loud;"
-                " attest branch)"], cj["red_steps"]
-        # 2) 规则正判（classify 直调·canned 形）：run#7 形 cancelled＋唯 gate2 红
-        #    → E 变体；log GATE-BANNER-ABSENT 词面入证据（第三件）
+            assert cj["family"] == fam and cj["red_steps"] == [G2_RED], cj
+            assert any("offline canned 日志 1 件" in e
+                       for e in rep["evidence"]), rep["evidence"]
+            if stem.endswith("cancelled"):
+                assert any("gate2-only 连坐" in e for e in cj["evidence"]), cj
+                assert any("log 确证：GATE-BANNER-ABSENT" in e
+                           for e in cj["evidence"]), cj
+                assert any("dump 行滤除 2 行" in e for e in cj["evidence"]), cj
+            else:
+                assert any("结论位校验" in e and "认证态红形" in e
+                           for e in cj["evidence"]), cj
+                assert any("log[GATE2-ATTEST-RED]" in e
+                           for e in cj["evidence"]), cj
+                assert any("log[判定=CLEAN]" in e for e in cj["evidence"]), cj
+                assert any("log[R4-覆盖划分]" in e for e in cj["evidence"]), cj
+                assert any("log[APPENDIX-缺]" in e for e in cj["evidence"]), cj
+                assert not any("log 确证：GATE-BANNER-ABSENT" in e
+                               for e in cj["evidence"]), \
+                    "banner 仅 dump 行不得确证（复核台账 §三-2 证据陷阱）"
+                assert any("dump 行滤除 1 行" in e for e in cj["evidence"]), cj
+        # 2) 四矢保持 E（复核台账 §四-2 ①相 banner-absent 形·classify 直调·
+        #    真执行行 canned）：#7（Build cancelled→coqchk skipped→gate2 红＋
+        #    banner 真行）／#8·#20 形（Build success→coqchk cancelled→gate2 红）／
+        #    #26 形（同 #7 步级·无日志→banner token 未确证如实注记仍 E）
         g2_steps = [mkstep(1, "Build full tree (order topology, fingerprint"
                            " skip, thermal-guarded)", "cancelled"),
                     mkstep(2, "coqchk full-tree certification (parallel"
                               " root-grouped, thermal-guarded)", "skipped",
                            started_at=None, completed_at=None),
-                    mkstep(3, "gate2 axioms sentinel (block-state-machine,"
-                              " fail-loud; attest branch)", "failure")]
-        c = classify(mkjob(id=71, conclusion="cancelled", steps=g2_steps))
+                    mkstep(3, G2_RED, "failure")]
+        BANNER_REAL = ("2026-11-06T13:22:43Z GATE-BANNER-ABSENT _chk_all.log"
+                       " 不在盘——coqchk 未产出日志（上游 gate4/build 夭折连带，"
+                       "红因看上游步）·非 COQLIB 代际失守")
+        ATT_REAL = ("2026-11-07T17:18:52Z 判定=CLEAN(exit 0) Axioms段数=14"
+                    " 公理总数=0 日志完整=True\n2026-11-07T17:18:53Z "
+                    "GATE2-ATTEST-RED: 认证态覆盖断言不备")
+        c = classify(mkjob(id=71, conclusion="cancelled", steps=g2_steps),
+                     log_text=BANNER_REAL)
         assert c["family"] == "E-coqchk-skipped" \
             and c["action"] == "rerun-after-stable-window" \
-            and any("gate2-only 连坐" in e for e in c["evidence"]), c
-        c = classify(mkjob(id=72, conclusion="cancelled", steps=g2_steps),
-                     log_text="2026-11-06T12:54:20Z gate2: "
-                              "GATE-BANNER-ABSENT ledger missing\n")
+            and any("gate2-only 连坐" in e for e in c["evidence"]) \
+            and any("log 确证：GATE-BANNER-ABSENT" in e
+                    for e in c["evidence"]), c
+        for jid in (81, 82):
+            c = classify(mkjob(id=jid, conclusion="cancelled", steps=[
+                mkstep(1, "Build full tree (order topology, fingerprint"
+                         " skip, thermal-guarded)", "success"),
+                mkstep(2, "coqchk full-tree certification (parallel"
+                         " root-grouped, thermal-guarded)", "cancelled"),
+                mkstep(3, G2_RED, "failure")]), log_text=BANNER_REAL)
+            assert c["family"] == "E-coqchk-skipped" and any(
+                "gate2-only 连坐" in e for e in c["evidence"]), (jid, c)
+        c = classify(mkjob(id=83, conclusion="cancelled", steps=g2_steps))
         assert c["family"] == "E-coqchk-skipped" and any(
-            "GATE-BANNER-ABSENT" in e for e in c["evidence"]), c
-        # 3) 规则负判四发：build/coqchk proper content 红→A（连坐被破）；
+            "banner token 未确证" in e for e in c["evidence"]), c
+        # 3) #10 转正矢（认证态形·器判 UNREC=复核判词·复核台账 §四-2 ②相）：
+        #    a. token 直证形（canned 真执行行）→UNRECOGNIZED；b. 判据件二形
+        #    （无日志·coqchk success 完走＝非产物缺机理）→UNRECOGNIZED；
+        #    c. 认证态 token 零红词面机检（落 UNREC 兜底的前提）
+        steps10 = [mkstep(1, "Build full tree (order topology, fingerprint"
+                          " skip, thermal-guarded)", "success"),
+                   mkstep(2, "attest reconcile (archive-hit -> skip list,"
+                             " miss -> coqchk, cw.attest/v1)", "success"),
+                   mkstep(3, "coqchk full-tree certification (parallel"
+                             " root-grouped, thermal-guarded)", "success"),
+                   mkstep(4, "Upload vo trust cache (cross-machine sync)",
+                          "success"),
+                   mkstep(5, G2_RED, "failure")]
+        c = classify(mkjob(id=84, steps=steps10), log_text=ATT_REAL)
+        assert c["family"] == "UNRECOGNIZED" and c["action"] == "watch-only", c
+        assert any("结论位校验" in e and "认证态红形" in e
+                   for e in c["evidence"]), c
+        assert any("log[GATE2-ATTEST-RED]" in e for e in c["evidence"]), c
+        c = classify(mkjob(id=85, steps=steps10))
+        assert c["family"] == "UNRECOGNIZED" and any(
+            "coqchk 步 success" in e for e in c["evidence"]), c
+        for s in ["GATE2-ATTEST-RED: 认证态覆盖断言不备",
+                  "判定=CLEAN(exit 0) Axioms段数=14 公理总数=0 日志完整=True",
+                  "R4 覆盖划分破: skipped∪sent != surface 或交集非空或面空",
+                  "appendix={present:false}"]:
+            assert not RED_CONTENT_RE.search(s) and not RED_NET_RE.search(s) \
+                and not RED_ABORT_RE.search(s), "认证态 token 误入红词面: %s" % s
+        # 4) dump 行滤除矢（复核台账 §三-2 证据陷阱·canned 零网络）：a. dump 行
+        #    与真执行行混在→滤除注记＋真执行行确证；b. S6 陷阱形（banner 仅
+        #    dump 行·#10 步真形 coqchk success）→不确证→UNREC（滤除生效）；
+        #    c. --no-dump-filter 同陷阱形（滤除关）→dump 行原样确证（陷阱如实再现）
+        DUMP_LINE = ("2026-11-07T17:18:49.5000000Z \x1b[36;1mif [ ! -f "
+                     "\"_chk_all.log\" ]; then echo GATE-BANNER-ABSENT; "
+                     "exit 1; fi\x1b[0m")
+        c = classify(mkjob(id=71, conclusion="cancelled", steps=g2_steps),
+                     log_text=DUMP_LINE + "\n" + BANNER_REAL)
+        assert c["family"] == "E-coqchk-skipped" and any(
+            "dump 行滤除 1 行" in e for e in c["evidence"]), c
+        assert any("log[GATE-BANNER-ABSENT]" in e for e in c["evidence"]), c
+        c = classify(mkjob(id=86, steps=steps10), log_text=DUMP_LINE)
+        assert c["family"] == "UNRECOGNIZED" and not any(
+            "log 确证：GATE-BANNER-ABSENT" in e for e in c["evidence"]), c
+        assert any("dump 行滤除 1 行" in e for e in c["evidence"]), c
+        c = classify(mkjob(id=87, conclusion="cancelled", steps=g2_steps),
+                     log_text=DUMP_LINE, dump_filter=False)
+        assert c["family"] == "E-coqchk-skipped" and any(
+            "log 确证：GATE-BANNER-ABSENT" in e for e in c["evidence"]), c
+        assert any("36;1m" in e for e in c["evidence"]), \
+            "滤除关时 dump 行原样入证据（陷阱如实再现）"
+        # 5) 五 token 在册矢（复核台账 §三候选·逐 token 真账形正判·全员在册）＋
+        #    谱外候选不冒充在册负证
+        for tag, line in [
+                ("GATE2-ATTEST-RED", "GATE2-ATTEST-RED: 认证态覆盖断言不备"),
+                ("判定=CLEAN",
+                 "判定=CLEAN(exit 0) Axioms段数=14 公理总数=0 日志完整=True"),
+                ("公理总数", "公理总数=0"),
+                ("R4-覆盖划分",
+                 "R4 覆盖划分破: skipped∪sent != surface 或交集非空或面空"),
+                ("APPENDIX-缺", "appendix={present:false}")]:
+            hits = [rx for t, rx in KEY_LOG_PATTERNS if t == tag]
+            assert len(hits) == 1, "token 不在册或重册: %s" % tag
+            assert hits[0].search(line), "token 正例不命中: %s" % tag
+            evl = scan_log_evidence(line)
+            assert any(e.startswith("log[%s]" % tag) for e in evl), (tag, evl)
+        assert not any("GATE2-AXIOMS-RED" in t or "GATE5-RED" in t
+                       or "ATT-RECON-FAIL" in t for t, _ in KEY_LOG_PATTERNS), \
+            "复核台账 §三-3 另三候选不在本轮五 token 清单·不冒充在册（不充册）"
+        # 6) 规则负判五发：build/coqchk proper content 红→A（连坐被破）；
         #    「Upload artifact (gate2 ledger)」gate2 子串搭便上传红→B（防误吞
         #    既钉）；非 gate2/上传红步→UNRECOGNIZED；零红步 failure（runner
         #    失联形＝出处六事件 #3）→UNRECOGNIZED 不充谱
         c = classify(mkjob(id=73, steps=[
             mkstep(1, "Build full tree (order topology, fingerprint skip,"
                      " thermal-guarded)", "failure"),
-            mkstep(2, "gate2 axioms sentinel (block-state-machine,"
-                     " fail-loud; attest branch)", "failure")]))
+            mkstep(2, G2_RED, "failure")]))
         assert c["family"] == "A-content-red", c
         c = classify(mkjob(id=74, steps=[
             mkstep(1, "coqchk full-tree certification (parallel"
                      " root-grouped, thermal-guarded)", "failure"),
-            mkstep(2, "gate2 axioms sentinel (block-state-machine,"
-                     " fail-loud; attest branch)", "failure")]))
+            mkstep(2, G2_RED, "failure")]))
         assert c["family"] == "A-content-red", c
         c = classify(mkjob(id=75, steps=[
             mkstep(1, "Upload artifact (gate2 ledger)", "failure"),
@@ -1373,6 +1621,36 @@ def selftest():
                      conclusion=None)]))
         assert c["family"] == "UNRECOGNIZED", \
             "runner 失联零红步形仍谱外不充谱实测 %s" % c["family"]
+        # 7) CLI 矢：--no-dump-filter（#10 canned fixture·滤除关→dump 行 banner
+        #    入判据·认证态 token 与 banner dump 并存→判据件二兜底 UNREC·run 级
+        #    响亮注记）＋job_logs 形坏 fail-loud 9＋canned 日志确定性字节恒同
+        out = os.path.join(tmp, "g10_nodumpfilter.json")
+        p = run(["--offline", fx("gate2_only_failure"), "--no-dump-filter",
+                 "--json", out])
+        assert p.returncode == 0, p.stdout[-400:]
+        rep = json.load(io.open(out, encoding="utf-8"))
+        assert rep["family"] == "UNRECOGNIZED" \
+            and rep["action"] == "watch-only", (rep["family"], rep["action"])
+        assert any("滤除已关" in e and "--no-dump-filter" in e
+                   for e in rep["evidence"]), rep["evidence"]
+        cj = rep["jobs"][0]["classification"]
+        assert any("coqchk 步 success" in e for e in cj["evidence"]), cj
+        assert any("36;1m" in e for e in cj["evidence"]), cj
+        bad = os.path.join(tmp, "bad_logs.json")
+        with io.open(bad, "w", encoding="utf-8") as fh:
+            json.dump({"total_count": 1, "jobs": [mkjob()],
+                       "job_logs": {"1": 42}}, fh)
+        p = run(["--offline", bad])
+        assert p.returncode == 9, "job_logs 形坏应 fail-loud 9 实测 %d" \
+            % p.returncode
+        outa = os.path.join(tmp, "g10_det_a.json")
+        outb = os.path.join(tmp, "g10_det_b.json")
+        p = run(["--offline", fx("gate2_only_failure"), "--json", outa])
+        assert p.returncode == 0, p.stdout[-400:]
+        p = run(["--offline", fx("gate2_only_failure"), "--json", outb])
+        assert p.returncode == 0, p.stdout[-400:]
+        assert io.open(outa, "rb").read() == io.open(outb, "rb").read(), \
+            "canned 日志判类 json 字节漂移＝违例"
         # 4) logs 两跳 415 修法矢（canned _open 注入·零网络）：
         #    修后形 hop1 Accept=LOGS_ACCEPT（≠text/plain 415 债）→ 302 Location
         #    → hop2 零 Authorization → 200 日志文本；旧形对照 415 原码入证据；
@@ -1451,8 +1729,12 @@ def selftest():
               "响亮注记/分类器单元（regex 正负·连坐·在飞·E 勿当内容红·UNRECOGNIZED）/"
               "netrc 解析/确定性字节恒同/CLI 四码/韧性层退避（403×3→[2,4,8]·"
               "Retry-After 尊重·403 耗尽 9·401 不重试）/Main 形判读矢（coq93 真形"
-              " 16 步咬合+兼容表 15 行+E 两件齐）/〔十〕gate2-only E 变体矢"
-              "（两 fixture 全命中+正判+负判四发·六事件 #3 不充谱）+logs 两跳"
+              " 16 步咬合+兼容表 15 行+E 两件齐）/〔十〕复核台账 token 二分矢"
+              "（#7 fixture banner-absent canned→E·#8/#20/#26 形矢 E·#10 fixture"
+              " 认证态 canned→UNREC 转正验收判（器判=复核判词）·coqchk-success"
+              " 旁证·负判五发 #3 不充谱）+dump 行滤除矢（dump-only banner 不确证"
+              "·真执行行确证·--no-dump-filter 陷阱形如实再现）+五 token 在册矢"
+              "（复核台账 §三候选全员）+job_logs 形坏 9+canned 确定性+logs 两跳"
               " 415 修法矢（302→零 Authorization 第二跳 200·415/403/无 Location"
               " 原码入证据） 全过")
         return 0

@@ -98,13 +98,29 @@ __init__ 包结构；injector canned 路径零真网络一律不重试——离�
 缺省 30——两钟不同物不并铃）；on-red 旁路动作（含 --on-red-preset 展开·
 同一执行器）仍承 ON_RED_TIMEOUT 60s 帽不改哨退出码（v37 既约口径不动）。
 
+韧性层 v51（承任务书①②·哨长驻 round10 IncompleteRead 崩器修——更新账 v50
+在案＝http.client.IncompleteRead(371261 read, 72721 expected) 自 api_get_json
+resp.read() 抛出·loop 全驻崩：v38 backoff 只护 HTTPError 状态码面·传输层
+断流类不护＝器债第二类）：①传输层瞬态类（TRANSIENT_TRANSPORT_ERRORS＝
+IncompleteRead／RemoteDisconnected／BadStatusLine／ConnectionError 全族／
+socket.timeout·区别于 HTTPError 状态码类）→ 有界重试（--net-retries 缺省
+3 发·退避 5s/15s/45s＝net_backoff_delays 纯函数·继承 v38 backoff 语义＝
+有界表按 attempt 取延迟·每发全新 Request+urlopen 半读残体弃）；重试耗尽才
+上抛 9（fail-loud 保持·上抛后由②兜底）；非瞬态（HTTPError 状态码语义面/
+URLError 连接建立面/其余未知异常）零重试原样上抛——禁吞非瞬态错误。
+②loop 层兜底（宁跳轮不崩驻）：poll_round 逐信号源经 poll_source_guarded
+异常捕获（loop 模式限定）→ 该源本轮 skip＋事件流 {kind:source-error} 注记
+（响亮非静默）·下轮再试——异常路径 seen 幂等账未记＝下轮自然重报（宁重复
+不丢件判例同源）；once 模式不兜底直通 run_sentry fail-loud rc 9（工作流步骤
+语义保持）。
+
 退出码：0=巡检完成（红是数据非器红·响亮 stdout）；2=用法错（缺模式/双模
 同给/三源全缺/--branch 先于 --watch-repo/repo 形坏/负参/once 带 loop 专属
 参/--on-red-preset 与 --on-red 同给/preset 不识别/预设参数缺·重·形坏
 〔链式未知键判全链并集面〕/--emit 缺/--on-red 缺 --emit（plain 与 preset
 双路同守卫）/--on-red-arg 孤儿/
 --emit-max-bytes 须与 --emit 同给或 N<1/
---rebuild-state 缺 --state-file）；9=信号源不可达（CI HTTP 4xx/5xx·netrc 缺·
+--rebuild-state 缺 --state-file）；9=信号源不可达（CI HTTP 4xx/5xx·传输层瞬断重试耗尽〔--net-retries〕·netrc 缺·
 token 空·runs/jobs 形坏·预设器件缺·
 injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·ci_triage/
 chain_graph 子进程 rc≠0·子进程超时被杀〔--subproc-timeout〕·事件流轮转
@@ -152,10 +168,12 @@ fail-loud 禁静默降级（源不可达 9·injector 未覆盖 9·子进程 rc�
 """
 import argparse
 import datetime
+import http.client
 import io
 import json
 import os
 import re
+import socket
 import subprocess
 import sys
 import tempfile
@@ -228,6 +246,24 @@ EVENT_LINE_CAP = 200        # 事件内单行证据/命中行字符帽
 BUILDLOG_HIT_CAP = 50       # 单轮 build-signal 命中行帽（超出 truncated 注记）
 ON_RED_TIMEOUT = 60         # on-red 子进程超时秒（旁路动作防卡哨）
 
+# v51 传输层瞬态类（承哨长驻 round10 IncompleteRead 崩·更新账 v50 在案＝真崩栈
+# http.client.IncompleteRead(371261 read, 72721 expected) 自 resp.read() 抛出）：
+# body 中途断流（IncompleteRead）/服务器断连（RemoteDisconnected·兼
+# ConnectionResetError 与 BadStatusLine 两族面）/坏状态行（BadStatusLine）/
+# 连接断（ConnectionError 全族含 Reset/Refused/Aborted/BrokenPipe）/读超时
+# （socket.timeout）——均瞬态可重试。区别于 HTTPError 状态码类（401/404 语义面
+# 走 --retry-max 判面）与 URLError 连接建立面（DNS/连接失败=9 快败）——禁吞
+# 非瞬态错误：不在此列的异常零重试原样上抛（fail-loud）。
+TRANSIENT_TRANSPORT_ERRORS = (
+    http.client.IncompleteRead,
+    http.client.RemoteDisconnected,
+    http.client.BadStatusLine,
+    ConnectionError,
+    socket.timeout,
+)
+NET_RETRY_BASE = 5.0        # 传输层退避基秒（任务书钦定 5s/15s/45s）
+NET_RETRY_RATIO = 3.0       # 退避指数比（5→15→45＝×3·缺省 3 发）
+
 
 class SentryError(Exception):
     """带退出码的 fail-loud 异常（code: 2=用法错·9=信号源不可达/形坏）。"""
@@ -243,6 +279,27 @@ def sleep_scaled(sec, scale):
     """time.sleep(sec*scale)·scale=0 零真睡（pushci.py:184 sleep_scaled 同款·
     selftest 矢量依赖）。"""
     time.sleep(max(0.0, float(sec) * float(scale)))
+
+
+def net_backoff_delays(net_retries):
+    """传输层瞬断退避秒表（v51 任务书钦定 5s/15s/45s＝base 5·比 3·纯函数
+    零钟零随机同参重跑恒同·继承 v38 backoff 语义＝有界表按 attempt 取延迟·
+    耗尽上抛 fail-loud）。判例：net_retries=3 → [5.0, 15.0, 45.0]·0 → []
+    （零重试一发定谳）；负/非 int → ValueError（fail-loud）。"""
+    if not isinstance(net_retries, int) or isinstance(net_retries, bool) \
+            or net_retries < 0:
+        raise ValueError("net_retries 须非负 int·实测 %r" % (net_retries,))
+    return [NET_RETRY_BASE * (NET_RETRY_RATIO ** i) for i in range(net_retries)]
+
+
+def _safe_exc(e):
+    """异常安全文案「ClassName: str(e)」——str 本身炸（如 IncompleteRead
+    partial 非 bytes 形其 __str__ 内 len() 再炸）→ 仅类名。耗尽上抛与 loop
+    兜底注记路径专用：文案层禁再炸遮蔽原错（v51 实测判例）。"""
+    try:
+        return "%s: %s" % (type(e).__name__, e)
+    except Exception:
+        return type(e).__name__
 
 
 def now_iso():
@@ -337,14 +394,19 @@ def load_injector(path):
 
 
 def api_get_json(url, token, timeout, injector, retry_max=3, sleep_scale=1.0,
-                 _open=None, _sleep=None):
+                 net_retries=3, _open=None, _sleep=None):
     """只读 GET → (status, parsed_json)。唯一网络动作·注入点单函数：
     injector 在场按 url_contains 首中即用（可循环复用·哨轮询幂等语义）·未命中
     fail-loud 9 绝不静默走真网络·且 canned 路径零重试（离线可测铁律）；缺席真
     urllib（韧性层 v37：403/429/5xx 指数退避重试·base 2s·帽 retry_max·
     Retry-After 秒数头优先替当次延迟·_http_backoff 纯函数；耗尽或 4xx 语义面
-    → 9·连接失败 → 9·body 非合法 JSON → 9）。_open/_sleep 注入位（selftest
-    零网络矢量）。"""
+    → 9·连接失败 → 9·body 非合法 JSON → 9）。韧性层 v51：传输层瞬态类
+    （TRANSIENT_TRANSPORT_ERRORS·IncompleteRead 真崩栈在案）有界重试——帽
+    net_retries 缺省 3 发·退避 net_backoff_delays（5s/15s/45s）·每发全新
+    Request+urlopen（半读残体弃）·耗尽才上抛 9（fail-loud 保持·上抛后由
+    poll_source_guarded loop 兜底该源本轮 skip 宁跳轮不崩驻）；非瞬态类
+    （URLError/其余未知异常）零重试原样上抛禁吞。_open/_sleep 注入位
+    （selftest 零网络矢量·canned resp.read() 抛传输异常即读函数注入面）。"""
     if injector is not None:
         for r in injector["responses"]:
             if r["url_contains"] in url:
@@ -360,7 +422,9 @@ def api_get_json(url, token, timeout, injector, retry_max=3, sleep_scale=1.0,
     do_sleep = (lambda s: sleep_scaled(s, sleep_scale)) if _sleep is None \
         else _sleep
     delays = _http_backoff.backoff_delays(retry_max)
+    net_delays = net_backoff_delays(net_retries)
     attempt = 0
+    net_attempt = 0
     while True:
         req = urllib.request.Request(url, headers={
             "Accept": "application/vnd.github+json",
@@ -384,6 +448,16 @@ def api_get_json(url, token, timeout, injector, retry_max=3, sleep_scale=1.0,
                 e.headers.get("Retry-After") if e.headers is not None else None)
             do_sleep(ra if ra is not None else delays[attempt])
             attempt += 1
+        except TRANSIENT_TRANSPORT_ERRORS as e:
+            # v51：瞬态传输面有界重试（每发全新连接·半读残体弃）·耗尽才上抛
+            # 9 fail-loud 保持——loop 层捕获后该源本轮 skip 下轮再试（宁跳轮
+            # 不崩驻）；禁吞＝计数器有界·耗尽必报。
+            if net_attempt >= net_retries:
+                raise SentryError(
+                    "CI API 传输层瞬断重试耗尽（%d 发·退避 %s）: %s (%s)"
+                    % (net_retries, net_delays, url, _safe_exc(e)), 9)
+            do_sleep(net_delays[net_attempt])
+            net_attempt += 1
         except (urllib.error.URLError, OSError) as e:
             raise SentryError("CI API 不可达: %s (%s)" % (url, e), 9)
     try:
@@ -560,6 +634,7 @@ def poll_ci_repo(sentry, spec, st):
     token = sentry["token"]            # injector 在场为 None·惰性已取
     _, body = api_get_json(runs_url(repo), token, sentry["timeout"],
                            sentry["injector"], retry_max=sentry["retry_max"],
+                           net_retries=sentry["net_retries"],
                            sleep_scale=sentry["args"].sleep_scale)
     runs = None
     if isinstance(body, dict):
@@ -592,6 +667,7 @@ def poll_ci_repo(sentry, spec, st):
             _, jobs_body = api_get_json(
                 API_ROOT + jobs_api_path(repo, rid), token, sentry["timeout"],
                 sentry["injector"], retry_max=sentry["retry_max"],
+                net_retries=sentry["net_retries"],
                 sleep_scale=sentry["args"].sleep_scale)
             if not isinstance(jobs_body, dict) \
                     or not isinstance(jobs_body.get("jobs"), list):
@@ -852,9 +928,33 @@ def fire_on_red(sentry, ev):
 
 # ---- 单轮巡检 ----------------------------------------------------------------
 
+def poll_source_guarded(sentry, label, fn, *args):
+    """loop 长驻兜底（v51 任务书②·哨语义宁跳轮不崩驻）：单信号源巡检异常
+    （api 传输耗尽 SentryError 9／子进程硬错／任何未分类异常——传输层重试
+    修复后的残余面兜底）→ 事件流 {kind:source-error} 注记（响亮非静默）＋
+    该源本轮 skip·下轮再试——异常路径 seen 幂等账未记＝下轮自然重报（宁重复
+    不丢件判例同源）。once 模式直通不兜底（工作流步骤 fail-loud rc 9 语义
+    保持）。KeyboardInterrupt/SystemExit 非 Exception 不吞（长驻可中断）；
+    source-error 非 on-red 触发面（红事件族过滤不动）。"""
+    if sentry["mode"] != "loop":
+        return fn(*args)
+    try:
+        return fn(*args)
+    except Exception as e:
+        err = clip(_safe_exc(e), 400)
+        emit_event(sentry, make_event(sentry, "source-error", {
+            "source": label, "error": err,
+            "note": "loop 长驻兜底：该源本轮 skip·下轮再试（宁跳轮不崩驻·"
+                    "响亮注记非静默·seen 未记下轮重报宁重复不丢件）"}))
+        sys.stdout.write("source-error 注记: %s 本轮 skip（%s）\n" % (label, err))
+        return {"source": label, "skipped": True, "error": err}
+
+
 def poll_round(sentry, st, round_no):
     """单轮三路巡检 → 轮 report dict（--json 覆盖写·sort_keys）。源硬错
-    （SentryError）逐层上抛由 run_sentry 裁停——fail-loud 不带病运行。"""
+    （SentryError）逐层上抛由 run_sentry 裁停——fail-loud 不带病运行（once
+    模式语义保持）；loop 模式逐源经 poll_source_guarded 兜底＝异常源本轮
+    skip＋source-error 事件注记·下轮再试（v51 任务书②·宁跳轮不崩驻）。"""
     a = sentry["args"]
     sys.stdout.write("=== CW-SENTINEL round=%d mode=%s（红是数据非器红）===\n"
                      % (round_no, sentry["mode"]))
@@ -863,13 +963,16 @@ def poll_round(sentry, st, round_no):
            "sleep_scale": a.sleep_scale, "ts_enabled": sentry["ts_enabled"]}
     ci_out = []
     for spec in sentry["specs"]:
-        ci_out.append(poll_ci_repo(sentry, spec, st))
+        ci_out.append(poll_source_guarded(sentry, "ci:" + spec["repo"],
+                                          poll_ci_repo, sentry, spec, st))
     if ci_out:
         rep["sources"]["ci"] = ci_out
     if a.watch_ledgers:
-        rep["sources"]["ledgers"] = poll_ledgers(sentry, a.watch_ledgers, st)
+        rep["sources"]["ledgers"] = poll_source_guarded(
+            sentry, "ledgers", poll_ledgers, sentry, a.watch_ledgers, st)
     if a.watch_buildlog:
-        rep["sources"]["buildlog"] = poll_buildlog(sentry, a.watch_buildlog, st)
+        rep["sources"]["buildlog"] = poll_source_guarded(
+            sentry, "buildlog", poll_buildlog, sentry, a.watch_buildlog, st)
     for ev in sentry["events"]:
         if ev.get("kind") in ("ci-red", "blocking", "build-signal") \
                 and sentry["on_red"]:
@@ -978,6 +1081,8 @@ def build_sentry(args):
                           "守卫）", 2)
     if args.retry_max < 0:
         raise SentryError("--retry-max 须≥0 实测 %s" % args.retry_max, 2)
+    if args.net_retries < 0:
+        raise SentryError("--net-retries 须≥0 实测 %s" % args.net_retries, 2)
     if args.subproc_timeout < 1:
         raise SentryError("--subproc-timeout 须≥1 实测 %s"
                           % args.subproc_timeout, 2)
@@ -1009,6 +1114,7 @@ def build_sentry(args):
         "emit_max_bytes": args.emit_max_bytes, "rotations": 0,
         "timeout": args.timeout, "injector": None, "token": None,
         "retry_max": args.retry_max,
+        "net_retries": args.net_retries,
         "subproc_timeout": args.subproc_timeout,
         "ts_enabled": args.sleep_scale != 0,
     }
@@ -1022,8 +1128,10 @@ def build_sentry(args):
 def run_sentry(args):
     """双模主循环：once 单轮·loop interval 序贯（--max-rounds 轮帽 0=无限）。
     源硬错 → sentinel-error 事件（若 emit 在位）+ rc 9 退出（fail-loud 不带
-    病运行·任务书 9 口径）。state 每轮末落盘（事件先 emit 后存 state·宁重复
-    不丢件）。"""
+    病运行·任务书 9 口径）。v51：loop 模式源级异常在 poll_round 内逐源兜底
+    skip（source-error 注记·宁跳轮不崩驻·任务书②）——走到本层的硬错面＝
+    兜底层自身再败（如 emit 出账失败）·仍 fail-loud。state 每轮末落盘
+    （事件先 emit 后存 state·宁重复不丢件）。"""
     sentry = build_sentry(args)
     if args.rebuild_state:
         existed = os.path.isfile(args.state_file)
@@ -1133,6 +1241,13 @@ def main():
                     help="CI API 403/429/5xx 退避重试帽（默认 3·指数 base 2s·"
                          "Retry-After 秒数头尊重·仅真 urllib 路·injector "
                          "canned 不重试）")
+    ap.add_argument("--net-retries", dest="net_retries", type=int, default=3,
+                    metavar="N",
+                    help="传输层瞬断重试帽（默认 3 发·退避 5s/15s/45s·瞬态类＝"
+                         "IncompleteRead/RemoteDisconnected/BadStatusLine/"
+                         "ConnectionError/socket.timeout·耗尽 9 上抛 loop 层"
+                         "逐源 skip 宁跳轮不崩驻；--retry-max 另承 HTTP 状态码"
+                         "面 base 2s）")
     ap.add_argument("--subproc-timeout", dest="subproc_timeout", type=int,
                     default=120, metavar="S",
                     help="子进程防挂超时秒（默认 120·ci_triage/chain_graph 调用"
@@ -1178,7 +1293,18 @@ def selftest():
     canned sleep 子进程超时杀 9 报调用名）⑪--state-file 崩溃恢复（损坏红拒
     9 禁静默重建·原件不动／--rebuild-state 显式重建红事件复现／缺
     --state-file rc=2）⑫--emit-max-bytes JSONL 轮转（超限先轮转再追加·
-    .1/.2 保留 2 代·seq 跨代续号不重·缺 --emit/N<1 rc=2）。"""
+    .1/.2 保留 2 代·seq 跨代续号不重·缺 --emit/N<1 rc=2）
+    ⑭韧性层 v51 传输层瞬断（canned IncompleteRead 读函数注入〔_Resp.read 抛
+    真崩栈同形 IncompleteRead(371261, 72721)〕·首二发抛第三发成退避 [5,15]·
+    RemoteDisconnected/BadStatusLine/socket.timeout 全员可重试·重试耗尽上抛
+    9 退避序断言 [5,15,45]·--net-retries 帽可调＝1 发一睡即耗尽·非瞬态
+    ValueError 原样穿透零吞零睡·URLError 连接建立面快败 9 零重试·loop 逐源
+    skip＝canned 401 双轮 rc0 不崩 source-error 注记×2 seen 零记账〔宁跳轮
+    不崩驻·宁重复不丢件〕·once 同形仍 9 对照既有〔八〕）
+    ⑮部署形冒烟（监督壳 examples/sentinel_supervisor.sh：bash -n 语法检＋
+    关键行 grep 断言〔重启帽／退避／state 续接注记／收兵钩位留空 return 0／
+    guard 位／rc 分诊／三件套落位名／零硬编码绝对路径〕——静态断言非真跑·
+    零执行零网络·只验部署工件在库与结构逐点在位）。"""
     import shutil
 
     def run(args, cwd=None):
@@ -1750,6 +1876,187 @@ def selftest():
                  "--emit-max-bytes", "0"])
         assert p.returncode == 2, "轮转 N=0 应 rc=2 实测 %d" % p.returncode
 
+        # 〔十三〕韧性层 v51：传输层瞬断有界重试＋loop 逐源 skip（真崩栈
+        # IncompleteRead(371261, 72721) 同形·更新账 v50 round10 在案）
+        assert net_backoff_delays(3) == [5.0, 15.0, 45.0], \
+            net_backoff_delays(3)
+        assert net_backoff_delays(0) == [], net_backoff_delays(0)
+        for bad in (-1, "3", 1.5, None, True):
+            try:
+                net_backoff_delays(bad)
+                assert False, "net_retries=%r 应 ValueError" % (bad,)
+            except ValueError:
+                pass
+
+        class _BadReadResp(_Resp):
+            """canned 半读断流体（读函数注入面：resp.read() 抛 IncompleteRead·
+            真崩栈同形 371261 read/72721 expected——partial 须 bytes 形·int 形
+            其 __str__ 内 len() 自炸·真崩文案「371261 bytes read, 72721 more
+            expected」）。"""
+            def read(self):
+                raise http.client.IncompleteRead(b"\x00" * 371261, 72721)
+
+        # 首二发抛第三发成（缺省 3 发帽·退避 5s/15s·retry_max=0 隔离状态码面）
+        slept = []
+        st13, body13 = api_get_json("https://x", "tok", 5, None, retry_max=0,
+                                    _open=_seq_open([_BadReadResp(),
+                                                     _BadReadResp(),
+                                                     _Resp(b'{"ok":13}')]),
+                                    _sleep=slept.append)
+        assert st13 == 200 and body13 == {"ok": 13} \
+            and slept == [5.0, 15.0], (st13, body13, slept)
+        # 瞬态类全员可重试（RemoteDisconnected/BadStatusLine/socket.timeout
+        # 三发依次抛·第四发成→退避 5/15/45 全程）
+        slept = []
+        st13, _ = api_get_json("https://x", "tok", 5, None, retry_max=0,
+                               _open=_seq_open([
+                                   http.client.RemoteDisconnected(),
+                                   http.client.BadStatusLine("bogus"),
+                                   socket.timeout("timed out"),
+                                   _Resp(b'{"ok":1}')]),
+                               _sleep=slept.append)
+        assert st13 == 200 and slept == [5.0, 15.0, 45.0], (st13, slept)
+        # 重试耗尽上抛（fail-loud 保持）·退避序断言全程 [5,15,45]·真崩栈文案
+        # 同形断言（「371261 bytes read, 72721 more expected」）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None, retry_max=0,
+                         _open=_seq_open([_BadReadResp()] * 4),
+                         _sleep=slept.append)
+            assert False, "传输层重试耗尽应 9"
+        except SentryError as e:
+            assert e.code == 9 and "传输层瞬断重试耗尽" in str(e) \
+                and "IncompleteRead" in str(e) \
+                and "371261 bytes read, 72721 more expected" in str(e), e
+        assert slept == [5.0, 15.0, 45.0], slept          # 退避序断言
+        # 文案层防御：str() 自炸异常（IncompleteRead partial 非 bytes 形其
+        # __str__ len() 再炸）不遮蔽原错——耗尽上抛仍干净 SentryError 9
+        # （v51 首跑实测判例器化）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None, retry_max=0,
+                         _open=_seq_open(
+                             [http.client.IncompleteRead(1, 2)] * 4),
+                         _sleep=slept.append)
+            assert False, "str 自炸异常耗尽仍应 9"
+        except SentryError as e:
+            assert e.code == 9 and "IncompleteRead" in str(e), e
+        assert slept == [5.0, 15.0, 45.0], slept
+        # --net-retries 帽可调：帽 1 → 一发重试即耗尽（一睡 5s）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None, retry_max=0,
+                         net_retries=1,
+                         _open=_seq_open([_BadReadResp(), _BadReadResp()]),
+                         _sleep=slept.append)
+            assert False, "net_retries=1 耗尽应 9"
+        except SentryError as e:
+            assert e.code == 9, e.code
+        assert slept == [5.0], slept
+        slept = []
+        st13, _ = api_get_json("https://x", "tok", 5, None, retry_max=0,
+                               net_retries=1,
+                               _open=_seq_open([_BadReadResp(), _Resp()]),
+                               _sleep=slept.append)
+        assert st13 == 200 and slept == [5.0], (st13, slept)
+        # 非瞬态不吞不重试：未知异常原样穿透（fail-loud 禁吞边界）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None,
+                         _open=_seq_open([ValueError("boom-nontransient")]),
+                         _sleep=slept.append)
+            assert False, "非瞬态应原样穿透"
+        except ValueError as e:
+            assert "boom-nontransient" in str(e), e
+        assert slept == [], "非瞬态零重试零睡"
+        # URLError 连接建立面仍快败 9（不混入传输层重试面）
+        slept = []
+        try:
+            api_get_json("https://x", "tok", 5, None,
+                         _open=_seq_open([urllib.error.URLError("dns fail")]),
+                         _sleep=slept.append)
+            assert False, "URLError 应快败 9"
+        except SentryError as e:
+            assert e.code == 9 and "不可达" in str(e), e
+        assert slept == [], "URLError 零重试零睡"
+        # loop 层逐源 skip：canned 401 双轮各 skip → rc 0 不崩（宁跳轮不崩驻）·
+        # source-error 注记×2·seen 零记账（下轮重报·宁重复不丢件）
+        state13 = os.path.join(tmp, "state13.json")
+        emit13 = os.path.join(tmp, "events13.jsonl")
+        rep13 = os.path.join(tmp, "rep13.json")
+        p = run(["--loop", "--max-rounds", "2", "--interval", "5",
+                 "--watch-repo", REPO, "--injector", p401,
+                 "--state-file", state13, "--emit", emit13, "--json", rep13,
+                 "--sleep-scale", "0"])
+        assert p.returncode == 0, \
+            "loop 逐源兜底应 rc=0 不崩（宁跳轮不崩驻）: %s" % p.stdout[-600:]
+        rep = json.load(io.open(rep13, encoding="utf-8"))
+        assert rep["mode"] == "loop" and rep["round"] == 2, rep
+        assert rep["sources"]["ci"][0].get("skipped") is True \
+            and "HTTP 401" in rep["sources"]["ci"][0].get("error", ""), \
+            rep["sources"]["ci"]
+        evs13 = [json.loads(l) for l in io.open(emit13, encoding="utf-8")
+                 if l.strip()]
+        assert len(evs13) == 2 and all(e["kind"] == "source-error"
+                                       for e in evs13), evs13
+        assert [e["seq"] for e in evs13] == [1, 2], evs13
+        assert evs13[0]["source"] == "ci:" + REPO \
+            and "HTTP 401" in evs13[0]["error"], evs13[0]
+        st13 = json.load(io.open(state13, encoding="utf-8"))
+        assert st13["repos"] == {}, \
+            "skip 轮 seen 不得记账（下轮重报·宁重复不丢件）: %s" % st13["repos"]
+        # once 同形对照（既有〔八〕矢量复证）：canned 401 仍 fail-loud rc 9
+        emit13b = os.path.join(tmp, "events13b.jsonl")
+        p = run(["--once", "--watch-repo", REPO, "--injector", p401,
+                 "--state-file", os.path.join(tmp, "state13b.json"),
+                 "--emit", emit13b, "--sleep-scale", "0"])
+        assert p.returncode == 9, "once 同形应保持 fail-loud rc=9 实测 %d" \
+            % p.returncode
+        evs13b = [json.loads(l) for l in io.open(emit13b, encoding="utf-8")
+                  if l.strip()]
+        assert len(evs13b) == 1 and evs13b[0]["kind"] == "sentinel-error" \
+            and evs13b[0]["code"] == 9, evs13b
+
+        # 〔十四〕部署形冒烟（监督壳 examples/sentinel_supervisor.sh·静态断言
+        # 非真跑）：bash -n 仅解析不执行＋关键行 grep 断言——验部署工件在库与
+        # 结构逐点在位（重启帽／退避／state 续接注记／收兵钩位留空／guard 位／
+        # rc 分诊／三件套落位名／路径参数化零硬编码）。零执行零网络。
+        sup_sh = os.path.normpath(os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            os.pardir, "examples", "sentinel_supervisor.sh"))
+        assert os.path.isfile(sup_sh), "监督壳部署形脚本缺库: %s" % sup_sh
+        p = subprocess.run(["bash", "-n", sup_sh],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        out14 = p.stdout.decode("utf-8", errors="replace") \
+            if isinstance(p.stdout, bytes) else (p.stdout or "")
+        assert p.returncode == 0, "bash -n 语法检应过 rc=0: %s" % out14[-300:]
+        sup_text = io.open(sup_sh, encoding="utf-8").read()
+        assert sup_text.startswith("#!/bin/bash"), "部署形应 bash 正典头"
+        for tok in (
+                "SUPERVISOR_MAX_RESTARTS", "重启预算耗尽",           # 重启帽
+                "SUPERVISOR_BACKOFF_BASE", "SUPERVISOR_BACKOFF_MAX",
+                "退避",                                              # 退避
+                "--state-file", "state 续接",                        # state 续接注记
+                "state.json", "events.jsonl", "report.json",         # 三件套落位名
+                "supervisor_withdraw_hook",                          # 收兵钩位（留空形另断言）
+                "SENTINEL_GUARD", "cpu_guard",                       # guard 钩位
+                "tools/cw_sentinel.py", "--loop",                    # 哨子命令
+                "rc=2 用法错",                                       # rc 分诊（用法错不进重启环）
+        ):
+            assert tok in sup_text, "监督壳关键形缺: %r" % tok
+        assert re.search(r"supervisor_withdraw_hook\(\) \{\n  return 0",
+                         sup_text), "收兵钩位应留空（缺省体 return 0·部署方按需填形）"
+        assert "/Users/" not in sup_text, \
+            "部署形禁硬编码绝对路径（路径参数化铁律）: /Users/ 命中"
+        # 本机 bash 3.2 判例（部署形功能冒烟实捕·20261112）：裸 $VAR 后紧贴
+        # 全角字会被吞进变量名 → set -u 下 unbound variable 崩（真崩形
+        # 「rc=$RC）」）——裸 $VAR 一律 ${} 括起的结构律断言（紧跟非 ASCII
+        # 字节即违例）
+        m_cjk = re.search(r"\$([A-Za-z_][A-Za-z0-9_]*)[^\x00-\x7F]", sup_text)
+        assert m_cjk is None, \
+            "裸 $%s 紧贴全角字＝bash 3.2 变量名吞字崩形·须 \${} 括起" \
+            % (m_cjk.group(1) if m_cjk else "")
+
         print("CW-SENTINEL-SELFTEST PASS: ①once ci-red+二跑 seen 幂等零事件/"
               "②ledger 新件 blocking+幂等/③buildlog 增量 grep+半行不误报/"
               "④on-red 占位替换执行实证+缺省零动作/⑤loop 三轮 JSONL 序贯/"
@@ -1765,7 +2072,16 @@ def selftest():
               "⑪state 崩溃恢复（损坏红拒 9 禁静默重建原件不动·--rebuild-state "
               "显式重建红事件复现·缺 --state-file rc=2）/"
               "⑫emit 轮转（--emit-max-bytes 超限先轮转再追加·.1/.2 保留 2 代·"
-              "seq 跨代续号·缺 --emit/N<1 rc=2） 全过")
+              "seq 跨代续号·缺 --emit/N<1 rc=2）/"
+              "⑭传输层瞬断 v51（canned IncompleteRead 读函数注入·首二发抛第三"
+              "发成退避 [5,15]·RemoteDisconnected/BadStatusLine/socket.timeout"
+              " 全员可重试·耗尽 9 退避序 [5,15,45] 断言·--net-retries 帽可调·"
+              "非瞬态/URLError 快败零吞零睡·loop 逐源 skip source-error 注记 "
+              "rc0 宁跳轮不崩驻 seen 零记账·once 同形仍 9）/"
+              "⑮部署形冒烟（监督壳 examples/sentinel_supervisor.sh·bash -n "
+              "语法检＋关键行 grep 断言：重启帽/退避/state 续接注记/收兵钩位"
+              "留空 return 0/guard 位/rc 分诊/三件套落位名/零硬编码绝对路径"
+              "——静态断言非真跑零执行零网络） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

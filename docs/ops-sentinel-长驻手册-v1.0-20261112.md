@@ -24,6 +24,11 @@
 > roadmap-v43-plus ②（docs/roadmap-v43-plus-20261111.md:30-38·验证方式 :38）→ v44 实战
 > 首演（更新账.md:3814-3834）→ v47 真仓首战（更新账.md:3895）→ v48 长驻过夜候选
 > （更新账.md:3912）→ 本册成档。
+>
+> **v1.0 补节（20261112 工装席·部署件文档化波）**：补 §1.6 监督壳部署形（部署工件
+> `examples/sentinel_supervisor.sh` 新落库＋`cw_sentinel --selftest` 增部署形冒烟矢
+> ——承 v50 崩溃判例 更新账.md:3999）——哨器面旗标零改（selftest 矢量面为测试件
+> 非器面）；§1.6 行号锚 v50 2ab39bc 现势，其余各节行号仍锚 v47 6217808 不变。
 
 ---
 
@@ -121,6 +126,58 @@ spawn 侧载体，哨自身无感知。
   `--max-rounds 15` 跑满自停（更新账.md:3820-3821）；`--max-rounds` 只属 `--loop`（once
   带之 rc=2·:968-969）。
 - 手动收哨才 `kill "$SENTINEL_PID"`（POSIX TERM·哨无 trap 特殊化·ops-realtime-service:52-53）。
+
+### 1.6 监督壳部署形（examples/sentinel_supervisor.sh·v50 崩溃判例的运行态补偿层）
+
+> 本节＝v1.0 补节（20261112 工装席·部署件文档化波）——行号锚 v50 2ab39bc 工作树
+> 现势（其余各节仍锚 v47 6217808·承正本声明漂移注记）；部署正本＝
+> `examples/sentinel_supervisor.sh`（自本机运行态 /tmp 版 1:1 泛化·路径全参数化
+> 零硬编码绝对路径·中文注记·监督壳自身退出码 0/1/2/9）。
+
+**判例源（v50 账·更新账.md:3999）**：哨长驻 **round10 IncompleteRead 崩**——真崩栈
+`http.client.IncompleteRead(371261 read, 72721 expected)`（读 371261／欠 72721 字节·
+传输层断流·任务书转述与 v51 器修席在飞 diff 同数互证）＝器债第二类：`api_get_json`
+的 v38 退避重试只罩 `HTTPError` 状态码面（cw_sentinel.py:375-386），传输层半读位
+`raw = resp.read()`（cw_sentinel.py:373）抛 `http.client.IncompleteRead`（非
+URLError/OSError 子类·逃逸 :387 捕获面）→ 未捕获 traceback → rc=1 崩——**退避不护
+传输层**。处置两轨：**监督壳补偿已部署**（本机运行态判例：`bash /tmp/sentinel_supervisor.sh`
+nohup 常驻·本席 `ps` 实读 PID 489→guard→哨子进程三级活体）＋**器修入 v51**（韧性层
+传输层瞬断有界重试＋loop 逐源 skip 兜底·并发在飞落盘）——**壳是进程级兜底非器内修
+复**：v51 器修降传输层崩概率后，壳仍兜一切器内不护崩形（emit/rename 失败、OOM、机器
+重启、loop 逐源 guard 面之外的上层崩）与已部署旧形运行态。
+
+**state 零损失（本席 20261112 实读·崩后重启续接实证）**：`_log/sentinel_v48/` 三件套
+——`report.json` `round=3`（重启后新进程轮号）且**无 `state_rebuilt` 键**（未走重建
+·承 §3.1）；`state.json` seen 双仓咬合 Set 30／Main 31（§4.3 崩前账 30/30·重启续接
+期自然新增 1）；`events.jsonl` 仍 33 行·seq 1-33 单调无重——**seen 幂等账跨崩零损失
+零重报**（承 §3.3 宁重复不丢件——壳补崩溃进程不补数据·数据面由 state 续接自愈）。
+
+**四泛化点＋rc 分诊（自 /tmp 运行态版泛化对照）**：
+
+| 泛化点 | 正典形配置面（env·全参数化） | /tmp 运行态判例形 |
+|---|---|---|
+| 重启帽 | `SUPERVISOR_MAX_RESTARTS`（缺省 40·耗尽 echo 响亮 exit 1） | `for i in $(seq 1 40)` 定长环 |
+| 退避 | `SUPERVISOR_BACKOFF_BASE`×2 指数·帽 `SUPERVISOR_BACKOFF_MAX`（缺省 60/600） | 固定 `sleep 60` |
+| state 续接注记 | 挂壳即 echo 响亮注记（seen 幂等·跨重启零损失续接·禁静默重建） | 仅注释 |
+| 定时收兵钩位 | `supervisor_withdraw_hook` **留空**（缺省 `return 0`·示例 09:00 形在函数上注释·收兵粒度＝spawn 边界·运行中收兵用人工 kill 承 §1.5） | 无钩位（人工 kill 收兵） |
+| rc 分诊（泛化新增） | 子 rc=0＝轮尽自停→壳 exit 0；**子 rc=2＝用法错→不进重启环** fail-loud exit 2（重启无义·承 §1.2 spawn 前预检同律）；子 rc=9（信号源不可达）与其余 rc（含传输层崩 rc=1·IncompleteRead 判例形）→退避重启计帽 | 非 0 一律 sleep 60 重启 |
+| guard 位 | `SENTINEL_GUARD`（缺省直跑——哨本体纯逻辑零编译 §1.4 口径）＋`SENTINEL_GUARD_ARGS`（缺省 `-MaxWaitSec 120`） | 硬编码 CW 侧 cpu_guard.sh 包裹 |
+
+**部署命令形**（nohup 形 A 同款·§1.3；先 `--once` 预检再挂壳承 §1.2）——必给项
+fail-loud：`SENTINEL_WORK`/`SENTINEL_WATCH_REPOS` 缺 → 壳 rc 2；repo root／哨本体／
+工作目录缺 → 壳 rc 9：
+
+```bash
+SENTINEL_WORK=/path/to/_log/sentinel_v50 \
+SENTINEL_WATCH_REPOS="ORG/REPO-A ORG/REPO-B" \
+[SENTINEL_GUARD=/path/to/cpu_guard.sh SENTINEL_GUARD_ARGS="-MaxWaitSec 120"] \
+nohup bash examples/sentinel_supervisor.sh >/dev/null 2>&1 &
+```
+
+**部署形冒烟（非真跑·cw_sentinel --selftest 增矢）**：`bash -n` 语法检＋关键行 grep
+断言（重启帽／退避／state 续接注记／收兵钩位留空 `return 0`／guard 位／rc 分诊／
+三件套落位名／`/Users/` 零硬编码绝对路径断言）——静态断言零执行零网络，只验部署
+工件在库与结构逐点在位。
 
 ---
 
@@ -354,6 +411,7 @@ FILE.1 → FILE.2（旧 FILE.2 覆盖弃·保留 2 代）→ FILE → FILE.1 →
 | 更新账.md:3844 | v45 render_events 入账（§2.3） |
 | 更新账.md:3865 | v46 red_dispatch 入账（§2.4） |
 | 更新账.md:3888-3914 | v47 账·33 事件真仓首战（§4.2）＋v48 候选 :3912 |
+| 更新账.md:3999 | v50 崩溃判例：哨长驻 round10 IncompleteRead 崩＝传输层器债第二类·监督壳补偿已部署·器修入 v51（§1.6 判例源） |
 | roadmap-v43-plus-20261111.md:30-38 | 候选② sentinel --loop 长驻首战（价值/依赖/成本/风险＋验证方式 :38） |
 | roadmap-v43-plus-20261111.md:13/:35 | 积分静默窗：**观测类候选静默期零事件亦属合法观测非器红**（排程面口径） |
 | ops-live-run-log-20261111.md:79-111 | 后台哨可运行态声明（依赖面 :83-85·启动命令 :87-94·JSONL 消费 :96-100·活体烟测 :102-111） |
@@ -374,3 +432,9 @@ FILE.1 → FILE.2（旧 FILE.2 覆盖弃·保留 2 代）→ FILE → FILE.1 →
 4. **证据分级**：§2.1 v48 真行／§4.3 落位实况＝本席本波实读；§4.1/§4.2＝更新账账文直引
    （原席实跑·本席未复跑）；§2.3/§2.4 器语义＝docstring 实读。哨 `--selftest` 12 节矢量
    面与三闸回归史见 ops-live-run-log §3.4（:110）——本册未复跑自测，如实注记。
+5. **v1.0 补节对账（20261112 工装席）**：§1.6 为补节——新落库部署工件
+   `examples/sentinel_supervisor.sh`（上件 1「零新造」指哨器面零改·本补节不动该结论；
+   部署壳是仓内 examples 新工件非器）＋`cw_sentinel --selftest` 增部署形冒烟矢（测试
+   件非器面·器旗标零改）；§1.6 崩栈真形与 state 零损失证据＝本席本波实读（report/
+   state/events 三件实读＋ps 活体三级实读），v51 器修面＝并发席在飞 diff 实读转述
+   （其成形以 v51 账为准·本册不代账）。

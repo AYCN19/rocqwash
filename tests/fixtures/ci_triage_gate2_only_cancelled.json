@@ -189,13 +189,16 @@
    ]
   }
  ],
+ "job_logs": {
+  "127903477736": "2026-11-06T13:22:43.0000000Z \u001b[36;1mif [ ! -f \"_chk_all.log\" ]; then echo \"GATE-BANNER-ABSENT _chk_all.log 不在盘——coqchk 未产出日志\"; exit 1; fi\u001b[0m\n2026-11-06T13:22:43.0000000Z \u001b[36;1mverdict=$(python3 gate2_attest.py) || { echo \"GATE2-ATTEST-RED: 认证态覆盖断言不备\"; exit 1; }\u001b[0m\n2026-11-06T13:22:43Z GATE-BANNER-ABSENT _chk_all.log 不在盘——coqchk 未产出日志（上游 gate4/build 夭折连带，红因看上游步）·非 COQLIB 代际失守\n"
+ },
  "_provenance": {
-  "source": "Main 全史 retro 实测台账 docs/retro-triage-Main仓全史-20261112.md §二主表 run#7（rocqwash-ci-triage/1 真形逐字段誊录·20261112）",
+  "source": "Main 全史 retro 实测台账 docs/retro-triage-Main仓全史-20261112.md §二主表 run#7（rocqwash-ci-triage/1 真形逐字段誊录·20261112）＋复核台账 docs/复核-UNREC-14事件-20261112.md §二 S4 真执行行誊录（20261112 二次增补）",
   "run_id": 42221225472,
   "job_id": 127903477736,
   "event": "push",
   "branch": "main",
-  "shape": "gate2-only 连坐形：唯 gate2 axioms sentinel 红·前置 build/coqchk 非 content 红·无其他红步（UNREC 六事件 #7/#8/#10/#20/#26 五发同构）",
-  "log_confirm": "探针 P4（20261112）：job 127903477736 logs 两跳 200 1673483 bytes·GATE-BANNER-ABSENT 在册（E 变体第三件实测确证·判据词面非推断）"
+  "shape": "gate2-only 连坐形·banner-absent 相（复核台账 §四-2 ①相）：唯 gate2 axioms sentinel 红·Build cancelled→coqchk skipped——器判 E-coqchk-skipped（token 二分四矢保持 E·canned job_logs 真执行行入判）",
+  "log_confirm": "探针 P4（20261112）：job 127903477736 logs 两跳 200 1673483 bytes·GATE-BANNER-ABSENT 真执行行 13:22:43Z 在册（复核台账 §二 S4·E 变体第三件实测确证·判据词面非推断）；canned 另含 2 行 dump（青色脚本回显——banner 分支与 attest 分支脚本文本·复核台账 §三-2 证据陷阱形：attest token 仅 dump 行在册须被滤除·真执行 banner 行须保留确证）"
  }
 }
