@@ -5,6 +5,10 @@
 > **Core Principle**: 凡可用类型论结构性判据机检的，一律不交给概率模型猜。
 > (What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models.)
 
+> **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-campaign-total-v1.0-20261111.md](docs/rocqwash-service-campaign-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（收口三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·候令未排程）
+>
+> **v42 快照（2026-11-11·收口总档波·四席并铸＋集成席收口）**: 总报告/演练实录/路线图三档入 docs/（服务层总览 v40 在库续用）·cw_paths v1.x 双件入 ConstructiveWorld·rocqwash v41 `c5df4d4`——三闸收口基准：doc_lint drift=0／破坏面矩阵 17 判全过／总套零红（SKIP 不计红）。
+
 ## Architecture: Three Chains in One
 
 ```

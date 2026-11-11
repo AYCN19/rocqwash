@@ -1,7 +1,7 @@
 # 服务层总览 v1.0（service-layer overview·2026-11-11）
 
 > 一张图讲清 rocqwash 现役能力全貌：**四职能**（清洗／洗形／排障／疏通）×
-> **三层**（诊断 v35／编排 v36／服务 v37-v39）×**统一入口**（cw.sh 十九工具）×
+> **三层**（诊断 v35／编排 v36／服务 v37-v39）×**统一入口**（cw.sh 二十工具）×
 > **工作流配合接口**（引 whitepaper）。内容全部取自器实况（各器 `--help` 与
 > docstring·`cw.sh` 工具表·更新账 v35-v39 段·2026-11-11 先读后写·零凭空
 > API）；文中旗标引用已经 `tools/doc_lint.py` ③旗标查逐枚对照 `--help` 实出
@@ -38,7 +38,7 @@
 │  底座：scan4 普查·probe 探针·chain 链根·cure 治愈·sync-ledger·        │
 │        erasure·dual-scan·netname-normalize·select-audit               │
 └───────────────────────────────────────────────────────────────────────┘
-        统一入口：bash cw.sh <tool>（十九工具＋help·1:1 透传·bash 3.2）
+        统一入口：bash cw.sh <tool>（二十工具＋help·1:1 透传·bash 3.2）
 ```
 
 读法：外部工作流只站在图顶——调器、读 JSON、按五纪律分流；四职能全部由
@@ -61,7 +61,7 @@
 | 编排层 | v36（4026051） | pushci（subprocess 编排 v35 四器·零新引擎） | 一键流水线：发射闸→push→watch→heal→verdict±merge·七态封册 |
 | 服务层 | v37（41e74b0）／v38（c205ea0）／v39（caa3a28） | v37＝unclog·wash-shape·sentinel 三器＋接口五纪律；v38＝cw-doctor 四域体检＋`--on-red-preset` 接驳＋`--audit` 审计＋韧性层＋三嵌段＋whitepaper；v39＝doc-lint＋cure_pack v1.4＋header_map_v1 模板库＋relay e2e＋ops 手册＋入口补齐十九 | 批处理工具→实时动态服务：四职能常驻化＋体检＋文档收口 |
 
-## 四、入口：cw.sh 十九工具全表
+## 四、入口：cw.sh 二十工具全表
 
 统一入口 `bash cw.sh <tool> [args...]`（repo 根·参数与退出码 1:1 透传·
 `bash cw.sh help <tool>` 看单器一行提示）：
