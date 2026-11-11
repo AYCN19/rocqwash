@@ -17,6 +17,14 @@
   E coqchk-skipped 签名 E-coqchk-skipped＝上传步红＋coqchk 步 skipped（＋gate2
     GATE-BANNER-ABSENT 日志确证）＝B 族变体·勿当内容红
     → action=rerun-after-stable-window。
+  E 变体（gate2-only 连坐形·20261112 Main retro 六事件证据人工指认入谱）＝
+    红步集 ⊆ {gate2＋上传族} 且纯 gate2 红步在册（gate2 名非上传名——防
+    「Upload artifact (gate2 ledger)」gate2 子串词面搭便误吞上传红）·前置
+    build/coqchk 非 content 红＝「coqchk 产物缺·gate2 连坐」（GATE-BANNER-ABSENT
+    同义·run#7 job 127903477736 日志 200 实测确证在册）＝E 族内变体
+    → family=E-coqchk-skipped·action=rerun-after-stable-window。
+    判类谱序 UNRECOGNIZED>C>A>E>B>D 不动（E 变体在 E 内·出处六事件中
+    #7/#8/#10/#20/#26 五发 gate2-only 形入谱·#3 runner 失联形仍谱外不充谱）。
   绿炉＝无红件 → family=none·action=watch-only。在飞/条件跳过（conclusion 空或
     skipped/neutral）同记 none·但 evidence 显式注记「判类暂缓非绿判」·绝不充绿。
   判类谱外红形 → family=UNRECOGNIZED·action=watch-only（不充谱·run 级判类序
@@ -24,7 +32,8 @@
 
   判类序（逐 job·先到先归）：绿/在飞/条件跳过 → D（cancelled·零步骤）→ B 连坐形
   （cancelled·有步骤零红步）→ log 直证 C（EXIT=134/Abort trap: 6）→ E 签名
-  （上传红＋coqchk skipped）→ log B → 步名 B（checkout/upload/artifact/cache/…）
+  （上传红＋coqchk skipped）→ E 变体（gate2-only 连坐：红步集 ⊆ {gate2+上传族}·
+  build/coqchk 非 content 红）→ log B → 步名 B（checkout/upload/artifact/cache/…）
   → log A（Error:/FAIL/ORDER-MISSING/COQCHK_EXIT≠0/公理总数≠0）→ 步名 A
   （build/compile/coqchk/…）→ UNRECOGNIZED。
 
@@ -43,9 +52,12 @@
     （GET /repos/{repo}/actions/runs/{run}/jobs?per_page=100&page=N 分页到齐；
       --logs 时对红件再 GET /repos/{repo}/actions/jobs/{job}/logs 抓关键行入证据：
       COQCHK_EXIT/COQCHK_ALL_PASS/判定=CLEAN/公理总数/GATE-BANNER-ABSENT/
-      ENOTFOUND/ORDER-MISSING/EXIT=134 等；logs GET 404/403 本身入证据——
-      403 Forbidden: job is completed 即判类谱 B 中断连坐 token·重试耗尽后
-      原码照旧入证据）
+      ENOTFOUND/ORDER-MISSING/EXIT=134 等；取日志两跳形（20261112 415 修法·
+      实测定）：第一跳 Accept: application/vnd.github+json（text/plain 现 415 拒）
+      禁自动重定向 GET → 302 Location 签名 URL；第二跳对签名 URL 零 Authorization
+      再 GET（签名自带凭据——带 token 转发 403 Azure AuthenticationFailed·实测）；
+      logs GET 404/403/415 本身入证据——403 Forbidden: job is completed 即判类谱
+      B 中断连坐 token·重试耗尽后原码照旧入证据）
   韧性层（v37 限流退避·承任务书①）：线上 GET 遇 403/429/5xx → 指数退避重试
     （base 2s·帽 --retry-max 缺省 3·Retry-After 秒数头尊重——可解析秒数替当
     次指数延迟·HTTP-date 形不猜落回指数；重试耗尽或 4xx 语义面（401/404 等）
@@ -58,7 +70,9 @@
     （canned jobs JSON 同 API 真形 {"total_count":N,"jobs":[...]}；
       fixtures 见 tests/fixtures/ci_triage_*.json 六件套＋Main 形 coq93
       真形一件 ci_triage_main_coq93.json（v48 勘形小改①·单 Windows job
-      「Main CI 9.3」16 步真名·绿样张）＝七件）
+      「Main CI 9.3」16 步真名·绿样张）＋gate2-only 真形两件
+      ci_triage_gate2_only_{cancelled,failure}.json（20261112 retro 台账
+      run#7/#10 逐字段誊录）＝九件）
   python3 tools/ci_triage.py --selftest
 
 退出码：0=分诊完成（红是数据非器红·响亮 stdout）；2=用法错（参数缺失/互斥/
@@ -99,6 +113,14 @@ import urllib.request
 PROG = "ci_triage"
 SCHEMA = "rocqwash-ci-triage/1"
 API_ROOT = "https://api.github.com"
+# logs 端点 Accept 实测定值（20261112 415 修法）：text/plain 现 415 拒（探针 P1
+# 原词 {"message":"Unsupported 'Accept' header: 'text/plain'. Must accept
+# 'application/json'. ..."}）；application/vnd.github+json → 302 Location 签名
+# URL（探针 P2）；第二跳对签名 URL 零 Authorization → 200 实日志（探针 P4·
+# 1673483 bytes）；带 token 转发 → 403 Azure AuthenticationFailed（探针 P5
+# 对照·证两跳零认证必要面）。探针 /tmp/probe_logs_415.py·job 127903477736。
+LOGS_ACCEPT = "application/vnd.github+json"
+REDIRECT_CODES = (301, 302, 303, 307, 308)   # 签名 URL 重定向族（两跳手工续接）
 
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 if TOOLS_DIR not in sys.path:
@@ -139,6 +161,9 @@ CONTENT_STEP_RE = re.compile(r"(?i)build|compile|coqchk|coqc|rocq|check|verify|m
 NET_STEP_RE = re.compile(r"(?i)checkout|upload|artifact|cache|download|publish")
 UPLOAD_STEP_RE = re.compile(r"(?i)upload|artifact")
 COQCHK_STEP_RE = re.compile(r"(?i)coqchk")
+GATE2_STEP_RE = re.compile(r"(?i)gate2")   # gate2-only 连坐形判据词（纯 gate2
+# 红步＝GATE2 命中且 UPLOAD 不命中——「Upload artifact (gate2 ledger)」gate2
+# 子串词面搭便不算纯 gate2·防误吞上传红·组合判据在 classify E 变体分支）
 
 RED_STEP_CONCLUSIONS = ("failure", "timed_out")
 
@@ -340,20 +365,84 @@ def fetch_jobs_online(repo, run_id, token, timeout, retry_max=3):
     return jobs, (total if total is not None else len(jobs))
 
 
-def fetch_job_log(repo, job_id, token, timeout, retry_max=3):
-    """GET 单 job 日志原文 → (text, None)；HTTP 4xx/5xx → (None, 证据注记)——
-    logs 404 与 403 Forbidden: job is completed（判类谱 B 中断连坐）本身即证据
-    （403/429/5xx 先经 http_get 指数退避重试·耗尽才落证据注记·原码照旧在册）。
-    连接失败仍 TriageError 9（API 不可达）。"""
-    url = "%s/repos/%s/actions/jobs/%s/logs" % (API_ROOT, repo, job_id)
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """禁自动重定向 handler（302 以 HTTPError 形上抛·供 fetch_job_log 两跳手工
+    续接——urllib 缺省跟随时会把 Authorization 头一并转发签名 URL·Azure 侧
+    403 AuthenticationFailed 实测形；两跳零认证第二跳即修）。"""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _logs_error_note(e):
+    """logs HTTPError → 证据注记（body 头 120 字符·原码在册·同旧注记形）。"""
     try:
-        return http_get(url, token, timeout, accept="text/plain",
-                        retry_max=retry_max).decode(
-            "utf-8", errors="replace"), None
-    except ApiHTTPError as e:
-        note = "logs-GET: HTTP %d %s（日志不可达·入证据）" % (
-            e.code, e.body.strip()[:120])
-        return None, note
+        body = (e.read() or b"").decode("utf-8", errors="replace")
+    except Exception:
+        body = ""
+    return "logs-GET: HTTP %d %s（日志不可达·入证据）" % (
+        e.code, body.strip()[:120])
+
+
+def fetch_job_log(repo, job_id, token, timeout, retry_max=3, _open=None,
+                  _sleep=None):
+    """GET 单 job 日志原文 → (text, None)；HTTP 4xx/5xx → (None, 证据注记)。
+
+    两跳取日志（20261112 415 修法·实测定）：第一跳 GET logs 端点
+    （Accept: application/vnd.github+json——text/plain 现 415 拒·禁自动重定向
+    _NoRedirect opener）→ 302 Location 签名 URL；第二跳对签名 URL 零
+    Authorization 再 GET（签名自带凭据——urllib 缺省随重定向转发 token 会
+    403 Azure AuthenticationFailed·探针 P5 实测）。403/429/5xx 第一跳指数退避
+    重试（_http_backoff 同款·Retry-After 秒数头尊重·耗尽落证据注记）；
+    404/415 等语义面不重试原码照旧入证据；第二跳失败落证据注记不重试；
+    连接失败仍 TriageError 9（API 不可达）。_open/_sleep 注入位（selftest
+    零网络矢量·缺省真 opener/真 sleep）。"""
+    url = "%s/repos/%s/actions/jobs/%s/logs" % (API_ROOT, repo, job_id)
+    do_open = _open
+    if do_open is None:
+        do_open = urllib.request.build_opener(_NoRedirect).open
+    do_sleep = time.sleep if _sleep is None else _sleep
+    delays = _http_backoff.backoff_delays(retry_max)
+
+    def _request(u, with_auth):
+        headers = {
+            "Accept": LOGS_ACCEPT,
+            "User-Agent": "rocqwash-ci-triage",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        if with_auth:
+            headers["Authorization"] = "token %s" % token
+        return urllib.request.Request(u, headers=headers)
+
+    attempt = 0
+    while True:
+        try:
+            with do_open(_request(url, True), timeout=timeout) as resp:
+                return resp.read().decode("utf-8", errors="replace"), None
+        except urllib.error.HTTPError as e:
+            if e.code in REDIRECT_CODES:
+                loc = e.headers.get("Location") if e.headers is not None \
+                    else None
+                if not loc:
+                    return None, "logs-GET: HTTP %d 无 Location（重定向形坏）" \
+                        % e.code
+                try:
+                    with do_open(_request(loc, False),
+                                 timeout=timeout) as r2:
+                        return r2.read().decode(
+                            "utf-8", errors="replace"), None
+                except urllib.error.HTTPError as e2:
+                    return None, _logs_error_note(e2)
+            if attempt < retry_max and _http_backoff.is_retry_status(e.code):
+                ra = _http_backoff.parse_retry_after(
+                    e.headers.get("Retry-After")
+                    if e.headers is not None else None)
+                do_sleep(ra if ra is not None else delays[attempt])
+                attempt += 1
+                continue
+            return None, _logs_error_note(e)
+        except (urllib.error.URLError, OSError) as e:
+            raise TriageError("API 不可达: %s (%s)" % (url, e), 9)
 
 
 # ---- 离线装载 ---------------------------------------------------------------
@@ -461,6 +550,36 @@ def classify(job, log_text=None):
         if log_text:
             if GATE_BANNER_ABSENT_RE.search(log_text):
                 ev.append("log 确证：GATE-BANNER-ABSENT（E 签名第三件齐）")
+            ev.extend(scan_log_evidence(log_text))
+        return {"family": "E-coqchk-skipped",
+                "action": ACTION_OF["E-coqchk-skipped"],
+                "evidence": ev, "red_steps": red_names}
+
+    # E 变体（gate2-only 连坐形·20261112 Main retro 六事件证据人工指认入谱）：
+    # 红步集 ⊆ {gate2＋上传族} 且纯 gate2 红步在册（gate2 名非上传名——防
+    # 「Upload artifact (gate2 ledger)」gate2 子串词面搭便误吞上传红）＝前置
+    # build/coqchk 非 content 红（Build/coqchk proper 步名既不沾 gate2 也不沾
+    # 上传族·在红步集即破子集条件）＝「coqchk 产物缺·gate2 连坐」（GATE-BANNER-
+    # ABSENT 同义·run#7 job 127903477736 日志 200 实测确证）
+    # → family=E-coqchk-skipped（E 族内变体·判类谱序 UNRECOGNIZED>C>A>E>B>D
+    #   不动）·action=rerun-after-stable-window。出处：retro 台账 §二主表
+    #   UNREC 六事件中 #7/#8/#10/#20/#26 五发 gate2-only 形·#3 runner 失联形
+    #   （零红步）仍走 UNRECOGNIZED 不充谱。
+    gate2_only_red = [s for s in red_steps
+                      if GATE2_STEP_RE.search(str(s.get("name") or ""))
+                      and not UPLOAD_STEP_RE.search(str(s.get("name") or ""))]
+    subset_gate2_upload = all(
+        GATE2_STEP_RE.search(str(s.get("name") or ""))
+        or UPLOAD_STEP_RE.search(str(s.get("name") or ""))
+        for s in red_steps)
+    if gate2_only_red and subset_gate2_upload:
+        ev.append("gate2-only 连坐形（E 变体）：红步集 ⊆ {gate2+上传族}·纯 gate2"
+                  " 红步在册·前置 build/coqchk 非 content 红＝coqchk 产物缺·"
+                  "gate2 连坐（GATE-BANNER-ABSENT 同义·20261112 Main retro "
+                  "#7/#8/#10/#20/#26 五事件形入谱）")
+        if log_text:
+            if GATE_BANNER_ABSENT_RE.search(log_text):
+                ev.append("log 确证：GATE-BANNER-ABSENT（gate2-only E 变体第三件）")
             ev.extend(scan_log_evidence(log_text))
         return {"family": "E-coqchk-skipped",
                 "action": ACTION_OF["E-coqchk-skipped"],
@@ -785,7 +904,10 @@ def selftest():
     E 勿当内容红负证）＋netrc 解析单元＋确定性字节恒同＋CLI 四码＋韧性层退避
     （403×3→[2,4,8]·Retry-After 尊重·耗尽上抛·401 不重试·_open/_sleep 注入
     零网络）＋〔九〕Main 形判读矢（v48 勘形小改①·coq93.yml 真形步名×五族
-    判类兼容机检钉——勘形 §3.1「即用」判据的机械实证）。
+    判类兼容机检钉——勘形 §3.1「即用」判据的机械实证）＋〔十〕gate2-only
+    E 变体矢（两 fixture 全命中＋规则正负判·出处六事件 #7/#8/#10/#20/#26
+    入谱 #3 不充谱）＋logs 两跳 415 修法矢（302→零 Authorization 第二跳
+    200·415/403/无 Location 原码入证据·canned 零网络）。
     全程 --offline fixtures 零真网络零编译。"""
     import shutil
     import subprocess
@@ -1075,7 +1197,10 @@ def selftest():
         # 「pre-build」含 build 子串→CONTENT 搭便归 A（fix-content·poison-token
         # 红语义上属内容红·可接受同 gate5/attest 词面搭便）——非 §3.1 所记
         # 「零命中→UNRECOGNIZED 兜底」；「五族骨架即用」判据不受影响（不漏红
-        # 不误断·兜底行剩 gate3/gate2/RAM/tree-stats-gen 四枚）。
+        # 不误断）。20261112 增注：gate2 行原钉 UNRECOGNIZED（v48 勘形兼容表
+        # 时点器面）——Main retro 六事件证据人工指认后 gate2-only 连坐形入谱
+        # （E 变体·见〔十〕）·本行现钉 E-coqchk-skipped·兜底行剩 gate3/RAM/
+        # tree-stats-gen 三枚（20261112 自查日志注记·与勘形 §八判读不追溯）。
         MAIN_JOB_NAME = ("Rocq 9.3 build + coqchk "
                          "(self-hosted seed cache, Windows)")
         MAIN_STEPS = [
@@ -1138,7 +1263,7 @@ def selftest():
              "B-netred"),
             ("gate3 cross-tree require-face diff", "UNRECOGNIZED"),
             ("gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
-             "UNRECOGNIZED"),
+             "E-coqchk-skipped"),
             ("RAM guard (report commit headroom before heavy phase)",
              "UNRECOGNIZED"),
             ("Generate tree-stats (six-dimension counts, three-caliber breakdown)",
@@ -1175,11 +1300,161 @@ def selftest():
         assert c["family"] == "E-coqchk-skipped", c
         assert any("coqchk" in e for e in c["evidence"]), c
 
+        # 〔十〕gate2-only E 变体判读矢＋logs 两跳 415 修法矢（20261112·
+        # Main retro 六事件证据人工指认入谱·全部 canned 零网络）
+        # 1) 两件新 fixture（真形自 retro 台账 run#7 cancelled／run#10 failure）
+        #    全命中 E 变体（family/action/连坐注记/红步咬合）
+        for stem, concl in (("gate2_only_cancelled", "cancelled"),
+                            ("gate2_only_failure", "failure")):
+            path = fx(stem)
+            assert os.path.isfile(path), "gate2-only fixture 缺失: %s" % path
+            out = os.path.join(tmp, stem + ".json")
+            p = run(["--offline", path, "--json", out])
+            assert p.returncode == 0, p.stdout[-400:]
+            rep = json.load(io.open(out, encoding="utf-8"))
+            assert rep["schema"] == SCHEMA and rep["family"] \
+                == "E-coqchk-skipped" \
+                and rep["action"] == "rerun-after-stable-window", \
+                (stem, rep["family"], rep["action"])
+            assert rep["jobs"][0]["conclusion"] == concl, \
+                (stem, rep["jobs"][0]["conclusion"])
+            cj = rep["jobs"][0]["classification"]
+            assert cj["family"] == "E-coqchk-skipped" and any(
+                "gate2-only 连坐" in e for e in cj["evidence"]), cj
+            assert cj["red_steps"] == [
+                "gate2 axioms sentinel (block-state-machine, fail-loud;"
+                " attest branch)"], cj["red_steps"]
+        # 2) 规则正判（classify 直调·canned 形）：run#7 形 cancelled＋唯 gate2 红
+        #    → E 变体；log GATE-BANNER-ABSENT 词面入证据（第三件）
+        g2_steps = [mkstep(1, "Build full tree (order topology, fingerprint"
+                           " skip, thermal-guarded)", "cancelled"),
+                    mkstep(2, "coqchk full-tree certification (parallel"
+                              " root-grouped, thermal-guarded)", "skipped",
+                           started_at=None, completed_at=None),
+                    mkstep(3, "gate2 axioms sentinel (block-state-machine,"
+                              " fail-loud; attest branch)", "failure")]
+        c = classify(mkjob(id=71, conclusion="cancelled", steps=g2_steps))
+        assert c["family"] == "E-coqchk-skipped" \
+            and c["action"] == "rerun-after-stable-window" \
+            and any("gate2-only 连坐" in e for e in c["evidence"]), c
+        c = classify(mkjob(id=72, conclusion="cancelled", steps=g2_steps),
+                     log_text="2026-11-06T12:54:20Z gate2: "
+                              "GATE-BANNER-ABSENT ledger missing\n")
+        assert c["family"] == "E-coqchk-skipped" and any(
+            "GATE-BANNER-ABSENT" in e for e in c["evidence"]), c
+        # 3) 规则负判四发：build/coqchk proper content 红→A（连坐被破）；
+        #    「Upload artifact (gate2 ledger)」gate2 子串搭便上传红→B（防误吞
+        #    既钉）；非 gate2/上传红步→UNRECOGNIZED；零红步 failure（runner
+        #    失联形＝出处六事件 #3）→UNRECOGNIZED 不充谱
+        c = classify(mkjob(id=73, steps=[
+            mkstep(1, "Build full tree (order topology, fingerprint skip,"
+                     " thermal-guarded)", "failure"),
+            mkstep(2, "gate2 axioms sentinel (block-state-machine,"
+                     " fail-loud; attest branch)", "failure")]))
+        assert c["family"] == "A-content-red", c
+        c = classify(mkjob(id=74, steps=[
+            mkstep(1, "coqchk full-tree certification (parallel"
+                     " root-grouped, thermal-guarded)", "failure"),
+            mkstep(2, "gate2 axioms sentinel (block-state-machine,"
+                     " fail-loud; attest branch)", "failure")]))
+        assert c["family"] == "A-content-red", c
+        c = classify(mkjob(id=75, steps=[
+            mkstep(1, "Upload artifact (gate2 ledger)", "failure"),
+            mkstep(2, "COQCHK", "success")]))
+        assert c["family"] == "B-netred", \
+            "gate2 子串搭便上传红仍归 B（防误吞）实测 %s" % c["family"]
+        c = classify(mkjob(id=76, steps=[
+            mkstep(1, "Generate tree-stats (six-dimension counts,"
+                     " three-caliber breakdown)", "failure")]))
+        assert c["family"] == "UNRECOGNIZED", c
+        c = classify(mkjob(id=77, steps=[
+            mkstep(1, "Build full tree (order topology, fingerprint skip,"
+                     " thermal-guarded)", None, status="in_progress",
+                     conclusion=None)]))
+        assert c["family"] == "UNRECOGNIZED", \
+            "runner 失联零红步形仍谱外不充谱实测 %s" % c["family"]
+        # 4) logs 两跳 415 修法矢（canned _open 注入·零网络）：
+        #    修后形 hop1 Accept=LOGS_ACCEPT（≠text/plain 415 债）→ 302 Location
+        #    → hop2 零 Authorization → 200 日志文本；旧形对照 415 原码入证据；
+        #    第二跳 403 Azure 形原码入证据；重定向无 Location 形坏入证据。
+        assert LOGS_ACCEPT == "application/vnd.github+json" \
+            and LOGS_ACCEPT != "text/plain", LOGS_ACCEPT
+
+        def _redirect_err(code, loc):
+            return urllib.error.HTTPError(
+                "https://x", code, "HTTP Error %d" % code,
+                {"Location": loc}, io.BytesIO(b""))
+
+        cap = []
+        slept = []
+
+        def _open_2hop(req, timeout=None):
+            cap.append((str(req.full_url), dict(req.headers)))
+            if len(cap) == 1:
+                raise _redirect_err(
+                    302, "https://blob.example/job-logs.txt?sig=1")
+            return _Resp(b"BUILD LOG\nGATE-BANNER-ABSENT\n")
+
+        text, note = fetch_job_log("o/r", 42, "tok", 5,
+                                   _open=_open_2hop, _sleep=slept.append)
+        assert text == "BUILD LOG\nGATE-BANNER-ABSENT\n" and note is None, \
+            (text, note)
+        assert len(cap) == 2, cap
+        u1, h1 = cap[0]
+        u2, h2 = cap[1]
+        assert "/actions/jobs/42/logs" in u1, u1
+        assert h1.get("Accept") == LOGS_ACCEPT \
+            and h1.get("Authorization") == "token tok", h1
+        assert u2.startswith("https://blob.example/job-logs.txt"), u2
+        assert "Authorization" not in h2, \
+            "第二跳须零 Authorization（带 token 转发 403 Azure 实测形）"
+        assert h2.get("Accept") == LOGS_ACCEPT, h2
+        assert slept == [], "两跳矢量零重试零睡"
+        cap = []
+        slept = []
+
+        def _open_415(req, timeout=None):
+            cap.append(str(req.full_url))
+            raise _http_err(415)
+
+        text, note = fetch_job_log("o/r", 42, "tok", 5,
+                                   _open=_open_415, _sleep=slept.append)
+        assert text is None and note is not None and "HTTP 415" in note, \
+            (text, note)
+        assert "415" in note and "logs-GET" in note, note
+        assert slept == [], "415 语义面不重试零睡"
+        cap = []
+        slept = []
+
+        def _open_2hop_403(req, timeout=None):
+            cap.append(str(req.full_url))
+            if len(cap) == 1:
+                raise _redirect_err(
+                    302, "https://blob.example/job-logs.txt?sig=1")
+            raise _http_err(403)
+
+        text, note = fetch_job_log("o/r", 42, "tok", 5,
+                                   _open=_open_2hop_403, _sleep=slept.append)
+        assert text is None and note is not None and "HTTP 403" in note, \
+            (text, note)
+        assert slept == [], "第二跳失败不重试零睡"
+
+        def _open_noloc(req, timeout=None):
+            raise _redirect_err(302, "")
+
+        text, note = fetch_job_log("o/r", 42, "tok", 5,
+                                   _open=_open_noloc, _sleep=slept.append)
+        assert text is None and note is not None \
+            and "无 Location" in note, (text, note)
+
         print("CI-TRIAGE-SELFTEST PASS: 五族+绿炉六样张全命中/基线 13.3x 判例+缺席"
               "响亮注记/分类器单元（regex 正负·连坐·在飞·E 勿当内容红·UNRECOGNIZED）/"
               "netrc 解析/确定性字节恒同/CLI 四码/韧性层退避（403×3→[2,4,8]·"
               "Retry-After 尊重·403 耗尽 9·401 不重试）/Main 形判读矢（coq93 真形"
-              " 16 步咬合+兼容表 15 行+E 两件齐） 全过")
+              " 16 步咬合+兼容表 15 行+E 两件齐）/〔十〕gate2-only E 变体矢"
+              "（两 fixture 全命中+正判+负判四发·六事件 #3 不充谱）+logs 两跳"
+              " 415 修法矢（302→零 Authorization 第二跳 200·415/403/无 Location"
+              " 原码入证据） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

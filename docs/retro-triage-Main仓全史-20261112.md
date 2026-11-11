@@ -238,3 +238,67 @@ B/E/A/UNREC 族零漂。
 | 4 | logs 双探（text/plain vs application/json·job 126871747925） | 415（原词入账）/403 Azure XML（§2.4-1） |
 | 5 | 哨 v48 三件套直读（state/events/report） | Main seen=31·events 33 行 Main 18·对账 agree=30/disagree=0（§四） |
 | 6 | `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | **VERDICT consistent（exit 0）**·本档 refs=18 unresolved=0 oos=0 drift=0·全仓三查零漂（本档交稿后本席实跑·§六·6 注记同轮） |
+
+---
+
+## 八、器面小改落地注记（20261112·工装席 triage-fix 席增补·承 §2.4-1 候选与 §2.3-3 两形）
+
+> **本节性质**：后续工装席增补（非 §一-§七原实测席笔迹）——判类谱序
+> UNRECOGNIZED>C>A>E>B>D **不动**；器面两小改＋fixture 两件＋selftest 矢量区。
+> 本档 §二主表 32 发判类系当时器面记录**不追溯改写**·现势器面对同形数据的
+> 判类变化逐条在册（§8.3）。全部实跑经
+> `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120` 包裹。
+
+### 8.1 logs 端点 415 修法（§2.4-1 候选落地·Accept 值实测定）
+
+- 实测探针（只读 GET·job 127903477736＝本档 §二 run#3 红件·netrc 同款口径·
+  token 永不回显）：`Accept: text/plain`→415 原词（§2.4-1 同形复现）；
+  `Accept: application/vnd.github+json`→**302 Location**（Azure 签名 URL·
+  `application/vnd.github.v3.text` 同 302·取标准形）；对签名 URL
+  **零 Authorization** 第二跳→**200** 实日志 1,673,483 bytes；对照带 token
+  转发→403 Azure AuthenticationFailed XML——§2.4-1 双探 403 形机理实证
+  ＝urllib 缺省随重定向转发 Authorization 头所致·两跳零认证即修。
+- 器面落点：`tools/ci_triage.py:122` LOGS_ACCEPT 常量＋`:368` _NoRedirect
+  禁自动重定向 handler＋`:387` fetch_job_log 两跳重写（403/429/5xx 第一跳
+  退避重试语义保持·404/415 原码照旧入证据·第二跳失败入证据不重试）。
+- 修后真发一发实证（本席实跑）：`python3 -B tools/ci_triage.py --repo
+  hy7pc8gfmf-dotcom/ConstructiveWorld-Main --run 42221225472 --logs --json
+  /tmp/triagefix_r7.json` → rc=0·run#7 红件 job 127903477736 取日志 200·
+  evidence 抓到 GATE-BANNER-ABSENT 词面 3 行·零 415 注记（§2.4-1「日志词面
+  零在场」债清偿）。
+- selftest 增 canned 矢（`tools/ci_triage.py:1300` 〔十〕·4）：修后形
+  hop1 Accept=LOGS_ACCEPT→302→hop2 零 Authorization→200 两跳断言＋415/403/
+  重定向无 Location 三负例原码入证据（零网络·_open 注入）。
+
+### 8.2 gate2-only 连坐形入谱（E 变体·§2.3-3 观察二的人工指认落谱）
+
+- **规则出处＝本档 §二主表 UNREC 六事件（#3/#7/#8/#10/#20/#26）**：其中
+  **#7/#8/#10/#20/#26 五发 gate2-only 形**（唯 gate2 axioms sentinel 红·前置
+  build/coqchk 非 content 红·无其他红步）人工指认为「coqchk 产物缺·gate2
+  连坐」族＝E 变体；**#3 runner 失联形（failure·零红步）仍谱外不充谱**——
+  六事件并录·五入一留（§五·3「扩谱须人工指认」纪律承本任务书指认）。
+- 判据（`tools/ci_triage.py:164` GATE2_STEP_RE＋`:558` classify E 变体分支）：
+  红步集 ⊆ {gate2＋上传族} 且**纯 gate2 红步在册**（gate2 名非上传名——防
+  「Upload artifact (gate2 ledger)」gate2 子串词面搭便误吞上传红·负证矢量
+  在册）→ family=E-coqchk-skipped·action=rerun-after-stable-window·
+  evidence 注 gate2-only 连坐；log GATE-BANNER-ABSENT 词面在册即第三件确证。
+  action 承 E 族处置表统一 rerun-after-stable-window（涉网络/ watch-only
+  分流本五发无证据面·如实不设）；#7/#26 build 步 conclusion=cancelled（非
+  红步族）同判——判据面为「非 content 红」非「success/skipped 严格面」。
+- 日志语义确证（§8.1 修后通路·run#7 实抓原句）：gate2 哨自陈「_chk_all.log
+  不在盘——coqchk 未产出日志（上游 gate4/build 夭折连带·红因看上游步）·
+  非 COQLIB 代际失守」——与 E 变体判据逐字咬合。
+- fixtures 两件（真形自本档 §二主表 32 发出账逐字段誊录·_provenance 在册）：
+  `tests/fixtures/ci_triage_gate2_only_cancelled.json`（run#7·job
+  127903477736·cancelled 18 步真形）／`ci_triage_gate2_only_failure.json`
+  （run#10·job 128320751675·failure 18 步真形）。selftest 正判两件全命中
+  ＋负判五发（build 红＋gate2 红→A·coqchk proper 红＋gate2 红→A·gate2
+  子串搭便上传红→B·tree-stats 单红→UNRECOGNIZED·#3 零红步形→UNRECOGNIZED
+  不充谱）（`tools/ci_triage.py:1300` 〔十〕）。
+
+### 8.3 现势判类对读（不追溯改写 §二主表·如实并记）
+
+#7/#8/#10/#20/#26 五发现势判类＝E-coqchk-skipped（rerun-after-stable-window）
+·#3 仍 UNRECOGNIZED——§2.3 族分布 UNRECOGNIZED×6 为当时器面快照·现势同批
+数据判类＝UNREC×1＋E 变体×5（run#7 现发实证 §8.1 在卷）。§四哨对账 30/30
+全同结论不受影响（判类面变化仅族名迁移·红件集不变）。

@@ -1,0 +1,201 @@
+{
+ "total_count": 1,
+ "jobs": [
+  {
+   "classification": {
+    "action": "watch-only",
+    "evidence": [
+     "job conclusion=failure status=completed",
+     "failure-step: gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
+     "step-conclusions: Set up job=success,Run actions/checkout@v5=success,gate1 poison-token guard (pre-build fail-fast)=success,gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)=success,gate3 cross-tree require-face diff=success,Seed trust cache from local vo tree=success,RAM guard (report commit headroom before heavy phase)=success,Build full tree (order topology, fingerprint skip, thermal-guarded)=success,Generate tree-stats (six-dimension counts, three-caliber breakdown)=success,Upload tree-stats=success,gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)=success,attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)=success,coqchk full-tree certification (parallel root-grouped, thermal-guarded)=success,Upload vo trust cache (cross-machine sync)=success,gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)=failure,Upload coqchk logs=success,Post Run actions/checkout@v5=success,Complete job=success",
+     "判类谱外红形·不充谱·人工看日志指认",
+     "logs-GET: HTTP 415 {\"message\":\"Unsupported 'Accept' header: 'text/plain'. Must accept 'application/json'.\",\"documentation_url\":\"https://doc（日志不可达·入证据）"
+    ],
+    "family": "UNRECOGNIZED",
+    "red_steps": [
+     "gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)"
+    ]
+   },
+   "completed_at": "2026-11-07T17:19:21Z",
+   "conclusion": "failure",
+   "duration_sec": 40785,
+   "id": 128320751675,
+   "name": "Rocq 9.3 build + coqchk (self-hosted seed cache, Windows)",
+   "started_at": "2026-11-07T05:59:36Z",
+   "status": "completed",
+   "steps": [
+    {
+     "completed_at": "2026-11-07T05:59:37Z",
+     "conclusion": "success",
+     "duration_sec": 5,
+     "name": "Set up job",
+     "number": 1,
+     "started_at": "2026-11-07T05:59:32Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T05:59:42Z",
+     "conclusion": "success",
+     "duration_sec": 5,
+     "name": "Run actions/checkout@v5",
+     "number": 2,
+     "started_at": "2026-11-07T05:59:37Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T05:59:55Z",
+     "conclusion": "success",
+     "duration_sec": 13,
+     "name": "gate1 poison-token guard (pre-build fail-fast)",
+     "number": 3,
+     "started_at": "2026-11-07T05:59:42Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:00:44Z",
+     "conclusion": "success",
+     "duration_sec": 49,
+     "name": "gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)",
+     "number": 4,
+     "started_at": "2026-11-07T05:59:55Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:01:10Z",
+     "conclusion": "success",
+     "duration_sec": 26,
+     "name": "gate3 cross-tree require-face diff",
+     "number": 5,
+     "started_at": "2026-11-07T06:00:44Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:01:19Z",
+     "conclusion": "success",
+     "duration_sec": 9,
+     "name": "Seed trust cache from local vo tree",
+     "number": 6,
+     "started_at": "2026-11-07T06:01:10Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:01:20Z",
+     "conclusion": "success",
+     "duration_sec": 1,
+     "name": "RAM guard (report commit headroom before heavy phase)",
+     "number": 7,
+     "started_at": "2026-11-07T06:01:19Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:04:47Z",
+     "conclusion": "success",
+     "duration_sec": 207,
+     "name": "Build full tree (order topology, fingerprint skip, thermal-guarded)",
+     "number": 8,
+     "started_at": "2026-11-07T06:01:20Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:04:50Z",
+     "conclusion": "success",
+     "duration_sec": 3,
+     "name": "Generate tree-stats (six-dimension counts, three-caliber breakdown)",
+     "number": 9,
+     "started_at": "2026-11-07T06:04:47Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:04:55Z",
+     "conclusion": "success",
+     "duration_sec": 5,
+     "name": "Upload tree-stats",
+     "number": 10,
+     "started_at": "2026-11-07T06:04:50Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:05:00Z",
+     "conclusion": "success",
+     "duration_sec": 5,
+     "name": "gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)",
+     "number": 11,
+     "started_at": "2026-11-07T06:04:55Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T06:05:01Z",
+     "conclusion": "success",
+     "duration_sec": 1,
+     "name": "attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)",
+     "number": 12,
+     "started_at": "2026-11-07T06:05:00Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:18:19Z",
+     "conclusion": "success",
+     "duration_sec": 40398,
+     "name": "coqchk full-tree certification (parallel root-grouped, thermal-guarded)",
+     "number": 13,
+     "started_at": "2026-11-07T06:05:01Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:18:49Z",
+     "conclusion": "success",
+     "duration_sec": 30,
+     "name": "Upload vo trust cache (cross-machine sync)",
+     "number": 14,
+     "started_at": "2026-11-07T17:18:19Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:18:53Z",
+     "conclusion": "failure",
+     "duration_sec": 4,
+     "name": "gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
+     "number": 15,
+     "started_at": "2026-11-07T17:18:49Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:19:11Z",
+     "conclusion": "success",
+     "duration_sec": 18,
+     "name": "Upload coqchk logs",
+     "number": 16,
+     "started_at": "2026-11-07T17:18:53Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:19:14Z",
+     "conclusion": "success",
+     "duration_sec": 3,
+     "name": "Post Run actions/checkout@v5",
+     "number": 32,
+     "started_at": "2026-11-07T17:19:11Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-07T17:19:15Z",
+     "conclusion": "success",
+     "duration_sec": 1,
+     "name": "Complete job",
+     "number": 33,
+     "started_at": "2026-11-07T17:19:14Z",
+     "status": "completed"
+    }
+   ]
+  }
+ ],
+ "_provenance": {
+  "source": "Main 全史 retro 实测台账 docs/retro-triage-Main仓全史-20261112.md §二主表 run#10（rocqwash-ci-triage/1 真形逐字段誊录·20261112）",
+  "run_id": 42345007340,
+  "job_id": 128320751675,
+  "event": "push",
+  "branch": "main",
+  "shape": "gate2-only 连坐形：唯 gate2 axioms sentinel 红·前置 build/coqchk 非 content 红·无其他红步（UNREC 六事件 #7/#8/#10/#20/#26 五发同构）",
+  "log_confirm": "该 job 日志未实抓（本席 --logs 真发对象为 run#7）·GATE-BANNER-ABSENT 词面如实不作断言"
+ }
+}

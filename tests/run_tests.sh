@@ -83,7 +83,10 @@
 #         DYLD-DOCTOR-SELFTEST PASS＋--help 冒烟·零真 otool 零编译零网络零写盘）
 #       tools/ci_triage.py CI 红炉分诊器（tests/test_ci_triage.py·最小自测壳
 #         两判：--selftest 冻结标记 CI-TRIAGE-SELFTEST PASS＋--help 冒烟·
-#         零网络零写盘）
+#         零网络零写盘；selftest〔十〕gate2-only E 变体矢直挂
+#         tests/fixtures/ci_triage_gate2_only_{cancelled,failure}.json
+#         真形两件（v50 20261112 工装席入谱·retro 台账 run#7/#10 誊录·
+#         fixtures 九件套＝六件套＋Main 形＋gate2-only 两件））
 #       tools/net_probe.py 网络窗探针（tests/test_net_probe.py·最小自测壳两判：
 #         --selftest 冻结标记 NET-PROBE-SELFTEST PASS＋--help 冒烟·零网络零写盘）
 #       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
