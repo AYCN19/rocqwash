@@ -1,0 +1,33 @@
+{
+ "argv": {
+  "dry_run": true,
+  "max_heal": null,
+  "merge": false,
+  "pr": null
+ },
+ "branch": "main",
+ "canned": {
+  "jobs": [],
+  "logs": {},
+  "merge": null,
+  "probe": [],
+  "rerun": [],
+  "runs": []
+ },
+ "expect": {
+  "api_calls": 0,
+  "exit": 0,
+  "final_conclusion": null,
+  "git_calls": 0,
+  "merge_enabled": false,
+  "run_id": null,
+  "verdict": "dry-run",
+  "watch_rounds": 0,
+  "zero_api_calls": true,
+  "zero_git_calls": true
+ },
+ "head_sha": "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee07",
+ "scenario": "s7_main_dry_run",
+ "schema": "rocqwash-pushci-scenario/1",
+ "summary": "S7 Main 形 dry-run（勘形小改②·v48）：--branch main＝Main 仓 refs/heads/main 直推路线（push 白名单 [main] 唯一活路·勘形档 §3.2/§5.4）--dry-run 计划输出含 preflight 三闸（toolchain/net/gate4）与 [2] push 计划行·零 API 调用零 git 调用零副作用（tmp canned 仓·真仓 /Users/apple/Desktop/ConstructiveWorld-Main 前置件未物化·真发候令不入本波）"
+}

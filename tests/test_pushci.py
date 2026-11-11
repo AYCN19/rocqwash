@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_pushci.py — tools/pushci.py 六场景铸例壳（tests/·pushci 一键流水线测试席·
-20261111）
+"""test_pushci.py — tools/pushci.py 七场景铸例壳（tests/·pushci 一键流水线测试席·
+20261111·v48 勘形小改②扩 Main 形 dry-run 一件）
 
 pushci 一键流水线（preflight 发射闸→push→watch→NETRED 自愈 rerun→verdict→可选
-merge）的场景测试：六场景 fixture（tests/fixtures/pushci_scenarios/*.json·GitHub
+merge）的场景测试：七场景 fixture（tests/fixtures/pushci_scenarios/*.json·GitHub
 API 真形 canned 响应按轮次序列）经实现原生 flat 注入形（夹具原件 verbatim→
 DIR/scenario.json·「canned 键即认」）驱动 tools/pushci.py 全离线全注入跑通，逐场景
 判 exit 码／report.final／heal 轮数／关键 stage 字段／调用流水实证：
@@ -27,9 +27,13 @@ DIR/scenario.json·「canned 键即认」）驱动 tools/pushci.py 全离线全�
                 report.merge.merge_sha 非空 exit 0
   8 S6 dry-run  --dry-run 计划输出·零 API 调用（api_calls.json==[]）零 git 调用
                 （calls.json==[]）→verdict dry-run exit 0
-  9 幂等        六场景各两跑（同仓同 canned）：report 字节恒同；若含漂移则全部
+  9 S7 Main 形  --branch main（refs/heads/main 直推路线·勘形档 §3.2）--dry-run
+                dry-run       计划输出含 preflight 三闸计划行（toolchain/net/
+                gate4）与 [2] push 计划行（HTTP/1.1＋分支 main）·零 API 零 git
+                调用零副作用→verdict dry-run exit 0
+  10 幂等       七场景各两跑（同仓同 canned）：report 字节恒同；若含漂移则全部
                 差异叶须落墙钟类窄键名（否则红·禁静默放宽）
-  10 CLI 五码   --help 0／未知形参 2／缺必给 2／repo 缺失 9／injector-git-caller
+  11 CLI 五码   --help 0／未知形参 2／缺必给 2／repo 缺失 9／injector-git-caller
                 单边 2
 
 零副作用律：全部场景 tmp 仓 fixture（每跑 HEAD sha 与 status --porcelain 前后逐
@@ -48,7 +52,7 @@ api_calls.json 逐位对拍。
   bash tools/cpu_guard.sh -MaxWaitSec 120 -- python3 -B tests/test_pushci.py
   python3 -B tests/test_pushci.py        # 手动（-B 禁 __pycache__）
 
-退出码：0=十节全绿；1=任一红（fail-loud 响亮逐条列红·红例打印 file:line）。
+退出码：0=十一节全绿；1=任一红（fail-loud 响亮逐条列红·红例打印 file:line）。
 """
 import io
 import json
@@ -75,7 +79,8 @@ VERDICTS = ("success", "fix-content", "toolchain", "unstable",
             "heal-exhausted", "gate4-block", "dry-run")
 
 SCENARIOS = ["s1_green_path", "s2_netred_heal", "s3_content_red",
-             "s4_heal_exhausted", "s5_merge_flow", "s6_dry_run"]
+             "s4_heal_exhausted", "s5_merge_flow", "s6_dry_run",
+             "s7_main_dry_run"]
 
 # 墙钟类键名（幂等判的例外面·窄类不放宽：仅此形键可跨跑漂移）
 WALLCLOCK_KEY_RX = re.compile(
@@ -489,6 +494,37 @@ def check_s6(scen, res):
     return "S6 dry-run（零 API 零 git 调用流水实证·计划在册·verdict dry-run·exit 0）"
 
 
+def check_s7(scen, res):
+    f = assert_common(scen, res)
+    assert f["mode"] == "dry-run", "mode 应 dry-run 实测 %r" % f["mode"]
+    assert f["plan"], "dry-run 应有计划输出（report.plan 非空）"
+    # preflight 三闸计划行在册（toolchain/net/gate4·Main 形 gate 族在 plan 面
+    # 逐行实证——gate4 缺省未启形＝直推 main 路线 base...branch 差集退化的
+    # 正确缺省·勘形档 §5.4。注意 report.plan 列为裸行·stdout 渲染时才加
+    # 「PLAN 」前缀）
+    assert any("[1] preflight.toolchain" in ln for ln in f["plan"]), f["plan"]
+    assert any("[1] preflight.net" in ln for ln in f["plan"]), f["plan"]
+    assert any("[1] preflight.gate4" in ln and "未启" in ln
+               for ln in f["plan"]), f["plan"]
+    # push 计划行：HTTP/1.1 推送形＋分支 main（refs/heads/main 直推路线）
+    assert any("[2] push" in ln and "HTTP/1.1" in ln and " main" in ln
+               for ln in f["plan"]), f["plan"]
+    # Main 形咬合：report.args.branch == "main"
+    assert res["report"]["args"]["branch"] == "main", res["report"]["args"]
+    # 零副作用流水实证：零 git 调用零 API 调用（calls.json/api_calls.json 皆空）
+    assert res["git_calls"] == [], \
+        "S7 零 git 调用实证＝calls.json 空·实测 %r" % res["git_calls"]
+    assert res["api_calls"] == [], \
+        "S7 零 API 调用实证＝api_calls.json 空·实测 %r" % res["api_calls"]
+    assert res["stdout"].strip(), "dry-run 应有计划 stdout"
+    assert "PLAN [2] push" in res["stdout"], \
+        "计划应含 push 段行: %s" % res["stdout"][-500:]
+    assert scen["branch"] in res["stdout"], \
+        "计划输出应含分支名 main（计划实证）: %s" % res["stdout"][-500:]
+    return ("S7 Main 形 dry-run（branch=main·preflight 三闸计划行在册·push 计划"
+            "行 HTTP/1.1＋main·零 API 零 git 调用流水实证·零副作用）")
+
+
 CHECKS = {
     "s1_green_path": check_s1,
     "s2_netred_heal": check_s2,
@@ -496,6 +532,7 @@ CHECKS = {
     "s4_heal_exhausted": check_s4,
     "s5_merge_flow": check_s5,
     "s6_dry_run": check_s6,
+    "s7_main_dry_run": check_s7,
 }
 
 
@@ -677,7 +714,7 @@ def frame_loc(exc_info):
 
 
 def main():
-    print("== test_pushci: pushci 六场景铸例壳（repo=%s）==" % REPO)
+    print("== test_pushci: pushci 七场景铸例壳（repo=%s）==" % REPO)
     if not os.path.isfile(PUSHCI):
         print("FAIL-LOUD: tools/pushci.py 缺席——场景节不可跑（fail-loud）")
         return 1

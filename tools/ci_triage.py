@@ -56,7 +56,9 @@
     python3 tools/ci_triage.py --offline JOBS.json [--baseline-seconds N ...]
         [--json out.json]
     （canned jobs JSON 同 API 真形 {"total_count":N,"jobs":[...]}；
-      fixtures 见 tests/fixtures/ci_triage_*.json 六件套）
+      fixtures 见 tests/fixtures/ci_triage_*.json 六件套＋Main 形 coq93
+      真形一件 ci_triage_main_coq93.json（v48 勘形小改①·单 Windows job
+      「Main CI 9.3」16 步真名·绿样张）＝七件）
   python3 tools/ci_triage.py --selftest
 
 退出码：0=分诊完成（红是数据非器红·响亮 stdout）；2=用法错（参数缺失/互斥/
@@ -782,7 +784,8 @@ def selftest():
     缺席响亮注记＋分类器单元（关键行 regex 正负判·连坐/在飞/UNRECOGNIZED 分流·
     E 勿当内容红负证）＋netrc 解析单元＋确定性字节恒同＋CLI 四码＋韧性层退避
     （403×3→[2,4,8]·Retry-After 尊重·耗尽上抛·401 不重试·_open/_sleep 注入
-    零网络）。
+    零网络）＋〔九〕Main 形判读矢（v48 勘形小改①·coq93.yml 真形步名×五族
+    判类兼容机检钉——勘形 §3.1「即用」判据的机械实证）。
     全程 --offline fixtures 零真网络零编译。"""
     import shutil
     import subprocess
@@ -1064,10 +1067,119 @@ def selftest():
             assert e.code == 401, e.code
         assert slept == [], "401 零重试零睡"
 
+        # 〔九〕Main 形判读矢（v48 勘形小改①·勘形档 §3.1 兼容表的机检钉）：
+        # coq93.yml 真形（workflow「Main CI 9.3」·单 Windows job「Rocq 9.3
+        # build + coqchk (self-hosted seed cache, Windows)」）步名 16 枚逐枚
+        # 咬合＋五族判类对 Main 步名兼容逐行机械验证（真红不漏红·UNRECOGNIZED
+        # 兜底不误断）。机检与勘形 §3.1 散文一处不符如实登记：gate1 步名
+        # 「pre-build」含 build 子串→CONTENT 搭便归 A（fix-content·poison-token
+        # 红语义上属内容红·可接受同 gate5/attest 词面搭便）——非 §3.1 所记
+        # 「零命中→UNRECOGNIZED 兜底」；「五族骨架即用」判据不受影响（不漏红
+        # 不误断·兜底行剩 gate3/gate2/RAM/tree-stats-gen 四枚）。
+        MAIN_JOB_NAME = ("Rocq 9.3 build + coqchk "
+                         "(self-hosted seed cache, Windows)")
+        MAIN_STEPS = [
+            "Set up job",
+            "actions/checkout@v5",
+            "gate1 poison-token guard (pre-build fail-fast)",
+            "gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)",
+            "gate3 cross-tree require-face diff",
+            "Seed trust cache from local vo tree",
+            "RAM guard (report commit headroom before heavy phase)",
+            "Build full tree (order topology, fingerprint skip, thermal-guarded)",
+            "Generate tree-stats (six-dimension counts, three-caliber breakdown)",
+            "Upload tree-stats",
+            "gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)",
+            "attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)",
+            "coqchk full-tree certification (parallel root-grouped, thermal-guarded)",
+            "Upload vo trust cache (cross-machine sync)",
+            "gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
+            "Upload coqchk logs",
+        ]
+        main_path = fx("main_coq93")
+        assert os.path.isfile(main_path), \
+            "Main 形 fixture 缺失（真形七件套须在卷）: %s" % main_path
+        out = os.path.join(tmp, "main_coq93.json")
+        p = run(["--offline", main_path, "--json", out])
+        assert p.returncode == 0, p.stdout[-400:]
+        repM = json.load(io.open(out, encoding="utf-8"))
+        assert repM["schema"] == SCHEMA and repM["family"] == "none" \
+            and repM["action"] == "watch-only", (repM["family"],
+                                                 repM["action"])
+        jm = repM["jobs"][0]
+        assert jm["name"] == MAIN_JOB_NAME, jm["name"]
+        assert [s["name"] for s in jm["steps"]] == MAIN_STEPS, \
+            "Main 真形步名咬合失守（16 枚·序按 coq93.yml 实取）"
+        assert all(s["conclusion"] == "success" for s in jm["steps"]), \
+            "Main 绿样张应全步 success"
+        # 确定性：Main 夹具同输入重跑 --json 字节级恒同
+        out2 = os.path.join(tmp, "main_coq93.2.json")
+        p = run(["--offline", main_path, "--json", out2])
+        assert p.returncode == 0, p.stdout[-400:]
+        assert io.open(out2, "rb").read() == io.open(out, "rb").read(), \
+            "Main 形 json 字节漂移＝违例"
+        # 兼容表逐行机检（真形单红步形·无日志·判类序 步名 B 先于 步名 A）
+        MAIN_COMPAT = [
+            ("Build full tree (order topology, fingerprint skip, thermal-guarded)",
+             "A-content-red"),
+            ("coqchk full-tree certification (parallel root-grouped, thermal-guarded)",
+             "A-content-red"),
+            ("gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)",
+             "A-content-red"),
+            ("attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)",
+             "A-content-red"),
+            ("gate1 poison-token guard (pre-build fail-fast)", "A-content-red"),
+            ("actions/checkout@v5", "B-netred"),
+            ("Seed trust cache from local vo tree", "B-netred"),
+            ("Upload tree-stats", "B-netred"),
+            ("Upload vo trust cache (cross-machine sync)", "B-netred"),
+            ("Upload coqchk logs", "B-netred"),
+            ("gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)",
+             "B-netred"),
+            ("gate3 cross-tree require-face diff", "UNRECOGNIZED"),
+            ("gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
+             "UNRECOGNIZED"),
+            ("RAM guard (report commit headroom before heavy phase)",
+             "UNRECOGNIZED"),
+            ("Generate tree-stats (six-dimension counts, three-caliber breakdown)",
+             "UNRECOGNIZED"),
+        ]
+        for nm, fam in MAIN_COMPAT:
+            c = classify(mkjob(id=31,
+                               steps=[mkstep(1, nm, "failure")]))
+            assert c["family"] == fam, \
+                ("Main 形判读矢失配", nm, fam, c["family"])
+        # 词面暗礁/搭便机制钉：gate4=artifact 子串→步名 B 先判（勘形 §3.1
+        # 暗礁行·Set :120 同款非 Main 新增）；gate1=pre-build 子串→步名 A 搭便
+        c = classify(mkjob(id=33, steps=[mkstep(
+            1, "gate4 comment guard (pre-build, exit1=red exit2=yellow"
+               " artifact-only)", "failure")]))
+        assert c["family"] == "B-netred" and any(
+            "网络邻接步" in e and "artifact" in e for e in c["evidence"]), c
+        c = classify(mkjob(id=34, steps=[mkstep(
+            1, "gate1 poison-token guard (pre-build fail-fast)", "failure")]))
+        assert c["family"] == "A-content-red" and any(
+            "内容步" in e for e in c["evidence"]), c
+        # E 族 Main 形两件齐（勘形 §3.1 E 行：上传红＋coqchk skipped·
+        # Main 步名两件齐→E 可发）：Upload coqchk logs 红＋coqchk 步 skipped
+        e_main = [mkstep(1, "Build full tree (order topology, fingerprint"
+                            " skip, thermal-guarded)", "success"),
+                  mkstep(2, "Upload coqchk logs", "failure"),
+                  mkstep(3, "coqchk full-tree certification (parallel"
+                            " root-grouped, thermal-guarded)", "skipped",
+                         started_at=None, completed_at=None),
+                  mkstep(4, "gate2 axioms sentinel (block-state-machine,"
+                            " fail-loud; attest branch)", "skipped",
+                         started_at=None, completed_at=None)]
+        c = classify(mkjob(id=32, steps=e_main))
+        assert c["family"] == "E-coqchk-skipped", c
+        assert any("coqchk" in e for e in c["evidence"]), c
+
         print("CI-TRIAGE-SELFTEST PASS: 五族+绿炉六样张全命中/基线 13.3x 判例+缺席"
               "响亮注记/分类器单元（regex 正负·连坐·在飞·E 勿当内容红·UNRECOGNIZED）/"
               "netrc 解析/确定性字节恒同/CLI 四码/韧性层退避（403×3→[2,4,8]·"
-              "Retry-After 尊重·403 耗尽 9·401 不重试） 全过")
+              "Retry-After 尊重·403 耗尽 9·401 不重试）/Main 形判读矢（coq93 真形"
+              " 16 步咬合+兼容表 15 行+E 两件齐） 全过")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

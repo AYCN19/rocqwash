@@ -172,3 +172,22 @@ K=3 真跑（rc=0·cpu_guard FRONT pos=1 waited=0s·`--probe-parallel 3`·同候
 **加速比三账对表（probe_chain 口径）：K1/K2/K3＝190.728/101.916/165.202 → K1/K2＝1.87×·K1/K3＝1.15×·K3 较 K2 慢 1.62×（K2/K3＝0.62）＝负边际加速·DS4 纪律如实录·禁编数字禁凑绿**。total 口径同向（194.086/105.436/169.684）。判读（单跑读数·律 1 噪声带未复跑采样＝趋势级）：**并行收益在 K=2 档位现拐点——现机（4 CPU）现职守面 K=3 无收益**。挤压嫌疑注记（如实·不作开脱）：跑时另一席 nice-19 coqchk 17 件后台在飞·guard 热态预检 tlevel=58→launch 60（K=2 跑为 0）·pmset CPU_Speed_Limit=100% 无热钳位；K=3 与 K=2（前日 08:14）错峰合规。
 
 口径可比性机检（本席实跑）：恒同面 K=3 vs K=2 除 timing 段＋`args.probe_parallel` 外逐键恒同（0 键差）；`baseline_diff` 双向（K1↔K3·K2↔K3）verdict=stable·候选面四元组 `source=tsv·src=ConstructiveWorld_Live·candidates=audit27.tsv·chain_ledgers=-` 恒同·rc=0。账名按任务书指定 `audit-k3-20261112.json` 落仓（perf-README §2 命名律本名形 `perf-ConstructiveWorld_Live-k3-*.json`·四元组内嵌恒同·diff 实测无误配·如实注记）；rocq-cmd 取 K=1/K=2 同字面 coqc 模板而非 bin/rocq（args 段一致为先决·perf-README §2——模板词「rocq」系 rocq93 套件泛指）。
+
+## 20261112 K=3 复采样：律 1 噪声带首采（两发区间·实测席 k3-noise）
+
+perf-README §3 律 1「单跑不下结论」的 K=3 复采样一发（与首发错峰·温控纪律同 v48 实测席）——上行回填段「律 1 噪声带未复跑采样＝趋势级」自此段起有带可读。
+
+规程（同首发字面·args 段逐键恒同机检 0 键差）：`--probe-parallel 3`·同候选面 /tmp/audit27.tsv·同世界 /tmp/probe_world_v38·同 K=1/K=2/K3 字面 coqc 模板·src=ConstructiveWorld_Live（Set 仓正本·27 件 md5 跑前实测全对）·cpu_guard 包裹（FRONT pos=1 waited=0s·launch tlevel=57·无热钳位）。
+
+| 跑 | K | timing.jobs | manifest_s | probe_chain_s | total_s | rc |
+| --- | --- | --- | --- | --- | --- | --- |
+| 首发（上行回填段） | 3 | 3 | 2.574 | 165.202 | 169.684 | 0 |
+| 复采样（本席·02:12-02:15） | 3 | 3 | 2.16 | 190.719 | 195.221 | 0 |
+
+**噪声带（probe_chain 口径·两发区间）＝[165.202, 190.719]·带宽 25.517s＝首读的 15.4%（中点口径 14.3%）**；total 口径同向（169.684→195.221·+15.1%）。战况面两发恒同：27/27 RC0·red=0·墙=0·台账 md5_match 27/27·args 段与非 timing 段逐键恒同（差异恰在唯一非确定段 timing·律 2 恒同面先验 PASS）。
+
+负结果如实（禁编数字）：复采样读数 190.719 较首发**慢 15.4%**·且与 K=1 串行基线 190.728 仅差 -0.009s（落在串行线上）·两发区间整体覆盖串行值。上行「K3 较 K2 慢 1.62×＝负边际」的定性结论两发共同支持（两发均远慢于 K2=101.916·带外恒成立）；但 K3 相对 K1 的精确负边际量级属单跑级噪声（一发快于串行 25.5s·一发与串行持平）——**K=3 无收益＝两发可读的稳健结论·负边际精确倍数不可由单跑读出（律 1 正例）**。
+
+温控与挤压注记（如实·不作开脱）：首发与复采样均与另一席 nice-19 后台 coqchk 循环（17 件 base rebuild·-Direct 档）同窗挤压——带值含挤压效应；两发错峰合规（首发 01:40 产账·复采样 02:12 起·无时段重叠）；launch 热态首发 58→60·复采样 57·pmset CPU_Speed_Limit=100% 两发均无热钳位。
+
+comparable 机检（本席实跑·全经 cpu_guard 包裹）：`baseline_diff` 双向（K3→K3b·K3b→K3）verdict=stable rc=0·候选面四元组 `source=tsv·src=ConstructiveWorld_Live·candidates=audit27.tsv·chain_ledgers=-` 恒同；K1↔K3b·K2↔K3b 横核同 stable rc=0。出账名按任务书 `audit-k3b-20261112.json`（偏离 perf 命名律·同首发先例注记保持·四元组内嵌恒同 diff 实测无误配）。

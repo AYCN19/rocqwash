@@ -8,6 +8,8 @@
 > **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-campaign-total-v1.0-20261111.md](docs/rocqwash-service-campaign-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（收口三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·候令未排程）· [docs/ops-sentinel-长驻手册-v1.0-20261112.md](docs/ops-sentinel-长驻手册-v1.0-20261112.md)（哨长驻运维手册 v1.0·部署/消费/轮转恢复）· [docs/勘形-multi-repo-Main仓适配-20261112.md](docs/勘形-multi-repo-Main仓适配-20261112.md)（路线图⑦ Main 仓 CI 形制勘察·适配分级即用 4／小改 3／中改 2）
 >
 > **v42 快照（2026-11-11·收口总档波·四席并铸＋集成席收口）**: 总报告/演练实录/路线图三档入 docs/（服务层总览 v40 在库续用）·cw_paths v1.x 双件入 ConstructiveWorld·rocqwash v41 `c5df4d4`——三闸收口基准：doc_lint drift=0／破坏面矩阵 17 判全过／总套零红（SKIP 不计红）。
+>
+> **v49 快照（2026-11-12·Main 仓适配小改＋实测收口波·四席并铸＋集成席收口）**: fixtures 席 Main 形两件入 tests/（`tests/fixtures/ci_triage_main_coq93.json`＝Main CI 9.3 coq93.yml 真形 16 步 canned＋`tests/fixtures/pushci_scenarios/s7_main_dry_run.json`＝branch main 直推路线 dry-run）·消费面＝`tools/ci_triage.py --selftest`〔九〕Main 形判读矢（兼容表 15 行机检＋E 两件齐）＋`tests/test_pushci.py` 七场景壳（t_ci_triage/t_pushci 既有例已挂登记·run_tests.sh 零改动）；retro 台账 `docs/retro-triage-Main仓全史-20261112.md`（Main 全史 369 runs 实取·现役 coq93 31 条逐判＋coq#340 桥件·红炉并集 19 事件·与哨对账 30/30 零分歧）；K3b 复采样 `examples/baselines/audit-k3b-20261112.json`（probe_chain_s=190.719·perf-profile 律 1 噪声带首采 [165.202, 190.719]·K=3 无收益两发稳健结论）；总报告 v2.0 `docs/rocqwash-service-campaign-total-v2.0-20261112.md`（v1.0 基座全保留＋v43-v48 六波增补章）——三闸收口：doc_lint `--help-cap 24` consistent／破坏面矩阵 17 判全过／总套 59 例 58 过 0 红 1 略（t_quad8_check 四仓副本群正本缺卷·SKIP 不计红）。
 
 ## Architecture: Three Chains in One
 

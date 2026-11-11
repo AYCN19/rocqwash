@@ -239,3 +239,74 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 | 3 | `python3 -B tools/ci_triage.py --selftest` | rc=0·CI-TRIAGE-SELFTEST PASS |
 | 4 | Set 仓 coq.yml 全文实读（735 行）＋双册 ls | 实读毕·root order.txt No such file |
 | 5 | 本档写入后 `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | 见当轮账（drift 须=0 方合三闸基准·若幻引即修档重跑） |
+
+---
+
+## 八、小改三件执行记录（20261112·v48 勘形小改 3 波·工装席）
+
+> 承 §五建议路径：**步 2**（Main 形 fixtures＋selftest Main 形判读矢）与
+> **步 3**（pushci Main 干跑矢·零器改零旗标增零语义改）本波 done；**步 4**
+> 真发候令只立一行不入本波（未执行）。全部实跑经
+> `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`
+> 包裹。
+
+- **步 2 done**（§五.2）：
+  - 新件 `tests/fixtures/ci_triage_main_coq93.json`——canned Main coq93.yml
+    真形 jobs：单 Windows job「Rocq 9.3 build + coqchk (self-hosted seed
+    cache, Windows)」（workflow 名 **Main CI 9.3**·job 名系 coq93.yml:61
+    display rename 真形；`_provenance` 键在册：coq93.yml:38/:61/:89-91/
+    :102-591 行源＋runs-on [self-hosted, Windows]＋timeout 2880＋并发组
+    cw-main-ci-93）；步名 16 枚按实取件 /tmp/mainwf_coq93.yml 逐枚誊录
+    （v5 checkout→gate1→gate4→gate3→Seed→RAM guard→Build full tree→
+    Generate tree-stats→Upload tree-stats→gate5→attest reconcile→coqchk
+    full-tree certification→Upload vo trust cache→gate2→Upload coqchk
+    logs）·绿样张全步 success。
+  - `tools/ci_triage.py` --selftest 增〔九〕Main 形判读矢：fixture 16 步名
+    逐枚咬合＋确定性字节恒同＋**兼容表 15 行机检**（真形单红步形·无日志·
+    判类序步名 B 先于步名 A）＋E 族 Main 形两件齐形（Upload coqchk logs 红＋
+    coqchk 步 skipped→E-coqchk-skipped·§3.1 E 行「两件齐→E 可发」实证）。
+  - **机检钉判读（勘形 §3.1 兼容表的机械实证·向量已冻结）**：Build full
+    tree／coqchk full-tree certification／gate5 vo-binary quarantine／attest
+    reconcile→**A**（gate5/attest 系 coqchk 子串词面搭便·§3.1 同判）；checkout@v5／
+    Seed trust cache／Upload tree-stats／Upload vo trust cache／Upload coqchk
+    logs→**B**；gate4 comment guard→**B**（artifact 子串→步名 B 先判·§3.1
+    词面暗礁行实证·Set :120 同款非 Main 新增）；gate3／gate2／RAM guard／
+    Generate tree-stats→**UNRECOGNIZED 兜底**不误断。
+  - **一处勘形散文勘误如实登记（机检 vs §3.1 散文）**：§3.1 gate1 行记
+    「零命中→UNRECOGNIZED 兜底」——机械实测 gate1 步名「pre-build fail-fast」
+    含 build 子串→CONTENT 搭便归 **A-content-red**（fix-content·poison-token
+    红语义上属内容红·可接受同 gate5/attest 搭便）。「五族骨架即用」判据不受
+    影响（不漏红·不误断·兜底行四枚非 §3.1 所记两枚）。
+- **步 3 done**（§五.3·零器改——`tools/pushci.py` 本波零触碰）：
+  - 新件 `tests/fixtures/pushci_scenarios/s7_main_dry_run.json`（branch=
+    main＝refs/heads/main 直推路线·rocqwash-pushci-scenario/1 同形·expect
+    git_calls=0/api_calls=0）。
+  - `tests/test_pushci.py` 六场景壳→七场景（S7 Main 形 dry-run 矢：canned
+    git-caller 空表＋injector flat verbatim·report.plan 三闸行
+    [1] preflight.toolchain／[1] preflight.net／[1] preflight.gate4（未启形
+    ＝直推 main 路线 base...branch 差集退化的正确缺省）＋[2] push 计划行
+    （HTTP/1.1＋main）逐行断言；零 API 零 git 调用流水实证；tmp 仓
+    before/after 恒同零副作用；幂等两跑字节恒同）。真仓 dry-run 未跑——
+    前置件缺（§3.3/§五.3：Main 本地 checkout 须先物化）。
+- **步 4 真发候令（§五.4·未执行·一行）**：
+
+  ```bash
+  python3 -B tools/pushci.py --repo-path /Users/apple/Desktop/ConstructiveWorld-Main --branch main --remote origin --watch-max-rounds 6 --max-heal 2 --json /tmp/pushci_main_first.json
+  ```
+
+  前置＝①Main 本地 checkout 物化（20261112 `ls -d /Users/apple/Desktop/*Main*`
+  实测**不在卷**——本波任务书给形「/Users/apple/Desktop/ConstructiveWorld-Main
+  在卷」与实取不符·按 §1.3 法如实登记）；②先行同令加 `--dry-run` 计划面零
+  副作用（v36 S6 判据·HEAD/porcelain 前后恒同）；③`--watch-max-rounds` 安全
+  阀压 §3.2 单组 cancel-in-progress:true 连坐循环面；④Main 分支保护面真发
+  前补探（§六.2 未探如实承）。
+
+## 九、执行字据（20261112·全部 cpu_guard 包裹·工装席实跑）
+
+| # | 命令 | rc |
+|---|---|---|
+| 1 | `python3 -B tools/ci_triage.py --selftest` | 0（CI-TRIAGE-SELFTEST PASS·含〔九〕Main 形判读矢：coq93 真形 16 步咬合＋兼容表 15 行＋E 两件齐） |
+| 2 | `python3 -B tests/test_pushci.py` | 0（17 过/0 红·S7 场景＋S7 幂等两跑字节恒同） |
+| 3 | `bash tests/run_tests.sh`（全套·含全部器 selftest 例） | 0（58 过/0 红/1 略〔t_quad8_check 四仓副本群既有 SKIP〕/共 59 例） |
+| 4 | `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | 0（VERDICT consistent·drift=0·本档 refs=46 unresolved=6 oos=0·本段写入后当轮实跑） |
+| 5 | 禁触对账 | 冻结八件（certify/frozen8.py LEDGER8 在册八件）/quad8/更新账.md 零触碰 ✓；`tools/pushci.py` 零改动（步 3 纯测试面）✓；git 零写操作（未 commit）✓ |
