@@ -6,7 +6,9 @@
 #         the v45 render-events ledger renderer plus the v46
 #         `red-dispatch`/`registry-audit` pair plus the v47 registry-fix
 #         prescription applier plus the annotation-face normalization
-#         linter (norm-lint) — twenty-five tools in total
+#         linter (norm-lint) plus the contribution registration-row
+#         regenerator (registry-regen) plus the contribution intake
+#         inspector (contrib-intake) — twenty-seven tools in total
 #         (repository root, bash 3.2 compatible)
 #
 # Usage: bash cw.sh <tool> [args...]
@@ -77,6 +79,12 @@
 #   norm-lint   annotation-face normalization linter, report-only first form (header banner + five-field block / jargon mapping-table faces / CJK residue / forbidden classes / header budget; findings are data, the exit code never escalates on them)
 #                                                    -> tools/norm_lint.py
 #               cw.sh norm-lint --tree DIR | --file PATH [--jargon-map P] [--cjk-threshold F] [--cjk-whitelist P] [--json P] [--md P]
+#   registry-regen contribution registration-row regenerator (merge-target books verbatim + canonical #R<seq>-<md5-8> rows tail-appended in dependency order; dry-run by default)
+#                                                    -> tools/registry_regen.py
+#               cw.sh registry-regen --base-repo REPO --base-ref REF --contrib-repo REPO --contrib-ref REF --pieces M1,M2,... --anchor-src DIR [--dep-source require|coqdep|registry|auto] [--seq N] [--out DIR] [--apply] [--json P]
+#   contrib-intake contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face: registry union dry run / norm lint / gate expectation / lane isolation; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0)
+#                                                    -> tools/contrib_intake.py
+#               cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -131,6 +139,17 @@
 #      both --tree and --file / --gate or --strict reserved / negative
 #      --cjk-threshold); 9=missing input (tree or file absent / jargon map
 #      unreadable / CJK whitelist unreadable).
+#      registry-regen, same shape: 0=draft produced (BLOCK pieces are
+#      data, reported loudly); 1=selftest red; 2=usage error (apply
+#      without out / empty pieces / negative seq) or assertion failure
+#      (key collision / new anchor-text collision / dependency cycle /
+#      entity ambiguity / entity-blob divergence / write integrity -
+#      failure means zero writes); 9=missing input (repo / ref / book /
+#      anchor-src directory absent, coqdep absent when selected).
+#      contrib-intake, same shape: 0=verdict issued (a BLOCK verdict is
+#      data, reported loudly; gates never short-circuit); 1=instrument
+#      failure (no verdict can be issued); 2=usage error; 9=missing input
+#      (face path absent / ref unresolvable / instrument missing).
 #   4. bash 3.2 compatible (no associative arrays, no bash-4+ features);
 #      read-only routing layer — itself writes nothing.
 #
@@ -220,6 +239,12 @@ Usage: bash cw.sh <tool> [args...]
   norm-lint   annotation-face normalization linter, report-only first form (header banner + five-field block / jargon mapping-table faces / CJK residue / forbidden classes / header budget; findings are data, the exit code never escalates on them)
                                                    -> tools/norm_lint.py
               cw.sh norm-lint --tree DIR | --file PATH [--jargon-map P] [--cjk-threshold F] [--cjk-whitelist P] [--json P] [--md P]
+  registry-regen contribution registration-row regenerator (merge-target books verbatim + canonical #R<seq>-<md5-8> rows tail-appended in dependency order; dry-run by default)
+                                                   -> tools/registry_regen.py
+              cw.sh registry-regen --base-repo REPO --base-ref REF --contrib-repo REPO --contrib-ref REF --pieces M1,M2,... --anchor-src DIR [--dep-source require|coqdep|registry|auto] [--seq N] [--out DIR] [--apply] [--json P]
+  contrib-intake contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face: registry union dry run / norm lint / gate expectation / lane isolation; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0)
+                                                   -> tools/contrib_intake.py
+              cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -258,6 +283,8 @@ hint_for() {  # $1=tool
     audit)       echo "cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]   # registry hygiene auditor (order.txt/_CoqProject dual-book read-only four-account output: duplicates / anchor collisions / seq-form / malformed / missing anchors / orphans / live topology + --fix-plan deterministic prescription, zero writes; --apply does not exist; keys and anchor canon reused from registry_union, zero re-invention; findings are data, exit 0) -> tools/registry_audit.py" ;;
     registry-fix) echo "cw.sh registry-fix --audit-json AUDIT.json --order ORDER.txt --project _CoqProject [--anchor-src DIR] [--json REPORT.json] [--apply] [--work-dir DIR]   # registry prescription applier (applies registry_audit --fix-plan prescriptions one by one; three prescription kinds DEDUP keep-first / anchor re-stamp / ORPHAN-ADD skip; dry-run by default; --apply writes, then three assertions hold or rollback; staging fully in-memory, zero writes; same-parameter discipline binds audit and applier verbatim) -> tools/registry_fix.py" ;;
     norm-lint)   echo "cw.sh norm-lint --tree DIR | --file PATH [--jargon-map P] [--cjk-threshold F] [--cjk-whitelist P] [--json P] [--md P]   # annotation-face normalization linter, report-only first form (prose faces of .py/.sh/.md: header banner + five-field block Purpose./Interface./Dependencies./Evidence./Exit-codes. verbatim; jargon mapping-table faces word-boundary; CJK residue warn; forbidden classes warn; header budget 30; findings are data, the exit code never escalates on them; *.zh.md and docs/zh/ archives skipped; default jargon map docs/jargon-to-standard-mapping-v1.md) -> tools/norm_lint.py" ;;
+    registry-regen) echo "cw.sh registry-regen --base-repo REPO --base-ref REF --contrib-repo REPO --contrib-ref REF --pieces M1,M2,... --anchor-src DIR [--dep-source require|coqdep|registry|auto] [--seq N] [--out DIR] [--apply] [--json P]   # contribution registration-row regenerator (merge-target books verbatim as the draft bottom + canonical #R<seq>-<md5-8> rows for the named pieces tail-appended in dependency order, ties by the contribution registry's existing row order; BLOCK pieces listed with reasons and no rows; entity md5 cross-checked against the contribution-surface blob; three same-source assertions reused from registry_union; dry-run by default, --apply writes DIR/order.txt and DIR/_CoqProject) -> tools/registry_regen.py" ;;
+    contrib-intake) echo "cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]   # contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face, protocol four-check pipeline in one run: registry union dry run against the base face with a regeneration prescription on any assertion blast / norm lint of each new or changed prose face via norm_lint / gate expectation over changed .v faces with a gate7 probe precheck / lane isolation tally of changed paths outside --lane-prefix; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0; zero writes into either face) -> tools/contrib_intake.py" ;;
     *) return 1 ;;
   esac
 }
@@ -303,12 +330,14 @@ case "${1:-}" in
   audit)       shift; run_tool audit       "tools/registry_audit.py"        "$@" ;;
   registry-fix) shift; run_tool registry-fix "tools/registry_fix.py"        "$@" ;;
   norm-lint)   shift; run_tool norm-lint   "tools/norm_lint.py"             "$@" ;;
+  registry-regen) shift; run_tool registry-regen "tools/registry_regen.py" "$@" ;;
+  contrib-intake) shift; run_tool contrib-intake "tools/contrib_intake.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: unknown tool: $2（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint）" >&2
+        echo "cw.sh help: unknown tool: $2（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake）" >&2
         exit 2
       fi
     fi
@@ -316,7 +345,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: unknown tool: $1（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|help）" >&2
+    echo "cw.sh: unknown tool: $1（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|help）" >&2
     usage >&2
     exit 2 ;;
 esac

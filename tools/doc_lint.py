@@ -95,7 +95,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 25     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代·注释面规范化波 tools/norm_lint.py 入册后 25 器——帽溢出 wash/probe_engine.py 同 precedent 换代 24→25）
+DEFAULT_HELP_CAP = 27     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代·注释面规范化波 tools/norm_lint.py 入册后 25 器——帽溢出 wash/probe_engine.py 同 precedent 换代 24→25）— tools/registry_regen.py registered as the 26th tool: cap raised 25->26, same precedent as the 24->25 bump at the norm-lint registration — tools/contrib_intake.py registered as the 27th tool: cap raised 26->27, same precedent (registry_rel sorted order again puts wash/probe_engine.py last; its doc-flag references need the real --help run to stay phantom-free)
 HELP_TIMEOUT = 60         # --help 子进程秒帽（本地件防挂·fail-loud）
 DETAIL_CAP = 300          # checks[].detail 截断（cw_doctor non_form ln[:120] 同款）
 DRIFT_LINE_CAP = 20       # ③ 每文件幻引/悬引列帽（总数如实·cw_doctor 帽 20 同款）

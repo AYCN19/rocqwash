@@ -172,6 +172,22 @@
 #         缺 tree/--selftest 与扫描旗标同用/非 .py/.sh/.md 扩展名=2·
 #         缺 jargon-map=9）＋基线账报告出账（norm-lint-baseline json/md 两
 #         报告·全仓注释面现状如实）·套件挂接·零网络零编译零触真仓）
+#       tools/contrib_intake.py contribution intake inspector (tests/
+#         test_contrib_intake.py minimal shell, three checks: --selftest
+#         rc=0 with the CONTRIB-INTAKE-SELFTEST PASS frozen marker — the
+#         tool's own dual-git-clone four-gate vectors are attested by the
+#         tool, the suite shell is self-supplemented — plus --help smoke
+#         plus exit-code spot checks bogus=2/no-input=2/missing-face=9/
+#         bad-ref=9; tmp fixtures only, zero writes, zero network)
+#       tools/registry_regen.py contribution registration-row regenerator
+#         (tests/test_registry_regen.py minimal shell, three checks:
+#         --selftest rc=0 with the REGISTRY-REGEN-SELFTEST PASS frozen
+#         marker — the tool's own tmp-fixture vectors attest topological
+#         regeneration, missing-dependency BLOCK, the frozen md5 vector,
+#         dry-run zero-write, blast/divergence and rerun-identity — plus
+#         --help smoke plus exit-code spot checks bogus=2/no-input=2/
+#         apply-without-out=2/negative-seq=2/missing-base=9; tmp fixtures
+#         only, zero writes, zero network)
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -295,7 +311,9 @@ t_dual_scan \
  t_red_dispatch \
  t_registry_audit \
  t_registry_fix \
- t_norm_lint"
+ t_norm_lint \
+ t_contrib_intake \
+ t_registry_regen"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -738,6 +756,33 @@ t_norm_lint() {
   # 最小自测壳三判：--selftest 六矢量＋--help 冒烟＋退出码口径抽验 2/9
   # ——report-only 首形·基线账报告出账·零网络零编译零触真仓）
   "$PY" -B "$REPO/tests/test_norm_lint.py"
+}
+
+t_contrib_intake() {
+  # contribution intake inspector (tools/contrib_intake.py): the protocol
+  # four-check pipeline in one read-only run — registry/norm/gate
+  # expectation/isolation gates never short-circuit, a BLOCK verdict is
+  # data and the exit code stays 0. tests/test_contrib_intake.py minimal
+  # shell, three checks: --selftest rc=0 with the CONTRIB-INTAKE-SELFTEST
+  # PASS frozen marker (the tool's own dual-git-clone vectors attest the
+  # four gates), --help smoke, exit-code spot checks bogus=2/no-input=2/
+  # missing-face=9/bad-ref=9; tmp fixtures only, zero writes, zero
+  # network, zero real-repository contact.
+  "$PY" -B "$REPO/tests/test_contrib_intake.py"
+}
+
+t_registry_regen() {
+  # contribution registration-row regenerator (tools/registry_regen.py):
+  # merge-target books verbatim as the draft bottom plus canonical
+  # #R<seq>-<md5-8> rows tail-appended in dependency order, dry run by
+  # default, --apply writes only under an explicit --out.
+  # tests/test_registry_regen.py minimal shell, three checks: --selftest
+  # rc=0 with the REGISTRY-REGEN-SELFTEST PASS frozen marker (the tool's
+  # own tmp-fixture vectors attest the regeneration semantics), --help
+  # smoke, exit-code spot checks bogus=2/no-input=2/apply-without-out=2/
+  # negative-seq=2/missing-base=9; tmp fixtures only, zero writes, zero
+  # network, zero real-repository contact.
+  "$PY" -B "$REPO/tests/test_registry_regen.py"
 }
 
 # ---------- 汇总执行 ----------
