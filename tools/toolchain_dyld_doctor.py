@@ -267,10 +267,13 @@ def selftest():
                                 "libgmp.10.dylib")
         assert donor_restore_source(mark_ref, donor_a) == os.path.join(
             donor_a, "gmp", "lib", "libgmp.10.dylib"), "相对段同位未命中"
-        # 同名兜底：ref 无标记 → donor 典序首同名
+        # 同名兜底：ref 无标记 → donor 典序首同名（ref 须真缺失——GitHub macos-15
+        # runner 预装 Homebrew gmp 使硬编码 /opt/... exists=True 破坏 fixture·
+        # 20261112 改 tmp 合成保零环境依赖）
         donor_b = os.path.join(tmp, "donorB")
         wfile(os.path.join(donor_b, "nested", "dir", "libgmp.10.dylib"))
-        plain_ref = "/opt/homebrew/opt/gmp/lib/libgmp.10.dylib"
+        plain_ref = os.path.join(tmp, "absentbrew", "opt", "gmp", "lib",
+                                 "libgmp.10.dylib")
         assert donor_restore_source(plain_ref, donor_b) == os.path.join(
             donor_b, "nested", "dir", "libgmp.10.dylib"), "同名兜底未命中"
         # donorA 在场：mark_ref 走相对段同位·plain_ref 走同名兜底·双双命中
