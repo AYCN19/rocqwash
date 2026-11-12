@@ -1,108 +1,173 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""unclog.py — 疏通堵塞闭环引擎（rocqwash tools/·v37 旗舰·20261111 入账）
+"""unclog.py — blockage-clearing closed-loop engine for rocqwash (tools/).
 
-把 W59-W88 实时支撑席的堵链疏通**手工五步**闭成自旋（编排而非重造——probe_engine/
-chain_graph/cure_applier/scan_v4_token/frozen8 全 subprocess 调用·本器只做胶水与
-状态机·承 v36 pushci 编排判例 tools/pushci.py:544 _run_py 同款）：
+Closes the manual five-step unblocking procedure used by the real-time support
+workflow into a self-driving loop (orchestrates existing engines rather than
+reimplementing them — probe_engine/chain_graph/cure_applier/scan_v4_token/
+frozen8 are always invoked as subprocesses; this tool supplies only the glue
+and the state machine, following the pushci.py orchestration precedent):
 
-  手工五步（判例：wash 战役实时支撑席·W59-W88）      本器闭环（--rounds 帽·缺省 5）
-  ① probe 归集红账              →  ① 归集：候选面三源任选 → probe_engine 出当前红账
-  ② chain_graph 链根图挑根      →  ② 链根：chain_graph 合并 TOP 榜 → 取 self.washable=true
-                                    之首（全 false＝无正典可洗根→诚实墙·禁硬凑）
-  ③ cure_applier 落刀           →  ③ 落刀：对根件干跑出方案 → 有方案且 --apply 才落刀
-                                    （只正典包 cure_pack v1.3·禁 freeform 编辑）；
-                                    无方案→该根记 cure-miss 入墙账
-  ④ re-scan/re-probe 复核       →  ④ 复核：scan_v4_token 复扫受治件（cured token 残差
-                                    应零）＋ probe_engine 复探受治件（rc 应 0）
-  ⑤ 人工判定                    →  ⑤ 判定：红账空=verdict unclogged exit 0；未空且轮
-                                    未尽→下一轮；轮尽→verdict rounds-exhausted exit 1
-                                    （附各轮账＋终判探）
+  manual five steps (real-time support workflow)         this tool's loop (--rounds cap, default 5)
+  ① probe collects the failure set        →  ① collect: any of three candidate sources →
+                                            probe_engine produces the current failure set
+  ② chain_graph picks chain roots from the graph
+                                          →  ② chain root: chain_graph merges the top list →
+                                            take the first entry with self.washable=true
+                                            (all false = no actionable root → honest wall;
+                                            nothing is forced)
+  ③ cure_applier applies the cure         →  ③ apply: dry-run the root file to produce a plan →
+                                            apply only when a plan exists and --apply is given
+                                            (the canonical cure pack only; no free-form edits);
+                                            no plan → the root is recorded as cure-miss in the
+                                            wall table
+  ④ re-scan / re-probe verification       →  ④ verify: scan_v4_token re-scans the treated file
+                                            (cured-token residual should be zero) + probe_engine
+                                            re-probes it (rc should be 0)
+  ⑤ human judgment                        →  ⑤ verdict: empty failure set = verdict unclogged,
+                                            exit 0; non-empty and rounds remain → next round;
+                                            rounds exhausted → verdict rounds-exhausted, exit 1
+                                            (with each round's record + a final probe)
 
-候选面三源任选（互斥）：
-  --candidates TSV      候选清单直喂 probe_engine（表头列名定位·probe_engine 同款）
-  --chain-ledgers JSON  既有 probe 台账并入（argv 序＝合并序·后批覆盖前批·chain_graph
-                        同款）；后续轮的复探台账逐轮并入（resprobe 后批覆盖——洗后
-                        状态入账）。此模式无逐轮全量重探（零 world 依赖可跑）。
-  （两者缺省）          --src 全树枚举：walk --src 收 *.v 逐件 md5 → 生成 TSV（RED 列
-                        不申报·probe_engine 对 rc0 如实出 RC0——链根可洗性判据是
-                        self.rc 非 verdict·chain_graph.py:109 同款口径）
+Three candidate sources (mutually exclusive):
+  --candidates TSV      feed the candidate list directly to probe_engine
+                        (located by header column names, same convention as
+                        probe_engine)
+  --chain-ledgers JSON  merge existing probe ledgers (argv order = merge
+                        order, later batches override earlier ones, same as
+                        chain_graph); re-probe ledgers from later rounds are
+                        merged round by round (resprobe: later overrides
+                        earlier — the post-repair state is recorded). This
+                        mode has no per-round full re-probe (runs with zero
+                        world dependency).
+  (neither given)       --src full-tree enumeration: walk --src collecting
+                        *.v files with per-file md5 → generate the TSV (the
+                        RED column is not declared; probe_engine honestly
+                        reports RC0 for rc0 — the chain-root washability
+                        criterion is self.rc, not verdict; same convention as
+                        chain_graph.py)
 
-红账口径：probe 记录 rc!=0（rc1 红件／rc124 TIMEOUT／NO-SRC）＝红；chain_graph
-stats.rc1＋stats.other 并集即红账（chain_graph.py:116-121）。verdict 判定只认红账
-（红是数据非器红·probe_engine rc1 候选是产出数据非器红）。
+Failure-set criteria: a probe record with rc != 0 (rc1 failure / rc124
+TIMEOUT / NO-SRC) counts as failed; the union of chain_graph stats.rc1 +
+stats.other is the failure set (chain_graph.py:116-121). The verdict is
+judged only on the failure set (a failing result is data, not a tool
+failure; a probe_engine rc1 candidate is produced data, not a tool failure).
 
-诚实墙（禁硬凑）：TOP 榜全 self.washable=false（链中环 self-unwashable／根未入
-候选集 unprobed）或可洗根全部碰壁（cure-miss 正典包零方案／root-file-missing 缺
-根件／frozen-in-service 在册红拒／exclusive-group-conflict 变体须人择／
-idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐根列不可洗因，
-零落刀零硬凑。
+Honest wall (nothing is forced): when every TOP entry has
+self.washable=false (a mid-chain ring: self-unwashable; or the root is not
+in the candidate set: unprobed), or every washable root hits a dead end
+(cure-miss: the canonical pack offers no plan / root-file-missing /
+frozen-in-service: the root is on the frozen roster and is refused /
+exclusive-group-conflict: variants require human selection /
+idempotence-fail: the apply-time idempotence assertion refuses to write) →
+verdict=wall exit 1; the wall table lists the non-actionable reason per
+root; zero applies, nothing forced.
 
-安全律：
-  --apply 缺省关＝全干跑零写盘（单开关·--yes 不需要）；落刀只经 cure_applier
-  正典包（--pack 缺省 wash/cure_pack.json v1.3）；落刀对象恒为链根件
-  （<src>/<根>.v——pick 之外无 cure 调用路径·对非链根件禁落刀系结构性保证）；
-  frozen 在册（certify/frozen8.py --ledger 八件·子进程实取·缺册 fail-closed 9）
-  预检红拒：根名撞在册 rel／基名／去扩展名，或根件 realpath 撞在册文件
-  （--src 与 --repo-path 双侧解析）即拒——入墙账 reason=frozen-in-service·零落刀。
+Safety rules:
+  --apply defaults to off = everything is a dry run with zero disk writes
+    (single switch; --yes is not needed); applies go only through the
+    cure_applier canonical pack (--pack default wash/cure_pack.json);
+    the apply target is always the chain-root file (<src>/<root>.v — outside
+    pick there is no cure call path, so restricting applies to chain roots is
+    a structural guarantee); files on the frozen roster (certify/frozen8.py
+    --ledger, eight files, fetched via subprocess; a missing roster fails
+    closed with 9) are pre-checked and refused: if the root name collides
+    with a rostered rel / basename / extension-stripped name, or the root
+    file's realpath collides with a rostered file (resolved on both the
+    --src and --repo-path sides), it is refused — recorded in the wall table
+    as reason=frozen-in-service, zero applies.
 
---audit 只读审计（真树堵账基线·20261111 任务书）：
-  单遍 probe 干跑归集→chain_graph→出「堵账基线报告」供 v38 真实树基线
-  （schema 同 rocqwash-unclog/1：final.verdict=audit·rounds 单轮
-  probe_summary/chain_top 全在·墙账 graph 判例全记——unprobed/self-unwashable
-  /frozen-in-service 逐根·零链根红账补 no-chain-root 目禁哑墙·
-  cures_planned/cures_applied 恒 0＝零落刀零复核·exit 0 红是基线数据非器红）。
-  互斥：--audit 与 --apply 同给 rc=2（审计只读）·与 --loop 同给 rc=2（单遍
-  基线·哨态循环非审计语义）·与 --state-file 同给 rc=2（seen 哨态差分非审计
-  语义）·--rounds 不适用单遍。
-  零写盘硬保证＝--src 全文件 md5 清单跑前跑后自证恒同（probe_engine 本就
-  copyfile 出树编译·wash/probe_engine.py:163·产物清场 py:194——清单违同即
-  fail-loud 9·染污基线不出账）；workdir/--json/events 出账系审计本职不在保域。
-  耗时各段（enumerate/manifest/probe+chain/total）入 report["timing"]＝实测
-  墙钟·报告唯一非确定段（「同输入重跑字节恒同」除 timing 段外仍全成立）；
-  timing 段另录 jobs 维度＝--probe-parallel K 实参（probe_engine --jobs 透传
-  值·缺省 1）入账——同候选面异 K 前后跑 timing 段可比（并行剖面采集口·
-  examples/baselines/perf-README.md 规程；injector 罐装模式本参旁路照记）。
-  离线可测同闭环：--injector canned probe 即 audit 探针罐装（selftest 矢量⑩）；
-  **真树 audit 活跑归主会话**（本器只证 fixture 级）。
+--audit read-only audit (real-tree blockage baseline):
+  A single-pass probe dry-run collection → chain_graph → a "blockage baseline
+  report" (schema rocqwash-unclog/1: final.verdict=audit; one round with
+  probe_summary/chain_top present; cure/rescan/resprobe always None;
+  cures_planned/cures_applied always 0; the wall table records every graph
+  case — unprobed/self-unwashable/frozen-in-service per root (data recorded,
+  not a stop condition — audit neither picks roots nor applies); a failure
+  set with no chain root adds a no-chain-root wall entry instead of staying
+  silent; exit 0 — a failing result is baseline data, not a tool failure).
+  Mutual exclusions: --audit with --apply → rc=2 (audit is read-only); with
+  --loop → rc=2 (single-pass baseline; watch-mode cycling is not audit
+  semantics); with --state-file → rc=2 (seen-state differencing is not audit
+  semantics); --rounds does not apply to a single pass.
+  Zero-write hard guarantee = the --src full-file md5 manifest is self-checked
+  identical before and after the run (probe_engine itself copies the tree out
+  for compilation — wash/probe_engine.py — and cleans up artifacts; any
+  manifest mismatch fails loudly with 9; a contaminated baseline is never
+  reported); workdir/--json/events writes are the audit's own duty and are
+  outside the guarded domain.
+  Per-phase timings (enumerate/manifest/probe+chain/total) enter
+  report["timing"] = measured wall clock — the only non-deterministic part of
+  the report (byte-identical reruns still hold for everything except the
+  timing section); the timing section also records the jobs dimension = the
+  --probe-parallel K value passed through to probe_engine --jobs (default 1)
+  — runs over the same candidate set with different K are comparable
+  (parallel-profile collection; see examples/baselines/perf-README.md; in
+  injector canned mode the parameter is bypassed but still recorded).
+  Offline-testable like the closed loop: --injector canned probe doubles as
+  the audit probe (selftest vector ⑩); a real-tree audit live run belongs to
+  the main session (this tool proves the fixture level only).
 
---probe-parallel K（probe_engine --jobs 并行度透传·缺省 1＝逐件串行零漂移）：
-  ①归集真探针/④复探 resprobe/--audit 同享同参——候选件分片 ThreadPool 并行
-  （台账记录序恒按候选典序·并行完成序不改变输出序·确定性铁律；md5_match/
-  verdict 逻辑零改·per-件 build log 仍独立落 logdir；真编译仍逐件经 --guard
-  cpu_guard 包裹·guard FRONT 档自带钳位）。K>1＝机内多 rocqworker 并发＝热
-  负载↑——--guard 同给时建议 K≤2（注记不强制·用户自裁·温控警示详见
-  wash/probe_engine.py docstring 并行节）。injector 罐装模式零真编译·本参
-  旁路（canned 直落 workdir）。
+--probe-parallel K (pass-through to probe_engine --jobs; default 1 = per-file
+serial, zero drift):
+  ① collect probe / ④ re-probe resprobe / --audit all share the parameter —
+  candidate files are sharded across a ThreadPool (ledger record order always
+  follows candidate order; completion order never changes output order — the
+  determinism rule; md5_match/verdict logic unchanged; per-file build logs
+  still land independently in logdir; real compilation still goes through
+  --guard cpu_guard per file; the guard FRONT profile applies its own
+  clamping). K>1 = multiple concurrent rocqworker processes on one machine =
+  higher thermal load — with --guard given, K≤2 is advised (advisory note,
+  not enforced; the user decides; thermal-control details in the parallelism
+  section of the wash/probe_engine.py docstring). Injector canned mode does
+  zero real compilation; the parameter is bypassed (canned data lands
+  directly in workdir).
 
---once/--loop 双模（v37 三器共同接口纪律③）：
-  --once（缺省）单次闭环；--loop 实时哨态：闭环周而复始（--interval 秒间隔·
-  --sleep-scale 乘数·selftest 用 0＝零真睡），轮事件＋周事件 JSONL 流写
-  --events（缺省 <workdir>/events.jsonl）；终局 verdict（unclogged/wall）即停
-  即退；rounds-exhausted 非终局 → 歇 --interval 再下一周（--loop-max 帽·0=不限）。
-  互斥明义：--rounds 与 --loop 同给 rc=2（--rounds 是单遍闭环轮帽·哨态周循环
-  非其语义·周内轮帽恒缺省 5——同 --audit/--loop 同给律·禁静默择一）。
---state-file 哨态 seen 状态（rocqwash-sentinel-state/1·与 cw_sentinel
-  --state-file 同形——同 schema 同键形 repos/ledgers/buildlogs·互读写兼容）：
-  轮间红账差分事件 only-new——每轮归集红账对 state.red_seen 差分，新现红件
-  emit {"event":"red-new", new_red:[...]}（已 seen 红不再报·seen 单调只增）；
-  事件先 emit 后存 state（宁重复不丢件·承哨纪律）；缺省 None＝差分关（零行
-  为变）；损坏 state（解析失败/键形坏）→ fail-loud 9 红拒禁静默重建（恢复＝
-  人工删件·器不吞）。
+--once/--loop dual mode (shared three-tool interface rule):
+  --once (default) runs a single closed loop; --loop is watch mode: the loop
+  repeats (--interval seconds between cycles; --sleep-scale multiplier;
+  --selftest uses 0 = zero real sleep); round events + cycle events are
+  written as a JSONL stream to --events (default <workdir>/events.jsonl); a
+  terminal verdict (unclogged/wall) stops and exits immediately;
+  rounds-exhausted is not terminal → wait --interval and start the next
+  cycle (--loop-max cap, 0 = unlimited). Mutual exclusion, spelled out:
+  --rounds with --loop → rc=2 (--rounds caps the rounds of a single closed
+  loop; watch-mode cycling is not its semantics; the per-cycle round cap is
+  always the default 5 — same rule as --audit with --loop; no silent choice
+  between them).
+--state-file watch-mode seen state (rocqwash-sentinel-state/1, same shape as
+  cw_sentinel --state-file — same schema, same keys repos/ledgers/buildlogs;
+  mutually read/write compatible):
+  inter-round failure-set differencing, only-new events — each round's
+  failure set is diffed against state.red_seen; newly appearing failed files
+  emit {"event":"red-new", new_red:[...]} (already-seen failures are not
+  reported again; seen grows monotonically); events are emitted before the
+  state is saved (prefer duplicates over losing events); default None =
+  differencing off (zero behavior change); a corrupted state (parse failure /
+  malformed keys) → fail-loud 9, hard refusal, no silent rebuild (recovery =
+  delete the file manually; the tool never swallows it).
 
-离线可测（硬要求·子进程调用层可注入·零真网络零真编译于 selftest）：
-  --injector DIR  DIR/scenario.json＝{"probe":[probe_ledger...],
-                  "resprobe":[probe_ledger...]}——probe/resprobe 两类 probe_engine
-                  调用按序严格消费 canned 台账（原样落 workdir 后仍喂**真**
-                  chain_graph·耗尽/缺列/形坏 fail-loud 2·零真编译）；chain_graph/
-                  cure_applier/scan_v4_token/frozen8 纯 stdlib 零编译零网络·注入
-                  模式下照旧真跑（真编排非傀儡）。
-  --sleep-scale F 全部 sleep 乘 F（selftest 用 0＝零真睡）。
+Offline-testable (hard requirement; the subprocess-call layer is injectable;
+zero real network and zero real compilation in --selftest):
+  --injector DIR  DIR/scenario.json = {"probe":[probe_ledger...],
+                  "resprobe":[probe_ledger...]} — the two probe_engine call
+                  classes (probe/resprobe) are consumed strictly in order
+                  from the canned ledgers (written verbatim into workdir and
+                  then fed to the **real** chain_graph; exhaustion / missing
+                  entry / malformed shape fails loudly with 2; zero real
+                  compilation); chain_graph/cure_applier/scan_v4_token/
+                  frozen8 are pure stdlib with zero compilation and zero
+                  network and run for real under injection (real
+                  orchestration, not a stub).
+  --sleep-scale F multiplies every sleep by F (--selftest uses 0 = zero real
+                  sleep).
 
-输出（确定性·sort_keys·同输入重跑 --json 字节级恒同·报告零墙钟零绝对路径——
-路径只出基名·全路径走 stdout 响亮；audit 模式 timing 段例外＝实测墙钟逐跑
-必异·余段仍恒同）：
-  --json report·schema=rocqwash-unclog/1：
+Output (deterministic; sort_keys; --json reruns are byte-identical on the
+same input; the report carries zero wall clock and zero absolute paths —
+paths are reported as basenames only, full paths go to explicit stdout; in
+audit mode the timing section is the exception = measured wall clock differs
+per run, all other sections stay identical):
+  --json report, schema=rocqwash-unclog/1:
     {schema, mode{source,apply,injector,loop[,audit]}, args, cycles?,
      rounds[{round, probe_summary{source,n_records,n_red,red_files,ledgers},
              chain_top[{lib,n,dependents,self{probed,rc,verdict,washable}}],
@@ -110,13 +175,17 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
              md5_after,on_disk_md5_match,reason}?, cures_planned, cures_applied,
              rescan{rc,ids,station_count,residual_zero}?,
              resprobe{rc,rc_ok,n_records,md5_match}?}],
-     wall{root:{root,reason,detail}}, timing?（audit·耗时各段＋jobs 维度）,
+     wall{root:{root,reason,detail}}, timing? (audit: per-phase timings + the
+     jobs dimension),
      final{verdict,rounds_run,red_files,
      cures_planned_total,cures_applied_total,wall_count}, verdict}
-  verdict ∈ unclogged|wall|rounds-exhausted|audit（audit=只读基线·exit 0）。
-  每轮进度 log 行（响亮 stdout）：[round k/N] root=X cures=Y。
+  verdict ∈ unclogged|wall|rounds-exhausted|audit (audit = read-only
+  baseline, exit 0).
+  Per-round progress log line (explicit stdout): [round k/N] root=X cures=Y.
 
-用法（路径全参数化·零硬编码绝对路径；器件路径由本件所在仓派生·pushci 判例）：
+Usage (all paths parameterized; zero hardcoded absolute paths; component
+paths are derived from the repository this file lives in, following the
+pushci precedent):
   python3 tools/unclog.py --src DIR --world DIR \\
       [--candidates TSV | --chain-ledgers LEDGER.json ...] \\
       [--repo-path DIR] [--rounds 5] [--apply] [--top 25] [--scan-ids S]
@@ -131,15 +200,20 @@ idempotence-fail 落刀幂等断言拒写）→ verdict=wall exit 1，墙账逐�
       [--json out.json]
   python3 tools/unclog.py --selftest
 
-退出码：0=unclogged／audit；1=wall／rounds-exhausted（红是数据非器红·响亮
-stdout）；2=用法错／注入场景形错（--rounds 与 --loop 同给/--audit 与
---apply·--loop·--state-file 同给/--probe-parallel<1/--state-file 目录缺）；
-9=fail-loud（路径缺失／器红：引擎子进程非数据性非零退／frozen 在册不可得／
-全树枚举零候选／audit 零写盘自证破／state 文件损坏红拒禁静默重建）。
---selftest：0=全过／2=断言失败。
+Exit codes: 0 = unclogged / audit; 1 = wall / rounds-exhausted (a failing result is
+  data, not a tool failure; explicit stdout); 2 = usage error / injection-scenario
+  shape error (--rounds with --loop / --audit with --apply, --loop, or
+  --state-file / --probe-parallel<1 / --state-file directory missing);
+  9 = fail-loud (path missing / tool error: an engine subprocess exits nonzero
+  for non-data reasons / frozen roster unavailable / full-tree enumeration
+  finds zero candidates / audit zero-write self-check broken / state file
+  corrupted and refused — no silent rebuild).
+  --selftest: 0 = all pass / 2 = assertion failure.
 
-世界纪律：本器零写 --world（世界 .vo 基座由调用方按 wash/world_hook.py 认证代
-纪律播种；洗后复探红是否清账取决于世界换代·本器如实出账禁硬凑）。
+World discipline: this tool never writes --world (the world's .vo foundation
+is seeded by the caller per the certification rules of wash/world_hook.py;
+whether a post-repair re-probe clears the failure set depends on world
+generation; this tool reports honestly and never forces an outcome).
 """
 import argparse
 import hashlib

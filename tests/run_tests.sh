@@ -165,6 +165,13 @@
 #         md5 冻结向量＋同输同出④注入炸点回滚⑤自然炸点 A-fix-2 回滚⑥staging
 #         炸零写盘⑦CLI 四码⑧落刀确定性——registry_audit --fix-plan 处方逐条
 #         落刀·缺省干跑·20261112 v47 集成席直挂）
+#       tools/norm_lint.py 注释面规范化检查器·report-only 首形（tests/
+#         test_norm_lint.py 最小自测壳三判：--selftest 六矢量 map-load/
+#         jargon-hit/fields-missing/substring-exemption/whitelist-exemption/
+#         english-clean 由器自证＋--help 冒烟＋退出码口径抽验 2/9（bogus/
+#         缺 tree/--selftest 与扫描旗标同用/非 .py/.sh/.md 扩展名=2·
+#         缺 jargon-map=9）＋基线账报告出账（norm-lint-baseline json/md 两
+#         报告·全仓注释面现状如实）·套件挂接·零网络零编译零触真仓）
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -287,7 +294,8 @@ t_dual_scan \
  t_baseline_diff \
  t_red_dispatch \
  t_registry_audit \
- t_registry_fix"
+ t_registry_fix \
+ t_norm_lint"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -723,6 +731,13 @@ t_registry_fix() {
   # rocqwash-registry-fix/1——器 --selftest 八矢量全 canned tmp fixture·
   # 零网络零编译零触真仓）
   "$PY" -B "$REPO/tools/registry_fix.py" --selftest
+}
+
+t_norm_lint() {
+  # 注释面规范化检查器挂接（tools/norm_lint.py·tests/test_norm_lint.py
+  # 最小自测壳三判：--selftest 六矢量＋--help 冒烟＋退出码口径抽验 2/9
+  # ——report-only 首形·基线账报告出账·零网络零编译零触真仓）
+  "$PY" -B "$REPO/tests/test_norm_lint.py"
 }
 
 # ---------- 汇总执行 ----------

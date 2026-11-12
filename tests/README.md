@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 59 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 60 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（59 例）
+## 覆盖面（60 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -226,3 +226,4 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 59 过 / 1 红 / 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
 | 59 | `t_registry_fix` | `tools/registry_fix.py`（注册册处方执行器·registry_audit `--fix-plan` 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD skip·**缺省干跑**·`--apply` 落刀后断言三判炸即回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema `rocqwash-registry-fix/1`） | 器 `--selftest` 直挂八矢量 rc=0 且含 `REGISTRY-FIX-SELFTEST PASS` 冻结标记：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑字节恒同②--apply 12 重复块→0＋断言三过（dup 零残留/锚撞零增/孤儿不增）＋md5 账对盘③77c2b9a8 锚刷 md5 冻结向量＋同输同出（registry_union CLI 逐字节恒同）④注入炸点 INJECT_ENV=post-write 回滚⑤自然炸点 A-fix-2 新撞锚回滚⑥staging 炸零写盘（work-dir 不建）⑦CLI 四码（help0/bogus2/无输入2/缺audit9/缺册9/坏schema2/无fix_plan2/同参破2/缺anchor-src9）⑧落刀确定性（双 fresh 夹具册面 bytes＋逐条 md5 账恒同）。全 canned tmp fixture·零网络零编译零触真仓 |
+| 60 | `t_norm_lint` | `tools/norm_lint.py`（注释面规范化检查器·report-only 首形·header 五字段/jargon 词面/CJK 残留/禁类/头注行数帽五查·基线账报告出账 norm-lint-baseline json/md·全仓注释面现状如实） | `tests/test_norm_lint.py` 最小自测壳三判：--selftest rc=0 且六矢量 PASS（map-load/jargon-hit/fields-missing/substring-exemption/whitelist-exemption/english-clean 由器自证）／--help rc=0／退出码口径抽验（bogus=2／缺 tree=9／--selftest 与扫描旗标同用=2／非 .py/.sh/.md 扩展名=2／缺 jargon-map=9）。零网络零编译零触真仓 |

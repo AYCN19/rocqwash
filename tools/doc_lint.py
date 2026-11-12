@@ -24,9 +24,10 @@ tools/·v38 工装席任务书·20261111 入账）
     累进属设计内·v38 轮 cw.sh:2「共十六」同款史行）·不在对账面——只锚上述
     四形，宁缺毋滥不造新计数形。
   ③旗标查＝README-cw.md/README.md/examples/workflows/*.md/docs/*.md（docs/
-    递归含 zh/en）中引用的器旗标（--xxx 形）逐枚对照各器 --help 实出输出
-    （subprocess 真跑 --help·rc!=0/超时=器红 fail-loud 9·帽 --help-cap 20 器）。
-    器集＝cw.sh 16 路由 ∪ tools/ 非 _ 前缀 .py＝19 器（现势·帽 20 有余）；
+    递归·*.zh.md 与 docs/zh/ 归档面免扫——注释规范卡 §5.2 归档件非正本面）
+    中引用的器旗标（--xxx 形）逐枚对照各器 --help 实出输出
+    （subprocess 真跑 --help·rc!=0/超时=器红 fail-loud 9·帽 --help-cap 25 器）。
+    器集＝cw.sh 路由 ∪ tools/ 非 _ 前缀 .py＝25 器（现势·帽 25 有余）；
     超帽按典序截断·溢出器如实列「未实跑 --help·引用 N 处未证」。归账规则＝
     器引用两级（一级强引用＝盘路径形/cli/rocqwash/cw.sh 路由形·二级弱引用＝
     裸名形——路由名/器 stem/在盘 oos 器 stem），旗标归其逻辑行最近前驱一级
@@ -94,7 +95,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 24     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代）
+DEFAULT_HELP_CAP = 25     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代·注释面规范化波 tools/norm_lint.py 入册后 25 器——帽溢出 wash/probe_engine.py 同 precedent 换代 24→25）
 HELP_TIMEOUT = 60         # --help 子进程秒帽（本地件防挂·fail-loud）
 DETAIL_CAP = 300          # checks[].detail 截断（cw_doctor non_form ln[:120] 同款）
 DRIFT_LINE_CAP = 20       # ③ 每文件幻引/悬引列帽（总数如实·cw_doctor 帽 20 同款）
@@ -527,8 +528,15 @@ def doc_files(repo):
     for dirpath, dirnames, filenames in os.walk(dd):
         dirnames.sort()
         for fn in sorted(filenames):
-            if fn.endswith(".md"):
-                out.append(rel_of(repo, os.path.join(dirpath, fn)))
+            if not fn.endswith(".md"):
+                continue
+            rel = rel_of(repo, os.path.join(dirpath, fn))
+            # 注释规范卡 §5.2：归档件非正本面——*.zh.md 同目录留档形与
+            # docs/zh/ 追认形为冻结历史存档（声明不随代码演进维护），
+            # 对活实现的一致性查在其上无意义，免扫
+            if rel.startswith("docs/zh/") or rel.endswith(".zh.md"):
+                continue
+            out.append(rel)
     return out
 
 
@@ -1152,7 +1160,7 @@ def main():
                     help="报告出账（rocqwash-doclint/1·sort_keys 确定性）")
     ap.add_argument("--help-cap", dest="help_cap", type=int,
                     default=DEFAULT_HELP_CAP, metavar="N",
-                    help="③ --help 真跑器帽（缺省 20·溢出典序截断如实列）")
+                    help="③ --help 真跑器帽（缺省 25·溢出典序截断如实列）")
     args = ap.parse_args(argv)
 
     try:

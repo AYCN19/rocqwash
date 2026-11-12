@@ -138,6 +138,52 @@ v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段�
   doc_lint 复跑 consistent drift=0。
 - 自测套件 54 例（50 过／0 红／4 SKIP）。
 
+### v53 — 注释面规范化波：规范卡＋norm_lint＋入口面/四器英文化（2026-11-13·工作树未发版）
+
+**Added**
+
+- `docs/annotation-standard-v1.0-20261113.md` — 注释规范卡 v1.0：两段式头注
+  （banner＋五字段 Purpose./Interface./Dependencies./Evidence./Exit-codes.
+  逐字）＋禁词面四族＋双语过渡规则（翻译替换为正·原中文入 `.zh.md` 留档
+  而非删除·代码标识符/CLI 旗标/JSON schema 字段/退出码语义零改动）＋
+  error/warn 分级与检查器退出码口径（0/1/2/9）。
+- `docs/jargon-to-standard-mapping-v1.md` — 黑话→标准表述对照表 v1（规范卡
+  Appendix A·142 活跃词面＝核心 16 行＋JARGON v0.9/v1.1 基座承袭＋工具仓
+  sweep 扩充＋短语级＋英语口语族·语境注记逐行·标识符豁免登记）。
+- `tools/norm_lint.py` — 注释面规范化检查器 report-only 首形：`--tree`/`--file`
+  扫 .py/.sh/.md 散文面·五查（头注形/黑话词面/CJK 残留/禁类/头注行数帽）·
+  schema `rocqwash-norm-lint/1`·findings 是数据退出码不升级（0/1/2/9）·
+  `--selftest` 六矢量·`*.zh.md` 与 `docs/zh/` 归档面免扫。
+- `docs/zh/ci_triage-docstring.zh.md` 等 — 核心四器中文 docstring 原档留档
+  （cw_sentinel/pushci/unclog/ci_triage·程序化逐字提取）＋`README-cw.zh.md`／
+  `cli/rocqwash.zh.md` 双语过渡留档。
+
+**Changed**
+
+- 入口面英文化（翻译替换·接口零改动）：`cw.sh`／`cli/rocqwash`／`README-cw.md`
+  头注/帮助面英文重写·标识符/旗标/退出码逐字未动；`tools/ci_triage.py`／
+  `tools/pushci.py`／`tools/unclog.py`／`tools/cw_sentinel.py` 模块 docstring
+  英文化（行内注释残留如实登记，为递归消减基线）。
+- `cw.sh` 二十五工具：norm-lint 路由入册（六处同步）；README-cw.md 工具表
+  增 norm-lint 行。
+- `tools/doc_lint.py`：DEFAULT_HELP_CAP 24→25（norm_lint 入册后 25 器·帽溢出
+  probe_engine 按 v38/v46 同 precedent 换代）；doc 面收集免扫 `*.zh.md` 与
+  `docs/zh/` 归档面（规范卡 §5.2 归档件非正本面）。
+- tests/：t_norm_lint 挂接（`tests/test_norm_lint.py` 最小自测壳三判）·
+  自测套件 59→60 例；README.md/tests/README.md 计数行同步。
+
+**Verification**
+
+- norm_lint 全仓基线账（`--tree` 全仓·无白名单·现状如实）：files=140·
+  error=2441·warn=1036·cjk_ratio=0.248597·同输入重跑字节恒同
+  （`docs/norm-lint-baseline-20261113.{json,md}`）。
+- doc_lint consistent（help_run=25/25·drift=0）；总套两遍绿（60 例 59 过
+  0 红 1 略×2）；bash -n 全 sh 过；黑话终扫在册＝入口面叙述类词面清偿约
+  26 处（wave/campaign/seat 叙述·日期戳·席名·叙述义 dispatch 改写），余量
+  如实登记＝标识符引形类（cw.sh `dispatch` 路由名×5·README-cw.md 例命令/
+  文档链接文件名日期×6·cli/rocqwash `retrofit` 子动词名×4）＋四器行内注释
+  残留（jargon 2-14·cjk_ratio 0.11-0.19）。
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

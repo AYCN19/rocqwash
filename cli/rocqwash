@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
-# cli/rocqwash — rocqwash 统一 CLI 入口（bash）· Unified CLI entry (bash)
+# cli/rocqwash — rocqwash unified CLI entry (bash)
 #
-# 子命令 Subcommands: scan | names | wash | verify | seam | certify | watch
+# Subcommands: scan | names | wash | verify | seam | certify | watch
 #
-# 路由契约 Routing contract:
-#   1. 通用逐件入口（模块目录下唯一一个不带前导下划线的 .py）→ 自动路由，参数与
-#      退出码 1:1 透传（fail-loud，不改写）。
-#   2. 前导下划线 .py（如 wash/_abl1_wash.py）＝战役/席位专用工装：路径硬编码、
-#      不接逐件 argv——统一入口**不代跑**（防误触外部沙箱写），直接 python3 调用。
-#   3. 模块无通用入口 → exit 3（NOT-IMPLEMENTED，fail-loud，不模拟任何行为）。
-#   4. 多个通用入口 → exit 4（入口不唯一，列清单要求人工指认）。
+# Routing contract:
+#   1. The generic per-file entry (the only non-underscore-prefixed .py in a
+#      module directory) is auto-routed; arguments and exit codes pass
+#      through 1:1 (fail-loud, never rewritten).
+#   2. Underscore-prefixed .py files (e.g. wash/_abl1_wash.py) are
+#      effort-specific tooling: hardcoded paths, no per-file argv —
+#      the unified entry never runs them on the caller's behalf (this
+#      prevents accidental writes to external sandboxes); invoke them with
+#      python3 directly.
+#   3. A module with no generic entry exits 3 (NOT-IMPLEMENTED; fail-loud,
+#      nothing is simulated).
+#   4. Several generic entries exit 4 (entry not unique; a listing is
+#      printed for manual disambiguation).
 #
-# 退出码 Exit codes:
-#   0 = 通过   2 = 断言失败/未知子命令（含 certify/verify 未知子动词）   3 = 无通用逐件入口   4 = 通用入口不唯一（certify/verify 无子动词亦走此口径）
-#   9 = 文件缺失   其余 = 各子工具自身口径透传（如 scan --selftest 向量失败 exit 2）
+# Exit codes:
+#   0 = pass   2 = assertion failure / unknown subcommand (incl. unknown
+#   certify/verify sub-verbs)   3 = no generic per-file entry   4 = generic
+#   entry not unique (bare certify/verify follow the same convention)
+#   9 = file missing   others = each sub-tool's own convention, passed
+#   through (e.g. scan --selftest vector failure exits 2)
+#
+# 中文原版留档 Chinese original archive: cli/rocqwash.zh.md (bilingual
+# transition archive; tool names, flags and exit-code semantics identical).
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,48 +34,49 @@ NAMES_PY="$ROOT/names/mac_stmt_names.py"
 
 usage() {
   cat <<'EOF'
-rocqwash — Coq/Rocq Constructive Proof Unblocking Engine（统一 CLI 入口 / unified CLI entry）
+rocqwash — Coq/Rocq Constructive Proof Unblocking Engine (unified CLI entry)
+（中文过渡注 zh transition note: this help is English-first; the original Chinese wording is archived in cli/rocqwash.zh.md）
 
-用法 Usage: rocqwash <subcommand> [args...]
+Usage: rocqwash <subcommand> [args...]
 
-子命令 Subcommands:
-  scan     语句面 Prop 裸形扫描器              -> scan/mac_stmt_scan.py
+Subcommands:
+  scan     statement-surface bare-Prop-form scanner         -> scan/mac_stmt_scan.py
            (--file/--json/--manifest/--hits-csv/--baseline/--selftest)
-  names    顶层语句名有序清单 + N=N 有序全等断言 -> names/mac_stmt_names.py
+  names    ordered top-level statement-name list + N=N ordered-equality assertion -> names/mac_stmt_names.py
            (<file>/--compare/--expect/--kinds/--include-let/--json/--names-out)
-  wash     规范洗引擎＋世界基钩子（双通用入口·exit 4 请直接指认）
+  wash     canonical wash engine + world-base hook (two generic entries; exit 4 — name one explicitly)
            -> wash/wash_engine.py | wash/world_hook.py
-  verify   绿判四件套＋gate6 普查薄包装      -> verify/  显式分派 (verify gate4|verify_vo|verify_gate6|retrofit ...)
-  seam     代际缝探针（W13 four-mechanism）           -> seam/seam_probe.py
-  certify  两层冻结＋推窗四判据＋UNION v2＋八件冻结名单      -> certify/  显式分派 (certify freeze|push_gate|frozen8 ...)
-  watch    CI 监控＋钉 IP 推送＋ls-remote 确证        -> watch/watch.py (ci/push/confirm)
-  help     本帮助
+  verify   green-verdict four-pack + gate6 census thin wrapper -> verify/  explicit routing (verify gate4|verify_vo|verify_gate6|retrofit ...)
+  seam     generation-seam probe (W13 four-mechanism)       -> seam/seam_probe.py
+  certify  two-tier freeze + push-window four criteria + UNION v2 + frozen-eight list check -> certify/  explicit routing (certify freeze|push_gate|frozen8 ...)
+  watch    CI monitoring + pin-IP push + ls-remote confirmation -> watch/watch.py (ci/push/confirm)
+  help     this help
 
-路由说明 Routing notes:
-  - 模块目录下唯一非 "_" 前缀 .py = 通用逐件入口，自动路由（参数/退出码透传）。
-  - certify 三通用件（freeze_manifest＋push_gate＋frozen8）与 verify 四通用件（gate4＋
-    verify_vo＋verify_gate6＋retrofit）走显式子动词分派：`rocqwash certify freeze|push_gate|frozen8 [args...]`、
-    `rocqwash verify gate4|verify_vo|verify_gate6|retrofit [args...]` 1:1 透传；无子动词＝入口
-    不唯一 → exit 4 列清单人工指认；未知子动词 → exit 2。
-  - "_" 前缀 .py = 战役/席位专用工装（路径硬编码·无逐件接口），统一入口不代跑；
-    需要时直接 `python3 wash/_abl1_wash.py` 等方式调用。
-  - 无通用入口 → exit 3；多个通用入口 → exit 4（列清单人工指认）。
+Routing notes:
+  - The only non-"_"-prefixed .py in a module directory = the generic per-file entry, auto-routed (arguments/exit codes pass through).
+  - certify's three generic pieces (freeze_manifest + push_gate + frozen8) and verify's four generic pieces (gate4 +
+    verify_vo + verify_gate6 + retrofit) use explicit sub-verb routing: `rocqwash certify freeze|push_gate|frozen8 [args...]`,
+    `rocqwash verify gate4|verify_vo|verify_gate6|retrofit [args...]` pass through 1:1; no sub-verb = entry
+    not unique -> exit 4 with a listing for manual disambiguation; unknown sub-verb -> exit 2.
+  - "_"-prefixed .py = effort-specific tooling (hardcoded paths, no per-file interface); the unified entry never runs it;
+    when needed, invoke it directly, e.g. `python3 wash/_abl1_wash.py`.
+  - No generic entry -> exit 3; several generic entries -> exit 4 (listing for manual disambiguation).
 
-退出码 Exit codes: 0=pass  2=assertion-fail/unknown-subcommand  3=no-generic-entry  4=ambiguous-entry  9=file-missing
+Exit codes: 0=pass  2=assertion-fail/unknown-subcommand  3=no-generic-entry  4=ambiguous-entry  9=file-missing
 EOF
 }
 
 not_implemented() {  # $1=subcommand  $2=dir
-  echo "rocqwash $1: NOT-IMPLEMENTED — $2/ 目录为空，模块尚未落地。" >&2
-  echo "  该子命令为统一入口预留位；模块实现落进 $2/ 后自动启用。" >&2
+  echo "rocqwash $1: NOT-IMPLEMENTED — the $2/ directory is empty; the module has not landed yet." >&2
+  echo "  This subcommand is a reserved slot in the unified entry; it auto-enables once a module lands in $2/." >&2
   echo "  (subcommand reserved; auto-enabled once the module lands — nothing is simulated here)" >&2
   exit 3
 }
 
-run_module() {  # $1=subcommand  $2=dir  rest = 透传参数
+run_module() {  # $1=subcommand  $2=dir  rest = passthrough args
   local sub="$1" dir="$2"; shift 2
   local entry="" n=0 c=0 f base
-  # 通用入口＝不带前导下划线的 .py；_ 前缀＝战役/席位专用工装（不由统一入口代跑）
+  # Generic entry = non-underscore-prefixed .py; _ prefix = effort-specific tooling (never run by the unified entry)
   for f in "$dir"/*.py; do
     [ -e "$f" ] || continue
     c=$((c+1))
@@ -75,19 +88,19 @@ run_module() {  # $1=subcommand  $2=dir  rest = 透传参数
     exec python3 "$entry" "$@"
   elif [ "$n" -eq 0 ]; then
     if [ "$c" -gt 0 ]; then
-      echo "rocqwash $sub: $dir/ 仅有战役/席位专用工装（_ 前缀·$c 个·路径硬编码/无逐件接口），统一入口不代跑：" >&2
+      echo "rocqwash $sub: $dir/ holds only campaign/seat-specific tooling (_-prefixed, $c file(s), hardcoded paths / no per-file interface); the unified entry does not run them:" >&2
       ls -A "$dir" >&2
-      echo "  通用逐件入口落地后自动启用。(generic per-file entry pending — campaign tools must be invoked directly)" >&2
+      echo "  (auto-enables once a generic per-file entry lands — campaign tools must be invoked directly)" >&2
       exit 3
     fi
     not_implemented "$sub" "$dir"
   else
-    echo "rocqwash $sub: $dir/ 含 $n 个通用入口（入口不唯一），请直接指认（ambiguous entry）:" >&2
+    echo "rocqwash $sub: $dir/ holds $n generic entries (entry not unique); name one explicitly (ambiguous entry):" >&2
     for f in "$dir"/*.py; do
       [ -e "$f" ] || continue
       base="$(basename "$f")"
       case "$base" in
-        _*) echo "  [campaign-tool·不自动路由] $base" >&2 ;;
+        _*) echo "  [campaign-tool · not auto-routed] $base" >&2 ;;
         *)  echo "  [generic] $base" >&2 ;;
       esac
     done
@@ -95,51 +108,51 @@ run_module() {  # $1=subcommand  $2=dir  rest = 透传参数
   fi
 }
 
-certify_usage() {  # certify 显式分派子帮助（explicit-dispatch sub-help）
+certify_usage() {  # certify explicit-dispatch sub-help
   cat <<'EOF'
-rocqwash certify — 两层冻结＋推窗四判据＋UNION v2＋八件冻结名单机检（显式分派 / explicit dispatch）
+rocqwash certify — two-tier freeze + push-window four criteria + UNION v2 + frozen-eight list machine-check (explicit routing)
 
-用法 Usage: rocqwash certify <sub-verb> [args...]
+Usage: rocqwash certify <sub-verb> [args...]
 
-子动词 Sub-verbs:
-  freeze     两层冻结清单机检（tier1 逐件 md5＋tier2 清单 md5）  -> certify/freeze_manifest.py
+Sub-verbs:
+  freeze     two-tier freeze-list machine-check (tier1 per-file md5 + tier2 list md5)  -> certify/freeze_manifest.py
              (<dir> freeze|check --out/--tier2/--manifest/--json/--selftest)
-  push_gate  推窗四判据＋UNION v2 多世界清单                      -> certify/push_gate.py
+  push_gate  push-window four criteria + UNION v2 multi-world list                     -> certify/push_gate.py
              (window|union-freeze|union-check ... / --selftest)
-  frozen8    在役八组件冻结名单机检（--selftest/--check/--list）   -> certify/frozen8.py
+  frozen8    frozen-eight in-service component list machine-check (--selftest/--check/--list) -> certify/frozen8.py
              (check --list certify/frozen8_manifest.json --tier2 certify/frozen8_tier2.md5 / --selftest)
 
-路由说明 Routing notes:
-  - 子动词后参数与退出码 1:1 透传（fail-loud，不改写）。
-  - 无子动词＝三通用件入口不唯一 → exit 4 列清单人工指认（与 verify/ 同款契约形）。
-  - 未知子动词 → exit 2（列合法子动词）。
+Routing notes:
+  - Arguments and exit codes after the sub-verb pass through 1:1 (fail-loud, never rewritten).
+  - No sub-verb = the three generic entries are not unique -> exit 4 with a listing for manual disambiguation (same contract shape as verify/).
+  - Unknown sub-verb -> exit 2 (legal sub-verbs listed).
 
-退出码 Exit codes: 0=pass  2=unknown-sub-verb  4=ambiguous-entry  其余=子工具自身口径透传
+Exit codes: 0=pass  2=unknown-sub-verb  4=ambiguous-entry  others = each sub-tool's own convention, passed through
 EOF
 }
 
-verify_usage() {  # verify 显式分派子帮助（explicit-dispatch sub-help·与 certify_usage 同款契约形）
+verify_usage() {  # verify explicit-dispatch sub-help (same contract shape as certify_usage)
   cat <<'EOF'
-rocqwash verify — 绿判四件套（green-verdict four-pack·显式分派 / explicit dispatch）
+rocqwash verify — green-verdict four-pack (explicit routing)
 
-用法 Usage: rocqwash verify <sub-verb> [args...]
+Usage: rocqwash verify <sub-verb> [args...]
 
-子动词 Sub-verbs:
-  gate4      头注五字段机检守卫 v2.1（注释卫生三域扫描）        -> verify/gate4_comment_guard.py
-             (--file/--tree/--tree-recursive/--baseline/--json/--emit-ledger/--selftest 无·单件/树扫)
-  verify_vo  通用逐件绿判四件套（exit/log/魔数/新鲜度）         -> verify/verify_vo.py
+Sub-verbs:
+  gate4      header five-field machine-check guard v2.1 (comment-hygiene three-domain scan) -> verify/gate4_comment_guard.py
+             (--file/--tree/--tree-recursive/--baseline/--json/--emit-ledger; no --selftest; single-file/tree scan)
+  verify_vo  generic per-file green-verdict four-pack (exit/log/magic/freshness) -> verify/verify_vo.py
              (--v <f.v> --vo <f.vo> [--rc N|--exit-file F] [--log L] [--json out] / --selftest)
-  verify_gate6 gate6 census 薄包装＋eum 判例器化               -> verify/verify_gate6.py
-             (--tree <dir>/--judge-before/--judge-after/--selftest / 形参 rc 1:1 透传正本)
-  retrofit   gate7 英化 retrofit（战役工装·硬编码席位路径）     -> verify/retrofit_gate7_irr.py
-             (无 argv 接口——统一入口只 1:1 透传，不代跑战役写)
+  verify_gate6 gate6 census thin wrapper + EUM precedent mechanization -> verify/verify_gate6.py
+             (--tree <dir>/--judge-before/--judge-after/--selftest; parameters and rc pass through 1:1 to the original)
+  retrofit   gate7 English-surface adaptation (effort tooling; hardcoded work paths) -> verify/retrofit_gate7_irr.py
+             (no argv interface — the unified entry only passes through 1:1, never runs its writes)
 
-路由说明 Routing notes:
-  - 子动词后参数与退出码 1:1 透传（exec 直转·fail-loud，不改写）。
-  - 无子动词＝四通用件入口不唯一 → exit 4 列清单人工指认（与 certify/ 同款契约形）。
-  - 未知子动词 → exit 2（列合法子动词）。
+Routing notes:
+  - Arguments and exit codes after the sub-verb pass through 1:1 (direct exec; fail-loud, never rewritten).
+  - No sub-verb = the four generic entries are not unique -> exit 4 with a listing for manual disambiguation (same contract shape as certify/).
+  - Unknown sub-verb -> exit 2 (legal sub-verbs listed).
 
-退出码 Exit codes: 0=pass  1/2=子工具自身口径透传（gate4 违规=1·复核=2）  2=unknown-sub-verb  4=ambiguous-entry  9=file-missing
+Exit codes: 0=pass  1/2=each sub-tool's own convention, passed through (gate4 violation=1 · recheck=2)  2=unknown-sub-verb  4=ambiguous-entry  9=file-missing
 EOF
 }
 
@@ -152,11 +165,12 @@ case "${1:-}" in
     shift; exec python3 "$NAMES_PY" "$@" ;;
   wash)    shift; run_module wash    "$ROOT/wash"    "$@" ;;
   verify)
-    # 显式分派（gate4|verify_vo|verify_gate6|retrofit 子动词·1:1 透传·2026-10-31 适配席
-    # rqadapt 立三子动词；20261101 巡检席 rqsup4 四巡补 verify_gate6＝五课轮落件后
-    # 分派表缺件，合法通用入口被 unknown-sub-verb 拦截 exit 2 的契约漂移）；
-    # 无子动词＝四通用件入口不唯一，仍走 run_module → exit 4 列清单人工指认
-    # （与 certify/ 同款契约形）。冻结件零改动：四个 .py 本体未经本 CLI 修改。
+    # Explicit routing (gate4|verify_vo|verify_gate6|retrofit sub-verbs; 1:1 passthrough;
+    # verify_gate6 was added after the initial three — the route-table gap left a legal generic
+    # entry blocked by unknown-sub-verb exit 2, a contract drift);
+    # no sub-verb = the four generic entries are not unique, so run_module still runs -> exit 4
+    # with a listing for manual disambiguation (same contract shape as certify/).
+    # Zero frozen-file changes: the four .py bodies were never modified by this CLI.
     shift
     GATE4_PY="$ROOT/verify/gate4_comment_guard.py"
     VERIFYVO_PY="$ROOT/verify/verify_vo.py"
@@ -178,17 +192,19 @@ case "${1:-}" in
       help|-h|--help) verify_usage; exit 0 ;;
       "") run_module verify "$ROOT/verify" ;;
       *)
-        echo "rocqwash verify: 未知子动词 unknown sub-verb: $1（合法子动词 legal: gate4|verify_vo|verify_gate6|retrofit）" >&2
+        echo "rocqwash verify: unknown sub-verb: $1（未知子动词·legal: gate4|verify_vo|verify_gate6|retrofit）" >&2
         verify_usage >&2
         exit 2 ;;
     esac ;;
   seam)    shift; run_module seam    "$ROOT/seam"    "$@" ;;
   certify)
-    # 显式分派（freeze|push_gate|frozen8 子动词·1:1 透传）；无子动词＝三通用件入口不唯一，
-    # 仍走 run_module → exit 4 列清单人工指认（与 verify/ 同款契约形，见 CONTRIBUTING §4②）。
-    # frozen8 子动词＝五巡补件（20261101 席 rqsup4）：v3 轮 certify/frozen8.py 落地后
-    # 分派表缺件，合法通用入口被 unknown-sub-verb 拦截 exit 2 的契约漂移（与四巡
-    # verify_gate6 补件同款）。冻结件零改动：各 .py 本体未经本 CLI 修改。
+    # Explicit routing (freeze|push_gate|frozen8 sub-verbs; 1:1 passthrough); no sub-verb = the
+    # three generic entries are not unique, so run_module still runs -> exit 4 with a listing for
+    # manual disambiguation (same contract shape as verify/, see CONTRIBUTING §4②).
+    # The frozen8 sub-verb: after certify/frozen8.py landed, the route table lacked it — a legal
+    # generic entry blocked by unknown-sub-verb exit 2, a contract drift (same shape as the
+    # verify_gate6 addition).
+    # Zero frozen-file changes: the .py bodies were never modified by this CLI.
     shift
     FREEZE_PY="$ROOT/certify/freeze_manifest.py"
     PUSHGATE_PY="$ROOT/certify/push_gate.py"
@@ -206,7 +222,7 @@ case "${1:-}" in
       help|-h|--help) certify_usage; exit 0 ;;
       "") run_module certify "$ROOT/certify" ;;
       *)
-        echo "rocqwash certify: 未知子动词 unknown sub-verb: $1（合法子动词 legal: freeze|push_gate|frozen8）" >&2
+        echo "rocqwash certify: unknown sub-verb: $1（未知子动词·legal: freeze|push_gate|frozen8）" >&2
         certify_usage >&2
         exit 2 ;;
     esac ;;
@@ -214,7 +230,7 @@ case "${1:-}" in
   help|-h|--help) usage; exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "rocqwash: 未知子命令 unknown subcommand: $1" >&2
+    echo "rocqwash: unknown subcommand: $1（未知子命令）" >&2
     usage >&2
     exit 2 ;;
 esac
