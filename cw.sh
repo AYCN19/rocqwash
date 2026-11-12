@@ -8,7 +8,8 @@
 #         prescription applier plus the annotation-face normalization
 #         linter (norm-lint) plus the contribution registration-row
 #         regenerator (registry-regen) plus the contribution intake
-#         inspector (contrib-intake) — twenty-seven tools in total
+#         inspector (contrib-intake) plus the autonomous evolution engine
+#         (evolve) — twenty-eight tools in total
 #         (repository root, bash 3.2 compatible)
 #
 # Usage: bash cw.sh <tool> [args...]
@@ -85,6 +86,9 @@
 #   contrib-intake contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face: registry union dry run / norm lint / gate expectation / lane isolation; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0)
 #                                                    -> tools/contrib_intake.py
 #               cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]
+#   evolve      autonomous evolution engine v1 (harvest five signal classes from the existing engines -> derive scored candidates -> draft the human-gated next-round task brief; draft-only: never executes a candidate, never writes the repository)
+#                                                    -> tools/evolve.py
+#               cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -168,7 +172,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — unified entry for the rocqwash tool suite (24 tools · bash 3.2 compatible)
+cw.sh — unified entry for the rocqwash tool suite (28 tools · bash 3.2 compatible)
 （中文过渡注 zh transition note: this help is English-first; the full original Chinese quick reference is archived in README-cw.zh.md）
 
 Usage: bash cw.sh <tool> [args...]
@@ -245,6 +249,9 @@ Usage: bash cw.sh <tool> [args...]
   contrib-intake contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face: registry union dry run / norm lint / gate expectation / lane isolation; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0)
                                                    -> tools/contrib_intake.py
               cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]
+  evolve      autonomous evolution engine v1 (harvest five signal classes from the existing engines -> derive scored candidates -> draft the human-gated next-round task brief; draft-only: never executes a candidate, never writes the repository)
+                                                   -> tools/evolve.py
+              cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -285,6 +292,7 @@ hint_for() {  # $1=tool
     norm-lint)   echo "cw.sh norm-lint --tree DIR | --file PATH [--jargon-map P] [--cjk-threshold F] [--cjk-whitelist P] [--json P] [--md P]   # annotation-face normalization linter, report-only first form (prose faces of .py/.sh/.md: header banner + five-field block Purpose./Interface./Dependencies./Evidence./Exit-codes. verbatim; jargon mapping-table faces word-boundary; CJK residue warn; forbidden classes warn; header budget 30; findings are data, the exit code never escalates on them; *.zh.md and docs/zh/ archives skipped; default jargon map docs/jargon-to-standard-mapping-v1.md) -> tools/norm_lint.py" ;;
     registry-regen) echo "cw.sh registry-regen --base-repo REPO --base-ref REF --contrib-repo REPO --contrib-ref REF --pieces M1,M2,... --anchor-src DIR [--dep-source require|coqdep|registry|auto] [--seq N] [--out DIR] [--apply] [--json P]   # contribution registration-row regenerator (merge-target books verbatim as the draft bottom + canonical #R<seq>-<md5-8> rows for the named pieces tail-appended in dependency order, ties by the contribution registry's existing row order; BLOCK pieces listed with reasons and no rows; entity md5 cross-checked against the contribution-surface blob; three same-source assertions reused from registry_union; dry-run by default, --apply writes DIR/order.txt and DIR/_CoqProject) -> tools/registry_regen.py" ;;
     contrib-intake) echo "cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]   # contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face, protocol four-check pipeline in one run: registry union dry run against the base face with a regeneration prescription on any assertion blast / norm lint of each new or changed prose face via norm_lint / gate expectation over changed .v faces with a gate7 probe precheck / lane isolation tally of changed paths outside --lane-prefix; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0; zero writes into either face) -> tools/contrib_intake.py" ;;
+    evolve)      echo "cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]   # autonomous evolution engine v1 (harvest five signal classes by subprocess of the existing engines: norm-lint fitness with frozen surfaces excluded / sentinel --once dual-repo new ci-red events / suite last state / registry audit accounts with increment / maintained UNRECOGNIZED sentinel events; derive fixed-rule scored candidates plus genetic standing candidates from the ledger lineage; draft the constitution three-law-preamble task brief to --draft-out; draft-only spawn gate: never executes a candidate, never writes the repository; adverse signals are data, exit 0; 2 usage; 9 missing/unreachable) -> tools/evolve.py" ;;
     *) return 1 ;;
   esac
 }
@@ -332,12 +340,13 @@ case "${1:-}" in
   norm-lint)   shift; run_tool norm-lint   "tools/norm_lint.py"             "$@" ;;
   registry-regen) shift; run_tool registry-regen "tools/registry_regen.py" "$@" ;;
   contrib-intake) shift; run_tool contrib-intake "tools/contrib_intake.py" "$@" ;;
+  evolve)      shift; run_tool evolve      "tools/evolve.py"              "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: unknown tool: $2（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake）" >&2
+        echo "cw.sh help: unknown tool: $2（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve）" >&2
         exit 2
       fi
     fi
@@ -345,7 +354,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: unknown tool: $1（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|help）" >&2
+    echo "cw.sh: unknown tool: $1（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve|help）" >&2
     usage >&2
     exit 2 ;;
 esac

@@ -313,7 +313,8 @@ t_dual_scan \
  t_registry_fix \
  t_norm_lint \
  t_contrib_intake \
- t_registry_regen"
+ t_registry_regen \
+ t_evolve"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -769,6 +770,22 @@ t_contrib_intake() {
   # missing-face=9/bad-ref=9; tmp fixtures only, zero writes, zero
   # network, zero real-repository contact.
   "$PY" -B "$REPO/tests/test_contrib_intake.py"
+}
+
+t_evolve() {
+  # autonomous evolution engine hook (tools/evolve.py):
+  # harvest signal classes by subprocess of the existing engines, derive
+  # scored candidates by fixed rules, draft the human-gated next-round task
+  # brief (constitution three-law preamble auto-carried). tests/test_evolve.py
+  # minimal shell, three checks: --selftest rc=0 with ten PASS vector groups
+  # (canned signal injection via real subprocesses, candidate rules, draft
+  # formation, frozen exclusion, sentinel seen-idempotence, deterministic
+  # double run), --help smoke, exit-code contract spot checks bogus=2/
+  # no-draft=2/no-signal=2/watch-without-state=2/two-suite-sources=2/
+  # missing-baseline=9/missing-parent=9; tmp fixtures only, zero writes,
+  # zero network, zero real-repository contact, draft-only (never executes
+  # a candidate).
+  "$PY" -B "$REPO/tests/test_evolve.py"
 }
 
 t_registry_regen() {

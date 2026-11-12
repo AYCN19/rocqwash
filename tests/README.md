@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 62 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 63 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（62 例）
+## 覆盖面（63 例）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -234,3 +234,4 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 62 过 / 1 红 / 
 |---|------|------|------|
 | 61 | `t_contrib_intake` | `tools/contrib_intake.py`（contribution intake inspector: read-only four-gate verdicts — registry / norm / gate expectation / isolation — over a contribution face vs a base face; gates never short-circuit, BLOCK is data, exit stays 0） | `tests/test_contrib_intake.py` minimal shell, three checks: --selftest rc=0 with `CONTRIB-INTAKE-SELFTEST PASS`（the tool's own dual-git-clone vectors attest the four gates: clean/collision/jargon/overlap plus read-only/determinism/archive parity/probe outcomes/CLI）／--help rc=0／exit-code spot checks bogus=2, no-input=2, missing-face=9, bad-ref=9。tmp fixtures only, zero writes, zero network, zero real-repository contact |
 | 62 | `t_registry_regen` | `tools/registry_regen.py`（contribution registration-row regenerator: merge-target books verbatim as the draft bottom + canonical `#R<seq>-<md5-8>` rows tail-appended in dependency order; dry run by default, `--apply` writes only under an explicit `--out`） | `tests/test_registry_regen.py` minimal shell, three checks: --selftest rc=0 with `REGISTRY-REGEN-SELFTEST PASS`（the tool's own tmp-fixture vectors attest three-piece topological regeneration / missing-dependency BLOCK / the frozen md5 vector / dry-run zero-write / blast and divergence cases / CLI codes / rerun identity）／--help rc=0／exit-code spot checks bogus=2, no-input=2, apply-without-out=2, negative-seq=2, missing-base=9。tmp fixtures only, zero writes, zero network, zero real-repository contact |
+| 63 | `t_evolve` | `tools/evolve.py`（autonomous evolution engine v1: harvest five signal classes by subprocess of the existing engines — norm-lint fitness with frozen surfaces excluded / sentinel `--once` dual-repo new ci-red events / suite last state / registry audit accounts with increment / maintained UNRECOGNIZED sentinel events; derive fixed-rule scored candidates plus genetic standing candidates from the ledger lineage; draft the constitution three-law-preamble task brief; draft-only, never executes a candidate, never writes the repository） | `tests/test_evolve.py` minimal shell, three checks: --selftest rc=0 with ten PASS vector groups（canned signal injection via real subprocesses / candidate rules / draft formation / frozen exclusion / sentinel seen-idempotence / deterministic double run）／--help rc=0／exit-code spot checks bogus=2, no-draft=2, no-signal=2, watch-without-state=2, two-suite-sources=2, missing-baseline=9, missing-parent=9。tmp fixtures only, zero writes, zero network, zero real-repository contact |
