@@ -1,70 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""probe_engine.py — 批量闭包相容探针引擎（rocqwash wash/·v30 实战判例工具化·
-承 seat_wash13/probe_batch.py 1:1 泛化·20261103 入账）
+"""probe_engine.py — batch closure-compatibility probe engine (rocqwash wash/).
 
-探针法（闭包相容判定）：把候选件 `<件名>.v` 从源树 cp 入世界目录（世界含播种
-.vo 闭包·只读语义），在世界 cwd 直接 `rocq c` 编译一发。退出码即判据：
-  rc=0  Require 闭包可装载＋语句面可 elaboration ＝ 相容（可洗可落）；
-  rc!=0 记红因原文（世界接口代差/缺依赖族候选）。
-一切真编译必经 cpu_guard 包裹（--guard 给出即包裹），退出码无管道真取
-（subprocess returncode 直读）。探针后清场：候选件五件产物
-(.v/.vo/.glob/.vos/.vok) 移出世界入 --logdir 留证（世界保持播种态纯度）。
+    Purpose.  Probes closure compatibility in batch: for each candidate in the TSV manifest, copy
+      `<name>.v` from --src into the seeded world directory (read-only seeded .vo closure) and run
+      one real `rocq c` compile there, verdict read from the subprocess returncode (never through a
+      pipe); only --out and --logdir are written, the five probe artifacts move into --logdir as
+      evidence afterwards (world purity kept); real compiles run wrapped through cpu_guard under
+      --guard; resume by default (same-md5 --out records are skipped; --fresh re-probes everything).
 
-输入候选清单 TSV（首行表头·列名定位不按列序）：
-  必需列  件名  md5          （md5＝枚举时源件指纹·逐件实测回填 md5_match）
-  可选列  RED  行数          （RED＝语句面 RED 站数·rc0 分流必需；缺列时 rc0
-                              不作 washable/born-clean 三分·如实出 RC0）
+    Interface.  python3 wash/probe_engine.py --candidates TSV --src DIR --world DIR --out ledger.json
+      --logdir DIR [--rocq-cmd TPL] [--guard PATH --guard-reg DIR --guard-front N --guard-mid N
+      --guard-maxwait N] [--timeout S] [--ulimit-stack N] [--jobs K] [--fresh] | --selftest;
+      manifest columns located by name: `件名`/`md5` required, `RED` optional (statement-face RED
+      line count; without it an rc0 record is reported as RC0 — the three-way split is undecidable);
+      verdict ∈ {`WASHABLE`, `BORN-CLEAN`, `RC0`, `TIMEOUT`, `NO-SRC`} ∪ {`RED-MISSING_LIB`,
+      `RED-ILLEGAL_APP`, `RED-NO_SUBTERM`, `RED-FACE`, `RED-OTHER`, `RED-UNKNOWN`}; failure-class
+      regexes apply in order, first match wins (MISSING_LIB captures the library name); ledger
+      schema rocqwash-probe-ledger/1, records keyed by candidate name (--jobs K > 1: the main
+      thread records in dictionary order, completion order never reorders output).
 
-rc 分流（verdict 字段）：
-  rc0 + RED>0  → WASHABLE     （闭包相容＋语句面有 RED＝洗形候选）
-  rc0 + RED=0  → BORN-CLEAN   （闭包相容＋语句面零 RED＝born-clean 落位候选）
-  rc0 + RED缺  → RC0          （RED 未申报·三分不可判·报清单不报清白）
-  rc1          → RED-<红因>   （regex 分类，见下）
-  rc=124       → TIMEOUT      （--timeout 到点·subprocess.TimeoutExpired）
-  源件缺失     → NO-SRC       （--src 下无 <件名>.v·不编译如实出账）
+    Dependencies.  Python 3 standard library only; bash for the inner compile command and the cpu_guard wrapper; all paths parameterized.
 
-红因分类（rc1·按序首中即断·大小写不敏感）：
-  MISSING_LIB  /unable to locate library|cannot find library/   （缺库型·
-                捕获库名入 missing 字段）
-  ILLEGAL_APP  /illegal application/                             （代差型）
-  NO_SUBTERM   /no subterm matching/                             （代差型）
-  FACE         /expected to have type|is not convertible/        （面错·载体
-                接口代差错配族）
-  其余 rc1     → OTHER（有红因原文无分类命中）／UNKNOWN（零红因原文）
+    Evidence.  --selftest frozen vector groups (temporary directory, stub probe, zero real compiles):
+      rc three-way split, missing-library capture, resume byte-identity, --jobs K=1/K=3 parallel
+      output-equivalence vectors, --jobs 0 rc=2, four CLI codes; tests/test_probe_engine.py reruns them.
 
-幂等（CONTRIBUTING §0 律三）：--out 已在盘时默认 resume——候选件与既有记录
-md5 同 ⇒ skip 不重炮；--fresh 推倒重探。同候选集重跑产出同账（记录无时间戳/
-无绝对路径·sort_keys 落盘·字节级可复现）。
-
-并行（--jobs K·缺省 1＝逐件串行·零行为漂移）：
-  K>1 时候选件分片 concurrent.futures.ThreadPool 并行探针（真编译仍逐件经
-  --guard cpu_guard 包裹·guard FRONT 档自带并发钳位——同 -Reg 登记表下 FRONT/
-  MID 槽位天然限流·K 超出槽位的排队件 MaxWaitSec 到点降 BACK 档放行不占 FRONT
-  全速位）。台账记录序恒按候选典序（主线程按典序收账落盘·并行完成序不改变
-  输出序·确定性铁律；sort_keys 落盘同输入重跑字节恒同）；md5_match/verdict
-  逻辑零改；per-件 build log 仍独立落 logdir（<件名>.stderr.log 逐件异名互不
-  撞）。resume 幂等语义不变（skip 先行·余件入池）。候选重名＋K>1 → fail-loud
-  rc=2（同名件并发 copyfile/编译清场世界写竞争禁入）。
-  ⚠ 温控警示（显著·注记不强制·用户自裁）：K>1 时机内多 rocqworker 并发＝热
-  负载↑——机内同时活跃编译进程即 K 路（无 --guard 时零钳位全速并发·尤须自
-  裁）；--jobs 与 --guard 同给时建议 K≤2（guard FRONT 档缺省 2 槽·K 超出部分
-  排队降档·热负载受钳但仍在机内）。
-
-用法（全部路径参数化·零硬编码）：
-  python3 wash/probe_engine.py --candidates cands.tsv --src <源树> --world <世界目录> \
-      --out probe_ledger.json --logdir probe_logs/ \
-      [--rocq-cmd 'rocq c -Q . "" {name}.v'] [--guard tools/cpu_guard.sh \
-       --guard-reg /tmp/cw_reg_probe_engine --guard-front 0 --guard-mid 1 \
-       --guard-maxwait 600] [--timeout 1500] [--ulimit-stack 65532] \
-      [--jobs 1] [--fresh]
-  python3 wash/probe_engine.py --selftest
-
-退出码：0=批完成台账落盘（rc1 候选是探针产出数据非器红·计数响亮入 stdout）；
-2=用法错（--help rc=0／缺必需参数／--jobs<1／K>1 候选重名）；9=--candidates/
---src/--world/--guard 路径缺失；1=--selftest 红处。台账 schema=
-rocqwash-probe-ledger/1。
-"""
+    Exit-codes.  0 = batch complete, ledger written (rc1 candidates are probe output data, not a tool
+      failure; counts printed loudly); 1 = --selftest assertion failure; 2 = usage error (--help rc=0,
+      missing required arguments, --jobs < 1, duplicate candidate names under --jobs > 1);
+      9 = --candidates/--src/--world/--guard path missing."""
 import argparse
 import concurrent.futures
 import hashlib
@@ -79,7 +44,7 @@ import sys
 PROG = "probe_engine"
 SCHEMA = "rocqwash-probe-ledger/1"
 
-# 红因分类 regex（按序首中即断·IGNORECASE）
+# failure-class regexes (first match in order wins, IGNORECASE)
 MISSING_LIB_RE = re.compile(r"(?:unable to locate library|cannot find library)\s+\|?\s*"
                             r"([A-Za-z0-9_']+)", re.IGNORECASE)
 CLASS_RES = [
@@ -102,15 +67,17 @@ def md5_of(path):
 
 
 def load_candidates(path):
-    """候选清单 TSV → [(name, md5, red_or_None)]（表头列名定位·fail-loud）。"""
+    """Candidate manifest TSV → [(name, md5, red_or_None)] (columns located
+    by header names, not positions; fail-loud)."""
     with io.open(path, "r", encoding="utf-8") as fh:
         lines = [ln.rstrip("\n") for ln in fh if ln.strip()]
     if not lines:
-        raise ValueError("候选清单空文件: %s" % path)
+        raise ValueError("candidate manifest is an empty file: %s" % path)
     header = lines[0].split("\t")
     for req in ("件名", "md5"):
         if req not in header:
-            raise ValueError("候选清单缺必需列「%s」（表头=%r）" % (req, header))
+            raise ValueError("candidate manifest missing required column "
+                             "'%s' (header=%r)" % (req, header))
     i_name = header.index("件名")
     i_md5 = header.index("md5")
     i_red = header.index("RED") if "RED" in header else None
@@ -118,8 +85,8 @@ def load_candidates(path):
     for ln in lines[1:]:
         f = ln.split("\t")
         if len(f) < len(header):
-            raise ValueError("候选清单行宽不齐（应 %d 列实 %d 列）: %r"
-                             % (len(header), len(f), ln))
+            raise ValueError("candidate manifest row width mismatch (expected "
+                             "%d columns, got %d): %r" % (len(header), len(f), ln))
         red = None
         if i_red is not None:
             v = f[i_red].strip()
@@ -130,7 +97,8 @@ def load_candidates(path):
 
 
 def classify_red(red_text):
-    """红因分类：返回 (red_class, missing_lib_or_None)·按序首中即断。"""
+    """Failure-class triage: returns (red_class, missing_lib_or_None);
+    first match in order wins."""
     m = MISSING_LIB_RE.search(red_text or "")
     missing = m.group(1) if m else None
     for cls, rx in CLASS_RES:
@@ -140,7 +108,8 @@ def classify_red(red_text):
 
 
 def extract_red(err, out):
-    """首个 Error/Cannot find library/Anomaly 行＋续行（库名/细节常在续行）。"""
+    """First Error/Cannot find library/Anomaly line plus its continuation line
+    (library names and details usually sit on the next line)."""
     lines_all = (err + "\n" + out).split("\n")
     for i, ln in enumerate(lines_all):
         if RED_LINE_RE.search(ln):
@@ -150,7 +119,8 @@ def extract_red(err, out):
 
 
 def verdict_rc1(red_text):
-    """rc1 红因 verdict：RED-<分类>／RED-OTHER（有原文无命中）／RED-UNKNOWN（无原文）。"""
+    """rc1 failure verdict: RED-<class>, RED-OTHER (failure text with no class
+    hit), RED-UNKNOWN (no failure text at all)."""
     cls, _ = classify_red(red_text)
     if cls:
         return "RED-" + cls
@@ -158,7 +128,8 @@ def verdict_rc1(red_text):
 
 
 def verdict_of_rc(rc, red_count):
-    """rc0/124/NO_SRC 面分流（RED 缺列时 rc0 不作三分·如实出 RC0）。"""
+    """rc0/124/NO_SRC verdict split (without the RED column an rc0 record is
+    reported as RC0 — the three-way split is undecidable)."""
     if rc == "NO_SRC":
         return "NO-SRC"
     if rc == 124:
@@ -170,7 +141,8 @@ def verdict_of_rc(rc, red_count):
 
 def probe_one(name, src_dir, world_dir, logdir, rocq_cmd, guard, guard_reg,
               guard_front, guard_mid, guard_maxwait, timeout, ulimit_stack):
-    """单件探针：cp→编译→真退出码→红因提取→清场。返回记录 dict。"""
+    """One probe: copy → compile → real exit code → failure extraction →
+    cleanup.  Returns the record dict."""
     src = os.path.join(src_dir, name + ".v")
     if not os.path.exists(src):
         return {"file": name, "md5": None, "rc": "NO_SRC", "red": "",
@@ -208,7 +180,8 @@ def probe_one(name, src_dir, world_dir, logdir, rocq_cmd, guard, guard_reg,
            "verdict": "TIMEOUT" if rc == 124 else
            (verdict_rc1(red) if rc != 0 else "RC0"),
            "red_count": None, "md5_match": None}
-    # 清场：五件移出世界入 logdir 留证（世界保持播种态纯度）
+    # cleanup: move the five artifacts out of the world into logdir as evidence
+    # (the world keeps its seeded purity)
     for ext in ARTIFACT_EXTS:
         f = os.path.join(world_dir, name + ext)
         if os.path.exists(f):
@@ -232,14 +205,20 @@ def save_ledger(out_path, args, records):
 
 
 def _run_batch_parallel(cands, src_dir, world_dir, logdir, args, records):
-    """--jobs K>1 并行分片批（K=1 恒走 run_batch 原串行循环·零行为漂移）。
+    """--jobs K > 1 sharded parallel batch (K=1 always takes the original
+    serial loop in run_batch, zero behavior drift).
 
-    resume skip 先行→余件入 concurrent.futures.ThreadPool（max_workers=K·每件
-    一 probe_one·真编译仍逐件经 --guard 包裹·同 -Reg 登记表下 guard FRONT 档
-    自带钳位）→主线程按候选典序收账落盘（fut 序＝pending 序＝候选典序·并行
-    完成序不改变输出序·确定性铁律；records/skipped/probes 与串行同义同构·
-    逐件增量落盘同工艺）。候选重名 fail-loud rc=2（同名件并发 copyfile/编译
-    清场世界写竞争禁入）。"""
+    Resume skips run first → the remaining candidates go into a
+    concurrent.futures.ThreadPool (max_workers=K, one probe_one per
+    candidate; real compiles still run wrapped through --guard one by one;
+    the guard FRONT tier clamps concurrency on its own under the same -Reg
+    registry) → the main thread records in candidate dictionary order and
+    writes to disk (fut order = pending order = candidate dictionary order;
+    completion order never reorders output — determinism invariant;
+    records/skipped/probes carry the same meaning and shape as the serial
+    path, with the same incremental per-candidate ledger write).  Duplicate
+    candidate names fail loud rc=2 (concurrent copyfile/compile/cleanup
+    world-write races between same-name files are refused)."""
     skipped, probes = 0, 0
     pending = []
     for name, md5_decl, red_count in cands:
@@ -256,8 +235,9 @@ def _run_batch_parallel(cands, src_dir, world_dir, logdir, args, records):
             dupes.append(n)
         seen.add(n)
     if dupes:
-        print("FAIL-LOUD: --jobs %d 并行分片候选重名禁入（同名件并发世界写"
-              "竞争）: %s" % (args.jobs, ",".join(sorted(set(dupes)))),
+        print("FAIL-LOUD: --jobs %d parallel sharding rejects duplicate "
+              "candidate names (concurrent same-name world-write race): %s"
+              % (args.jobs, ",".join(sorted(set(dupes)))),
               file=sys.stderr)
         sys.exit(2)
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.jobs) as ex:
@@ -267,7 +247,9 @@ def _run_batch_parallel(cands, src_dir, world_dir, logdir, args, records):
                           args.timeout, args.ulimit_stack)
                 for name, _md5_decl, _red in pending]
         try:
-            # 主线程按候选典序收账（完成序不侵入输出序·记录序恒典序）
+            # the main thread records in candidate dictionary order (completion
+            # order never invades output order; record order stays dictionary
+            # order)
             for (name, md5_decl, red_count), fut in zip(pending, futs):
                 rec = fut.result()
                 rec["red_count"] = red_count
@@ -280,21 +262,24 @@ def _run_batch_parallel(cands, src_dir, world_dir, logdir, args, records):
                 print("PROBE %-42s rc=%s verdict=%s%s"
                       % (name, rec["rc"], rec["verdict"],
                          (" RED: " + rec["red"]) if rec["red"] else ""))
-                # 逐件增量落盘（中断可续·承原型工艺·与串行同）
+                # incremental per-candidate ledger write (resumable after an
+                # interruption; same as the serial path)
                 save_ledger(args.out, args, records)
         except BaseException:
             for f in futs:
-                f.cancel()          # 未起者即撤·在跑者自然收尾（fail-loud 不吞）
+                f.cancel()          # cancel not-yet-started futures; running ones finish naturally (fail-loud, nothing swallowed)
             raise
     return records, skipped, probes
 
 
 def run_batch(cands, src_dir, world_dir, logdir, args):
-    """批量探针（resume 幂等）→ (records, skipped, probes)。
+    """Batch probe (resume idempotent) → (records, skipped, probes).
 
-    --jobs K（缺省 1）：K=1 走下方原串行循环（逐字保留·零行为漂移）；K>1 分片
-    并行走 _run_batch_parallel（典序收账·输出序不随完成序漂移·温控警示见
-    docstring 并行节）。"""
+    --jobs K (default 1): K=1 takes the original serial loop below (kept
+    verbatim, zero behavior drift); K > 1 shards the batch into
+    _run_batch_parallel (dictionary-order recording, output order never
+    drifts with completion order; thermal caution in the parallelism
+    paragraph of the module docstring)."""
     records = {}
     if not args.fresh and os.path.exists(args.out):
         with io.open(args.out, "r", encoding="utf-8") as fh:
@@ -323,7 +308,8 @@ def run_batch(cands, src_dir, world_dir, logdir, args):
         print("PROBE %-42s rc=%s verdict=%s%s"
               % (name, rec["rc"], rec["verdict"],
                  (" RED: " + rec["red"]) if rec["red"] else ""))
-        # 逐件增量落盘（中断可续·承原型工艺）
+        # incremental per-candidate ledger write (resumable after an
+        # interruption)
         save_ledger(args.out, args, records)
     return records, skipped, probes
 
@@ -338,10 +324,13 @@ def run_args(argv):
 
 
 def selftest():
-    """内嵌冻结向量组（临时目录＋桩探针·零真编译零触真仓）：rc 分流三分
-    （BORN-CLEAN/RED-MISSING_LIB/WASHABLE）＋resume 幂等同账字节恒同＋--jobs
-    并行矢量（K=1 对拍缺省串行旧输出字节恒同／K=3 结果集等价序不变·canned
-    stub 注入并行路径／--jobs 0 rc=2）＋CLI 四码。"""
+    """Embedded frozen vector groups (temporary directory + stub probe; zero
+    real compiles, zero real repository touches): rc three-way split
+    (`BORN-CLEAN`/`RED-MISSING_LIB`/`WASHABLE`) + resume idempotence
+    byte-identical ledger + --jobs parallel vectors (K=1 differential
+    comparison byte-identical to the default serial output / K=3 result
+    equivalence with order unchanged, canned stub injected into the parallel
+    path / --jobs 0 rc=2) + four CLI codes."""
     import tempfile
 
     def run(args):
@@ -388,54 +377,61 @@ def selftest():
         assert acc["records"]["PassMe"]["verdict"] == "BORN-CLEAN", acc
         assert acc["records"]["RedMe"]["verdict"] == "RED-MISSING_LIB", acc
         assert acc["records"]["RedMe"]["missing"] == "Nope", acc
-        # resume 幂等：重跑同候选集→SKIP 且台账字节恒同
+        # resume idempotence: rerun the same manifest → SKIP lines and a
+        # byte-identical ledger
         before = io.open(led, "rb").read()
         p = run(["--candidates", cands, "--src", src, "--world", world,
                  "--out", led, "--logdir", logdir, "--rocq-cmd", tpl])
         assert p.returncode == 0 and "SKIP(done)" in p.stdout, p.stdout
-        assert io.open(led, "rb").read() == before, "重跑同账字节漂移＝违例"
-        # --jobs 并行矢量（canned stub 注入并行路径·零真编译）：K=1 显式对拍
-        # 缺省串行旧输出→字节恒同（缺省＝现行为·零漂移实证）；K=3 结果集等价
-        # （并行完成序不改变台账字节·记录序恒典序·三分 verdict 并池）
+        assert io.open(led, "rb").read() == before, "ledger byte drift on rerun is a violation"
+        # --jobs parallel vectors (canned stub injected into the parallel path,
+        # zero real compiles): explicit K=1 differential comparison against the
+        # default serial output → byte-identical (default = current behavior,
+        # zero-drift proof); K=3 result equivalence (parallel completion order
+        # never changes the ledger bytes; record order stays dictionary order;
+        # the three-way verdict split merges into one pool)
         p = run(["--candidates", cands, "--src", src, "--world", world,
                  "--out", led, "--logdir", logdir, "--rocq-cmd", tpl,
                  "--jobs", "1", "--fresh"])
         assert p.returncode == 0, p.stdout
         assert io.open(led, "rb").read() == before, \
-            "K=1 对拍缺省串行旧输出字节漂移＝违例"
+            "K=1 differential comparison against the default serial output drifted byte-wise, a violation"
         p = run(["--candidates", cands, "--src", src, "--world", world,
                  "--out", led, "--logdir", logdir, "--rocq-cmd", tpl,
                  "--jobs", "3", "--fresh"])
         assert p.returncode == 0, p.stdout
         assert io.open(led, "rb").read() == before, \
-            "K=3 结果集等价破（台账字节漂移＝完成序侵入输出序）"
+            "K=3 result equivalence broken (ledger byte drift means completion order invaded output order)"
         acc3 = json.load(io.open(led, encoding="utf-8"))
         assert acc3["records"]["Third"]["verdict"] == "WASHABLE" \
             and acc3["records"]["Third"]["red_count"] == 2 \
             and acc3["records"]["Third"]["md5_match"] is True, \
-            "K=3 并池三分缺 WASHABLE: %r" % acc3["records"]["Third"]
+            "K=3 merged pool missing the WASHABLE arm of the three-way split: %r" % acc3["records"]["Third"]
         assert acc3["records"]["PassMe"]["verdict"] == "BORN-CLEAN" \
             and acc3["records"]["RedMe"]["verdict"] == "RED-MISSING_LIB", acc3
-        # --jobs<1 用法红 rc=2（fail-loud）
+        # --jobs < 1 is a usage error, rc=2 (fail-loud)
         p = run(["--candidates", cands, "--src", src, "--world", world,
                  "--out", os.path.join(tmp, "j0.json"), "--logdir", logdir,
                  "--jobs", "0"])
-        assert p.returncode == 2, "--jobs 0 应 rc=2 实测 %d" % p.returncode
-        # CLI 四码
+        assert p.returncode == 2, "--jobs 0 must exit rc=2, got %d" % p.returncode
+        # four CLI codes
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown argument must exit rc=2, got %d" % p.returncode
         p = run([])
-        assert p.returncode == 2, "缺参数应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "missing arguments must exit rc=2, got %d" % p.returncode
         p = run(["--candidates", os.path.join(tmp, "nope.tsv"), "--src", src,
                  "--world", world, "--out", os.path.join(tmp, "x.json"),
                  "--logdir", logdir])
-        assert p.returncode == 9, "缺清单应 rc=9 实测 %d" % p.returncode
-        print("PROBE-ENGINE-SELFTEST PASS: rc 三分(BORN-CLEAN/RED-MISSING_LIB/"
-              "WASHABLE 并池)/missing 捕获/resume 幂等同账字节恒同/--jobs K=1 "
-              "对拍缺省串行旧输出字节恒同＋K=3 结果集等价序不变(canned stub "
-              "并行路径)＋--jobs 0 rc=2/CLI 四码 六判全过")
+        assert p.returncode == 9, "missing manifest must exit rc=9, got %d" % p.returncode
+        print("PROBE-ENGINE-SELFTEST PASS: rc three-way split (BORN-CLEAN/"
+              "RED-MISSING_LIB/WASHABLE merged pool)/missing-library capture/"
+              "resume idempotence with byte-identical ledger/--jobs K=1 "
+              "differential comparison byte-identical to the default serial "
+              "output + K=3 result equivalence with order unchanged (canned "
+              "stub parallel path) + --jobs 0 rc=2/four CLI codes — six "
+              "criteria all pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -446,38 +442,43 @@ def main():
     if "--selftest" in argv:
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
-        prog=PROG, description="批量闭包相容探针引擎：候选清单×世界目录→逐件 "
-                               "cp→rocq c 真退出码→rc 分流台账（schema "
-                               "rocqwash-probe-ledger/1·resume 幂等）")
+        prog=PROG, description="Batch closure-compatibility probe engine: "
+                               "candidate manifest x world directory -> "
+                               "per-candidate cp -> rocq c real exit code -> "
+                               "rc-split ledger (schema rocqwash-probe-ledger/1, "
+                               "resume idempotent)")
     ap.add_argument("--candidates", default=None, metavar="FILE",
-                    help="候选清单 TSV（必需列 件名/md5·可选列 RED/行数）")
+                    help="candidate manifest TSV (required columns 件名/md5, "
+                         "optional column RED = statement-face RED line count)")
     ap.add_argument("--src", default=None, metavar="DIR",
-                    help="源树根（候选件 <件名>.v 取自此）")
+                    help="source tree root (candidate <name>.v files are taken from here)")
     ap.add_argument("--world", default=None, metavar="DIR",
-                    help="世界目录（播种 .vo 闭包·探针 cwd）")
-    ap.add_argument("--out", default=None, metavar="FILE", help="台账 JSON 出账")
+                    help="world directory (seeded .vo closure; probe cwd)")
+    ap.add_argument("--out", default=None, metavar="FILE", help="ledger JSON output")
     ap.add_argument("--logdir", default=None, metavar="DIR",
-                    help="探针日志＋清场五件留证目录（缺则 --out.logs）")
+                    help="probe logs + post-probe artifact evidence directory (defaults to --out.logs)")
     ap.add_argument("--rocq-cmd", dest="rocq_cmd",
                     default='rocq c -Q . "" {name}.v', metavar="TPL",
-                    help="探针命令模板（含 {name} 占位·默认 'rocq c -Q . \"\" {name}.v'）")
+                    help="probe command template (contains the {name} placeholder, default 'rocq c -Q . \"\" {name}.v')")
     ap.add_argument("--guard", default=None, metavar="PATH",
-                    help="cpu_guard.sh 路径（给则一切探针经其包裹·真编译必给）")
+                    help="cpu_guard.sh path (when given, every probe runs wrapped through it; required for real compiles)")
     ap.add_argument("--guard-reg", dest="guard_reg",
                     default="/tmp/cw_reg_probe_engine", metavar="DIR")
     ap.add_argument("--guard-front", dest="guard_front", type=int, default=0)
     ap.add_argument("--guard-mid", dest="guard_mid", type=int, default=1)
     ap.add_argument("--guard-maxwait", dest="guard_maxwait", type=int, default=600)
     ap.add_argument("--timeout", type=int, default=1500,
-                    help="单件探针 subprocess 超时秒（到点 rc=124 TIMEOUT）")
+                    help="per-candidate subprocess timeout seconds (on expiry rc=124 TIMEOUT)")
     ap.add_argument("--ulimit-stack", dest="ulimit_stack", type=int, default=None,
-                    help="内层 ulimit -s 值（缺省不设·正本机惯例 65532）")
+                    help="inner ulimit -s value (unset by default; canonical-machine convention 65532)")
     ap.add_argument("--jobs", type=int, default=1, metavar="K",
-                    help="并行分片度（缺省 1＝逐件串行零漂移；K>1 ThreadPool "
-                         "并行·典序收账·真编译仍逐件经 --guard 包裹·与 --guard"
-                         " 同给建议 K≤2 温控自裁）")
+                    help="parallel shard degree (default 1 = per-candidate serial, "
+                         "zero drift; K > 1 runs a ThreadPool in parallel with "
+                         "dictionary-order recording; real compiles still run "
+                         "wrapped through --guard one by one; with --guard given, "
+                         "K <= 2 advised for thermal reasons, caller decides)")
     ap.add_argument("--fresh", action="store_true",
-                    help="推倒重探（缺省 resume：既有记录 md5 同即 skip）")
+                    help="re-probe from scratch (default resume: existing records with the same md5 are skipped)")
     args = ap.parse_args(argv)
 
     try:
@@ -486,26 +487,28 @@ def main():
         pass
 
     if args.jobs < 1:
-        print("FAIL-LOUD: --jobs 须≥1 实测 %d" % args.jobs, file=sys.stderr)
+        print("FAIL-LOUD: --jobs must be >= 1, got %d" % args.jobs, file=sys.stderr)
         sys.exit(2)
     for req, val in (("candidates", args.candidates), ("src", args.src),
                      ("world", args.world), ("out", args.out)):
         if not val:
-            print("FAIL-LOUD: --%s 必给（--selftest 除外）" % req, file=sys.stderr)
+            print("FAIL-LOUD: --%s is required (except --selftest)" % req, file=sys.stderr)
             sys.exit(2)
     for label, val in (("candidates", args.candidates), ("src", args.src),
                        ("world", args.world)):
         if not os.path.exists(val):
-            print("FAIL-LOUD: --%s 路径缺失: %s" % (label, val), file=sys.stderr)
+            print("FAIL-LOUD: --%s path missing: %s" % (label, val), file=sys.stderr)
             sys.exit(9)
     if args.guard and not os.path.exists(args.guard):
-        print("FAIL-LOUD: --guard 路径缺失: %s" % args.guard, file=sys.stderr)
+        print("FAIL-LOUD: --guard path missing: %s" % args.guard, file=sys.stderr)
         sys.exit(9)
     logdir = args.logdir or (args.out + ".logs")
     os.makedirs(logdir, exist_ok=True)
     if args.jobs > 1:
-        print("ADVISE(温控): --jobs %d>1＝机内多 rocqworker 并发·热负载↑"
-              "（--guard 同给建议 K≤2·注记不强制·用户自裁）" % args.jobs)
+        print("ADVISE(thermal): --jobs %d > 1 means multiple concurrent "
+              "rocqworker processes on this machine and a higher thermal load "
+              "(with --guard, K <= 2 advised; advisory, not enforced — the "
+              "caller decides)" % args.jobs)
 
     try:
         cands = load_candidates(args.candidates)
@@ -520,12 +523,13 @@ def main():
     n_rc1 = sum(1 for r in records.values() if r.get("rc") == 1)
     n_other = len(records) - n_wash - n_clean - n_rc1
     drift = sorted(n for n, r in records.items() if r.get("md5_match") is False)
-    print("== PROBE-ENGINE DONE: 候选 %d（本轮 probe %d / resume skip %d）=="
-          % (len(cands), probes, skipped))
-    print("verdict 汇总: WASHABLE=%d BORN-CLEAN=%d rc1=%d 其他=%d"
+    print("== PROBE-ENGINE DONE: candidates %d (probed this run %d / "
+          "resume-skipped %d) ==" % (len(cands), probes, skipped))
+    print("verdict summary: WASHABLE=%d BORN-CLEAN=%d rc1=%d other=%d"
           % (n_wash, n_clean, n_rc1, n_other))
     if drift:
-        print("MD5-DRIFT 候选（清单 md5≠源件现测）: %s" % ",".join(drift))
+        print("MD5-DRIFT candidates (manifest md5 != current source md5): %s"
+              % ",".join(drift))
     print("ledger -> %s" % args.out)
     sys.exit(0)
 

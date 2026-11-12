@@ -706,9 +706,9 @@
    "path": "README-cw.md"
   },
   {
-   "cjk_chars": 5669,
-   "cjk_ratio": 0.184424,
-   "face_chars": 30739,
+   "cjk_chars": 5755,
+   "cjk_ratio": 0.156915,
+   "face_chars": 36676,
    "findings": [
     {
      "kind": "header",
@@ -789,48 +789,6 @@
      "term": "20261113"
     },
     {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "effort / work stream",
-     "term": "campaign"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "route",
-     "term": "dispatch"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "adaptation",
-     "term": "retrofit"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "agent / seat-worker",
-     "term": "seat"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "release / work stream",
-     "term": "wave"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "agent / seat-worker",
-     "term": "席名"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "failing",
-     "term": "红"
-    },
-    {
      "kind": "forbidden",
      "line": 14,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
@@ -840,205 +798,277 @@
      "kind": "forbidden",
      "line": 14,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261112"
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 14,
+     "suggest": "release / work stream",
+     "term": "wave"
     },
     {
      "kind": "forbidden",
-     "line": 14,
+     "line": 16,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "2026-11-13"
+    },
+    {
+     "kind": "forbidden",
+     "line": 16,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261113"
     },
     {
      "kind": "forbidden",
-     "line": 14,
+     "line": 18,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "2026-11-13"
+    },
+    {
+     "kind": "forbidden",
+     "line": 18,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "effort / work stream",
+     "term": "campaign"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "route",
+     "term": "dispatch"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "adaptation",
+     "term": "retrofit"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "agent / seat-worker",
+     "term": "seat"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "release / work stream",
+     "term": "wave"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "agent / seat-worker",
+     "term": "席名"
+    },
+    {
+     "kind": "jargon",
+     "line": 18,
+     "suggest": "failing",
+     "term": "红"
+    },
+    {
+     "kind": "forbidden",
+     "line": 20,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "2026-11-13"
+    },
+    {
+     "kind": "forbidden",
+     "line": 20,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 20,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 20,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "勘形席"
     },
     {
      "kind": "jargon",
-     "line": 14,
+     "line": 20,
      "suggest": "pending execution",
      "term": "候令"
     },
     {
      "kind": "jargon",
-     "line": 14,
+     "line": 20,
      "suggest": "classification",
      "term": "判类"
     },
     {
      "kind": "jargon",
-     "line": 14,
+     "line": 20,
      "suggest": "failing",
      "term": "红"
     },
     {
      "kind": "jargon",
-     "line": 14,
+     "line": 20,
      "suggest": "automatic recovery",
      "term": "自愈"
     },
     {
      "kind": "forbidden",
-     "line": 16,
+     "line": 22,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "2026-11-12"
     },
     {
      "kind": "forbidden",
-     "line": 16,
+     "line": 22,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 16,
+     "line": 22,
      "suggest": "triage",
      "term": "分诊"
     },
     {
      "kind": "jargon",
-     "line": 16,
+     "line": 22,
      "suggest": "sentinel / mechanical watch",
      "term": "哨"
     },
     {
      "kind": "jargon",
-     "line": 16,
+     "line": 22,
      "suggest": "failing",
      "term": "红"
     },
     {
      "kind": "forbidden",
-     "line": 18,
+     "line": 24,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "2026-11-12"
     },
     {
      "kind": "forbidden",
-     "line": 18,
+     "line": 24,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "forbidden",
-     "line": 18,
+     "line": 24,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "工装席"
     },
     {
      "kind": "jargon",
-     "line": 18,
+     "line": 24,
      "suggest": "ledger (data surface) / record list (generic prose)",
      "term": "台账"
     },
     {
      "kind": "jargon",
-     "line": 18,
+     "line": 24,
      "suggest": "sentinel / mechanical watch",
      "term": "哨"
     },
     {
      "kind": "jargon",
-     "line": 18,
+     "line": 24,
      "suggest": "failing",
      "term": "红"
     },
     {
      "kind": "forbidden",
-     "line": 20,
+     "line": 26,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "2026-11-12"
     },
     {
      "kind": "forbidden",
-     "line": 20,
+     "line": 26,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 20,
+     "line": 26,
      "suggest": "ledger (data surface) / record list (generic prose)",
      "term": "台账"
     },
     {
      "kind": "jargon",
-     "line": 20,
+     "line": 26,
      "suggest": "agent / seat-worker",
      "term": "席"
     },
     {
      "kind": "jargon",
-     "line": 20,
+     "line": 26,
      "suggest": "failing",
      "term": "红"
     },
     {
      "kind": "forbidden",
-     "line": 46,
+     "line": 52,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261103"
     },
     {
      "kind": "jargon",
-     "line": 46,
+     "line": 52,
      "suggest": "effort / work stream",
      "term": "campaign"
     },
     {
      "kind": "jargon",
-     "line": 53,
+     "line": 59,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "jargon",
-     "line": 66,
+     "line": 72,
      "suggest": "effort / work stream",
      "term": "campaign"
     },
     {
      "kind": "jargon",
-     "line": 68,
+     "line": 74,
      "suggest": "effort / work stream",
      "term": "campaign"
     },
     {
      "kind": "jargon",
-     "line": 69,
+     "line": 75,
      "suggest": "effort / work stream",
      "term": "campaign"
     },
     {
      "kind": "jargon",
-     "line": 69,
+     "line": 75,
      "suggest": "four-point pass criterion",
      "term": "绿判四件套"
     },
     {
      "kind": "forbidden",
-     "line": 77,
+     "line": 83,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "2026-11-01"
     },
     {
      "kind": "jargon",
-     "line": 80,
+     "line": 86,
      "suggest": "four-point pass criterion",
      "term": "绿判四件套"
-    },
-    {
-     "kind": "jargon",
-     "line": 82,
-     "suggest": "agent / seat-worker",
-     "term": "席"
-    },
-    {
-     "kind": "jargon",
-     "line": 84,
-     "suggest": "route",
-     "term": "dispatch"
     },
     {
      "kind": "jargon",
@@ -1047,208 +1077,208 @@
      "term": "席"
     },
     {
+     "kind": "jargon",
+     "line": 90,
+     "suggest": "route",
+     "term": "dispatch"
+    },
+    {
+     "kind": "jargon",
+     "line": 94,
+     "suggest": "agent / seat-worker",
+     "term": "席"
+    },
+    {
      "kind": "forbidden",
-     "line": 91,
+     "line": 97,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "2026-10-31"
     },
     {
      "kind": "forbidden",
-     "line": 91,
+     "line": 97,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261101"
     },
     {
      "kind": "forbidden",
-     "line": 93,
+     "line": 99,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261101"
     },
     {
      "kind": "forbidden",
-     "line": 94,
+     "line": 100,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261103"
     },
     {
      "kind": "jargon",
-     "line": 96,
+     "line": 102,
      "suggest": "ledger (data surface) / record list (generic prose)",
      "term": "台账"
     },
     {
      "kind": "forbidden",
-     "line": 98,
+     "line": 104,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261103"
     },
     {
      "kind": "forbidden",
-     "line": 107,
+     "line": 113,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261103"
     },
     {
      "kind": "jargon",
-     "line": 114,
+     "line": 120,
      "suggest": "write / persist to disk",
      "term": "落盘"
     },
     {
      "kind": "jargon",
-     "line": 115,
+     "line": 121,
      "suggest": "operation",
      "term": "手术"
     },
     {
      "kind": "jargon",
-     "line": 115,
+     "line": 121,
      "suggest": "failing",
      "term": "红"
     },
     {
      "kind": "jargon",
-     "line": 115,
+     "line": 121,
      "suggest": "passing",
      "term": "绿"
     },
     {
      "kind": "forbidden",
-     "line": 117,
+     "line": 123,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261104"
     },
     {
      "kind": "forbidden",
-     "line": 127,
+     "line": 133,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 138,
+     "line": 144,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "jargon",
-     "line": 138,
+     "line": 144,
      "suggest": "shape normalization",
      "term": "洗形"
     },
     {
      "kind": "jargon",
-     "line": 139,
+     "line": 145,
      "suggest": "ledger (data surface) / record list (generic prose)",
      "term": "台账"
     },
     {
      "kind": "jargon",
-     "line": 141,
+     "line": 147,
      "suggest": "shape-normalizing tool",
      "term": "洗形器"
     },
     {
      "kind": "jargon",
-     "line": 144,
+     "line": 150,
      "suggest": "apply",
      "term": "落刀"
     },
     {
      "kind": "jargon",
-     "line": 145,
+     "line": 151,
      "suggest": "dry run by default",
      "term": "缺省干跑"
     },
     {
      "kind": "jargon",
-     "line": 146,
+     "line": 152,
      "suggest": "designated",
      "term": "钦名"
     },
     {
      "kind": "jargon",
-     "line": 148,
+     "line": 154,
      "suggest": "a failing result is data, not a tool failure",
      "term": "红是数据非器红"
     },
     {
      "kind": "forbidden",
-     "line": 154,
+     "line": 160,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "jargon",
-     "line": 156,
+     "line": 162,
      "suggest": "blocked items / blockage record",
      "term": "堵账"
     },
     {
      "kind": "jargon",
-     "line": 159,
+     "line": 165,
      "suggest": "a failing result is data, not a tool failure",
      "term": "红是数据非器红"
     },
     {
      "kind": "forbidden",
-     "line": 162,
+     "line": 168,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 162,
+     "line": 168,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "主会话"
     },
     {
      "kind": "jargon",
-     "line": 168,
+     "line": 174,
      "suggest": "dry run",
      "term": "干跑"
     },
     {
      "kind": "forbidden",
-     "line": 172,
+     "line": 178,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 172,
+     "line": 178,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "工装席"
     },
     {
      "kind": "jargon",
-     "line": 177,
+     "line": 183,
      "suggest": "a failing result is data, not a tool failure",
      "term": "红是数据非器红"
     },
     {
      "kind": "jargon",
-     "line": 179,
+     "line": 185,
      "suggest": "dry run",
      "term": "干跑"
     },
     {
      "kind": "forbidden",
-     "line": 181,
+     "line": 187,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
-    },
-    {
-     "kind": "forbidden",
-     "line": 185,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261111"
-    },
-    {
-     "kind": "jargon",
-     "line": 186,
-     "suggest": "release / work stream",
-     "term": "wave"
     },
     {
      "kind": "forbidden",
@@ -1257,112 +1287,106 @@
      "term": "20261111"
     },
     {
+     "kind": "jargon",
+     "line": 192,
+     "suggest": "release / work stream",
+     "term": "wave"
+    },
+    {
      "kind": "forbidden",
      "line": 197,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261111"
+    },
+    {
+     "kind": "forbidden",
+     "line": 203,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "工装席"
     },
     {
      "kind": "forbidden",
-     "line": 210,
+     "line": 216,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 214,
+     "line": 220,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 221,
+     "line": 227,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 222,
+     "line": 228,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "工装席"
     },
     {
      "kind": "forbidden",
-     "line": 224,
+     "line": 230,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 226,
+     "line": 232,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 232,
+     "line": 238,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "forbidden",
-     "line": 237,
+     "line": 243,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "主会话"
-    },
-    {
-     "kind": "forbidden",
-     "line": 238,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261111"
-    },
-    {
-     "kind": "jargon",
-     "line": 241,
-     "suggest": "route",
-     "term": "dispatch"
     },
     {
      "kind": "forbidden",
      "line": 244,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261111"
+    },
+    {
+     "kind": "jargon",
+     "line": 247,
+     "suggest": "route",
+     "term": "dispatch"
+    },
+    {
+     "kind": "forbidden",
+     "line": 250,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 249,
+     "line": 255,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 253,
+     "line": 259,
      "suggest": "passing",
      "term": "绿"
     },
     {
      "kind": "jargon",
-     "line": 256,
+     "line": 262,
      "suggest": "dry run",
      "term": "干跑"
-    },
-    {
-     "kind": "forbidden",
-     "line": 262,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261112"
-    },
-    {
-     "kind": "forbidden",
-     "line": 263,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261112"
-    },
-    {
-     "kind": "forbidden",
-     "line": 267,
-     "suggest": "replace the internal role name with the plain role wording",
-     "term": "主会话"
     },
     {
      "kind": "forbidden",
@@ -1372,19 +1396,37 @@
     },
     {
      "kind": "forbidden",
-     "line": 271,
+     "line": 269,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 273,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "forbidden",
+     "line": 274,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 277,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 271,
+     "line": 277,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 379,
+     "line": 385,
      "suggest": "adaptation",
      "term": "retrofit"
     }
@@ -1595,8 +1637,8 @@
   },
   {
    "cjk_chars": 27,
-   "cjk_ratio": 0.001793,
-   "face_chars": 15059,
+   "cjk_ratio": 0.001478,
+   "face_chars": 18269,
    "findings": [
     {
      "kind": "budget",
@@ -1636,37 +1678,37 @@
     },
     {
      "kind": "cjk",
-     "line": 14,
+     "line": 17,
      "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
      "term": "cjk_ratio"
     },
     {
      "kind": "jargon",
-     "line": 68,
+     "line": 71,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "jargon",
-     "line": 70,
+     "line": 73,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "jargon",
-     "line": 111,
+     "line": 123,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "jargon",
-     "line": 211,
+     "line": 234,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "jargon",
-     "line": 213,
+     "line": 236,
      "suggest": "route",
      "term": "dispatch"
     }
@@ -2518,6 +2560,96 @@
    "path": "docs/annotation-standard-v1.0-20261113.md"
   },
   {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 14727,
+   "findings": [
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 16,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 18,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 19,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 54,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 55,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 58,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 184,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/contrib-isolation-protocol-v1.0-20261113.md"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 8193,
+   "findings": [
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 7,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 24,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 77,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/draft-evolve-v55-20261113.md"
+  },
+  {
    "cjk_chars": 39,
    "cjk_ratio": 0.00128,
    "face_chars": 30466,
@@ -3001,6 +3133,126 @@
    "path": "docs/en/architecture.md"
   },
   {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 1199,
+   "findings": [
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "header",
+     "line": 1,
+     "suggest": "add the Dependencies. field per the annotation standard",
+     "term": "Dependencies."
+    },
+    {
+     "kind": "header",
+     "line": 1,
+     "suggest": "add the Evidence. field per the annotation standard",
+     "term": "Evidence."
+    },
+    {
+     "kind": "header",
+     "line": 1,
+     "suggest": "add the Exit-codes. field per the annotation standard",
+     "term": "Exit-codes."
+    },
+    {
+     "kind": "header",
+     "line": 1,
+     "suggest": "add the Interface. field per the annotation standard",
+     "term": "Interface."
+    },
+    {
+     "kind": "header",
+     "line": 1,
+     "suggest": "add the Purpose. field per the annotation standard",
+     "term": "Purpose."
+    }
+   ],
+   "kind": "md",
+   "path": "docs/evolve-cycle1-verdict-20261113.md"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 11477,
+   "findings": [
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 7,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 9,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 11,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "2026-11-13"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261103"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261111"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 61,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "工装席"
+    },
+    {
+     "kind": "forbidden",
+     "line": 70,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/evolve-draft-cycle1-20261113.md"
+  },
+  {
    "cjk_chars": 534,
    "cjk_ratio": 0.035562,
    "face_chars": 15016,
@@ -3098,6 +3350,141 @@
    ],
    "kind": "md",
    "path": "docs/jargon-to-standard-mapping-v1.md"
+  },
+  {
+   "cjk_chars": 4,
+   "cjk_ratio": 0.000185,
+   "face_chars": 21627,
+   "findings": [
+    {
+     "kind": "cjk",
+     "line": 1,
+     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
+     "term": "cjk_ratio"
+    },
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 18,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 19,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 19,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 88,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 95,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 108,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 144,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 152,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 185,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 186,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 201,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 238,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 263,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 273,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 276,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 285,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 307,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 326,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 361,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/ops-evolve-手册-v1.0-20261113.md"
   },
   {
    "cjk_chars": 1562,
@@ -7741,6 +8128,120 @@
    "path": "docs/复核-UNREC-14事件-20261112.md"
   },
   {
+   "cjk_chars": 11,
+   "cjk_ratio": 0.000734,
+   "face_chars": 14994,
+   "findings": [
+    {
+     "kind": "cjk",
+     "line": 1,
+     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
+     "term": "cjk_ratio"
+    },
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 7,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 35,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 173,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "2026-11-12"
+    },
+    {
+     "kind": "forbidden",
+     "line": 173,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 236,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/检验-PR48-intake四闸-20261113.md"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 11506,
+   "findings": [
+    {
+     "kind": "forbidden",
+     "line": 1,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 7,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 9,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 20,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 26,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 26,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "forbidden",
+     "line": 29,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261112"
+    },
+    {
+     "kind": "forbidden",
+     "line": 66,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/演示-evolve首轮-20261113.md"
+  },
+  {
    "cjk_chars": 3034,
    "cjk_ratio": 0.131439,
    "face_chars": 23083,
@@ -9567,45 +10068,8 @@
   {
    "cjk_chars": 0,
    "cjk_ratio": 0.0,
-   "face_chars": 1553,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    }
-   ],
+   "face_chars": 1696,
+   "findings": [],
    "kind": "py",
    "path": "scan/dual_scan.py"
   },
@@ -9805,9 +10269,9 @@
    "path": "seam/seam_probe.py"
   },
   {
-   "cjk_chars": 6979,
-   "cjk_ratio": 0.308983,
-   "face_chars": 22587,
+   "cjk_chars": 7006,
+   "cjk_ratio": 0.281445,
+   "face_chars": 24893,
    "findings": [
     {
      "kind": "cjk",
@@ -10199,8 +10663,8 @@
   },
   {
    "cjk_chars": 5684,
-   "cjk_ratio": 0.330273,
-   "face_chars": 17210,
+   "cjk_ratio": 0.28593,
+   "face_chars": 19879,
    "findings": [
     {
      "kind": "budget",
@@ -10420,217 +10884,199 @@
     },
     {
      "kind": "jargon",
-     "line": 182,
+     "line": 198,
      "suggest": "reconcile",
      "term": "对账"
     },
     {
      "kind": "jargon",
-     "line": 191,
+     "line": 207,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "forbidden",
-     "line": 203,
+     "line": 219,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 208,
+     "line": 224,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 209,
+     "line": 225,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 389,
+     "line": 408,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "forbidden",
-     "line": 410,
+     "line": 429,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261031"
     },
     {
      "kind": "jargon",
-     "line": 410,
+     "line": 429,
      "suggest": "agent / seat-worker",
      "term": "席"
     },
     {
      "kind": "jargon",
-     "line": 430,
+     "line": 449,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 448,
+     "line": 467,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "jargon",
-     "line": 466,
+     "line": 485,
      "suggest": "cross-check against the reference",
      "term": "对表"
     },
     {
      "kind": "jargon",
-     "line": 488,
+     "line": 507,
      "suggest": "ledger (data surface) / record list (generic prose)",
      "term": "台账"
     },
     {
      "kind": "jargon",
-     "line": 507,
+     "line": 526,
      "suggest": "dry run",
      "term": "干跑"
     },
     {
      "kind": "jargon",
-     "line": 530,
+     "line": 549,
      "suggest": "top list / ranking",
      "term": "榜"
     },
     {
      "kind": "forbidden",
-     "line": 564,
+     "line": 583,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261110"
     },
     {
      "kind": "jargon",
-     "line": 566,
+     "line": 585,
      "suggest": "dry run",
      "term": "干跑"
     },
     {
      "kind": "forbidden",
-     "line": 573,
+     "line": 592,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 580,
+     "line": 599,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 587,
+     "line": 606,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 594,
+     "line": 613,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "jargon",
-     "line": 596,
+     "line": 615,
      "suggest": "repository",
      "term": "仓"
     },
     {
      "kind": "forbidden",
-     "line": 602,
+     "line": 621,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 609,
+     "line": 628,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 623,
+     "line": 642,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "jargon",
-     "line": 623,
+     "line": 642,
      "suggest": "shape-normalizing tool",
      "term": "洗形器"
     },
     {
      "kind": "forbidden",
-     "line": 636,
+     "line": 655,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "jargon",
-     "line": 638,
+     "line": 657,
      "suggest": "apply",
      "term": "落刀"
     },
     {
      "kind": "forbidden",
-     "line": 650,
+     "line": 669,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 660,
+     "line": 679,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
     {
      "kind": "forbidden",
-     "line": 660,
+     "line": 679,
      "suggest": "replace the internal role name with the plain role wording",
      "term": "工装席"
     },
     {
      "kind": "jargon",
-     "line": 661,
+     "line": 680,
      "suggest": "sentinel / mechanical watch",
      "term": "哨"
     },
     {
      "kind": "jargon",
-     "line": 663,
+     "line": 682,
      "suggest": "dry run",
      "term": "干跑"
     },
     {
      "kind": "forbidden",
-     "line": 671,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261111"
-    },
-    {
-     "kind": "forbidden",
-     "line": 672,
-     "suggest": "replace the internal role name with the plain role wording",
-     "term": "工装席"
-    },
-    {
-     "kind": "forbidden",
-     "line": 680,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261111"
-    },
-    {
-     "kind": "forbidden",
-     "line": 691,
+     "line": 690,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261111"
     },
@@ -10642,31 +11088,49 @@
     },
     {
      "kind": "forbidden",
-     "line": 703,
+     "line": 699,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261111"
+    },
+    {
+     "kind": "forbidden",
+     "line": 710,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261111"
+    },
+    {
+     "kind": "forbidden",
+     "line": 710,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "工装席"
+    },
+    {
+     "kind": "forbidden",
+     "line": 722,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 707,
+     "line": 726,
      "suggest": "route",
      "term": "dispatch"
     },
     {
      "kind": "forbidden",
-     "line": 715,
+     "line": 734,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "forbidden",
-     "line": 727,
+     "line": 746,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261112"
     },
     {
      "kind": "jargon",
-     "line": 729,
+     "line": 748,
      "suggest": "dry run by default",
      "term": "缺省干跑"
     }
@@ -10907,6 +11371,14 @@
    ],
    "kind": "py",
    "path": "tests/test_comment_pack.py"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 1327,
+   "findings": [],
+   "kind": "py",
+   "path": "tests/test_contrib_intake.py"
   },
   {
    "cjk_chars": 0,
@@ -11365,6 +11837,14 @@
    "path": "tests/test_erasure_classifier.py"
   },
   {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 1355,
+   "findings": [],
+   "kind": "py",
+   "path": "tests/test_evolve.py"
+  },
+  {
    "cjk_chars": 617,
    "cjk_ratio": 0.371687,
    "face_chars": 1660,
@@ -11620,7 +12100,7 @@
     },
     {
      "kind": "jargon",
-     "line": 239,
+     "line": 240,
      "suggest": "agent / seat-worker",
      "term": "seat"
     }
@@ -12238,6 +12718,14 @@
    ],
    "kind": "py",
    "path": "tests/test_registry_audit.py"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 1333,
+   "findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_regen.py"
   },
   {
    "cjk_chars": 479,
@@ -13527,89 +14015,10 @@
    "path": "tools/baseline_diff.py"
   },
   {
-   "cjk_chars": 551,
-   "cjk_ratio": 0.363696,
-   "face_chars": 1515,
-   "findings": [
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "cjk",
-     "line": 3,
-     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
-     "term": "cjk_ratio"
-    },
-    {
-     "kind": "jargon",
-     "line": 3,
-     "suggest": "top list / ranking",
-     "term": "榜"
-    },
-    {
-     "kind": "forbidden",
-     "line": 4,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261103"
-    },
-    {
-     "kind": "jargon",
-     "line": 6,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "jargon",
-     "line": 17,
-     "suggest": "top list / ranking",
-     "term": "榜"
-    },
-    {
-     "kind": "jargon",
-     "line": 19,
-     "suggest": "write / persist to disk",
-     "term": "落盘"
-    },
-    {
-     "kind": "jargon",
-     "line": 44,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "jargon",
-     "line": 125,
-     "suggest": "top list / ranking",
-     "term": "榜"
-    }
-   ],
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 2899,
+   "findings": [],
    "kind": "py",
    "path": "tools/chain_graph.py"
   },
@@ -13801,6 +14210,14 @@
    ],
    "kind": "py",
    "path": "tools/ci_triage.py"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 7754,
+   "findings": [],
+   "kind": "py",
+   "path": "tools/contrib_intake.py"
   },
   {
    "cjk_chars": 281,
@@ -14113,8 +14530,8 @@
   },
   {
    "cjk_chars": 2856,
-   "cjk_ratio": 0.364704,
-   "face_chars": 7831,
+   "cjk_ratio": 0.345303,
+   "face_chars": 8271,
    "findings": [
     {
      "kind": "budget",
@@ -14241,107 +14658,18 @@
    "path": "tools/doc_lint.py"
   },
   {
-   "cjk_chars": 1086,
-   "cjk_ratio": 0.359484,
-   "face_chars": 3021,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "cjk",
-     "line": 3,
-     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
-     "term": "cjk_ratio"
-    },
-    {
-     "kind": "jargon",
-     "line": 3,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "forbidden",
-     "line": 4,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261103"
-    },
-    {
-     "kind": "jargon",
-     "line": 4,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "jargon",
-     "line": 7,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "jargon",
-     "line": 16,
-     "suggest": "probe (tool citation) / check (generic sense)",
-     "term": "探针"
-    },
-    {
-     "kind": "jargon",
-     "line": 30,
-     "suggest": "agent / seat-worker",
-     "term": "席"
-    },
-    {
-     "kind": "jargon",
-     "line": 42,
-     "suggest": "probe (tool citation) / check (generic sense)",
-     "term": "探针"
-    },
-    {
-     "kind": "jargon",
-     "line": 92,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    },
-    {
-     "kind": "jargon",
-     "line": 334,
-     "suggest": "agent / seat-worker",
-     "term": "seat"
-    }
-   ],
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 13375,
+   "findings": [],
+   "kind": "py",
+   "path": "tools/evolve.py"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 5917,
+   "findings": [],
    "kind": "py",
    "path": "tools/ledger_sync.py"
   },
@@ -14922,6 +15250,14 @@
    ],
    "kind": "py",
    "path": "tools/registry_fix.py"
+  },
+  {
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 10023,
+   "findings": [],
+   "kind": "py",
+   "path": "tools/registry_regen.py"
   },
   {
    "cjk_chars": 1927,
@@ -15715,45 +16051,8 @@
   {
    "cjk_chars": 0,
    "cjk_ratio": 0.0,
-   "face_chars": 2324,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    }
-   ],
+   "face_chars": 2276,
+   "findings": [],
    "kind": "py",
    "path": "verify/erasure_classifier.py"
   },
@@ -15986,182 +16285,18 @@
    "path": "verify/gate4_comment_guard.py"
   },
   {
-   "cjk_chars": 76,
-   "cjk_ratio": 0.102842,
-   "face_chars": 739,
-   "findings": [
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add a two-part module docstring: banner line, then the five-field block",
-     "term": "docstring"
-    },
-    {
-     "kind": "cjk",
-     "line": 2,
-     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
-     "term": "cjk_ratio"
-    },
-    {
-     "kind": "forbidden",
-     "line": 2,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261029"
-    },
-    {
-     "kind": "jargon",
-     "line": 2,
-     "suggest": "adaptation",
-     "term": "retrofit"
-    }
-   ],
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 1791,
+   "findings": [],
    "kind": "py",
    "path": "verify/retrofit_gate7_irr.py"
   },
   {
-   "cjk_chars": 777,
-   "cjk_ratio": 0.281522,
-   "face_chars": 2760,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "cjk",
-     "line": 3,
-     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
-     "term": "cjk_ratio"
-    },
-    {
-     "kind": "forbidden",
-     "line": 4,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261101"
-    },
-    {
-     "kind": "jargon",
-     "line": 4,
-     "suggest": "agent / seat-worker",
-     "term": "席"
-    },
-    {
-     "kind": "jargon",
-     "line": 18,
-     "suggest": "failing",
-     "term": "红"
-    },
-    {
-     "kind": "jargon",
-     "line": 19,
-     "suggest": "failing",
-     "term": "红"
-    },
-    {
-     "kind": "jargon",
-     "line": 20,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "jargon",
-     "line": 104,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "jargon",
-     "line": 169,
-     "suggest": "failing",
-     "term": "红"
-    },
-    {
-     "kind": "jargon",
-     "line": 169,
-     "suggest": "passing",
-     "term": "绿"
-    },
-    {
-     "kind": "jargon",
-     "line": 215,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "jargon",
-     "line": 215,
-     "suggest": "failing",
-     "term": "红"
-    },
-    {
-     "kind": "jargon",
-     "line": 215,
-     "suggest": "passing",
-     "term": "绿"
-    }
-   ],
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 3870,
+   "findings": [],
    "kind": "py",
    "path": "verify/verify_gate6.py"
   },
@@ -16300,225 +16435,24 @@
   {
    "cjk_chars": 0,
    "cjk_ratio": 0.0,
-   "face_chars": 2581,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    }
-   ],
+   "face_chars": 2814,
+   "findings": [],
    "kind": "py",
    "path": "wash/comment_sweep.py"
   },
   {
    "cjk_chars": 0,
    "cjk_ratio": 0.0,
-   "face_chars": 12478,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "forbidden",
-     "line": 12,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261103"
-    },
-    {
-     "kind": "jargon",
-     "line": 12,
-     "suggest": "effort / work stream",
-     "term": "campaign"
-    },
-    {
-     "kind": "forbidden",
-     "line": 37,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261104"
-    },
-    {
-     "kind": "jargon",
-     "line": 38,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "forbidden",
-     "line": 50,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261111"
-    },
-    {
-     "kind": "jargon",
-     "line": 50,
-     "suggest": "release / work stream",
-     "term": "wave"
-    },
-    {
-     "kind": "jargon",
-     "line": 51,
-     "suggest": "release / work stream",
-     "term": "wave"
-    },
-    {
-     "kind": "jargon",
-     "line": 838,
-     "suggest": "effort / work stream",
-     "term": "campaign"
-    },
-    {
-     "kind": "jargon",
-     "line": 1008,
-     "suggest": "release / work stream",
-     "term": "wave"
-    }
-   ],
+   "face_chars": 10253,
+   "findings": [],
    "kind": "py",
    "path": "wash/cure_applier.py"
   },
   {
-   "cjk_chars": 1426,
-   "cjk_ratio": 0.407545,
-   "face_chars": 3499,
-   "findings": [
-    {
-     "kind": "budget",
-     "line": 1,
-     "suggest": "compress the header block to the 30-line budget (banner + doc block)",
-     "term": "header-budget"
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Dependencies. field per the annotation standard",
-     "term": "Dependencies."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Evidence. field per the annotation standard",
-     "term": "Evidence."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Exit-codes. field per the annotation standard",
-     "term": "Exit-codes."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Interface. field per the annotation standard",
-     "term": "Interface."
-    },
-    {
-     "kind": "header",
-     "line": 1,
-     "suggest": "add the Purpose. field per the annotation standard",
-     "term": "Purpose."
-    },
-    {
-     "kind": "cjk",
-     "line": 3,
-     "suggest": "translate the prose face to English so the CJK share drops below the threshold (0.0)",
-     "term": "cjk_ratio"
-    },
-    {
-     "kind": "forbidden",
-     "line": 4,
-     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
-     "term": "20261103"
-    },
-    {
-     "kind": "jargon",
-     "line": 17,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "jargon",
-     "line": 21,
-     "suggest": "axiom-free born",
-     "term": "born-clean"
-    },
-    {
-     "kind": "jargon",
-     "line": 38,
-     "suggest": "write / persist to disk",
-     "term": "落盘"
-    },
-    {
-     "kind": "jargon",
-     "line": 65,
-     "suggest": "ledger (data surface) / record list (generic prose)",
-     "term": "台账"
-    }
-   ],
+   "cjk_chars": 0,
+   "cjk_ratio": 0.0,
+   "face_chars": 5056,
+   "findings": [],
    "kind": "py",
    "path": "wash/probe_engine.py"
   },
@@ -17966,9 +17900,9 @@
    "path": "wrapper/watch_rq.sh"
   },
   {
-   "cjk_chars": 59952,
-   "cjk_ratio": 0.322361,
-   "face_chars": 185978,
+   "cjk_chars": 62097,
+   "cjk_ratio": 0.323735,
+   "face_chars": 191814,
    "findings": [
     {
      "kind": "cjk",
@@ -22115,6 +22049,162 @@
      "line": 4053,
      "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
      "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4057,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4057,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "jargon",
+     "line": 4059,
+     "suggest": "failing",
+     "term": "红"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4065,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4066,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 4067,
+     "suggest": "survey",
+     "term": "普查"
+    },
+    {
+     "kind": "jargon",
+     "line": 4067,
+     "suggest": "failing-build triage",
+     "term": "红炉分诊"
+    },
+    {
+     "kind": "jargon",
+     "line": 4067,
+     "suggest": "apply",
+     "term": "落刀"
+    },
+    {
+     "kind": "jargon",
+     "line": 4069,
+     "suggest": "failing",
+     "term": "红"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4086,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4086,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4092,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 4093,
+     "suggest": "check / preflight check",
+     "term": "闸"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4095,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 4095,
+     "suggest": "dry run",
+     "term": "干跑"
+    },
+    {
+     "kind": "jargon",
+     "line": 4096,
+     "suggest": "failing",
+     "term": "红"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4111,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4111,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "jargon",
+     "line": 4117,
+     "suggest": "sentinel / mechanical watch",
+     "term": "哨"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4118,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4119,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "jargon",
+     "line": 4120,
+     "suggest": "failing",
+     "term": "红"
+    },
+    {
+     "kind": "jargon",
+     "line": 4131,
+     "suggest": "sentinel / mechanical watch",
+     "term": "哨"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4135,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4135,
+     "suggest": "replace the internal role name with the plain role wording",
+     "term": "主会话"
+    },
+    {
+     "kind": "forbidden",
+     "line": 4137,
+     "suggest": "drop the date stamp from the prose face; dates belong in the ledger surface",
+     "term": "20261113"
     }
    ],
    "kind": "md",
@@ -22132,14 +22222,14 @@
  },
  "root": "/Users/apple/Desktop/rocqwash",
  "scan": {
-  "archives_skipped": 7
+  "archives_skipped": 14
  },
  "schema": "rocqwash-norm-lint/1",
  "summary": {
-  "cjk_ratio": 0.248597,
-  "error": 2441,
-  "files": 140,
-  "warn": 1036
+  "cjk_ratio": 0.214081,
+  "error": 2377,
+  "files": 153,
+  "warn": 1098
  },
  "tool": "norm_lint"
 }

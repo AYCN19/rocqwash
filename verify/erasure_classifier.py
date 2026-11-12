@@ -1,46 +1,33 @@
 # -*- coding: utf-8 -*-
 """erasure_classifier.py — classification advisor for extraction erasure stations.
 
-Purpose:
-    Separately-extracted OCaml interfaces (.mli) may contain erasure stations:
-    statements whose type the extractor rendered as ``__`` (an informative
-    position the kernel erased because it was carried by a logical Prop).
-    This tool inventories those stations and assigns each a classification
-    cluster with a disposition suggestion — a first-pass advisor for a human
-    adjudicator, never a final verdict:
+    Purpose.  Inventories erasure stations in a separately-extracted OCaml
+      interface (.mli) — statements whose type the extractor rendered as `__`
+      — and assigns each a classification cluster with a disposition
+      suggestion: 1 permutation-conclusion → stdlib-Prop registration-class
+      candidate; 2 sorted-conclusion → already dissolved (the statement now
+      carries a real Set-carrier type); 3 neq-conclusion → real debt (rewrite
+      the statement face to the carrier-equality negation form);
+      4 membership-conclusion → capture-adjudication (await human
+      adjudication); 5 premise-position → legal erasure (premises may stay
+      logical); 6 other / inner-component → manual review.  A first-pass
+      advisor for a human adjudicator, never a final verdict.
 
-      1. permutation-conclusion   → stdlib-Prop registration-class candidate
-                                    (stdlib Permutation conclusions erase;
-                                    suggest registering the class)
-      2. sorted-conclusion        → already dissolved: the statement now
-                                    carries a real Set carrier type
-                                    (set-carried reshape resolution)
-      3. neq-conclusion           → real debt: rewrite the statement face to
-                                    the carrier equality negation form
-                                    (QeqT negation)
-      4. membership-conclusion    → capture-adjudication (CAPTURE) — await
-                                    human adjudication
-      5. premise-position         → legal erasure (premises may stay logical)
-      6. other / inner-component  → manual review
+    Interface.  --mli path/to/Module.mli (primary input); --json
+      path/to/scan.json (optional cross-check: scanner CAPTURE stations keyed
+      by channel — annotates agreement for cluster 4); --resolve name1,name2
+      (names expected dissolved — the report shows their current val type
+      status); --json-out out.json; --md-out out.md (human-readable ledger).
+      Per-station records carry {name, line, kind, cluster, suggestion,
+      evidence} plus per-cluster totals and the cross-check annotations.
+      Minimal usage: python3 erasure_classifier.py --mli Module.mli --json-out r.json --md-out r.md
 
-Inputs:
-    --mli path/to/Module.mli      extraction interface (primary input)
-    --json path/to/scan.json      optional cross-check: scanner CAPTURE
-                                  stations keyed by channel (annotates
-                                  agreement for cluster 4)
-    --resolve name1,name2         names expected to have been dissolved:
-                                  the report shows their current val type
-                                  status (resolved / still erased / missing)
-    --json-out out.json           classification report (JSON)
-    --md-out out.md               human-readable ledger (Markdown)
+    Dependencies.  Python 3 standard library only (argparse, hashlib, io, json, os, re, sys).
+    Evidence.  --selftest built-in vectors (six clusters, `coq_` prefix
+      forms, premise positions, multi-line inner-component stations) and
+      suite coverage under tests/test_erasure_classifier.py.
 
-Outputs:
-    per-station records {name, line, kind, cluster, suggestion, evidence}
-    plus totals per cluster and the optional cross-check annotations.
-    Exit codes: 0 = ran, 2 = usage, 9 = input missing.
-
-Minimal usage:
-    python3 erasure_classifier.py --mli path/to/Module.mli --json-out r.json --md-out r.md
+    Exit-codes.  0 = ran; 2 = usage or failing selftest; 9 = input missing.
 """
 import argparse, hashlib, io, json, os, re, sys
 

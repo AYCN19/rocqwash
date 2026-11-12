@@ -2,42 +2,33 @@
 # -*- coding: utf-8 -*-
 """dual_scan.py — dual-scanner cross-check driver (scan_v4_token + mac_stmt_scan).
 
-Purpose:
-    Runs the two word-face scanners over the same candidate files and
-    cross-checks their station reports:
+Purpose.  Runs the two word-face scanners over the same candidate files and
+  cross-checks their per-line reports: `scan_v4_token.py` (token-level
+  qualified-identifier census; stations {line, col, token, cls, ...}) and
+  `mac_stmt_scan.py` (statement-face scanner; hits {line, cat, ...} plus the
+  red_names / capture_stations counters).  Both are word-face instruments,
+  structurally blind to failure causes on the application/type face (e.g.
+  the S07-lineage "Illegal application" family); the dual run turns that
+  shared blindness into a mechanical per-file fact (two scanners at zero
+  stations), never a silent assumption.
 
-        scan_v4_token.py   token-level qualified-identifier census
-                           (stations: {line, col, token, cls, ...});
-        mac_stmt_scan.py   statement-face scanner (hits: {line, cat, ...},
-                           plus red_names / capture_stations counters).
+Interface.  python3 dual_scan.py --dir path/to/candidates [--file a.v ...]
+  [--out report.json] [--scan-v4 path] [--mac-stmt path] [--timeout S];
+  --dir (repeatable) scans every *.v in the directory sorted, --file
+  (repeatable) targets one file explicitly, --scan-v4/--mac-stmt override
+  the scanner paths (default: sibling files), --timeout bounds each scanner
+  subprocess (default 300).  Report JSON: {file: {scanv4: {rc, stations,
+  lines}, macstmt: {rc, hits, red_names, capture, lines}, diff: {only_v4,
+  only_stmt, common}}} plus a per-file DUAL line on stdout.
 
-    Both scanners are word-face instruments: they are structurally blind to
-    red causes that live on the application/type face (e.g. the S07-lineage
-    "Illegal application" family) — the dual run turns that shared blindness
-    into a mechanical fact per file (two scanners at zero stations) instead
-    of a silent assumption.  Scanner consensus is NOT a completeness
-    certificate: the diff report states per file which stations only one
-    scanner saw, so a third source can be pulled in for the gap.
+Dependencies.  Python 3 stdlib only; the two sibling scanners run as subprocesses; zero network.
 
-Inputs:
-    --dir path/to/candidates   scan every *.v in the directory (sorted);
-                               repeatable with --file for single targets.
-    --file path/to/file.v      explicit target (repeatable).
-    --out report.json          write the report here (JSON).
-    --scan-v4 path             scan_v4_token.py path (default: sibling file).
-    --mac-stmt path            mac_stmt_scan.py path (default: sibling file).
-    --timeout seconds          per-scan subprocess timeout (default 300).
+Evidence.  tests/test_dual_scan.py — five temp-dir fixture vectors (clean
+  zero/zero, one-sided diffs, byte-identical reruns, CLI contract).
 
-Outputs:
-    report JSON — {file: {scanv4: {rc, stations, lines},
-                          macstmt: {rc, hits, red_names, capture, lines},
-                          diff: {only_v4, only_stmt, common}}}
-    plus a per-file DUAL line on stdout.  Exit code = number of failed
-    scanner runs (0 = every scan ran clean; station counts never fail).
-
-Minimal usage:
-    python3 dual_scan.py --dir path/to/candidates --out report.json
-    python3 dual_scan.py --file a.v --file b.v
+Exit-codes.  Exit code = the number of failed scanner runs (0 = every scan
+  ran clean; station counts never fail); 2 = usage error, missing directory
+  or no targets; 9 = missing file or missing scanner tool.
 """
 import argparse, glob, json, os, subprocess, sys
 
@@ -65,6 +56,9 @@ def io_open(path):
     return io.open(path, "r", encoding="utf-8")
 
 
+# Scanner consensus is not a completeness certificate: the diff states per
+# file which lines only one scanner saw, so a third source can be pulled in
+# for the gap.
 def scan_one(path, scan_v4, mac_stmt, timeout, tmpdir):
     """Dual-scan one file; returns the per-file record."""
     rec = {}

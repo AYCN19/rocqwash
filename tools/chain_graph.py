@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""chain_graph.py — 多份 probe 台账合并→链根图→TOP 榜（rocqwash tools/·v30 实战
-判例工具化·承 seat_wash25/w25_merge_ledgers.py 1:1 泛化·20261103 入账）
+"""chain_graph.py — merge probe ledgers into a chain-root graph and a top list (rocqwash tools/).
 
-输入 N 份 probe 台账 JSON（argv 序＝合并序；probe_engine 的
-rocqwash-probe-ledger/1「records」壳与 W13 式裸 {件名: 记录} 双形通吃）：
-  1 合并：并集；重复键保留后批记录（后批覆盖前批·战役口径），batches 字段
-    累积全历史标签（标签＝文件名去 .json·重名自动缀序号）。
-  2 缺库提取：记录已有 missing 字段（probe_engine 产出）直用；否则对 red 原文
-    跑缺库 regex `(?:Unable to locate library|Cannot find library)`。
-  3 链根图：rc1 件按所缺库分组 → lib → dependents/n/batches；每根附**自身
-    可洗性字段** self——根件自身在合并账中的 rc/verdict：
-      washable=true（rc=0）＝洗此根即解锁全部 dependents（链根正典）；
-      washable=false（rc!=0）＝根件自身亦被阻（链中环·先治根的因）；
-      probed=false＝根件未在候选集（UNPROBED·候补探）。
-  4 TOP 榜：dependents 数降序（同数按库名典序）出 markdown＋json。
+Purpose.  Merges N probe ledgers (argv order = merge order; the
+  `rocqwash-probe-ledger/1` "records" shell from `probe_engine` and the bare
+  {name: record} dict form are both accepted) and emits: (1) the union merge
+  — later batches override earlier records on duplicate keys, every record
+  accumulating its full `batches` label history (label = file name minus
+  .json, duplicates suffixed numerically); (2) missing-library extraction —
+  the record's `missing` field when present, else the regex
+  unable-to-locate/cannot-find over the `red` text; (3) the chain-root graph
+  — rc=1 records grouped by missing library, each root carrying a `self`
+  block with its own merged-ledger rc/verdict (the three-way contract sits
+  on build_graph); (4) the top list — dependents descending, ties by
+  library name, markdown plus json.
 
-输出全部确定性（sorted 迭代＋sort_keys 落盘）：同输入重跑字节级恒同。
+Interface.  python3 tools/chain_graph.py LEDGER1.json [...] [--json P]
+  [--md P] [--top N] | --selftest.  Graph schema rocqwash-chain-graph/1;
+  routed as `chain` in the cw.sh table; zero hardcoded paths, zero network;
+  output deterministic (sorted iteration plus sort_keys), reruns
+  byte-identical.
 
-用法（全部路径参数化·零硬编码·零网络）：
-  python3 tools/chain_graph.py LEDGER1.json LEDGER2.json [...] \
-      [--json chain_graph.json] [--md chain_top.md] [--top 25]
-  python3 tools/chain_graph.py --selftest
+Dependencies.  Python 3 standard library only; every ledger path parameterized.
 
-退出码：0=出账完成（rc1 计数是数据非器红·响亮入 stdout）；2=用法错；9=任一
-输入台账缺失。图 schema=rocqwash-chain-graph/1。
+Evidence.  --selftest frozen vectors on temporary synthetic ledgers (zero
+  real-repo touches, zero network); suite tests/test_chain_graph.py
+  (seven sections).
+
+Exit-codes.  0 = graph emitted (the rc1 count is data, not a tool failure,
+  reported on stdout); 2 = usage error; 9 = any input ledger missing.
 """
 import argparse
 import io
@@ -41,18 +45,21 @@ MISSING_LIB_RE = re.compile(r"(?:unable to locate library|cannot find library)"
 
 
 def load_ledger(path):
-    """probe 台账 → {件名: 记录}（probe_engine 壳与 W13 裸 dict 双形通吃）。"""
+    """Probe ledger -> {name: record} (accepts both the `probe_engine`
+    records shell and the bare dict form)."""
     with io.open(path, "r", encoding="utf-8") as fh:
         d = json.load(fh)
     if isinstance(d, dict) and isinstance(d.get("records"), dict):
         return d["records"]
     if isinstance(d, dict):
         return d
-    raise ValueError("台账形态不识别（既非 records 壳亦非裸 dict）: %s" % path)
+    raise ValueError("unrecognized ledger shape (neither a records shell "
+                     "nor a bare dict): %s" % path)
 
 
 def merge_ledgers(paths):
-    """并集合并（后批覆盖）→ (merged, labels)。batches 累积全历史。"""
+    """Union merge (later batch overrides) -> (merged, labels); `batches`
+    accumulates the full label history."""
     merged = {}
     used_labels = {}
     labels = []
@@ -76,7 +83,9 @@ def merge_ledgers(paths):
 
 
 def missing_of(rec):
-    """记录所缺库：missing 字段直用；否则 red 原文 regex。非缺库返回 None。"""
+    """Missing library of a record: the `missing` field when present, else
+    the regex over the `red` text; None when this is not a missing-library
+    case."""
     m = rec.get("missing")
     if m:
         return m
@@ -86,7 +95,13 @@ def missing_of(rec):
 
 
 def build_graph(merged):
-    """链根图：rc1 缺库分组＋根件自身可洗性。→ (libs, stats, rc1_missing)。"""
+    # chain-root `self` block = the root's own record in the merged ledger:
+    # washable=true (rc=0) — treating this root unlocks every dependent;
+    # washable=false (rc!=0) — the root itself is blocked, a cycle in the
+    # chain, treat the root's cause first; probed=false — the root is absent
+    # from the candidate set (UNPROBED, pending probe).
+    """Chain-root graph: rc=1 records grouped by missing library plus the
+    root's own washability. -> (libs, stats, rc1_missing)."""
     libs = {}
     rc1_missing_set = set()
     for name in sorted(merged):
@@ -122,14 +137,16 @@ def build_graph(merged):
 
 
 def top_md(libs, stats, rc1_missing, top_n, paths):
-    """TOP 榜 markdown（确定性·dependents 降序）。"""
-    lines = ["# Chain Graph TOP（链根图·%d 份台账并集）" % len(paths), ""]
+    """Top-list markdown (deterministic; dependents count descending)."""
+    lines = ["# Chain Graph TOP (chain-root graph, union of %d ledgers)"
+             % len(paths), ""]
     lines.append("- merged_total=%d rc0=%d rc1=%d other=%d"
                  % (stats["merged_total"], len(stats["rc0"]),
                     len(stats["rc1"]), len(stats["other"])))
-    lines.append("- rc1 缺库型=%d 非缺库（代差型等）=%d"
+    lines.append("- rc1 missing-library=%d non-missing (other failure "
+                 "classes)=%d"
                  % (len(rc1_missing), len(stats["rc1"]) - len(rc1_missing)))
-    lines.append("- 缺库根（distinct libs）=%d" % len(libs))
+    lines.append("- missing-library roots (distinct libs)=%d" % len(libs))
     lines.append("")
     lines.append("| # | n | lib | self | batches | dependents |")
     lines.append("|---|---|-----|------|---------|------------|")
@@ -158,8 +175,10 @@ def run_args(argv):
 
 
 def selftest():
-    """内嵌冻结向量组（临时合成双账·零触真仓零网络）：并集覆盖＋batches 累积＋
-    缺库分组＋自身可洗性三分＋TOP 榜确定性＋CLI 四码。"""
+    """Frozen vector set (temporary synthetic ledgers; zero real-repo
+    touches, zero network): union override, batches accumulation,
+    missing-library grouping, three-way self washability, top-list
+    determinism, CLI four codes."""
     import shutil
     import tempfile
 
@@ -175,7 +194,8 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_chain_self_")
     try:
-        # 账 A：LibX rc0（链根可洗）＋两缺库消费者；LibY 自身 rc1（链中环）
+        # ledger A: LibX rc=0 (washable chain root) plus two missing-library
+        # consumers; LibY itself rc=1 (a cycle in the chain)
         la = {"LibX": {"file": "LibX", "rc": 0, "red": ""},
               "B1": {"file": "B1", "rc": 1,
                      "red": "Error: Unable to locate library | LibX"},
@@ -186,7 +206,8 @@ def selftest():
               "LibY": {"file": "LibY", "rc": 1, "red": "Error: Illegal application"}}
         fa = os.path.join(tmp, "ledgerA.json")
         json.dump(la, io.open(fa, "w", encoding="utf-8"))
-        # 账 B：B2 后批洗绿（覆盖）；D1 新增 LibX 消费者
+        # ledger B: B2 turns passing in the later batch (override); D1 is a
+        # new LibX consumer
         lb = {"B2": {"file": "B2", "rc": 0, "red": ""},
               "D1": {"file": "D1", "rc": 1,
                      "red": "Error: Unable to locate library | LibX"}}
@@ -198,35 +219,38 @@ def selftest():
         assert p.returncode == 0, p.stdout
         g = json.load(io.open(jf, encoding="utf-8"))
         assert g["schema"] == SCHEMA and g["stats"]["merged_total"] == 6, g["stats"]
-        # 后批覆盖：B2 以账 B rc0 记录为准且 batches 累积 [ledgerA, ledgerB]
+        # later batch overrides: B2 takes the ledger-B rc=0 record and its
+        # batches accumulate as [ledgerA, ledgerB]
         b2 = g["records"]["B2"]
         assert b2["rc"] == 0 and b2["batches"] == ["ledgerA", "ledgerB"], b2
-        # 链根：LibX dependents=B1,D1（B2 后批已绿出局）·self washable
+        # chain root: LibX dependents=B1,D1 (B2 left after turning passing
+        # in the later batch); self washable
         lx = g["libs"]["LibX"]
         assert lx["n"] == 2 and lx["dependents"] == ["B1", "D1"], lx
         assert lx["self"]["probed"] and lx["self"]["washable"] is True, lx
-        # 链中环：LibY 自身 rc1 → washable=false
+        # cycle in the chain: LibY itself rc=1 -> washable=false
         ly = g["libs"]["LibY"]
         assert ly["n"] == 1 and ly["self"]["washable"] is False, ly
-        # TOP 榜确定性：重跑字节恒同
+        # top-list determinism: rerun is byte-identical
         before_j = io.open(jf, "rb").read()
         before_m = io.open(mf, "rb").read()
         p = run([fa, fb, "--json", jf, "--md", mf])
         assert p.returncode == 0, p.stdout
-        assert io.open(jf, "rb").read() == before_j, "json 字节漂移＝违例"
-        assert io.open(mf, "rb").read() == before_m, "md 字节漂移＝违例"
-        assert "LibX" in before_m.decode("utf-8"), "TOP 榜缺链根"
-        # CLI 四码
+        assert io.open(jf, "rb").read() == before_j, "json byte drift = violation"
+        assert io.open(mf, "rb").read() == before_m, "md byte drift = violation"
+        assert "LibX" in before_m.decode("utf-8"), "top list missing a chain root"
+        # CLI four codes
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag should exit 2, got %d" % p.returncode
         p = run([])
-        assert p.returncode == 2, "缺台账应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "missing ledgers should exit 2, got %d" % p.returncode
         p = run([os.path.join(tmp, "nope.json")])
-        assert p.returncode == 9, "缺台账应 rc=9 实测 %d" % p.returncode
-        print("CHAIN-GRAPH-SELFTEST PASS: 并集覆盖/batches 累积/链根分组/"
-              "自身可洗性三分/确定性字节恒同/CLI 四码 六判全过")
+        assert p.returncode == 9, "missing ledger file should exit 9, got %d" % p.returncode
+        print("CHAIN-GRAPH-SELFTEST PASS: union-override/batches-accumulation/"
+              "chain-root-grouping/self-washability-three-way/deterministic-"
+              "byte-stability/cli-four-codes six checks pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -237,16 +261,18 @@ def main():
     if "--selftest" in argv:
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
-        prog=PROG, description="多份 probe 台账合并→链根图（missing-lib→"
-                               "dependents→自身可洗性）→TOP 榜 markdown+json")
+        prog=PROG, description="merge probe ledgers -> chain-root graph "
+                               "(missing-lib -> dependents -> self "
+                               "washability) -> top list as markdown+json")
     ap.add_argument("ledgers", nargs="*", metavar="LEDGER.json",
-                    help="probe 台账（argv 序＝合并序·后批覆盖前批）")
+                    help="probe ledgers (argv order = merge order; later "
+                         "batches override earlier ones)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="链根图原始数据出账")
+                    help="chain-root graph raw-data output")
     ap.add_argument("--md", default=None, metavar="out.md",
-                    help="TOP 榜 markdown 出账")
+                    help="top-list markdown output")
     ap.add_argument("--top", type=int, default=25, metavar="N",
-                    help="TOP 榜行数（默认 25）")
+                    help="top-list row count (default 25)")
     args = ap.parse_args(argv)
 
     try:
@@ -255,12 +281,12 @@ def main():
         pass
 
     if not args.ledgers:
-        print("FAIL-LOUD: 至少一份 probe 台账必给（--selftest 除外）",
-              file=sys.stderr)
+        print("FAIL-LOUD: at least one probe ledger is required "
+              "(except --selftest)", file=sys.stderr)
         sys.exit(2)
     for pth in args.ledgers:
         if not os.path.exists(pth):
-            print("FAIL-LOUD: 台账缺失: %s" % pth, file=sys.stderr)
+            print("FAIL-LOUD: ledger missing: %s" % pth, file=sys.stderr)
             sys.exit(9)
 
     merged, labels = merge_ledgers(args.ledgers)
@@ -272,7 +298,7 @@ def main():
     print("union total: %d rc0: %d rc1: %d other: %d"
           % (stats["merged_total"], len(stats["rc0"]), len(stats["rc1"]),
              len(stats["other"])))
-    print("rc1 missing-lib: %d  rc1 non-missing(代差型等): %d"
+    print("rc1 missing-lib: %d  rc1 non-missing (other failure classes): %d"
           % (len(rc1_missing), len(stats["rc1"]) - len(rc1_missing)))
     print("distinct missing libs: %d" % len(libs))
     print("--- TOP libs by dependents ---")
@@ -290,7 +316,8 @@ def main():
            "rc1_missing_files": rc1_missing,
            "rc1_nonmissing_files": [k for k in stats["rc1"]
                                     if k not in set(rc1_missing)],
-           # libs 在 json 落盘按典序（sort_keys）；rank 序＝top_order 显式保存
+           # libs is written to json in name order (sort_keys); the rank
+           # order is kept explicitly in top_order
            "top_order": list(libs.keys()),
            "libs": libs, "records": merged}
     if args.json:

@@ -251,7 +251,7 @@ def sec8_cli_codes(tmp):
     bad = wf(stage, "bad.tsv", "件名\nBadCand\n")
     rc, out = run(["--candidates", bad, "--src", src, "--world", world,
                    "--out", os.path.join(stage, "x.json"), "--logdir", logdir])
-    assert rc == 2 and "缺必需列" in out, "%d %s" % (rc, out)
+    assert rc == 2 and "missing required column" in out, "%d %s" % (rc, out)
     return "CLI 四码（help0/bogus2/缺参2/缺件9）＋坏清单 rc2"
 
 

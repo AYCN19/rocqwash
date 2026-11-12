@@ -1,7 +1,33 @@
 #!/usr/bin/env python3
-# retrofit_gate7_irr.py — gate7 英化 retrofit（验证员·UpReqIrrationalCriterion·20261029）
-# 只动注释不动物义 token；头注重建两段式五字段（30 行帽）；CJK→0·中文标点→0·非 ASCII→0。
-# fail-loud：md5 冻结断言、逐行底账断言、token 流恒等断言、行数/字符断言，任一失败即退出非零不落盘。
+"""retrofit_gate7_irr.py — gate7 English-surface adaptation for UpReqIrrationalCriterion.v.
+
+    Purpose.  Comment-only rewrite of an external frozen Coq source into its
+      English-surface form: the 34-line legacy header zone is replaced
+      wholesale by a two-part five-field English header, and every
+      CJK-bearing body comment line is replaced by its mapped English
+      counterpart.  Statement tokens are never touched — the comment-stripped
+      token stream must be identical before and after.
+
+    Interface.  No CLI arguments: hardcoded work paths SEAT/SRC/OUT and
+      FROZEN_MD5; consumed by tests/test_retrofit_dryrun.py via module import
+      and constant patching.  Output data faces: HEADER (the replacement
+      header lines) and M (the body line map, line number → (Chinese anchor,
+      English replacement)).
+
+    Dependencies.  Python 3 standard library only (hashlib, io, re, sys); the
+      source path is external to this repository.
+
+    Evidence.  Fail-loud guard set: frozen-md5 assertion, per-line anchor
+      assertion, CJK-coverage assertion, header cap/ASCII/five-field
+      assertions, comment-stripped token-stream identity, line arithmetic,
+      output CJK/non-ASCII zero; tests/test_retrofit_dryrun.py drives main()
+      on a synthetic fixture with all write opens intercepted in memory
+      (zero bytes on disk).
+
+    Exit-codes.  0 = adaptation written; nonzero = fail-loud assertion
+      (md5/line-shape/anchor/coverage/cap/token-divergence/residual) — exits
+      without writing the output.
+"""
 import hashlib, io, re, sys
 
 SEAT = "/Users/apple/Desktop/S系Prop清除战役工单/work_Main_full/sandbox/wf_irr2"

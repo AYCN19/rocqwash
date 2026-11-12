@@ -1,38 +1,31 @@
 # -*- coding: utf-8 -*-
 """comment_sweep.py — comment-domain sweep sidecar (comment_pack.json applier).
 
-Purpose:
-    Applies the comment_pack.json sweeps to a Rocq/Coq source file:
-      1. flag-word exchange inside comment spans only (nested-comment and
-         string-literal aware state machine; never inside strings, never in
-         code positions, never before the first code character);
-      2. optional leading-header replacement from a --header-map JSON file
-         (basename -> header text; the leading comment region before the
-         first code character is replaced wholesale with the mapped data).
-    Code lines are never touched: every application asserts mechanically
-    that the code-strip projection (file text minus comment spans) is
-    byte-identical before and after, and that a second application changes
-    nothing (idempotence, fail-loud).
+    Purpose.  Applies the comment_pack.json sweeps to a Rocq/Coq source file: flag-word exchange
+      inside comment spans only (nested-comment and string-literal aware state machine — never
+      inside strings, never in code positions, never before the first code character), plus an
+      optional leading-header replacement from a --header-map JSON file ({basename: header text};
+      the leading comment region before the first code character is replaced wholesale with the
+      mapped data).  Code lines are never touched: every application asserts mechanically that the
+      code-strip projection is byte-identical before and after, and that a second application
+      changes nothing (idempotence, fail-loud).  Dry run by default (writes only under --apply).
 
-Inputs:
-    --file path/to/file.v            target source (never modified on dry-run)
-    --pack path/to/comment_pack.json sweep pack (default: next to this script)
-    --header-map map.json            optional {basename: header text} data for
-                                     the leading-header replacement step
-    --json out.json                  write a sweep report
-    --apply                          write the swept file (default: dry-run)
+    Interface.  python3 wash/comment_sweep.py --file f.v [--pack comment_pack.json]
+      [--header-map map.json] [--json out.json] [--apply] | --selftest.  stdout report: flag swaps,
+      header replacement, header shape validation, code-line equality; --json report {file, mode,
+      md5_before, md5_after, report{flag_swaps, header_replaced, header_ok, header_problems,
+      header_end_line, code_lines_equal}, idempotence_ok}.
 
-Outputs:
-    stdout report — flag swaps, header replacement, header shape validation,
-    code-line-equality projection.  Exit codes: 0 = ran (dry-run or applied
-    with idempotence verified), 1 = code-line drift / idempotence failure
-    (fail-loud), 2 = usage, 9 = file missing.
+    Dependencies.  Python 3 standard library only; the sweep pack comment_pack.json sits next to this script (data face).
 
-Minimal usage:
-    python3 comment_sweep.py --file path/to/file.v                # dry-run
-    python3 comment_sweep.py --file f.v --header-map m.json --apply
-    python3 comment_sweep.py --selftest                            # vectors
-"""
+    Evidence.  --selftest vectors: comment-domain flag exchange with string, nested-comment and
+      idempotence guards; header replacement with a byte-equal code projection; dotted-field header
+      shape validation (positive and negative); clean-file zero-change; tests/test_comment_pack.py
+      reruns them end to end.
+
+    Exit-codes.  0 = ran (dry run, or applied with idempotence verified); 1 = code-line drift or
+      idempotence failure (fail-loud, file not written); 2 = usage; 9 = file, pack or header-map
+      missing."""
 import argparse, hashlib, io, json, os, re, sys
 
 PROG = "comment_sweep"

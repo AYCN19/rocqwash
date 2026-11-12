@@ -67,7 +67,7 @@ def sec1_selftest():
     rc, out = run(["--selftest"])
     assert rc == 0, "selftest 应 rc=0 实测 %d\n%s" % (rc, out)
     assert "LEDGER-SYNC-SELFTEST PASS" in out, out
-    assert "十三判全过" in out, out
+    assert "thirteen checks pass" in out, out
     return "selftest 十三判绿"
 
 
@@ -227,11 +227,12 @@ def sec8_cli_and_idempotent(tmp):
     bad = wf(os.path.join(tmp, "bad8.tsv"), "件名\tmd5\nG1\tm1\n")
     o2 = os.path.join(tmp, "bad8out.tsv")
     rc, out_txt = run(["--probe", probe, "--ledger", bad, "--out", o2])
-    assert rc == 2 and "缺必需列" in out_txt and not os.path.exists(o2), out_txt
+    assert rc == 2 and "missing required columns" in out_txt \
+        and not os.path.exists(o2), out_txt
     ragged = wf(os.path.join(tmp, "rag8.tsv"),
                 "件名\t行数\tmd5\tRED\t状态\t备注\nG1\t1\tm1\t0\n")
     rc, out_txt = run(["--probe", probe, "--ledger", ragged, "--out", o2])
-    assert rc == 2 and "行宽不齐" in out_txt and not os.path.exists(o2), out_txt
+    assert rc == 2 and "width mismatch" in out_txt and not os.path.exists(o2), out_txt
     return "CLI 四码＋列校验两变体 rc2 不产出＋幂等重跑字节恒同"
 
 
@@ -282,7 +283,7 @@ def sec9_items_shell_and_meta(tmp):
                           "件名\t行数\tmd5\tRED\t状态\t备注\n"
                           "I3\t1\tm\t0\tUNPROBED\t\n"),
                        "--out", out])
-    assert rc == 2 and "零记录" in out_txt, out_txt
+    assert rc == 2 and "zero records" in out_txt, out_txt
     assert not os.path.exists(out), "零记录拒同步仍产出＝违例"
     return "items 壳直吞＋壳键零幽灵＋batch_meta 响亮滤除＋全元数据 rc2 拒同步"
 

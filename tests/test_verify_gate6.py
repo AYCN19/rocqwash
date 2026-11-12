@@ -82,7 +82,7 @@ def main():
 
         # 3 ch1 滞治负例：before→before
         p = run(["--judge-before", jb, "--judge-after", jb])
-        check("ch1_滞治负例", p.returncode == 1 and "治必降" in p.stdout,
+        check("ch1_滞治负例", p.returncode == 1 and "ch1-must-drop" in p.stdout,
               "rc=%d" % p.returncode)
 
         # 4 薄调正判：正本真扫 fixtures 夹具树（eum 病面同形→ch1 词面命中）

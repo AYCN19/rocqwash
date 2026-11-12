@@ -1,89 +1,32 @@
 # -*- coding: utf-8 -*-
-"""cure_applier.py — applier for the consumer-cure canonical pack (5 + 10 patterns).
+"""cure_applier.py — applier for the consumer-cure canonical pack (cure_pack.json).
 
-Purpose:
-    Applies the deterministic rewrite patterns from cure_pack.json to a Rocq/Coq
-    source file.  Consumer-position cures (bridge wraps, goal-opening bridges,
-    opaque-reflexivity replacement, qualified successor references, NatLe
-    supply bridges) exist as canonical, idempotent rewrites: applying the pack
-    twice changes nothing on the second run — the applier asserts this
-    mechanically after every --apply.
+    Purpose.  Applies the deterministic rewrite patterns of cure_pack.json to a Rocq/Coq source
+      file; dry run by default (the file is written only under --apply).  The pack's
+      consumer-position cures — bridge wraps, goal-opening bridges, opaque-reflexivity replacement,
+      qualified successor references, NatLe supply bridges, statement-face downshifts, import-shadow
+      qualification, lineage adaptation forms, extraction-defect cures, connective qualification —
+      are canonical, idempotent rewrites: a second application changes nothing, and every --apply
+      asserts idempotence mechanically (fail-loud).
 
-    v31 additions (20261103 wash-campaign field report): statement-face
-    downshift patterns (Qle/Qlt carrier faces, scoped-notation comparisons),
-    Import-shadow direct-face qualification (two exclusive variants), and
-    NatLe premise-lift / drop-wrap pairs.  New engine "face-regex" scopes a
-    trigger to statement faces or proof regions with per-face token guards.
-    Patterns may declare "exclusive_group": two selected patterns of one group
-    both matching is a variant-choice conflict and fails loud (exit 4) —
-    the caller must pick one variant via --only.
+    Interface.  python3 wash/cure_applier.py --file f.v [--pack cure_pack.json] [--only id1,id2]
+      [--json out.json] [--apply] | --selftest.  stdout report per pattern (matches, engine); --json
+      report {file, mode, md5_before, md5_after, report{pattern_id: {matches, engine}},
+      idempotence_ok}.  Patterns may declare exclusive_group: two selected patterns of one group both
+      matching is a variant-choice conflict and fails loud — the caller picks one variant via --only.
+      Engines: line-regex, proof-first-tactic, token-station, face-regex (face/proof-scoped triggers
+      with per-face token guards), line-insert, station-report (report-only advisory stations, never
+      rewritten, excluded from the idempotence residual); routed as `cure` in cw.sh.
 
-    v32 additions (S07-lineage adaptation forms, W66 field report): the
-    argument-less-interface adaptation family — parameterized-shell drop
-    (cure32_A, face-regex with a :=-binding-right guard), notation rebind
-    (cure32_B, new "line-insert" engine: one line after the last world
-    import), projection-bridge bare form (cure32_C(a), @field carrier
-    instance -> bare field through the global instance) and predicate-face
-    convergence (cure32_C(b), token map whose targets must be the consuming
-    supply lemma's conclusion constant names — a delta-equivalent synonym
-    compiles but leaks Obj.magic at extraction, so the name is normative).
-    A report-only "station-report" engine ships the binder-shell station:
-    it counts the argumented-Class binders whose full removal is manual
-    surgery (intros lines / call sites) and must return to zero after the
-    surgery.  v32 engine fix: the exclusive-group conflict path now writes
-    its --json report before exiting 4 (previously crashed with
-    UnboundLocalError when --json was given).
+    Dependencies.  Python 3 standard library only; scan/scan_v4_token.py (sys.path injection, same repository) for the token-station engine; the pattern pack is data next to this script.
 
-    v34 additions (CI #178 extraction-defect families, 20261104 reverse-
-    revision round): the two born-clean fake-green lineages enter the pack
-    as cures.  E3 generic-interface instantiation — the abstract-carrier
-    application stations of a generic supply lemma are rewritten to the
-    concrete-carrier specialization shim call, and the line-insert engine
-    generates the shim Definition after the last import (the station
-    pattern face-excludes the shim's own body, which keeps the canonical
-    abstract application verbatim); E2 record polymorphic field — the
-    un-annotated field-consumption Definition is restated as an explicit-
-    type-annotated middleware, the downstream arity stations follow, and a
-    report-only station asserts the sweep completion.  All five v34
-    patterns reuse the v32 engines; no new engine ships in v34.
+    Evidence.  --selftest in-memory vector groups over the shipped pack: every canonical pattern
+      fires, skips guarded positions and is idempotent as specified, the exclusive-group conflict
+      fails loud, whole-pack second passes report zero matches; tests/test_cure_pack.py reruns them.
 
-    v39 addition (20261111 corpus-survey wave, evidence-gated): one
-    pattern from the b48-52 wash wave (ConstructiveWorld-Set commit
-    9a51c74) — interface-quantified connective qualification.  Bare
-    order connectives (lt/le/plus) in statement faces of files carrying
-    the exact section context 'Context {RI0 : RealInterfaceEnhanced}'
-    are pinned to the @S01_BaseRing.lt/le/plus RI0 projection form.
-    A new template_fn "ifq_conn_qualify" branches the rewrite on the
-    matched connective via the pattern's token_targets map; the
-    face-regex engine is reused unchanged (no new engine), so the
-    file_include gate (the exact context face), the Definition/Fixpoint
-    decl_exclude and the binder-declaration colon lookahead all apply.
-    Survey discipline held: candidate forms with thinner citations
-    (single-file rebind variant, semantic Id-setoid re-casts, witness
-    re-points, the v31/v32 pending families) stayed in the pending
-    list — none cast.
-
-Inputs:
-    --file path/to/file.v           target source (never modified on dry-run)
-    --pack path/to/cure_pack.json   pattern pack (default: cure_pack.json
-                                    next to this script)
-    --only id1,id2                  restrict to a subset of pattern ids
-    --json out.json                 write an application report
-    --apply                         write the cured file (default: dry-run)
-
-Outputs:
-    stdout report — per pattern: trigger matches found, rewrites applied.
-    --json report — {pattern_id: {matches: n, applied: n}} plus file md5s.
-    Exit codes: 0 = ran (dry-run or applied with idempotence verified),
-    1 = idempotence assertion failed (fail-loud), 2 = usage,
-    4 = exclusive-group conflict (two variants of one group matched — pick
-        one via --only), 5 = pattern id unknown, 9 = file missing.
-
-Minimal usage:
-    python3 cure_applier.py --file path/to/file.v              # dry-run
-    python3 cure_applier.py --file path/to/file.v --apply      # cure + verify
-    python3 cure_applier.py --selftest                          # in-memory vectors
-"""
+    Exit-codes.  0 = ran (dry run, or applied with idempotence verified); 1 = idempotence assertion
+      failed (fail-loud, file not written); 2 = usage; 4 = exclusive-group conflict (two variants of
+      one group matched — pick one via --only); 5 = unknown pattern id; 9 = file or pack missing."""
 import argparse, hashlib, io, json, os, re, sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -835,7 +778,7 @@ def selftest():
     print("cure14 drop wrap/intros-tail guard/idempotent:", c16, c16b)
     ok = ok and c16 and c16b
 
-    # v31 whole-pack idempotence on a conflict-free campaign sample
+    # v31 whole-pack idempotence on a conflict-free sample
     vsample = f6 + f7 + f13 + f14
     v1, vr1 = run_pack(vsample, pack["patterns"])
     v2, vr2 = run_pack(v1, pack["patterns"])
@@ -1004,8 +947,7 @@ def selftest():
           {k: x["matches"] for k, x in xr2.items()})
     ok = ok and c26
 
-    # ---- v39 vector (cure39: interface-quantified connective
-    # qualification; b48-52 wash-wave re-anchor form, commit 9a51c74) ----
+    # ---- v39 vector (cure39: interface-quantified connective qualification) ----
     v39 = dict((p["id"], p) for p in pack["patterns"]
                if p["id"].startswith("cure39"))
 
