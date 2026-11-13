@@ -51,6 +51,16 @@ import tempfile
 PROG = "toolchain_dyld_doctor"
 SCHEMA = "rocqwash-dyld-doctor/1"
 ENV_WORKER = "ROCWASH_ROCQWORKER"
+
+
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
+
+
 DEFAULT_WORKER = ("/Users/apple/Desktop/mac93_install_work/opam93/rocq93/"
                   "lib/rocq-runtime/rocqworker")
 DEFAULT_GUARD = "/Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh"
@@ -429,6 +439,13 @@ def main():
     elif os.environ.get(ENV_WORKER):
         worker, wsrc = os.environ[ENV_WORKER], "env"
     else:
+        # Clean mode: the sanctioned-machine worker default is a canonical
+        # face; report and refuse (explicit --worker / env stays available).
+        if _clean_mode():
+            print("requires canonical environment: the sanctioned-machine "
+                  "rocqworker default (%s); pass --worker or env %s to "
+                  "analyze a specific binary" % (DEFAULT_WORKER, ENV_WORKER))
+            sys.exit(9)
         worker, wsrc = DEFAULT_WORKER, "default"
 
     print("=== DYLD-DOCTOR ===")

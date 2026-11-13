@@ -12,6 +12,12 @@ import re, os, shutil, subprocess, sys
 OCAMLC = shutil.which("ocamlc")
 OCAMLDEP = shutil.which("ocamldep")
 if OCAMLC is None or OCAMLDEP is None:
+    # Clean mode (ROCWASH_CLEAN=1): the OCaml toolchain is a canonical-
+    # environment face; report it explicitly before the standing FATAL
+    # (this file's own exit-1 toolchain contract is kept).
+    if os.environ.get("ROCWASH_CLEAN", "").strip() == "1":
+        sys.stderr.write("requires canonical environment: the OCaml "
+                         "toolchain (ocamlc/ocamldep on PATH via opam env)\n")
     sys.stderr.write(
         "FATAL toolchain: ocamlc/ocamldep not found on PATH "
         f"(which ocamlc={OCAMLC!r}, which ocamldep={OCAMLDEP!r}). "

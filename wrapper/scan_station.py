@@ -44,6 +44,14 @@ CANONICAL_REL = "scan/mac_stmt_scan.py"
 PINNED_MD5 = "56ff0fb371f9684cc865023f6f5d0f4a"
 PINNED_NOTE = "20261031 rqadapt 适配时嵌记"
 
+
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
+
 STATION_USAGE = """scan_station — scan/mac_stmt_scan.py 正本指认包装（wrapper/）
 
 用法 Usage:
@@ -298,6 +306,15 @@ def main(argv=None):
                                 forward_argv=fwd)
         print("\n".join(lines), file=sys.stderr)
         sys.exit(2)
+
+    # Clean mode: the --baseline face targets the canonical campaign
+    # workspace; report and refuse before dispatching the frozen scanner
+    # (the generic --file scan stays available).
+    if _clean_mode() and "--baseline" in fwd:
+        print("requires canonical environment: the campaign-workspace S09 "
+              "baseline target (scan/mac_stmt_scan.py --baseline); use "
+              "--file for a generic scan")
+        sys.exit(9)
 
     # 透传：站级横幅走 stderr（正本 stdout 独占·管道口径不污染）
     print("[scan_station] 正本指认 md5=%s（%s）→ 透传 %d 参" % (actual, PINNED_NOTE, len(fwd)),

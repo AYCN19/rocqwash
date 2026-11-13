@@ -82,6 +82,14 @@ ROOTS = {
 AUDIT_MAIN_ROOT = "/Users/apple/Desktop/ConstructiveWorld-Main"
 AUDIT_CW_SB_GLOB = "沙箱/现役/*/scripts/gates/gate4_comment_guard.py"
 
+
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
+
 # 组件 → 在册副本（slug, 仓内 relpath）。key=组件名（承 frozen8 账载八件口径·
 # rq 相对路径）；副本路径各异（set/cw 的 gate 域与仓根布局不同）。
 REGISTRY = (
@@ -604,6 +612,13 @@ def main():
             for slug, rel in copies:
                 print("%s/%s  （组件 %s）" % (slug, rel, comp))
         sys.exit(0)
+    # Clean mode: freeze/check audit the registered canonical copy groups;
+    # report and refuse unless fixture roots are supplied via --roots-file.
+    if args.cmd in ("freeze", "check") and not args.roots_file and _clean_mode():
+        print("requires canonical environment: the registered four-repo "
+              "canonical copy groups (fixture roots stay available via "
+              "--roots-file)")
+        sys.exit(9)
     if args.cmd == "freeze":
         cmd_freeze(args)
     elif args.cmd == "check":

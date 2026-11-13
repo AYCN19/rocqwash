@@ -210,10 +210,21 @@ CANON_SET=${ROCWASH_CANON_SET:-/Users/apple/Desktop/ConstructiveWorld-Set}
 CANON_CW=${ROCWASH_CANON_CW:-/Users/apple/Desktop/ConstructiveWorld}
 CANON_W1=${ROCWASH_CANON_W1:-/Users/apple/Desktop/S系Prop清除战役工单}
 CANON=0
+# Clean mode (ROCWASH_CLEAN=1): canonical-environment auto-detection is
+# disabled and explicit canonical pointers are not applied; the canonical
+# paths resolve to a non-existent sentinel so the canonical-dependent cases
+# SKIP by their standing contract (docs/clean-mode-manual-20261114.md).
+if [ "${ROCWASH_CLEAN:-0}" = "1" ]; then
+  CANON_SET="${TMPDIR:-/tmp}/rocqwash-clean-no-canonical"
+  CANON_CW="$CANON_SET"
+  CANON_W1="$CANON_SET"
+  echo "(clean-mode note) ROCWASH_CLEAN=1: canonical-environment auto-detection disabled; canonical faces report 'requires canonical environment' and canonical-dependent cases SKIP"
+else
 if [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ] \
    && [ -f "$CANON_SET/scripts/gates/gate7_extract_run.py" ] \
    && [ -x "$CANON_CW/Live/toolchain/opam/live/bin/rocq" ]; then
   CANON=1
+fi
 fi
 
 # ---------- 门控编译弧总开关（v47 波⑧A 案·缺省探测 20261112）----------
@@ -226,6 +237,10 @@ fi
 #   BORN_WORLD_ROCQ     t_gate6_born_wrapper born 段（born_world.sh:114 存在性闸·
 #                       该测试零编译不触代差语义；CW Live rocq 缺卷→9.3 代役）
 GATE93_ROCQ=/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/rocq
+# Clean mode skips the whole default-pointer block below (auto-detection off;
+# ROCWASH_ROCQ/GATE7_PROBE_SCRIPT/GATE6_SCRIPT/BORN_WORLD_ROCQ stay unset so
+# the env-gated compile sections SKIP by contract).
+if [ "${ROCWASH_CLEAN:-0}" != "1" ]; then
 if [ -z "${ROCWASH_ROCQ:-}" ] && [ -x "$GATE93_ROCQ" ]; then
   export ROCWASH_ROCQ="$GATE93_ROCQ"
   echo "（探测注记）ROCWASH_ROCQ 未设→9.3 多路器在卷·缺省指认 ${ROCWASH_ROCQ}（⑧A 案）"
@@ -245,6 +260,7 @@ if [ -z "${BORN_WORLD_ROCQ:-}" ]; then
     export BORN_WORLD_ROCQ="$GATE93_ROCQ"
     echo "（探测注记）BORN_WORLD_ROCQ 未设且 CW Live rocq 缺卷→9.3 多路器代役（t_gate6_born_wrapper 解锁·该测试零编译仅存在性闸）"
   fi
+fi
 fi
 
 PASS=0; FAIL=0; SKIP=0; TOTAL=0; REDS=""; SKIPS=""
@@ -314,7 +330,8 @@ t_dual_scan \
  t_norm_lint \
  t_contrib_intake \
  t_registry_regen \
- t_evolve"
+ t_evolve \
+ t_clean_mode"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -800,6 +817,15 @@ t_registry_regen() {
   # negative-seq=2/missing-base=9; tmp fixtures only, zero writes, zero
   # network, zero real-repository contact.
   "$PY" -B "$REPO/tests/test_registry_regen.py"
+}
+
+t_clean_mode() {
+  # clean-mode switch selftest (tests/test_clean_mode.py · ROCWASH_CLEAN=1):
+  # canonical-dependency faces report "requires canonical environment" and
+  # refuse; default mode (env unset) stays unchanged; clean-available
+  # selftest faces still pass under the switch. Zero compile, zero network,
+  # zero writes outside mkdtemp. Census: docs/clean-mode-manual-20261114.md.
+  "$PY" -B "$REPO/tests/test_clean_mode.py"
 }
 
 # ---------- 汇总执行 ----------

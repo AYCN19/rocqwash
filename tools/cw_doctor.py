@@ -142,6 +142,14 @@ REGISTRY_REL = ("ConstructiveWorld_Live", "order.txt")
 DEFAULT_GUARD = "/Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh"
 
 
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
+
+
 class UsageError(Exception):
     """Usage error / malformed scenario shape (exit 2)."""
 
@@ -668,6 +676,16 @@ def run(args):
         raise UsageError("--timeout must be >= 1, got %d" % args.timeout)
     if args.guard_maxwait < 1:
         raise UsageError("--guard-maxwait must be >= 1, got %d" % args.guard_maxwait)
+    # Clean mode: the four-domain real rollup drives canonical faces (the
+    # sanctioned guard default, the registry ledger, the probe world);
+    # report and refuse after the usage-face validation above (usage errors
+    # keep their own exit codes). Offline canned runs stay available via
+    # --injector and the frozen --selftest vectors.
+    if _clean_mode() and not args.injector:
+        print("requires canonical environment: the ConstructiveWorld live "
+              "tree (sanctioned cpu_guard default, registry ledger, probe "
+              "world); offline canned runs stay available via --injector")
+        sys.exit(9)
     # tool presence precheck (9; orchestration adds no new engine — the four tools must be in place)
     for label, p in (("toolchain_dyld_doctor", TOOL_DYLD),
                      ("net_probe", TOOL_NET),

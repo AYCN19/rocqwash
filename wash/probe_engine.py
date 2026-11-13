@@ -43,6 +43,15 @@ import sys
 
 PROG = "probe_engine"
 SCHEMA = "rocqwash-probe-ledger/1"
+DEFAULT_ROCQ_CMD = 'rocq c -Q . "" {name}.v'
+
+
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
 
 # failure-class regexes (first match in order wins, IGNORECASE)
 MISSING_LIB_RE = re.compile(r"(?:unable to locate library|cannot find library)\s+\|?\s*"
@@ -458,7 +467,7 @@ def main():
     ap.add_argument("--logdir", default=None, metavar="DIR",
                     help="probe logs + post-probe artifact evidence directory (defaults to --out.logs)")
     ap.add_argument("--rocq-cmd", dest="rocq_cmd",
-                    default='rocq c -Q . "" {name}.v', metavar="TPL",
+                    default=DEFAULT_ROCQ_CMD, metavar="TPL",
                     help="probe command template (contains the {name} placeholder, default 'rocq c -Q . \"\" {name}.v')")
     ap.add_argument("--guard", default=None, metavar="PATH",
                     help="cpu_guard.sh path (when given, every probe runs wrapped through it; required for real compiles)")
@@ -494,6 +503,16 @@ def main():
         if not val:
             print("FAIL-LOUD: --%s is required (except --selftest)" % req, file=sys.stderr)
             sys.exit(2)
+    # Clean mode: the canonical face is the default --rocq-cmd template
+    # (the PATH rocq toolchain); report and refuse. An explicit --rocq-cmd
+    # override (the stub selftest driver, zero real compiles) is a
+    # caller-owned face and stays available, as does --selftest.
+    if _clean_mode() and args.rocq_cmd == DEFAULT_ROCQ_CMD:
+        print("requires canonical environment: a rocq toolchain for real "
+              "compile probes (default --rocq-cmd %r); pass an explicit "
+              "--rocq-cmd stub or use --selftest for the zero-compile face"
+              % DEFAULT_ROCQ_CMD)
+        sys.exit(9)
     for label, val in (("candidates", args.candidates), ("src", args.src),
                        ("world", args.world)):
         if not os.path.exists(val):

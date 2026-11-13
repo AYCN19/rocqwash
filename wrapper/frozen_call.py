@@ -56,6 +56,14 @@ DEFAULT_MANIFEST = os.path.join(_HERE, "quad8_manifest.json")
 DEFAULT_LOG = ("/Users/apple/Desktop/S系Prop清除战役工单/work_Main_full"
                "/sandbox/seat_rqadapt/账/quad8_call_ledger.jsonl")
 
+
+def _clean_mode():
+    # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
+    # canonical-dependency faces report "requires canonical environment" and
+    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # (env unset) keeps historical behavior byte-identical.
+    return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
+
 _CERTDIR = os.path.join(REPO, "certify")
 if _CERTDIR not in sys.path:
     sys.path.insert(0, _CERTDIR)
@@ -273,6 +281,18 @@ def main():
 
     if args.selftest:
         sys.exit(selftest())
+    # Clean mode: the canonical call face is the default in-repo frozen
+    # manifest or the canonical campaign call log; report and refuse.
+    # Explicit --manifest and --log together define a caller-owned face and
+    # stay available (the fixture selftest children pass both).
+    if _clean_mode() and args.command \
+            and (os.path.abspath(args.manifest) == os.path.abspath(DEFAULT_MANIFEST)
+                 or os.path.abspath(args.log)
+                 == os.path.abspath(os.environ.get("QUAD8_CALLLOG", DEFAULT_LOG))):
+        print("requires canonical environment: the default in-repo frozen "
+              "manifest or the canonical campaign call log; pass explicit "
+              "--manifest and --log for caller-owned faces")
+        sys.exit(9)
     cmd = list(args.command)
     if cmd and cmd[0] == "--":  # argparse REMAINDER 保 -- 原样入列（实测）·剥引子
         cmd = cmd[1:]
