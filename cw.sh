@@ -89,6 +89,14 @@
 #   evolve      autonomous evolution engine v1 (harvest five signal classes from the existing engines -> derive scored candidates -> draft the human-gated next-round task brief; draft-only: never executes a candidate, never writes the repository)
 #                                                    -> tools/evolve.py
 #               cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]
+#   vacgen      Lean vacuity probe skeleton generator (four-account casting, zero compile, pure stdlib; v1 CLI face preserved, v2 flags additive) -> tools/vacgen.py
+#               cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]
+#   ci-triage   CI red-run triage, alias of triage (same target script) -> tools/ci_triage.py
+#               cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
+#   (pending)   exp-append experience-ledger appender (existence-probed route: SKIP notice until tools/exp_port.py lands, then this row goes canonical)
+#               cw.sh exp-append --tool T --points P [--evidence E] [--batch B]
+#   baseline-diff-facade  clog-baseline differ, alias of baseline-diff (same target script) -> tools/baseline_diff.py
+#               cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -252,6 +260,14 @@ Usage: bash cw.sh <tool> [args...]
   evolve      autonomous evolution engine v1 (harvest five signal classes from the existing engines -> derive scored candidates -> draft the human-gated next-round task brief; draft-only: never executes a candidate, never writes the repository)
                                                    -> tools/evolve.py
               cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]
+  vacgen      Lean vacuity probe skeleton generator (four-account casting, zero compile, pure stdlib; v1 CLI face preserved, v2 flags additive) -> tools/vacgen.py
+              cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]
+  ci-triage   CI red-run triage, alias of triage (same target script) -> tools/ci_triage.py
+              cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
+  (pending)   exp-append experience-ledger appender (existence-probed route: SKIP notice until tools/exp_port.py lands, then this row goes canonical)
+              cw.sh exp-append --tool T --points P [--evidence E] [--batch B]
+  baseline-diff-facade  clog-baseline differ, alias of baseline-diff (same target script) -> tools/baseline_diff.py
+              cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -293,6 +309,12 @@ hint_for() {  # $1=tool
     registry-regen) echo "cw.sh registry-regen --base-repo REPO --base-ref REF --contrib-repo REPO --contrib-ref REF --pieces M1,M2,... --anchor-src DIR [--dep-source require|coqdep|registry|auto] [--seq N] [--out DIR] [--apply] [--json P]   # contribution registration-row regenerator (merge-target books verbatim as the draft bottom + canonical #R<seq>-<md5-8> rows for the named pieces tail-appended in dependency order, ties by the contribution registry's existing row order; BLOCK pieces listed with reasons and no rows; entity md5 cross-checked against the contribution-surface blob; three same-source assertions reused from registry_union; dry-run by default, --apply writes DIR/order.txt and DIR/_CoqProject) -> tools/registry_regen.py" ;;
     contrib-intake) echo "cw.sh contrib-intake --contrib-repo PATH --contrib-ref REF --base-repo PATH [--base-ref REF] [--paths P1,P2] [--order-path PATH] [--project-path PATH] [--lane-prefix PREFIX] [--jargon-map PATH] [--rocq-cmd CMD] [--json P]   # contribution intake inspector (read-only four-gate verdicts over a contribution face vs a base face, protocol four-check pipeline in one run: registry union dry run against the base face with a regeneration prescription on any assertion blast / norm lint of each new or changed prose face via norm_lint / gate expectation over changed .v faces with a gate7 probe precheck / lane isolation tally of changed paths outside --lane-prefix; gates never short-circuit, BLOCK verdicts are data and the exit code stays 0; zero writes into either face) -> tools/contrib_intake.py" ;;
     evolve)      echo "cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]   # autonomous evolution engine v1 (harvest five signal classes by subprocess of the existing engines: norm-lint fitness with frozen surfaces excluded / sentinel --once dual-repo new ci-red events / suite last state / registry audit accounts with increment / maintained UNRECOGNIZED sentinel events; derive fixed-rule scored candidates plus genetic standing candidates from the ledger lineage; draft the constitution three-law-preamble task brief to --draft-out; draft-only spawn gate: never executes a candidate, never writes the repository; adverse signals are data, exit 0; 2 usage; 9 missing/unreachable) -> tools/evolve.py" ;;
+    vacgen)      echo "cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]   # Lean vacuity probe skeleton generator (four-account casting, zero compile) -> tools/vacgen.py" ;;
+    ci-triage)   echo "cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI red-run triage, alias of triage -> tools/ci_triage.py" ;;
+    # exp-append hint goes canonical with tools/exp_port.py (RQW03); the two-line shape below stays inert to the doc_lint hint-table parser (a parseable row without a case route would be a dangling-name finding)
+    exp-append)
+      echo "cw.sh exp-append --tool T --points P [--evidence E] [--batch B]   # pending RQW03: SKIP notice until tools/exp_port.py lands" ;;
+    baseline-diff-facade) echo "cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]   # clog-baseline differ, alias of baseline-diff -> tools/baseline_diff.py" ;;
     *) return 1 ;;
   esac
 }
@@ -341,6 +363,18 @@ case "${1:-}" in
   registry-regen) shift; run_tool registry-regen "tools/registry_regen.py" "$@" ;;
   contrib-intake) shift; run_tool contrib-intake "tools/contrib_intake.py" "$@" ;;
   evolve)      shift; run_tool evolve      "tools/evolve.py"              "$@" ;;
+  vacgen)      shift; run_tool vacgen      "tools/vacgen.py"             "$@" ;;
+  ci-triage)   shift; run_tool ci-triage   "tools/ci_triage.py"          "$@" ;;
+  baseline-diff-facade) shift; run_tool baseline-diff-facade "tools/baseline_diff.py" "$@" ;;
+  exp-append)
+    shift
+    # existence-probed route (RQW03 pending): SKIP notice + exit 0 until
+    # tools/exp_port.py lands; never a dangling run_tool target
+    if [ -f "$ROOT/tools/exp_port.py" ]; then
+      exec python3 "$ROOT/tools/exp_port.py" append "$@"
+    fi
+    echo "cw.sh exp-append: SKIP exp_port not landed (RQW03 pending)" >&2
+    exit 0 ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
