@@ -181,8 +181,8 @@ TOOL_SPECS = [
             {
                 "repo": {"type": "string", "description": "repository slug for the CI query; CLI flag --repo"},
                 "run": {"type": "integer", "description": "CI run number to triage; CLI flag --run"},
-                "logs": {"type": "string", "description": "local log input for offline triage; CLI flag --logs"},
-                "offline": {"type": "boolean", "description": "triage from local logs instead of fetching; CLI flag --offline"},
+                "logs": {"type": "boolean", "description": "include fetched log dumps in the output; bare CLI flag --logs"},
+                "offline": {"type": "string", "description": "path to a jobs JSON file to triage from local input instead of fetching (CLI --offline JOBS.json)"},
                 "timeout": {"type": "number", "description": "network timeout in seconds; CLI flag --timeout"},
                 "retry_max": {"type": "integer", "description": "maximum retries; CLI flag --retry-max"},
             }
