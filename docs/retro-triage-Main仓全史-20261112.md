@@ -302,3 +302,69 @@ B/E/A/UNREC 族零漂。
 ·#3 仍 UNRECOGNIZED——§2.3 族分布 UNRECOGNIZED×6 为当时器面快照·现势同批
 数据判类＝UNREC×1＋E 变体×5（run#7 现发实证 §8.1 在卷）。§四哨对账 30/30
 全同结论不受影响（判类面变化仅族名迁移·红件集不变）。
+
+---
+
+## 九、Maintained-UNRECOGNIZED two-shape signature notes（维持 UNREC 两形签名说明）
+
+> **Section scope.** §2.3-3 recorded two Main-specific out-of-taxonomy shapes
+> (runner mid-step loss; gate2-only red step). The token-level ground truth for
+> both is the review ledger `docs/复核-UNREC-14事件-20261112.md` (§二 S3/S6,
+> §三-4/§三-6, §四-2/§四-3). This section fixes the two maintained-UNRECOGNIZED
+> signatures and their engine evidence notes. The taxonomy and the run-level
+> precedence (UNRECOGNIZED > C > A > E > B > D) are unchanged: both shapes stay
+> `family=UNRECOGNIZED` (action `watch-only`) — the supplement adds evidence
+> annotations, one canned fixture, and selftest vectors, nothing else (never
+> force-fitted into any family).
+
+### 9.1 Shape ① — runner-lost candidate（runner 失联形·Main coq93 run #3, id 41914865932）
+
+- Signature (four legs, all from the review ledger §二 S3/R1 step-level
+  evidence): job `conclusion=failure` with zero failed steps; the build step
+  "Build full tree (order topology, fingerprint skip, thermal-guarded)" still
+  hung at `status=in_progress` with `conclusion=null` while the remaining
+  steps stay pending; wall clock 57007s ≈ 15.8h — below the configured cap
+  and not `timed_out`; the job-log GET returns HTTP 404 BlobNotFound (the log
+  blob was never uploaded — the companion evidence of a runner lost mid-step;
+  §三-6 records the same double-404 for the Set#284 Windows job).
+- Engine form (`tools/ci_triage.py` classify): when all four legs hold — the
+  fourth leg being the logs-GET HTTP 404 evidence note, carried online by
+  `fetch_job_log` or offline by the `job_log_notes` canned extension —
+  classify emits the evidence-package note `runner-lost-candidate` (hung
+  build step names, wall clock, 404) plus the maintained rationale line, and
+  returns `UNRECOGNIZED`/`watch-only` unchanged. The D shape (cancelled +
+  zero steps) does not cover it; no family is assigned.
+- Fixture `tests/fixtures/ci_triage_runner_lost.json`: job-level fields from
+  a fresh GET; the step table transcribed from the surviving triage record of
+  the ledger (the live API no longer serves the step table for this job —
+  `steps=[]` on a fresh read, and the check-runs endpoint carries
+  `output.steps: null`); `job_log_notes` carries the real HTTP 404
+  BlobNotFound note text captured by a direct log-fetch probe. Selftest
+  vectors: the positive fixture plus four negatives (no note / note without
+  404 / hung non-build step / red steps present) and a byte-identical rerun.
+- Live-read boundary (recorded as-is): a fresh re-triage of run #3 returns
+  `UNRECOGNIZED` without the annotation, because the pruned `steps=[]` also
+  removes the hung-step leg from the live step table and the `--logs` fetch
+  list selects jobs with steps; the four-leg shape is observable through the
+  canned fixture (and the 404 leg is still directly observable — the blob is
+  still absent on a fresh probe).
+
+### 9.2 Shape ② — attested-red auth-state maintained（认证态红形·Main coq93 run #10, id 42345007340）
+
+- Signature (review ledger §二 S6/R4, §三-4, §四-2 token split): genuinely
+  executed (dump-line-filtered) `判定=CLEAN(exit 0)` with axiom total 0
+  together with `GATE2-ATTEST-RED` — parser CLEAN yet the attestation
+  coverage assertion red (R4 partition break, appendix absent), with the
+  coqchk step completed (40398s). The E gate2-only cascade variant does not
+  hold for attested-red shapes (§四-3: forcing it there would be a false
+  positive — the manual verdict stays UNRECOGNIZED).
+- Engine form: the gate2-only shape keeps its exclusion note, and classify
+  now additionally emits `auth-state-red-maintained` when both tokens are
+  genuinely present on dump-filtered log text — the note carries the UNREC
+  maintained rationale automatically (E cascade variant does not hold; manual
+  identification takes precedence; no force-fit). A single attestation token
+  without the pair keeps the plain exclusion note. Family stays
+  `UNRECOGNIZED`/`watch-only`.
+- Fixture `tests/fixtures/ci_triage_gate2_only_failure.json` (canned
+  genuinely-executed lines plus one dump line) carries both tokens; the
+  selftest asserts the pair note on it, plus two single-token negatives.

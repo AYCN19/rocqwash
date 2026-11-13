@@ -1,59 +1,62 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-r"""wash_station.py — 洗形⑤⑥⑦三步组合器（rocqwash wrapper/·适配席 rqadapt·20261031）
+r"""wash_station.py — wash-station three-step composer, steps 5/6/7 (rocqwash wrapper/).
 
-在役冻结件零改适配（各在飞席位实时引用·适配一律新文件 wrapper/）：本站把 nw8+ 洗形席
-候批账「三、born／R4／对表／gate4／探针（⑤⑥⑦）」节里的三步 ad-hoc 手工循环——
-  ⑤对表  names/mac_stmt_names.py  work/X.v --compare src/X.v   （N=N 有序全等断言）
-  ⑥gate4 verify/gate4_comment_guard.py --file work/X.v          （头注五字段机检 v2.1 EXT）
-  ⑦探针  seam/seam_probe.py --file work/X.v                     （W13 四机制指纹候选）
-1:1 组合为一条站命令，全部直调冻结正本（subprocess `python3 -B <正本绝对路径>`），
-零改冻结、判据零复制——三步红绿唯一判据源仍为各冻结正本自身退出码；本站只组合、
-出站账、聚合退出码（对齐 scan_station.py「只指认＋透传」与 gate7_probe.sh
-「判据零复制」适配纪律）。
+Purpose.  Composes the three ad-hoc manual loops of the nine-step shape
+  normalization form into one station command with zero frozen-file edits:
+  step 5 cross-check (`names/mac_stmt_names.py work/X.v --compare src/X.v`,
+  the N=N ordered-equality assertion), step 6 gate4
+  (`verify/gate4_comment_guard.py --file work/X.v`, the five-field header
+  mechanical check v2.1 EXT), step 7 probe (`seam/seam_probe.py --file
+  work/X.v`, the W13 four-mechanism fingerprint candidates).  Every step
+  runs the frozen canonical file directly (subprocess `python3 -B
+  <canonical absolute path>`); the station only composes, emits the
+  station account and aggregates exit codes — the sole verdict source for
+  each step stays that canonical file's own exit code (zero criterion
+  copying; the scan_station.py "recognize only + pass through" and
+  gate7_probe.sh "zero criterion copying" adaptation discipline).  The
+  station itself writes nothing except the user-specified --station-json
+  (and the frozen files' own user-specified --gate4-json/--probe-json/
+  --probe-csv).  Dry run by default in the sense that no step writes
+  unless the underlying frozen tool is given its write flags.
 
-域注记（双域各安其位·承 seam 补齐轮判定）：⑦＝W13 源面代际缝**指纹候选**探针
-（E364 盲区律：命中=候选非定谳、0 命中=无候选出账非「无缝」——报清单不报清白），
-供洗形②分诊 probe-first 与续洗台账驱动；它不是 gate7 提取执行闸
-（ConstructiveWorld-Set scripts/gates/gate7_extract_run.py·仓外正本只读）的替代，
-提取闸红绿仍走 wrapper/gate7_probe.sh 链。
+Interface.  python3 wrapper/wash_station.py --washed WORK.v --baseline
+  SRC.v [--root DIR] [--steps names,gate4,probe] [--include-let]
+  [--kinds LIST] [--expect-names N] [--gate4-json PATH]
+  [--gate4-no-principle] [--gate4-length-fail] [--gate4-length-cap N]
+  [--probe-json PATH] [--probe-csv PATH] [--check-pin]
+  [--expect-names-md5 HEX | --expect-gate4-md5 HEX |
+  --expect-probe-md5 HEX] [--station-json PATH] | --station-selftest.
+  Step subset may shrink but never reorders (composer contract).  The
+  step 7 probe is a fingerprint-candidate check only (the E364 blind-spot
+  rule: a hit is a candidate, not a verdict; zero hits means no
+  candidates were emitted, not "no seam" — the report lists, it does not
+  clear); it does not replace the gate7 extraction gate (the
+  ConstructiveWorld-Set scripts/gates/gate7_extract_run.py out-of-repo
+  read-only canonical), whose verdicts still run through the
+  wrapper/gate7_probe.sh chain.
 
-九步洗形中的位置（承 seat_nw8 候批账小节编号）：⑤对表→⑥gate4→⑦探针，顺序固定；
---steps 可减步不可重排（组合器契约）。
+Dependencies.  Python 3 standard library only; every path parameterized,
+  zero network.  Subprocesses always run `python3 -B` (no __pycache__ on
+  read-only faces).  The station never wraps itself in cpu_guard (the
+  `seat_nw8` nested-deadlock precedent — the wrapping duty belongs to the
+  caller, per the nw8 zero-bare-call convention).
 
-用法：
-  python3 wrapper/wash_station.py --washed work/X.v --baseline src/X.v [站级旗标]
+Evidence.  --station-selftest: nine frozen vectors, zero writes, no
+  frozen file executed — canonical presence, pin hex shape, --steps
+  subset ordering plus unknown-step rejection, hard-worst aggregation,
+  the three rc->verdict tables, the three command assemblies, input
+  precheck (baseline dependency + same-file rejection), station-account
+  extraction (positive and negative), and the md5 assertion shape check.
 
-站级旗标：
-  --washed FILE            洗后件（⑤⑥⑦ 共同靶·必填）
-  --baseline FILE          ⑤对表基准（洗前源·names 在步时必填）
-  --root DIR               冻结正本仓根（默认＝本包装所在仓根）
-  --steps LIST             步子集逗号分（names,gate4,probe·默认三步全开·可减不可重排）
-  --include-let            ⑤会师口径（Let 计入）·1:1 透传 names --include-let
-  --kinds LIST             ⑤kind 过滤·1:1 透传 names --kinds
-  --expect-names N         ⑤计数断言·1:1 透传 names --expect
-  --gate4-json PATH        ⑥gate4 --json 落盘（由冻结件自写·站只转交路径）
-  --gate4-no-principle     ⑥关判定原则启发式（默认开·承 nw8 v2.1 EXT principle=on 口径）
-  --gate4-length-fail      ⑥头注超标升格硬违规（默认复核级）
-  --gate4-length-cap N     ⑥头注行数帽（默认 30＝冻结件默认）
-  --probe-json PATH        ⑦探针 --json 落盘（站读其 hits 出站账）
-  --probe-csv PATH         ⑦探针 --hits-csv 落盘
-  --check-pin              三正本嵌记 md5 断言（20261031 适配时实测·任一不符 exit 2 不开步）
-  --expect-names-md5 HEX / --expect-gate4-md5 HEX / --expect-probe-md5 HEX
-                           外附 md5 断言（各自对应正本·可并用）
-  --station-json PATH      站账 JSON（三步 rc/verdict/摘要·站唯一写面·缺省零写盘）
-  --station-selftest       本站自检（九判·零写盘·不执行任何冻结件）
-  -h / --help              本站帮助
-
-退出码（聚合律·硬者胜）：0=三步全绿（⑤ rc=0 ∧ ⑥ rc=0 ∧ ⑦ rc=0——探针命中是候选
-非失败·E364 律）；1=硬红（⑤ rc≠0 名面 N≠N／⑥ rc=1 硬违规／⑦ rc≠0 出账失败）；
-2=复核级或站级（⑥ rc=2 REVIEW 项／站级用法错／md5 断言败——断言败绝不带病开步）；
-9=文件或正本缺失（washed/baseline/任一正本·预检不过零开步）。
-
-幂等律：本包装自身零写盘（不写正本、不写仓、不写临时）——唯一写面＝用户显式指定的
---station-json（及转交各冻结件的用户显式 --gate4-json/--probe-json/--probe-csv）。
-子进程一律 `python3 -B`（禁 __pycache__ 落只读面）；站内禁套 cpu_guard（嵌套死锁
-判例 seat_nw8——包裹义务在调用席，席位纪律同 nw8「零裸调」惯例）。
+Exit-codes.  Aggregation law, hard-worst wins: 0 = all steps green
+  (step5 rc=0 and step6 rc=0 and step7 rc=0 — a probe hit is a candidate,
+  not a failure, per the E364 rule); 1 = hard failing (step5 rc!=0 name
+  face N!=N / step6 rc=1 hard violation / step7 rc!=0 account-write
+  failure); 2 = review-grade or station-level (step6 rc=2 REVIEW items /
+  station usage error / md5 assertion failure — a failed assertion never
+  opens the run); 9 = file or canonical missing (washed/baseline/any
+  canonical; the precheck gates the run at zero steps).
 """
 import argparse
 import datetime
@@ -68,8 +71,10 @@ import sys
 PROG = "wash_station"
 WRAP_NAME = "wrapper/wash_station.py"
 
-# —— 冻结正本指认（相对仓根路径＋20261031 适配时实测嵌记 md5）——
-# 正本若经冻终权威改版，须由适配席对实盘重嵌记；本站不擅改正本。
+# frozen canonical files (repo-root-relative paths + pinned md5 taken from the
+# live tree when this wrapper was built).  If a canonical is revised by the
+# freeze authority, the wrapper agent re-pins against the live tree; this
+# station never edits canonicals.
 CANONICALS = {
     "names": {"rel": "names/mac_stmt_names.py",
               "pin": "01dc635ce445b05628bdd6e728990ce3"},
@@ -79,46 +84,51 @@ CANONICALS = {
               "pin": "7a01359a22b8960b352191f1a4490b37"},
 }
 PIN_NOTE = "20261031 rqadapt 适配时嵌记"
-STEP_ORDER = ("names", "gate4", "probe")          # ⑤⑥⑦ 固定序（可减不可重排）
-STEP_LABEL = {"names": "⑤对表", "gate4": "⑥gate4", "probe": "⑦探针"}
+STEP_ORDER = ("names", "gate4", "probe")          # steps 5/6/7 fixed order (may shrink, never reorder)
+STEP_LABEL = {"names": "s5-xcheck", "gate4": "s6-gate4", "probe": "s7-probe"}
 
-# 各冻结件退出码→站内 verdict 判表（判据零复制：verdict 唯一源自正本自身 rc）
-NAMES_GATE = {0: "PASS"}                            # 其余（2=不等 9=缺件）→ FAIL
-GATE4_GATE = {0: "PASS", 1: "FAIL", 2: "REVIEW"}    # nw8 口径：REVIEW=0 才算净
-PROBE_GATE = {0: "PASS"}                            # 命中=候选非失败（E364 律）；rc≠0=出账失败
+# per-canonical rc -> station verdict tables (zero criterion copying: the
+# verdict derives solely from the canonical's own rc)
+NAMES_GATE = {0: "PASS"}                            # others (2=unequal, 9=missing) -> FAIL
+GATE4_GATE = {0: "PASS", 1: "FAIL", 2: "REVIEW"}    # nw8 sense: only REVIEW=0 counts as clean
+PROBE_GATE = {0: "PASS"}                            # hits are candidates, not failures (E364 rule); rc!=0 = account failure
 
 VERDICT_RANK = {"PASS": 0, "REVIEW": 1, "FAIL": 2, "MISSING": 3}
 VERDICT_EXIT = {"PASS": 0, "REVIEW": 2, "FAIL": 1, "MISSING": 9}
 
-# 站账信息抽取（仅出账·永不覆判——verdict 唯一源自 rc；抽取失败=字段 null 如实出）
+# station-account info extraction (reporting only, never re-judges — the
+# verdict derives solely from rc; a failed extraction emits null honestly).
+# KEEP (data faces): the regexes parse the frozen canonicals' own output
+# formats verbatim and must not be rewritten.
 RE_NAMES_ASSERT = re.compile(r"断言 (\d+)=(\d+) 有序全等 : (PASS|FAIL)")
 RE_NAMES_TOTAL = re.compile(r"^total: (\d+)", re.M)
 RE_GATE4_SUM = re.compile(
     r"件数=(\d+)\s+PASS=(\d+)\s+FAIL=(\d+)\s+REVIEW\(人工复核\)=(\d+)\s+UNREADABLE=(\d+)")
 RE_PROBE_TOTAL = re.compile(r"^TOTAL: (\d+) 候选", re.M)
 
-STATION_USAGE = """wash_station — 洗形⑤⑥⑦三步组合器（wrapper/）
+STATION_USAGE = """wash_station — wash-station three-step composer, steps 5/6/7 (wrapper/)
 
-用法 Usage:
-  python3 wrapper/wash_station.py --washed WORK.v --baseline SRC.v [站级旗标]
+Usage:
+  python3 wrapper/wash_station.py --washed WORK.v --baseline SRC.v [station flags]
 
-站级旗标 Station flags:
-  --washed FILE         洗后件（三步共同靶·必填）
-  --baseline FILE       ⑤对表基准（names 在步时必填）
-  --root DIR            冻结正本仓根（默认＝本包装所在仓根）
-  --steps LIST          步子集逗号分（names,gate4,probe·默认全开·可减不可重排）
-  --include-let/--kinds LIST/--expect-names N     ⑤透传 names
+Station flags:
+  --washed FILE         washed file (shared target of the three steps; required)
+  --baseline FILE       step-5 cross-check baseline (required when names is in step)
+  --root DIR            frozen canonical repository root (default = this wrapper's repo root)
+  --steps LIST          step subset, comma-separated (names,gate4,probe; default all; may shrink, never reorder)
+  --include-let/--kinds LIST/--expect-names N     passed through to names
   --gate4-json PATH / --gate4-no-principle / --gate4-length-fail / --gate4-length-cap N
-                        ⑥透传 gate4
-  --probe-json PATH / --probe-csv PATH            ⑦透传 seam_probe
-  --check-pin           三正本嵌记 md5 断言（20261031）
-  --expect-names-md5/--expect-gate4-md5/--expect-probe-md5 HEX   外附断言
-  --station-json PATH   站账 JSON（站唯一写面·缺省零写盘）
-  --station-selftest    本站自检（九判·零写盘·不执行冻结件）
-  -h / --help           本帮助
+                        passed through to gate4
+  --probe-json PATH / --probe-csv PATH            passed through to seam_probe
+  --check-pin           three canonical pinned-md5 assertions
+  --expect-names-md5/--expect-gate4-md5/--expect-probe-md5 HEX   extra assertions
+  --station-json PATH   station-account JSON (the station's only write surface; zero writes by default)
+  --station-selftest    station selftest (nine vectors; zero writes; no frozen file executed)
+  -h / --help           this help
 
-退出码: 0=三步全绿  1=硬红（对表不等/gate4 硬违/探针出账败）  2=REVIEW/站级用法·断言败
-        9=文件或正本缺失
+Exit codes: 0=all three steps green  1=hard failing (cross-check unequal / gate4 hard violation / probe account failure)
+        2=REVIEW or station-level usage / assertion failure
+        9=file or canonical missing
 """
 
 
@@ -131,7 +141,7 @@ def md5_of(path):
 
 
 def default_root():
-    """默认正本仓根＝本包装文件的上上级目录（wrapper/ 的父目录）。"""
+    """Default canonical repo root = the grandparent of this wrapper file (wrapper/'s parent)."""
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -140,7 +150,7 @@ def canonical_path(root, step):
 
 
 def norm_hex(s):
-    """断言值形制核：剥空白/引号、小写；非 32 位 hex 回 None。"""
+    """Assertion-value shape check: strip whitespace/quotes, lowercase; non-32-hex returns None."""
     t = s.strip().strip("'\"").lower()
     if len(t) == 32 and all(c in "0123456789abcdef" for c in t):
         return t
@@ -148,8 +158,10 @@ def norm_hex(s):
 
 
 def parse_steps(spec_list):
-    """--steps 解析：逗号分＋重复旗标合并；未知步名 raise ValueError；
-    重排丢弃——恒归 ⑤⑥⑦ 固定序（组合器契约：可减不可重排）。"""
+    """--steps parsing: comma split plus repeated-flag merge; an unknown step
+    name raises ValueError; reorderings are discarded — always normalized to
+    the steps-5/6/7 fixed order (composer contract: may shrink, never
+    reorder)."""
     got = set()
     for spec in spec_list or []:
         for tok in spec.split(","):
@@ -157,26 +169,26 @@ def parse_steps(spec_list):
             if not tok:
                 continue
             if tok not in STEP_ORDER:
-                raise ValueError("未知步名 %r（合法：names,gate4,probe）" % tok)
+                raise ValueError("unknown step name %r (legal: names,gate4,probe)" % tok)
             got.add(tok)
     if not got:
-        raise ValueError("--steps 解析为空")
+        raise ValueError("--steps parsed to an empty set")
     return [s for s in STEP_ORDER if s in got]
 
 
 def check_inputs(washed, baseline, steps):
-    """预检形制：返回错误串或 None（文件存在性由 main 预检·此处只查组合形制）。"""
+    """Input shape precheck: returns an error string or None (file existence is main's precheck; this checks the composition shape only)."""
     if not washed:
-        return "--washed 必填（三步共同靶）"
+        return "--washed is required (shared target of the three steps)"
     if "names" in steps and not baseline:
-        return "--baseline 必填（⑤对表基准·names 在步时）"
+        return "--baseline is required (the step-5 cross-check baseline, when names is in step)"
     if washed and baseline and os.path.abspath(washed) == os.path.abspath(baseline):
-        return "洗后件与对表基准同件（对表退化为恒真·拒绝）：%s" % washed
+        return "washed file and cross-check baseline are the same file (the check would degenerate to always-true; refused): %s" % washed
     return None
 
 
 def child_argv(canonical, rest):
-    """子进程直调形：[python, -B, 冻结正本绝对路径, ...透传参]。-B 禁 __pycache__。"""
+    """Direct-call child form: [python, -B, frozen canonical absolute path, ...passthrough args].  -B forbids __pycache__."""
     py = sys.executable or "python3"
     return [py, "-B", canonical] + list(rest)
 
@@ -215,12 +227,12 @@ def probe_cmd(canonical, washed, probe_json, probe_csv):
 
 
 def gate_step(table, rc):
-    """判表查 verdict；表外 rc 一律 FAIL（fail-loud 不放水）。"""
+    """Verdict table lookup; an rc outside the table is always FAIL (fail-loud, nothing waved through)."""
     return table.get(rc, "FAIL")
 
 
 def aggregate(verdicts):
-    """聚合律·硬者胜：MISSING(9) > FAIL(1) > REVIEW(2) > PASS(0)。"""
+    """Aggregation law, hard-worst wins: MISSING(9) > FAIL(1) > REVIEW(2) > PASS(0)."""
     if not verdicts:
         return "PASS", 0
     worst = max(verdicts, key=lambda v: VERDICT_RANK[v])
@@ -228,7 +240,7 @@ def aggregate(verdicts):
 
 
 def run_child(argv):
-    """直调冻结件：子进程捕获→逐字回显（操作手可见性同 ad-hoc 循环）；rc 原样上呈。"""
+    """Run a frozen file directly: capture the child process and echo it verbatim (operator visibility equals the ad-hoc loop); the rc passes through unchanged."""
     p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        text=True, encoding="utf-8", errors="replace")
     if p.stdout:
@@ -241,7 +253,7 @@ def run_child(argv):
 
 
 def extract_info(stdout, probe_json_path):
-    """站账信息抽取（出账用·永不覆判；抽不到=None 如实出）。"""
+    """Station-account info extraction (reporting only, never re-judges; nothing extracted means None, emitted honestly)."""
     info = {}
     m = RE_NAMES_ASSERT.search(stdout)
     if m:
@@ -279,56 +291,56 @@ def extract_info(stdout, probe_json_path):
 
 
 def station_selftest():
-    """本站自检九判（零写盘·不执行任何冻结件）。回 pass 布尔。"""
+    """Station selftest, nine vectors (zero writes; no frozen file executed).  Returns the pass boolean."""
     ok = True
     root = default_root()
 
-    # 判1 三正本在位（默认仓根）
+    # v1 the three canonicals present (default root)
     found = {s: canonical_path(root, s) for s in STEP_ORDER}
     j = all(os.path.isfile(p) for p in found.values())
-    print("  judge1 三正本在位(default root):", "PASS" if j else "FAIL", found)
+    print("  judge1 canonicals present (default root):", "PASS" if j else "FAIL", found)
     ok = ok and j
 
-    # 判2 三嵌记 32-hex 形制
+    # v2 the three pins are 32-hex shaped
     j = all(norm_hex(CANONICALS[s]["pin"]) == CANONICALS[s]["pin"] for s in STEP_ORDER)
-    print("  judge2 三嵌记 32-hex 形制:", "PASS" if j else "FAIL")
+    print("  judge2 pins are 32-hex shaped:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判3 --steps 解析：子集固定序（可减不可重排）＋未知步名拒
+    # v3 --steps parsing: subset keeps fixed order (may shrink, never reorder) + unknown step name rejected
     try:
         got = parse_steps(["probe,names"])
         j = got == ["names", "probe"]
     except ValueError:
         got, j = None, False
-    print("  judge3 steps 子集固定序:", "PASS" if j else "FAIL", got)
+    print("  judge3 steps subset fixed order:", "PASS" if j else "FAIL", got)
     try:
         parse_steps(["bogus"])
         j = False
     except ValueError:
         j = True
-    print("  judge3b 未知步名拒:", "PASS" if j else "FAIL")
+    print("  judge3b unknown step name rejected:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判4 聚合律硬者胜
+    # v4 aggregation law, hard-worst wins
     v1, e1 = aggregate(["PASS", "PASS", "PASS"])
     v2, e2 = aggregate(["PASS", "REVIEW"])
     v3, e3 = aggregate(["FAIL", "REVIEW"])
     v4, e4 = aggregate(["PASS", "MISSING"])
     j = (v1, e1) == ("PASS", 0) and (v2, e2) == ("REVIEW", 2) \
         and (v3, e3) == ("FAIL", 1) and (v4, e4) == ("MISSING", 9)
-    print("  judge4 聚合律硬者胜:", "PASS" if j else "FAIL",
+    print("  judge4 aggregation hard-worst wins:", "PASS" if j else "FAIL",
           (v1, e1), (v2, e2), (v3, e3), (v4, e4))
     ok = ok and j
 
-    # 判5 三判表
+    # v5 the three verdict tables
     j = (gate_step(NAMES_GATE, 0) == "PASS" and gate_step(NAMES_GATE, 2) == "FAIL"
          and gate_step(GATE4_GATE, 0) == "PASS" and gate_step(GATE4_GATE, 1) == "FAIL"
          and gate_step(GATE4_GATE, 2) == "REVIEW" and gate_step(GATE4_GATE, 7) == "FAIL"
          and gate_step(PROBE_GATE, 0) == "PASS" and gate_step(PROBE_GATE, 9) == "FAIL")
-    print("  judge5 判表 names/gate4/probe:", "PASS" if j else "FAIL")
+    print("  judge5 verdict tables names/gate4/probe:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判6 三步 cmd 装配（子进程直调形·[python, -B, 正本, ...透传]）
+    # v6 the three command assemblies (direct-call child form: [python, -B, canonical, ...passthrough])
     c1 = names_cmd("/R/names.py", "w.v", "b.v", True, "Definition,Lemma", 5)
     c2 = gate4_cmd("/R/gate4.py", "w.v", "g.json", False, False, None)
     c3 = probe_cmd("/R/probe.py", "w.v", "p.json", "p.csv")
@@ -338,19 +350,19 @@ def station_selftest():
          and c2 == head + ["/R/gate4.py", "--file", "w.v", "--json", "g.json"]
          and c3 == head + ["/R/probe.py", "--file", "w.v", "--json", "p.json",
                            "--hits-csv", "p.csv"])
-    print("  judge6 cmd 装配:", "PASS" if j else "FAIL")
+    print("  judge6 command assemblies:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判7 预检形制：baseline 依存＋同件拒绝
+    # v7 input shape precheck: baseline dependency + same-file rejection
     j = (check_inputs(None, None, ["names"]) is not None
          and check_inputs("w.v", None, ["probe"]) is None
          and check_inputs("w.v", None, ["names"]) is not None
          and check_inputs("w.v", "b.v", ["names"]) is None
          and check_inputs("w.v", "w.v", ["names"]) is not None)
-    print("  judge7 预检形制:", "PASS" if j else "FAIL")
+    print("  judge7 input shape precheck:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判8 站账抽取：三冻结件样例行各抽出＋非匹配行如实 None
+    # v8 station-account extraction: sample lines from the three frozen files extracted + non-matching input honestly None
     s1 = "file: x\nmd5: ab\ntotal: 7  let_skipped: 0\n断言 7=7 有序全等 : PASS"
     s2 = "[gate4ext] v2.1 扫描时点=T  件数=1  PASS=1  FAIL=0  REVIEW(人工复核)=0  " \
          "UNREADABLE=0  length_cap=30(review)  principle=on  deep_files=0"
@@ -358,19 +370,19 @@ def station_selftest():
     i1 = extract_info(s1, None)
     i2 = extract_info(s2, None)
     i3 = extract_info(s3, None)
-    i0 = extract_info("没有可抽行", None)
+    i0 = extract_info('no extractable lines', None)
     j = (i1.get("names_total") == 7 and i1.get("names_assert") == "7=7 PASS"
          and i2.get("gate4_summary") == {"files": 1, "pass": 1, "fail": 0,
                                          "review": 0, "unreadable": 0}
          and i3.get("probe_hits_total") == 3
          and "probe_hits_total" not in i0 and "names_total" not in i0)
-    print("  judge8 站账抽取正/负:", "PASS" if j else "FAIL")
+    print("  judge8 station-account extraction positive/negative:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判9 断言形制核：32-hex 正过、伪值拒
+    # v9 assertion shape check: valid 32-hex passes, bogus values rejected
     j = (norm_hex(" 01dc635ce445b05628bdd6e728990ce3 ") == "01dc635ce445b05628bdd6e728990ce3"
          and norm_hex("zz") is None and norm_hex("01dc") is None)
-    print("  judge9 断言形制核正过伪拒:", "PASS" if j else "FAIL")
+    print("  judge9 assertion shape check pass/reject:", "PASS" if j else "FAIL")
     ok = ok and j
 
     return ok
@@ -384,62 +396,64 @@ def main(argv=None):
     except Exception:
         pass
 
-    ap = argparse.ArgumentParser(prog=PROG, description="洗形⑤⑥⑦三步组合器（直调冻结件·零改冻结）",
+    ap = argparse.ArgumentParser(prog=PROG, description="wash-station three-step composer (calls frozen canonicals directly; zero frozen edits)",
                                  usage=STATION_USAGE)
-    ap.add_argument("--washed", default=None, help="洗后件（三步共同靶）")
-    ap.add_argument("--baseline", default=None, help="⑤对表基准（洗前源）")
-    ap.add_argument("--root", default=None, help="冻结正本仓根（默认=本包装所在仓根）")
+    ap.add_argument("--washed", default=None, help="washed file (shared target of the three steps)")
+    ap.add_argument("--baseline", default=None, help="step-5 cross-check baseline (pre-wash source)")
+    ap.add_argument("--root", default=None, help="frozen canonical repository root (default = this wrapper's repo root)")
     ap.add_argument("--steps", action="append", default=None,
-                    help="步子集逗号分（names,gate4,probe·默认全开·可减不可重排）")
-    ap.add_argument("--include-let", action="store_true", help="⑤会师口径（Let 计入）")
-    ap.add_argument("--kinds", default=None, help="⑤kind 过滤（透传 names --kinds）")
-    ap.add_argument("--expect-names", type=int, default=None, help="⑤计数断言（透传 --expect）")
-    ap.add_argument("--gate4-json", default=None, help="⑥gate4 --json 落盘路径")
-    ap.add_argument("--gate4-no-principle", action="store_true", help="⑥关判定原则启发式")
-    ap.add_argument("--gate4-length-fail", action="store_true", help="⑥头注超标升格硬违规")
-    ap.add_argument("--gate4-length-cap", type=int, default=None, help="⑥头注行数帽（默认 30）")
-    ap.add_argument("--probe-json", default=None, help="⑦探针 --json 落盘路径")
-    ap.add_argument("--probe-csv", default=None, help="⑦探针 --hits-csv 落盘路径")
-    ap.add_argument("--check-pin", action="store_true", help="三正本嵌记 md5 断言")
+                    help="step subset, comma-separated (names,gate4,probe;"
+                         " default all; may shrink, never reorder)")
+    ap.add_argument("--include-let", action="store_true", help="convergence sense for step 5 (Let counted in)")
+    ap.add_argument("--kinds", default=None, help="step-5 kind filter (passed through to names --kinds)")
+    ap.add_argument("--expect-names", type=int, default=None, help="step-5 count assertion (passed through to --expect)")
+    ap.add_argument("--gate4-json", default=None, help="step-6 gate4 --json write path")
+    ap.add_argument("--gate4-no-principle", action="store_true", help="step-6: turn off the judgment-principle heuristic")
+    ap.add_argument("--gate4-length-fail", action="store_true", help="step-6: promote over-budget headers to hard violation")
+    ap.add_argument("--gate4-length-cap", type=int, default=None, help="step-6 header line cap (default 30)")
+    ap.add_argument("--probe-json", default=None, help="step-7 probe --json write path")
+    ap.add_argument("--probe-csv", default=None, help="step-7 probe --hits-csv write path")
+    ap.add_argument("--check-pin", action="store_true", help="three canonical pinned-md5 assertions")
     ap.add_argument("--expect-names-md5", action="append", default=[], metavar="HEX")
     ap.add_argument("--expect-gate4-md5", action="append", default=[], metavar="HEX")
     ap.add_argument("--expect-probe-md5", action="append", default=[], metavar="HEX")
-    ap.add_argument("--station-json", default=None, help="站账 JSON（站唯一写面）")
-    ap.add_argument("--station-selftest", action="store_true", help="本站自检九判")
+    ap.add_argument("--station-json", default=None, help="station-account JSON (the station's only write surface)")
+    ap.add_argument("--station-selftest", action="store_true", help="station selftest, nine vectors")
     args = ap.parse_args(argv)
 
     if args.station_selftest:
         p = station_selftest()
-        print("WASH-STATION-SELFTEST (wrapper 自身九判·零写盘·不执行冻结件):",
+        print("WASH-STATION-SELFTEST (wrapper's own nine vectors; zero writes;"
+              " no frozen file executed):",
               "PASS" if p else "FAIL")
         sys.exit(0 if p else 2)
 
     try:
         steps = parse_steps(args.steps) if args.steps else list(STEP_ORDER)
     except ValueError as e:
-        print("wash_station: 站级用法错: %s" % e, file=sys.stderr)
+        print("wash_station: station-level usage error: %s" % e, file=sys.stderr)
         sys.exit(2)
     err = check_inputs(args.washed, args.baseline, steps)
     if err:
-        print("wash_station: 站级用法错: %s" % err, file=sys.stderr)
+        print("wash_station: station-level usage error: %s" % err, file=sys.stderr)
         sys.exit(2)
 
-    # —— 预检：正本/靶件存在性（不过零开步·exit 9）——
+    # precheck: canonical/target existence (a failed precheck opens zero steps; exit 9)
     root = args.root if args.root else default_root()
     canon = {}
     for s in STEP_ORDER:
         p = canonical_path(root, s)
         if not os.path.isfile(p):
-            print("wash_station: 正本缺失: %s（%s·于仓根 %s）" % (CANONICALS[s]["rel"], s, root),
-                  file=sys.stderr)
+            print("wash_station: canonical missing: %s (%s; repo root %s)"
+                  % (CANONICALS[s]["rel"], s, root), file=sys.stderr)
             sys.exit(9)
         canon[s] = p
     for label, path in (("washed", args.washed), ("baseline", args.baseline)):
         if path and not os.path.isfile(path):
-            print("wash_station: 文件缺失: %s=%s" % (label, path), file=sys.stderr)
+            print("wash_station: file missing: %s=%s" % (label, path), file=sys.stderr)
             sys.exit(9)
 
-    # —— 嵌记/外附 md5 断言（败→卡出 stderr·exit 2·绝不带病开步）——
+    # pinned / extra md5 assertions (a failure reports on stderr, exit 2, and never opens the run in a broken state)
     actual = {s: md5_of(canon[s]) for s in STEP_ORDER}
     expects = {"names": args.expect_names_md5, "gate4": args.expect_gate4_md5,
                "probe": args.expect_probe_md5}
@@ -453,16 +467,17 @@ def main(argv=None):
             bad.append((s, "pin:%s" % CANONICALS[s]["pin"], actual[s]))
     if bad:
         for s, want, act in bad:
-            print("wash_station: md5 断言不符 [%s] want=%s actual=%s" % (s, want, act),
-                  file=sys.stderr)
-        print("wash_station: 断言败·不带病开步（正本若经冻终权威改版须由适配席重嵌记）",
-              file=sys.stderr)
+            print("wash_station: md5 assertion mismatch [%s] want=%s actual=%s"
+                  % (s, want, act), file=sys.stderr)
+        print("wash_station: assertion failure; the run does not open in a"
+              " broken state (if a canonical was revised by the freeze"
+              " authority, the wrapper agent must re-pin it)", file=sys.stderr)
         sys.exit(2)
 
-    # —— 开步：⑤→⑥→⑦ 固定序·全步出账（组合器＝全账聚合·不短路）——
-    print("== wash_station 洗形⑤⑥⑦ 三步组合（%s）==" % WRAP_NAME)
+    # open the run: steps 5->6->7 fixed order; every step reports (the composer aggregates the full account; no short-circuit)
+    print("== wash_station steps 5/6/7 three-step composition (%s) ==" % WRAP_NAME)
     print("washed:   %s" % args.washed)
-    print("baseline: %s" % (args.baseline or "—（names 不在步）"))
+    print("baseline: %s" % (args.baseline or "- (names not in step)"))
     for s in STEP_ORDER:
         print("canonical[%s]: %s  md5=%s  pin_match=%s"
               % (s, canon[s], actual[s], CANONICALS[s]["pin"] == actual[s]))
@@ -479,14 +494,14 @@ def main(argv=None):
                              args.gate4_length_cap)
         else:
             full = probe_cmd(canon[s], args.washed, args.probe_json, args.probe_csv)
-        print("-- %s 直调 %s" % (STEP_LABEL[s], CANONICALS[s]["rel"]), file=sys.stderr)
+        print("-- %s direct call %s" % (STEP_LABEL[s], CANONICALS[s]["rel"]), file=sys.stderr)
         rc, out = run_child(full)
         verdict = gate_step({"names": NAMES_GATE, "gate4": GATE4_GATE,
                              "probe": PROBE_GATE}[s], rc)
         step_rows[s] = {"rc": rc, "verdict": verdict}
         child_stdout[s] = out
 
-    # —— 站账信息抽取（出账·永不覆判）——
+    # station-account info extraction (reporting only; never re-judges)
     info = {}
     if "names" in child_stdout:
         info.update(extract_info(child_stdout["names"], None))
@@ -498,18 +513,18 @@ def main(argv=None):
     verdicts = [step_rows[s]["verdict"] for s in steps]
     verdict, exit_code = aggregate(verdicts)
 
-    print("--- 站账：steps=%s" % "+".join(steps))
+    print("--- station account: steps=%s" % "+".join(steps))
     for s in steps:
         r = step_rows[s]
         note = ""
         if s == "names" and info.get("names_assert"):
-            note = "（断言 %s·total=%s）" % (info["names_assert"], info.get("names_total", "?"))
+            note = "(assertion %s; total=%s)" % (info["names_assert"], info.get("names_total", "?"))
         elif s == "gate4" and info.get("gate4_summary"):
             g = info["gate4_summary"]
-            note = "（件数=%d PASS=%d FAIL=%d REVIEW=%d）" % (g["files"], g["pass"],
+            note = "(files=%d PASS=%d FAIL=%d REVIEW=%d)" % (g["files"], g["pass"],
                                                              g["fail"], g["review"])
         elif s == "probe" and info.get("probe_hits_total") is not None:
-            note = "（TOTAL %d 候选·E364 候选非定谳）" % info["probe_hits_total"]
+            note = "(TOTAL %d candidates; E364: candidates are not verdicts)" % info["probe_hits_total"]
         print("  %s %-6s rc=%-3d %-6s %s" % (STEP_LABEL[s], s, r["rc"], r["verdict"], note))
     print("verdict: %s" % verdict)
 

@@ -3,9 +3,9 @@
 - mode: tree · root: /Users/apple/Desktop/rocqwash
 - jargon map: docs/jargon-to-standard-mapping-v1.md (142 active faces)
 - cjk threshold: 0.0 · whitelist: (none) (0 files) · gate: off (report-only)
-- files scanned: 153 · error: 2377 · warn: 1098 · cjk_ratio: 0.214081
+- files scanned: 154 · error: 2267 · warn: 1092 · cjk_ratio: 0.189684
 
-## files with findings (136)
+## files with findings (137)
 
 ### CHANGELOG.md (md, cjk_ratio 0.306975)
 
@@ -129,7 +129,7 @@
 - L283 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L303 error jargon: dispatch → route
 
-### README.md (md, cjk_ratio 0.156915)
+### README.md (md, cjk_ratio 0.147150)
 
 - L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
 - L1 error header: Evidence. → add the Evidence. field per the annotation standard
@@ -143,114 +143,117 @@
 - L8 error jargon: 仓 → repository
 - L10 warn forbidden: 2026-11-11 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L12 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L12 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L12 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L14 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L14 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L14 error jargon: wave → release / work stream
 - L16 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L16 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L16 error jargon: wave → release / work stream
 - L18 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L18 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L18 error jargon: campaign → effort / work stream
-- L18 error jargon: dispatch → route
-- L18 error jargon: retrofit → adaptation
-- L18 error jargon: seat → agent / seat-worker
-- L18 error jargon: wave → release / work stream
-- L18 error jargon: 席名 → agent / seat-worker
-- L18 error jargon: 红 → failing
 - L20 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L20 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L20 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L20 warn forbidden: 勘形席 → replace the internal role name with the plain role wording
-- L20 error jargon: 候令 → pending execution
-- L20 error jargon: 判类 → classification
+- L20 error jargon: campaign → effort / work stream
+- L20 error jargon: dispatch → route
+- L20 error jargon: retrofit → adaptation
+- L20 error jargon: seat → agent / seat-worker
+- L20 error jargon: wave → release / work stream
+- L20 error jargon: 席名 → agent / seat-worker
 - L20 error jargon: 红 → failing
-- L20 error jargon: 自愈 → automatic recovery
-- L22 warn forbidden: 2026-11-12 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L22 warn forbidden: 2026-11-13 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L22 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L22 error jargon: 分诊 → triage
-- L22 error jargon: 哨 → sentinel / mechanical watch
+- L22 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L22 warn forbidden: 勘形席 → replace the internal role name with the plain role wording
+- L22 error jargon: 候令 → pending execution
+- L22 error jargon: 判类 → classification
 - L22 error jargon: 红 → failing
+- L22 error jargon: 自愈 → automatic recovery
 - L24 warn forbidden: 2026-11-12 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L24 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L24 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L24 error jargon: 台账 → ledger (data surface) / record list (generic prose)
+- L24 error jargon: 分诊 → triage
 - L24 error jargon: 哨 → sentinel / mechanical watch
 - L24 error jargon: 红 → failing
 - L26 warn forbidden: 2026-11-12 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L26 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L26 warn forbidden: 工装席 → replace the internal role name with the plain role wording
 - L26 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L26 error jargon: 席 → agent / seat-worker
+- L26 error jargon: 哨 → sentinel / mechanical watch
 - L26 error jargon: 红 → failing
-- L52 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L52 error jargon: campaign → effort / work stream
-- L59 error jargon: dispatch → route
-- L72 error jargon: campaign → effort / work stream
+- L28 warn forbidden: 2026-11-12 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L28 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L28 error jargon: 台账 → ledger (data surface) / record list (generic prose)
+- L28 error jargon: 席 → agent / seat-worker
+- L28 error jargon: 红 → failing
+- L54 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L54 error jargon: campaign → effort / work stream
+- L61 error jargon: dispatch → route
 - L74 error jargon: campaign → effort / work stream
-- L75 error jargon: campaign → effort / work stream
-- L75 error jargon: 绿判四件套 → four-point pass criterion
-- L83 warn forbidden: 2026-11-01 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L86 error jargon: 绿判四件套 → four-point pass criterion
-- L88 error jargon: 席 → agent / seat-worker
-- L90 error jargon: dispatch → route
-- L94 error jargon: 席 → agent / seat-worker
-- L97 warn forbidden: 2026-10-31 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L97 warn forbidden: 20261101 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L76 error jargon: campaign → effort / work stream
+- L77 error jargon: campaign → effort / work stream
+- L77 error jargon: 绿判四件套 → four-point pass criterion
+- L85 warn forbidden: 2026-11-01 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L88 error jargon: 绿判四件套 → four-point pass criterion
+- L90 error jargon: 席 → agent / seat-worker
+- L92 error jargon: dispatch → route
+- L96 error jargon: 席 → agent / seat-worker
+- L99 warn forbidden: 2026-10-31 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L99 warn forbidden: 20261101 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L100 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L102 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L104 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L113 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L120 error jargon: 落盘 → write / persist to disk
-- L121 error jargon: 手术 → operation
-- L121 error jargon: 红 → failing
-- L121 error jargon: 绿 → passing
-- L123 warn forbidden: 20261104 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L133 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L144 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L144 error jargon: 洗形 → shape normalization
-- L145 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L147 error jargon: 洗形器 → shape-normalizing tool
-- L150 error jargon: 落刀 → apply
-- L151 error jargon: 缺省干跑 → dry run by default
-- L152 error jargon: 钦名 → designated
-- L154 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
-- L160 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L162 error jargon: 堵账 → blocked items / blockage record
-- L165 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
-- L168 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L168 warn forbidden: 主会话 → replace the internal role name with the plain role wording
-- L174 error jargon: 干跑 → dry run
-- L178 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L178 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L183 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
-- L185 error jargon: 干跑 → dry run
-- L187 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L191 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L192 error jargon: wave → release / work stream
-- L197 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L203 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L216 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L220 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L227 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L228 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L230 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L232 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L238 error jargon: dispatch → route
-- L243 warn forbidden: 主会话 → replace the internal role name with the plain role wording
-- L244 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L247 error jargon: dispatch → route
-- L250 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L255 error jargon: 仓 → repository
-- L259 error jargon: 绿 → passing
-- L262 error jargon: 干跑 → dry run
-- L268 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L269 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L273 warn forbidden: 主会话 → replace the internal role name with the plain role wording
-- L274 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L277 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L277 error jargon: 仓 → repository
-- L385 error jargon: retrofit → adaptation
+- L101 warn forbidden: 20261101 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L102 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L104 error jargon: 台账 → ledger (data surface) / record list (generic prose)
+- L106 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L115 warn forbidden: 20261103 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L122 error jargon: 落盘 → write / persist to disk
+- L123 error jargon: 手术 → operation
+- L123 error jargon: 红 → failing
+- L123 error jargon: 绿 → passing
+- L125 warn forbidden: 20261104 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L135 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L146 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L146 error jargon: 洗形 → shape normalization
+- L147 error jargon: 台账 → ledger (data surface) / record list (generic prose)
+- L149 error jargon: 洗形器 → shape-normalizing tool
+- L152 error jargon: 落刀 → apply
+- L153 error jargon: 缺省干跑 → dry run by default
+- L154 error jargon: 钦名 → designated
+- L156 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
+- L162 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L164 error jargon: 堵账 → blocked items / blockage record
+- L167 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
+- L170 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L170 warn forbidden: 主会话 → replace the internal role name with the plain role wording
+- L176 error jargon: 干跑 → dry run
+- L180 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L180 warn forbidden: 工装席 → replace the internal role name with the plain role wording
+- L185 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
+- L187 error jargon: 干跑 → dry run
+- L189 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L193 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L194 error jargon: wave → release / work stream
+- L199 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L205 warn forbidden: 工装席 → replace the internal role name with the plain role wording
+- L218 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L222 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L229 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L230 warn forbidden: 工装席 → replace the internal role name with the plain role wording
+- L232 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L234 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L240 error jargon: dispatch → route
+- L245 warn forbidden: 主会话 → replace the internal role name with the plain role wording
+- L246 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L249 error jargon: dispatch → route
+- L252 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L257 error jargon: 仓 → repository
+- L261 error jargon: 绿 → passing
+- L264 error jargon: 干跑 → dry run
+- L270 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L271 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L275 warn forbidden: 主会话 → replace the internal role name with the plain role wording
+- L276 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L279 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L279 error jargon: 仓 → repository
+- L387 error jargon: retrofit → adaptation
 
 ### certify/freeze_manifest.py (py, cjk_ratio 0.376364)
 
@@ -570,6 +573,17 @@
 - L61 warn forbidden: 工装席 → replace the internal role name with the plain role wording
 - L70 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
 
+### docs/evolve-draft-cycle2-20261113.md (md, cjk_ratio 0.000000)
+
+- L1 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L7 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L24 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L49 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L49 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L53 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L53 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L53 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+
 ### docs/jargon-to-standard-mapping-v1.md (md, cjk_ratio 0.035562)
 
 - L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
@@ -802,7 +816,7 @@
 - L234 error jargon: 红 → failing
 - L240 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
 
-### docs/retro-triage-Main仓全史-20261112.md (md, cjk_ratio 0.252946)
+### docs/retro-triage-Main仓全史-20261112.md (md, cjk_ratio 0.206689)
 
 - L1 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 - L1 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
@@ -890,6 +904,7 @@
 - L277 error jargon: 红 → failing
 - L287 error jargon: 红 → failing
 - L295 error jargon: 红 → failing
+- L312 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
 
 ### docs/roadmap-v43-plus-20261111.md (md, cjk_ratio 0.424673)
 
@@ -2030,7 +2045,7 @@
 - L3 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 - L3 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
 
-### tests/test_destructive_matrix.py (py, cjk_ratio 0.284218)
+### tests/test_destructive_matrix.py (py, cjk_ratio 0.276189)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
 - L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
@@ -2480,38 +2495,10 @@
 - L575 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
 - L688 error jargon: 落盘 → write / persist to disk
 
-### tools/ci_triage.py (py, cjk_ratio 0.191742)
+### tools/ci_triage.py (py, cjk_ratio 0.001413)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L33 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L169 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L169 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L172 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L173 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L174 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L186 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L226 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L465 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L469 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L602 error jargon: 判类 → classification
-- L676 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L677 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L680 error jargon: 红 → failing
-- L694 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L921 error jargon: 判类 → classification
-- L1378 error jargon: 兜底 → fallback
-- L1379 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L1382 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L1468 error jargon: 红 → failing
-- L1482 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L1529 error jargon: 红 → failing
-- L1530 error jargon: 红 → failing
-- L1630 error jargon: 红 → failing
+- L80 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 
 ### tools/cpu_guard.sh (sh, cjk_ratio 0.418778)
 
@@ -2525,29 +2512,10 @@
 - L12 warn forbidden: 20260920 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L15 warn forbidden: 20261023 → drop the date stamp from the prose face; dates belong in the ledger surface
 
-### tools/cw_doctor.py (py, cjk_ratio 0.299968)
+### tools/cw_doctor.py (py, cjk_ratio 0.000410)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L3 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L3 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L4 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L11 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
-- L26 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L48 error jargon: 落盘 → write / persist to disk
-- L428 error jargon: 台账 → ledger (data surface) / record list (generic prose)
-- L699 error jargon: 归一 → normalize
-- L701 error jargon: 堵账 → blocked items / blockage record
-- L796 error jargon: 红 → failing
-- L818 error jargon: 正典 → canonical
-- L819 error jargon: 正典 → canonical
-- L873 error jargon: 归一 → normalize
-- L898 error jargon: 堵账 → blocked items / blockage record
-- L898 error jargon: 红 → failing
+- L664 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 
 ### tools/cw_sentinel.py (py, cjk_ratio 0.183549)
 
@@ -2569,28 +2537,10 @@
 - L2121 error jargon: 分诊 → triage
 - L2128 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
 
-### tools/doc_lint.py (py, cjk_ratio 0.345303)
+### tools/doc_lint.py (py, cjk_ratio 0.002517)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L3 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L3 error jargon: 对账 → reconcile
-- L4 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L4 warn forbidden: 工装席 → replace the internal role name with the plain role wording
-- L14 error jargon: 对账 → reconcile
-- L30 error jargon: 现势 → current state
-- L33 error jargon: 在盘 → present in the tree
-- L59 error jargon: 落盘 → write / persist to disk
-- L62 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
-- L98 warn forbidden: 主会话 → replace the internal role name with the plain role wording
-- L327 error jargon: 对账 → reconcile
-- L338 error jargon: 对账 → reconcile
-- L436 error jargon: 在盘 → present in the tree
-- L448 error jargon: 在盘 → present in the tree
+- L185 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 
 ### tools/net_probe.py (py, cjk_ratio 0.294843)
 
@@ -2772,59 +2722,15 @@
 - L230 error jargon: 红 → failing
 - L272 warn forbidden: 20261112 → drop the date stamp from the prose face; dates belong in the ledger surface
 
-### tools/unclog.py (py, cjk_ratio 0.115071)
+### tools/unclog.py (py, cjk_ratio 0.000894)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L232 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L372 error jargon: 落盘 → write / persist to disk
-- L479 error jargon: 落刀 → apply
-- L539 error jargon: 落刀 → apply
-- L650 error jargon: 红 → failing
-- L650 error jargon: 落盘 → write / persist to disk
-- L697 error jargon: 疏通 → clear blockages
-- L746 error jargon: 落刀 → apply
-- L1263 error jargon: 落刀 → apply
-- L1269 warn forbidden: 主会话 → replace the internal role name with the plain role wording
-- L1331 error jargon: 正典 → canonical
-- L1331 error jargon: 落刀 → apply
-- L1660 error jargon: 红是数据非器红 → a failing result is data, not a tool failure
+- L266 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 
-### tools/wash_shape.py (py, cjk_ratio 0.339074)
+### tools/wash_shape.py (py, cjk_ratio 0.000414)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L3 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L3 warn forbidden: 20261111 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L3 error jargon: 洗形器 → shape-normalizing tool
-- L12 error jargon: 落刀 → apply
-- L16 error jargon: 普查 → survey
-- L16 error jargon: 洗 → sanitize / clean
-- L17 error jargon: 干跑 → dry run
-- L18 error jargon: 落刀 → apply
-- L28 error jargon: 落刀 → apply
-- L34 error jargon: 归一 → normalize
-- L39 warn forbidden: 20261110 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L112 error jargon: 洗 → sanitize / clean
-- L578 error jargon: 兜底 → fallback
-- L578 error jargon: 无据不铸 → evidence required before issuance
-- L901 error jargon: 普查 → survey
-- L901 error jargon: 洗 → sanitize / clean
-- L982 error jargon: 归一 → normalize
-- L1192 error jargon: 落刀 → apply
-- L1341 error jargon: 落盘 → write / persist to disk
-- L1361 error jargon: 落刀 → apply
-- L1573 error jargon: 归一 → normalize
-- L1984 error jargon: 落刀 → apply
-- L2002 error jargon: 落刀 → apply
+- L1746 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 
 ### verify/_parse_fin_mac.py (py, cjk_ratio 0.285256)
 
@@ -3130,32 +3036,9 @@
 - L456 error jargon: dispatch → route
 - L475 error jargon: dispatch → route
 
-### wrapper/wash_station.py (py, cjk_ratio 0.449885)
+### wrapper/wash_station.py (py, cjk_ratio 0.000000)
 
 - L1 warn budget: header-budget → compress the header block to the 30-line budget (banner + doc block)
-- L1 error header: Dependencies. → add the Dependencies. field per the annotation standard
-- L1 error header: Evidence. → add the Evidence. field per the annotation standard
-- L1 error header: Exit-codes. → add the Exit-codes. field per the annotation standard
-- L1 error header: Interface. → add the Interface. field per the annotation standard
-- L1 error header: Purpose. → add the Purpose. field per the annotation standard
-- L3 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
-- L3 warn forbidden: 20261031 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L3 error jargon: 洗形 → shape normalization
-- L6 error jargon: 对表 → cross-check against the reference
-- L6 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L7 error jargon: 对表 → cross-check against the reference
-- L9 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L15 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L17 error jargon: 分诊 → triage
-- L21 error jargon: 对表 → cross-check against the reference
-- L21 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L35 error jargon: 落盘 → write / persist to disk
-- L39 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L39 error jargon: 落盘 → write / persist to disk
-- L40 error jargon: 探针 → probe (tool citation) / check (generic sense)
-- L40 error jargon: 落盘 → write / persist to disk
-- L41 warn forbidden: 20261031 → drop the date stamp from the prose face; dates belong in the ledger surface
-- L71 warn forbidden: 20261031 → drop the date stamp from the prose face; dates belong in the ledger surface
 
 ### wrapper/watch_rq.sh (sh, cjk_ratio 0.365347)
 
@@ -3170,7 +3053,7 @@
 - L3 error jargon: 席 → agent / seat-worker
 - L35 error jargon: dispatch → route
 
-### 更新账.md (md, cjk_ratio 0.323735)
+### 更新账.md (md, cjk_ratio 0.323712)
 
 - L1 warn cjk: cjk_ratio → translate the prose face to English so the CJK share drops below the threshold (0.0)
 - L1 warn forbidden: 2026-10-31 → drop the date stamp from the prose face; dates belong in the ledger surface
@@ -3889,6 +3772,10 @@
 - L4135 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
 - L4135 warn forbidden: 主会话 → replace the internal role name with the plain role wording
 - L4137 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L4141 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L4141 warn forbidden: 主会话 → replace the internal role name with the plain role wording
+- L4150 warn forbidden: 20261113 → drop the date stamp from the prose face; dates belong in the ledger surface
+- L4150 error jargon: 红 → failing
 
 ## clean files (17)
 

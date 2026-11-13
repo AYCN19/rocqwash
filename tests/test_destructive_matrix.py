@@ -255,7 +255,7 @@ def row_u2(tmp):
     rc2, out2 = sh(UNCLOG, ["--src", src, "--candidates", cands, "--audit",
                             "--apply"])
     assert rc2 == 2, "--audit --apply 同给应 rc=2 实测 %d\n%s" % (rc2, out2[-300:])
-    assert "互斥" in out2, out2[-300:]
+    assert "mutually exclusive" in out2, out2[-300:]  # synced to the translated unclog mutex message
 
 
 def row_u3(tmp):
@@ -373,7 +373,7 @@ def row_w3(tmp):
         "红拒前提破：目标件不在 frozen8 在册: %s" % roster
     rc, out = sh(WASH_SHAPE, ["--file", target, "--only", "eol"])
     assert rc == 2, "显式指认冻结件应红拒 rc=2 实测 %d\n%s" % (rc, out[-400:])
-    assert "红拒" in out, out[-300:]
+    assert "rejection" in out, out[-300:]  # synced to the translated wash_shape frozen-surface rejection message
 
 
 def row_w4(tmp):
@@ -387,7 +387,7 @@ def row_w4(tmp):
     rc, out = sh(WASH_SHAPE, ["--file", clean, "--header-map", mp,
                               "--header-map-preset", "campaign_set_diamond"])
     assert rc == 2, "同槽双旗应 rc=2 实测 %d\n%s" % (rc, out[-400:])
-    assert "互斥" in out, out[-300:]
+    assert "same-slot" in out, out[-300:]  # synced to the translated wash_shape same-slot exclusivity message
 
 
 # ---- ③ pushci 三行 ------------------------------------------------------------

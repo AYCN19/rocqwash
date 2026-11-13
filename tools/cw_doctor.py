@@ -1,66 +1,103 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""cw_doctor.py — 综合体检器·四域聚合（rocqwash tools/·v37 工装席任务书·
-20261111 入账）
+"""cw_doctor.py — aggregate health doctor: four-domain rollup (rocqwash tools/).
 
-一键全面健康评估：四域逐域 subprocess 编排**既有一器**（编排而非重造——先读
-各器 CLI 与 JSON schema 再接线·器红/形坏 fail-loud·零新引擎），聚合为综合
-健康分 0-100＋per-domain verdict＋advice 处置清单（每非绿域一条·指向对应器）：
-  ①环境域(40)＝subprocess toolchain_dyld_doctor（worker 缺省探测：flag/env
-    ROCWASH_ROCQWORKER/判例机缺省·器内自决）→ 报告 verdict healthy|
-    missing-libs|worker-missing → healthy=100 分·余=0 分（红是数据非器红）。
-  ②网络域(20)＝subprocess net_probe --rounds 1 --interval 0（缺省四端点）→
-    报告 verdict all-up|partial|all-down（无 --stable-window 时 net_probe
-    exit 0 仅＝探完成——可达性读报告 verdict 字段非退出码）→ score=可达率×100。
-  ③注册域(25)＝--registry PATH 显传（缺册 fail-loud 9）> env CW_SET/
-    ConstructiveWorld_Live/order.txt 探测（缺册如实 skip）> 全无 skip →
-    锚正典形审计：#R<序>-<md5_8> 形合规率（正典指纹＝md5 前 8 位小写 hex·
-    registry_union.md5_8_of 产物形；ANCHOR_RE 1:1 承 registry_union.py:81；
-    注释行/空行不审计——key_of 同款语义；无锚表体行计入 no_anchor 不入合规
-    率分母；非形清单帽 20·总数如实）→ score=合规率×100。
-  ④堵账域(15)＝--src DIR（缺省跳过）＋--sample N（缺省 0=不抽样→域如实
-    skip；域活须 --src 且 --sample>0）→ 全树典序枚举 .v（unclog 同款）→
-    --sample N 等距抽样（i*total//N 索引·N≥树大＝全量普查）→ 候选 TSV →
-    subprocess probe_engine --fresh（真探必 --world·--guard 缺省
-    ConstructiveWorld cpu_guard.sh 温控——sanctioned 缺省承
-    toolchain_dyld_doctor 同款·可 --guard 覆盖）→ 台账 → chain_graph --top 1
-    恒真跑（纯 stdlib 零编译零网络·真编排非傀儡·unclog 同款）→ 红账率
-    （stats.rc1∪stats.other）→ score=(1-红账率)×100 → 有缺库链根时附 TOP
-    一名（top_order 首名·n＋self 可洗性）。
+Purpose.  One-shot overall health assessment: orchestrates the existing
+  per-domain tools over four domains, each driven by subprocess (write
+  orchestration, never re-implementation — each tool's CLI and JSON schema
+  are read before wiring; a tool failure or malformed report is fail-loud;
+  zero new engines), and aggregates them into an overall health score 0-100
+  plus a per-domain verdict plus an advice list (one entry per non-passing
+  domain, pointing at the corresponding tool).  Domain 1 env (weight 40) =
+  subprocess toolchain_dyld_doctor (the worker default probe is decided
+  inside that tool: flag / env ROCWASH_ROCQWORKER / the sanctioned-machine
+  default) -> report verdict healthy|missing-libs|worker-missing ->
+  healthy scores 100, anything else 0 (a failing result is data, not a tool
+  failure).  Domain 2 net (20) = subprocess net_probe --rounds 1 --interval
+  0 (the default four endpoints) -> report verdict all-up|partial|all-down
+  (without --stable-window, net_probe exit 0 only means the probe completed
+  — reachability is read from the report's verdict field, not the exit
+  code) -> score = reachability rate x 100.  Domain 3 registry (25) =
+  --registry PATH explicit (missing ledger fails loud 9) > env CW_SET
+  /ConstructiveWorld_Live/order.txt probe (a missing ledger skips honestly)
+  > none skips -> the anchor canonical-form audit: the compliance rate of
+  the #R<seq>-<md5_8> form -> score = rate x 100.  Domain 4 clog (15) =
+  --src DIR (skipped by default) + --sample N (default 0 = no sampling ->
+  the domain skips honestly; the domain is active only with --src and
+  --sample>0) -> whole-tree canonical-order .v enumeration -> equidistant
+  sampling -> candidates TSV -> subprocess probe_engine --fresh -> ledger ->
+  chain_graph --top 1 always runs (pure stdlib, zero compiles, zero
+  network; real orchestration, never a puppet) -> the red-account rate
+  (stats.rc1 union stats.other) -> score = (1 - red rate) x 100, plus a TOP
+  entry when a missing-library chain root exists.
 
-综合分＝Σ(域分×权重)/Σ(在域权重)（skip 域权重剔除归一·round 2 位）；
-verdict healthy(≥90)｜degraded(<90)。advice：env→toolchain_dyld_doctor 溯源
-还原（只建议·禁代执行）·net→net_probe --stable-window 双探稳窗·registry→
-registry_union --reanchor 重锚正典形·clog→unclog 闭环疏通·skip 域→显传
-对应开关后重跑体检。
+Interface.  python3 tools/cw_doctor.py [--json OUT] [--workdir DIR]
+  [--registry PATH] [--src DIR --sample N [--world DIR]] [--worker PATH]
+  [--donor DIR] [--endpoints URL[,URL...]] [--guard PATH] [--guard-reg DIR]
+  [--guard-maxwait S] [--timeout S] [--rocq-cmd TPL] [--injector DIR]
+  | --selftest.  Report schema rocqwash-cwdoctor/1.  Score = sum(domain
+  score x weight) / sum(active weights) (skipped domains drop their weight;
+  round 2 places); verdict healthy (>=90) | degraded (<90).  Advice: env ->
+  trace and restore with toolchain_dyld_doctor (advice only, never
+  auto-executed); net -> a two-probe stable window with net_probe
+  --stable-window; registry -> re-anchor to the canonical form with
+  registry_union --reanchor; clog -> clear blockages with the unclog closed
+  loop; a skipped domain -> pass its switch and re-run.  Offline-testable:
+  --injector DIR/scenario.json = {engine key: {"rc": int, "stdout": str,
+  "report": dict}} with the fixed key set dyld/net/probe (the wash_shape
+  Injector contract; unknown key -> 2); the canned table must cover every
+  tool call this run will issue (a missing key -> 9; it never silently
+  falls through to the real tool on the real network).  Determinism: the
+  report carries no wall-clock field, every path is a basename, sort_keys
+  on write; same input and environment rerun byte-identical.
 
-离线可测（v37 纪律·全 subprocess 层 canned 注入）：--injector 场景 JSON
-（DIR/scenario.json）＝{引擎键: {"rc": int, "stdout": str, "report": dict}}·
-键集固定 dyld/net/probe（wash_shape Injector 同款契约·键不识 2）·canned 表
-须覆盖本次将发的全部器件调用（dyld/net 恒需·probe 须于堵账域活时——缺键
-9·绝不静默走真器真网·cw_sentinel 同律）。canned rc 语义随真器：dyld rc∈
-{0,1,9} 带报告可解析（1/9=数据红）·rc=2/报告缺/形坏=器红 9；net/probe
-rc≠0=器红 9。probe canned 台账原样落 workdir 后仍喂真 chain_graph（真编排
-非傀儡·unclog 同款）。本器自身零 sleep 零 loop（--sleep-scale 无涉·net 轮
-间隔恒 0）。
+Dependencies.  Python 3 standard library only; every path parameterized
+  except the sanctioned --guard default (the ConstructiveWorld cpu_guard.sh
+  path, the same default as toolchain_dyld_doctor; overridable).  Zero
+  sleeps, zero loops in this tool itself (--sleep-scale is irrelevant; the
+  net round interval is always 0).
 
-确定性：report 无墙钟字段·路径一律 basename（绝对路径证据在 stdout 与
-workdir 工件）·sort_keys 落盘·同输入同环境重跑字节级恒同。
+Evidence.  --selftest frozen vectors on a tmp fixture tree with canned
+  subprocess-layer injection (zero real otool, zero real network, zero real
+  compiles; chain_graph and the registry audit run for real — pure stdlib):
+  the four-domain all-green 100, the env-red 60.0 degradation, the registry
+  skip renormalization 86.67 plus the CW_SET missing-ledger honest skip,
+  the clog TOP injection 88.75, advice generation, JSON idempotence,
+  CLI four codes with canned full-coverage, and the registry-audit unit;
+  suite membership tests/test_cw_doctor.py.
 
-用法（全部路径参数化·除 --guard sanctioned 缺省外零硬编码）：
-  python3 tools/cw_doctor.py [--json OUT] [--workdir DIR]
-      [--registry PATH] [--src DIR --sample N [--world DIR]]
-      [--worker PATH] [--donor DIR] [--endpoints URL[,URL...]]
-      [--guard PATH] [--guard-reg DIR] [--guard-maxwait S] [--timeout S]
-      [--rocq-cmd TPL] [--injector DIR]
-  python3 tools/cw_doctor.py --selftest
-
-退出码：0=healthy（综合分 ≥90）；1=degraded（<90·红响亮出账——域红是数据
-非器红）；2=用法错（argparse/--sample 负/--timeout 非/injector 场景形坏·键
-不识）；9=缺（器件缺失/--registry 显传缺册/--src 缺目录/--world 真探缺/
---guard 缺/--src 零候选/injector 场景缺·canned 未覆盖/子进程器红/报告
-schema 不识/注册册解码失败）。--json report schema=rocqwash-cwdoctor/1。
+Exit-codes.  0 = healthy (overall score >= 90); 1 = degraded (< 90, the
+  failing domains reported loudly — a domain failure is data, not a tool
+  failure); 2 = usage error (argparse / negative --sample / invalid
+  --timeout / malformed injector scenario / unknown key); 9 = missing
+  (tool missing / explicit --registry ledger missing / --src directory
+  missing / --world missing for a real probe / --guard missing / --src with
+  zero candidates / injector scenario missing, canned not covering /
+  subprocess tool failure / unrecognized report schema / registry decode
+  failure).
 """
+# Extended contract (kept outside the five-field block per the annotation
+# standard 30-line header budget):
+# domain 4 pipeline detail: whole-tree canonical-order enumeration (the unclog
+# form), equidistant sampling at i*total//N indexes (N >= tree size means a
+# full census, no sampling), candidates TSV, probe_engine --fresh (a real probe
+# requires --world; --guard defaults to the ConstructiveWorld cpu_guard.sh
+# thermal wrapper — the same sanctioned default as toolchain_dyld_doctor,
+# overridable via --guard), the probe ledger, chain_graph --top 1 (always runs
+# for real), the red-account rate over stats.rc1 union stats.other, and a TOP
+# entry (the first top_order name with its n and self washability) when a
+# missing-library chain root exists.
+# canned rc semantics follow the real tools: dyld rc in {0,1,9} with a
+# parseable report is data (1/9 = a data-side failure); rc=2 / missing report /
+# malformed = tool failure 9; net/probe rc != 0 = tool failure 9.  A canned
+# probe ledger is written to the workdir verbatim and still feeds the real
+# chain_graph (real orchestration, never a puppet).
+# anchor canonical form: #R<seq>-<md5 first 8 lowercase hex> — the
+# registry_union.md5_8_of product form; ANCHOR_RE mirrors registry_union.py:81
+# 1:1; comment lines and blank lines are not audited (the key_of semantics);
+# anchorless body rows count into no_anchor and stay out of the compliance-rate
+# denominator; the non-form list caps at 20 with the total reported honestly.
+
 import argparse
 import hashlib
 import io
@@ -92,32 +129,32 @@ WEIGHTS = {"env": 40, "net": 20, "registry": 25, "clog": 15}
 HEALTHY_MIN = 90.0
 NON_FORM_CAP = 20
 
-# 锚形 1:1 承 registry_union.py:81 ANCHOR_RE；正典形＝#R<序>-<md5 前 8 位
-# 小写 hex（registry_union.md5_8_of=hexdigest()[:8] 产物形·:80 注记「重锚后
-# 恒为 #R<序号>-<md5 前 8 hex>」）
+# anchor shape mirrors registry_union.py:81 ANCHOR_RE 1:1; the canonical form is
+# #R<seq>-<first 8 lowercase hex of md5> (the registry_union.md5_8_of =
+# hexdigest()[:8] product form)
 ANCHOR_RE = re.compile(r"#(R\d+(?:-[0-9A-Fa-f]+)?)")
 CANON_ANCHOR_RE = re.compile(r"R\d+-[0-9a-f]{8}")
 
 ENV_REGISTRY = "CW_SET"
 REGISTRY_REL = ("ConstructiveWorld_Live", "order.txt")
-# sanctioned 判例机缺省（toolchain_dyld_doctor.py DEFAULT_GUARD 同款·任务书
-# 钦定路径·--guard 可覆盖）
+# the sanctioned-machine default (the same DEFAULT_GUARD as
+# toolchain_dyld_doctor.py; overridable via --guard)
 DEFAULT_GUARD = "/Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh"
 
 
 class UsageError(Exception):
-    """用法错/场景形坏（exit 2）。"""
+    """Usage error / malformed scenario shape (exit 2)."""
 
 
 class MissingInput(Exception):
-    """输入缺失（exit 9）。"""
+    """Missing input (exit 9)."""
 
 
 class ToolError(Exception):
-    """编排器件器红/报告形坏（exit 9·fail-loud 禁静默降级）。"""
+    """Orchestrated tool failure / malformed report (exit 9; fail-loud, silent degradation forbidden)."""
 
 
-# ---- 小件（确定性 helpers·unclog/wash_shape 同款本地副本·无包结构不互 import）--
+# ---- small pieces (deterministic helpers; local copies of the unclog/wash_shape forms; no package layout, no cross-imports) ----
 
 def md5_of(path):
     h = hashlib.md5()
@@ -141,14 +178,14 @@ def load_json(path, what):
         with io.open(path, "r", encoding="utf-8") as fh:
             return json.load(fh)
     except (ValueError, UnicodeDecodeError, OSError) as e:
-        raise ToolError("%s JSON 形坏: %s (%s)" % (what, path, e))
+        raise ToolError("%s JSON malformed: %s (%s)" % (what, path, e))
 
 
 def run_py(tool_path, cli):
-    """python3 -B <tool> <cli> 子进程单点（stdout+stderr 合流·unclog 同款）。
-    缺件→9。"""
+    """The python3 -B <tool> <cli> subprocess single point (stdout+stderr
+    merged; the unclog form).  Missing tool -> 9."""
     if not os.path.isfile(tool_path):
-        raise MissingInput("工具链件缺失: %s" % tool_path)
+        raise MissingInput("toolchain file missing: %s" % tool_path)
     p = subprocess.run([sys.executable, "-B", tool_path] + list(cli),
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
@@ -157,7 +194,7 @@ def run_py(tool_path, cli):
 
 
 def write_cands_tsv(path, pairs):
-    """候选清单 TSV（件名/md5 双列·probe_engine 必需列形制·unclog 同款）。"""
+    """Candidates TSV (name/md5 columns; the probe_engine-required column form; the unclog form).  KEEP (data face): the header row is probe_engine's required TSV vocabulary."""
     with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
         fh.write("件名\tmd5\n")
         for name, md5 in pairs:
@@ -165,8 +202,9 @@ def write_cands_tsv(path, pairs):
 
 
 def enumerate_tree(src):
-    """--src 全树枚举 *.v → [(件名(相对路径·/分隔·去 .v), md5)]（确定性·
-    双排序·unclog 同款）。"""
+    """Whole-tree enumeration of --src *.v -> [(name (relative path, /
+    separated, .v stripped), md5)] (deterministic, doubly sorted; the unclog
+    form)."""
     out = []
     for dirpath, dirnames, filenames in os.walk(src):
         dirnames.sort()
@@ -179,8 +217,10 @@ def enumerate_tree(src):
 
 
 def sample_pairs(pairs, n):
-    """确定性等距抽样：典序枚举上取 i*total//N 索引（span 长 total>n 必含
-    n 的倍数→索引严格递增不重复）；N≥total 时全量普查（不抽样）。"""
+    """Deterministic equidistant sampling: on the canonical-order enumeration
+    take the i*total//N indexes (for total>n the span length guarantees the
+    multiples exist -> strictly increasing, never repeated indexes); N>=total
+    means a full census (no sampling)."""
     total = len(pairs)
     if n >= total:
         return list(pairs)
@@ -193,48 +233,53 @@ def sample_pairs(pairs, n):
     return out
 
 
-# ---- 注入点：子进程调用层罐装（v37 离线可测纪律·wash_shape Injector 同款）----
+# ---- injection point: the subprocess call layer, canned (offline testability; the wash_shape Injector form) ----
 
 class Injector(object):
-    """--injector DIR：子进程调用层罐装（DIR/scenario.json·unclog 同款形）。
-    场景 JSON {引擎键: {"rc": int, "stdout": str, "report": dict}}；键集＝
-    dyld/net/probe；命中键的器件调用恒定返付 canned·不真 subprocess。canned
-    表须覆盖本次将发的全部器件调用（run() 预检·缺键 9——绝不静默走真器真
-    网·cw_sentinel 同律）。"""
+    """--injector DIR: canning the subprocess call layer (DIR/scenario.json;
+    the unclog form).  Scenario JSON {engine key: {"rc": int, "stdout": str,
+    "report": dict}}; key set = dyld/net/probe; a tool call whose key matches
+    always returns the canned response — no real subprocess.  The canned table
+    must cover every tool call this run will issue (checked up front in run();
+    a missing key -> 9 — it never silently falls through to the real tool on
+    the real network; the cw_sentinel rule)."""
 
     KEYS = ("dyld", "net", "probe")
 
     def __init__(self, dirpath):
         sj = os.path.join(dirpath, "scenario.json")
         if not os.path.isfile(sj):
-            raise MissingInput("injector 场景缺失: %s" % sj)
+            raise MissingInput("injector scenario missing: %s" % sj)
         try:
             with io.open(sj, "r", encoding="utf-8") as fh:
                 scen = json.load(fh)
         except Exception as e:
-            raise UsageError("injector 场景 JSON 畸形: %s (%s)" % (sj, e))
+            raise UsageError("injector scenario JSON malformed: %s (%s)" % (sj, e))
         if not isinstance(scen, dict):
-            raise UsageError("injector 场景须 dict: %s" % sj)
+            raise UsageError("injector scenario must be a dict: %s" % sj)
         bad = [k for k in scen if k not in self.KEYS]
         if bad:
-            raise UsageError("injector 场景键不识（须 %s）: %s"
-                             % (",".join(self.KEYS), sorted(bad)))
+            raise UsageError("unknown injector scenario key (need one of %s):"
+                             " %s" % (",".join(self.KEYS), sorted(bad)))
         for k, ent in sorted(scen.items()):
             rc = ent.get("rc") if isinstance(ent, dict) else None
             if (not isinstance(ent, dict)
                     or not isinstance(rc, int) or isinstance(rc, bool)
                     or not isinstance(ent.get("stdout", ""), str)
                     or not isinstance(ent.get("report", {}), dict)):
-                raise UsageError("injector 罐装项 %r 形坏（须 {rc:int, "
-                                 "stdout?:str, report?:dict}）: %r" % (k, ent))
+                raise UsageError("injector canned entry %r malformed (need"
+                                 " {rc:int, stdout?:str, report?:dict}): %r"
+                                 % (k, ent))
         self.scen = scen
 
     def require(self, keys):
-        """canned 全覆盖预检（缺键 9·防半罐装静默走真器真网）。"""
+        """Canned full-coverage precheck (a missing key -> 9; prevents a half-canned run from silently falling through to the real tool on the real network)."""
         miss = [k for k in keys if k not in self.scen]
         if miss:
-            raise MissingInput("injector canned 未覆盖 %s（canned 表须全覆盖"
-                               "将发的器件调用·绝不静默走真器真网）"
+            raise MissingInput("injector canned does not cover %s (the canned"
+                               " table must cover every tool call about to be"
+                               " issued; it never silently falls through to the"
+                               " real tool on the real network)"
                                % ",".join(miss))
 
     def take(self, key):
@@ -242,12 +287,14 @@ class Injector(object):
         return ent.get("rc", 0), ent.get("stdout", ""), ent.get("report")
 
 
-# ---- ①环境域 -----------------------------------------------------------------
+# ---- domain 1: env ----
 
 def domain_env(args, workdir, inj):
-    """①环境域：subprocess toolchain_dyld_doctor --json（worker 缺省探测器
-    内自决·--worker/--donor 可透传）。verdict healthy=100 分·余=0 分；
-    rc∈{0,1,9} 带报告＝数据（1/9 数据红）·rc=2/报告缺/形坏=器红 9。"""
+    """Domain 1 env: subprocess toolchain_dyld_doctor --json (the worker
+    default probe is decided inside that tool; --worker/--donor pass through).
+    verdict healthy scores 100, anything else 0; rc in {0,1,9} with a report is
+    data (1/9 = a data-side failure); rc=2 / missing report / malformed = tool
+    failure 9."""
     report_path = os.path.join(workdir, "dyld.json")
     if inj is not None:
         rc, out, rep = inj.take("dyld")
@@ -259,27 +306,27 @@ def domain_env(args, workdir, inj):
         if args.donor:
             cli += ["--donor", args.donor]
         rc, out = run_py(TOOL_DYLD, cli)
-        rep = load_json(report_path, "dyld 报告") \
+        rep = load_json(report_path, "dyld report") \
             if os.path.isfile(report_path) else None
     if rep is None:
-        raise ToolError("toolchain_dyld_doctor 器红 rc=%d（报告未落盘）: %s"
-                        % (rc, out[-300:]))
+        raise ToolError("toolchain_dyld_doctor tool failure rc=%d (no report"
+                        " written): %s" % (rc, out[-300:]))
     if rc not in (0, 1, 9):
-        raise ToolError("toolchain_dyld_doctor 器红 rc=%d: %s" % (rc, out[-300:]))
+        raise ToolError("toolchain_dyld_doctor tool failure rc=%d: %s" % (rc, out[-300:]))
     if not isinstance(rep, dict) or rep.get("schema") != SCHEMA_DYLD:
-        raise ToolError("dyld 报告 schema 不识: %r（期待 %s）"
+        raise ToolError("dyld report schema unrecognized: %r (expected %s)"
                         % (rep.get("schema") if isinstance(rep, dict) else rep,
                            SCHEMA_DYLD))
     verdict = rep.get("verdict")
     if verdict not in ("healthy", "missing-libs", "worker-missing"):
-        raise ToolError("dyld 报告 verdict 不识: %r" % (verdict,))
+        raise ToolError("dyld report verdict unrecognized: %r" % (verdict,))
     refs = rep.get("external_refs")
     if not isinstance(refs, list):
-        raise ToolError("dyld 报告 external_refs 形坏: %r" % (refs,))
+        raise ToolError("dyld report external_refs malformed: %r" % (refs,))
     for e in refs:
         if not isinstance(e, dict) or not isinstance(e.get("path"), str) \
                 or not isinstance(e.get("exists"), bool):
-            raise ToolError("dyld 报告 external_refs 项形坏: %r" % (e,))
+            raise ToolError("dyld report external_refs entry malformed: %r" % (e,))
     missing = [e["path"] for e in refs if not e["exists"]]
     return {"status": "ok", "weight": WEIGHTS["env"],
             "tool": "tools/toolchain_dyld_doctor.py", "rc": rc,
@@ -288,12 +335,13 @@ def domain_env(args, workdir, inj):
             "external_refs": len(refs), "missing_refs": missing}
 
 
-# ---- ②网络域 -----------------------------------------------------------------
+# ---- domain 2: net ----
 
 def domain_net(args, workdir, inj):
-    """②网络域：subprocess net_probe --rounds 1 --interval 0（缺省四端点·
-    --endpoints 可覆盖）。无 --stable-window 时 net_probe exit 0 仅＝探完成
-    ——可达性读报告 verdict 字段；score=可达率×100。"""
+    """Domain 2 net: subprocess net_probe --rounds 1 --interval 0 (the default
+    four endpoints; --endpoints overridable).  Without --stable-window,
+    net_probe exit 0 only means the probe completed — reachability is read
+    from the report's verdict field; score = reachability rate x 100."""
     report_path = os.path.join(workdir, "net.json")
     if inj is not None:
         rc, out, rep = inj.take("net")
@@ -303,32 +351,32 @@ def domain_net(args, workdir, inj):
         if args.endpoints:
             cli += ["--endpoints", args.endpoints]
         rc, out = run_py(TOOL_NET, cli)
-        rep = load_json(report_path, "net 报告") \
+        rep = load_json(report_path, "net report") \
             if os.path.isfile(report_path) else None
     if rc != 0:
-        raise ToolError("net_probe 器红 rc=%d: %s" % (rc, out[-300:]))
+        raise ToolError("net_probe tool failure rc=%d: %s" % (rc, out[-300:]))
     if not isinstance(rep, dict) or rep.get("schema") != SCHEMA_NET:
-        raise ToolError("net 报告 schema 不识: %r（期待 %s）"
+        raise ToolError("net report schema unrecognized: %r (expected %s)"
                         % (rep.get("schema") if isinstance(rep, dict) else rep,
                            SCHEMA_NET))
     verdict = rep.get("verdict")
     if verdict not in ("all-up", "partial", "all-down"):
-        raise ToolError("net 报告 verdict 不识: %r" % (verdict,))
+        raise ToolError("net report verdict unrecognized: %r" % (verdict,))
     rounds = rep.get("rounds")
     if not isinstance(rounds, list) or not rounds:
-        raise ToolError("net 报告 rounds 形坏: %r" % (rounds,))
+        raise ToolError("net report rounds malformed: %r" % (rounds,))
     entries = []
     for r in rounds:
         if not isinstance(r, dict) or not isinstance(r.get("endpoints"), list):
-            raise ToolError("net 报告轮形坏: %r" % (r,))
+            raise ToolError("net report round malformed: %r" % (r,))
         for e in r["endpoints"]:
             if not isinstance(e, dict) or not isinstance(e.get("url"), str) \
                     or not isinstance(e.get("ok"), bool):
-                raise ToolError("net 报告端点项形坏: %r" % (e,))
+                raise ToolError("net report endpoint entry malformed: %r" % (e,))
             entries.append(e)
     total = len(entries)
     if total == 0:
-        raise ToolError("net 报告零端点探针")
+        raise ToolError("net report probed zero endpoints")
     ups = sum(1 for e in entries if e["ok"])
     rate = float(ups) / total
     return {"status": "ok", "weight": WEIGHTS["net"],
@@ -338,37 +386,40 @@ def domain_net(args, workdir, inj):
             "down_endpoints": [e["url"] for e in entries if not e["ok"]]}
 
 
-# ---- ③注册域 -----------------------------------------------------------------
+# ---- domain 3: registry ----
 
 def resolve_registry(args):
-    """注册册三择：--registry 显传（缺册 fail-loud 9·显传输入禁静默 skip）
-    > env CW_SET 探测（缺册如实 skip）> 全无 skip。
-    → (path|None, source|None, skip_reason|None)。"""
+    """Registry ledger three-way resolution: explicit --registry (a missing
+    ledger fails loud 9; an explicitly given input is never silently skipped)
+    > env CW_SET probe (a missing ledger skips honestly) > none skips.
+    -> (path|None, source|None, skip_reason|None)."""
     if args.registry:
         if not os.path.isfile(args.registry):
-            raise MissingInput("--registry 显传册缺失: %s" % args.registry)
+            raise MissingInput("the explicit --registry ledger is missing: %s" % args.registry)
         return args.registry, "flag", None
     cw = os.environ.get(ENV_REGISTRY)
     if cw:
         cand = os.path.join(cw, *REGISTRY_REL)
         if os.path.isfile(cand):
             return cand, "CW_SET", None
-        return None, None, ("env %s=%s 下缺册（%s 不在盘）"
-                            % (ENV_REGISTRY, cw, "/".join(REGISTRY_REL)))
-    return None, None, "--registry 未显传且 env %s 未设" % ENV_REGISTRY
+        return None, None, ("under env %s=%s the ledger is missing (%s not on"
+                            " disk)" % (ENV_REGISTRY, cw, "/".join(REGISTRY_REL)))
+    return None, None, "--registry not given and env %s not set" % ENV_REGISTRY
 
 
 def audit_registry(path):
-    """册锚正典形审计（纯读零子进程）：非空非注释行（registry_union key_of
-    同款语义——首 # 前空＝注释/空行跳过）上取 ANCHOR_RE 首锚（anchor_of 同款
-    逐行首中）→ 正典形 #R<序>-<md5_8> 全match判定。非形清单帽 NON_FORM_CAP
-    条·总数如实。"""
+    """Ledger anchor canonical-form audit (pure reads, zero subprocesses): on
+    non-empty non-comment lines (the registry_union key_of semantics — blank
+    before the first # means comment/blank, skipped) take the first ANCHOR_RE
+    match (the anchor_of first-hit-per-line form) -> a fullmatch judgment of
+    the canonical form #R<seq>-<md5_8>.  The non-form list caps at NON_FORM_CAP
+    entries; the total is reported honestly."""
     try:
         with io.open(path, "rb") as fh:
             raw = fh.read()
         text = raw.decode("utf-8")
     except (OSError, UnicodeDecodeError) as e:
-        raise MissingInput("注册册不可读/解码失败: %s (%s)" % (path, e))
+        raise MissingInput("registry ledger unreadable / decode failure: %s (%s)" % (path, e))
     lines = [ln.rstrip("\r\n").strip() for ln in text.split("\n")]
     while lines and lines[-1] == "":
         lines.pop()
@@ -378,7 +429,7 @@ def audit_registry(path):
         if not ln:
             continue
         if not ln.split("#", 1)[0].strip():
-            continue          # 注释行（首 # 前空·key_of 同款语义·非表体）
+            continue          # comment line (blank before the first #; the key_of semantics; not a body row)
         scanned += 1
         m = ANCHOR_RE.search(ln)
         if m is None:
@@ -399,8 +450,9 @@ def audit_registry(path):
 
 
 def domain_registry(reg_path, reg_source, skip_reason):
-    """③注册域：锚正典形审计→合规率×100。anchored==0（册内零锚）＝rate 0
-    如实 non-canonical；skip 域权重剔除归一。"""
+    """Domain 3 registry: the anchor canonical-form audit -> compliance rate
+    x 100.  anchored==0 (zero anchors in the ledger) = rate 0, honestly
+    non-canonical; a skipped domain drops its weight from the sum."""
     if reg_path is None:
         return {"status": "skip", "weight": WEIGHTS["registry"],
                 "reason": skip_reason}
@@ -420,39 +472,41 @@ def domain_registry(reg_path, reg_source, skip_reason):
     return out
 
 
-# ---- ④堵账域 -----------------------------------------------------------------
+# ---- domain 4: clog ----
 
 def domain_clog(args, workdir, inj):
-    """④堵账域：--src 且 --sample>0 才活（缺省 0=不抽样→如实 skip）。
-    全树典序枚举→等距抽样→候选 TSV→probe_engine --fresh（真探必 --world·
-    --guard 温控）→台账→chain_graph --top 1 恒真跑→红账率→TOP 一名。"""
+    """Domain 4 clog: active only with --src and --sample>0 (default 0 = no
+    sampling -> skips honestly).  Whole-tree canonical-order enumeration ->
+    equidistant sampling -> candidates TSV -> probe_engine --fresh (a real
+    probe requires --world; --guard thermal wrapper) -> ledger -> chain_graph
+    --top 1 always runs -> the red-account rate -> one TOP entry."""
     if not args.src:
         return {"status": "skip", "weight": WEIGHTS["clog"],
-                "reason": "--src 未给（堵账域缺省跳过）"}
+                "reason": "--src not given (the clog domain is skipped by default)"}
     if args.sample <= 0:
         return {"status": "skip", "weight": WEIGHTS["clog"],
-                "reason": "--src 在册但 --sample 0（缺省不抽样·真探须 "
-                          "--sample N>0）"}
+                "reason": "--src given but --sample 0 (no sampling by"
+                          " default; a real probe needs --sample N>0)"}
     ledger_path = os.path.join(workdir, "probe.json")
     graph_path = os.path.join(workdir, "chain.json")
     source = "injector" if inj is not None else "probe"
     out = ""
     if inj is not None:
         rc, out, rep = inj.take("probe")
-        dump_json(rep, ledger_path)   # canned 台账原样落 workdir·仍喂真 chain_graph
+        dump_json(rep, ledger_path)   # the canned ledger lands in the workdir verbatim; it still feeds the real chain_graph
     else:
         pairs = enumerate_tree(args.src)
         if not pairs:
-            raise MissingInput("--src 全树枚举零 .v 候选: %s" % args.src)
+            raise MissingInput("--src whole-tree enumeration found zero .v candidates: %s" % args.src)
         pairs = sample_pairs(pairs, args.sample)
         tsv = os.path.join(workdir, "cands.tsv")
         write_cands_tsv(tsv, pairs)
-        print("堵账候选面: 全树枚举抽样 %d 件（--sample %d）-> %s"
-              % (len(pairs), args.sample, tsv))
+        print("clog candidate face: whole-tree enumeration sampled %d files"
+              " (--sample %d) -> %s" % (len(pairs), args.sample, tsv))
         if not args.world:
-            raise MissingInput("--world 必给（堵账真探针；离线请 --injector）")
+            raise MissingInput("--world is required (the real clog probe; for offline use --injector)")
         if not os.path.isfile(args.guard):
-            raise MissingInput("--guard 缺失: %s" % args.guard)
+            raise MissingInput("--guard missing: %s" % args.guard)
         cli = ["--candidates", tsv, "--src", args.src,
                "--world", args.world, "--out", ledger_path,
                "--logdir", os.path.join(workdir, "probe-logs"),
@@ -463,29 +517,31 @@ def domain_clog(args, workdir, inj):
             cli += ["--rocq-cmd", args.rocq_cmd]
         rc, out = run_py(TOOL_PROBE, cli)
     if rc != 0:
-        raise ToolError("probe_engine 器红 rc=%d: %s" % (rc, out[-300:]))
-    ledger = load_json(ledger_path, "probe 台账")
+        raise ToolError("probe_engine tool failure rc=%d: %s" % (rc, out[-300:]))
+    ledger = load_json(ledger_path, "probe ledger")
     if not isinstance(ledger, dict) or ledger.get("schema") != SCHEMA_PROBE \
             or not isinstance(ledger.get("records"), dict):
-        raise ToolError("probe 台账 schema/形不识: %r（期待 %s＋records dict）"
+        raise ToolError("probe ledger schema/shape unrecognized: %r (expected"
+                        " %s plus a records dict)"
                         % (ledger.get("schema")
                            if isinstance(ledger, dict) else ledger,
                            SCHEMA_PROBE))
-    # 链根图恒真跑（纯 stdlib·零编译零网络·真编排非傀儡）·TOP 一名
+    # the chain-root graph always runs for real (pure stdlib; zero compiles, zero network; real orchestration, never a puppet); one TOP entry
     rc2, out2 = run_py(TOOL_CHAIN, [ledger_path, "--json", graph_path,
                                     "--top", "1"])
     if rc2 != 0:
-        raise ToolError("chain_graph 器红 rc=%d: %s" % (rc2, out2[-300:]))
-    graph = load_json(graph_path, "链根图")
+        raise ToolError("chain_graph tool failure rc=%d: %s" % (rc2, out2[-300:]))
+    graph = load_json(graph_path, "chain-root graph")
     if not isinstance(graph, dict) or graph.get("schema") != SCHEMA_CHAIN:
-        raise ToolError("链根图 schema 不识: %r（期待 %s）"
+        raise ToolError("chain-root graph schema unrecognized: %r (expected"
+                        " %s)"
                         % (graph.get("schema")
                            if isinstance(graph, dict) else graph,
                            SCHEMA_CHAIN))
     stats = graph.get("stats")
     if not isinstance(stats, dict) or not isinstance(stats.get("merged_total"),
                                                      int):
-        raise ToolError("链根图 stats 形坏: %r" % (stats,))
+        raise ToolError("chain-root graph stats malformed: %r" % (stats,))
     merged = stats["merged_total"]
     red = sorted(set(stats.get("rc1") or []) | set(stats.get("other") or []))
     red_rate = (float(len(red)) / merged) if merged else 0.0
@@ -504,11 +560,13 @@ def domain_clog(args, workdir, inj):
             "red_files": red, "chain_top1": top1}
 
 
-# ---- 聚合：综合分＋verdict＋advice ---------------------------------------------
+# ---- aggregation: overall score + verdict + advice ----
 
 def compute_score(domains):
-    """综合分＝Σ(域分×权重)/Σ(在域权重)（skip 域权重剔除归一·round 2 位）。
-    env/net 恒跑→分母 ≥60；全 skip 为内部不变量炸（fail-loud）。"""
+    """Overall score = sum(domain score x weight) / sum(active weights)
+    (skipped domains drop their weight; round 2 places).  env/net always run ->
+    the denominator >= 60; everything skipped is an internal-invariant
+    explosion (fail-loud)."""
     num = 0.0
     den = 0
     for d in DOMAIN_ORDER:
@@ -518,67 +576,74 @@ def compute_score(domains):
         num += dom["score"] * WEIGHTS[d]
         den += WEIGHTS[d]
     if den <= 0:
-        raise UsageError("内部不变量炸：四域全 skip（env/net 恒跑不应发生）")
+        raise UsageError("internal invariant explosion: all four domains skipped (env/net always run; this should not happen)")
     return round(num / den, 2), den
 
 
 def advice_of(domains):
-    """advice 清单：每非绿域一条处置建议（固定域序·指向对应器·skip 域指
-    开关）。全绿→空表。"""
+    """The advice list: one disposition suggestion per non-passing domain
+    (fixed domain order; points at the corresponding tool; a skipped domain
+    points at its switch).  All passing -> an empty list."""
     out = []
     env = domains["env"]
     if env["status"] == "ok" and env["verdict"] != "healthy":
         out.append({"domain": "env",
                     "tool": "tools/toolchain_dyld_doctor.py",
-                    "text": "环境域 verdict=%s（外部硬引用缺 %d 条）——运行 "
-                            "python3 tools/toolchain_dyld_doctor.py "
-                            "[--donor DIR] 溯源缺失库并按 restore 建议手工"
-                            "还原（只建议·禁代执行）"
+                    "text": "env domain verdict=%s (%d external hard"
+                            " references missing) — run python3"
+                            " tools/toolchain_dyld_doctor.py [--donor DIR] to"
+                            " trace the missing libraries and restore them by"
+                            " hand per the restore suggestions (advice only,"
+                            " never auto-executed)"
                             % (env["verdict"], len(env["missing_refs"]))})
     net = domains["net"]
     if net["status"] == "ok" and net["verdict"] != "all-up":
         out.append({"domain": "net", "tool": "tools/net_probe.py",
-                    "text": "网络域 %s（%d/%d up）——发射前运行 python3 "
-                            "tools/net_probe.py --rounds 2 --stable-window "
-                            "取双探稳窗"
+                    "text": "net domain %s (%d/%d up) — before initiating a"
+                            " run, take a two-probe stable window with python3"
+                            " tools/net_probe.py --rounds 2 --stable-window"
                             % (net["verdict"], net["up"], net["total"])})
     reg = domains["registry"]
     if reg["status"] == "skip":
         out.append({"domain": "registry", "tool": "--registry",
-                    "text": "注册域 skip（%s）——显传 --registry PATH（如 "
-                            "$CW_SET/ConstructiveWorld_Live/order.txt）后"
-                            "重跑体检" % reg["reason"]})
+                    "text": "registry domain skipped (%s) — pass --registry"
+                            " PATH (e.g."
+                            " $CW_SET/ConstructiveWorld_Live/order.txt) and"
+                            " re-run the check" % reg["reason"]})
     elif reg["verdict"] != "healthy":
         out.append({"domain": "registry", "tool": "tools/registry_union.py",
-                    "text": "注册域锚形合规率 %.4f（非形 %d 条·帽 %d 已列）"
-                            "——运行 python3 tools/registry_union.py "
-                            "--reanchor <件名> --anchor-src <DIR> 重锚 "
-                            "#R<序>-<md5_8> 正典形"
+                    "text": "registry domain anchor-form compliance rate"
+                            " %.4f (%d non-form entries, cap %d listed) —"
+                            " re-anchor to the #R<seq>-<md5_8> canonical form"
+                            " with python3 tools/registry_union.py --reanchor"
+                            " <name> --anchor-src <DIR>"
                             % (reg["rate"], reg["non_form_total"],
                                NON_FORM_CAP)})
     clog = domains["clog"]
     if clog["status"] == "skip":
         out.append({"domain": "clog", "tool": "--src",
-                    "text": "堵账域 skip（%s）——显传 --src DIR --sample N "
-                            "真探（受 cpu_guard 温控）后重跑体检"
+                    "text": "clog domain skipped (%s) — pass --src DIR"
+                            " --sample N for a real probe (under the cpu_guard"
+                            " thermal wrapper) and re-run the check"
                             % clog["reason"]})
     elif clog["verdict"] != "healthy":
         top1 = clog.get("chain_top1")
         top_txt = ("TOP1=%s(n=%d)" % (top1["lib"], top1["n"])) if top1 \
-            else "TOP1=无（红无缺库链根）"
+            else "TOP1=none (no failing file has a missing-library chain root)"
         out.append({"domain": "clog", "tool": "tools/unclog.py",
-                    "text": "堵账域红账率 %.4f（红 %d/%d·链根 %s）——运行 "
-                            "python3 tools/unclog.py --src <DIR> "
-                            "--world <DIR> 闭环疏通"
+                    "text": "clog domain red-account rate %.4f (%d failing"
+                            " of %d; chain root %s) — clear the blockages with"
+                            " the python3 tools/unclog.py --src <DIR>"
+                            " --world <DIR> closed loop"
                             % (clog["red_rate"], clog["red"],
                                clog["probed"], top_txt)})
     return out
 
 
-# ---- 总控 ---------------------------------------------------------------------
+# ---- main flow ----
 
 def args_summary(args, reg_source):
-    """args 摘要（路径一律 basename——绝对路径不进 report·确定性纪律）。"""
+    """The args summary (always basenames — absolute paths never enter the report; the determinism discipline)."""
     return {"sample": args.sample,
             "src": basename_of(args.src),
             "world": basename_of(args.world) if args.world else None,
@@ -592,32 +657,34 @@ def args_summary(args, reg_source):
 
 
 def run(args):
-    """总控：值校验（2）→器件先验（9）→注册册三择→canned 全覆盖预检→
-    四域逐域跑→综合分→verdict→advice→report（0=healthy/1=degraded）。"""
+    """Main flow: value validation (2) -> tool presence precheck (9) ->
+    registry three-way resolution -> canned full-coverage precheck -> the four
+    domains one by one -> overall score -> verdict -> advice -> report
+    (0 = healthy / 1 = degraded)."""
     # 值校验（2）
     if args.sample < 0:
-        raise UsageError("--sample 须≥0（0=不抽样）实测 %d" % args.sample)
+        raise UsageError("--sample must be >= 0 (0 = no sampling), got %d" % args.sample)
     if args.timeout < 1:
-        raise UsageError("--timeout 须≥1 实测 %d" % args.timeout)
+        raise UsageError("--timeout must be >= 1, got %d" % args.timeout)
     if args.guard_maxwait < 1:
-        raise UsageError("--guard-maxwait 须≥1 实测 %d" % args.guard_maxwait)
-    # 器件先验（9·编排零新引擎——四器在位性先验）
+        raise UsageError("--guard-maxwait must be >= 1, got %d" % args.guard_maxwait)
+    # tool presence precheck (9; orchestration adds no new engine — the four tools must be in place)
     for label, p in (("toolchain_dyld_doctor", TOOL_DYLD),
                      ("net_probe", TOOL_NET),
                      ("probe_engine", TOOL_PROBE),
                      ("chain_graph", TOOL_CHAIN)):
         if not os.path.isfile(p):
-            raise MissingInput("器件缺失: %s (%s)" % (label, p))
+            raise MissingInput("tool missing: %s (%s)" % (label, p))
     if args.src is not None and not os.path.isdir(args.src):
-        raise MissingInput("--src 目录缺失: %s" % args.src)
+        raise MissingInput("--src directory missing: %s" % args.src)
     if args.world is not None and not os.path.isdir(args.world):
-        raise MissingInput("--world 目录缺失: %s" % args.world)
+        raise MissingInput("--world directory missing: %s" % args.world)
     reg_path, reg_source, reg_skip = resolve_registry(args)
     clog_active = bool(args.src) and args.sample > 0
     inj = Injector(args.injector) if args.injector else None
     if inj is not None:
         inj.require(["dyld", "net"] + (["probe"] if clog_active else []))
-        print("injector: %s（canned %s·子进程调用层罐装不真 subprocess）"
+        print("injector: %s (canned %s; the subprocess call layer is canned, no real subprocess)"
               % (args.injector, ",".join(sorted(inj.scen))))
     # workdir
     if args.workdir:
@@ -641,13 +708,13 @@ def run(args):
               "active_weight": active_w, "domains": domains,
               "advice": advice, "args": args_summary(args, reg_source)}
 
-    # stdout 响亮（确定性域序）
-    print("=== CW-DOCTOR（综合体检·四域聚合）===")
+    # loud stdout (deterministic domain order)
+    print("=== CW-DOCTOR (aggregate health check, four-domain rollup) ===")
     for d in DOMAIN_ORDER:
         dom = domains[d]
         if dom["status"] == "skip":
-            print("[%-8s] skip  weight=%d（%s）" % (d, dom["weight"],
-                                                    dom["reason"]))
+            print("[%-8s] skip  weight=%d (%s)" % (d, dom["weight"],
+                                                   dom["reason"]))
             continue
         print("[%-8s] ok    weight=%d verdict=%s score=%s"
               % (d, dom["weight"], dom["verdict"], dom["score"]))
@@ -671,17 +738,17 @@ def run(args):
                   % (dom["source"], dom["probed"], dom["red"],
                      dom["red_rate"],
                      ("%s(n=%d)" % (top1["lib"], top1["n"])) if top1
-                     else "无"))
-    print("--- 评分 ---")
+                     else "none"))
+    print("--- scoring ---")
     print("active weight %d/%d · SCORE=%s · verdict: %s"
           % (active_w, sum(WEIGHTS.values()), score, verdict))
     if advice:
-        print("--- advice（每非绿域一条）---")
+        print("--- advice (one entry per non-passing domain) ---")
         for a in advice:
             print("  [%s] %s\n    -> %s" % (a["domain"], a["tool"],
                                             a["text"]))
     else:
-        print("--- advice：全绿零处置 ---")
+        print("--- advice: all passing, no dispositions ---")
     if args.json:
         dump_json(report, args.json)
         print("json -> %s" % args.json)
@@ -689,23 +756,32 @@ def run(args):
     return 0 if verdict == "healthy" else 1
 
 
-# ---- --selftest（内嵌冻结向量组·tmp fixture 树·全 subprocess 层 canned 注入）----
+# ---- --selftest (frozen vectors; tmp fixture tree; everything canned at the subprocess layer) ----
 
 def selftest():
-    """矢量组（tmp fixture＋injector 子进程调用层罐装·零真 otool 零真网络
-    零真编译·chain_graph/注册审计真跑——纯 stdlib 零编译零网络）：
-    V1 四域全绿 100 分（exit 0·advice 空·active weight 100）
-    V2 环境红降分（missing-libs→env 0 分→60.0·degraded·advice 指 dyld）
-    V3 注册缺册 skip 归一（CW_SET 剥离＋net partial→86.67·active weight 75·
-       advice 含 net＋registry 两条）＋CW_SET 缺册如实 skip
-    V4 堵账 TOP 注入（canned 红账 3/4→clog 25.0→88.75·chain TOP1=A(n=2)·
-       advice 指 unclog）
-    V5 advice 生成（V2/V3/V4 逐条断言·全绿空表已在 V1）
-    V6 JSON 幂等（同场景两跑异 workdir 字节恒同）
-    V7 CLI 四码（--help 0·--bogus 2·--sample 负 2·--registry 缺册 9·--src
-       缺目录 9·--injector 场景缺 9·场景键不识 2·canned 未覆盖 9）
-    V8 注册审计单元（混形 rate 2/6·注释/空行/无锚行计数·帽 25→20·7/8/9 位
-       指纹与大写 hex 皆非形·零锚册·CW_SET 正探 source=CW_SET）
+    """Vectors (tmp fixtures + injector subprocess-layer canning; zero real
+    otool, zero real network, zero real compiles; chain_graph and the registry
+    audit run for real — pure stdlib):
+    V1  four domains all green, score 100 (exit 0; empty advice; active
+        weight 100)
+    V2  env failing lowers the score (missing-libs -> env 0 -> 60.0;
+        degraded; advice points at dyld)
+    V3  registry ledger-missing skip renormalizes (CW_SET stripped + net
+        partial -> 86.67; active weight 75; advice carries the net and
+        registry entries) plus the CW_SET missing-ledger honest skip
+    V4  clog TOP injection (canned red account 3/4 -> clog 25.0 -> 88.75;
+        chain TOP1=A(n=2); advice points at unclog)
+    V5  advice generation (asserted entry by entry for V2/V3/V4; the
+        all-green empty list already covered in V1)
+    V6  JSON idempotence (same scenario, two runs, different workdirs,
+        byte-identical)
+    V7  CLI four codes (--help 0; --bogus 2; negative --sample 2; missing
+        --registry ledger 9; missing --src directory 9; missing --injector
+        scenario 9; unknown scenario key 2; canned not covering 9)
+    V8  registry-audit unit (mixed forms rate 2/6; comment/blank/anchorless
+        line counts; cap 25 -> 20; 7/8/9-digit fingerprints and uppercase hex
+        are all non-form; a zero-anchor ledger; the CW_SET positive probe with
+        source=CW_SET)
     """
     tmp = tempfile.mkdtemp(prefix="rocqwash_cwdoctor_self_")
     here = os.path.dirname(os.path.abspath(__file__))
@@ -756,7 +832,7 @@ def selftest():
                 "verdict": "RED-MISSING_LIB", "red_count": None,
                 "md5_match": None}
 
-    # canned 报告（冻结向量·路径全假·零机器依赖）
+    # canned reports (frozen vectors; all paths fake; zero machine dependency)
     DYLD_OK = {"schema": SCHEMA_DYLD, "worker": "/fake/rocqworker",
                "external_refs": [
                    {"path": "/fake/Live/toolchain/gmp/lib/libgmp.10.dylib",
@@ -793,7 +869,7 @@ def selftest():
                 "records": records}
 
     PROBE_GREEN = probe_rep({"A": rec0("A"), "B": rec0("B")})
-    # 红账向量：A 可洗链根·B/C 缺 A·D 缺 B → TOP1=A(n=2)·红 3/4
+    # red-account vector: A is a washable chain root; B/C miss A; D misses B -> TOP1=A(n=2); 3/4 failing
     PROBE_RED = probe_rep({"A": rec0("A"), "B": rec1("B", "A"),
                            "C": rec1("C", "A"), "D": rec1("D", "B")})
 
@@ -808,27 +884,27 @@ def selftest():
 
     REG_GREEN = make_registry(
         os.path.join(tmp, "reg_green.txt"),
-        ["# 正典册 fixture（全 #R<序>-<md5_8> 形）",
+        ["# canonical-ledger fixture (all #R<seq>-<md5_8> form)",
          "S01_BaseRing.v#R0-d66910ab",
          "S02_Cauchy.v#R1-0123abcd",
          "S03_QExp.v#R2-deadbeef",
          ""])
     REG_MIX = make_registry(
         os.path.join(tmp, "reg_mix.txt"),
-        ["A.v#R0-d66910ab",            # 正典
-         "B.v#R1-0123abcd",            # 正典
-         "C.v#R2",                     # 非形·裸序号
-         "D.v#R3-abcdef",              # 非形·5 位
-         "E.v#R4-D66910AB",            # 非形·大写 8 位（md5_8 恒小写）
-         "F.v#R5-d66910abc",           # 非形·9 位
-         "G.v",                        # 表体无锚→no_anchor
-         "# 注释 #R9-d66910ab",         # 注释行→不审计
-         ""])                          # 空行→不审计
+        ["A.v#R0-d66910ab",            # canonical
+         "B.v#R1-0123abcd",            # canonical
+         "C.v#R2",                     # non-form, bare seq
+         "D.v#R3-abcdef",              # non-form, 5 digits
+         "E.v#R4-D66910AB",            # non-form, uppercase 8 (md5_8 is always lowercase)
+         "F.v#R5-d66910abc",           # non-form, 9 digits
+         "G.v",                        # anchorless body row -> no_anchor
+         "# comment #R9-d66910ab",      # comment line -> not audited
+         ""])                          # blank line -> not audited
     src_empty = os.path.join(tmp, "src_empty")
     os.makedirs(src_empty)
 
     try:
-        # ---- V1 四域全绿 100 分 ----
+        # ---- V1 four domains all green, score 100 ----
         j1 = os.path.join(tmp, "v1.json")
         wd1 = os.path.join(tmp, "wd_v1a")
         p = run(["--json", j1, "--workdir", wd1, "--registry", REG_GREEN,
@@ -851,10 +927,10 @@ def selftest():
             doms["clog"]["chain_top1"] is None, doms["clog"]
         assert rep["advice"] == [], rep["advice"]
         assert "SCORE=100.0" in p.stdout, p.stdout[-400:]
-        # 域名固定四键（确定性形制）
+        # the fixed four domain keys (deterministic shape)
         assert sorted(doms) == ["clog", "env", "net", "registry"], sorted(doms)
 
-        # ---- V2 环境红降分（0×40 → 60.0·degraded·advice 指 dyld）----
+        # ---- V2 env failing lowers the score (0x40 -> 60.0; degraded; advice points at dyld) ----
         j2 = os.path.join(tmp, "v2.json")
         p = run(["--json", j2, "--registry", REG_GREEN, "--src", src_empty,
                  "--sample", "2", "--injector", SCEN_ENVRED])
@@ -870,7 +946,7 @@ def selftest():
             rep["advice"]
         assert "toolchain_dyld_doctor" in p.stdout, p.stdout[-400:]
 
-        # ---- V3 注册缺册 skip 归一（CW_SET 剥离·net partial→86.67）----
+        # ---- V3 registry ledger-missing skip renormalizes (CW_SET stripped; net partial -> 86.67) ----
         j3 = os.path.join(tmp, "v3.json")
         p = run(["--json", j3, "--src", src_empty, "--sample", "2",
                  "--injector", SCEN_NETPART])
@@ -884,7 +960,7 @@ def selftest():
             rep["domains"]["net"]["score"] == 50.0, rep["domains"]["net"]
         assert [a["domain"] for a in rep["advice"]] == ["net", "registry"], \
             rep["advice"]
-        # CW_SET 设而缺册→如实 skip（reason 含「缺册」）
+        # CW_SET set but the ledger missing -> skips honestly (the reason carries "missing")
         cw_empty = os.path.join(tmp, "cwset_empty")
         os.makedirs(cw_empty)
         j3b = os.path.join(tmp, "v3b.json")
@@ -893,9 +969,9 @@ def selftest():
         assert p.returncode == 0, p.stdout[-800:]
         rep = json.loads(io.open(j3b, encoding="utf-8").read())
         reg = rep["domains"]["registry"]
-        assert reg["status"] == "skip" and "缺册" in reg["reason"], reg
+        assert reg["status"] == "skip" and "missing" in reg["reason"], reg
 
-        # ---- V4 堵账 TOP 注入（红 3/4→clog 25.0→88.75·TOP1=A）----
+        # ---- V4 clog TOP injection (3/4 failing -> clog 25.0 -> 88.75; TOP1=A) ----
         j4 = os.path.join(tmp, "v4.json")
         p = run(["--json", j4, "--registry", REG_GREEN, "--src", src_empty,
                  "--sample", "2", "--injector", SCEN_CLOGRED])
@@ -914,7 +990,7 @@ def selftest():
         assert len(adv) == 1 and adv[0]["tool"] == "tools/unclog.py" and \
             "TOP1=A(n=2)" in adv[0]["text"], rep["advice"]
 
-        # ---- V6 JSON 幂等：同场景两跑异 workdir 字节恒同 ----
+        # ---- V6 JSON idempotence: same scenario, two runs, different workdirs, byte-identical ----
         j6a = os.path.join(tmp, "v6a.json")
         j6b = os.path.join(tmp, "v6b.json")
         p = run(["--json", j6a, "--workdir", os.path.join(tmp, "wd6a"),
@@ -927,35 +1003,35 @@ def selftest():
         assert p.returncode == 0, p.stdout[-400:]
         ba = io.open(j6a, "rb").read()
         bb = io.open(j6b, "rb").read()
-        assert ba == bb, "json 字节漂移＝违例"
+        assert ba == bb, "json byte drift = violation"
         rep = json.loads(ba.decode("utf-8"))
         assert rep["schema"] == SCHEMA, rep["schema"]
 
-        # ---- V7 CLI 四码 ----
+        # ---- V7 CLI four codes ----
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag should rc=2, got %d" % p.returncode
         p = run(["--sample", "-1"])
-        assert p.returncode == 2, "--sample 负应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "negative --sample should rc=2, got %d" % p.returncode
         p = run(["--registry", os.path.join(tmp, "nope.txt")])
-        assert p.returncode == 9, "显传缺册应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "explicit missing ledger should rc=9, got %d" % p.returncode
         p = run(["--src", os.path.join(tmp, "no_dir")])
-        assert p.returncode == 9, "--src 缺目录应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "missing --src directory should rc=9, got %d" % p.returncode
         p = run(["--injector", os.path.join(tmp, "no_inj")])
-        assert p.returncode == 9, "injector 场景缺应 rc=9 实测 %d" \
+        assert p.returncode == 9, "missing injector scenario should rc=9, got %d" \
             % p.returncode
         bad_scen = os.path.join(tmp, "inj_bad")
         wjson(os.path.join(bad_scen, "scenario.json"), {"bogus_key": {}})
         p = run(["--injector", bad_scen])
-        assert p.returncode == 2, "场景键不识应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown scenario key should rc=2, got %d" % p.returncode
         half_scen = os.path.join(tmp, "inj_half")
         wjson(os.path.join(half_scen, "scenario.json"),
               {"dyld": {"rc": 0, "report": DYLD_OK}})
         p = run(["--injector", half_scen])
-        assert p.returncode == 9, "canned 未覆盖应 rc=9 实测 %d" \
+        assert p.returncode == 9, "canned not covering should rc=9, got %d" \
             % p.returncode
-        # --src 在册而 --sample 0（缺省不抽样）→堵账域如实 skip 不真探
+        # --src given but --sample 0 (no sampling by default) -> the clog domain skips honestly, no real probe
         j7 = os.path.join(tmp, "v7.json")
         p = run(["--json", j7, "--src", src_empty, "--injector", SCEN_OK])
         assert p.returncode == 0, p.stdout[-400:]
@@ -964,7 +1040,7 @@ def selftest():
             "--sample 0" in rep["domains"]["clog"]["reason"], \
             rep["domains"]["clog"]
 
-        # ---- V8 注册审计单元 ----
+        # ---- V8 registry-audit unit ----
         st = audit_registry(REG_MIX)
         assert st["lines_scanned"] == 7 and st["anchored"] == 6 and \
             st["canonical"] == 2, st
@@ -972,20 +1048,20 @@ def selftest():
         assert st["no_anchor"] == 1 and st["non_form_total"] == 4, st
         assert [e["anchor"] for e in st["non_form"]] == \
             ["#R2", "#R3-abcdef", "#R4-D66910AB", "#R5-d66910abc"], st
-        # 帽 20：25 条非形→清单 20·总数 25
+        # cap 20: 25 non-form rows -> the list holds 20, the total reports 25
         cap_lines = ["X%d.v#R%d" % (i, i) for i in range(25)]
         cap_path = make_registry(os.path.join(tmp, "reg_cap.txt"), cap_lines)
         st = audit_registry(cap_path)
         assert st["non_form_total"] == 25 and len(st["non_form"]) == 20, \
             (st["non_form_total"], len(st["non_form"]))
-        # 零锚册→rate 0·non-canonical
+        # zero-anchor ledger -> rate 0, non-canonical
         z_path = make_registry(os.path.join(tmp, "reg_noanchor.txt"),
                                ["A.v", "B.v"])
         st = audit_registry(z_path)
         assert st["anchored"] == 0 and st["rate"] == 0.0, st
         dom = domain_registry(z_path, "flag", None)
         assert dom["verdict"] == "non-canonical" and dom["score"] == 0.0, dom
-        # CW_SET 正探：册在 CW_SET/ConstructiveWorld_Live/order.txt
+        # CW_SET positive probe: the ledger at CW_SET/ConstructiveWorld_Live/order.txt
         cw_ok = os.path.join(tmp, "cwset_ok")
         make_registry(os.path.join(cw_ok, "ConstructiveWorld_Live",
                                    "order.txt"),
@@ -1000,10 +1076,13 @@ def selftest():
             reg["verdict"] == "healthy" and reg["anchored"] == 2, reg
         assert rep["args"]["registry_source"] == "CW_SET", rep["args"]
 
-        print("CW-DOCTOR-SELFTEST PASS: 四域全绿100/环境红降60/注册skip归一"
-              "86.67＋CW_SET缺册/堵账TOP注入88.75/advice 生成/JSON 幂等字节"
-              "恒同/CLI 四码＋罐装全覆盖/注册审计单元（混形2of6·帽20·零锚·"
-              "CW_SET 正探） 九节全过")
+        print("CW-DOCTOR-SELFTEST PASS: four domains all green 100 / env-red"
+              " down to 60 / registry skip renormalized 86.67 + the CW_SET"
+              " missing ledger / clog TOP injection 88.75 / advice generation /"
+              " JSON idempotence byte-identical / CLI four codes + canned full"
+              " coverage / the registry-audit unit (mixed forms 2of6, cap 20,"
+              " zero anchors, the CW_SET positive probe) — all eight vectors"
+              " pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -1019,47 +1098,62 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="综合体检器·四域聚合：环境/网络/注册/堵账 逐域 subprocess"
-                    " 编排既有一器→综合健康分 0-100＋per-domain verdict＋"
-                    "advice（schema rocqwash-cwdoctor/1）")
+        description="aggregate health doctor, four-domain rollup:"
+                    " env/net/registry/clog each driven by subprocess over the"
+                    " existing per-domain tool -> an overall health score 0-100"
+                    " plus per-domain verdicts plus advice (schema"
+                    " rocqwash-cwdoctor/1)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="体检报告出账（rocqwash-cwdoctor/1·sort_keys 确定性）")
+                    help="health report output path (rocqwash-cwdoctor/1;"
+                         " sort_keys determinism)")
     ap.add_argument("--workdir", default=None, metavar="DIR",
-                    help="工件目录（dyld/net 报告·probe 台账·链根图·缺省 "
-                         "mkdtemp·stdout 响亮路径）")
+                    help="artifacts directory (the dyld/net reports, the"
+                         " probe ledger, the chain-root graph; default"
+                         " mkdtemp; the path is printed to stdout)")
     ap.add_argument("--registry", default=None, metavar="PATH",
-                    help="注册册显传（order.txt 形；缺省探测 env %s/"
-                         "ConstructiveWorld_Live/order.txt·均无→注册域 skip）"
+                    help="explicit registry ledger (order.txt form; by default"
+                         " probes env %s/ConstructiveWorld_Live/order.txt;"
+                         " neither present -> the registry domain skips)"
                          % ENV_REGISTRY)
     ap.add_argument("--src", default=None, metavar="DIR",
-                    help="堵账域源树（缺省跳过堵账域）")
+                    help="the clog-domain source tree (the clog domain is"
+                         " skipped without it)")
     ap.add_argument("--sample", type=int, default=0, metavar="N",
-                    help="堵账抽样帽（缺省 0=不抽样→堵账域 skip·N>0 等距"
-                         "抽样·N≥树大=全量普查）")
+                    help="clog sampling cap (default 0 = no sampling -> the"
+                         " clog domain skips; N>0 samples equidistantly; N >="
+                         " tree size = a full census)")
     ap.add_argument("--world", default=None, metavar="DIR",
-                    help="堵账真探世界目录（真探必给·离线请 --injector）")
+                    help="the clog real-probe world directory (required for a"
+                         " real probe; for offline use --injector)")
     ap.add_argument("--worker", default=None, metavar="PATH",
-                    help="透传 toolchain_dyld_doctor --worker（缺省器内探测 "
-                         "flag/env/判例机缺省）")
+                    help="passed through to toolchain_dyld_doctor --worker (by"
+                         " default the tool probes flag/env/the sanctioned"
+                         " machine default itself)")
     ap.add_argument("--donor", default=None, metavar="DIR",
-                    help="透传 toolchain_dyld_doctor --donor（missing 件溯源）")
+                    help="passed through to toolchain_dyld_doctor --donor"
+                         " (tracing missing entries)")
     ap.add_argument("--endpoints", default=None, metavar="URL[,URL...]",
-                    help="透传 net_probe --endpoints（缺省四端点）")
+                    help="passed through to net_probe --endpoints (the default"
+                         " four endpoints)")
     ap.add_argument("--guard", default=DEFAULT_GUARD, metavar="PATH",
-                    help="cpu_guard.sh 透传 probe_engine（堵账真探温控·"
-                         "sanctioned 判例机缺省）")
+                    help="cpu_guard.sh passed through to probe_engine (the"
+                         " clog real-probe thermal wrapper; defaults to the"
+                         " sanctioned-machine path)")
     ap.add_argument("--guard-reg", dest="guard_reg",
                     default="/tmp/cw_reg_cw_doctor", metavar="DIR")
     ap.add_argument("--guard-maxwait", dest="guard_maxwait", type=int,
                     default=600, metavar="S")
     ap.add_argument("--timeout", type=int, default=1500, metavar="S",
-                    help="probe_engine 单件超时秒透传")
+                    help="per-file timeout seconds passed through to"
+                         " probe_engine")
     ap.add_argument("--rocq-cmd", dest="rocq_cmd", default=None, metavar="TPL",
-                    help="探针命令模板透传 probe_engine（缺省用其内置默认）")
+                    help="the probe command template passed through to"
+                         " probe_engine (by default its own built-in default)")
     ap.add_argument("--injector", default=None, metavar="DIR",
-                    help="离线罐装场景（DIR/scenario.json·键 dyld/net/probe·"
-                         "子进程调用层罐装 {rc,stdout,report}·canned 表须"
-                         "全覆盖将发的器件调用）")
+                    help="offline canning scenario (DIR/scenario.json; keys"
+                         " dyld/net/probe; the subprocess call layer canned"
+                         " with {rc,stdout,report}; the canned table must"
+                         " cover every tool call about to be issued)")
     args = ap.parse_args(argv)
 
     try:

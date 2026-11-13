@@ -1,0 +1,192 @@
+{
+ "_provenance": {
+  "branch": "main",
+  "event": "push",
+  "job_id": 126871747925,
+  "log_confirm": "logs-GET 404 真实注记（20261113 两跳通路实取·job 126871747925）：BlobNotFound XML body 头 120 字符原样誊入 job_log_notes 扩展位（离线取证注记通路·非 API 真形）——复核台账 §三-6 失联双件 log blob 双 404 同形；classification 字段＝20261112 存档实跑记录（415 时代注记·历史快照不追溯）",
+  "run_id": 41914865932,
+  "shape": "runner 失联形（failure＋零红步＋Build 步悬 status=in_progress conclusion=null＋墙钟 57007s＜2880min 帽且非 timed_out＋logs-GET 404 BlobNotFound 日志 blob 未落地）——器判 UNRECOGNIZED 维持不充谱（复核台账 §二 S3/R1·§三-6·§四-3 ③）；器面证据注记 runner-lost-candidate（family 不变·证据包形）",
+  "source": "复核台账 docs/复核-UNREC-14事件-20261112.md §二 S3/R1（步级 GET jobs 实取证·failure 零红步·Build 步悬 in_progress·其余步 pending）＋存档实跑出账 /tmp/retro_main/tri/coq93_03_41914865932.json（20261112 rocqwash-ci-triage/1·步级真表逐字段誊录源）＋20261113 live GET 复取（job 级字段逐字段誊录·现势 steps=[]·步表已剪·check-runs 端点 output.steps 亦 null·如实登记）"
+ },
+ "job_log_notes": {
+  "126871747925": "logs-GET: HTTP 404 ﻿<?xml version=\"1.0\" encoding=\"utf-8\"?><Error><Code>BlobNotFound</Code><Message>The specified blob does not exist.\nReque（日志不可达·入证据）"
+ },
+ "jobs": [
+  {
+   "classification": {
+    "action": "watch-only",
+    "evidence": [
+     "job conclusion=failure status=completed",
+     "step-conclusions: Set up job=success,Run actions/checkout@v5=success,gate1 poison-token guard (pre-build fail-fast)=success,gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)=success,gate3 cross-tree require-face diff=success,Seed trust cache from local vo tree=success,RAM guard (report commit headroom before heavy phase)=success,Build full tree (order topology, fingerprint skip, thermal-guarded)=-,Generate tree-stats (six-dimension counts, three-caliber breakdown)=-,Upload tree-stats=-,gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)=-,attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)=-,coqchk full-tree certification (parallel root-grouped, thermal-guarded)=-,Upload vo trust cache (cross-machine sync)=-,gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)=-,Upload coqchk logs=-,Post Run actions/checkout@v5=-",
+     "判类谱外红形·不充谱·人工看日志指认",
+     "logs-GET: HTTP 415 {\"message\":\"Unsupported 'Accept' header: 'text/plain'. Must accept 'application/json'.\",\"documentation_url\":\"https://doc（日志不可达·入证据）"
+    ],
+    "family": "UNRECOGNIZED",
+    "red_steps": []
+   },
+   "completed_at": "2026-11-05T13:08:45Z",
+   "conclusion": "failure",
+   "duration_sec": 57007,
+   "id": 126871747925,
+   "name": "Rocq 9.1 build + coqchk (self-hosted local trust cache, Windows)",
+   "started_at": "2026-11-04T21:18:38Z",
+   "status": "completed",
+   "steps": [
+    {
+     "completed_at": "2026-11-04T21:18:44Z",
+     "conclusion": "success",
+     "duration_sec": 5,
+     "name": "Set up job",
+     "number": 1,
+     "started_at": "2026-11-04T21:18:39Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:18:48Z",
+     "conclusion": "success",
+     "duration_sec": 4,
+     "name": "Run actions/checkout@v5",
+     "number": 2,
+     "started_at": "2026-11-04T21:18:44Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:19:01Z",
+     "conclusion": "success",
+     "duration_sec": 13,
+     "name": "gate1 poison-token guard (pre-build fail-fast)",
+     "number": 3,
+     "started_at": "2026-11-04T21:18:48Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:19:47Z",
+     "conclusion": "success",
+     "duration_sec": 46,
+     "name": "gate4 comment guard (pre-build, exit1=red exit2=yellow artifact-only)",
+     "number": 4,
+     "started_at": "2026-11-04T21:19:01Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:20:11Z",
+     "conclusion": "success",
+     "duration_sec": 24,
+     "name": "gate3 cross-tree require-face diff",
+     "number": 5,
+     "started_at": "2026-11-04T21:19:47Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:20:11Z",
+     "conclusion": "success",
+     "duration_sec": 0,
+     "name": "Seed trust cache from local vo tree",
+     "number": 6,
+     "started_at": "2026-11-04T21:20:11Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": "2026-11-04T21:20:12Z",
+     "conclusion": "success",
+     "duration_sec": 1,
+     "name": "RAM guard (report commit headroom before heavy phase)",
+     "number": 7,
+     "started_at": "2026-11-04T21:20:11Z",
+     "status": "completed"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Build full tree (order topology, fingerprint skip, thermal-guarded)",
+     "number": 8,
+     "started_at": "2026-11-04T21:20:12Z",
+     "status": "in_progress"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Generate tree-stats (six-dimension counts, three-caliber breakdown)",
+     "number": 9,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Upload tree-stats",
+     "number": 10,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "gate5 vo-binary quarantine (pre-coqchk, token+digest, control-calibrated)",
+     "number": 11,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "attest reconcile (archive-hit -> skip list, miss -> coqchk, cw.attest/v1)",
+     "number": 12,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "coqchk full-tree certification (parallel root-grouped, thermal-guarded)",
+     "number": 13,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Upload vo trust cache (cross-machine sync)",
+     "number": 14,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "gate2 axioms sentinel (block-state-machine, fail-loud; attest branch)",
+     "number": 15,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Upload coqchk logs",
+     "number": 16,
+     "started_at": null,
+     "status": "pending"
+    },
+    {
+     "completed_at": null,
+     "conclusion": null,
+     "duration_sec": null,
+     "name": "Post Run actions/checkout@v5",
+     "number": 32,
+     "started_at": null,
+     "status": "pending"
+    }
+   ]
+  }
+ ],
+ "total_count": 1
+}

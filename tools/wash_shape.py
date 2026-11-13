@@ -1,95 +1,130 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""wash_shape.py — 洗形器·正典形五洗流水（rocqwash tools/·v37 三器共同接口·20261111）
+"""wash_shape.py — shape-normalizing tool: canonical five-wash pipeline (rocqwash tools/).
 
-正典形五洗（逐文件依序执行·各洗可 --only 选·判例出处逐洗标注）：
-  ①词面洗 lexical   subprocess verify/gate4_comment_guard.py --file（五检项 v2.1
-                    EXT·rc 0/1/2 分流承 tools/pushci.py gate4_prescan 先例）→
-                    FAIL 项（hard 词面项）与 review 语境双义项对 wash/comment_pack.json
-                    flag_words 查正典同义改写式（sidecar 自述 trigger＝「gate4
-                    comment-guard review findings」；flag_word_note＝「Context-biaised
-                    review words exchange to their neutral English term」——语境双义
-                    复核项正是该包的交换靶面）。落刀＝wash/comment_sweep.py --apply
-                    （comment_pack 消费器·嵌套注释/字符串感知状态机·代码行相等断言）。
-                    无对应式→plan-miss（不硬造——comment_pack「never synthesized」
-                    同律）。
-  ②token 洗 token   scan/scan_v4_token.py --file 普查（token 级·W5 mixed-line 盲区
-                    闭合）→wash/cure_applier.py 正典包（cure_pack v1.3）干跑（该器
-                    缺省 dry-run）→--apply 落刀（二遍零残断言内建·rc 1 不落盘）。
-                    有站无式→plan-miss；排他组冲突（rc 4）→plan-miss 须人工 --only
-                    择一（cure_applier variant-choice 纪律）。
-  ③头注形洗 header  两段式＋五字段缺检（gate4 即含：无头注/头注非首块/缺字段/头注
-                    超标）→缺失字段方案＝comment_pack 式补写模板（--header-map 逐件
-                    数据·comment_sweep --header-map 前导注释区整体替换·内容绝不
-                    合成）；或 --header-map-preset 钦名模板（tests/fixtures/
-                    header_map_v1.json 蒸馏库·schema rocqwash-header-map/1·占位
-                    {name}/{deps_stdlib}/{deps_dev} 承目标件 Require 面与件名派生·
-                    {bundle}/{summary}/{mission} 承既有头注逐字携带——任一绑不上
-                    plan-miss 不硬造·渲染后仍经 comment_sweep --header-map 落刀）；
-                    无模板→plan-miss 不硬造。模板源探测次序：--header-map >
-                    --header-map-preset > env ROCWASH_HEADER_MAP（map 文件路径）>
-                    无＝plan-miss 如实；--header-map 与 --header-map-preset 显传
-                    互斥（同槽律 rc 2）。preset 源仅对 gate4 头注域硬项施刀·五字段
-                    齐件不对齐改写（防人工 curated 面被机械卷改写·诚实账）。
-  ④行尾洗 eol       CRLF→LF 归一（保末行换行形态；3KB 探测窗承 tools/
-                    registry_union.py detect_eol EOL_PROBE_BYTES 形制）。前洗引擎
-                    universal-newline 写回会附带归一——本洗 apply 以现盘实测为准·
-                    零改如实出账。
-  ⑤锚形洗 anchor    order.txt 行锚→registry_union.py --reanchor 正典形
-                    （#R<序>-<md5 前 8 hex>·20261110 判例：顺序号形锚与跨批撞锚
-                    皆此治愈；--reanchor 与 --anchor-src 成对·--apply 必配 --out
-                    ——经临时稿 os.replace 回位）。coqproject 行无锚→不适用。
-                    缺实体/实体歧义/行无锚→plan-miss（registry_union「缺件如实列
-                    跳过」同律）。
+Purpose.  Applies the canonical five-wash pipeline to every target file in
+  order (each wash selectable via --only; per-wash contract in the
+  extended comment block below): 1 lexical (gate4 word-face findings
+  exchanged through the `wash/comment_pack.json` flag_words table,
+  applied by `wash/comment_sweep.py --apply`; findings without a rewrite
+  entry are reported as plan-miss, never synthesized), 2 token
+  (`scan/scan_v4_token.py` survey + `wash/cure_applier.py` dry run, then
+  --apply; the cure engine re-asserts zero residue on a second pass),
+  3 header (missing-field cure via --header-map per-file data or the
+  --header-map-preset designated template rendered from the target's own
+  Require faces and carried header), 4 eol (CRLF->LF normalization with
+  final-newline preservation), 5 anchor (order.txt line anchors
+  re-canonicalized to `#R<seq>-<md5-8>` by `tools/registry_union.py
+  --reanchor`).  Two phases: plan (zero writes; per-wash
+  {kind,action,status,detail} list plus stats) then --apply (execute
+  would-fix items, re-run all five washes, verdict shaped only when the
+  rescan is fully clean).  verdict: clean | shaped | partial |
+  plan-miss.  Dry run by default; writes only under --apply.
 
-两段制：plan（零写盘·逐文件逐洗 {kind,action,status:would-fix|clean|plan-miss,
-detail} 清单＋统计）→--apply（执行 would-fix 项→**复跑五洗复核**→全净才 verdict
-shaped；复跑不净＝verdict partial·如实列残项）。verdict：clean｜shaped｜partial｜
-plan-miss（任一无对应式项在册即 plan-miss——非器力所能及·如实亮账）。
+Interface.  python3 tools/wash_shape.py --file A.v [--file B.v ...]
+  [--json OUT] | --dir TREE [--exclude NAME ...] [--only 1,3] [--apply]
+  [--header-map M.json | --header-map-preset NAME] [--anchor-src DIR]
+  | --loop [--interval S] [--max-rounds N] [--events FILE] | --selftest.
+  Report schema rocqwash-shape/1; loop event stream schema
+  rocqwash-sentinel-event/1 (sort_keys canonical JSONL, one line per
+  event, flush+fsync, stdout mirror).  Template-source probe order:
+  --header-map > --header-map-preset > env ROCWASH_HEADER_MAP > none
+  (= plan-miss, reported honestly); --header-map and
+  --header-map-preset are same-slot mutually exclusive (rc 2).  The
+  preset source rewrites only gate4 header-domain hard items and never
+  aligns an already-conforming five-field header (a human-curated face
+  is never machine-rewritten).  Frozen surfaces (the certify/frozen8.py
+  roster and the frozen ledger) are auto-excluded on --dir and
+  hard-rejected on explicit --file (exit 2).
 
-范围与禁触面：--file 多值／--dir 全树（.v＋order.txt/_CoqProject·.v `_*` 下划线
-守卫承 gate4 scan_tree v2.1 同律）；certify/frozen8.py 在册八件自动排除（--ledger
-账载常量·离线可用）·显式指认冻结件＝红拒命中 exit 2（禁触铁律）；更新账.md 同为
-禁触面自动排除。
+Dependencies.  Python 3 standard library only; every path parameterized,
+  zero hardcoded absolute paths, zero network.  The five wash engines
+  run as subprocesses (`python3 -B <engine>`) — orchestration, never
+  re-implementation.  Offline-testable: --injector cans the subprocess
+  call layer with {rc,stdout,report}; --sleep-scale scales sleeps to
+  zero for the selftest vectors.
 
-接口纪律（v37 三器共同）：JSON-in/JSON-out（--json report·schema rocqwash-shape/1·
-sort_keys 确定性·无时间戳·同输入重跑字节恒同）；退出码 0=clean/shaped·1=partial/
-plan-miss（洗未尽·响亮出账）·2=用法/断言（冻结件红拒·引擎形外退出·JSON 畸形）·
-9=缺；--once/--loop 双模（--loop 实时哨态·--interval 可调·--max-rounds 界定·
---apply 可与 loop 并用逐轮落刀）；离线可测（--injector 子进程
-调用层罐装 {rc,stdout,report}·--sleep-scale 缩睡·--selftest 全矢量零真网络零真
-编译）；编排而非重造（五洗引擎全 subprocess 调用·先读各器 CLI 与 JSON schema 再
-编排）。
+Evidence.  --selftest: 18 frozen vectors on temporary fixtures (zero
+  real network, zero real compiles) covering per-wash plan verdicts,
+  zero-write plan, plan-miss honesty, apply->rescan->shaped,
+  idempotence, frozen-roster exclusion (canned and real), injector
+  layer, CLI four codes, loop/once modes, byte-identical determinism,
+  preset chain and probe order, preset render->apply end to end,
+  same-slot exclusivity, missing-library rc 9, event-stream shape, and
+  plan-cache invalidation; suite membership tests/test_wash_shape.py.
 
---loop 事件流（同形对齐·承 cw_sentinel 事件形——三器共同事件解析面）：
-  JSONL 逐行 schema=rocqwash-sentinel-event/1·键 sort_keys 规范式·seq 事件流
-  内单调（--events 在位以现有行数为基跨进程续号·缺省进程内从 1）·kind∈
-  {round,stop}·ts 由 time 钟出（--sleep-scale 0 时关 ts·note「ts=off」注记
-  ——确定性同哨）；stdout 镜像恒流＋--events 追加落账（逐行 flush+fsync）。
-  round 事件携 round/apply/verdict/五洗计数/n_applied/plan_cache_hit；
-  stop 事件携 round/reason=max-rounds/verdict。
-plan 缓存失效语义（--loop 跨轮·源件 md5 变→plan 重算）：失效域＝范围件
-  （--file/--dir 收件）∪⑤锚实体件（order.txt 行锚实体·anchor_src 解析——
-  实体 md5 变/实体出现消失/歧义化亦域变）的 {abspath: md5} 集；逐轮重测域
-  （廉价 md5·引擎零重跑）：域恒同→复用上轮 plan（缓存命中·命中轮五洗引擎
-  零重判）；任一源件 md5 变→失效重算并刷新域。首轮必重算；--once 单段不走
-  缓存；rescan 恒直算（落刀后新鲜盘面·不复用）。响亮出账＝report["plan_cache"]
-  {hit}（仅 loop 模式在账）＋round 事件 plan_cache_hit。
-
-用法（全部路径参数化·零硬编码绝对路径）：
-  python3 tools/wash_shape.py --file A.v [--file B.v ...] [--json OUT]   # plan 段
-  python3 tools/wash_shape.py --dir TREE [--exclude 名 ...] [--only 1,3]
-  python3 tools/wash_shape.py --file A.v --apply [--header-map M.json] \
-      [--header-map-preset NAME] [--anchor-src DIR] [--json OUT]         # 两段全施
-  python3 tools/wash_shape.py --dir TREE --loop [--interval 5] \
-      [--max-rounds 0] [--events FILE] [--apply]                         # 哨态
-  python3 tools/wash_shape.py --selftest
-
-退出码：0=clean/shaped；1=partial/plan-miss（洗未尽·响亮出账）；2=用法错/断言炸
-（冻结件红拒/引擎形外退出/JSON 畸形/--header-map 与 --header-map-preset 同槽
-互斥）；9=路径缺失（--file/--dir/引擎件/--header-map/--header-map-preset 模板库/
-env ROCWASH_HEADER_MAP/--injector/--events 出账写败）。schema=rocqwash-shape/1。
+Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
+  reported loudly); 2 = usage/assertion (frozen-surface rejection,
+  engine out-of-shape exit, malformed JSON, same-slot exclusivity);
+  9 = missing input path (--file/--dir/engine file/template library/
+  env map/--injector/--events write failure).
 """
+# Extended contract (kept outside the five-field block per the annotation
+# standard 30-line header budget):
+# wash 1 lexical  subprocess `verify/gate4_comment_guard.py --file` (five check
+#                 items, v2.1 EXT; rc 0/1/2 routing follows the tools/pushci.py
+#                 gate4_prescan precedent).  FAIL items (hard word-face items)
+#                 and review dual-sense items are looked up in the
+#                 `wash/comment_pack.json` flag_words table for the canonical
+#                 same-meaning rewrite (the sidecar declares trigger = "gate4
+#                 comment-guard review findings"; flag_word_note = "Context-biaised
+#                 review words exchange to their neutral English term" — the
+#                 dual-sense review items are exactly that pack's exchange
+#                 targets).  The rewrite is applied by `wash/comment_sweep.py
+#                 --apply` (a comment_pack consumer: nesting/string-aware state
+#                 machine with a code-line equality assertion).  No entry ->
+#                 plan-miss (never synthesized — same rule as comment_pack's
+#                 "never synthesized").
+# wash 2 token    `scan/scan_v4_token.py --file` survey (token level; closes the
+#                 W5 mixed-line blind spot) -> `wash/cure_applier.py` canonical
+#                 pack (cure_pack v1.3) dry run (that engine is dry run by
+#                 default) -> --apply applies the rewrite (a second-pass
+#                 zero-residue assertion is built in; rc 1 writes nothing).
+#                 Stations without an entry -> plan-miss; exclusive-group
+#                 conflict (rc 4) -> plan-miss and the operator must pick one
+#                 via --only (cure_applier variant-choice discipline).
+# wash 3 header   two-part header + five-field missing checks (gate4 already
+#                 reports: no header / header not first block / missing fields /
+#                 over-budget header).  The missing-field cure = comment_pack
+#                 style full-header rewrite template (--header-map, per-file
+#                 data; comment_sweep --header-map replaces the leading comment
+#                 zone wholesale and never synthesizes content); or
+#                 --header-map-preset designated templates (the tests/fixtures/
+#                 header_map_v1.json distilled library, schema
+#                 rocqwash-header-map/1; placeholders {name}/{deps_stdlib}/
+#                 {deps_dev} derive from the target's Require faces and file
+#                 name; {bundle}/{summary}/{mission} carry the existing header
+#                 verbatim — any unbound placeholder is plan-miss, never
+#                 synthesized; the rendered text is still applied through
+#                 comment_sweep --header-map).  No template -> plan-miss.
+# wash 4 eol      CRLF->LF normalization (final-newline form preserved; the 3KB
+#                 probe window follows tools/registry_union.py detect_eol
+#                 EOL_PROBE_BYTES).  Earlier universal-newline engine write-backs
+#                 already normalize as a side effect — this wash's apply reports
+#                 what the on-disk bytes actually show, including a zero-change
+#                 pass, honestly.
+# wash 5 anchor   order.txt line anchors -> registry_union.py --reanchor
+#                 canonical form (#R<seq>-<md5 first 8 hex>; both sequence-only
+#                 anchors and cross-batch anchor collisions are cured here;
+#                 --reanchor pairs with --anchor-src; --apply requires --out
+#                 and lands via a temp file os.replace).  coqproject rows carry
+#                 no anchors -> not applicable.  Missing entity / ambiguous
+#                 entity / anchorless row -> plan-miss (same rule as
+#                 registry_union's honest skip listing).
+# two phases      plan (zero writes; per-file per-wash {kind,action,
+#                 status: would-fix|clean|plan-miss, detail} list + stats)
+#                 -> --apply (execute would-fix items -> re-run all five washes
+#                 -> verdict shaped only when fully clean; a dirty rescan is
+#                 verdict partial with the residual items listed honestly).
+# loop mode       --loop watch mode: one pass per round; the plan cache keys on
+#                 the {abspath: md5} set of scope files plus wash-5 anchor
+#                 entities — a stable domain reuses the previous plan (cache
+#                 hit, zero engine re-runs), any source md5 change invalidates
+#                 and recomputes.  First round always recomputes; --once skips
+#                 the cache; rescan always computes fresh (post-apply disk
+#                 state is never reused).  Loud accounting = report["plan_cache"]
+#                 {hit} (loop mode only) plus the round event plan_cache_hit.
+
 import argparse
 import datetime
 import hashlib
@@ -105,14 +140,14 @@ import time
 
 PROG = "wash_shape"
 SCHEMA = "rocqwash-shape/1"
-EVENT_SCHEMA = "rocqwash-sentinel-event/1"   # --loop 事件流同形承 cw_sentinel
+EVENT_SCHEMA = "rocqwash-sentinel-event/1"   # --loop event stream, same shape as cw_sentinel
 
-# 五洗 kind（正典序·--only 序号映射 1..5）
-KIND_LEXICAL = "lexical"    # ①词面洗
-KIND_TOKEN = "token"        # ②token 洗
-KIND_HEADER = "header"      # ③头注形洗
-KIND_EOL = "eol"            # ④行尾洗
-KIND_ANCHOR = "anchor"      # ⑤锚形洗
+# five wash kinds (canonical order; --only number map 1..5)
+KIND_LEXICAL = "lexical"    # wash 1: lexical
+KIND_TOKEN = "token"        # wash 2: token
+KIND_HEADER = "header"      # wash 3: header
+KIND_EOL = "eol"            # wash 4: eol
+KIND_ANCHOR = "anchor"      # wash 5: anchor
 KINDS = (KIND_LEXICAL, KIND_TOKEN, KIND_HEADER, KIND_EOL, KIND_ANCHOR)
 KIND_ALIASES = {
     "1": KIND_LEXICAL, "2": KIND_TOKEN, "3": KIND_HEADER,
@@ -130,16 +165,18 @@ VERDICT_SHAPED = "shaped"
 VERDICT_PARTIAL = "partial"
 VERDICT_PLAN_MISS = "plan-miss"
 
-# gate4 头注域硬项类型（归③头注形洗·词面洗不计）
+# gate4 header-domain hard-item types (wash 3 territory; not counted by the
+# lexical wash).  Tuple and tag values are gate4's own output vocabulary —
+# interface data, kept verbatim.
 HEADER_ITEM_TYPES = ("缺字段", "无头注", "头注非首块", "头注超标")
-REVIEW_DUAL = "语境双义复核"   # comment_pack 交换靶面（flag_word_note 口径）
+REVIEW_DUAL = "语境双义复核"   # comment_pack exchange target (flag_word_note sense)
 
-# 锚正典 1:1 承 registry_union.ANCHOR_RE；行尾探测窗承 detect_eol
+# anchor canonical form mirrors registry_union.ANCHOR_RE 1:1; eol probe window mirrors detect_eol
 ANCHOR_RE = re.compile(r"#(R\d+(?:-[0-9A-Fa-f]+)?)")
 EOL_PROBE_BYTES = 3072
 
 REGISTRY_KINDS = {"order.txt": "order", "_CoqProject": "coqproject"}
-LEDGER_NAME = "更新账.md"   # 铁律禁触面（自动排除·显式指认红拒）
+LEDGER_NAME = "更新账.md"   # frozen-surface filename (auto-excluded; explicit naming is a hard rejection)
 
 ACTION_SWEEP = "wash/comment_sweep.py --apply"
 ACTION_SWEEP_MAP = "wash/comment_sweep.py --header-map <MAP> --apply"
@@ -148,7 +185,7 @@ ACTION_CURE = "wash/cure_applier.py --apply"
 ACTION_EOL = "wash_shape:eol-rewrite(CRLF->LF)"
 ACTION_REGU = "tools/registry_union.py --reanchor --apply"
 
-# ③头注模板源（探测次序 --header-map > --header-map-preset > env > 无=plan-miss）
+# wash-3 header template source (probe order --header-map > --header-map-preset > env > none=plan-miss)
 HEADER_LIB_REL = os.path.join("tests", "fixtures", "header_map_v1.json")
 HEADER_LIB_SCHEMA = "rocqwash-header-map/1"
 ENV_HEADER_MAP = "ROCWASH_HEADER_MAP"
@@ -170,11 +207,11 @@ RE_BARE_REQUIRE = re.compile(
 
 
 class UsageError(Exception):
-    """用法错/断言炸（exit 2：冻结件红拒·引擎形外退出·JSON 畸形）。"""
+    """Usage/assertion failure (exit 2: frozen-surface rejection, engine out-of-shape exit, malformed JSON)."""
 
 
 class MissingInput(Exception):
-    """路径缺失（exit 9）。"""
+    """Missing input path (exit 9)."""
 
 
 def md5_of(path):
@@ -186,25 +223,28 @@ def md5_of(path):
 
 
 def sleep_scaled(sec, scale):
-    """time.sleep(sec*scale)·scale=0 零真睡（selftest 矢量依赖·承 pushci 同款）。"""
+    """time.sleep(sec*scale); scale=0 means no real sleep (selftest vector dependency; same form as pushci)."""
     time.sleep(max(0.0, float(sec) * float(scale)))
 
 
 def now_iso():
-    """UTC ISO8601 秒精度 Z 形（事件 ts 字段·承 cw_sentinel.now_iso 同形）。"""
+    """UTC ISO8601 second-precision Z form (event ts field; same shape as cw_sentinel.now_iso)."""
     return datetime.datetime.now(datetime.timezone.utc).strftime(
         "%Y-%m-%dT%H:%M:%SZ")
 
 
 def make_event(seq, kind, fields, ts_enabled):
-    """--loop 事件组装（同形承 cw_sentinel.make_event）：schema/seq/kind 头＋
-    fields；ts 由 time 钟出·ts_enabled=False（--sleep-scale 0）时关 ts 并以
-    note「ts=off」注记（确定性·fields 自带 note 时并入不打架）。"""
+    """--loop event assembly (same shape as cw_sentinel.make_event): schema/
+    seq/kind header plus fields; ts comes from the clock, and ts_enabled=False
+    (--sleep-scale 0) drops ts and annotates note "ts=off" (deterministic;
+    merges cleanly when fields already carry a note)."""
     ev = {"schema": EVENT_SCHEMA, "seq": seq, "kind": kind}
     ev.update(fields)
     if ts_enabled:
         ev["ts"] = now_iso()
     else:
+        # KEEP (data face): the note value and its joiner are rocqwash-sentinel-event/1
+        # schema data — shared parsing face with cw_sentinel, kept verbatim.
         off = "ts=off（--sleep-scale 0·确定性输出）"
         base = ev.pop("note", None)
         ev["note"] = (off + "｜" + base) if base else off
@@ -212,19 +252,22 @@ def make_event(seq, kind, fields, ts_enabled):
 
 
 def events_seq_base(path):
-    """--events 现有非空行数（seq 跨进程续基·承 cw_sentinel emit_seq_base
-    同律——追加流以现有行数为基续号）。读败 → 9。"""
+    """Number of existing non-empty lines in --events (cross-process seq base;
+    same rule as cw_sentinel emit_seq_base — an append stream continues
+    numbering from its existing lines).  Read failure -> 9."""
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
             return sum(1 for ln in fh if ln.strip())
     except OSError as e:
-        raise MissingInput("--events 读基失败: %s (%s)" % (path, e))
+        raise MissingInput("--events seq base read failed: %s (%s)" % (path, e))
 
 
 def first_code_offset(text):
-    """首个代码字符偏移（深度 0·非空白·注释/字符串感知）——前导头注区边界。
-    1:1 本地重实现 wash/comment_sweep.py first_code_offset 形制（不 import——
-    防引擎件漂移牵连·wash_engine.py 本地重实现同律）。"""
+    """Offset of the first code character (depth 0, non-whitespace, comment/
+    string aware) — the leading header-zone boundary.  A 1:1 local
+    re-implementation of wash/comment_sweep.py first_code_offset (no import —
+    engine drift must not couple into this file; same rule as the
+    wash_engine.py local re-implementation)."""
     n = len(text)
     i = 0
     depth = 0
@@ -265,8 +308,9 @@ def first_code_offset(text):
 
 
 def resolve_entity(name, anchor_src):
-    """anchor_src 下（os.walk 递归）取同名 .v 实体。0 命中→None；多处→歧义串。
-    1:1 承 registry_union.resolve_entity 形制。"""
+    """Resolve the same-named .v entity under anchor_src (os.walk recursive).
+    Zero hits -> None; multiple hits -> an ambiguity string.
+    1:1 with registry_union.resolve_entity."""
     target = name + ".v"
     direct = os.path.join(anchor_src, target)
     if os.path.isfile(direct):
@@ -281,7 +325,7 @@ def resolve_entity(name, anchor_src):
 
 
 def md5_8_of(path):
-    """实件 md5 前 8 hex（锚正典指纹源·承 registry_union.md5_8_of）。"""
+    """First 8 hex of the entity md5 (anchor canonical fingerprint source; mirrors registry_union.md5_8_of)."""
     return md5_of(path)[:8]
 
 
@@ -291,9 +335,10 @@ def tail_of(text, n=200):
 
 
 def strip_comment_spans(text):
-    """注释域剥离（留换行·字符串感知）——Require 面抽取前置。
-    1:1 本地重实现 wash/comment_sweep.py strip_comments 形制（不 import——
-    防引擎件漂移牵连·first_code_offset 本地重实现同律）。"""
+    """Strip comment spans (newlines kept, string-aware) — the Require-face
+    extraction precondition.  A 1:1 local re-implementation of
+    wash/comment_sweep.py strip_comments (no import — engine drift must not
+    couple into this file; same rule as first_code_offset)."""
     out = []
     i, n = 0, len(text)
     depth = 0
@@ -338,8 +383,10 @@ def strip_comment_spans(text):
 
 
 def wrap_long_line(line, width=76, sub="      "):
-    """贪心词卷（>width 且含空格才卷·续行缩 6·超长孤词整词保留）——preset
-    渲染卷行形制（战役件卷行宽≈76 续行缩 6·DecBridge6.v:19-29 形制引据）。"""
+    """Greedy word wrap (wraps only when >width and containing spaces;
+    continuation lines indent by 6; an over-long single word is kept whole) —
+    the preset render wrapping form (corpus files wrap at width ~76 with 6-space
+    continuations; shape evidenced by DecBridge6.v:19-29)."""
     if len(line) <= width or " " not in line.strip():
         return [line]
     words = line.split(" ")
@@ -355,16 +402,20 @@ def wrap_long_line(line, width=76, sub="      "):
 
 
 def require_faces(text):
-    """Require 面双列抽取（③头注形洗 preset 占位 {deps_stdlib}/{deps_dev}
-    数据源·目标件自身语句逐名·绝不合成）。注释感知剥离（strip_comment_spans）
-    后仅取列 0 起顶层语句行：
-      From Stdlib Require [Import|Export] A B.  → stdlib 列
-      Require [Import|Export] A B.              → dev 列
-      From <X> Require [Import|Export] A B.     → dev 列（全名 X.A——战役语料
-        五件 grep 零命中·机械完备臂）。
-    序＝件内出现序·去重保序。语料引据：ConstructiveWorld-Set @6e805d1
-    LW3Kills.v:30-38（From Stdlib 三行＋bare 六行）对照其头注 :13-17 双列；
-    abl_tail_supply_67.v:32-35 对照 :15-16。"""
+    """Two-column Require-face extraction (the wash-3 preset placeholder
+    {deps_stdlib}/{deps_dev} data source; names taken one by one from the
+    target file's own statements, never synthesized).  After comment-aware
+    stripping (strip_comment_spans) only column-0 top-level statement lines
+    count:
+      From Stdlib Require [Import|Export] A B.  -> stdlib column
+      Require [Import|Export] A B.              -> dev column
+      From <X> Require [Import|Export] A B.     -> dev column (qualified X.A —
+        the corpus grep found zero bare-From cases; the mechanical
+        completeness arm).
+    Order = order of appearance in the file, deduplicated preserving first
+    occurrence.  Corpus evidence: ConstructiveWorld-Set @6e805d1
+    LW3Kills.v:30-38 (three From Stdlib lines + six bare lines) against its
+    header columns :13-17; abl_tail_supply_67.v:32-35 against :15-16."""
     stdlib, dev = [], []
     for ln in strip_comment_spans(text).split("\n"):
         ln = ln.rstrip()
@@ -390,14 +441,20 @@ def require_faces(text):
 
 
 def header_carry(text):
-    """既有前导头注区逐字携带抽取（preset 占位 {bundle}/{summary}/{mission}
-    绑定源）。返回 dict——缺键即该占位绑不上（judge plan-miss 如实·不硬造）：
-      bundle＝L1『(* ConstructiveWorld-Set -- <身>. *)』内文（终句号归模板行）；
-      summary＝『(** * <名>: <身>.』题行内文（终句号归模板行）；
-      mission＝Mission 字段身（标签行余文＋续行至次字段标签/收注符·换行缩进
-      原样逐字携带）。
-    语料引据：ConstructiveWorld-Set @6e805d1 DecBridge6.v:1/:3/:5-14 三身
-    正典位；头注身内容绝不合成（comment_pack header_spec 同律）。"""
+    """Verbatim-carry extraction of the existing leading header zone (the
+    binding source for the preset placeholders {bundle}/{summary}/{mission}).
+    Returns a dict — a missing key means that placeholder cannot bind (the
+    judge records plan-miss honestly, never synthesizes):
+      bundle  = the inside of the L1 `(* ConstructiveWorld-Set -- <body>. *)`
+                line (the final period belongs to the template line);
+      summary = the inside of the `(** * <name>: <body>.` title line (the
+                final period belongs to the template line);
+      mission = the Mission field body (label-line remainder plus continuation
+                lines up to the next field label / comment close, newline and
+                indentation carried verbatim).
+    Corpus evidence: ConstructiveWorld-Set @6e805d1 DecBridge6.v:1/:3/:5-14 —
+    the three canonical bodies; header body content is never synthesized
+    (same rule as comment_pack header_spec)."""
     off = first_code_offset(text)
     zone = text[:off] if off is not None else text
     lines = zone.split("\n")
@@ -433,27 +490,28 @@ def header_carry(text):
 
 
 class Injector(object):
-    """--injector 场景：子进程调用层罐装（v37 离线可测纪律）。场景 JSON
-    {引擎键: {"rc": int, "stdout": str, "report": obj?}}；命中键的引擎调用
-    恒定返付 canned（逐调用同响应）·不真 subprocess。键集＝gate4/scan_v4/
-    cure/sweep/registry_union/frozen8。"""
+    """--injector scenario: canning the subprocess call layer (offline
+    testability).  Scenario JSON {engine key: {"rc": int, "stdout": str,
+    "report": obj?}}; an engine call whose key matches always returns the
+    canned response (same response per call) — no real subprocess.  Key set =
+    gate4/scan_v4/cure/sweep/registry_union/frozen8."""
 
     KEYS = ("gate4", "scan_v4", "cure", "sweep", "registry_union", "frozen8")
 
     def __init__(self, path):
         if not os.path.isfile(path):
-            raise MissingInput("injector 场景缺失: %s" % path)
+            raise MissingInput("injector scenario missing: %s" % path)
         try:
             with io.open(path, "r", encoding="utf-8") as fh:
                 scen = json.load(fh)
         except Exception as e:
-            raise UsageError("injector 场景 JSON 畸形: %s (%s)" % (path, e))
+            raise UsageError("injector scenario JSON malformed: %s (%s)" % (path, e))
         if not isinstance(scen, dict):
-            raise UsageError("injector 场景须 dict: %s" % path)
+            raise UsageError("injector scenario must be a dict: %s" % path)
         bad = [k for k in scen if k not in self.KEYS]
         if bad:
-            raise UsageError("injector 场景键不识（须 %s）: %s"
-                             % (",".join(self.KEYS), sorted(bad)))
+            raise UsageError("unknown injector scenario key (need one of %s):"
+                             " %s" % (",".join(self.KEYS), sorted(bad)))
         self.scen = scen
 
     def canned(self, key):
@@ -461,12 +519,12 @@ class Injector(object):
         if ent is None:
             return None
         if not isinstance(ent, dict):
-            raise UsageError("injector 罐装项须 dict: %s" % key)
+            raise UsageError("injector canned entry must be a dict: %s" % key)
         return ent
 
 
 class WashShape(object):
-    """洗形器主体：收件→逐洗判（plan）→逐洗施（apply）→复跑复核。"""
+    """Shaper body: collect files -> per-wash plan -> per-wash apply -> rescan verification."""
 
     def __init__(self, args):
         self.args = args
@@ -495,12 +553,12 @@ class WashShape(object):
                          ("frozen8", self.tool_frozen8),
                          ("comment_pack", self.pack_comment)):
             if not os.path.isfile(p):
-                raise MissingInput("引擎件缺失（%s）: %s" % (label, p))
+                raise MissingInput("engine file missing (%s): %s" % (label, p))
         if args.anchor_src and not os.path.isdir(args.anchor_src):
-            raise MissingInput("--anchor-src 目录缺失: %s" % args.anchor_src)
+            raise MissingInput("--anchor-src directory missing: %s" % args.anchor_src)
         self.injector = Injector(args.injector) if args.injector else None
         self.flag_words = self._load_flag_words()
-        # ③头注模板源探测（互斥已在 main 前置 rc2·次序 map > preset > env > 无）
+        # wash-3 template source probe (exclusivity already enforced rc 2 in main; order map > preset > env > none)
         self.header_map = None
         self.header_source = "none"
         self.header_map_path = None
@@ -513,18 +571,19 @@ class WashShape(object):
         self.frozen_abs, self.frozen_rel, self.frozen_source = \
             self._load_frozen_roster()
         self.excludes = list(args.exclude or [])
-        # --loop 事件流 seq（跨进程续基在 run_loop 定）＋plan 跨轮缓存
+        # --loop event seq (cross-process base fixed in run_loop) + cross-round plan cache
         self._seq = 1
         self._plan_cache = None
         self._plan_md5s = None
 
-    # ---- 数据面 ----
+    # ---- data plane ----
 
     def _resolve_header_source(self):
-        """③头注模板源探测（缺省探测路径次序）：--header-map >
-        --header-map-preset > env ROCWASH_HEADER_MAP（map 文件路径·与
-        --header-map 同构）> 无＝plan-miss 如实（judge_header 缺省臂）。
-        --header-map 与 --header-map-preset 同槽互斥 rc2（main 前置）。"""
+        """wash-3 template source probe (default probe order): --header-map >
+        --header-map-preset > env ROCWASH_HEADER_MAP (a map file path, same
+        shape as --header-map) > none = plan-miss reported honestly (the
+        judge_header default arm).  --header-map and --header-map-preset are
+        same-slot exclusive rc 2 (enforced up front in main)."""
         args = self.args
         env_map = os.environ.get(ENV_HEADER_MAP)
         if args.header_map:
@@ -545,89 +604,94 @@ class WashShape(object):
                                                     "env " + ENV_HEADER_MAP)
 
     def _load_flag_words(self):
-        """comment_pack.json flag_words（正典同义改写式·数据驱动不硬造）。"""
+        """comment_pack.json flag_words (the canonical same-meaning rewrite table; data-driven, never synthesized)."""
         try:
             with io.open(self.pack_comment, "r", encoding="utf-8") as fh:
                 pack = json.load(fh)
         except Exception as e:
-            raise UsageError("comment_pack JSON 畸形: %s (%s)"
+            raise UsageError("comment_pack JSON malformed: %s (%s)"
                              % (self.pack_comment, e))
         fw = pack.get("flag_words")
         if not isinstance(fw, dict):
-            raise UsageError("comment_pack 缺 flag_words 表: %s"
+            raise UsageError("comment_pack missing the flag_words table: %s"
                              % self.pack_comment)
         return fw
 
     def _load_header_map(self, path, label):
-        """头注 map 装载（comment_pack 式补写模板·逐件数据·{basename: text}）。
-        缺失＝9·畸形＝2（label 标源：--header-map 或 env ROCWASH_HEADER_MAP）。"""
+        """Header map load (comment_pack style full-header rewrite template;
+        per-file data; {basename: text}).  Missing = 9; malformed = 2 (label
+        names the source: --header-map or env ROCWASH_HEADER_MAP)."""
         if not os.path.isfile(path):
-            raise MissingInput("%s 缺失: %s" % (label, path))
+            raise MissingInput("%s missing: %s" % (label, path))
         try:
             with io.open(path, "r", encoding="utf-8") as fh:
                 m = json.load(fh)
         except Exception as e:
-            raise UsageError("%s JSON 畸形: %s (%s)" % (label, path, e))
+            raise UsageError("%s JSON malformed: %s (%s)" % (label, path, e))
         if not isinstance(m, dict):
-            raise UsageError("%s 须 {basename: header text}: %s" % (label, path))
+            raise UsageError("%s must be {basename: header text}: %s" % (label, path))
         return m
 
     def _load_header_preset(self):
-        """钦名模板装载＋fail-loud 形检（schema rocqwash-header-map/1）：库缺失
-        ＝9·JSON 畸形/schema 不识/preset 名不识/占位出白名单/variants 无 else
-        兜底/任一模板行缺 evidence 金标引据＝2（金标纪律机械化——无据不铸）。"""
+        """Designated-template load plus fail-loud shape checks (schema
+        rocqwash-header-map/1): missing library = 9; malformed JSON / unknown
+        schema / unknown preset name / placeholder outside the allowlist /
+        variants without an else fallback / any template line missing its
+        evidence citation = 2 (the gold-standard discipline mechanized —
+        evidence required before issuance)."""
         path = self.header_library_path
         if not os.path.isfile(path):
-            raise MissingInput("--header-map-preset 模板库缺失: %s" % path)
+            raise MissingInput("--header-map-preset template library missing: %s" % path)
         try:
             with io.open(path, "r", encoding="utf-8") as fh:
                 lib = json.load(fh)
         except Exception as e:
-            raise UsageError("模板库 JSON 畸形: %s (%s)" % (path, e))
+            raise UsageError("template library JSON malformed: %s (%s)" % (path, e))
         if not isinstance(lib, dict) or lib.get("schema") != HEADER_LIB_SCHEMA:
-            raise UsageError("模板库 schema 不识（须 %s）: %s"
-                             % (HEADER_LIB_SCHEMA, path))
+            raise UsageError("template library schema unrecognized (need %s):"
+                             " %s" % (HEADER_LIB_SCHEMA, path))
         presets = lib.get("presets")
         if not isinstance(presets, dict) or not presets:
-            raise UsageError("模板库缺 presets 表: %s" % path)
+            raise UsageError("template library missing the presets table: %s" % path)
         name = self.header_preset_name
         if name not in presets:
-            raise UsageError("preset 名不识（库 %s 在册: %s）: %s"
-                             % (path, ",".join(sorted(presets)), name))
+            raise UsageError("preset name unrecognized (library %s has: %s):"
+                             " %s" % (path, ",".join(sorted(presets)), name))
         pre = presets[name]
         known = lib.get("placeholders")
         if not isinstance(known, dict) or not known:
-            raise UsageError("模板库缺 placeholders 白名单: %s" % path)
+            raise UsageError("template library missing the placeholders allowlist: %s" % path)
         if not isinstance(pre.get("evidence"), list) or not pre["evidence"]:
-            raise UsageError("preset %r 缺金标 evidence（无据不铸）: %s"
-                             % (name, path))
+            raise UsageError("preset %r missing its evidence citations (evidence"
+                             " required before issuance): %s" % (name, path))
         lines = pre.get("lines")
         if not isinstance(lines, list) or not lines:
-            raise UsageError("preset %r 缺 lines 模板行: %s" % (name, path))
+            raise UsageError("preset %r missing its lines template rows: %s" % (name, path))
 
         def ph_scan(s, where):
             bad = sorted(set(m.group(1) for m in PH_RE.finditer(s)
                              if m.group(1) not in known))
             if bad:
-                raise UsageError("占位出白名单（%s）: %s" % (where, ",".join(bad)))
+                raise UsageError("placeholder outside the allowlist (%s): %s" % (where, ",".join(bad)))
 
         for ent in lines:
             if isinstance(ent, str):
-                ph_scan(ent, "行式模板")
+                ph_scan(ent, "line-style template")
                 continue
             if not isinstance(ent, dict) or not isinstance(
                     ent.get("variants"), list) or not ent["variants"]:
-                raise UsageError("variants 槽式模板形畸（须 {slot, variants}）: "
-                                 "%s" % path)
+                raise UsageError("variants slot-style template malformed (need"
+                                 " {slot, variants}): %s" % path)
             has_else = False
             for v in ent["variants"]:
                 if not isinstance(v, dict) or not isinstance(v.get("line"), str):
-                    raise UsageError("variant 形畸（须 {when, line, evidence}）: "
-                                     "%s" % path)
-                ph_scan(v["line"], "variants 式")
+                    raise UsageError("variant malformed (need {when, line,"
+                                     " evidence}): %s" % path)
+                ph_scan(v["line"], "variants entry")
                 ev = v.get("evidence")
                 if not isinstance(ev, list) or not ev:
-                    raise UsageError("variant 缺金标 evidence（无据不铸）: %s"
+                    raise UsageError("variant missing its evidence citation"
+                                     " (evidence required before issuance): %s"
                                      % path)
                 when = v.get("when")
                 if when == "else":
@@ -636,22 +700,25 @@ class WashShape(object):
                     badk = [k for k in when if k not in known
                             or not isinstance(when[k], bool)]
                     if badk:
-                        raise UsageError("when 键出白名单/非布尔: %s"
-                                         % ",".join(sorted(badk)))
+                        raise UsageError("when key outside the allowlist or not"
+                                         " boolean: %s" % ",".join(sorted(badk)))
                 else:
-                    raise UsageError("when 须 'else' 或非空 bool dict: %s" % path)
+                    raise UsageError("when must be 'else' or a non-empty bool dict: %s" % path)
             if not has_else:
-                raise UsageError("variants 无 else 兜底（渲染须全态可决）: %s"
-                                 % path)
+                raise UsageError("variants has no else fallback (rendering must"
+                                 " decide for every state): %s" % path)
         return {"desc": pre.get("desc", ""), "lines": lines}
 
     def render_preset_header(self, path, text):
-        """preset 渲染（③头注形洗·占位替换）：模板行逐行替换占位→超宽行贪心
-        卷（wrap_long_line）。占位值全部承目标件自身——{name}＝basename 去 .v·
-        {deps_stdlib}/{deps_dev}＝require_faces 双列·{bundle}/{summary}/
-        {mission}＝header_carry 既有头注逐字携带——绝不合成。任一占位绑不上→
-        (None, 缺位清单)（judge 记 plan-miss 如实）。缓存键＝(abspath, 文面
-        md5)（loop 逐轮重判·同件同文恒同·件变即重渲）。"""
+        """Preset render (wash 3, placeholder substitution): template rows get
+        their placeholders replaced one by one, then over-wide lines wrap
+        greedily (wrap_long_line).  Every placeholder value comes from the
+        target file itself — {name} = basename minus .v, {deps_stdlib}/
+        {deps_dev} = the require_faces two columns, {bundle}/{summary}/
+        {mission} = header_carry verbatim — never synthesized.  Any unbound
+        placeholder -> (None, missing list) (the judge records plan-miss
+        honestly).  Cache key = (abspath, text md5) (re-judged per loop round;
+        same file same text stays identical, a changed file re-renders)."""
         key = (os.path.abspath(path), hashlib.md5(
             text.encode("utf-8", "replace")).hexdigest())
         if key in self._preset_render_cache:
@@ -679,14 +746,15 @@ class WashShape(object):
                                 bool(vals[k]) == w for k, w in when.items()):
                             chosen = v["line"]
                             break
-                    rows = [chosen]  # else 兜底装载已验·chosen 恒非 None
+                    rows = [chosen]  # else fallback verified at load; chosen is never None
                 for row in rows:
                     filled = PH_RE.sub(lambda m: vals[m.group(1)], row)
                     for phys in filled.split("\n"):
                         if phys.startswith("    "):
-                            # 卷行仅施字段身行（4 空格起）——L1 束语行与题行
-                            # 全战役语料恒单行（DecBridge6.v:1 103 列/:3 96 列·
-                            # abl_tail_supply_66.v:1 95 列皆单行）·不卷。
+                            # wrap only field-body lines (4-space indent) — the
+                            # L1 bundle line and the title line stay single-line
+                            # across the whole corpus (DecBridge6.v:1 103 cols /
+                            # :3 96 cols; abl_tail_supply_66.v:1 95 cols).
                             out_rows.extend(wrap_long_line(phys))
                         else:
                             out_rows.append(phys)
@@ -696,8 +764,9 @@ class WashShape(object):
         return self._preset_render_cache[key]
 
     def header_map_entry(self, basename):
-        """映射查得（basename 带/不带 .v 双试·承 comment_sweep.run 同款）。
-        仅 map 源（--header-map/env）——preset 源走 render_preset_header。"""
+        """Map lookup (basename tried with and without .v; same form as
+        comment_sweep.run).  Map source only (--header-map/env) — the preset
+        source goes through render_preset_header."""
         if not self.header_map:
             return None
         keys = [basename, basename[:-2]] if basename.endswith(".v") \
@@ -708,13 +777,15 @@ class WashShape(object):
         return None
 
     def _load_frozen_roster(self):
-        """certify/frozen8.py --ledger → (abs 集, rel 集, 来源说明)。
-        --ledger 只打账载常量（离线·零盘验）·injector 可罐装。行式
-        「md5<空白>relpath」；绝对路径行按 abs 收·相对行对 repo_root 归位。"""
+        """certify/frozen8.py --ledger -> (abs set, rel set, source note).
+        --ledger only prints the ledger-loaded constants (offline, no disk
+        verification); the injector can replace it.  Line form
+        "md5<whitespace>relpath"; absolute-path lines collect as abs; relative
+        lines resolve against repo_root."""
         rc, out, _rep, canned = self.run_engine(
             "frozen8", self.tool_frozen8, ["--ledger"])
         if rc != 0:
-            raise UsageError("frozen8 --ledger 形外退出 rc=%d: %s"
+            raise UsageError("frozen8 --ledger out-of-shape exit rc=%d: %s"
                              % (rc, tail_of(out)))
         abs_set, rel_set = set(), set()
         for ln in out.splitlines():
@@ -742,24 +813,25 @@ class WashShape(object):
         return rel in self.frozen_rel
 
     def is_forbidden(self, path):
-        """铁律禁触面：冻结八件在册∪更新账.md。"""
+        """Non-negotiable frozen surfaces: the frozen-eight roster plus the frozen ledger."""
         return self.is_frozen(path) or \
             os.path.basename(path) == LEDGER_NAME
 
-    # ---- 引擎调用层（注入点）----
+    # ---- engine call layer (injection point) ----
 
     def run_engine(self, key, tool_abs, cli, want_json=False):
-        """子进程调用层：injector 命中键→罐装恒定返付；否则真 subprocess
-        [sys.executable, -B, tool] + cli（stdout+stderr 合流·承 pushci
-        _run_py 形制）。want_json→附 --json tmp·解析后即删。返回
-        (rc, stdout, report|None, canned_flag)。"""
+        """Subprocess call layer: an injector key hit returns the canned
+        response constantly; otherwise a real subprocess [sys.executable, -B,
+        tool] + cli runs (stdout+stderr merged; the pushci _run_py form).
+        want_json appends --json tmp, parses, then deletes it.  Returns
+        (rc, stdout, report|None, canned_flag)."""
         canned = self.injector.canned(key) if self.injector else None
         if canned is not None:
             rep = canned.get("report")
             return (int(canned.get("rc", 0)), str(canned.get("stdout", "")),
                     rep, True)
         if not os.path.isfile(tool_abs):
-            raise MissingInput("引擎件缺失: %s" % tool_abs)
+            raise MissingInput("engine file missing: %s" % tool_abs)
         full_cli = list(cli)
         tmp = None
         if want_json:
@@ -788,12 +860,14 @@ class WashShape(object):
                 except OSError:
                     pass
 
-    # ---- 收件 ----
+    # ---- file collection ----
 
     def collect_files(self):
-        """--file 显式（存在性 9·禁触面红拒 2）＋ --dir 全树（.v 非 _·registry
-        两名·隐目录跳过·禁触面与 --exclude 自动排除）。去重按 abspath·序按
-        构造路径字符串（确定性）。返回 (files, excluded 记录)。"""
+        """--file explicit (existence 9; frozen-surface rejection 2) plus --dir
+        whole-tree (.v excluding _-prefixed, the two registry names, hidden
+        dirs skipped; frozen surfaces and --exclude auto-excluded).
+        Dedup by abspath; order by constructed path string (deterministic).
+        Returns (files, excluded records)."""
         args = self.args
         files, seen = [], set()
         excluded = []
@@ -807,14 +881,16 @@ class WashShape(object):
 
         for p in (args.file or []):
             if not os.path.exists(p):
-                raise MissingInput("--file 缺失: %s" % p)
+                raise MissingInput("--file missing: %s" % p)
             if self.is_forbidden(p):
-                raise UsageError("FATAL 冻结件红拒: %s（certify/frozen8.py "
-                                 "在册/更新账·禁触铁律——洗形器拒不执行）" % p)
+                raise UsageError("FATAL frozen-surface rejection: %s (on the "
+                                 "certify/frozen8.py roster or the frozen ledger;"
+                                 " non-negotiable constraint — the shaper refuses)"
+                                 % p)
             add(p)
         for d in (args.dir or []):
             if not os.path.isdir(d):
-                raise MissingInput("--dir 缺失: %s" % d)
+                raise MissingInput("--dir missing: %s" % d)
             for root, dirs, names in os.walk(d):
                 dirs[:] = sorted(x for x in dirs
                                  if not x.startswith("."))
@@ -847,26 +923,26 @@ class WashShape(object):
                 return True
         return False
 
-    # ---- 逐洗判（plan·零写盘）----
+    # ---- per-wash judging (plan; zero writes) ----
 
     def gate4_report(self, path):
-        """gate4 单件报告（rc 0/1/2 正常·形外/JSON 畸形→器红 exit 2）。"""
+        """gate4 single-file report (rc 0/1/2 normal; out-of-shape / malformed JSON -> engine failure exit 2)."""
         rc, out, rep, _c = self.run_engine("gate4", self.tool_gate4,
                                            ["--file", path], want_json=True)
         if rc not in (0, 1, 2):
-            raise UsageError("gate4 形外退出 rc=%d: %s" % (rc, tail_of(out)))
+            raise UsageError("gate4 out-of-shape exit rc=%d: %s" % (rc, tail_of(out)))
         if not isinstance(rep, dict) or not rep.get("results"):
-            raise UsageError("gate4 JSON 出账缺失/畸形: %s" % tail_of(out))
+            raise UsageError("gate4 JSON report missing/malformed: %s" % tail_of(out))
         return rep["results"][0]
 
     def judge_lexical(self, path, g4):
-        """①词面洗：gate4 hard 词面项＋review 语境双义项→flag_words 查式。"""
+        """Wash 1 lexical: gate4 hard word-face items plus review dual-sense items -> flag_words rewrite lookup."""
         hard = g4.get("hard") or []
         review = g4.get("review") or []
         verdict = g4.get("verdict", "?")
         if verdict == "UNREADABLE":
             return self._w(KIND_LEXICAL, STATUS_PLAN_MISS,
-                           "gate4 UNREADABLE（面不可读·无式可施）")
+                           "gate4 UNREADABLE (face unreadable; nothing applicable)")
         lex = [it for it in hard if it[2] not in HEADER_ITEM_TYPES]
         dual = [it for it in review if it[2] == REVIEW_DUAL]
         manual = len(review) - len(dual)
@@ -879,62 +955,66 @@ class WashShape(object):
             else:
                 unfix.append("%s:%s" % (tag, w))
         for it in dual:
-            w = it[3].split("（", 1)[0]
+            w = it[3].split("（", 1)[0]  # fullwidth paren = gate4 review-text format (interface, kept)
             if w in self.flag_words:
-                fixable.append("双义:%s→%s" % (w, self.flag_words[w]))
+                fixable.append("dual:%s->%s" % (w, self.flag_words[w]))
             else:
-                unfix.append("双义:%s（无对应式）" % w)
-        detail = ("gate4=%s hard=%d(词面项=%d) review=%d(双义=%d 人工域=%d) "
-                  "可改写=%d 无式=%d" % (verdict, len(hard), len(lex),
-                                         len(review), len(dual), manual,
-                                         len(fixable), len(unfix)))
+                unfix.append("dual:%s (no rewrite entry)" % w)
+        detail = ("gate4=%s hard=%d(lexical=%d) review=%d(dual=%d manual=%d)"
+                  " fixable=%d unfixable=%d" % (verdict, len(hard), len(lex),
+                                                len(review), len(dual), manual,
+                                                len(fixable), len(unfix)))
         if fixable:
-            detail += " 可改写[" + ";".join(fixable[:8]) + "]"
+            detail += " fixable[" + ";".join(fixable[:8]) + "]"
         if unfix:
-            detail += " 无式[" + ";".join(unfix[:8]) + "]"
+            detail += " unfixable[" + ";".join(unfix[:8]) + "]"
         status = (STATUS_WOULD_FIX if fixable
                   else (STATUS_PLAN_MISS if unfix else STATUS_CLEAN))
         return self._w(KIND_LEXICAL, status, detail,
                        n_fix=len(fixable), n_miss=len(unfix))
 
     def judge_token(self, path):
-        """②token 洗：scan_v4 普查→cure_applier 正典包干跑。"""
+        """Wash 2 token: scan_v4 survey -> cure_applier canonical-pack dry run."""
         rc, out, cen, _c = self.run_engine("scan_v4", self.tool_scan4,
                                            ["--file", path], want_json=True)
         if rc != 0:
-            raise UsageError("scan_v4 形外退出 rc=%d: %s" % (rc, tail_of(out)))
+            raise UsageError("scan_v4 out-of-shape exit rc=%d: %s" % (rc, tail_of(out)))
         if not isinstance(cen, dict):
-            raise UsageError("scan_v4 census JSON 缺失/畸形: %s"
+            raise UsageError("scan_v4 census JSON missing/malformed: %s"
                              % tail_of(out))
         n = int(cen.get("station_count", 0) or 0)
         if n == 0:
             return self._w(KIND_TOKEN, STATUS_CLEAN,
-                           "census 站=0（tracked=%s）"
+                           "census stations=0 (tracked=%s)"
                            % ",".join(cen.get("tracked_ids") or []))
         rc2, out2, crep, _c2 = self.run_engine("cure", self.tool_cure,
                                                ["--file", path],
                                                want_json=True)
         if rc2 == 4:
             return self._w(KIND_TOKEN, STATUS_PLAN_MISS,
-                           "census 站=%d·正典包排他组冲突（两变体皆中·须人工"
-                           " --only 择一）: %s" % (n, tail_of(out2, 160)))
+                           "census stations=%d; canonical-pack exclusive-group"
+                           " conflict (both variants matched; the operator must"
+                           " pick one via --only): %s" % (n, tail_of(out2, 160)))
         if rc2 != 0:
-            raise UsageError("cure_applier 干跑形外退出 rc=%d: %s"
+            raise UsageError("cure_applier dry run out-of-shape exit rc=%d: %s"
                              % (rc2, tail_of(out2)))
         total = sum(int(v.get("matches", 0) or 0)
                     for v in ((crep or {}).get("report") or {}).values())
         if total:
             return self._w(KIND_TOKEN, STATUS_WOULD_FIX,
-                           "census 站=%d·正典包干跑命中=%d" % (n, total),
+                           "census stations=%d; canonical-pack dry-run hits=%d" % (n, total),
                            n_fix=total)
         return self._w(KIND_TOKEN, STATUS_PLAN_MISS,
-                       "census 站=%d·正典包零命中（无对应式）" % n,
+                       "census stations=%d; canonical-pack zero hits (no rewrite entry)" % n,
                        n_miss=n)
 
     def judge_header(self, path, g4, text):
-        """③头注形洗：gate4 头注域硬项＋模板判（map 源＝逐件数据·对齐判与
-        补写判并施；preset 源＝钦名模板渲染——仅对硬项施刀·五字段齐件不对齐
-        改写（防人工 curated 面被机械卷改写·诚实账）；无源＝plan-miss 如实）。"""
+        """Wash 3 header: gate4 header-domain hard items plus template judging
+        (map source = per-file data, alignment and rewrite judged together;
+        preset source = designated-template render — rewrites only hard items
+        and never aligns an already-conforming five-field header, so a
+        human-curated face is never machine-rewritten; no source = plan-miss
+        reported honestly)."""
         items = [it for it in (g4.get("hard") or [])
                  if it[2] in HEADER_ITEM_TYPES]
         item_strs = ["%s:%s" % (it[2], it[3]) for it in items]
@@ -947,69 +1027,71 @@ class WashShape(object):
             mapped = None
         if mapped is not None:
             if items:
-                how = "comment_pack 式模板整体补写" \
-                    if self.header_source == "map" else "钦名模板渲染整体补写"
+                how = "comment_pack-style template full rewrite" \
+                    if self.header_source == "map" else "designated-template full rewrite"
                 return self._w(KIND_HEADER, STATUS_WOULD_FIX,
-                               "头注项=%d[%s]·%s"
+                               "header items=%d[%s]; %s"
                                % (len(items), ";".join(item_strs[:6]), how))
             if self.header_source == "map":
                 off = first_code_offset(text)
                 cur = text[:off] if off is not None else ""
                 if cur != mapped:
                     return self._w(KIND_HEADER, STATUS_WOULD_FIX,
-                                   "头注形与模板差（整体补写对齐）")
+                                   "header shape differs from the map (full-rewrite alignment)")
                 return self._w(KIND_HEADER, STATUS_CLEAN,
-                               "头注正典形（模板已在位）")
+                               "header already canonical (map text in place)")
             return self._w(KIND_HEADER, STATUS_CLEAN,
-                           "头注无项（首块·五字段齐·preset 不对齐改写）")
+                           "no header items (first block, five fields complete; preset never aligns-rewrites)")
         if items:
             if miss_ph:
                 return self._w(KIND_HEADER, STATUS_PLAN_MISS,
-                               "preset 渲染绑不上占位[%s]（承件缺既有头注身）"
-                               "·不硬造: [%s]"
+                               "preset render cannot bind placeholders [%s]"
+                               " (file lacks a carried header body); never"
+                               " synthesized: [%s]"
                                % (",".join(miss_ph),
                                   ";".join(item_strs[:6])),
                                n_miss=len(items))
             return self._w(KIND_HEADER, STATUS_PLAN_MISS,
-                           "无补写模板（模板源=%s 未配/缺条目）·不硬造: [%s]"
+                           "no rewrite template (template source=%s not"
+                           " configured / no entry); never synthesized: [%s]"
                            % (self.header_source,
                               ";".join(item_strs[:6])),
                            n_miss=len(items))
         return self._w(KIND_HEADER, STATUS_CLEAN,
-                       "头注无项（首块·五字段齐）")
+                       "no header items (first block, five fields complete)")
 
     def judge_eol(self, path, raw):
-        """④行尾洗：CRLF→LF 归一（末行换行形态保全）。"""
+        """Wash 4 eol: CRLF->LF normalization (final-newline form preserved)."""
         n = raw.count(b"\r\n")
         lone = raw.count(b"\r") - n
-        fin = "有" if raw.endswith(b"\n") else "无"
+        fin = "present" if raw.endswith(b"\n") else "absent"
         if n == 0:
-            detail = "CRLF=0·LF 已归一（末行换行=%s）" % fin
+            detail = "CRLF=0; LF already normalized (final newline=%s)" % fin
             if lone:
-                detail += "·lone_CR=%d（非 CRLF 口径·不改）" % lone
+                detail += "; lone_CR=%d (not CRLF, left unchanged)" % lone
             return self._w(KIND_EOL, STATUS_CLEAN, detail)
         return self._w(KIND_EOL, STATUS_WOULD_FIX,
-                       "CRLF 行尾=%d（末行换行形态保全）" % n
+                       "CRLF line endings=%d (final-newline form preserved)" % n
                        + ("·lone_CR=%d" % lone if lone else ""),
                        n_fix=n)
 
     def judge_anchor(self, path, raw):
-        """⑤锚形洗：order.txt 行锚正典形判（#R<序>-<md5 前 8>）。"""
+        """Wash 5 anchor: order.txt line-anchor canonical-form judging (#R<seq>-<md5-8>)."""
         base = os.path.basename(path)
         kind = REGISTRY_KINDS.get(base)
         if kind is None:
             return self._w(KIND_ANCHOR, STATUS_CLEAN,
-                           "非 registry（order.txt/_CoqProject）·此洗不适用")
+                           "not a registry file (order.txt/_CoqProject); wash not applicable")
         if kind == "coqproject":
             return self._w(KIND_ANCHOR, STATUS_CLEAN,
-                           "coqproject 行无锚（registry_union 口径）·不适用")
+                           "coqproject rows carry no anchors (registry_union sense); not applicable")
         anchor_src = self.args.anchor_src or \
             os.path.dirname(os.path.abspath(path))
         try:
             text = raw.decode("utf-8")
         except UnicodeDecodeError as e:
             return self._w(KIND_ANCHOR, STATUS_PLAN_MISS,
-                           "registry 非 UTF-8 面: %s" % e, n_miss=1)
+                           "registry face not UTF-8: %s" % e, n_miss=1)
         lines = [ln.rstrip("\r\n").strip()
                  for ln in text.split("\n")]
         while lines and lines[-1] == "":
@@ -1021,21 +1103,21 @@ class WashShape(object):
                 continue
             head = ln.split("#", 1)[0].strip()
             if not head:
-                continue  # 纯注释行（registry_union key_of=None 同律）
+                continue  # pure comment line (registry_union key_of=None rule)
             m = ANCHOR_RE.search(ln)
             if m is None:
-                miss_rows.append("行无锚不可重锚（无序号可承）: %s" % ln)
+                miss_rows.append("anchorless row cannot re-anchor (no seq to carry): %s" % ln)
                 continue
             anchor = m.group(0)
             seq = anchor[2:].split("-", 1)[0]
             module = head[:-2] if head.endswith(".v") else head
             entity = resolve_entity(module, anchor_src)
             if entity is None:
-                miss_rows.append("缺实体（%s 下无 %s.v）: %s"
+                miss_rows.append("missing entity (%s has no %s.v): %s"
                                  % (anchor_src, module, ln))
                 continue
             if entity.startswith("AMBIGUOUS:"):
-                miss_rows.append("实体歧义（registry_union 拒锚）: %s"
+                miss_rows.append("ambiguous entity (registry_union refuses to anchor): %s"
                                  % entity[len("AMBIGUOUS:"):])
                 continue
             fp = md5_8_of(entity)
@@ -1044,29 +1126,29 @@ class WashShape(object):
                 fix_rows.append("%s: %s→%s" % (module, anchor, canonical))
                 if module not in modules:
                     modules.append(module)
-        detail = "order 锚判：非正典=%d 无式=%d" % (len(fix_rows),
+        detail = "order anchor check: non-canonical=%d unfixable=%d" % (len(fix_rows),
                                                    len(miss_rows))
         if fix_rows:
             detail += " [" + ";".join(fix_rows[:8]) + "]"
         if miss_rows:
-            detail += " 无式[" + ";".join(miss_rows[:6]) + "]"
+            detail += " unfixable[" + ";".join(miss_rows[:6]) + "]"
         status = (STATUS_WOULD_FIX if fix_rows
                   else (STATUS_PLAN_MISS if miss_rows else STATUS_CLEAN))
         return self._w(KIND_ANCHOR, status, detail,
                        n_fix=len(fix_rows), n_miss=len(miss_rows),
                        modules=modules)
 
-    # ---- plan 组装 ----
+    # ---- plan assembly ----
 
     def plan_file(self, path):
-        """单件逐洗判（正典序①→⑤·零写盘）。"""
+        """Per-file wash judging (canonical order 1->5; zero writes)."""
         kinds = self.kinds
         try:
             with open(path, "rb") as fh:
                 raw = fh.read()
         except OSError as e:
             return {"file": path, "washes": [
-                self._w(k, STATUS_PLAN_MISS, "件不可读: %s" % e, n_miss=1)
+                self._w(k, STATUS_PLAN_MISS, "file unreadable: %s" % e, n_miss=1)
                 for k in kinds]}
         try:
             text = raw.decode("utf-8")
@@ -1085,9 +1167,12 @@ class WashShape(object):
             if KIND_HEADER in kinds:
                 washes.append(self.judge_header(path, g4, text))
         else:
-            for k, note in ((KIND_LEXICAL, "非 .v 源·词面洗不适用"),
-                            (KIND_TOKEN, "非 .v 源·token 洗不适用"),
-                            (KIND_HEADER, "非 .v 源·头注形洗不适用")):
+            for k, note in ((KIND_LEXICAL,
+                             "not a .v source; lexical wash not applicable"),
+                            (KIND_TOKEN,
+                             "not a .v source; token wash not applicable"),
+                            (KIND_HEADER,
+                             "not a .v source; header wash not applicable")):
                 if k in kinds:
                     washes.append(self._w(k, STATUS_CLEAN, note))
         if KIND_EOL in kinds:
@@ -1097,18 +1182,22 @@ class WashShape(object):
         return {"file": path, "washes": washes}
 
     def compute_plan(self):
-        """全范围 plan（零写盘）→ {"files": [...], "stats": {...}}。"""
+        """Whole-scope plan (zero writes) -> {"files": [...], "stats": {...}}."""
         entries = [self.plan_file(p) for p in self.files]
         return {"files": entries, "stats": stats_of(entries)}
 
-    # ---- plan 缓存（--loop 跨轮·源件 md5 变→重算）----------------------------
+    # ---- plan cache (--loop cross-round; any source md5 change recomputes) ----
 
     def plan_scope_md5s(self):
-        """plan 缓存失效域 {abspath: md5}：范围件（--file/--dir 收件）∪⑤锚
-        实体件（order.txt 行锚实体·anchor_src 解析——实体 md5 变亦源变）。
-        实体出现/消失/歧义化以记号键入域（域集变即失效）；件不可读记 None
-        （态变触发重算·fail-soft 域账）。逐轮重测此域＝廉价 md5（五洗引擎
-        零重跑）·域恒同→缓存命中。"""
+        """Plan-cache invalidation domain {abspath: md5}: scope files
+        (--file/--dir collection) plus wash-5 anchor entities (order.txt line
+        anchor entities resolved via anchor_src — an entity md5 change is a
+        source change).  Entity appearance/disappearance/ambiguation enters the
+        domain under a marker key (a domain-set change invalidates); an
+        unreadable file records None (its state change triggers recompute;
+        fail-soft domain accounting).  Re-measuring this domain per round is a
+        cheap md5 pass (zero wash-engine re-runs); a stable domain means a
+        cache hit."""
         out = {}
         for p in self.files:
             ap = os.path.abspath(p)
@@ -1124,7 +1213,7 @@ class WashShape(object):
                 with open(p, "rb") as fh:
                     text = fh.read().decode("utf-8", errors="replace")
             except OSError:
-                continue            # 件不可读已在范围域记 None
+                continue            # unreadable file already recorded None in the scope domain
             anchor_src = asrc or os.path.dirname(os.path.abspath(p))
             for ln in text.split("\n"):
                 head = ln.split("#", 1)[0].strip()
@@ -1135,7 +1224,7 @@ class WashShape(object):
                 if ent is None:
                     out["<missing:%s>" % module] = None
                 elif ent.startswith("AMBIGUOUS:"):
-                    out[ent] = ent  # 歧义集串本身入域（集变即域变）
+                    out[ent] = ent  # the ambiguity string itself enters the domain (set change = domain change)
                 else:
                     ap = os.path.abspath(ent)
                     try:
@@ -1145,10 +1234,12 @@ class WashShape(object):
         return out
 
     def plan_cached(self):
-        """plan 跨轮缓存（--loop 哨态）：失效域（plan_scope_md5s）恒同→复用
-        上轮 plan（缓存命中·五洗引擎零重判）；任一源件 md5 变→失效重算并
-        刷新域（源件 md5 变→plan 重算·钦定语义）。首轮缓存空必重算。
-        返回 (plan, hit)。"""
+        """Cross-round plan cache (--loop watch mode): a stable invalidation
+        domain (plan_scope_md5s) reuses the previous plan (cache hit; zero
+        wash-engine re-runs); any source md5 change invalidates, recomputes and
+        refreshes the domain (source md5 change -> plan recompute; fixed
+        semantics).  The first round always recomputes (cache empty).
+        Returns (plan, hit)."""
         cur = self.plan_scope_md5s()
         if self._plan_cache is not None and cur == self._plan_md5s:
             return self._plan_cache, True
@@ -1157,20 +1248,20 @@ class WashShape(object):
         self._plan_md5s = cur
         return plan, False
 
-    # ---- 逐洗施（apply·两段第二段）----
+    # ---- per-wash apply (phase two of the two-phase form) ----
 
     def apply_lexical(self, path):
         rc, out, rep, canned = self.run_engine(
             "sweep", self.tool_sweep, ["--file", path, "--apply"],
             want_json=True)
         if rc != 0:
-            raise UsageError("comment_sweep --apply 器红 rc=%d: %s"
+            raise UsageError("comment_sweep --apply engine failure rc=%d: %s"
                              % (rc, tail_of(out)))
         r = (rep or {}).get("report") or {}
         return {"file": path, "kind": KIND_LEXICAL,
                 "engine": "wash/comment_sweep.py", "rc": 0,
                 "detail": "flag_swaps=%d%s" % (int(r.get("flag_swaps", 0) or 0),
-                                               "（injector 罐装）" if canned
+                                               " (injector canned)" if canned
                                                else "")}
 
     def apply_token(self, path):
@@ -1178,21 +1269,25 @@ class WashShape(object):
             "cure", self.tool_cure, ["--file", path, "--apply"],
             want_json=True)
         if rc != 0:
-            raise UsageError("cure_applier --apply 器红 rc=%d（不落盘·二遍"
-                             "零残断言）: %s" % (rc, tail_of(out)))
+            raise UsageError("cure_applier --apply engine failure rc=%d"
+                             " (nothing written; built-in second-pass zero-residue"
+                             " assertion): %s" % (rc, tail_of(out)))
         hits = sum(int(v.get("matches", 0) or 0)
                    for v in ((rep or {}).get("report") or {}).values())
         return {"file": path, "kind": KIND_TOKEN,
                 "engine": "wash/cure_applier.py", "rc": 0,
                 "detail": "pattern_hits=%d%s" % (hits,
-                                                 "（injector 罐装）" if canned
+                                                 " (injector canned)" if canned
                                                  else "")}
 
     def apply_header(self, path):
-        """③落刀：comment_sweep --header-map <具体 map> --apply（引擎恒
-        comment_sweep·编排零新引擎）。map 源＝显传/env 路径；preset 源＝现渲
-        染单件 map 临时落盘（{basename: 渲染文}·用后即删——渲染值承件自身
-        数据·编排不落常盘）。绑不上（件面在 plan 后漂移）→器红 rc2 fail-loud。"""
+        """Wash 3 apply: comment_sweep --header-map <concrete map> --apply (the
+        engine is always comment_sweep; orchestration adds no new engine).  Map
+        source = the explicit/env path; preset source = the freshly rendered
+        single-file map written to a temp file ({basename: rendered text},
+        deleted after use — rendered values come from the file's own data;
+        orchestration persists nothing).  Unbindable placeholders (the file
+        drifted after plan) -> engine failure rc 2 fail-loud."""
         tmp = None
         try:
             if self.header_source == "preset":
@@ -1201,7 +1296,8 @@ class WashShape(object):
                 rendered, miss_ph = self.render_preset_header(path, text)
                 if rendered is None:
                     raise UsageError(
-                        "preset 渲染绑不上占位[%s]（apply 时件面漂移）: %s"
+                        "preset render cannot bind placeholders [%s] (file"
+                        " drifted after plan): %s"
                         % (",".join(miss_ph), path))
                 fd, tmp = tempfile.mkstemp(prefix="wash_shape_hmap_")
                 with os.fdopen(fd, "w", encoding="utf-8") as fh:
@@ -1221,28 +1317,29 @@ class WashShape(object):
                 except OSError:
                     pass
         if rc != 0:
-            raise UsageError("comment_sweep --header-map --apply 器红 rc=%d: %s"
-                             % (rc, tail_of(out)))
+            raise UsageError("comment_sweep --header-map --apply engine failure"
+                             " rc=%d: %s" % (rc, tail_of(out)))
         r = (rep or {}).get("report") or {}
         return {"file": path, "kind": KIND_HEADER,
                 "engine": "wash/comment_sweep.py", "rc": 0,
                 "detail": "header_replaced=%s flag_swaps=%d%s"
                           % (r.get("header_replaced"),
                              int(r.get("flag_swaps", 0) or 0),
-                             "（injector 罐装）" if canned else "")}
+                             " (injector canned)" if canned else "")}
 
     def apply_eol(self, path, raw):
         n = raw.count(b"\r\n")
         if n == 0:
             return {"file": path, "kind": KIND_EOL, "engine": "wash_shape",
                     "rc": 0,
-                    "detail": "crlf_converted=0 changed=False（前洗已附带"
-                              "归一·如实）"}
+                    "detail": "crlf_converted=0 changed=False (an earlier"
+                              " engine write-back already normalized; reported"
+                              " as observed)"}
         with open(path, "wb") as fh:
             fh.write(raw.replace(b"\r\n", b"\n"))
         return {"file": path, "kind": KIND_EOL, "engine": "wash_shape",
-                "rc": 0, "detail": "crlf_converted=%d changed=True（末行换行"
-                                   "形态保全）" % n}
+                "rc": 0, "detail": "crlf_converted=%d changed=True (final-newline"
+                                   " form preserved)" % n}
 
     def apply_anchor(self, path, modules):
         anchor_src = self.args.anchor_src or \
@@ -1258,14 +1355,14 @@ class WashShape(object):
                  "--anchor-src", anchor_src, "--out", tmp, "--apply"],
                 want_json=True)
             if rc != 0:
-                raise UsageError("registry_union --reanchor 器红 rc=%d（零"
-                                 "写盘）: %s" % (rc, tail_of(out)))
+                raise UsageError("registry_union --reanchor engine failure"
+                                 " rc=%d (zero writes): %s" % (rc, tail_of(out)))
             rewrites = ((rep or {}).get("reanchor") or {}).get("rewrites") or []
             if canned:
                 return {"file": path, "kind": KIND_ANCHOR,
                         "engine": "tools/registry_union.py", "rc": 0,
-                        "detail": "rewrites=%d（injector 罐装·未回位）"
-                                  % len(rewrites)}
+                        "detail": "rewrites=%d (injector canned; not moved"
+                                  " into place)" % len(rewrites)}
             os.replace(tmp, path)
             tmp = None
             return {"file": path, "kind": KIND_ANCHOR,
@@ -1280,7 +1377,7 @@ class WashShape(object):
                     pass
 
     def apply_one(self, path, wash):
-        """单洗落刀（按 plan 判面分发·正典序由调用方保证）。"""
+        """Apply one wash (dispatched on the plan verdict; canonical order guaranteed by the caller)."""
         kind = wash["kind"]
         if kind == KIND_LEXICAL:
             return self.apply_lexical(path)
@@ -1293,13 +1390,14 @@ class WashShape(object):
                 return self.apply_eol(path, fh.read())
         if kind == KIND_ANCHOR:
             return self.apply_anchor(path, wash.get("_modules") or [])
-        raise UsageError("洗 kind 不识: %s" % kind)
+        raise UsageError("unknown wash kind: %s" % kind)
 
-    # ---- verdict 与报告 ----
+    # ---- verdict and report ----
 
     def verdict_of(self, entries, n_applied, apply_mode):
-        """verdict：任一项级无式（洗级 plan-miss 或 _n_miss>0）→plan-miss；
-        余 would-fix→partial；apply 模式有施→shaped；否则 clean。"""
+        """verdict: any item-level miss (wash-level plan-miss or _n_miss>0) ->
+        plan-miss; otherwise any would-fix -> partial; apply mode with applied
+        items -> shaped; otherwise clean."""
         miss = any(w["status"] == STATUS_PLAN_MISS or w.get("_n_miss", 0) > 0
                    for f in entries for w in f["washes"])
         pend = any(w["status"] == STATUS_WOULD_FIX
@@ -1329,7 +1427,7 @@ class WashShape(object):
                                                         x["reason"]))},
             "verdict": verdict,
         }
-        if cache_hit is not None:   # --loop 跨轮 plan 缓存（响亮出账）
+        if cache_hit is not None:   # --loop cross-round plan cache (loud accounting)
             rep["plan_cache"] = {"hit": bool(cache_hit)}
         if self.args.apply:
             rep["apply"] = {"applied": applied,
@@ -1338,11 +1436,11 @@ class WashShape(object):
         return rep
 
     def dump_report(self, path, rep):
-        """确定性 JSON 落盘（sort_keys＋indent=1·与 registry_union.dump_json
-        同律·原子写）。"""
+        """Deterministic JSON write (sort_keys + indent=1; the
+        registry_union.dump_json rule; atomic write)."""
         d = os.path.dirname(os.path.abspath(path))
         if not os.path.isdir(d):
-            raise MissingInput("--json 出路径目录缺失: %s" % path)
+            raise MissingInput("--json output directory missing: %s" % path)
         fd, tmp = tempfile.mkstemp(dir=d, prefix=".wash_shape_json_")
         try:
             with io.open(tmp, "w", encoding="utf-8", newline="\n") as fh:
@@ -1354,12 +1452,14 @@ class WashShape(object):
                 os.unlink(tmp)
             raise
 
-    # ---- 主流程 ----
+    # ---- main flow ----
 
     def one_pass(self, round_no=None):
-        """一段完整流水：plan（--loop 走跨轮缓存·源件 md5 恒同命中复用/任一
-        变重算；--once 直算不走缓存）→(--apply? 落刀→复跑五洗复核——rescan
-        恒直算不复用缓存)→(verdict, report, n_applied)。"""
+        """One complete pass: plan (--loop uses the cross-round cache — a stable
+        source-md5 domain hits the cache, any change recomputes; --once computes
+        directly without the cache) -> (--apply? apply, then re-run all five
+        washes — rescan always computes fresh, never reuses the cache) ->
+        (verdict, report, n_applied)."""
         if self.args.loop:
             plan, cache_hit = self.plan_cached()
         else:
@@ -1389,8 +1489,9 @@ class WashShape(object):
         return exit_code_of(verdict)
 
     def _emit_event(self, ev):
-        """事件出账（stdout 镜像＋--events 追加·sort_keys 规范式一行·逐行
-        flush+fsync 承 cw_sentinel.emit_event 同律）。写败 → 9。"""
+        """Event emission (stdout mirror + --events append; sort_keys canonical
+        one-line JSON; per-line flush+fsync, the cw_sentinel.emit_event rule).
+        Write failure -> 9."""
         line = json.dumps(ev, ensure_ascii=False, sort_keys=True)
         print(line)
         sys.stdout.flush()
@@ -1402,14 +1503,16 @@ class WashShape(object):
                     fh.flush()
                     os.fsync(fh.fileno())
             except OSError as e:
-                raise MissingInput("--events 出账失败: %s (%s)"
+                raise MissingInput("--events write failed: %s (%s)"
                                    % (self.args.events, e))
 
     def run_loop(self):
-        """哨态：逐轮 one_pass（plan 跨轮缓存·源件 md5 变→重算）·JSONL 事件
-        流同形对齐（rocqwash-sentinel-event/1·schema/seq/kind·sort_keys 规范
-        式·seq 以 --events 现有行数为基跨进程续号·ts 承 --sleep-scale 0 关）·
-        --events 追加落账·--max-rounds 界定（0=无限·到帽出 stop 事件）。"""
+        """Watch mode: one_pass per round (cross-round plan cache; any source
+        md5 change recomputes); the JSONL event stream keeps the same shape
+        (rocqwash-sentinel-event/1; schema/seq/kind; sort_keys canonical form;
+        seq continues across processes from the existing --events line count;
+        ts drops when --sleep-scale 0); --events appends; --max-rounds bounds
+        the run (0 = unbounded; a stop event is emitted at the cap)."""
         ts_enabled = self.args.sleep_scale != 0
         if self.args.events and os.path.isfile(self.args.events):
             self._seq = events_seq_base(self.args.events) + 1
@@ -1473,17 +1576,18 @@ class WashShape(object):
             for f in rs["files"]:
                 for w in f["washes"]:
                     if w["status"] != STATUS_CLEAN:
-                        print("  残项 %s %s %s %s" % (w["status"].upper(),
+                        print("  residual %s %s %s %s" % (w["status"].upper(),
                                                       f["file"], w["kind"],
                                                       w["detail"]))
         for e in report["scope"]["excluded"]:
             print("  EXCLUDED %s (%s)" % (e["path"], e["reason"]))
 
-    # ---- 内件 ----
+    # ---- internals ----
 
     def _w(self, kind, status, detail, n_fix=0, n_miss=0, modules=None):
-        """洗目条目：外显四键（kind/action/status/detail·schema 面）＋内部
-        统计键（_ 前缀·落盘投影时剥除）。"""
+        """Wash entry: the four schema-surface keys (kind/action/status/detail)
+        plus internal stat keys (underscore-prefixed; stripped by the on-disk
+        projection)."""
         action = "none"
         if status == STATUS_WOULD_FIX:
             action = {KIND_LEXICAL: ACTION_SWEEP,
@@ -1503,7 +1607,7 @@ class WashShape(object):
 
 
 def project_entry(ent):
-    """洗目条目→schema 面四键（_ 内部键剥除）。"""
+    """Wash entry -> the four schema-surface keys (underscore-prefixed internal keys stripped)."""
     return {"kind": ent["kind"], "action": ent["action"],
             "status": ent["status"], "detail": ent["detail"]}
 
@@ -1516,8 +1620,8 @@ def project_plan(plan):
 
 
 def stats_of(entries):
-    """plan 统计：files/wash_entries/would_fix/clean/plan_miss（洗级）/
-    plan_miss_items（项级）。"""
+    """Plan stats: files/wash_entries/would_fix/clean/plan_miss (wash level) /
+    plan_miss_items (item level)."""
     st = {"files": len(entries), "wash_entries": 0, "would_fix": 0,
           "clean": 0, "plan_miss": 0, "plan_miss_items": 0,
           "would_fix_items": 0}
@@ -1536,13 +1640,14 @@ def stats_of(entries):
 
 
 def exit_code_of(verdict):
-    """退出码口径：0=clean/shaped·1=partial/plan-miss。"""
+    """Exit-code rule: 0 = clean/shaped; 1 = partial/plan-miss."""
     return 0 if verdict in (VERDICT_CLEAN, VERDICT_SHAPED) else 1
 
 
 def parse_only(spec):
-    """--only 解析：逗号/空分·序号 1-5 与 kind 名双收·未知即用法炸·出参保
-    正典序。"""
+    """--only parsing: comma/space split; both the numbers 1-5 and kind names
+    are accepted; an unknown token is a usage failure; the returned list keeps
+    canonical order."""
     if not spec:
         return list(KINDS)
     got = set()
@@ -1551,46 +1656,57 @@ def parse_only(spec):
             continue
         k = KIND_ALIASES.get(tok)
         if k is None:
-            raise UsageError("--only 项不识（须 %s 或 1-5）: %s"
+            raise UsageError("unknown --only item (need %s or 1-5): %s"
                              % (",".join(KINDS), tok))
         got.add(k)
     if not got:
-        raise UsageError("--only 列空: %r" % spec)
+        raise UsageError("--only list empty: %r" % spec)
     return [k for k in KINDS if k in got]
 
 
-# ---------- 自证 ----------
+# ---------- selftest ----------
 
 def selftest():
-    """内嵌冻结向量组（tmp 夹具·零真网络零真编译·真引擎离线驱动）：
+    """Frozen selftest vectors (tmp fixtures; zero real network, zero real
+    compiles; real engines driven offline):
 
-    判1  plan 五洗逐判（脏件：词面 would-fix/token clean/header clean/
-         eol would-fix/anchor 不适用）→partial rc1
-    判2  正件对照全 clean→clean rc0
-    判3  plan 零写盘·--apply 缺省关（md5 恒同）
-    判4  plan-miss 如实（无式词面件→plan-miss；混合件→would-fix 修可修·
-         plan-miss 亮无式）
-    判5  apply→rescan clean→shaped rc0（词面交换/CRLF 归一/锚正典 md5_8 实证）
-    判6  幂等（二跑 plan 全 clean→clean rc0；再 apply 零 applied）
-    判7  锚缺实体 plan-miss
-    判8  冻结名排除（injector 罐装名册：--dir 自动排除＋显式 --file 红拒 rc2；
-         真 frozen8 --ledger 八件＋真在册件红拒）
-    判9  子进程调用层注入（gate4 罐装判面）
-    判10 CLI 四码（help0/bogus2/无输入面2/缺件9）
-    判11 --once/--loop 双模（loop --max-rounds 2 事件流两轮＋stop）
-    判12 确定性（plan --json 两跑字节恒同）
-    判13 preset 链（--header-map-preset 装载在位·齐件不扰 rc0；探测次序：
-         preset 胜 env·--header-map 胜 env——env ROCWASH_HEADER_MAP 双向）
-    判14 preset 占位替换渲染→apply 端到端（缺字段件渲染整体补写→rescan
-         clean→shaped rc0→二跑幂等 clean·渲染文逐名断言［name/deps 双列/
-         bundle/build 命令/Axioms 豁免面］）
-    判15 同槽互斥（--header-map＋--header-map-preset rc2；preset 未知名 rc2）
-    判16 无源 plan-miss 如实（无旗无 env→缺字段件 header plan-miss）＋
-         模板库缺失 rc9（--repo-root 隔离场·引擎件 symlink 七路）
-    判17 --loop 事件流同形对齐（rocqwash-sentinel-event/1·--events 落盘逐行
-         sort_keys 范式·seq 跨进程续号不重号·kind round/stop·ts=off 注记）
-    判18 plan 缓存失效语义（a 范围件 md5 变→重算 miss/恒同→hit 复用
-         [F,F,T]；b ⑤锚实体件 md5 变亦源变 [F,F,F,T]——实体域缺位即假 hit）
+    v1   per-wash plan verdicts on the dirty file (lexical would-fix /
+         token clean / header clean / eol would-fix / anchor not
+         applicable) -> partial rc1
+    v2   clean-file control, all clean -> clean rc0
+    v3   plan writes nothing; --apply defaults off (md5 unchanged)
+    v4   plan-miss honesty (an unrewritable word-face file -> plan-miss;
+         a mixed file -> would-fix the fixable and plan-miss the unfixable)
+    v5   apply -> rescan clean -> shaped rc0 (word-face exchange / CRLF
+         normalization / anchor canonical md5_8 verified)
+    v6   idempotence (second plan all clean -> clean rc0; re-apply applies 0)
+    v7   anchor missing entity -> plan-miss
+    v8   frozen-roster exclusion (injector-canned roster: --dir auto-excludes
+         plus explicit --file hard rejection rc2; the real frozen8 --ledger
+         eight files and a real rostered file also hard-reject)
+    v9   subprocess-layer injection (canned gate4 verdict face)
+    v10  CLI four codes (help 0 / bogus 2 / no-input 2 / missing 9)
+    v11  --once/--loop modes (loop --max-rounds 2: two round events + stop)
+    v12  determinism (plan --json reruns are byte-identical)
+    v13  preset chain (--header-map-preset loads; conforming files untouched
+         rc0; probe order: preset beats env, --header-map beats env —
+         env ROCWASH_HEADER_MAP tested both ways)
+    v14  preset placeholder render -> apply end to end (missing-field file
+         renders a full rewrite -> rescan clean -> shaped rc0 -> rerun
+         idempotent clean; rendered text asserted name by name [name / both
+         deps columns / bundle / build command / Axioms exemption face])
+    v15  same-slot exclusivity (--header-map + --header-map-preset rc2;
+         unknown preset name rc2)
+    v16  no-source plan-miss honesty (no flag and no env -> missing-field
+         file header plan-miss) + missing template library rc9 (isolated
+         --repo-root with seven engine symlinks)
+    v17  --loop event-stream shape (rocqwash-sentinel-event/1; --events lines
+         sort_keys canonical; seq continues across processes without reuse;
+         kinds round/stop; ts=off note)
+    v18  plan-cache invalidation (a scope-file md5 change -> recompute miss /
+         stable -> hit reuse [F,F,T]; a wash-5 anchor-entity md5 change is
+         also a source change [F,F,F,T] — a domain missing its entity would
+         be a false hit)
     """
     import tempfile
 
@@ -1619,13 +1735,15 @@ def selftest():
         os.makedirs(asrc)
         src_miss = os.path.join(tmp, "src_miss")
         os.makedirs(src_miss)
+        # fixture .v header: Chinese field labels are the gate4 check input
+        # (interface data consumed by the frozen engine) — kept verbatim.
         header = ("(* 使命：洗形器自测夹具。\n"
                   "   依赖：无。\n"
                   "   对标：无。\n"
                   "   构造性：全闭合。\n"
                   "   编译配方：rocq c -Q . \"\" fixture.v。 *)\n")
         dirty_lf = header + "Definition a := 1. (* 这里埋一个载体词 *)\n" \
-                            "Definition b := 2.\n"
+                            "Definition b := 2.\n"  # fixture data: 载体 is a comment_pack flag_words key
         dirty_v = wf(os.path.join(src, "dirty.v"), dirty_lf.replace(
             "\n", "\r\n"), newline="")
         clean_v = wf(os.path.join(src, "clean.v"),
@@ -1641,8 +1759,9 @@ def selftest():
                         "Ghost.v#R9\n")
         wf(os.path.join(asrc, "ToyA.v"), "Definition ta := 1.\n")
         wf(os.path.join(asrc, "ToyB.v"), "Definition tb := 2.\n")
-        # 判13/14/16 preset 矢量夹具：战役 `**` 形头注缺 构造性/编译 两字段
-        # （gate4 缺字段硬项驱动）·Require 面 From Stdlib 一行＋bare 两行
+        # v13/14/16 preset-vector fixture: a `**`-style header missing two
+        # fields (drives the gate4 missing-field hard item); Require face =
+        # one From Stdlib line + two bare lines
         fx_header = (
             "(* ConstructiveWorld-Set -- fixture bundle for the wash shape "
             "header-map preset selftest. *)\n"
@@ -1666,8 +1785,9 @@ def selftest():
                    "Definition fx_slot : True.\n"
                    "Proof. exact I. Qed.\n")
         fx_v = wf(os.path.join(src, "hdmap_fx.v"), fx_header + fx_body)
-        # 判16 专用副本（判14 apply 会把 hdmap_fx.v 洗成五字段齐件——plan-miss
-        # 矢量须用未经施刀的缺字段件）
+        # v16-only copy (the v14 apply would wash hdmap_fx.v into a
+        # five-field-complete file — the plan-miss vector needs the
+        # untouched missing-field file)
         fx2_v = wf(os.path.join(src, "hdmap_fx2.v"), fx_header + fx_body)
 
         def load_json(path):
@@ -1680,7 +1800,7 @@ def selftest():
                     return dict((w["kind"], w) for w in f["washes"])
             return {}
 
-        # 判1 plan 五洗逐判（脏件）
+        # v1 per-wash plan verdicts (dirty file)
         j1 = os.path.join(tmp, "j1.json")
         rc, out = run(["--file", dirty_v, "--json", j1])
         rep1 = load_json(j1)
@@ -1688,47 +1808,47 @@ def selftest():
         c1 = (rc == 1 and rep1["schema"] == SCHEMA
               and rep1["verdict"] == "partial"
               and w1["lexical"]["status"] == "would-fix"
-              and "载体" in w1["lexical"]["detail"]
+              and "载体" in w1["lexical"]["detail"]  # 载体 comes from the comment_pack data key
               and w1["token"]["status"] == "clean"
               and w1["header"]["status"] == "clean"
               and w1["eol"]["status"] == "would-fix"
               and w1["anchor"]["status"] == "clean"
-              and "不适用" in w1["anchor"]["detail"])
-        print("判1 plan 五洗逐判(脏件 partial):", c1)
+              and "not applicable" in w1["anchor"]["detail"])
+        print("v1 per-wash plan verdicts (dirty file partial):", c1)
         ok = ok and c1
 
-        # 判2 正件对照
+        # v2 clean-file control
         rc, out = run(["--file", clean_v, "--json",
                        os.path.join(tmp, "j2.json")])
         rep2 = load_json(os.path.join(tmp, "j2.json"))
         c2 = rc == 0 and rep2["verdict"] == "clean" and \
             all(w["status"] == "clean"
                 for f in rep2["plan"]["files"] for w in f["washes"])
-        print("判2 正件对照全 clean:", c2)
+        print("v2 clean-file control all clean:", c2)
         ok = ok and c2
 
-        # 判3 plan 零写盘·--apply 缺省关
+        # v3 plan writes nothing; --apply defaults off
         md5_before = md5_of(dirty_v)
         c3 = md5_of(dirty_v) == md5_before
-        print("判3 plan 零写盘(--apply 缺省关):", c3)
+        print("v3 plan writes nothing (--apply defaults off):", c3)
         ok = ok and c3
 
-        # 判4 plan-miss 如实（无式件＋混合件）
+        # v4 plan-miss honesty (unrewritable + mixed files)
         rc, out = run(["--file", missy_v])
         m_miss = ("PLAN-MISS" in out and "禁词:探针" in out
-                  and "无对应式" not in out)
+                  and "no rewrite entry" not in out)  # 禁词 = gate4 output tag (interface)
         rc, out = run(["--file", mixed_v, "--json",
                        os.path.join(tmp, "j4.json")])
         rep4 = load_json(os.path.join(tmp, "j4.json"))
         w4 = washes_of(rep4, "mixed.v")
         c4 = (rc == 1 and rep4["verdict"] == "plan-miss"
               and w4["lexical"]["status"] == "would-fix"
-              and "无式[禁词:探针]" in w4["lexical"]["detail"]
+              and "unfixable[禁词:探针]" in w4["lexical"]["detail"]
               and rep4["plan"]["stats"]["plan_miss_items"] == 1)
-        print("判4 plan-miss 如实(无式件/混合件):", c4, m_miss)
+        print("v4 plan-miss honesty (unrewritable/mixed files):", c4, m_miss)
         ok = ok and c4 and m_miss
 
-        # 判5 apply→rescan clean→shaped（词面/CRLF/锚三面实证）
+        # v5 apply -> rescan clean -> shaped (word-face / CRLF / anchor verified)
         rc, out = run(["--file", dirty_v, "--file", order_txt,
                        "--anchor-src", asrc, "--apply", "--json",
                        os.path.join(tmp, "j5.json")])
@@ -1749,10 +1869,10 @@ def selftest():
               and len(rep5["apply"]["applied"]) >= 3
               and all(s == "clean"
                       for d in rescan_w.values() for s in d.values()))
-        print("判5 apply→rescan clean→shaped(词面/CRLF/锚实证):", c5)
+        print("v5 apply->rescan clean->shaped (word-face/CRLF/anchor):", c5)
         ok = ok and c5
 
-        # 判6 幂等（二跑 plan 全 clean；再 apply 零 applied）
+        # v6 idempotence (second plan all clean; re-apply applies zero)
         rc, out = run(["--file", dirty_v, "--file", order_txt,
                        "--anchor-src", asrc, "--json",
                        os.path.join(tmp, "j6.json")])
@@ -1763,16 +1883,16 @@ def selftest():
               and all(w["status"] == "clean"
                       for f in rep6["plan"]["files"] for w in f["washes"])
               and rc6b == 0 and "applied=0" in out6b)
-        print("判6 幂等(二跑 plan 全 clean/再 apply 零 applied):", c6)
+        print("v6 idempotence (second plan all clean / re-apply zero applied):", c6)
         ok = ok and c6
 
-        # 判7 锚缺实体 plan-miss
+        # v7 anchor missing entity -> plan-miss
         rc, out = run(["--file", order_miss, "--anchor-src", asrc])
-        c7 = rc == 1 and "PLAN-MISS" in out and "缺实体" in out
-        print("判7 锚缺实体 plan-miss:", c7)
+        c7 = rc == 1 and "PLAN-MISS" in out and "missing entity" in out
+        print("v7 anchor missing entity plan-miss:", c7)
         ok = ok and c7
 
-        # 判8 冻结名排除（injector 罐装名册＋真 frozen8 名册）
+        # v8 frozen-roster exclusion (injector-canned roster + real frozen8 roster)
         vault = os.path.join(tmp, "vault")
         os.makedirs(vault)
         frozen_me = wf(os.path.join(vault, "frozen_me.py"), "x = 1\n")
@@ -1793,13 +1913,13 @@ def selftest():
             "scan", "mac_stmt_scan.py"), "--only", "eol"])
         c8 = (rc == 0 and "frozen_me.py" in excl_paths
               and "frozen_me.py" not in plan_files
-              and rc8b == 2 and "红拒" in out8b
-              and rc8c == 2 and "红拒" in out8c
+              and rc8b == 2 and "rejection" in out8b
+              and rc8c == 2 and "rejection" in out8c
               and rep8["scope"]["frozen_roster_source"] == "injector-canned")
-        print("判8 冻结名排除(罐装 --dir 排除/显式红拒 rc2/真在册红拒):", c8)
+        print("v8 frozen-roster exclusion (canned --dir exclusion / explicit rejection rc2 / real roster rejection):", c8)
         ok = ok and c8
 
-        # 判9 子进程调用层注入（gate4 罐装判面）
+        # v9 subprocess-layer injection (canned gate4 verdict face)
         inj2 = wf(os.path.join(tmp, "inj2.json"), json.dumps(
             {"gate4": {"rc": 1, "stdout": "canned-gate4",
                        "report": {"results": [
@@ -1810,21 +1930,21 @@ def selftest():
                        "--only", "lexical"])
         c9 = rc == 1 and "PLAN-MISS" in out and "gate4=FAIL" in out \
             and "禁词:探针" in out
-        print("判9 子进程调用层注入(gate4 罐装判面):", c9)
+        print("v9 subprocess-layer injection (canned gate4 face):", c9)
         ok = ok and c9
 
-        # 判10 CLI 四码
+        # v10 CLI four codes
         rc_h, out_h = run(["--help"])
         rc_b, out_b = run(["--bogus"])
         rc_n, out_n = run([])
         rc_m, out_m = run(["--file", os.path.join(tmp, "nope.v")])
         c10 = (rc_h == 0 and "usage" in out_h.lower()
                and rc_b == 2 and rc_n == 2 and rc_m == 9)
-        print("判10 CLI 四码(help0/bogus2/无输入面2/缺件9):", c10)
+        print("v10 CLI four codes (help0/bogus2/no-input2/missing9):", c10)
         ok = ok and c10
 
-        # 判11 --once/--loop 双模（哨态两轮＋stop 事件·事件流同形对齐：
-        # schema/seq/kind·sort_keys 规范式·ts=off 注记）
+        # v11 --once/--loop modes (two watch rounds + stop event; event-stream
+        # shape: schema/seq/kind; sort_keys canonical form; ts=off note)
         rc, out = run(["--file", clean_v, "--only", "eol", "--loop",
                        "--interval", "0", "--sleep-scale", "0",
                        "--max-rounds", "2"])
@@ -1838,7 +1958,7 @@ def selftest():
             except ValueError:
                 continue
             if isinstance(e, dict) and e.get("schema") == EVENT_SCHEMA:
-                ev_pairs.append((ln, e))     # stdout 镜像逐行（响亮）
+                ev_pairs.append((ln, e))     # stdout mirror line by line (loud)
         evs11 = [e for _, e in ev_pairs]
         c11 = (rc == 0 and len(evs11) == 3
                and [e["kind"] for e in evs11] == ["round", "round", "stop"]
@@ -1846,10 +1966,10 @@ def selftest():
                and all(ln == json.dumps(e, ensure_ascii=False,
                                         sort_keys=True) for ln, e in ev_pairs)
                and all("ts=off" in e.get("note", "") for e in evs11))
-        print("判11 --loop 哨态(max-rounds 2/事件流同形 schema+seq+kind):", c11)
+        print("v11 --loop watch mode (max-rounds 2 / event shape schema+seq+kind):", c11)
         ok = ok and c11
 
-        # 判12 确定性（plan --json 两跑字节恒同）
+        # v12 determinism (plan --json reruns byte-identical)
         ja = os.path.join(tmp, "ja.json")
         jb = os.path.join(tmp, "jb.json")
         run(["--file", missy_v, "--file", order_miss, "--anchor-src",
@@ -1857,10 +1977,10 @@ def selftest():
         run(["--file", missy_v, "--file", order_miss, "--anchor-src",
              asrc, "--json", jb])
         c12 = io.open(ja, "rb").read() == io.open(jb, "rb").read()
-        print("判12 确定性(plan --json 两跑字节恒同):", c12)
+        print("v12 determinism (plan --json reruns byte-identical):", c12)
         ok = ok and c12
 
-        # 判13 preset 链（装载在位·齐件不扰·探测次序 preset/--header-map 胜 env）
+        # v13 preset chain (loads; conforming files untouched; probe order preset/--header-map beats env)
         j13a = os.path.join(tmp, "j13a.json")
         rc, out = run(["--file", clean_v, "--header-map-preset",
                        "campaign_set_diamond", "--json", j13a])
@@ -1881,12 +2001,12 @@ def selftest():
         c13 = (rc == 0 and rep13a["verdict"] == "clean"
                and hm13["source"] == "preset"
                and hm13["preset"] == "campaign_set_diamond"
-               and rc13b == 1 and "钦名模板渲染整体补写" in out13b
-               and rc13c == 1 and "无补写模板（模板源=map" in out13c)
-        print("判13 preset 链(装载在位/齐件不扰/preset>--header-map 胜 env):", c13)
+               and rc13b == 1 and "designated-template full rewrite" in out13b
+               and rc13c == 1 and "no rewrite template (template source=map" in out13c)
+        print("v13 preset chain (loads / conforming untouched / preset>--header-map beats env):", c13)
         ok = ok and c13
 
-        # 判14 preset 占位替换渲染→apply 端到端（缺字段件→补写→shaped→幂等）
+        # v14 preset placeholder render -> apply end to end (missing-field file -> full rewrite -> shaped -> idempotent)
         j14a = os.path.join(tmp, "j14a.json")
         rc, out = run(["--file", fx_v, "--header-map-preset",
                        "campaign_set_diamond", "--json", j14a])
@@ -1894,8 +2014,8 @@ def selftest():
         w14 = washes_of(rep14a, "hdmap_fx.v")
         c14a = (rc == 1 and rep14a["verdict"] == "partial"
                 and w14["header"]["status"] == "would-fix"
-                and "钦名模板渲染整体补写" in w14["header"]["detail"]
-                and "缺字段" in w14["header"]["detail"]
+                and "designated-template full rewrite" in w14["header"]["detail"]
+                and "缺字段" in w14["header"]["detail"]  # 缺字段 = gate4 output tag (interface, kept)
                 and w14["header"]["action"] == ACTION_SWEEP_MAP_PRESET)
         rc, out = run(["--file", fx_v, "--header-map-preset",
                        "campaign_set_diamond", "--apply", "--json",
@@ -1918,21 +2038,21 @@ def selftest():
             w["status"] == "clean"
             for f in rep14c["plan"]["files"] for w in f["washes"])
         c14 = c14a and c14b and c14c
-        print("判14 preset 占位替换渲染→apply 端到端(partial→shaped→幂等"
-              "/渲染逐名断言):", c14)
+        print("v14 preset placeholder render->apply end to end (partial->shaped"
+              "->idempotent / render asserted name by name):", c14)
         ok = ok and c14
 
-        # 判15 同槽互斥（双旗 rc2·preset 未知名 rc2）
+        # v15 same-slot exclusivity (both flags rc2; unknown preset name rc2)
         rc, out = run(["--file", clean_v, "--header-map", envmap_empty,
                        "--header-map-preset", "campaign_set_diamond"])
         rc15b, out15b = run(["--file", clean_v, "--header-map-preset",
                              "no_such_preset"])
-        c15 = (rc == 2 and "互斥" in out
-               and rc15b == 2 and "名不识" in out15b)
-        print("判15 同槽互斥(双旗 rc2/未知名 rc2):", c15)
+        c15 = (rc == 2 and "same-slot" in out
+               and rc15b == 2 and "unrecognized" in out15b)
+        print("v15 same-slot exclusivity (both flags rc2 / unknown name rc2):", c15)
         ok = ok and c15
 
-        # 判16 无源 plan-miss 如实＋模板库缺失 rc9（隔离 repo_root）
+        # v16 no-source plan-miss honesty + missing template library rc9 (isolated repo_root)
         env_clean = dict(os.environ)
         env_clean.pop(ENV_HEADER_MAP, None)
         rc, out = run(["--file", fx2_v, "--only", "header"], env=env_clean)
@@ -1953,13 +2073,13 @@ def selftest():
         rc16b, out16b = run(["--file", clean_v, "--header-map-preset",
                              "campaign_set_diamond", "--repo-root", iso])
         c16 = (rc == 1 and "PLAN-MISS" in out
-               and "无补写模板（模板源=none" in out
-               and rc16b == 9 and "模板库缺失" in out16b)
-        print("判16 无源 plan-miss 如实/模板库缺失 rc9:", c16)
+               and "no rewrite template (template source=none" in out
+               and rc16b == 9 and "template library missing" in out16b)
+        print("v16 no-source plan-miss honesty / missing template library rc9:", c16)
         ok = ok and c16
 
-        # 判17 --loop 事件流同形对齐（--events 落盘逐行范式·flush+fsync·seq
-        # 跨进程续号不重号）
+        # v17 --loop event-stream shape (--events lines canonical; flush+fsync;
+        # seq continues across processes without reuse)
         ev17 = os.path.join(tmp, "ev17.jsonl")
         rc, out = run(["--file", clean_v, "--only", "eol", "--loop",
                        "--interval", "0", "--sleep-scale", "0",
@@ -1977,15 +2097,20 @@ def selftest():
                and all(e["schema"] == EVENT_SCHEMA for e in evs17)
                and all(ln == json.dumps(json.loads(ln), ensure_ascii=False,
                                         sort_keys=True) for ln in lines17))
-        print("判17 事件流同形对齐(--events 逐行范式/seq 跨进程续号):", c17)
+        print("v17 event-stream shape (--events canonical lines / seq continues across processes):", c17)
         ok = ok and c17
 
-        # 判18 plan 缓存失效语义（源件 md5 变→plan 重算·恒同→命中复用）：
-        # a) 范围件 md5 变——loop --apply 三轮：轮1 miss→落刀 CRLF→LF（文件
-        #    变）→轮2 必 miss（重算后 eol clean）→轮3 恒同 hit 复用；
-        # b) ⑤锚实体件 md5 变亦源变——ToyE.v（实体）轮1 被 eol 落刀而
-        #    order_e.txt 未动→轮2 miss 纯实体域驱动（域缺实体即假 hit）→
-        #    轮2 落刀改 order_e.txt→轮3 miss→轮4 恒同 hit（序列 [F,F,F,T]）。
+        # v18 plan-cache invalidation (source md5 change -> recompute; stable
+        # -> cache hit):
+        # a) scope-file md5 change — loop --apply three rounds: round 1 miss ->
+        #    apply CRLF->LF (file changes) -> round 2 must miss (eol clean after
+        #    recompute) -> round 3 stable hit reuse;
+        # b) a wash-5 anchor-entity md5 change is also a source change —
+        #    ToyE.v (the entity) is eol-applied in round 1 while order_e.txt is
+        #    untouched -> round 2 misses purely from the entity domain (a domain
+        #    missing its entity would be a false hit) -> round 2 applies and
+        #    changes order_e.txt -> round 3 misses -> round 4 stable hit
+        #    (sequence [F,F,F,T]).
         cache_v = wf(os.path.join(src, "cache_probe.v"),
                      header + "Definition z := 0.\r\n", newline="")
         ev18 = os.path.join(tmp, "ev18.jsonl")
@@ -1999,12 +2124,12 @@ def selftest():
         c18a = (rc == 0
                 and [e["plan_cache_hit"] for e in evs18] == [False, False, True]
                 and rep18["plan_cache"]["hit"] is True
-                and evs18[0]["n_applied"] == 1     # 轮1 落刀 CRLF→LF
-                and evs18[1]["n_applied"] == 0     # 轮2 重算后已 clean
+                and evs18[0]["n_applied"] == 1     # round 1 applied CRLF->LF
+                and evs18[1]["n_applied"] == 0     # round 2 clean after recompute
                 and all(w["status"] == "clean"
                         for f in rep18["plan"]["files"]
                         for w in f["washes"]))
-        print("判18a plan 缓存（范围件 md5 变→重算 miss/恒同→hit 复用）:", c18a)
+        print("v18a plan cache (scope md5 change -> recompute miss / stable -> hit reuse):", c18a)
         ok = ok and c18a
 
         asrc18 = os.path.join(tmp, "asrc18")
@@ -2034,18 +2159,18 @@ def selftest():
                 and all(w["status"] == "clean"
                         for f in rep18b["plan"]["files"]
                         for w in f["washes"]))
-        print("判18b plan 缓存（锚实体件 md5 变→重算 miss·序列 [F,F,F,T]）:",
-              c18b)
+        print("v18b plan cache (anchor-entity md5 change -> recompute miss;"
+              " sequence [F,F,F,T]):", c18b)
         ok = ok and c18b
 
         print("WASH-SHAPE-SELFTEST:",
-              "PASS（18 判全过）" if ok else "FAIL")
+              "PASS (all 18 vectors)" if ok else "FAIL")
         return 0 if ok else 1
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-# ---------- 主流程 ----------
+# ---------- main ----------
 
 def main():
     argv = sys.argv[1:]
@@ -2054,55 +2179,67 @@ def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="洗形器·正典形五洗流水（gate4 词面/token 普查+正典包/头注"
-                    "模板/行尾归一/registry 重锚·两段 plan→apply 复跑复核·"
-                    "schema rocqwash-shape/1）")
+        description="shape-normalizing tool: canonical five-wash pipeline"
+                    " (gate4 word-face / token survey + canonical pack / header"
+                    " template / eol normalization / registry re-anchor;"
+                    " two-phase plan->apply with rescan verification; schema"
+                    " rocqwash-shape/1)")
     ap.add_argument("--file", action="append", default=[], metavar="PATH",
-                    help="目标件（可多次；.v 走①②③·order.txt/_CoqProject 走⑤"
-                         "·任意文本件走④）")
+                    help="target files (repeatable; .v runs washes 1-3;"
+                         " order.txt/_CoqProject runs wash 5; any text file"
+                         " runs wash 4)")
     ap.add_argument("--dir", action="append", default=[], metavar="DIR",
-                    help="全树收件（.v＋order.txt/_CoqProject·可多次）")
-    ap.add_argument("--exclude", action="append", default=[], metavar="名",
-                    help="追加排除名（ basename 或路径段·冻结名册在册自动排除）")
+                    help="whole-tree collection (.v plus order.txt/_CoqProject;"
+                         " repeatable)")
+    ap.add_argument("--exclude", action="append", default=[], metavar="NAME",
+                    help="additional excluded names (a basename or a path"
+                         " segment; rostered frozen files are auto-excluded)")
     ap.add_argument("--only", default=None, metavar="KINDS",
-                    help="洗目子集（逗号分·lexical,token,header,eol,anchor "
-                         "或 1-5·缺省全五洗）")
+                    help="wash subset (comma-separated: lexical,token,header,"
+                         "eol,anchor or 1-5; default all five)")
     ap.add_argument("--header-map", dest="header_map", default=None,
                     metavar="MAP.json",
-                    help="③头注形洗补写模板（{basename: header text}·逐件数据"
-                         "·与 --header-map-preset 同槽互斥 rc2）")
+                    help="wash-3 header full-rewrite template ({basename: header"
+                         " text}; per-file data; same-slot exclusive with"
+                         " --header-map-preset, rc 2)")
     ap.add_argument("--header-map-preset", dest="header_map_preset",
                     default=None, metavar="NAME",
-                    help="③头注形洗钦名模板（tests/fixtures/header_map_v1.json "
-                         "蒸馏库内 preset 名·占位承目标件自身派生/既有头注逐字"
-                         "携带·缺省探测次序 --header-map > 本参 > env "
-                         "ROCWASH_HEADER_MAP > 无=plan-miss）")
+                    help="wash-3 header designated template (a preset name in"
+                         " the tests/fixtures/header_map_v1.json distilled"
+                         " library; placeholders derive from the target's own"
+                         " faces / carried header; probe order --header-map >"
+                         " this flag > env ROCWASH_HEADER_MAP > none ="
+                         " plan-miss)")
     ap.add_argument("--anchor-src", dest="anchor_src", default=None,
                     metavar="DIR",
-                    help="⑤锚形洗实件源目录（缺省=registry 件同目录）")
+                    help="wash-5 anchor entity source directory (default = the"
+                         " registry file's own directory)")
     ap.add_argument("--repo-root", dest="repo_root", default=None,
                     metavar="DIR",
-                    help="引擎件根（缺省=本脚本上上级·全参数化）")
+                    help="engine files root (default = this script's"
+                         " grandparent; fully parameterized)")
     ap.add_argument("--json", dest="jsonout", default=None, metavar="OUT",
-                    help="report 出账（schema rocqwash-shape/1）")
+                    help="report output path (schema rocqwash-shape/1)")
     ap.add_argument("--apply", action="store_true",
-                    help="两段第二段：执行 would-fix 项＋复跑五洗复核（缺省"
-                         " plan 零写盘）")
+                    help="phase two: execute would-fix items and re-run all five"
+                         " washes for verification (default: plan, zero writes)")
     ap.add_argument("--loop", action="store_true",
-                    help="哨态：逐轮流水＋JSONL 事件流（缺省 --once 单段）")
+                    help="watch mode: one pass per round plus a JSONL event"
+                         " stream (default: --once, a single pass)")
     ap.add_argument("--interval", type=float, default=5.0, metavar="S",
-                    help="loop 轮间秒（缺省 5·可调）")
+                    help="seconds between loop rounds (default 5; adjustable)")
     ap.add_argument("--sleep-scale", dest="sleep_scale", type=float,
                     default=1.0, metavar="S",
-                    help="sleep 缩放（0=零真睡·selftest 依赖）")
+                    help="sleep scale (0 = no real sleep; selftest dependency)")
     ap.add_argument("--max-rounds", dest="max_rounds", type=int, default=0,
-                    metavar="N", help="loop 轮数界定（0=无限）")
+                    metavar="N", help="loop round cap (0 = unbounded)")
     ap.add_argument("--events", default=None, metavar="FILE",
-                    help="loop JSONL 事件追加账（stdout 恒流·此参另落盘）")
+                    help="loop JSONL event append file (stdout always flows;"
+                         " this flag additionally writes to disk)")
     ap.add_argument("--injector", default=None, metavar="SCEN.json",
-                    help="子进程调用层罐装场景 {引擎键: {rc,stdout,report}}"
-                         "（键集 gate4/scan_v4/cure/sweep/registry_union/"
-                         "frozen8）")
+                    help="subprocess-layer canning scenario {engine key:"
+                         " {rc,stdout,report}} (key set gate4/scan_v4/cure/"
+                         "sweep/registry_union/frozen8)")
     args = ap.parse_args(argv)
 
     try:
@@ -2112,15 +2249,17 @@ def main():
 
     try:
         if not args.file and not args.dir:
-            print("FAIL-LOUD: --file/--dir 至少给一（收件面）", file=sys.stderr)
+            print("FAIL-LOUD: --file/--dir: at least one is required"
+                  " (collection surface)", file=sys.stderr)
             sys.exit(2)
         if args.interval < 0 or args.sleep_scale < 0 or args.max_rounds < 0:
-            print("FAIL-LOUD: --interval/--sleep-scale/--max-rounds 须≥0",
+            print("FAIL-LOUD: --interval/--sleep-scale/--max-rounds must be >= 0",
                   file=sys.stderr)
             sys.exit(2)
         if args.header_map and args.header_map_preset:
-            print("FAIL-LOUD: --header-map 与 --header-map-preset 同槽互斥"
-                  "（rc2 同槽律——③头注模板源二择一显传）", file=sys.stderr)
+            print("FAIL-LOUD: --header-map and --header-map-preset are"
+                  " same-slot exclusive (rc 2 same-slot rule — pass exactly one"
+                  " wash-3 template source)", file=sys.stderr)
             sys.exit(2)
         ws = WashShape(args)
         ws.files, ws.excluded_records = ws.collect_files()

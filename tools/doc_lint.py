@@ -1,86 +1,49 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""doc_lint.py — 文档←→实现一致性三查器（docs↔tools 对账·防文档漂移·rocqwash
-tools/·v38 工装席任务书·20261111 入账）
+"""doc_lint.py — the docs-vs-implementation consistency three-check tool (docs <-> tools reconciliation; guards against documentation drift; rocqwash tools/).
 
-三查（全部纯本地·零网络零编译·python3 纯 stdlib·编排零新引擎——解析规则逐条
-锚在盘件现行行，不发明新形）：
-  ①工具表查＝cw.sh 头注/usage/hint/case 四处工具清单互检＋与 tools/ 目录实有
-    通用入口对账（路由缺/表多/表少逐条列）。四处＝头注工具表（cw.sh:10-50·name
-    desc -> path·两行折行体 cw.sh:25-26 doctor 等同形）、usage() heredoc 工具表
-    （cw.sh:83-124）、hint_for() 一行提示（cw.sh:133-153·echo 串尾缀 -> path）、
-    case 分派（cw.sh:170-186·run_tool <name> "<rel>"）。互检＝有路由者四处俱在
-    （缺一处即表少·逐器逐处列）＋四处路径逐器咬合（不符/缺 -> 路径即列）；
-    对账＝case 路由目标缺盘即「表多（悬路由）」、tools/ 非 _ 前缀 .py（通用
-    入口·定义锚 cli/rocqwash:9「模块目录下唯一一个不带前导下划线的 .py」）
-    无 case 路由即「路由缺」。help 为伪路由不参赛（cw.sh:49 头注行＋
-    cw.sh:187 help|-h|--help 特例分派·hint_for 无分支——四处本就不对称）。
-  ②计数查＝tests/run_tests.sh CASES 数（run_tests.sh:140-192 静态在册例·
-    t_fail_probe 为 FAIL_PROBE 自检注入例不计·run_tests.sh:194-197）vs
-    tests/README.md 计数行（:12「预期 52 过」＋:15「## 覆盖面（52 例）」）vs
-    README.md 例数行（:59「自测套件（52 例）— test suite (52 cases)」）——
-    数值三处一致·漂移即列；计数行形未现＝计数行缺失亦列。README.md:83/92/
-    101/112/123/139/156「扩至 N 例」等增补史行为版本化历史非现势计数（逐轮
-    累进属设计内·v38 轮 cw.sh:2「共十六」同款史行）·不在对账面——只锚上述
-    四形，宁缺毋滥不造新计数形。
-  ③旗标查＝README-cw.md/README.md/examples/workflows/*.md/docs/*.md（docs/
-    递归·*.zh.md 与 docs/zh/ 归档面免扫——注释规范卡 §5.2 归档件非正本面）
-    中引用的器旗标（--xxx 形）逐枚对照各器 --help 实出输出
-    （subprocess 真跑 --help·rc!=0/超时=器红 fail-loud 9·帽 --help-cap 25 器）。
-    器集＝cw.sh 路由 ∪ tools/ 非 _ 前缀 .py＝25 器（现势·帽 25 有余）；
-    超帽按典序截断·溢出器如实列「未实跑 --help·引用 N 处未证」。归账规则＝
-    器引用两级（一级强引用＝盘路径形/cli/rocqwash/cw.sh 路由形·二级弱引用＝
-    裸名形——路由名/器 stem/在盘 oos 器 stem），旗标归其逻辑行最近前驱一级
-    引用·无则二级（README.md:232「cli/rocqwash certify push_gate union-freeze
-    --world…」内 union-freeze 裸名 union 不得咬走 primary 的实证律）；旗标
-    token 先掩码再找器引用（防 --probe-resume 内 \bprobe\b 误吞）。池兜底三
-    路：散文段＝空行/围栏/标题界整段引用两遍收集（段首旗标如 README-cw.md:77
-    「① --once/--loop 双模」实证）；代码围栏命令行＝反斜杠续行拼行后严格
-    只在命令自身内归账（幻引判定最强面）；代码围栏注释行＝块池归账
-    （step-pushci.md:75-77「# 可选追加：--pre-scan-gate4／--merge…」实形）。漂移两向＝
-    缺旗标（幻引/多余引用·同面两词：doc 侧引用为多余·器侧实出缺此旗标——
-    primary 器 help 实出无＋池内 registry 器全缺＋池内无可证 oos/unknown 器；
-    「同一旗标 token 重复≥2 即多余」的机械判据被 README.md:232 union-freeze
-    --world wa=… --world wb=… 合法多值实证否弃·不采）＋悬引（primary 引用
-    不识——cw.sh 非路由/路由目标缺盘而旗标无器可证；cw.sh bogus 等退出码
-    示例行无旗标故不误咬）。无主旗标与池含 oos/unknown 器者＝unresolved
-    如实计不判漂（不可证≠漂——docs/zh/architecture.md:54 台账行「--json/
-    --hits-csv」属 scan 阶段件 mac_stmt_scan、上下文在文档节层·机检不可归账
-    不作漂判的实证律）。cli/rocqwash 及 registry 外器（certify/watch/wrapper/
-    战役件等）旗标非本查对象——计入 out_of_scope 如实出账（cli/rocqwash 为
-    v29 前路由层·旗标属子工具·cli/rocqwash:8-11 路由契约）。
-    argparse 折行复原：break_on_hyphens 断词实出「--on-red-<LF>arg」（cw_sentinel
-    --help 实证）——(--tok)-\n<ws>(cont) 复原后再取 token；registry_union --help:14
-    「--ref-*」词面为 glob 散文·截断 token 属噪音不害幻引判定（本查只单向
-    doc→help：help 散文多收旗标仅致漏报不致误报——精度换零误报·宁缺毋滥）。
+Purpose.  Runs the three checks (all purely local, zero network, zero
+  compiles, Python 3 stdlib only, orchestrating zero new engines — every
+  parsing rule is anchored to the current on-disk lines, no invented
+  shapes) and reports whether the documentation and the implementation
+  agree.  Read-only by construction: nothing is ever written into the
+  audited repository.
 
-输出：--json report schema=rocqwash-doclint/1（checks[{kind,target,status,
-detail}]·verdict consistent|drift·counts·out_of_scope·registry·args·sort_keys
-落盘·无墙钟字段·路径一律仓相对——同输入重跑字节恒同）。checks 逐条列：
-kind∈{tool_table,count,flag}·status∈{ok,drift}·detail 单行（截 300 字符）。
+Interface.  python3 tools/doc_lint.py [--repo DIR] [--json OUT]
+  [--help-cap N] | --selftest.  Report schema rocqwash-doclint/1 (checks
+  [{kind,target,status,detail}], verdict consistent|drift, counts,
+  out_of_scope, registry, args; sort_keys on write; no wall-clock field;
+  every path repo-relative — same-input reruns are byte-identical).  The
+  checks list rows with kind in {tool_table,count,flag}, status in
+  {ok,drift}, and a single-line detail (clipped at 300 chars).  The full
+  three-check contract lives in the extended contract block below.
 
-退出码：0=consistent（三查零漂）；1=drift（任一条 drift·红是数据非器红·
-响亮 stdout）；2=用法错（argparse/--help-cap<1）；9=缺（--repo 缺目录/被审
-仓必需输入缺失：cw.sh·README.md·README-cw.md·tests/run_tests.sh·
-tests/README.md·docs/·examples/workflows/·--json 父目录缺·器 --help 器红/
-超时·doc 件不可解码）。
+Dependencies.  Python 3 standard library only; the only subprocesses are
+  local real --help runs (milliseconds; zero network, zero compiles, zero
+  sleeps — --injector/--sleep-scale do not apply); every path
+  parameterized, zero hardcoded paths; offline-testable by nature (the
+  --selftest uses all-tmp mini-repo fixtures).
 
-本器一次性静态对账·无巡检环——--once/--loop 无涉（cw_doctor 同例）；子进程
-仅本地 --help 真跑（毫秒级·零网络零编译零睡）——--injector/--sleep-scale 无涉
-·离线天然可测（--selftest 全 tmp 迷你仓夹具）。
+Evidence.  --selftest vectors (tmp mini-repo fixtures; the consistency
+  verdict plus CLI codes plus the idempotence check): V1 a consistent mini
+  repo (2 routes, all four places present; count 2 agreeing in all three
+  spots; every cited flag proven) -> rc 0, verdict consistent, zero drift
+  checks; V2 a missing tool-table row (the hint_for b line dropped) -> rc
+  1, tool_table drift pointing at cw.sh:hint; V3 a count drift
+  (tests/README.md coverage changed to 3) -> rc 1, count drift, value 3
+  vs 2; V4 a phantom flag citation (docs/note.md gains a --bogus-flag
+  reference) -> rc 1, flag drift; V5 CLI codes (--help 0; --bogus 2;
+  missing --repo 9) plus --help-cap 0 -> 2; V6 JSON idempotence (same
+  repo, two runs, different --json paths, byte-identical — the report
+  never embeds its own json path).  Suite membership tests/test_doc_lint.py.
 
---selftest 矢量（tmp 迷你仓 fixture·四判＋CLI 三码＋幂等一判）：
-  V1 一致迷你仓（2 路由四处齐·计数 2 三处一致·旗标实引全证）→ rc0·verdict
-     consistent·checks 零 drift。
-  V2 工具表缺一（hint_for 摘 b 行）→ rc1·tool_table drift 指向 cw.sh:hint。
-  V3 计数漂（tests/README.md 覆盖面改 3）→ rc1·count drift 数值 3≠2。
-  V4 旗标幻引（docs/note.md 增 --bogus-flag 引用）→ rc1·flag drift 幻引。
-  V5 CLI 三码（--help 0·--bogus 2·--repo 缺 9）＋--help-cap 0→2。
-  V6 JSON 幂等（同仓两跑异 --json 路径字节恒同——report 不嵌 json 路径）。
-
-用法（全部路径参数化·零硬编码）：
-  python3 tools/doc_lint.py [--repo DIR] [--json OUT] [--help-cap N]
-  python3 tools/doc_lint.py --selftest
+Exit-codes.  0 = consistent (zero drift across the three checks); 1 =
+  drift (any row drifted; a failing result is data, not a tool failure;
+  reported loudly on stdout); 2 = usage error (argparse / --help-cap < 1);
+  9 = missing (--repo directory missing / an audited-repo required input
+  missing: cw.sh, README.md, README-cw.md, tests/run_tests.sh,
+  tests/README.md, docs/, examples/workflows/; the --json parent directory
+  missing; a tool --help failing or timing out; an undecodable doc file).
 """
 import argparse
 import io
@@ -92,27 +55,111 @@ import subprocess
 import sys
 import tempfile
 
+# Extended contract (kept outside the five-field block per the annotation
+# standard 30-line header budget).
+# check 1, the tool table: mutual inspection of the four cw.sh tool lists
+# (header / usage / hint / case) plus reconciliation against the generic
+# entry points that actually exist in tools/ (missing routes / extra rows /
+# missing rows listed row by row).  The four places = the header tool table
+# (cw.sh:10-50, name desc -> path, with the two-line wrapped form like the
+# doctor rows at cw.sh:25-26), the usage() heredoc tool table (cw.sh:83-124),
+# the hint_for() one-line hints (cw.sh:133-153, the echo string ending with
+# -> path), and the case routing block (cw.sh:170-186, run_tool <name> "<rel>").
+# Mutual inspection = every routed tool appears in all four places (a missing
+# place is a missing row, listed per tool per place) plus per-tool path
+# agreement across the four places (a mismatch or a missing -> path is
+# listed).  Reconciliation = a case route whose target is missing on disk is
+# an extra row (a dangling route); a tools/ non-underscore .py (a generic
+# entry point, defined by the cli/rocqwash:9 anchor "the only .py without a
+# leading underscore in the module directory") without a case route is a
+# missing route.  help is a pseudo-route and does not compete (the cw.sh:49
+# header row plus the cw.sh:187 help|-h|--help special routing; hint_for has
+# no branch — the four places are asymmetric by design).
+# check 2, the counts: the tests/run_tests.sh CASES count (the statically
+# rostered cases at run_tests.sh:140-192; the t_fail_probe FAIL_PROBE
+# self-check injection case is not counted, run_tests.sh:194-197) vs the
+# tests/README.md count lines (:12 "expected 52 passes" + :15 "coverage (52
+# cases)") vs the README.md case-count line (:59 "self-test suite (52 cases)
+# — test suite (52 cases)").  All three values must agree; a drift is listed;
+# a missing count-line shape is listed as a missing count line.  The
+# "extended to N cases" history lines (README.md:83/92/101/112/123/139/156)
+# are versioned history, not current counts (per-round accretion is by
+# design, the same history-line form as the v38 cw.sh:2 "sixteen total") and
+# stay outside the reconciliation — only the four shapes above are anchored;
+# prefer fewer shapes over inventing new count forms.
+# check 3, the flags: every tool flag cited in README-cw.md / README.md /
+# examples/workflows/*.md / docs/*.md (docs recursive; *.zh.md and docs/zh/
+# archives are exempt — annotation standard card 5.2, archive files are not
+# canonical faces) is checked one by one against each tool's real --help
+# output (a real subprocess --help run; rc != 0 / timeout = tool failure,
+# fail-loud 9; capped at --help-cap tools).  The tool set = cw.sh routes
+# union tools/ non-underscore .py; over-cap tools are truncated in canonical
+# order and listed honestly as "help not run; N citations unproven".
+# Attribution rules: tool references have two tiers (tier-1 strong = an
+# on-disk path form / cli/rocqwash / a cw.sh route form; tier-2 weak = a bare
+# name — a route name, a tool stem, or an on-disk out-of-scope tool stem); a
+# flag is attributed to the nearest preceding tier-1 reference on its logical
+# line, else tier-2 (the README.md:232 "cli/rocqwash certify push_gate
+# union-freeze --world..." precedent: the bare-name union inside union-freeze
+# must not steal the primary).  Flag tokens are masked before tool-reference
+# search (so the probe inside --probe-resume is not swallowed by \\bprobe\\b).
+# Three pool fallbacks: a prose paragraph = whole-paragraph references
+# collected in two passes bounded by blank lines / fences / headings (the
+# README-cw.md:77 paragraph-initial flag precedent); a code-fence command
+# line = backslash continuations joined, then attributed strictly inside the
+# command itself (the strongest phantom-judgment face); a code-fence comment
+# line = block-pool attribution (the step-pushci.md:75-77 "# optional
+# additions: --pre-scan-gate4 / --merge..." real form).  Drift has two
+# directions: a missing flag (phantom / extra citation — the doc side cites a
+# flag the tool does not actually emit: the primary tool's real help lacks it,
+# the registry tools in the pool all lack it, and the pool has no verifiable
+# oos/unknown tool; the mechanical "the same flag token repeated >= 2 is
+# extra" rule was rejected by the README.md:232 union-freeze --world wa=...
+# --world wb=... legitimate multi-value precedent and is not used) plus a
+# dangling citation (the primary reference is unrecognized — a cw.sh
+# non-route or a route target missing on disk, leaving the flag with no
+# provable tool; the cw.sh bogus-style exit-code example lines carry no flags
+# and are not mis-bitten).  Ownerless flags and pools containing oos/unknown
+# tools are counted honestly as unresolved, never judged drift (unprovable is
+# not drift — the docs/zh/architecture.md:54 ledger line "--json/--hits-csv"
+# belongs to the scan-stage tool mac_stmt_scan with the context at the
+# document-section level; when the mechanical check cannot attribute it, no
+# drift is judged).  cli/rocqwash and non-registry tools' (certify/watch/
+# wrapper/work-stream files etc.) flags are outside this check — counted into
+# out_of_scope honestly (cli/rocqwash is the pre-v29 routing layer; its flags
+# belong to the sub-tools, cli/rocqwash:8-11 routing contract).
+# argparse wrap repair: break_on_hyphens splits tokens as "--on-red-<LF>arg"
+# (evidenced by the cw_sentinel --help output) — repaired via
+# (--tok)-\n<ws>(cont) before token extraction; the registry_union --help:14
+# "--ref-*" wording is glob prose, its truncated tokens are noise and harmless
+# to phantom judgment (this check is one-way doc->help: extra flags harvested
+# from help prose only cause missed reports, never false ones — precision
+# traded for zero false positives).
+
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 28     # ③ --help 真跑器帽（v38 波 20→24 换代·v46 时点 23 器有余——集成席登记帽溢出 cure_applier/probe_engine 后主会话裁决换代·注释面规范化波 tools/norm_lint.py 入册后 25 器——帽溢出 wash/probe_engine.py 同 precedent 换代 24→25）— tools/registry_regen.py registered as the 26th tool: cap raised 25->26, same precedent as the 24->25 bump at the norm-lint registration — tools/contrib_intake.py registered as the 27th tool: cap raised 26->27, same precedent (registry_rel sorted order again puts wash/probe_engine.py last; its doc-flag references need the real --help run to stay phantom-free) — tools/evolve.py registered as the 28th tool: cap raised 27->28, same precedent (registry_rel sorted order again puts wash/probe_engine.py last)
-HELP_TIMEOUT = 60         # --help 子进程秒帽（本地件防挂·fail-loud）
-DETAIL_CAP = 300          # checks[].detail 截断（cw_doctor non_form ln[:120] 同款）
-DRIFT_LINE_CAP = 20       # ③ 每文件幻引/悬引列帽（总数如实·cw_doctor 帽 20 同款）
-LIST_CAP = 20             # out_of_scope/registry 溢出清单帽（总数如实）
+DEFAULT_HELP_CAP = 28     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last)
+HELP_TIMEOUT = 60         # --help subprocess second cap (local-file hang guard; fail-loud)
+DETAIL_CAP = 300          # checks[].detail clip (the cw_doctor non_form ln[:120] form)
+DRIFT_LINE_CAP = 20       # check 3 per-file phantom/dangling list cap (the total is honest; the cw_doctor cap-20 form)
+LIST_CAP = 20             # the out_of_scope/registry overflow list cap (the total is honest)
 
-PSEUDO_ROUTES = ("help",)  # 伪路由（cw.sh:49 头注行·cw.sh:187 特例分派）
+PSEUDO_ROUTES = ("help",)  # the pseudo-route (the cw.sh:49 header row; the cw.sh:187 special routing)
 
-# 仓级通用器旗标（不入幻引判定）：--help 恒有；--selftest 承套件纪律——
-# run_tests.sh 在册各器例全数真跑 --selftest（t_scan_selftest:t_cw_doctor
-# 十二器直跑＋t_cw_sentinel/t_wash_shape/t_unclog 同），部分器以 pre-argparse
-# 形处理（cw_doctor.py:1014 `if "--selftest" in argv` 先于 argparse 同款）
-# 致 --help 输出不列——按 help 缺失判幻引即误报，故恒认。
+# repo-level universal tool flags (excluded from phantom judgment): --help is
+# always present; --selftest follows the suite discipline — every rostered
+# tool case in run_tests.sh really runs --selftest (t_scan_selftest /
+# t_cw_doctor twelve tools directly plus t_cw_sentinel / t_wash_shape /
+# t_unclog the same), and some tools handle it pre-argparse (the cw_doctor.py
+# `if "--selftest" in argv` form before argparse) so --help never lists it —
+# judging it a phantom flag from its help absence would be a false positive,
+# hence it is always accepted.
 UNIVERSAL_FLAGS = ("--help", "--selftest")
 
 PLACE_ORDER = ("header", "usage", "hint", "case")
 
-# ---- ① cw.sh 四处解析正则（1:1 锚 cw.sh 现行行·见 docstring 引据）----
+# ---- check 1: the cw.sh four-place parsing regexes (anchored 1:1 to the current cw.sh lines; KEEP, data faces — these anchor the real cw.sh's own section headers) ----
 ROUTE_NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 ROW_PATH_RE = re.compile(r"^([a-z0-9][a-z0-9-]*)\s+.*->\s*(\S+)\s*$")
 CONT_PATH_RE = re.compile(r"^->\s*(\S+)\s*$")
@@ -123,7 +170,7 @@ HINT_PATH_RE = re.compile(r"->\s*(\S+)\s*$")
 CASE_RE = re.compile(
     r'^\s*([a-z0-9][a-z0-9-]*)\)\s+shift;\s*run_tool\s+\S+\s+"([^"]+)"')
 
-# ---- ② 计数行形（1:1 锚 tests/README.md:12/:15·README.md:59 现行行）----
+# ---- check 2: count-line shapes (anchored 1:1 to the current tests/README.md:12/:15 and README.md:59 lines; KEEP, data faces — these anchor the READMEs' own Chinese count-line formats) ----
 COUNT_PATTERNS = (
     ("tests/README.md", re.compile(r"覆盖面（(\d+) 例）"), "覆盖面（N 例）"),
     ("tests/README.md", re.compile(r"预期 (\d+) 过"), "预期 N 过"),
@@ -133,7 +180,7 @@ COUNT_PATTERNS = (
 )
 CASES_RE = re.compile(r'(?ms)^CASES="(.*?)"')
 
-# ---- ③ doc 扫描正则 ----
+# ---- check 3: doc scanning regexes ----
 FLAG_RE = re.compile(r"--[A-Za-z0-9][A-Za-z0-9_-]*")
 # argparse break_on_hyphens 折行复原：(--tok)-\n<ws>(cont) → --tok-cont
 HYPHEN_WRAP_RE = re.compile(
@@ -147,25 +194,25 @@ ROUTE_MENTION_RE = re.compile(r"\bcw\.sh\s+([a-z][a-z0-9-]*)")
 
 
 class UsageError(Exception):
-    """用法错/值校验败（exit 2）。"""
+    """Usage error / value validation failure (exit 2)."""
 
 
 class MissingInput(Exception):
-    """输入缺失（exit 9）。"""
+    """Missing input (exit 9)."""
 
 
 class ToolError(Exception):
-    """器红/--help 失败（exit 9·fail-loud 禁静默降级）。"""
+    """Tool failure / --help failure (exit 9; fail-loud, silent degradation forbidden)."""
 
 
-# ---- 小件（确定性 helpers·cw_doctor 同款本地副本·无包结构不互 import）----
+# ---- small pieces (deterministic helpers; local copies of the cw_doctor forms; no package layout, no cross-imports) ----
 
 def read_text(path, what):
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
             return fh.read()
     except (OSError, UnicodeDecodeError) as e:
-        raise MissingInput("%s 不可读/解码失败: %s (%s)" % (what, path, e))
+        raise MissingInput("%s unreadable / decode failure: %s (%s)" % (what, path, e))
 
 
 def dump_json(obj, path):
@@ -173,11 +220,11 @@ def dump_json(obj, path):
         with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(obj, fh, indent=1, ensure_ascii=False, sort_keys=True)
     except OSError as e:
-        raise MissingInput("--json 落盘失败: %s (%s)" % (path, e))
+        raise MissingInput("--json write failed: %s (%s)" % (path, e))
 
 
 def rel_of(repo, p):
-    """仓相对路径（确定性·报告零绝对路径纪律）。"""
+    """Repo-relative path (deterministic; the zero-absolute-paths-in-the-report discipline)."""
     return os.path.relpath(p, repo).replace(os.sep, "/")
 
 
@@ -190,13 +237,15 @@ def line_no_of(text, pos):
     return text[:pos].count("\n") + 1
 
 
-# ---- ① 工具表查 ----------------------------------------------------------------
+# ---- check 1: the tool table ----
 
 def parse_table_rows(lines, ln0):
-    """表体行 → {name: {"path": str|None, "line": int}}（仅认路由名形
-    ^[a-z0-9][a-z0-9-]*$·三体：单行 name desc -> path／续行 -> path／折行
-    pending name 待续行赋 path·cw.sh:25-26 doctor 折行体 1:1）。
-    路由契约/退出码等段界行截停（TABLE_STOP_RE）。"""
+    """Table body rows -> {name: {"path": str|None, "line": int}} (only the
+    route-name shape ^[a-z0-9][a-z0-9-]*$ counts; three forms: a single line
+    name desc -> path; a continuation line -> path; a wrapped pending name
+    whose path arrives on the next line — the cw.sh:25-26 doctor wrapped form
+    1:1).  Section-boundary rows like the routing-contract / exit-codes
+    headers stop the scan (TABLE_STOP_RE)."""
     rows = {}
     pending = None
     for i, raw in enumerate(lines):
@@ -231,13 +280,14 @@ def parse_table_rows(lines, ln0):
 
 
 def parse_cw_sh(repo):
-    """cw.sh 四处清单解析 → {place: {name: {"path", "line"}}}。
-    区域界锚：头注至首个 set -u（cw.sh:73）；usage 至首 EOF（heredoc 终）；
-    hint_for 至首个列 0 }；case 至 EOF（case "${1:-}" in 唯一分派 case·
-    hint_for 内 case "$1" in 不误咬）。"""
+    """cw.sh four-place list parsing -> {place: {name: {"path", "line"}}}.
+    Region boundaries: the header runs to the first set -u (cw.sh:73); usage
+    to the first EOF (the heredoc end); hint_for to the first column-0 };
+    case to EOF (the case "${1:-}" in is the only routing case; the inner
+    case "$1" in of hint_for is not mis-bitten)."""
     path = os.path.join(repo, "cw.sh")
     if not os.path.isfile(path):
-        raise MissingInput("被审仓缺 cw.sh: %s" % path)
+        raise MissingInput("the audited repo lacks cw.sh: %s" % path)
     text = read_text(path, "cw.sh")
     lines = text.split("\n")
 
@@ -249,7 +299,7 @@ def parse_cw_sh(repo):
 
     setu = idx_of(lambda ln: ln.strip() == "set -u")
     if setu is None:
-        raise ToolError("cw.sh 形不识（无 set -u 界）: %s" % path)
+        raise ToolError("cw.sh shape unrecognized (no set -u boundary): %s" % path)
     u_start = idx_of(lambda ln: "usage() {" in ln)
     u_end = idx_of(lambda ln: ln.strip() == "EOF",
                    (u_start + 1) if u_start is not None else 0)
@@ -258,7 +308,7 @@ def parse_cw_sh(repo):
                    (h_start + 1) if h_start is not None else 0)
     c_start = idx_of(lambda ln: 'case "${1:-}" in' in ln)
     if u_start is None or h_start is None or c_start is None:
-        raise ToolError("cw.sh 形不识（usage/hint_for/case 界缺一）: %s" % path)
+        raise ToolError("cw.sh shape unrecognized (one of the usage/hint_for/case boundaries missing): %s" % path)
 
     def table_start(lines, lo, hi, marker):
         seg = idx_of(lambda ln: marker in ln, lo)
@@ -286,24 +336,29 @@ def parse_cw_sh(repo):
 
 
 def check_tool_table(repo, places):
-    """①四处互检＋tools/ 通用入口对账 → checks 列表（逐条·kind=tool_table）。"""
+    """Check 1: the four-place mutual inspection plus the tools/ generic-entry
+    reconciliation -> the checks list (one row each; kind=tool_table)."""
     checks = []
     routed = set(places["case"]) - set(PSEUDO_ROUTES)
-    # 四处互检：有路由者四处俱在（表少/悬名逐器逐处列）
+    # four-place mutual inspection: every routed tool present in all four places (missing rows / dangling names listed per tool per place)
     for place in PLACE_ORDER:
         names = set(places[place]) - set(PSEUDO_ROUTES)
         for t in sorted(routed - names):
             checks.append({"kind": "tool_table",
                            "target": "cw.sh:%s" % place, "status": "drift",
-                           "detail": clip("工具 %s 于 case 路由在册而 %s 表缺行"
-                                          "（互检表少）" % (t, place))})
+                           "detail": clip("tool %s is routed in the case table"
+                                          " but the %s table lacks its row"
+                                          " (mutual inspection: a missing row)"
+                                          % (t, place))})
         for t in sorted(names - routed):
             checks.append({"kind": "tool_table",
                            "target": "cw.sh:%s:%s" % (place, t),
                            "status": "drift",
-                           "detail": clip("工具 %s 仅 %s 表在册而 case 无路由"
-                                          "（互检悬名）" % (t, place))})
-    # 路径逐器咬合（case 路径为正·他处缺失/不符即列）
+                           "detail": clip("tool %s appears only in the %s table"
+                                          " with no case route (mutual"
+                                          " inspection: a dangling name)"
+                                          % (t, place))})
+    # per-tool path agreement (the case path is authoritative; a missing or mismatched path elsewhere is listed)
     for t in sorted(routed):
         for place in PLACE_ORDER[:-1]:
             ent = places[place].get(t)
@@ -313,29 +368,31 @@ def check_tool_table(repo, places):
                 checks.append({"kind": "tool_table",
                                "target": "cw.sh:%s:%s" % (place, t),
                                "status": "drift",
-                               "detail": clip("工具 %s 于 %s 行缺 -> 路径"
-                                              "（折行体断裂）" % (t, place))})
+                               "detail": clip("tool %s has no -> path on its"
+                                              " %s row (a broken wrapped"
+                                              " form)" % (t, place))})
             elif ent["path"] != places["case"][t]["path"]:
                 checks.append({"kind": "tool_table",
                                "target": "cw.sh:%s:%s" % (place, t),
                                "status": "drift",
-                               "detail": clip("工具 %s 路径不一：%s=%s vs "
-                                              "case=%s" % (t, place,
+                               "detail": clip("tool %s paths disagree: %s=%s vs"
+                                              " case=%s" % (t, place,
                                                            ent["path"],
                                                            places["case"][t]
                                                            ["path"]))})
-    # 对账：case 路由目标缺盘＝表多（悬路由）
+    # reconciliation: a case route whose target is missing on disk = an extra row (a dangling route)
     tools_dir = os.path.join(repo, "tools")
     if not os.path.isdir(tools_dir):
-        raise MissingInput("被审仓缺 tools/ 目录: %s" % tools_dir)
+        raise MissingInput("the audited repo lacks the tools/ directory: %s" % tools_dir)
     for t in sorted(routed):
         p = places["case"][t]["path"]
         if not os.path.isfile(os.path.join(repo, p)):
             checks.append({"kind": "tool_table",
                            "target": "cw.sh:case:%s" % t, "status": "drift",
-                           "detail": clip("路由目标缺盘 %s（表多·悬路由）"
+                           "detail": clip("the route target is missing on disk:"
+                                          " %s (an extra row; a dangling route)"
                                           % p)})
-    # 对账：tools/ 非 _ 前缀 .py 无 case 路由＝路由缺（cli/rocqwash:9 定义）
+    # reconciliation: a tools/ non-underscore .py without a case route = a missing route (the cli/rocqwash:9 definition)
     generic = sorted(fn for fn in os.listdir(tools_dir)
                      if fn.endswith(".py") and not fn.startswith("_"))
     routed_paths = set(places["case"][t]["path"] for t in routed)
@@ -346,42 +403,48 @@ def check_tool_table(repo, places):
             unrouted.append(rel)
             checks.append({"kind": "tool_table", "target": rel,
                            "status": "drift",
-                           "detail": clip("tools/ 通用入口（cli/rocqwash:9 "
-                                          "非 _ 前缀 .py 定义）无 cw.sh case "
-                                          "路由（路由缺）")})
+                           "detail": clip("a tools/ generic entry point (the"
+                                          " cli/rocqwash:9 non-underscore .py"
+                                          " definition) has no cw.sh case route"
+                                          " (a missing route)")})
     if not checks:
-        checks.append({"kind": "tool_table", "target": "cw.sh 四处＋tools/",
+        checks.append({"kind": "tool_table", "target": "cw.sh four places + tools/",
                        "status": "ok",
-                       "detail": clip("互检一致（%d 器四处齐·路径咬合）＋对账"
-                                      "零缺口（tools/ 通用入口 %d 全路由）"
+                       "detail": clip("mutual inspection agrees (%d tools in all"
+                                      " four places, paths aligned) +"
+                                      " reconciliation with zero gaps (all %d"
+                                      " tools/ generic entry points routed)"
                                       % (len(routed), len(generic)))})
     registry_rel = sorted(set(routed_paths) |
                           set("tools/" + fn for fn in generic))
     return checks, registry_rel, unrouted
 
 
-# ---- ② 计数查 -----------------------------------------------------------------
+# ---- check 2: the counts ----
 
 def check_counts(repo):
-    """②CASES 数 vs tests/README.md 计数行 vs README.md 例数行 → checks。"""
+    """Check 2: the CASES count vs the tests/README.md count lines vs the README.md case-count line -> checks."""
     checks = []
     rt_rel = "tests/run_tests.sh"
     rt_path = os.path.join(repo, rt_rel)
     if not os.path.isfile(rt_path):
-        raise MissingInput("被审仓缺 %s: %s" % (rt_rel, rt_path))
+        raise MissingInput("the audited repo lacks %s: %s" % (rt_rel, rt_path))
     rt_text = read_text(rt_path, rt_rel)
     m = CASES_RE.search(rt_text)
     if m is None:
-        raise ToolError("run_tests.sh 形不识（CASES=\" 块缺）: %s" % rt_path)
-    # bash 引号串内反斜杠续行（run_tests.sh:140 `CASES="\`＋逐行尾 `\`）还原
-    # 成空白后再取 token——字面 `\` 不是用例名
+        raise ToolError("run_tests.sh shape unrecognized (no CASES=\" block): %s" % rt_path)
+    # backslash continuations inside the bash quoted string (run_tests.sh:140
+    # CASES="\ plus a trailing \ per line) are restored to whitespace before
+    # tokenizing — a literal \ is not a case name
     tokens = m.group(1).replace("\\\n", " ").split()
     cases_n = len(tokens)
     cases_line = line_no_of(rt_text, m.start())
     checks.append({"kind": "count", "target": "%s:%d" % (rt_rel, cases_line),
                    "status": "ok",
-                   "detail": clip("CASES 在册 %d 例（静态在册·t_fail_probe 为"
-                                  " FAIL_PROBE 注入例不计）" % cases_n)})
+                   "detail": clip("CASES rostered %d cases (statically"
+                                  " rostered; the t_fail_probe FAIL_PROBE"
+                                  " injection case is not counted)"
+                                  % cases_n)})
     for rel, rx, label in COUNT_PATTERNS:
         fpath = os.path.join(repo, rel)
         if not os.path.isfile(fpath):
@@ -390,8 +453,9 @@ def check_counts(repo):
         hits = list(rx.finditer(text))
         if not hits:
             checks.append({"kind": "count", "target": rel, "status": "drift",
-                           "detail": clip("计数行形「%s」未现（计数行缺失）"
-                                          % label)})
+                           "detail": clip("the count-line shape [%s] never"
+                                          " appeared (the count line is"
+                                          " missing)" % label)})
             continue
         for h in hits:
             no = line_no_of(text, h.start())
@@ -399,43 +463,47 @@ def check_counts(repo):
             if val == cases_n:
                 checks.append({"kind": "count",
                                "target": "%s:%d" % (rel, no), "status": "ok",
-                               "detail": clip("「%s」＝%d 与 CASES %d 一致"
+                               "detail": clip("[%s] = %d agrees with CASES %d"
                                               % (label, val, cases_n))})
             else:
                 checks.append({"kind": "count",
                                "target": "%s:%d" % (rel, no),
                                "status": "drift",
-                               "detail": clip("「%s」＝%d ≠ CASES %d（计数漂）"
+                               "detail": clip("[%s] = %d != CASES %d (count"
+                                              " drift)"
                                               % (label, val, cases_n))})
     return checks, cases_n
 
 
-# ---- ③ 旗标查 -----------------------------------------------------------------
+# ---- check 3: the flags ----
 
 def run_help_flags(repo, rel):
-    """subprocess 真跑 --help → 实出旗标集（含折行复原）。rc!=0/超时=器红 9。"""
+    """A real subprocess --help run -> the actually emitted flag set (wrap repair included).  rc != 0 / timeout = tool failure 9."""
     p = os.path.join(repo, rel)
     try:
         pr = subprocess.run([sys.executable, "-B", p, "--help"],
                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                             timeout=HELP_TIMEOUT)
     except subprocess.TimeoutExpired as e:
-        raise ToolError("--help 超时（>%ds）: %s (%s)" % (HELP_TIMEOUT, rel, e))
+        raise ToolError("--help timed out (> %ds): %s (%s)" % (HELP_TIMEOUT, rel, e))
     out = pr.stdout.decode("utf-8", "replace") if isinstance(pr.stdout, bytes) \
         else (pr.stdout or "")
     if pr.returncode != 0:
-        raise ToolError("--help 器红 rc=%d: %s (%s)" % (pr.returncode, rel,
-                                                        out[-200:]))
+        raise ToolError("--help tool failure rc=%d: %s (%s)"
+                        % (pr.returncode, rel, out[-200:]))
     fixed = HYPHEN_WRAP_RE.sub(r"\1-\2", out)
     return set("--" + t for t in HELP_TOKEN_RE.findall(fixed))
 
 
 class LintCtx(object):
-    """③扫描上下文：器集映射＋help 实出集＋账面。
-    器引用两级：一级强引用（盘路径形/cli/rocqwash/cw.sh 路由形）·二级弱引用
-    （裸名形——路由名/器 stem/在盘 oos 器 stem）。primary 取行内最近前驱一级
-    引用·无则二级（防 README.md:232「cli/rocqwash certify push_gate
-    union-freeze --world…」内 union-freeze 的裸名 union 咬走 primary）。"""
+    """Check 3 scanning context: the tool-set maps + the real help sets + the
+    account books.  Tool references have two tiers: tier-1 strong (an on-disk
+    path form / cli/rocqwash / a cw.sh route form); tier-2 weak (a bare name —
+    a route name, a tool stem, or an on-disk out-of-scope tool stem).  The
+    primary is the nearest preceding tier-1 reference on the line, else tier-2
+    (this blocks the bare-name union inside union-freeze from stealing the
+    primary in the README.md:232 "cli/rocqwash certify push_gate union-freeze
+    --world..." line)."""
 
     def __init__(self, repo, registry_rel, route_map, help_cap):
         self.repo = repo
@@ -445,8 +513,10 @@ class LintCtx(object):
             base = os.path.basename(rel)
             if base.endswith(".py"):
                 self.stem_map[base[:-3]] = rel
-        # 在盘 oos 器 stem（模块目录非 _ 前缀 .py＋tools/*.sh·registry 除外）——
-        # 令「wash_engine.py」等裸件名引用可归账为 oos（不可证但可归·非无主）
+        # on-disk out-of-scope tool stems (non-underscore .py in the module
+        # directories plus tools/*.sh, excluding the registry) — so bare file
+        # name citations like "wash_engine.py" can be attributed as oos
+        # (unprovable but attributable, not ownerless)
         self.oos_stem_map = {}
         for d in ("tools", "wash", "scan", "verify", "certify", "wrapper",
                   "watch", "seam", "names", "recipes"):
@@ -481,8 +551,9 @@ class LintCtx(object):
         self.oos_total = 0
 
     def load_helps(self):
-        """逐器真跑 --help（典序·帽内）→ help 集（并集仓级通用旗标——
-        UNIVERSAL_FLAGS 注）。"""
+        """A real --help run per tool (canonical order, within the cap) -> the
+        help sets (unioned with the repo-level universal flags — see
+        UNIVERSAL_FLAGS)."""
         for rel in self.help_order:
             self.help[rel] = run_help_flags(self.repo, rel) | set(
                 UNIVERSAL_FLAGS)
@@ -499,9 +570,9 @@ class LintCtx(object):
             return None
         p = self.route_map.get(r)
         if p is None:
-            return ("unknown", "cw.sh %s（非路由）" % r)
+            return ("unknown", "cw.sh %s (not a route)" % r)
         if not os.path.isfile(os.path.join(self.repo, p)):
-            return ("unknown", "cw.sh %s（路由目标缺盘 %s）" % (r, p))
+            return ("unknown", "cw.sh %s (route target missing on disk: %s)" % (r, p))
         return ("tool", p)
 
     def resolve_bare(self, b):
@@ -515,25 +586,28 @@ class LintCtx(object):
 
 
 def doc_files(repo):
-    """③ 对账面文件序（README 系→examples/workflows/*.md→docs/ 递归·典序）。"""
+    """Check 3: the reconciliation file order (the README family -> examples/workflows/*.md -> docs/ recursive; canonical order)."""
     out = ["README-cw.md", "README.md"]
     wf = os.path.join(repo, "examples", "workflows")
     if not os.path.isdir(wf):
-        raise MissingInput("被审仓缺 examples/workflows/: %s" % wf)
+        raise MissingInput("the audited repo lacks examples/workflows/: %s" % wf)
     out += sorted("examples/workflows/" + fn
                   for fn in os.listdir(wf) if fn.endswith(".md"))
     dd = os.path.join(repo, "docs")
     if not os.path.isdir(dd):
-        raise MissingInput("被审仓缺 docs/: %s" % dd)
+        raise MissingInput("the audited repo lacks docs/: %s" % dd)
     for dirpath, dirnames, filenames in os.walk(dd):
         dirnames.sort()
         for fn in sorted(filenames):
             if not fn.endswith(".md"):
                 continue
             rel = rel_of(repo, os.path.join(dirpath, fn))
-            # 注释规范卡 §5.2：归档件非正本面——*.zh.md 同目录留档形与
-            # docs/zh/ 追认形为冻结历史存档（声明不随代码演进维护），
-            # 对活实现的一致性查在其上无意义，免扫
+            # annotation standard card 5.2: archive files are not canonical
+            # faces — the sibling *.zh.md archives and the docs/zh/ directory
+            # are frozen historical archives (their statements are not
+            # maintained as the code evolves); a consistency check against the
+            # living implementation is meaningless on them, so they are
+            # exempt from the scan
             if rel.startswith("docs/zh/") or rel.endswith(".zh.md"):
                 continue
             out.append(rel)
@@ -541,20 +615,31 @@ def doc_files(repo):
 
 
 def scan_doc(repo, rel, ctx):
-    """单文件 ③ 扫描 → (item, drift_n, refs_n)。
-    三路归账：①散文段＝空行/围栏/标题界的整段两遍处理（一遍收全段引用池·
-    二遍逐行归账——段首旗标如 README-cw.md:77「① --once/--loop 双模」前驱
-    无器引用，段池兜底）；②代码围栏命令行＝反斜杠续行拼行后逐命令严格归账
-    （池＝命令自身引用·幻引判定最强面）；③代码围栏注释行（step-pushci.md:75-77
-    「# 可选追加：--pre-scan-gate4…」实形）＝块池归账（全块引用两遍收集）。
-    引用两级：一级（路径/cli/路由）＞二级（裸名）——primary 取最近前驱一级·
-    无则二级。漂移两向：缺旗标（幻引/多余引用——primary 器 help 实出无此
-    旗标＋池内 registry 器全缺＋池内无可证 oos/unknown 器）；悬引（primary
-    引用不识——cw.sh 非路由/路由目标缺盘）。无主旗标与池含 oos/unknown 者
-    ＝unresolved 如实计（不可证≠漂——zh/en architecture 台账行「--json/
-    --hits-csv」属 scan 阶段件 mac_stmt_scan 实证：上下文在文档节层·机检
-    不可归账不作漂判）。旗标 token 先掩码再找器引用（防 --probe-resume 内
-    \\bprobe\\b 误吞）。"""
+    """Single-file check 3 scan -> (item, drift_n, refs_n).
+    Three attribution routes: (1) prose paragraphs = whole paragraphs bounded
+    by blank lines / fences / headings, processed in two passes (pass one
+    collects the paragraph reference pool; pass two attributes line by line —
+    a paragraph-initial flag like README-cw.md:77 "the --once/--loop dual
+    mode" has no preceding tool reference, so the paragraph pool backs it
+    up); (2) code-fence command lines = backslash continuations joined, then
+    attributed strictly per command (the pool = the command's own references;
+    the strongest phantom-judgment face); (3) code-fence comment lines (the
+    step-pushci.md:75-77 "# optional additions: --pre-scan-gate4..." real
+    form) = block-pool attribution (the whole block's references collected in
+    two passes).  Reference tiers: tier 1 (path/cli/route) > tier 2 (bare
+    name) — the primary is the nearest preceding tier-1, else tier 2.  Drift
+    has two directions: a missing flag (phantom / extra citation — the
+    primary tool's real help lacks the flag, the registry tools in the pool
+    all lack it, and the pool holds no verifiable oos/unknown tool); a
+    dangling citation (the primary reference is unrecognized — a cw.sh
+    non-route or a route target missing on disk).  Ownerless flags and pools
+    containing oos/unknown tools are counted honestly as unresolved
+    (unprovable is not drift — the zh/en architecture ledger lines "--json/
+    --hits-csv" belong to the scan-stage tool mac_stmt_scan: the context sits
+    at the document-section level, and when the mechanical check cannot
+    attribute a flag it does not judge drift).  Flag tokens are masked before
+    the tool-reference search (so the probe inside --probe-resume is not
+    swallowed by \\bprobe\\b)."""
     text = read_text(os.path.join(repo, rel), rel)
     lines = text.split("\n")
     drifts = []            # (line_no, detail)
@@ -562,15 +647,16 @@ def scan_doc(repo, rel, ctx):
     unres_total = [0]
     oos_local = [0]
     in_code = False
-    para = []              # 散文段缓冲 [(line_no, seg)]
-    code_block = []        # 代码块逻辑行缓冲 [(line_no, joined)]
-    cur = []               # 代码续行拼装缓冲 [(line_no, seg)]
+    para = []              # prose-paragraph buffer [(line_no, seg)]
+    code_block = []        # code-block logical-line buffer [(line_no, joined)]
+    cur = []               # code continuation assembly buffer [(line_no, seg)]
     pend_join = False
 
     def mentions_of(seg):
-        """→ (mentions 有序[(pos, tier, (kind,key))], flag_hits[(pos,tok)])。
-        tier 1＝路径/cli/路由强引用·2＝裸名弱引用。旗标 token 先掩码（同长
-        空格·位置不漂）再找器引用。"""
+        """-> (ordered mentions [(pos, tier, (kind,key))], flag_hits
+        [(pos,tok)]).  Tier 1 = a path/cli/route strong reference; tier 2 = a
+        bare-name weak reference.  Flag tokens are masked first (same-length
+        spaces, positions undisturbed) before the tool-reference search."""
         flag_hits = [(m.start(), m.group(0)) for m in FLAG_RE.finditer(seg)]
         masked = FLAG_RE.sub(lambda m: " " * len(m.group(0)), seg)
         mentions = []
@@ -590,8 +676,9 @@ def scan_doc(repo, rel, ctx):
         return mentions, flag_hits
 
     def account(no, mentions, flag_hits, pool):
-        """单逻辑行归账 → (drifts, refs, unresolved)。primary＝行内最近前驱
-        一级引用·无则二级；pool＝兜底池（kind-tagged·tool/oos/unknown）。"""
+        """Attribute one logical line -> (drifts, refs, unresolved).  The
+        primary = the nearest preceding tier-1 reference on the line, else
+        tier 2; pool = the fallback pool (kind-tagged: tool/oos/unknown)."""
         out = []
         refs = 0
         unres = 0
@@ -614,19 +701,22 @@ def scan_doc(repo, rel, ctx):
                 if unverifiable:
                     unres += 1
                     continue
-                out.append((no, "缺旗标（幻引/多余引用）：%s 前最近器 %s "
-                                "help 实出无此旗标（实出 %d 枚）·池 %s 亦无"
+                out.append((no, "missing flag (phantom / extra citation):"
+                                " the nearest tool %s before %s does not emit"
+                                " this flag in its real help (%d flags"
+                                " emitted); the pool %s lacks it too"
                                 % (tok, key,
                                    len(ctx.help.get(key, set())),
-                                   ",".join(reg_pool) if reg_pool else "空")))
+                                   ",".join(reg_pool) if reg_pool else "empty")))
             elif kind == "oos":
                 ek = (rel, key)
                 ctx.oos[ek] = ctx.oos.get(ek, 0) + 1
                 ctx.oos_total += 1
                 oos_local[0] += 1
             elif kind == "unknown":
-                out.append((no, "悬引：旗标 %s 前最近器引用不识（%s）——无器"
-                                "可证" % (tok, key)))
+                out.append((no, "dangling citation: the nearest tool reference"
+                                " before the flag %s is unrecognized (%s) — no"
+                                " tool can prove it" % (tok, key)))
             else:
                 if any(tok in ctx.help.get(t, set()) for t in reg_pool):
                     continue
@@ -634,8 +724,10 @@ def scan_doc(repo, rel, ctx):
         return out, refs, unres
 
     def flush_code_block():
-        """代码块两遍：一遍收全块引用池（注释行用）·二遍逐逻辑行归账
-        （命令行严格自身池·注释行块池）。"""
+        """The code block in two passes: pass one collects the whole-block
+        reference pool (for comment lines); pass two attributes per logical
+        line (command lines strictly from their own pool; comment lines from
+        the block pool)."""
         nonlocal code_block, drifts
         if not code_block:
             return
@@ -659,7 +751,7 @@ def scan_doc(repo, rel, ctx):
             unres_total[0] += u
 
     def flush_para():
-        """散文段两遍：一遍收全段引用池·二遍逐行归账（段池兜底）。"""
+        """The prose paragraph in two passes: pass one collects the whole-paragraph reference pool; pass two attributes line by line (the paragraph pool backs it up)."""
         nonlocal para, drifts
         if not para:
             return
@@ -680,7 +772,7 @@ def scan_doc(repo, rel, ctx):
             unres_total[0] += u
 
     def flush_join():
-        """续行拼装收口 → 逻辑行入代码块缓冲。"""
+        """Continuation-assembly close-out -> the logical line enters the code-block buffer."""
         nonlocal cur, pend_join, code_block
         if not cur:
             return
@@ -716,7 +808,7 @@ def scan_doc(repo, rel, ctx):
             cur.append((no, seg))
             flush_join()
             continue
-        # 散文：标题行独立成段（防池跨节泄漏）·空行收段
+        # prose: a heading line forms its own paragraph (keeps the pool from leaking across sections); a blank line closes the paragraph
         if st.startswith("#"):
             flush_para()
             para.append((no, seg))
@@ -738,18 +830,18 @@ def scan_doc(repo, rel, ctx):
         parts.append("drift=%d" % drift_n)
         parts += ["L%d: %s" % (no, clip(d, 160)) for no, d in shown]
         if len(drifts) > DRIFT_LINE_CAP:
-            parts.append("另 %d 条未列（帽 %d）"
+            parts.append("%d more not listed (cap %d)"
                          % (len(drifts) - DRIFT_LINE_CAP, DRIFT_LINE_CAP))
     else:
         parts.append("drift=0")
     item = {"kind": "flag", "target": rel,
             "status": "drift" if drift_n else "ok",
-            "detail": clip("；".join(parts))}
+            "detail": clip("; ".join(parts))}
     return item, drift_n, refs_total[0]
 
 
 def check_flags(repo, ctx):
-    """③旗标查总控：help 真跑→逐件扫描→checks（每文件一项＋溢出器未证项）。"""
+    """Check 3 main flow: real help runs -> per-file scans -> checks (one item per file plus the unproven overflow-tool items)."""
     checks = []
     files = doc_files(repo)
     ctx.load_helps()
@@ -763,14 +855,15 @@ def check_flags(repo, ctx):
         if n:
             checks.append({"kind": "flag", "target": ov_rel,
                            "status": "drift",
-                           "detail": clip("help 帽 %d 溢出未实跑 --help·doc "
-                                          "引用 %d 处未证（旗标查未竟）"
-                                          % (DEFAULT_HELP_CAP, n))})
+                           "detail": clip("over the help cap %d, --help not"
+                                          " run; %d doc citations unproven (the"
+                                          " flag check is incomplete for this"
+                                          " tool)" % (DEFAULT_HELP_CAP, n))})
     return checks, total_drift, files
 
 
 def _refs_for(ctx, files, tool_rel):
-    """溢出器在 doc 面的引用计数（重扫轻量：仅器引用不跑旗标判定）。"""
+    """An overflow tool's citation count on the doc faces (a light rescan: tool references only, no flag judging)."""
     n = 0
     for rel in files:
         text = read_text(os.path.join(ctx.repo, rel), rel)
@@ -784,38 +877,39 @@ def _refs_for(ctx, files, tool_rel):
     return n
 
 
-# ---- 总控 ---------------------------------------------------------------------
+# ---- main flow ----
 
 def run(args):
-    """总控：值校验（2）→被审仓先验（9）→①②③逐查→report（0/1）。"""
+    """Main flow: value validation (2) -> audited-repo prechecks (9) -> checks 1/2/3 one by one -> the report (0/1)."""
     if args.help_cap < 1:
-        raise UsageError("--help-cap 须≥1 实测 %d" % args.help_cap)
+        raise UsageError("--help-cap must be >= 1, got %d" % args.help_cap)
     repo = args.repo
     if not os.path.isdir(repo):
-        raise MissingInput("--repo 缺目录: %s" % repo)
+        raise MissingInput("--repo directory missing: %s" % repo)
     for req in ("cw.sh", "README.md", "README-cw.md", "tests/run_tests.sh",
                 "tests/README.md"):
         if not os.path.isfile(os.path.join(repo, req)):
-            raise MissingInput("被审仓必需输入缺失: %s" % req)
-    print("=== DOC-LINT（文档←→实现一致性三查）=== repo=%s"
+            raise MissingInput("an audited-repo required input is missing: %s"
+                               % req)
+    print("=== DOC-LINT (docs-vs-implementation consistency, three checks) === repo=%s"
           % os.path.basename(os.path.abspath(repo)))
 
-    # ①工具表查
+    # check 1: the tool table
     places = parse_cw_sh(repo)
     tt_checks, registry_rel, unrouted = check_tool_table(repo, places)
     route_map = {name: ent["path"] for name, ent in places["case"].items()
                  if name not in PSEUDO_ROUTES}
     print("[tool_table] checks=%d unrouted=%s"
-          % (len(tt_checks), ",".join(unrouted) if unrouted else "无"))
+          % (len(tt_checks), ",".join(unrouted) if unrouted else "none"))
 
-    # ②计数查
+    # check 2: the counts
     cnt_checks, cases_n = check_counts(repo)
     print("[count] CASES=%d checks=%d" % (cases_n, len(cnt_checks)))
 
-    # ③旗标查
+    # check 3: the flags
     ctx = LintCtx(repo, registry_rel, route_map, args.help_cap)
     flag_checks, flag_drift, files = check_flags(repo, ctx)
-    print("[flag] docs=%d help_run=%d/%d（帽 %d）drift=%d"
+    print("[flag] docs=%d help_run=%d/%d (cap %d) drift=%d"
           % (len(files), len(ctx.help_order), len(registry_rel),
              args.help_cap, flag_drift))
 
@@ -860,7 +954,7 @@ def run(args):
     return 0 if verdict == "consistent" else 1
 
 
-# ---- --selftest（tmp 迷你仓 fixture·四判＋CLI 三码＋幂等一判）-------------------
+# ---- --selftest (tmp mini-repo fixtures; the consistency vectors + CLI codes + the idempotence vector) ----
 
 MINI_TOOL_A = '''#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -1015,13 +1109,18 @@ def make_mini_repo(root, hint_drop=None, count_drift=False, phantom=False):
 
 
 def selftest():
-    """矢量组（tmp 迷你仓 fixture·全离线·真 subprocess --help 于夹具小器）：
-    V1 一致迷你仓 0 漂（rc0·verdict consistent·三查全 ok）
-    V2 工具表缺一（hint 摘 b）→ rc1·tool_table drift 指 cw.sh:hint
-    V3 计数漂（覆盖面 3≠2）→ rc1·count drift
-    V4 旗标幻引（docs/note.md --bogus-flag）→ rc1·flag drift
-    V5 CLI 三码（--help 0·--bogus 2·--repo 缺 9·--help-cap 0→2）
-    V6 JSON 幂等（同仓两跑异 --json 路径字节恒同）
+    """Vectors (tmp mini-repo fixtures; fully offline; real subprocess --help
+    runs against the fixture's small tools):
+    V1  a consistent mini repo with zero drift (rc 0; verdict consistent; all
+        three checks ok)
+    V2  a missing tool-table row (the hint b line dropped) -> rc 1; a
+        tool_table drift pointing at cw.sh:hint
+    V3  a count drift (coverage 3 vs 2) -> rc 1; a count drift
+    V4  a phantom flag citation (docs/note.md --bogus-flag) -> rc 1; a flag
+        drift
+    V5  CLI codes (--help 0; --bogus 2; missing --repo 9; --help-cap 0 -> 2)
+    V6  JSON idempotence (same repo, two runs, different --json paths,
+        byte-identical)
     """
     tmp = tempfile.mkdtemp(prefix="rocqwash_doclint_self_")
     here = os.path.dirname(os.path.abspath(__file__))
@@ -1037,7 +1136,7 @@ def selftest():
         return p
 
     try:
-        # ---- V1 一致迷你仓 0 漂 ----
+        # ---- V1 a consistent mini repo, zero drift ----
         v1 = os.path.join(tmp, "v1")
         make_mini_repo(v1)
         j1 = os.path.join(tmp, "v1.json")
@@ -1053,17 +1152,17 @@ def selftest():
         assert rep["counts"]["count"]["drift"] == 0, rep["counts"]
         assert rep["counts"]["flag"]["drift"] == 0, rep["counts"]
         assert len(rep["registry"]["help_run"]) == 2, rep["registry"]
-        # 引用旗标确已逐枚对账：a 器 --file/--json＋b 器 --dir/--apply
+        # every cited flag proven one by one: tool a --file/--json + tool b --dir/--apply
         v1_flag = [c for c in rep["checks"]
                    if c["kind"] == "flag" and c["target"]
                    == "examples/workflows/wf.md"]
         assert v1_flag and "refs=" in v1_flag[0]["detail"], v1_flag
-        # 无器上下文旗标引用＝unresolved 如实计·不判漂（V1 仍 consistent）
+        # a flag citation with no tool context = counted honestly as unresolved, never drift (V1 stays consistent)
         note = [c for c in rep["checks"]
                 if c["kind"] == "flag" and c["target"] == "docs/note.md"]
         assert note and "unresolved=1" in note[0]["detail"], note
 
-        # ---- V2 工具表缺一（hint 摘 b）----
+        # ---- V2 a missing tool-table row (the hint b line dropped) ----
         v2 = os.path.join(tmp, "v2")
         make_mini_repo(v2, hint_drop="b")
         j2 = os.path.join(tmp, "v2.json")
@@ -1077,7 +1176,7 @@ def selftest():
         assert hit, rep["checks"]
         assert rep["counts"]["tool_table"]["drift"] >= 1, rep["counts"]
 
-        # ---- V3 计数漂（覆盖面 3≠2）----
+        # ---- V3 a count drift (coverage 3 vs 2) ----
         v3 = os.path.join(tmp, "v3")
         make_mini_repo(v3, count_drift=True)
         j3 = os.path.join(tmp, "v3.json")
@@ -1085,14 +1184,15 @@ def selftest():
         assert p.returncode == 1, p.stdout[-1200:]
         rep = json.loads(io.open(j3, encoding="utf-8").read())
         hit = [c for c in rep["checks"] if c["kind"] == "count"
-               and c["status"] == "drift" and "3 ≠ CASES 2" in c["detail"]]
+               and c["status"] == "drift"
+               and "3 != CASES 2" in c["detail"]]
         assert hit, rep["checks"]
         assert rep["counts"]["count"]["drift"] == 1, rep["counts"]
-        # 其余两查仍零漂（漂移只在计数域·不连带）
+        # the other two checks stay at zero drift (the drift is confined to the count domain; nothing cascades)
         assert rep["counts"]["tool_table"]["drift"] == 0, rep["counts"]
         assert rep["counts"]["flag"]["drift"] == 0, rep["counts"]
 
-        # ---- V4 旗标幻引（docs/note.md --bogus-flag）----
+        # ---- V4 a phantom flag citation (docs/note.md --bogus-flag) ----
         v4 = os.path.join(tmp, "v4")
         make_mini_repo(v4, phantom=True)
         j4 = os.path.join(tmp, "v4.json")
@@ -1101,24 +1201,24 @@ def selftest():
         rep = json.loads(io.open(j4, encoding="utf-8").read())
         hit = [c for c in rep["checks"] if c["kind"] == "flag"
                and c["status"] == "drift" and c["target"] == "docs/note.md"
-               and "幻引" in c["detail"] and "--bogus-flag" in c["detail"]]
+               and "phantom" in c["detail"] and "--bogus-flag" in c["detail"]]
         assert hit, rep["checks"]
         assert rep["counts"]["flag"]["drift"] == 1, rep["counts"]
-        # 其余两查仍零漂
+        # the other two checks stay at zero drift
         assert rep["counts"]["tool_table"]["drift"] == 0, rep["counts"]
         assert rep["counts"]["count"]["drift"] == 0, rep["counts"]
 
-        # ---- V5 CLI 三码＋--help-cap 值校验 ----
+        # ---- V5 CLI codes + the --help-cap value validation ----
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-300:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag should rc=2, got %d" % p.returncode
         p = run(["--repo", os.path.join(tmp, "no_dir")])
-        assert p.returncode == 9, "--repo 缺目录应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "missing --repo directory should rc=9, got %d" % p.returncode
         p = run(["--repo", v1, "--help-cap", "0"])
-        assert p.returncode == 2, "--help-cap 0 应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "--help-cap 0 should rc=2, got %d" % p.returncode
 
-        # ---- V6 JSON 幂等：同仓两跑异 --json 路径字节恒同 ----
+        # ---- V6 JSON idempotence: same repo, two runs, different --json paths, byte-identical ----
         j6a = os.path.join(tmp, "v6a.json")
         j6b = os.path.join(tmp, "v6b.json")
         p = run(["--repo", v1, "--json", j6a])
@@ -1127,13 +1227,15 @@ def selftest():
         assert p.returncode == 0, p.stdout[-400:]
         ba = io.open(j6a, "rb").read()
         bb = io.open(j6b, "rb").read()
-        assert ba == bb, "json 字节漂移＝违例"
+        assert ba == bb, "json byte drift = violation"
         rep = json.loads(ba.decode("utf-8"))
         assert rep["schema"] == SCHEMA and "doclint" in rep["schema"]
 
-        print("DOC-LINT-SELFTEST PASS: 一致仓0漂/工具表缺一(hint)/计数漂"
-              "(3≠2)/旗标幻引(--bogus-flag)/CLI 三码＋cap 值校验/JSON 幂等"
-              "字节恒同 六节全过")
+        print("DOC-LINT-SELFTEST PASS: the consistent repo with zero drift /"
+              " the missing tool-table row (hint) / the count drift (3 vs 2) /"
+              " the phantom flag (--bogus-flag) / the CLI codes + the cap value"
+              " validation / the JSON idempotence byte-identical — all six"
+              " vectors pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -1149,18 +1251,24 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="文档←→实现一致性三查器：工具表查（cw.sh 四处互检＋tools/"
-                    " 通用入口对账）＋计数查（CASES vs tests/README.md vs "
-                    "README.md）＋旗标查（doc 引用旗标 vs --help 实出·帽 20 器）"
-                    "（schema rocqwash-doclint/1）")
+        description="the docs-vs-implementation consistency three-check tool:"
+                    " the tool-table check (cw.sh four-place mutual inspection +"
+                    " the tools/ generic-entry reconciliation) + the count check"
+                    " (CASES vs tests/README.md vs README.md) + the flag check"
+                    " (doc-cited flags vs real --help output, capped)"
+                    " (schema rocqwash-doclint/1)")
     ap.add_argument("--repo", default=os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))), metavar="DIR",
-        help="被审仓根（缺省＝本件所在 tools/ 的上一级）")
+        help="the audited repo root (default = the parent of the"
+             " tools/ directory holding this file)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="报告出账（rocqwash-doclint/1·sort_keys 确定性）")
+                    help="the report output path (rocqwash-doclint/1;"
+                         " sort_keys determinism)")
     ap.add_argument("--help-cap", dest="help_cap", type=int,
                     default=DEFAULT_HELP_CAP, metavar="N",
-                    help="③ --help 真跑器帽（缺省 25·溢出典序截断如实列）")
+                    help="the check-3 --help real-run tool cap (default 28;"
+                         " over-cap tools truncate in canonical order and are"
+                         " listed honestly)")
     args = ap.parse_args(argv)
 
     try:
