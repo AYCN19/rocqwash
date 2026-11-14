@@ -68,6 +68,10 @@ Exit-codes.  0 GREEN (plan clean, or apply then rescan residue zero); 1 RED
 #   loudly (exit 2) before any write.  Rounds with zero applied rows
 #   record nothing, so the second full cycle on a clean file reports
 #   zero would-fix items and leaves state and target untouched.
+#   Idempotence caliber: a rerun whose package was already consumed ends
+#   in verdict REFUSED at rc 2 with zero writes (the report names
+#   budget_refusals), and the target stays byte-identical; the refusal
+#   is the loud witness of byte-identity, not a state to retry through.
 #
 # http provider.  Direct apply path; fires only when the environment gate
 #   and the three endpoint variables are all present, refuses loudly

@@ -59,7 +59,7 @@
 ### tools/i18n_pipeline.py
 
 - 状态 Status：[live]（工单道 4 交付件；E4 编排本体 P0/P1/P3/P6）
-- 用途 Purpose：zh↔en 双向四联动管线的编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py` §10：segment_document／translate_segments／apply_linkages／verify_faces／tenpoint_review／sync_ledger_append），本道实现 P0/P1/P3/P6 并 import 道5/道6 模块组装 translate_segments／verify_faces／tenpoint_review；P0 政策预查：目标面 regime 表 `repo`／`paper`／`supplement` 三面（承 i18n SPEC §7 D/E 三轨分级的模块内常数 `P0_REGIMES`），评审敏感面默认 `disclosure_required:true`，`refusal:true` 的面拒绝即合法结果（exit 0，段账记 refusal 行），P0 注记行（`policy_precheck_ref`）先于任何翻译落段账；P1 分段器：保护名单（代码块/行内反引号/CLI 旗标/--形 token/标识符/数学/引文/路径/URL），段＝连续散文行区间，出段账行（SPEC §9 九键形，`source_span` 行号）；P3 四联动编排 L1（termbase 查词，道6）→L2（jargon_apply 投影＋plan，道2）→L3（CJK 零残留＋em-dash 密度每千字符 ≤1＋保护名单零漂移 diff）→L4（ai_flavor 检测，命中=finding 走道3 同款建议流），联动改写落同一段账（`annotation_site` 照实）；P6 段账：JSONL 追加式、English keys、行内禁过程叙事，闭合校验每机器段九键齐＋`annotation_site=="model"`＋`tenpoint_verdict` 非 PENDING 才准闭合。
+- 用途 Purpose：zh↔en 双向四联动管线的编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py` §10：segment_document／translate_segments／apply_linkages／verify_faces／tenpoint_review／sync_ledger_append），本道实现 P0/P1/P3/P6 并 import 道5/道6 模块组装 translate_segments／verify_faces／tenpoint_review；P0 政策预查：目标面 regime 表 `repo`／`paper`／`supplement` 三面（承 i18n SPEC §7 D/E 三轨分级的模块内常数 `P0_REGIMES`），评审敏感面默认 `disclosure_required:true`，`refusal:true` 的面拒绝即合法结果（exit 0，段账记 refusal 行），P0 注记行（`policy_precheck_ref`）先于任何翻译落段账；P1 分段器：保护名单（代码块/行内反引号/CLI 旗标/--形 token/标识符/数学/引文/路径/URL），段＝连续散文行区间，出段账行（SPEC §9 十键形·含 policy_precheck_ref，`source_span` 行号）；P3 四联动编排 L1（termbase 查词，道6）→L2（jargon_apply 投影＋plan，道2）→L3（CJK 零残留＋em-dash 密度每千字符 ≤1＋保护名单零漂移 diff）→L4（ai_flavor 检测，命中=finding 走道3 同款建议流），联动改写落同一段账（`annotation_site` 照实）；P6 段账：JSONL 追加式、English keys、行内禁过程叙事，闭合校验每机器段十键齐（含 policy_precheck_ref）＋`annotation_site=="model"`＋`tenpoint_verdict` 非 PENDING 才准闭合。
 - 调用形 Invocation：`python -I tools/i18n_pipeline.py --manifest <run.json> --stage p0|p1|p3|p6 [--json <out>]` [live]（分段执行，断点续跑）
 - 示例 Example：`python -I tools/i18n_pipeline.py --manifest out/run.json --stage p1 --json out/segments.json`
 - 依赖 Imports：Python 3 标准库（stdlib-only 硬闸）＋仓内道2/道5/道6 模块（jargon_apply／i18n_translate／i18n_verify 组装面）；manifest 与段账经 stdlib json。
@@ -69,12 +69,12 @@
 ### tools/i18n_translate.py
 
 - 状态 Status：[live]（工单道 5 交付件；E4 模型处层 P2）
-- 用途 Purpose：模型处层（P2）：handoff 形（默认·零网络）：`--emit` 出段包（每行 segment_id／direction／source_text／protected_tokens／prompt_template_ref／instruction），外部模型席回填 `{segment_id, translated_text, model_id, prompt_template_ref, timestamp_utc}` 后 `--ingest` 九键校验（缺 model_id 或 annotation 缺失＝违规拒收 fail-loud）；http 形（可选·default-deny·环境门同道3 三变量）：OpenAI 兼容端点，逐段调用，逐段标注（model_id=端点模型名，`annotation_site="model"`），NETRED ledger 逐次含失败；prompt 模板 `--prompts <dir>`（缺省用内置模板常数，`prompt_template_ref:"prompts/zh2en-repo-v1"` 形命名）；纯函数导出 `build_handoff(segments, direction) -> rows`、`ingest_translations(segments, rows) -> (translated, ledger_rows[])`。
+- 用途 Purpose：模型处层（P2）：handoff 形（默认·零网络）：`--emit` 出段包（每行 segment_id／direction／source_text／protected_tokens／prompt_template_ref／instruction），外部模型席回填 `{segment_id, translated_text, model_id, prompt_template_ref, timestamp_utc}` 后 `--ingest` 十键校验（含 policy_precheck_ref，缺 model_id 或 annotation 缺失＝违规拒收 fail-loud）；http 形（可选·default-deny·环境门同道3 三变量）：OpenAI 兼容端点，逐段调用，逐段标注（model_id=端点模型名，`annotation_site="model"`），NETRED ledger 逐次含失败；prompt 模板 `--prompts <dir>`（缺省用内置模板常数，`prompt_template_ref:"prompts/zh2en-repo-v1"` 形命名）；纯函数导出 `build_handoff(segments, direction) -> rows`、`ingest_translations(segments, rows) -> (translated, ledger_rows[])`。
 - 调用形 Invocation：`python -I tools/i18n_translate.py --emit <out.jsonl> [--prompts <dir>]` [live]；`python -I tools/i18n_translate.py --ingest <in.jsonl>` [live]；http 腿旗标面以落岸 usage 面为准（本稿转录契约面）[live]
 - 示例 Example：`python -I tools/i18n_translate.py --emit out/segments-handoff.jsonl --prompts prompts/`
 - 依赖 Imports：Python 3 标准库（stdlib-only 硬闸）；handoff 默认面零网络；http 腿传输 import 在落岸时声明。
 - 网络 Network face：handoff 面 zero；http 腿 non-zero·default-deny（环境门 `ROCQWASH_MCP_ALLOW_NET=1` ＋ `ROCQWASH_LLM_ENDPOINT`／`ROCQWASH_LLM_MODEL`／`ROCQWASH_LLM_KEY` 三缺一响亮拒绝并命名缺项；NETRED ledger 行逐次含失败）。
-- SKIP 面：全票唯一网络面＝http 提供者腿（default-deny），无环境门时拒绝而非降级；handoff 形零网络全功能（执行智能体＝模型处）；零标注机器段＝管线违规（九键校验拒收）。
+- SKIP 面：全票唯一网络面＝http 提供者腿（default-deny），无环境门时拒绝而非降级；handoff 形零网络全功能（执行智能体＝模型处）；零标注机器段＝管线违规（十键校验拒收·含 policy_precheck_ref）。
 
 ### tools/i18n_verify.py
 

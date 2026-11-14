@@ -134,7 +134,11 @@ Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
 #                 handoff route as their action; ban-remediation faces and
 #                 em-dash occurrences are human items -> plan-miss items.
 #                 --apply runs the engine's --emit-handoff (the package
-#                 lands beside the target; the target itself is untouched):
+#                 lands in the shaper's process working directory: the
+#                 subprocess inherits the caller's CWD and the emit path
+#                 is a bare basename, so the file lands next to where
+#                 wash_shape runs, not beside the target; the target
+#                 itself is untouched):
 #                 the write completes only after the provider fills the rows
 #                 and --apply-handoff ingests them, so until that round trip
 #                 the rescan reports the residual findings loudly (verdict

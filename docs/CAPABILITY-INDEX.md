@@ -1,7 +1,7 @@
 # rocqwash CAPABILITY-INDEX（工具能力契约面 · Tool Capability Contract Surface）
 
-版本锚 Version anchor：`5829f6d18a9ee2bc63c19ef46caad115e34a0c85`（钉住克隆 `D:/ComplexAnalysis/rocqwash` main，2026-11-14 本地 `git rev-parse HEAD` 实测；对账回执 N2 实测与远端 main 一致）。
-Version anchor: pinned clone `D:/ComplexAnalysis/rocqwash` main at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`, measured locally on 2026-11-14 (`git rev-parse HEAD`); the reconciliation receipt (channel N2) matched this head to the remote main.
+版本锚 Version anchor：`d6d0ec75747edee957e334d1ff9391707cb39f21`（引擎本体批落岸提交·施工基座注记；2026-11-15 本地 `git rev-parse HEAD` 于工作树实测。词面普查未重跑：§1/§2 逐行照录面仍以普查铸时锚 `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` 的词面事实为准；census 重扫候下波）。
+Version anchor: `d6d0ec75747edee957e334d1ff9391707cb39f21`, the engine-body batch integration commit, recorded here as the construction-base annotation; measured locally on 2026-11-15 (`git rev-parse HEAD` on the working tree). The census was not re-run: the §1/§2 transcribed lines remain the census-time word-face facts cast at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`; the census re-scan awaits the next wave.
 
 ## 0. 定位与读法 · Positioning and How to Read
 
@@ -193,7 +193,7 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 
 ### tools/i18n_pipeline.py
 - 状态 Status：[live]（引擎本体票 道4 交付·合流落岸·E4 编排本体 P0/P1/P3/P6）
-- 用途 Purpose：zh<->en 双向四联动管线编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py`），本道实现 P0 政策预查（`repo`/`paper`/`supplement` regime 表，refusal 即合法结果 exit 0 记台账）、P1 分段器（保护名单、段=连续散文行区间、段账九键）、P3 四联动编排（L1 termbase 查词、L2 jargon 投影、L3 CJK 零残留加 em-dash 密度、L4 ai_flavor 检测）、P6 段账闭合校验。Pipeline orchestration body: six immutable operation signatures, P0 policy pre-check (refusal is a legal exit-0 ledgered outcome), P1 segmentation under the protection list, P3 four-linkage application, P6 append-only ledger closure gate.
+- 用途 Purpose：zh<->en 双向四联动管线编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py`），本道实现 P0 政策预查（`repo`/`paper`/`supplement` regime 表，refusal 即合法结果 exit 0 记台账）、P1 分段器（保护名单、段=连续散文行区间、段账十键（含 policy_precheck_ref））、P3 四联动编排（L1 termbase 查词、L2 jargon 投影、L3 CJK 零残留加 em-dash 密度、L4 ai_flavor 检测）、P6 段账闭合校验。Pipeline orchestration body: six immutable operation signatures, P0 policy pre-check (refusal is a legal exit-0 ledgered outcome), P1 segmentation under the protection list, P3 four-linkage application, P6 append-only ledger closure gate.
 - 调用形 Invocation：`python -I tools/i18n_pipeline.py --manifest <run.json> --stage p0|p1|p3|p6 [--json <out>]` ／ `--selftest`
 - 示例 Example：`python -I tools/i18n_pipeline.py --manifest out/run.json --stage p1 --json out/segments.json`
 - 依赖 Imports：argparse, io, json, os, re, subprocess, sys, tempfile ＋ 仓内 `tools/jargon_apply.py`／`tools/i18n_translate.py`／`tools/i18n_verify.py`／`tools/termbase.py`（组装面）
@@ -202,12 +202,12 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 
 ### tools/i18n_translate.py
 - 状态 Status：[live]（引擎本体票 道5 交付·合流落岸·E4 模型处层 P2）
-- 用途 Purpose：模型处层（P2）：handoff 形默认零网络（`--emit` 出段包、回填后 `--ingest` 九键校验，缺 model_id 或缺标注即违规拒收 fail-loud）；http 形可选 default-deny（OpenAI 兼容端点逐段调用逐段标注 `annotation_site="model"`，NETRED 台账逐次含失败）；prompt 模板 `--prompts <dir>`（缺省内置常数）。Model-site layer P2: handoff form default zero-network with nine-key ingest validation; http form optional default-deny with per-segment annotation and a NETRED ledger line per call.
+- 用途 Purpose：模型处层（P2）：handoff 形默认零网络（`--emit` 出段包、回填后 `--ingest` 十键校验（含 policy_precheck_ref），缺 model_id 或缺标注即违规拒收 fail-loud）；http 形可选 default-deny（OpenAI 兼容端点逐段调用逐段标注 `annotation_site="model"`，NETRED 台账逐次含失败）；prompt 模板 `--prompts <dir>`（缺省内置常数）。Model-site layer P2: handoff form default zero-network with ten-key (including policy_precheck_ref) ingest validation; http form optional default-deny with per-segment annotation and a NETRED ledger line per call.
 - 调用形 Invocation：`python -I tools/i18n_translate.py --segments <p> --emit <out.jsonl> [--prompts <dir>]` ／ `--ingest <in.jsonl>` ／ `--provider handoff|http`
 - 示例 Example：`python -I tools/i18n_translate.py --segments out/segments.json --emit out/handoff.jsonl`
 - 依赖 Imports：argparse, io, json, os, re, sys, tempfile, time, urllib.request
 - 网络 Network face：handoff 面 zero；http 腿 non-zero（default-deny：环境门三变量缺一响亮拒绝并命名缺项；NETRED 行逐次含失败；凭据值零落盘零日志）
-- SKIP 面：全票唯一网络面=http 提供者腿；无环境门拒绝而非降级；零标注机器段=管线违规九键拒收
+- SKIP 面：全票唯一网络面=http 提供者腿；无环境门拒绝而非降级；零标注机器段=管线违规十键拒收（含 policy_precheck_ref）
 
 ### tools/i18n_verify.py
 - 状态 Status：[live]（引擎本体票 道6 交付·合流落岸·E4 P4/P5）
@@ -508,7 +508,9 @@ VERDICT CLEAN (36 faces = 0; em-dash = 0)
 
 ## 6. 锚滞后登记 · Anchor-lag register (growth cycle 3)
 
-The version anchor at the top (5829f6d) lags the working-tree HEAD (8e04cc6) by seven commits. Facts measured on the lagged state, per the caller duty in section 0:
+Register note (2026-11-15, wave-2 annotation closeout): the version anchor at the top advanced to `d6d0ec7` (the engine-body batch integration commit) as a construction-base annotation. The census cast stays pinned at `5829f6d`; no census re-scan ran (the census re-scan awaits the next wave). The cycle-3 entry below is kept as written for its own time.
+
+Cycle-3 entry, kept as written: the version anchor then at the top (5829f6d) lagged the working-tree HEAD (8e04cc6) by seven commits. Facts measured on the lagged state, per the caller duty in section 0:
 
 - Committed tool count at HEAD is 28 `.py` files under `tools/` (`git ls-tree HEAD tools/`), one above the census count 27 recorded in section 1: `tools/mcp_server.py` was added after the census snapshot. Its contract face is reachable directly (`python -I tools/mcp_server.py --help`; the capability mapping is documented in `docs/mcp.md`). A census-grade entry awaits the census lane's own re-run; this register deliberately does not hand-write one.
 - Two further tools sit on disk untracked: `tools/exp_port.py` (experience-bus port, schema rocqwash-exp/1, `append`/`query` faces plus `--selftest`) and `tools/periscope.py` (collection legs; operation manual at `docs/periscope_sop.md`). They join the index only once their own commits exist on the tracked face.

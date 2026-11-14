@@ -102,7 +102,9 @@ Seed paths are given relative to the rocqwash repository root, where the
   `python tools/wash_shape.py --file <value> --apply` [integration update: the stage landed as wash 7 `ai-flavor` in wash_shape and the
   detection body `tools/ai_flavor.py`; the write face runs through the
   rewrite provider per design change 4, so the wash_shape apply arm emits
-  the handoff package and the round trip completes it]
+  the handoff package, which lands in the caller's process working
+  directory (a bare-basename emit path, not beside the target), and the
+  round trip completes it]
 - Example: `sh ai_flavor_selfcheck.sh docs/report.md`; candidate form:
   `python tools/wash_shape.py --file docs/report.md --apply`
 - Imports: wash_shape.py already imports argparse, datetime, hashlib, io,

@@ -101,6 +101,22 @@
 #               cw.sh mcp-server   (stdio transport; drive from an MCP client, not interactively)
 #   periscope   six-source peripheral-intelligence sweep (sentinel companion window log + judgment draft skeleton; read-only GET) -> tools/periscope.py
 #               cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]
+#   ai-flavor   AI-wording word-face detection body (36-face battery + separate em-dash battery; hits are data, not errors; word map read-only) -> tools/ai_flavor.py
+#               cw.sh ai-flavor --file <p> [--json out] | --tree DIR | --selftest
+#   ai-flavor-apply AI-wording advisory apply face (writes only through the rewrite provider; handoff leg default zero-network; http leg default-deny; zh ban faces never machine-written) -> tools/ai_flavor_apply.py
+#               cw.sh ai-flavor-apply --file <p> [--json out] [--emit-handoff out.jsonl | --apply-handoff in.jsonl --state p] [--provider handoff|http]
+#   auto-round  round-ledger admission/rollback/salvage body (auto/gated gear per autonomy.json; append-only ledger; rollback = drift archive then one revert; no reset no force no push) -> tools/auto_round.py
+#               cw.sh auto-round <command> [--repo-root P] [--autonomy P] [--state P] [--ledger P] [--continue] [--selftest]
+#   i18n-pipeline zh-en four-linkage i18n pipeline orchestration (P0 policy pre-check / P1 segmenter / P3 four-linkage apply / P6 ledger closure; refusal is a legal exit-0 ledgered outcome) -> tools/i18n_pipeline.py
+#               cw.sh i18n-pipeline --manifest run.json --stage p0|p1|p3|p6 [--json out] [--selftest]
+#   i18n-translate model-site layer P2 of the i18n pipeline (handoff emit/ingest default zero-network; http leg optional default-deny; NETRED ledger line per call) -> tools/i18n_translate.py
+#               cw.sh i18n-translate --segments <p> --emit out.jsonl [--prompts DIR] | --ingest in.jsonl [--provider handoff|http]
+#   i18n-verify P4 mechanical verify orchestration + P5 human ten-point form face (the engine emits the form and ingests verdicts, never judges) -> tools/i18n_verify.py
+#               cw.sh i18n-verify --verify-target <p> [--json out] | --emit-tenpoint <target> | --ingest-tenpoint verdicts.json | --selftest
+#   jargon-apply jargon-to-standard apply face over the 62-entry map (replace entries only; human rows never machine-written; plan zero-write default; apply rescans to residue zero; idempotent) -> tools/jargon_apply.py
+#               cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]
+#   termbase    read-only terminology thin layer over seeds/termbase/termbase.json (exact-face lookup; schema validation fail-loud; a miss is data, exit 0) -> tools/termbase.py
+#               cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -276,6 +292,22 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh mcp-server   (stdio transport; drive from an MCP client, not interactively)
   periscope   six-source peripheral-intelligence sweep (sentinel companion window log + judgment draft skeleton; read-only GET) -> tools/periscope.py
               cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]
+  ai-flavor   AI-wording word-face detection body (36-face battery + separate em-dash battery; hits are data, not errors; word map read-only) -> tools/ai_flavor.py
+              cw.sh ai-flavor --file <p> [--json out] | --tree DIR | --selftest
+  ai-flavor-apply AI-wording advisory apply face (writes only through the rewrite provider; handoff leg default zero-network; http leg default-deny; zh ban faces never machine-written) -> tools/ai_flavor_apply.py
+              cw.sh ai-flavor-apply --file <p> [--json out] [--emit-handoff out.jsonl | --apply-handoff in.jsonl --state p] [--provider handoff|http]
+  auto-round  round-ledger admission/rollback/salvage body (auto/gated gear per autonomy.json; append-only ledger; rollback = drift archive then one revert; no reset no force no push) -> tools/auto_round.py
+              cw.sh auto-round <command> [--repo-root P] [--autonomy P] [--state P] [--ledger P] [--continue] [--selftest]
+  i18n-pipeline zh-en four-linkage i18n pipeline orchestration (P0 policy pre-check / P1 segmenter / P3 four-linkage apply / P6 ledger closure; refusal is a legal exit-0 ledgered outcome) -> tools/i18n_pipeline.py
+              cw.sh i18n-pipeline --manifest run.json --stage p0|p1|p3|p6 [--json out] [--selftest]
+  i18n-translate model-site layer P2 of the i18n pipeline (handoff emit/ingest default zero-network; http leg optional default-deny; NETRED ledger line per call) -> tools/i18n_translate.py
+              cw.sh i18n-translate --segments <p> --emit out.jsonl [--prompts DIR] | --ingest in.jsonl [--provider handoff|http]
+  i18n-verify P4 mechanical verify orchestration + P5 human ten-point form face (the engine emits the form and ingests verdicts, never judges) -> tools/i18n_verify.py
+              cw.sh i18n-verify --verify-target <p> [--json out] | --emit-tenpoint <target> | --ingest-tenpoint verdicts.json | --selftest
+  jargon-apply jargon-to-standard apply face over the 62-entry map (replace entries only; human rows never machine-written; plan zero-write default; apply rescans to residue zero; idempotent) -> tools/jargon_apply.py
+              cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]
+  termbase    read-only terminology thin layer over seeds/termbase/termbase.json (exact-face lookup; schema validation fail-loud; a miss is data, exit 0) -> tools/termbase.py
+              cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -323,6 +355,14 @@ hint_for() {  # $1=tool
     baseline-diff-facade) echo "cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]   # clog-baseline differ, alias of baseline-diff -> tools/baseline_diff.py" ;;
     mcp-server)  echo "cw.sh mcp-server   # rocqwash MCP stdio server (JSON-RPC 2.0 over stdio) -> tools/mcp_server.py" ;;
     periscope)   echo "cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]   # six-source peripheral-intelligence sweep -> tools/periscope.py" ;;
+    ai-flavor)   echo "cw.sh ai-flavor --file <p> [--json out] | --tree DIR | --selftest   # AI-wording word-face detection body (36-face battery + em-dash battery; hits are data, not errors) -> tools/ai_flavor.py" ;;
+    ai-flavor-apply) echo "cw.sh ai-flavor-apply --file <p> [--json out] [--emit-handoff out.jsonl | --apply-handoff in.jsonl --state p] [--provider handoff|http]   # AI-wording advisory apply face (writes only through the rewrite provider; handoff default zero-network; http leg default-deny) -> tools/ai_flavor_apply.py" ;;
+    auto-round)  echo "cw.sh auto-round <command> [--repo-root P] [--autonomy P] [--state P] [--ledger P] [--continue] [--selftest]   # round-ledger admission/rollback/salvage body (commands commit/approve/anchor/rollback/salvage/merge-salvage/status/list/log; append-only; no reset no force no push) -> tools/auto_round.py" ;;
+    i18n-pipeline) echo "cw.sh i18n-pipeline --manifest run.json --stage p0|p1|p3|p6 [--json out] [--selftest]   # zh-en four-linkage i18n pipeline orchestration (P0 policy / P1 segmenter / P3 apply / P6 closure; refusal is a legal exit-0 ledgered outcome) -> tools/i18n_pipeline.py" ;;
+    i18n-translate) echo "cw.sh i18n-translate --segments <p> --emit out.jsonl [--prompts DIR] | --ingest in.jsonl [--provider handoff|http]   # model-site layer P2 (handoff emit/ingest default zero-network; http leg default-deny; NETRED ledger line per call) -> tools/i18n_translate.py" ;;
+    i18n-verify) echo "cw.sh i18n-verify --verify-target <p> [--json out] | --emit-tenpoint <target> | --ingest-tenpoint verdicts.json | --selftest   # P4 mechanical verify orchestration + P5 human ten-point form (the engine never judges) -> tools/i18n_verify.py" ;;
+    jargon-apply) echo "cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]   # jargon-to-standard apply face (replace entries only; plan zero-write default; apply rescans to residue zero; idempotent) -> tools/jargon_apply.py" ;;
+    termbase)    echo "cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest   # read-only terminology thin layer (exact-face lookup; schema fail-loud; a miss is data) -> tools/termbase.py" ;;
     *) return 1 ;;
   esac
 }
@@ -377,6 +417,14 @@ case "${1:-}" in
   exp-append)  shift; run_tool exp-append  "tools/exp_port.py"          append "$@" ;;
   mcp-server)  shift; run_tool mcp-server  "tools/mcp_server.py"   "$@" ;;
   periscope)   shift; run_tool periscope   "tools/periscope.py"   "$@" ;;
+  ai-flavor)   shift; run_tool ai-flavor   "tools/ai_flavor.py"   "$@" ;;
+  ai-flavor-apply) shift; run_tool ai-flavor-apply "tools/ai_flavor_apply.py"   "$@" ;;
+  auto-round)  shift; run_tool auto-round  "tools/auto_round.py"   "$@" ;;
+  i18n-pipeline) shift; run_tool i18n-pipeline "tools/i18n_pipeline.py"   "$@" ;;
+  i18n-translate) shift; run_tool i18n-translate "tools/i18n_translate.py"   "$@" ;;
+  i18n-verify) shift; run_tool i18n-verify "tools/i18n_verify.py"   "$@" ;;
+  jargon-apply) shift; run_tool jargon-apply "tools/jargon_apply.py"   "$@" ;;
+  termbase)    shift; run_tool termbase    "tools/termbase.py"   "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
