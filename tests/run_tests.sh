@@ -200,7 +200,7 @@ set -u
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 FIX="$REPO/tests/fixtures"
-PY=python3
+PY=${ROCWASH_PY:-python3}
 
 # ---------- 正本环境探针（CI 准入）----------
 # 四例（t_gate7_wrapper/t_quad8_check/t_gate6_born_wrapper/t_verify_gate6）的

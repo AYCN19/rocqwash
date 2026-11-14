@@ -139,7 +139,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 28     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last)
+DEFAULT_HELP_CAP = 32     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28->32, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last; the 20261114 bump follows the measured registry size 32 - an over-cap tool has an empty help set and every doc flag cited against it is misjudged phantom)
 HELP_TIMEOUT = 60         # --help subprocess second cap (local-file hang guard; fail-loud)
 DETAIL_CAP = 300          # checks[].detail clip (the cw_doctor non_form ln[:120] form)
 DRIFT_LINE_CAP = 20       # check 3 per-file phantom/dangling list cap (the total is honest; the cw_doctor cap-20 form)
@@ -1266,7 +1266,7 @@ def main():
                          " sort_keys determinism)")
     ap.add_argument("--help-cap", dest="help_cap", type=int,
                     default=DEFAULT_HELP_CAP, metavar="N",
-                    help="the check-3 --help real-run tool cap (default 28;"
+                    help="the check-3 --help real-run tool cap (default 32;"
                          " over-cap tools truncate in canonical order and are"
                          " listed honestly)")
     args = ap.parse_args(argv)

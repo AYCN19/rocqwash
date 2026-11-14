@@ -63,7 +63,7 @@ python -I tools/vacgen.py --preflight-all --census <census.json> --root <clone>
         [--report <difficulty-map.json>]
 ```
 
-The taxonomy table is located by a fail-safe chain: `--taxonomy` flag, then
+The taxonomy table is located by a fail-safe chain: vacgen first tries the `--taxonomy` flag, then
 the `VACGEN_TAXONOMY` environment variable, then a `taxonomy.json` next to the
 tool, then a builtin starter row. With no taxonomy file the generator keeps
 its builtin recognition face; unrecognized premise shapes are counted as

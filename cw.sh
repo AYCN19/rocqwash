@@ -93,10 +93,14 @@
 #               cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]
 #   ci-triage   CI red-run triage, alias of triage (same target script) -> tools/ci_triage.py
 #               cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
-#   (pending)   exp-append experience-ledger appender (existence-probed route: SKIP notice until tools/exp_port.py lands, then this row goes canonical)
-#               cw.sh exp-append --tool T --points P [--evidence E] [--batch B]
+#   exp-append  experience-ledger appender (schema rocqwash-exp/1, idempotent seen set; the MCP exp_append face) -> tools/exp_port.py
+#               cw.sh exp-append --tool T --points P [--evidence E] [--batch B] [--id ID]
 #   baseline-diff-facade  clog-baseline differ, alias of baseline-diff (same target script) -> tools/baseline_diff.py
 #               cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]
+#   mcp-server  rocqwash MCP stdio server (JSON-RPC 2.0 over stdio; capability true names follow docs/CAPABILITY-INDEX.md) -> tools/mcp_server.py
+#               cw.sh mcp-server   (stdio transport; drive from an MCP client, not interactively)
+#   periscope   six-source peripheral-intelligence sweep (sentinel companion window log + judgment draft skeleton; read-only GET) -> tools/periscope.py
+#               cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -264,10 +268,14 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]
   ci-triage   CI red-run triage, alias of triage (same target script) -> tools/ci_triage.py
               cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]
-  (pending)   exp-append experience-ledger appender (existence-probed route: SKIP notice until tools/exp_port.py lands, then this row goes canonical)
-              cw.sh exp-append --tool T --points P [--evidence E] [--batch B]
+  exp-append  experience-ledger appender (schema rocqwash-exp/1, idempotent seen set; the MCP exp_append face) -> tools/exp_port.py
+              cw.sh exp-append --tool T --points P [--evidence E] [--batch B] [--id ID]
   baseline-diff-facade  clog-baseline differ, alias of baseline-diff (same target script) -> tools/baseline_diff.py
               cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]
+  mcp-server  rocqwash MCP stdio server (JSON-RPC 2.0 over stdio; capability true names follow docs/CAPABILITY-INDEX.md) -> tools/mcp_server.py
+              cw.sh mcp-server   (stdio transport; drive from an MCP client, not interactively)
+  periscope   six-source peripheral-intelligence sweep (sentinel companion window log + judgment draft skeleton; read-only GET) -> tools/periscope.py
+              cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -311,10 +319,10 @@ hint_for() {  # $1=tool
     evolve)      echo "cw.sh evolve --draft-out PATH [--json P] [--top N] [--baseline P] [--watch-repo ORG/REPO]... [--sentinel-state F] [--suite-ledger F | --suite-now] [--registry-git REPO --registry-ref REF] [--selftest]   # autonomous evolution engine v1 (harvest five signal classes by subprocess of the existing engines: norm-lint fitness with frozen surfaces excluded / sentinel --once dual-repo new ci-red events / suite last state / registry audit accounts with increment / maintained UNRECOGNIZED sentinel events; derive fixed-rule scored candidates plus genetic standing candidates from the ledger lineage; draft the constitution three-law-preamble task brief to --draft-out; draft-only spawn gate: never executes a candidate, never writes the repository; adverse signals are data, exit 0; 2 usage; 9 missing/unreachable) -> tools/evolve.py" ;;
     vacgen)      echo "cw.sh vacgen --in F [--out DIR] [--toolchain T] [--snapshot S] [--preflight-all] [--taxonomy P] [--force]   # Lean vacuity probe skeleton generator (four-account casting, zero compile) -> tools/vacgen.py" ;;
     ci-triage)   echo "cw.sh ci-triage --repo ORG/REPO --run ID [--logs] | --offline JOBS.json [--json out]   # CI red-run triage, alias of triage -> tools/ci_triage.py" ;;
-    # exp-append hint goes canonical with tools/exp_port.py (RQW03); the two-line shape below stays inert to the doc_lint hint-table parser (a parseable row without a case route would be a dangling-name finding)
-    exp-append)
-      echo "cw.sh exp-append --tool T --points P [--evidence E] [--batch B]   # pending RQW03: SKIP notice until tools/exp_port.py lands" ;;
+    exp-append)  echo "cw.sh exp-append --tool T --points P [--evidence E] [--batch B] [--id ID]   # experience-ledger appender (schema rocqwash-exp/1, idempotent seen set; the MCP exp_append face) -> tools/exp_port.py" ;;
     baseline-diff-facade) echo "cw.sh baseline-diff-facade OLD.json NEW.json [--json out.json] [--md out.md]   # clog-baseline differ, alias of baseline-diff -> tools/baseline_diff.py" ;;
+    mcp-server)  echo "cw.sh mcp-server   # rocqwash MCP stdio server (JSON-RPC 2.0 over stdio) -> tools/mcp_server.py" ;;
+    periscope)   echo "cw.sh periscope --config F [--out DIR] [--rounds N] [--dry-run]   # six-source peripheral-intelligence sweep -> tools/periscope.py" ;;
     *) return 1 ;;
   esac
 }
@@ -366,15 +374,9 @@ case "${1:-}" in
   vacgen)      shift; run_tool vacgen      "tools/vacgen.py"             "$@" ;;
   ci-triage)   shift; run_tool ci-triage   "tools/ci_triage.py"          "$@" ;;
   baseline-diff-facade) shift; run_tool baseline-diff-facade "tools/baseline_diff.py" "$@" ;;
-  exp-append)
-    shift
-    # existence-probed route (RQW03 pending): SKIP notice + exit 0 until
-    # tools/exp_port.py lands; never a dangling run_tool target
-    if [ -f "$ROOT/tools/exp_port.py" ]; then
-      exec python3 "$ROOT/tools/exp_port.py" append "$@"
-    fi
-    echo "cw.sh exp-append: SKIP exp_port not landed (RQW03 pending)" >&2
-    exit 0 ;;
+  exp-append)  shift; run_tool exp-append  "tools/exp_port.py"          append "$@" ;;
+  mcp-server)  shift; run_tool mcp-server  "tools/mcp_server.py"   "$@" ;;
+  periscope)   shift; run_tool periscope   "tools/periscope.py"   "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

@@ -6,7 +6,11 @@ Mission:
     follow the entry lines of docs/CAPABILITY-INDEX.md, the single tool
     capability contract surface of this repository. Landing note: RQW08
     (2026-11-14); the protocol and security face is documented in
-    docs/mcp.md.
+    docs/mcp.md. Expansion note: RQW13 batch 1 (2026-11-14) appends
+    thirteen zero-network capability specs in the expansion ticket order,
+    each transcribed from its docs/CAPABILITY-INDEX.md entry line; the
+    network-or-heavy candidates stay unregistered awaiting batch 2 (the
+    batch-2 register in docs/mcp.md section 3).
 
 Protocol:
     Newline-delimited JSON-RPC 2.0 over stdin and stdout, hand written on
@@ -257,8 +261,9 @@ TOOL_SPECS = [
         ),
         "description": (
             "Append one structured experience entry to the in-repo experience ledger "
-            "(tools/exp_port.py append). Pending capability: the CLI lands with the "
-            "experience-bus package; until then calls return an explicit not-found result."
+            "(tools/exp_port.py append, schema rocqwash-exp/1, idempotent seen set: "
+            "re-appending an already-seen entry returns the existing id and writes "
+            "nothing). The returned text carries the entry id of the ledger line."
         ),
     },
     {
@@ -306,6 +311,429 @@ TOOL_SPECS = [
             "contract surface, resolved from ROCQWASH_HOME. Zero network face, no side effects."
         ),
     },
+    # ---- RQW13 batch 1 (2026-11-14): thirteen zero-network capabilities,
+    # appended in expansion-ticket order; each spec is transcribed from its
+    # docs/CAPABILITY-INDEX.md section 2 entry line. baseline_diff was
+    # already on this face as baselinediff (above) and is not re-registered.
+    {
+        "name": "chain_graph",
+        "kind": "cli",
+        "cli": os.path.join("tools", "chain_graph.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("ledgers", "@0"),
+            ("json_out", "--json"),
+            ("md_out", "--md"),
+            ("top", "--top"),
+        ),
+        "schema": _object_schema(
+            {
+                "ledgers": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "probe ledger JSON paths, merged into one chain-root graph (positional LEDGER.json list)",
+                },
+                "json_out": {"type": "string", "description": "write the rocqwash-chain-graph/1 JSON report to this path; CLI flag --json"},
+                "md_out": {"type": "string", "description": "write the markdown report to this path; CLI flag --md"},
+                "top": {"type": "integer", "description": "ranked-list length cap; CLI flag --top"},
+            },
+            required=("ledgers",),
+        ),
+        "description": (
+            "Merge probe ledgers into a chain-root graph and a ranked list (tools/chain_graph.py, "
+            "graph schema rocqwash-chain-graph/1; the ledgers array carries one LEDGER.json path "
+            "per element). Zero network face. The CLI also dispatches a --selftest frozen-vector "
+            "face before argparse; it is not part of the INDEX entry line and not exposed here."
+        ),
+    },
+    {
+        "name": "doc_lint",
+        "kind": "cli",
+        "cli": os.path.join("tools", "doc_lint.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("repo", "--repo"),
+            ("json_out", "--json"),
+            ("help_cap", "--help-cap"),
+        ),
+        "schema": _object_schema(
+            {
+                "repo": {"type": "string", "description": "audited repository root; CLI flag --repo (defaults to the repo holding the tool)"},
+                "json_out": {"type": "string", "description": "write the rocqwash-doclint/1 report to this path; CLI flag --json"},
+                "help_cap": {"type": "integer", "description": "check-3 real --help run cap; CLI flag --help-cap"},
+            }
+        ),
+        "description": (
+            "Docs-versus-implementation consistency three-check over a repository: the tool table "
+            "(cw.sh four-place mutual inspection plus the tools/ generic-entry reconciliation), the "
+            "count check (suite roster versus README count lines) and the flag check (doc-cited "
+            "flags versus real --help output, capped) (tools/doc_lint.py, schema rocqwash-doclint/1). "
+            "Zero network face; the flag check runs in-repo tools with --help only (read-only)."
+        ),
+    },
+    {
+        "name": "ledger_sync",
+        "kind": "cli",
+        "cli": os.path.join("tools", "ledger_sync.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("probe", "--probe"),
+            ("ledger", "--ledger"),
+            ("out", "--out"),
+            ("report", "--report"),
+            ("policy", "--policy"),
+        ),
+        "schema": _object_schema(
+            {
+                "probe": {"type": "string", "description": "probe ledger TSV path; CLI flag --probe"},
+                "ledger": {"type": "string", "description": "status ledger TSV path; CLI flag --ledger"},
+                "out": {"type": "string", "description": "merged TSV output path; CLI flag --out"},
+                "report": {"type": "string", "description": "sync report output path; CLI flag --report"},
+                "policy": {"type": "string", "description": "merge policy name; CLI flag --policy"},
+            }
+        ),
+        "description": (
+            "TSV merge synchronizer between the probe ledger and the status ledger, with the "
+            "merge policy parameterized (tools/ledger_sync.py). Zero network face."
+        ),
+    },
+    {
+        "name": "netname_normalize",
+        "kind": "cli",
+        "cli": os.path.join("tools", "netname_normalize.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("dir", "--dir"),
+            ("apply", "--apply"),
+            ("map", "--map"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "dir": {"type": "string", "description": "world directory indexed by os.walk; CLI flag --dir"},
+                "apply": {"type": "boolean", "description": "apply the renames instead of reporting only; bare CLI flag --apply"},
+                "map": {"type": "string", "description": "write the rename mapping table to this TSV path; CLI flag --map"},
+                "json_out": {"type": "string", "description": "write the audit JSON to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Normalize doubled .v.v file suffixes over a world directory; the mapping table can be "
+            "emitted (--map) or applied (--apply, the write face) (tools/netname_normalize.py). "
+            "Zero network face; --apply renames only inside the directory given by --dir."
+        ),
+    },
+    {
+        "name": "norm_lint",
+        "kind": "cli",
+        "cli": os.path.join("tools", "norm_lint.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("tree", "--tree"),
+            ("file", "--file"),
+            ("jargon_map", "--jargon-map"),
+            ("cjk_threshold", "--cjk-threshold"),
+            ("cjk_whitelist", "--cjk-whitelist"),
+            ("json_out", "--json"),
+            ("md_out", "--md"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "tree": {"type": "string", "description": "directory to lint (mutually exclusive with file); CLI flag --tree"},
+                "file": {"type": "string", "description": "single file to lint (mutually exclusive with tree); CLI flag --file"},
+                "jargon_map": {"type": "string", "description": "jargon mapping file path; CLI flag --jargon-map"},
+                "cjk_threshold": {"type": "number", "description": "CJK ratio threshold; CLI flag --cjk-threshold"},
+                "cjk_whitelist": {"type": "string", "description": "CJK whitelist file path; CLI flag --cjk-whitelist"},
+                "json_out": {"type": "string", "description": "write the rocqwash-norm-lint/1 report to this path; CLI flag --json"},
+                "md_out": {"type": "string", "description": "write the human-readable report to this path; CLI flag --md"},
+                "selftest": {"type": "boolean", "description": "run the built-in frozen-vector selftest; bare CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Annotation-face normalization lint in report-first form over one tree or one file, "
+            "with the jargon map, CJK threshold and whitelist parameterized (tools/norm_lint.py, "
+            "schema rocqwash-norm-lint/1). Zero network face; the built-in --selftest "
+            "frozen-vector face is on the INDEX entry line and exposed here."
+        ),
+    },
+    {
+        "name": "render_events",
+        "kind": "cli",
+        "cli": os.path.join("tools", "render_events.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("events", "--events"),
+            ("dir", "--dir"),
+            ("md_out", "--md"),
+            ("json_out", "--json"),
+            ("top", "--top"),
+        ),
+        "schema": _object_schema(
+            {
+                "events": {"type": "string", "description": "event stream JSONL path; CLI flag --events"},
+                "dir": {"type": "string", "description": "event directory alternative input; CLI flag --dir"},
+                "md_out": {"type": "string", "description": "markdown ledger output path; CLI flag --md"},
+                "json_out": {"type": "string", "description": "JSON report output path; CLI flag --json"},
+                "top": {"type": "integer", "description": "ranked-list length cap; CLI flag --top"},
+            }
+        ),
+        "description": (
+            "Render a JSONL event stream into a markdown ledger (tools/render_events.py; input "
+            "via --events or --dir, output via --md or --json). Zero network face."
+        ),
+    },
+    {
+        "name": "select_audit",
+        "kind": "cli",
+        "cli": os.path.join("tools", "select_audit.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("order", "--order"),
+            ("select", "--select"),
+            ("grep", "--grep"),
+            ("requires", "--requires"),
+            ("world", "--world"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "order": {"type": "string", "description": "certification tree order.txt full table (read-only); CLI flag --order"},
+                "select": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "batch selection list paths, repeatable (one array element per --select occurrence)",
+                },
+                "grep": {"type": "string", "description": "single-name full-table grep name; CLI flag --grep"},
+                "requires": {"type": "string", "description": "requires file (.v) to audit against; CLI flag --requires"},
+                "world": {"type": "string", "description": "world directory for the closure face; CLI flag --world"},
+                "json_out": {"type": "string", "description": "write the audit JSON to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Audit a batch selection against the tree order file by full-table grep (tools/"
+            "select_audit.py; the select array carries one selection-list path per element and "
+            "maps to repeated --select occurrences). Zero network face."
+        ),
+    },
+    {
+        "name": "registry_audit",
+        "kind": "cli",
+        "cli": os.path.join("tools", "registry_audit.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("order", "--order"),
+            ("project", "--project"),
+            ("git", "--git"),
+            ("ref", "--ref"),
+            ("git_path_order", "--git-path-order"),
+            ("git_path_project", "--git-path-project"),
+            ("live_src", "--live-src"),
+            ("anchor_src", "--anchor-src"),
+            ("fix_plan", "--fix-plan"),
+            ("json_out", "--json"),
+            ("md_out", "--md"),
+        ),
+        "schema": _object_schema(
+            {
+                "order": {"type": "string", "description": "order.txt path; CLI flag --order"},
+                "project": {"type": "string", "description": "_CoqProject path; CLI flag --project"},
+                "git": {"type": "string", "description": "repository to read the registry pair from; CLI flag --git"},
+                "ref": {"type": "string", "description": "git ref to read; CLI flag --ref"},
+                "git_path_order": {"type": "string", "description": "order.txt path inside the git tree; CLI flag --git-path-order"},
+                "git_path_project": {"type": "string", "description": "_CoqProject path inside the git tree; CLI flag --git-path-project"},
+                "live_src": {"type": "string", "description": "live source directory; CLI flag --live-src"},
+                "anchor_src": {"type": "string", "description": "anchor source directory; CLI flag --anchor-src"},
+                "fix_plan": {"type": "boolean", "description": "emit the deterministic fix plan; bare CLI flag --fix-plan"},
+                "json_out": {"type": "string", "description": "write the audit JSON to this path; CLI flag --json"},
+                "md_out": {"type": "string", "description": "write the markdown report to this path; CLI flag --md"},
+            }
+        ),
+        "description": (
+            "Read-only hygiene audit over the two registry files, emitting a deterministic fix "
+            "plan with --fix-plan (tools/registry_audit.py, the producer side of the audit-fix "
+            "pair). Zero network face; local git reads only. Aimed at serviced Coq books: on a "
+            "repository whose tree carries no order.txt or _CoqProject the audit exits nonzero "
+            "with its REGISTERED fail-loud face (measured; CAPABILITY-INDEX section 4.1)."
+        ),
+    },
+    {
+        "name": "registry_fix",
+        "kind": "cli",
+        "cli": os.path.join("tools", "registry_fix.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("audit_json", "--audit-json"),
+            ("order", "--order"),
+            ("project", "--project"),
+            ("anchor_src", "--anchor-src"),
+            ("apply", "--apply"),
+            ("work_dir", "--work-dir"),
+            ("audit_tool", "--audit-tool"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "audit_json": {"type": "string", "description": "fix-plan JSON produced by registry_audit; CLI flag --audit-json"},
+                "order": {"type": "string", "description": "order.txt path; CLI flag --order"},
+                "project": {"type": "string", "description": "_CoqProject path; CLI flag --project"},
+                "anchor_src": {"type": "string", "description": "anchor source directory; CLI flag --anchor-src"},
+                "apply": {"type": "boolean", "description": "write the plan instead of dry running; bare CLI flag --apply"},
+                "work_dir": {"type": "string", "description": "scratch work directory; CLI flag --work-dir"},
+                "audit_tool": {"type": "string", "description": "registry_audit path for the same-parameter re-audit; CLI flag --audit-tool"},
+                "json_out": {"type": "string", "description": "write the execution JSON to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Apply the fix plan produced by registry_audit (tools/registry_fix.py, the executor "
+            "side of the audit-fix pair; dry run by default, --apply writes under staged "
+            "in-memory assertions with rollback). Zero network face. The opt-in --orphan-add face "
+            "is not exposed here: it is absent from the INDEX entry line transcribed above."
+        ),
+    },
+    {
+        "name": "registry_regen",
+        "kind": "cli",
+        "cli": os.path.join("tools", "registry_regen.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("base_repo", "--base-repo"),
+            ("base_ref", "--base-ref"),
+            ("contrib_repo", "--contrib-repo"),
+            ("contrib_ref", "--contrib-ref"),
+            ("pieces", "--pieces"),
+            ("anchor_src", "--anchor-src"),
+            ("dep_source", "--dep-source"),
+            ("seq", "--seq"),
+            ("base_path_order", "--base-path-order"),
+            ("base_path_project", "--base-path-project"),
+            ("contrib_path_order", "--contrib-path-order"),
+            ("contrib_path_project", "--contrib-path-project"),
+            ("out", "--out"),
+            ("apply", "--apply"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "base_repo": {"type": "string", "description": "base repository; CLI flag --base-repo"},
+                "base_ref": {"type": "string", "description": "base ref; CLI flag --base-ref"},
+                "contrib_repo": {"type": "string", "description": "contribution repository; CLI flag --contrib-repo"},
+                "contrib_ref": {"type": "string", "description": "contribution ref; CLI flag --contrib-ref"},
+                "pieces": {"type": "string", "description": "piece table, comma separated module names; CLI flag --pieces"},
+                "anchor_src": {"type": "string", "description": "anchor source directory; CLI flag --anchor-src"},
+                "dep_source": {"type": "string", "description": "dependency source selector; CLI flag --dep-source"},
+                "seq": {"type": "integer", "description": "row sequence number; CLI flag --seq"},
+                "base_path_order": {"type": "string", "description": "order.txt path in the base repo; CLI flag --base-path-order"},
+                "base_path_project": {"type": "string", "description": "_CoqProject path in the base repo; CLI flag --base-path-project"},
+                "contrib_path_order": {"type": "string", "description": "order.txt path in the contribution repo; CLI flag --contrib-path-order"},
+                "contrib_path_project": {"type": "string", "description": "_CoqProject path in the contribution repo; CLI flag --contrib-path-project"},
+                "out": {"type": "string", "description": "output directory for the apply face; CLI flag --out"},
+                "apply": {"type": "boolean", "description": "write the regenerated rows (requires out); bare CLI flag --apply"},
+                "json_out": {"type": "string", "description": "write the regeneration JSON to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Regenerate contribution registration rows onto the merge-target line (tools/"
+            "registry_regen.py; base and contribution repos, refs, piece table and path table "
+            "parameterized; dry run by default, --apply writes only under an explicit out). "
+            "Zero network face; local git reads only."
+        ),
+    },
+    {
+        "name": "registry_union",
+        "kind": "cli",
+        "cli": os.path.join("tools", "registry_union.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("base", "--base"),
+            ("main", "--main"),
+            ("branch", "--branch"),
+            ("git", "--git"),
+            ("ref_base", "--ref-base"),
+            ("ref_main", "--ref-main"),
+            ("ref_branch", "--ref-branch"),
+            ("git_path", "--git-path"),
+            ("kind", "--kind"),
+            ("reanchor", "--reanchor"),
+            ("anchor_src", "--anchor-src"),
+            ("out", "--out"),
+            ("apply", "--apply"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "base": {"type": "string", "description": "base registry file; CLI flag --base"},
+                "main": {"type": "string", "description": "main registry file; CLI flag --main"},
+                "branch": {"type": "string", "description": "branch registry file; CLI flag --branch"},
+                "git": {"type": "string", "description": "repository to read the registries from; CLI flag --git"},
+                "ref_base": {"type": "string", "description": "ref for the base registry; CLI flag --ref-base"},
+                "ref_main": {"type": "string", "description": "ref for the main registry; CLI flag --ref-main"},
+                "ref_branch": {"type": "string", "description": "ref for the branch registry; CLI flag --ref-branch"},
+                "git_path": {"type": "string", "description": "registry path inside the git tree; CLI flag --git-path"},
+                "kind": {"type": "string", "description": "kind selection name; CLI flag --kind"},
+                "reanchor": {"type": "string", "description": "re-anchor name list, comma separated; CLI flag --reanchor"},
+                "anchor_src": {"type": "string", "description": "anchor source directory; CLI flag --anchor-src"},
+                "out": {"type": "string", "description": "merged output file; CLI flag --out"},
+                "apply": {"type": "boolean", "description": "write the merged file; bare CLI flag --apply"},
+                "json_out": {"type": "string", "description": "write the union JSON to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Three-way union merger for the registry (tools/registry_union.py; base/main/branch "
+            "inputs with re-anchoring and kind selection parameterized; dry run by default, "
+            "--apply writes). Zero network face; local git reads only."
+        ),
+    },
+    {
+        "name": "abl1_4b_compile",
+        "kind": "cli",
+        "cli": os.path.join("tools", "_abl1_4b_compile.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("extract_dir", "@0"),
+            ("driver", "@1"),
+        ),
+        "schema": _object_schema(
+            {
+                "extract_dir": {"type": "string", "description": "extracted module directory to compile (positional EXTRACT_DIR)"},
+                "driver": {"type": "string", "description": "optional driver .ml to link and run (positional DRIVER.ML)"},
+            },
+            required=("extract_dir",),
+        ),
+        "description": (
+            "Internal helper: incremental OCaml compilation of an extracted module directory in "
+            "dependency fixpoint order, interface files first, optionally linking and running a "
+            "driver (tools/_abl1_4b_compile.py, positional EXTRACT_DIR plus optional DRIVER.ML). "
+            "Zero network face. Design SKIP face: the tool exits loudly when ocamlc/ocamldep are "
+            "absent from PATH, so this capability needs an OCaml toolchain on the host."
+        ),
+    },
+    {
+        "name": "http_backoff",
+        "kind": "cli",
+        "cli": os.path.join("tools", "_http_backoff.py"),
+        "net_gated": False,
+        "fixed_args": ["--selftest"],
+        "arg_map": (),
+        "schema": _object_schema({}),
+        "description": (
+            "Internal shared helper: pure-function HTTP rate-limit backoff with a frozen-vector "
+            "selftest, no transport and no IO (tools/_http_backoff.py). This capability exposes "
+            "the --selftest face only; the helper's other face is module import by ci_triage, "
+            "cw_sentinel and pushci. Zero network face."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -315,6 +743,8 @@ _TYPE_CHECKS = {
     "number": lambda value: isinstance(value, (int, float)) and not isinstance(value, bool),
     "integer": lambda value: isinstance(value, int) and not isinstance(value, bool),
     "boolean": lambda value: isinstance(value, bool),
+    "array": lambda value: isinstance(value, list)
+    and all(isinstance(item, str) for item in value),
 }
 
 
@@ -382,6 +812,11 @@ def _validate_arguments(spec, arguments):
             raise InvalidParams(
                 "Invalid params: argument '{0}' must not start with '-'".format(key)
             )
+        if expected == "array" and any(item.startswith("-") for item in value):
+            raise InvalidParams(
+                "Invalid params: array argument '{0}' must not contain "
+                "items starting with '-'".format(key)
+            )
     for key in spec["schema"]["required"]:
         if key not in arguments:
             raise InvalidParams("Invalid params: missing required argument '{0}'".format(key))
@@ -391,7 +826,10 @@ def _build_argv(spec, arguments, cli_path):
     """Map schema arguments onto the INDEX entry-line call form.
 
     Booleans: True appends the flag, False omits it. Values marked '@N' are
-    positional. Everything else is a value flag passed as --flag value.
+    positional. Arrays (RQW13 batch 1): for a positional target the items
+    extend the argv in order (an argparse nargs="*" face); for a value flag
+    the flag is repeated once per item (an argparse action="append" face).
+    Everything else is a value flag passed as --flag value.
     """
     argv = [sys.executable, cli_path]
     argv.extend(spec["fixed_args"])
@@ -402,6 +840,12 @@ def _build_argv(spec, arguments, cli_path):
         if isinstance(value, bool):
             if value:
                 argv.append(flag)
+        elif isinstance(value, list):
+            if flag.startswith("@"):
+                argv.extend(str(item) for item in value)
+            else:
+                for item in value:
+                    argv.extend([flag, str(item)])
         elif flag.startswith("@"):
             argv.append(str(value))
         else:

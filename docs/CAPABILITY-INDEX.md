@@ -138,7 +138,7 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 - SKIP 面：coq 系词面（1）、cpu_guard 词面（3）；运行需网络窗
 
 ### tools/doc_lint.py
-- 用途 Purpose：docs 与实现一致性检查器：路由表、cw.sh 面、`--help` 面三查对账。Docs-versus-implementation consistency checker: routing tables, the cw.sh face, and the `--help` face.
+- 用途 Purpose：docs 与实现一致性检查器：路由表、cw.sh 面、`--help` 面三查对账。Docs-versus-implementation consistency checker: routing tables, the face of cw.sh, and the `--help` face.
 - 调用形 Invocation：`python tools/doc_lint.py [--repo] [--json] [--help-cap]`
 - 示例 Example：`python tools/doc_lint.py --repo <value>`
 - 依赖 Imports：argparse, io, json, os, re, shutil, subprocess, sys, tempfile
@@ -350,8 +350,8 @@ Each item below is a negative finding of that scan, not an absolute claim (trans
 - **Landing facts (first-hand measured)**: `tools/vacgen.py` landed on 2026-11-13 via graft commit `5829f6d` (the version anchor of this file). `git show --stat` measured four files: `tools/vacgen.py` 2,625 lines, `docs/vacgen_sop.md` 384 lines, `tests/t_vacgen_shape.py` 51 lines, `更新账.md` +1 line. Landing-package note: RQW02.
 - **双面形态**：零编译面（骨架铸形无 Lean 环境可跑）＋编译验证腿（需 Lean 工具链，设计 SKIP 面）；三通道词面（lean/lake/mathlib/elan 64 处）与 SKIP 面照录于第 2 节 vacgen 条目。详规程 = `docs/vacgen_sop.md`；形状回归自检 = `tests/t_vacgen_shape.py`。
 - **Two faces**: a zero-compile face (skeleton casting runs without a Lean environment) plus a compile-verification leg (needs a Lean toolchain, a design SKIP face); the three-channel word faces (lean/lake/mathlib/elan, 64 hits) and the SKIP face are transcribed in the §2 vacgen entry. Detailed procedure = `docs/vacgen_sop.md`; shape regression selftest = `tests/t_vacgen_shape.py`.
-- **路由面（2026-11-14 实测）**：cw.sh 暂无 vacgen 分支（`grep -c vacgen cw.sh` = 0）；调用按第 2 节 vacgen 条目行直调 `python tools/vacgen.py ...`。路由分支缺席已登记候补，补齐前本索引行为唯一调用形。
-- **Route face (measured 2026-11-14)**: cw.sh has no vacgen branch yet (`grep -c vacgen cw.sh` = 0); invoke by line from the §2 vacgen entry as `python tools/vacgen.py ...`. The missing route branch is registered as pending; until it lands, the entry line in this index is the only invocation form.
+- **路由面（2026-11-14 复测·现势）**：cw.sh vacgen 分支已落（commit `8e04cc6` 四处齐备：头表/usage/hint_for/case；`grep -c vacgen cw.sh` = 6 实测）；CLI 调用形 `bash cw.sh vacgen ...` 与直调 `python tools/vacgen.py ...` 两形并行有效。
+- **Route face (re-measured 2026-11-14, current)**: the cw.sh vacgen branch has landed (commit `8e04cc6`, all four places present: header table / usage / hint_for / case; `grep -c vacgen cw.sh` = 6 measured); both `bash cw.sh vacgen ...` and the direct `python tools/vacgen.py ...` invocation forms are valid.
 - **CI 锚**：本 head 之炉 #43421710372 conclusion=success（对账回执 N3 实测，2026-11-13；同 head 前三炉连续 success）。
 - **CI anchor**: the run at this head, #43421710372, concluded success (reconciliation receipt channel N3, measured 2026-11-13; the three prior runs at earlier heads were all success).
 
@@ -390,6 +390,15 @@ SKIP（本席不探，候后续核验步骤）：网络面五件 ci_triage / cw_
 
 SKIP (not probed by this seat, awaiting the later verification pass): the five network-face tools ci_triage / cw_sentinel / net_probe / pushci / contrib_intake (their runs need a network window or remote access); special-environment/heavy tools _abl1_4b_compile (usage face; a bare call triggers the compile face), _gen_fin_mac, cw_doctor, evolve, red_dispatch, registry_audit, registry_fix, registry_regen, registry_union, select_audit, toolchain_dyld_doctor, unclog, vacgen, wash_shape. The `net_probe` `--selftest` divergence (§2 note) also awaits that step.
 
+### 4.1 Follow-up probes · 补充探活（后续核验步骤产出）
+
+Measured 2026-11-14 against HEAD `8e04cc6f9b6ee118e8e2729e9ae3edd6a163bf79`. The census anchor above stays the cast-time anchor; this block extends the light-probe ledger without re-casting the census, and the caller duty at §0 governs re-checks after HEAD advances. Uncommitted worktree lanes were held by a concurrent integration during measurement (recorded, not attributed).
+
+- `evolve.py` help probe rc=0: the §2 entry line matches the live help face (all 19 flags present, no incompatible names).
+- One full evolve round via the §2 example line: rc=0, stdout `evolve rocqwash-evolve/1: signals=3 candidates=5 drafted=5` (baseline + suite-now + maintained sentinel events/state inputs; draft and report written to the caller's work directory).
+- The §2 registry pair aimed at this tool repo: rc=9 fail-loud REGISTERED (git show main:order.txt fatal: path does not exist): `git ls-tree main` carries no order.txt and no _CoqProject anywhere in the tree; the registry signal stays pointed at the serviced books only.
+- Suite face, bash form: 51 pass / 12 failing / 4 skip / 67 total, rc=1; the 12 failing cases are lane-level and tool faces registered in the cycle accounts (Windows-lane environment faces for dyld/taskpolicy, the wash_shape report fd face, the unclog cure md5 text-mode face, the red_dispatch selftest vector face, the registry_audit reanchor-order face, and the probe/verify faces owned by their own lanes). The ask's literal interpreter form against a `.sh` file is a category error (Python parses the script); the bash form is the executable face.
+
 ## 5. 语域自查断言 · Register Self-Check Assertion
 
 本文件正文经仪器 `ai_flavor_selfcheck.sh`（36 词面电池 + em-dash U+2014 电池；词表源 = 术语表 §4.6/§5）自查，靶 = 本文件全件。实测输出见收工时点附录行。
@@ -413,3 +422,11 @@ VERDICT CLEAN (36 faces = 0; em-dash = 0)
 执行形 Execution：`sh ai_flavor_selfcheck.sh CAPABILITY-INDEX.md`，exit 0。器械副本 Instrument copy：`D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/ai_flavor_selfcheck.sh`（2026-11-12 铸件，与 census 同仪）。
 
 照录保真度机检 Transcription-fidelity checks（收工时点 closing time）：census §3 五字段逐行 135 = 135，diffs=0；负发现四要素行 16 = 16，diffs=0；条目数/示例行/SKIP 面 27 = 27 = 27；7 件轻探 `--help` 全旗标在场（baseline_diff 位置参数以 metavar 渲染）。
+
+## 6. 锚滞后登记 · Anchor-lag register (growth cycle 3)
+
+The version anchor at the top (5829f6d) lags the working-tree HEAD (8e04cc6) by seven commits. Facts measured on the lagged state, per the caller duty in section 0:
+
+- Committed tool count at HEAD is 28 `.py` files under `tools/` (`git ls-tree HEAD tools/`), one above the census count 27 recorded in section 1: `tools/mcp_server.py` was added after the census snapshot. Its contract face is reachable directly (`python -I tools/mcp_server.py --help`; the capability mapping is documented in `docs/mcp.md`). A census-grade entry awaits the census lane's own re-run; this register deliberately does not hand-write one.
+- Two further tools sit on disk untracked: `tools/exp_port.py` (experience-bus port, schema rocqwash-exp/1, `append`/`query` faces plus `--selftest`) and `tools/periscope.py` (collection legs; operation manual at `docs/periscope_sop.md`). They join the index only once their own commits exist on the tracked face.
+- Consequence for callers: entries in section 2 stay valid for the 27 censused tools at their recorded faces; for the three faces above, invoke from each tool's own `--help` word face and record the HEAD used, exactly as the caller duty requires.

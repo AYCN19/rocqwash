@@ -1016,8 +1016,9 @@ def selftest():
                 and rep4["summary"]["total"] == 14, rep4["summary"]
             assert any(f["kind"] == K_DUP_ORDER and f["key"] == "A.v"
                        for f in rep4["sections"]["duplicates"]), rep4
-            # git 形锚刷处方走 registry_union --git 面
-            assert any("--git %s" % d4 in r["command"]
+            # git 形锚刷处方走 registry_union --git 面（shq 形匹配——路径含
+            # 空格/反斜杠时 shq 引用包裹·POSIX tmp 裸形与原字面恒同）
+            assert any(("--git %s" % shq(d4)) in r["command"]
                        for r in rep4["fix_plan"]["reanchor"]), rep4["fix_plan"]
             p = run(["--git", d4, "--ref", "no-such-ref", "--json", j4])
             assert p.returncode == 9, "坏 ref 应 rc=9 实测 %d" % p.returncode
