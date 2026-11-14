@@ -1,8 +1,10 @@
-# Contributing to rocqwash / 贡献指南
+# Contributing to rocqos (rocqwash) / 贡献指南
 
 > 双语指南：每节先中文、后 English 摘要。架构与组件现状见
 > [`docs/zh/architecture.md`](docs/zh/architecture.md) /
 > [`docs/en/architecture.md`](docs/en/architecture.md)。
+>
+> 正式名 **rocqos**（Rocq operations suite）·链接名仍 `rocqwash`（一仓两名·2026-11-15 定）。现势锚=tag `rw-v0.1.0-20261114`（公开仓·CI 绿）。全量契约面=[`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md)·MCP 面=[`docs/mcp.md`](docs/mcp.md)。
 
 ## 0. 核心原则 / Core Principles
 
@@ -21,10 +23,29 @@ results require negative-vector control; (2) fail-loud — non-zero exit + loud 
 on any assertion failure, no green-washing, SKIPs must be explicit; (3) idempotent
 replay — exact-string + count assertions + skip-if-already-applied.
 
+## 0.5 许可与贡献者协议 / License & Contributor Agreement
+
+**中文**：本仓以 **AGPL-3.0-or-later** 授权（仓根 `LICENSE` 全文）。贡献条款：
+
+1. **ICLA 先签**：首次贡献被合并前签署 [`CLA/ICLA.md`](CLA/ICLA.md)（版权与专利双授予＋双许可授权＋AI 作为工具之人为作者主体系声明）；签署件交 Steward 王宝军（168888@live.cn·管辖：中华人民共和国法律）。企业贡献者走 [`CLA/CCLA.md`](CLA/CCLA.md)。
+2. **人为主体系**：贡献须含人类实质性创作；AI 工具可辅助，但提交者为作者并对内容负责（`NOTICE` AUTHORSHIP STATEMENT 同源）；PR 描述请披露 AI 辅助面。
+3. **协议不变量**：贡献一经并入即按 AGPL-3.0-or-later 授权；不接受「仅私有许可」的补充条款（商业许可轨道见 [`CLA/commercial_license_template.md`](CLA/commercial_license_template.md)·与贡献无关）。
+
+**English**: the repo is licensed **AGPL-3.0-or-later** (see `LICENSE`). Terms: (1) sign
+[`CLA/ICLA.md`](CLA/ICLA.md) before your first merged contribution (copyright + patent
+grant, dual-license authorization, and the human-as-author representation; signed copies
+to the Steward, Wang Baojun, 168888@live.cn, PRC law; corporate contributors use the
+CCLA). (2) Contributions require substantial human creative authorship; AI tools may
+assist but the submitter is the author and discloses AI assistance in the PR. (3) Merged
+contributions are licensed AGPL-3.0-or-later; no private-only add-on terms.
+
 ## 1. 贡献流程 / Contribution Workflow
 
 **中文**：
 
+0. **ICLA 与 intake 预检**：签署 ICLA（见 §0.5）＋只读四闸自检
+   `bash cw.sh contrib-intake --contrib-repo <your-repo>`（贡献仓/基线仓/ref/路径/jargon
+   映射参数化·BLOCK 即按提示补正）。AI 辅助面在 PR 描述披露。
 1. **认领模块槽位**：`workflows/` 占位与各模块深件（R4 提取侧三源、`verify/`
    统一入口收口——需历史件改名·冻结解禁后、`certify/` 收口——见
    docs/zh/architecture.md §4 注①③）为开放槽位（空目录＝未落地；`tests/` 已落
@@ -40,7 +61,7 @@ replay — exact-string + count assertions + skip-if-already-applied.
 6. **评审判据**：评审只认机械证据（退出码、md5、count 断言、selftest PASS），
    不认「我测过了」口头声明。
 
-**English**: (1) claim an open module slot (`workflows/` placeholder and the module
+**English**: (0) sign the ICLA (see §0.5) and run the read-only four-gate intake check `bash cw.sh contrib-intake --contrib-repo <your-repo>`; disclose AI assistance in the PR. (1) claim an open module slot (`workflows/` placeholder and the module
 deep pieces: the R4 extraction-side three-source conjunction, the `verify/` unified
 entry unification (needs a historical-file rename, after the freeze lifts) and the
 `certify/` entry unification (see docs/zh/architecture.md §4 notes ①③) — empty dir =
@@ -70,6 +91,13 @@ evidence only (exit codes, md5s, count assertions, selftest PASS).
   - 注释语言不拘，标识符一律 ASCII（Unicode 仅允许出现在被扫描的标识符名道内，
     参照 `mac_stmt_names.py` 的 Unicode 名道处理）。
   - md5 指纹：凡落盘对照/冻结，输出源文件 md5（参照两器 `md5_of`）。
+  - **语言与标准化五闸**（新件硬性）：注释/docstring/帮助与运行时输出文字一律英文；
+    新件五字段英文头（`Purpose. / Interface. / Dependencies. / Evidence. / Exit-codes.`
+    ·≤30 行·见 [`docs/annotation-standard-v1.0-20261113.md`](docs/annotation-standard-v1.0-20261113.md)）；
+    新代码面 CJK=0；AI 味电池 CLEAN（`python -I tools/ai_flavor.py --file <件>`·36 面+em-dash 双电池·目标 0）；
+    黑话按 [`seeds/jargon/jargon-map.json`](seeds/jargon/jargon-map.json) 规避（`norm_lint` 机检）；
+    运行时输出串改动必须同步测试断言。豁免面（种子逐字转录/测试数据/`docs/zh/` 镜像/内部台账）
+    登记制：凡豁免必登记（件:行·类·依据）·未登记命中=违规。
 - **Bash**（`tools/`、`cli/`）：`set -u`；临时资源 `trap ... EXIT INT TERM` 清理；
   退出码透传不改写；macOS 自带 bash 3.2 兼容（禁 bash 4+ 特性）。
 - **Coq/Rocq（`.v` 样例与模板）**：语句名 ASCII；面向库文件的注释遵守 gate7
@@ -81,7 +109,13 @@ headers with thorough module docstrings, aligned flag naming, exit codes
 (no conclusion-only). Bash is `set -u`, traps cleanup, exit-code passthrough, macOS
 bash-3.2 compatible. In `.v` files: ASCII statement names, gate7 comment hygiene for
 library files (CJK→0, five-field header, 30-line cap), and an honest header note
-about dependency & compile-verification status.
+about dependency & compile-verification status. New files additionally pass the
+five-gate standardization set: English-only comments/docstrings/help/runtime strings,
+five-field English header (annotation standard, 30-line cap), CJK=0 on new code faces,
+clean ai-flavor battery (`python -I tools/ai_flavor.py --file <file>`), jargon-map
+discipline (`norm_lint` machine-checked), and output-string changes synced to test
+assertions. Exemptions (verbatim seed transcriptions, test data, `docs/zh/` mirrors,
+internal ledgers) are registration-based: an unregistered hit is a violation.
 
 ## 3. 模块契约 / Module Contract（与 `cli/rocqwash` 的对接）
 
@@ -127,16 +161,16 @@ assertions. New subcommands need one `run_module` line in `cli/rocqwash`.
 
 **中文**——交付前必跑全绿。**零构建**：纯 Python 标准库＋bash（Python ≥ 3.9、
 bash ≥ 3.2·macOS 自带），无编译构建步骤；涉编译的演示需 rocq/coqc，缺席时对应段
-显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（2026-11-01 席 rqsup4
-五巡实测 31 过 / 0 红 / EXIT 0）：
+显式 SKIP＝NOT-RUN（绝不假绿）。交付前先跑一键自测套件（历史基线 2026-11-01 五巡 31 过 0 红；**现势名册以
+[`tests/README.md`](tests/README.md) 为准·tag `rw-v0.1.0` 时点=67 例**）：
 
 ```bash
 # ⓪ 一键自测套件（全仓总闸）
 bash tests/run_tests.sh                              # 全绿 EXIT 0；任一红 EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 34过/1红/EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # 套件自检：注入恒红例 → 1 红/EXIT 1（计数随名册）
 ```
 
-套件覆盖面与形制（34 例：scan selftest／names `--expect` 正·含-Let·负判／gate4
+套件覆盖面与形制（例数随名册推进·tag `rw-v0.1.0`=67：scan selftest／names `--expect` 正·含-Let·负判／gate4
 净·脏两判／retrofit 干跑／wash 战役件三判／wash_engine 六判／verify_vo 十三判
 （含 `--require-fresh` fresh-compile 防线四判）／
 seam_probe 四机制／freeze_manifest 四判／push_gate UNION 六判＋window 四判／
@@ -181,20 +215,24 @@ cli/rocqwash names examples/demo_prop_leak.v \
 - **涉编译的改动**：一律经 `tools/cpu_guard.sh` 包裹（见 §5），并核
   `.vo` 魔数 `436f712100015ff4` 与 mtime 新鲜度（绿判四件套口径）。
 - **文档改动**：zh/en 双镜像同步，`make demo` 仍 exit 0。
+- **零新增红判据**：改动后套件红集 ⊆ 改前基线红集（红=数据·Windows 宿主面假红族照
+  `tests/README.md` 名册对表·过/略不减）；自致计数失配（自己改动造成的账面过时）必须当场同步，
+  存量债另波清偿。
 
 **English**: everything here must pass before delivery. **Zero build**: pure stdlib
 Python + bash (Python ≥ 3.9, bash ≥ 3.2 — macOS stock), no build step; compile demos
 need rocq/coqc, absent → the segment SKIPs explicitly (SKIP = NOT-RUN, never
-green-washed). Run the one-shot suite first (measured 2026-11-01, seat rqsup4
-round 5: 31 pass / 0 fail / EXIT 0):
+green-washed). Run the one-shot suite first (historical baseline 2026-11-01 five
+rounds 31 pass / 0 fail; **current roster in [`tests/README.md`](tests/README.md),
+67 cases at tag `rw-v0.1.0`**):
 
 ```bash
 # ⓪ one-shot suite (repo-wide gate)
 bash tests/run_tests.sh                              # all green EXIT 0; any red EXIT 1
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 31 pass / 1 fail / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh  # suite self-check: injected always-red → 1 fail / EXIT 1 (count follows the roster)
 ```
 
-Coverage & format (31 cases) in [`tests/README.md`](tests/README.md). Items ①–④
+Coverage & format (roster-grown; 67 cases at tag `rw-v0.1.0`) in [`tests/README.md`](tests/README.md). Items ①–④
 below are component-level checks (① is suite-covered; ② ③ ④ stay manual; ②–④
 baseline measured 2026-10-31): scanner selftest (exit 0), CLI smoke (help=0,
 unknown=2, bare `certify`=4 ambiguous-entry listing, `certify freeze|push_gate|frozen8`
@@ -204,8 +242,10 @@ runs for real via the ledger, byte-identical to the reference specimen), and the
 N=N ordered equality assertion for any wash/rewrite PR. New scanner
 channels/whitelist entries must add paired positive+negative frozen selftest
 vectors; wash PRs must show idempotent replay (`applied=0 skipped=N`); anything
-compiling goes through cpu_guard with the `.vo` magic + freshness checks; doc
-changes keep zh/en mirrors in sync.
+compiling goes through cpu_guard with the `.vo` magic + freshness checks; doc changes keep zh/en mirrors in sync. Zero-new-red criterion: the post-change red
+set must be a subset of the pre-change baseline roster (red is data; Windows host-face
+false-red family per the roster); self-inflicted count staleness must be fixed in the
+same change, existing debt is paid in its own wave.
 
 ## 5. cpu_guard 使用说明 / cpu_guard Usage（v3 温控包裹）
 
@@ -258,6 +298,15 @@ code = wrapped command's. Smoke check:
 **English**: commit as `type: summary`, one verifiable unit per commit. Review asks
 three questions: where is the evidence (exit codes/output)? are assertions
 fail-loud? are both doc mirrors synced? Any "no" sends it back.
+
+**中文（维护侧）**：maintainer 提交一律 GPG 签名（仓 `commit.gpgsign` 沿用）；
+[`更新账.md`](更新账.md) append-only（每次落岸恰一行·CRLF 硬闸=numstat 恰 1 加 0 删）；
+stage 恰清单禁 `-A`；多席位并发期树检先行（他席未提交件零触碰零卷入）。
+
+**English (maintainer side)**: maintainer commits are GPG-signed; the ledger
+`更新账.md` is append-only (exactly one line per landing, CRLF gate = numstat exactly
++1/-0); stage explicit paths only; during concurrent-seat windows check the tree first
+and never touch other seats' uncommitted work.
 
 ## 7. 接口五纪律 / Interface Five Disciplines（工作流配合面·v37 起共同契约）
 
@@ -339,4 +388,8 @@ never re-implement a verdict. New tools enter the existing flows as: --selftest
 frozen vectors + suite hookup + doc_lint three checks; the CI repair chain
 doctor→net-probe→pushci→triage; the realtime service surface (sentinel events →
 human review → unclog audit/apply, wash-shape plan/apply, cw-doctor checkup,
---on-red-preset relays); and the doc-closing chain (`bash cw.sh doc-lint --repo .`).
+--on-red-preset relays); and the doc-closing chain (`bash cw.sh doc-lint --repo .`). The authoritative
+per-tool contract face is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md);
+the MCP surface (24 capabilities) is [`docs/mcp.md`](docs/mcp.md); the language-engine
+stack (ai-flavor / jargon / termbase / i18n pipeline / auto-round) is registered in
+[`seeds/engines/ENGINES.md`](seeds/engines/ENGINES.md).
