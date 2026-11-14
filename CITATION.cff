@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "rocqwash: repository-hygiene and CI triage toolset (MCP stdio server, five-family failure taxonomy, budget-capped self-heal and auto-repair)"
+version: 0.1.0
+license: AGPL-3.0-or-later
+repository-code: "https://github.com/hy7pc8gfmf-dotcom/rocqwash"
+authors:
+  - family-names: Wang
+    given-names: Baojun
+    orcid: "https://orcid.org/0009-0001-4240-9045"
+  - family-names: Xia
+    given-names: Wanlan
+    orcid: "https://orcid.org/0009-0008-7359-044X"
+  - family-names: Zu
+    given-names: Guangzhao
+    orcid: "https://orcid.org/0009-0006-7811-6638"
+  - family-names: Zeng
+    given-names: Baiyuan
+    orcid: "https://orcid.org/0009-0005-9811-5598"
+  - family-names: Zhou
+    given-names: Zhinong
+    orcid: "https://orcid.org/0009-0001-3206-5824"
+  - family-names: Gao
+    given-names: Xuefeng
+    orcid: "https://orcid.org/0009-0007-9904-1599"
+keywords:
+  - repository-hygiene
+  - continuous-integration
+  - failure-triage
+  - mcp-server
+  - self-healing
+  - program-repair
+  - rocq
+  - ai-flavor-detection
+# doi: to be minted via Zenodo release at the first public release.

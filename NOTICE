@@ -1,0 +1,69 @@
+rocqwash — repository-hygiene and CI triage toolset (MCP stdio server, five-family failure taxonomy, budget-capped self-heal and auto-repair)
+Copyright 2026 王宝军、夏挽岚、祖光照、曾栢源、周志农、高雪峰 & Contributors
+
+==========================================================================
+SOURCE CODE LICENSE
+==========================================================================
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for details; the full license text is
+distributed with this repository in the LICENSE file, and at
+<https://www.gnu.org/licenses/>.
+
+Commercial licensing: entities that cannot comply with AGPL-3.0's
+distribution or network-interaction obligations (closed-source
+integration, hosted offerings, embedded distribution) may obtain an
+alternative license. See CLA/README.md and
+docs/license-protocol-v1.0-20261114.md; contact 168888@live.cn.
+
+==========================================================================
+AUTHORSHIP STATEMENT (HUMAN AUTHORSHIP; AI AS INSTRUMENT)
+==========================================================================
+
+The rocqwash Authors state that this work is authored by human beings:
+artificial-intelligence systems were used only as instruments under
+human direction, and every substantive design decision — the failure
+taxonomy, the budget-capped autonomy model, the edit-class
+whitelists, the round/rollback/salvage machinery — originated as and
+remains a human authorship contribution recorded in human-signed
+instructions and design volumes. Contributors make the same statement
+for their contributions when signing the Contributor License
+Agreement (CLA/ICLA.md, representations section).
+
+==========================================================================
+AUTONOMY DISCLOSURE
+==========================================================================
+
+Parts of this product are designed to operate on software repositories
+and continuous-integration systems on the user's behalf (repository
+hygiene passes, CI triage, budget-capped auto-retry and auto-repair
+rounds, round ledger with rollback and salvage). Deployment is the
+operator's decision; the operator is responsible for the credentials,
+scopes, and repository authorization they grant to the tool. Budget
+caps, the fail-loud rule, and the append-only experience ledger exist
+so that every autonomous action can be bounded and audited. See
+docs/license-protocol-v1.0-20261114.md.
+
+==========================================================================
+SEED DATA
+==========================================================================
+
+Data-only seed files under seeds/ (word maps, jargon maps, termbase,
+specification documents) are integral parts of the product and are
+governed by the same AGPL-3.0 license. Their upstream originals
+(register cited in each SPEC) remain the sole maintenance points;
+in-repo copies are read-only snapshots under the sync discipline
+stated in each SPEC.
+
+==========================================================================
+CONTACT
+==========================================================================
+
+Project steward and licensing contact: 王宝军 <168888@live.cn>
