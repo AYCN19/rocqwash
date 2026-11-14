@@ -4,7 +4,7 @@
 > **English-first version:** see [README-cw.md](README-cw.md) — 本文件为 `cw.sh` 速查文档的原中文全文留档
 > （翻译替换波 20261113·双语过渡期·内容与英文主版互引；术语以黑话→标准表述对照表为准）。
 
-# cw.sh — v29-v32 工具波统一入口速查 / Unified entry quick reference
+# cw.sh — 统一入口速查（正式名 rocqos·链接名 rocqwash·42 路由 / 40 工具）/ Unified entry quick reference
 
 `cw.sh` 是 rocqwash v29-v32 七工具＋20261111 五工具＋v37 三器＋v38 一器＋v39 三器（doc-lint/netname-normalize/select-audit）＋v40 一器＋v45 一器＋v46 两器（dispatch/audit）＋v47 一器（registry-fix·共二十四个）的**一键调用入口**（repo 根）：
 
@@ -20,6 +20,9 @@ bash cw.sh <tool> [args...]
   的歧义保护（exit 4）不覆盖它们——本入口按工具名显式补位。20261111 五工具
   （doctor/net-probe/triage/union/pushci）同落 `tools/` 多入口目录，同此显式名
   补位路由。
+
+
+> 正式名 **rocqos**（Rocq 运维套件·Rocq operations suite）·链接名仍 `rocqwash`。现势锚=tag `rw-v0.1.0-20261114`（公开仓）。全量契约面=[docs/CAPABILITY-INDEX.md](docs/CAPABILITY-INDEX.md)·MCP 面=[docs/mcp.md](docs/mcp.md)·语言引擎=[seeds/engines/ENGINES.md](seeds/engines/ENGINES.md)·协议=AGPL-3.0-or-later＋CLA。
 
 ## 中文速查表
 
@@ -84,6 +87,32 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 > 异册即用法错 exit 2）；ORPHAN-ADD 缺模板序号/缺 md5 与 anchor-missing 病灶
 > 归 skip 清单如实直传人工分判（禁机械造锚）；audit 计数>0 恒 exit 0（红是
 > 数据非器红）。真树 `--apply` 活跑归主会话（器 selftest/夹具级全验在册）。
+
+
+## 速查表·后继波新增（至 tag rw-v0.1.0-20261114）
+
+| 工具 | 目标脚本 | 用途 | 一行示例 |
+|------|----------|------|----------|
+| `netname-normalize` | `tools/netname_normalize.py` | `.v.v` 双后缀净名归一器（映射表可出可施，`--apply` 落改） | `bash cw.sh netname-normalize --dir <value> --apply` |
+| `select-audit` | `tools/select_audit.py` | 批选清单对树 order 文件的全表 grep 剔重审计 | `bash cw.sh select-audit --order <value>` |
+| `render-events` | `tools/render_events.py` | 事件流 JSONL 到 markdown 记录的渲染器 | `bash cw.sh render-events --events <value>` |
+| `registry-regen` | `tools/registry_regen.py` | 贡献面注册行到合并目标线的再生成器（基线/贡献两仓双 ref、分片表、路径表均参数化） | `bash cw.sh registry-regen --base-repo <value> --apply` |
+| `contrib-intake` | `tools/contrib_intake.py` | 外部贡献 intake 检查器：四道只读闸核验后出结论（贡献仓/基线仓/ref/路径/jargon 映射均参数化） | `bash cw.sh contrib-intake --contrib-repo <value>` |
+| `evolve` | `tools/evolve.py` | 自演化引擎 v1：从 watcher 事件与记录面生成演化草案并登记（sentinel/suite/registry 系旗标面在卷） | `bash cw.sh evolve --draft-out <value> --suite-now` |
+| `vacgen` | `tools/vacgen.py` | Lean vacuity 探针骨架生成器：四层形状识别（前提分解、taxonomy 查表、置信评分、分层回归），含零编译覆盖 preflight 与难度地图（`--preflight-all`） | `bash cw.sh vacgen --in <value> --force` |
+| `ci-triage` | `tools/ci_triage.py` | 拉取并分诊失败 CI 炉的日志，输出分诊结论（`--offline` 可改走本地日志面） | `bash cw.sh ci-triage --offline <value> --logs` |
+| `baseline-diff-facade` | `tools/baseline_diff.py` | 对比两份基线文件，产出增减报告（JSON/markdown 双出形） | `bash cw.sh baseline-diff-facade <old> <new> --json <value>` |
+| `exp-append` | `tools/exp_port.py` | 经验总线追加面（schema rocqwash-exp/1：tool/points/evidence/batch 四字段；幂等 seen 集·重复条目返回既有 id 零写入） | `bash cw.sh exp-append append --tool <tool> --points <text> --batch <batch>` |
+| `mcp-server` | `tools/mcp_server.py` | MCP stdio 服务器（tools/list 现 24 能力·零网络门控·未知方法 -32601） | `bash cw.sh mcp-server tools/mcp_server.py` |
+| `periscope` | `tools/periscope.py` | 六源外围情报采集器（观察清单/arXiv 查询/自家 issues→机检情报条目·sha 与时点绑定·撞车检测） | `bash cw.sh periscope --help` |
+| `ai-flavor` | `tools/ai_flavor.py` | AI 味词面检测本体：36 词面电池（中文 3 族 10 面、英文词干 15、句式 8、段首 3）加独立 em-dash 电池（U+2014 计数，目标 0），词表只读 `seeds/ai_flavor/word-map.json`（正则字面逐字转录）；命中是数据非错误 | `bash cw.sh ai-flavor --file docs/report.md --json out/ai-flavor-report.json` |
+| `ai-flavor-apply` | `tools/ai_flavor_apply.py` | AI 味施加面：全部写入建议性（advisory）且在写入门（`--apply-handoff`／`--provider http`）后，改写一律经改写提供者（handoff 默认零网络：`--emit-handoff` 出段包、回填后 `--apply-handoff` 校验写入；http 腿 default-deny）；中文 10 面永不机改，词干面取 register 中性直陈形，句式面删或改述；预算帽每目标文件每类一轮（`--state`，缺省落目标件旁 `<file>.aiflavor-state.json`）；改写后重跑检测残留=0 方 GREEN | `bash cw.sh ai-flavor-apply --file docs/report.md --emit-handoff out/handoff.jsonl --state out/state.json` |
+| `auto-round` | `tools/auto_round.py` | 轮次账回档本体：autonomy.json 双档准入（auto 自批/gated 等人批·同一代码路径 admission_decision）加 §7.2 十键轮次账 JSONL（append-only）加 commit trailer（Rocqwash-Round/-Mode/Salvage-Of）加轻量 ref refs/rocqwash/rounds/\<n\> 加回档=先归档 refs/rocqwash/drift/ 后单 revert 回锚（零 reset 零 force 零 push）加 salvage 精修包往返加振荡告警加 max_unreviewed_rounds 软停（--continue 显式放行）加 status/list/log 三查询面 | `bash cw.sh auto-round status --repo-root .` |
+| `i18n-pipeline` | `tools/i18n_pipeline.py` | zh<->en 双向四联动管线编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py`），本道实现 P0 政策预查（`repo`/`paper`/`supplement` regime 表，refusal 即合法结果 exit 0 记记录）、P1 分段器（保护名单、段=连续散文行区间、段账十键（含 policy_precheck_ref））、P3 四联动编排（L1 termbase 查词、L2 jargon 投影、L3 CJK 零残留加 em-dash 密度、L4 ai_flavor 检测）、P6 段账闭合校验 | `bash cw.sh i18n-pipeline --manifest out/run.json --stage p1 --json out/segments.json` |
+| `i18n-translate` | `tools/i18n_translate.py` | 模型处层（P2）：handoff 形默认零网络（`--emit` 出段包、回填后 `--ingest` 十键校验（含 policy_precheck_ref），缺 model_id 或缺标注即违规拒收 fail-loud）；http 形可选 default-deny（OpenAI 兼容端点逐段调用逐段标注 `annotation_site="model"`，NETRED 记录逐次含失败）；prompt 模板 `--prompts <dir>`（缺省内置常数） | `bash cw.sh i18n-translate --segments out/segments.json --emit out/handoff.jsonl` |
+| `i18n-verify` | `tools/i18n_verify.py` | P4 机械验证编排（子进程调 `tools/ai_flavor.py`／`tools/norm_lint.py --jargon-map`／`tools/doc_lint.py`，汇成验证矩阵 JSON `rocqwash.i18n.verify/1`）；P5 人工十点单面（`--emit-tenpoint` 出审读表单按目标面形态取变体；`--ingest-tenpoint` 校验结论写回段账 `tenpoint_verdict`；引擎不替人判） | `bash cw.sh i18n-verify --emit-tenpoint docs/report.en.md --json out/tenpoint-form.json` |
+| `jargon-apply` | `tools/jargon_apply.py` | 黑话到标准术施加面：数据只读 `seeds/jargon/jargon-map.json`（62 条）；只机改 `disposition:"replace"` 条目；`rewrite_or_delete` 永不机改（findings 列出处置=human）；guarded 行默认拒改上报（`--guarded-interactive` 出逐行问询文件）；preserve 豁免走 exempt 机制；标识符位永不改写（反引号跨段遮蔽）；默认 plan 零写列 before/after 对，`--apply` 后自动重扫残留=0 方 exit 0，幂等 | `bash cw.sh jargon-apply --tree docs --plan --json out/jargon-plan.json` |
+| `termbase` | `tools/termbase.py` | 术语库只读薄层：`seeds/termbase/termbase.json` 只读（stdlib json，schema 校验 fail-loud）加 `lookup(term) -> entries` 精确面查词（剥强调与全角括号、按分隔符拆面）加 `--selftest` | `bash cw.sh termbase --selftest` |
 
 ### 退出码
 

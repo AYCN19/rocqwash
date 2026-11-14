@@ -1,4 +1,4 @@
-# cw.sh — unified entry quick reference (rocqwash tool suite · 25 tools)
+# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 42 routes over 40 tools)
 
 > **Language versions:** this file is the English-first version of the quick
 > reference. The original Chinese full text is preserved verbatim in
@@ -104,6 +104,32 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 > audit exits 0 even with count>0 (findings are data, not tool failure).
 > Live-tree `--apply` runs belong to the main session (selftest/fixture-level
 > verification is fully in place).
+
+
+## Tool quick reference: newer waves (through tag rw-v0.1.0-20261114)
+
+| Tool | Target script | Purpose | One-line example |
+|------|----------|------|----------|
+| `netname-normalize` | `tools/netname_normalize.py` | Normalizes doubled `.v.v` suffixes (map can be emitted or applied with `--apply`) | `bash cw.sh netname-normalize --dir <value> --apply` |
+| `select-audit` | `tools/select_audit.py` | Audits a batch selection against the tree's order file by full-table grep | `bash cw.sh select-audit --order <value>` |
+| `render-events` | `tools/render_events.py` | Renders a JSONL event stream into a markdown ledger | `bash cw.sh render-events --events <value>` |
+| `registry-regen` | `tools/registry_regen.py` | Regenerates contribution registration rows onto the merge-target line (base and contribution repos, refs, piece table, and path table parameterized) | `bash cw.sh registry-regen --base-repo <value> --apply` |
+| `contrib-intake` | `tools/contrib_intake.py` | Contribution intake inspector: a read-only four-gate check that issues a verdict (contribution repo, base repo, refs, paths, and jargon map all parameterized) | `bash cw.sh contrib-intake --contrib-repo <value>` |
+| `evolve` | `tools/evolve.py` | Self-evolution engine v1: drafts evolution proposals from watcher events and ledger faces (sentinel, suite, and registry flag families present) | `bash cw.sh evolve --draft-out <value> --suite-now` |
+| `vacgen` | `tools/vacgen.py` | Lean vacuity probe skeleton generator with a four-layer shape-recognition engine (premise decomposition, taxonomy lookup, confidence scoring, tiered harness), including a zero-compile coverage preflight and a difficulty map (`--preflight-all`) | `bash cw.sh vacgen --in <value> --force` |
+| `ci-triage` | `tools/ci_triage.py` | Fetches and triages logs of failing CI runs; `--offline` switches to local log input | `bash cw.sh ci-triage --offline <value> --logs` |
+| `baseline-diff-facade` | `tools/baseline_diff.py` | Compares two baseline files and reports additions and removals (JSON and markdown output) | `bash cw.sh baseline-diff-facade <old> <new> --json <value>` |
+| `exp-append` | `tools/exp_port.py` | Experience-bus append face (schema rocqwash-exp/1, four fields, idempotent seen-set; duplicates return the existing id and write nothing) | `bash cw.sh exp-append append --tool <tool> --points <text> --batch <batch>` |
+| `mcp-server` | `tools/mcp_server.py` | MCP stdio server (tools/list carries 24 capabilities, net-gated faces deny-by-default, unknown methods answer -32601) | `bash cw.sh mcp-server tools/mcp_server.py` |
+| `periscope` | `tools/periscope.py` | Six-source peripheral intelligence collector (watch list, arXiv queries, own issues into machine-checked intel entries bound to sha and time, collision detection) | `bash cw.sh periscope --help` |
+| `ai-flavor` | `tools/ai_flavor.py` | Wording detection body: a 36-face battery (10 zh, 15 en stems, 8 sentence, 3 paragraph-initial) plus a separate em-dash battery (target 0); hits are data, not errors; pure exports `detect_text(text, word_map)` and `load_word_map(path)` | `bash cw.sh ai-flavor --file docs/report.md --json out/ai-flavor-report.json` |
+| `ai-flavor-apply` | `tools/ai_flavor_apply.py` | Advisory apply face: writes only through the rewrite provider (handoff default zero-network; http leg default-deny under the env gate), zh ban faces never machine-written, budget cap per file per class via `--state`, rescan residue zero gates GREEN | `bash cw.sh ai-flavor-apply --file docs/report.md --emit-handoff out/handoff.jsonl --state out/state.json` |
+| `auto-round` | `tools/auto_round.py` | Auto round ledger body: admission per the autonomy gear, one verified commit per round, append-only ledger JSONL, round trailers plus lightweight refs, anchor rollback via drift archive then a single revert (no reset, no force, no push), salvage round-trip, oscillation alarm and a soft stop on unreviewed rounds | `bash cw.sh auto-round status --repo-root .` |
+| `i18n-pipeline` | `tools/i18n_pipeline.py` | Pipeline orchestration body: six immutable operation signatures, P0 policy pre-check (refusal is a legal exit-0 ledgered outcome), P1 segmentation under the protection list, P3 four-linkage application, P6 append-only ledger closure gate | `bash cw.sh i18n-pipeline --manifest out/run.json --stage p1 --json out/segments.json` |
+| `i18n-translate` | `tools/i18n_translate.py` | Model-site layer P2: handoff form default zero-network with ten-key (including policy_precheck_ref) ingest validation; http form optional default-deny with per-segment annotation and a NETRED ledger line per call | `bash cw.sh i18n-translate --segments out/segments.json --emit out/handoff.jsonl` |
+| `i18n-verify` | `tools/i18n_verify.py` | P4 runs the mechanical verify instruments as subprocesses into one matrix; P5 emits the human ten-point form and ingests verdicts fail-loud; the engine never judges | `bash cw.sh i18n-verify --emit-tenpoint docs/report.en.md --json out/tenpoint-form.json` |
+| `jargon-apply` | `tools/jargon_apply.py` | Jargon-to-standard apply face over the 62-entry map: replace entries only, human rows listed never applied, guarded rows refuse by default, plan default zero-write, apply rescans to residue zero, idempotent | `bash cw.sh jargon-apply --tree docs --plan --json out/jargon-plan.json` |
+| `termbase` | `tools/termbase.py` | Read-only terminology thin layer over the E3 seed: schema validation fails loud, exact-face lookup, zero network; the E3 net interface and DIY channel stay candidates of their own seed SPECs | `bash cw.sh termbase --selftest` |
 
 ### Exit codes
 
