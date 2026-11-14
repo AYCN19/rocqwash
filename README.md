@@ -1,3 +1,5 @@
+> **rocqwash** — operating as **rocqos**, the *Rocq operations system*: a self-evolving operations layer for Rocq-based constructive-proof repositories. Built on Rocq 9.3. The "rocq" prefix is used with attribution to the [Rocq prover](https://rocq-prover.org) and its community; rocqos is an independent operations layer, not affiliated with Inria and not part of the Rocq distribution.
+
 # rocqwash — Coq/Rocq Constructive Proof Unblocking Engine
 > English: [README_EN.md](README_EN.md)
 
