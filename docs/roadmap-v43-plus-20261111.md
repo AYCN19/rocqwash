@@ -143,3 +143,11 @@
 3. `wash/cure_pack.json` 实读：version=1.4.0·patterns=25 式。
 4. 工具链现势：9.1 惯指路径 MISSING（ls 实证）＋9.3 多路器 `mac93_install_work/opam93/rocq93/bin/rocq` 在卷（find 实证）。
 5. 仓库现势：`git status --short` 空＋`git log -1` = `c5df4d4`（v41）——与任务书口径合。
+
+---
+
+## 六、Growth wiring annotation (RQW12 · 20261114)
+
+Annotation only: no candidate rows added, removed, or reordered; the pool above is unchanged.
+
+The five-engine seeds (E1 ai-flavor word map, E2 jargon map, E3 termbase, E4 i18n pipeline spec, E5 engines index; per the five-engine growth design volume 20261114) are landed on main at commit `9fa2bff` (RQW12, 2026-11-14): data + SPEC faces under `seeds/` (ai_flavor, jargon, termbase, i18n, engines) plus the seed selftest `tests/t_engines_seeds.py`; zero executable engine body, since the engines themselves grow on their own wash_shape / norm_lint / evolve faces in later waves. The seeds directory is the evolve candidate input face: the next growth cycle (RQW10 form) consumes `seeds/` as its feed. Selftest face: `python -I tests/t_engines_seeds.py` reports 5 segments / 42 checks, green, re-run first-hand in the repo layout on 2026-11-14. Honest boundary: `tests/run_tests.sh` does not wire the seeds selftest yet, so CI run 43555890998 (green at `9fa2bff`) did not execute it; suite wiring remains a follow-up candidate for the integration seat.
