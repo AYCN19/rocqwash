@@ -1,0 +1,1245 @@
+{
+ "description": "Built-in termbase seed for engine E3 (terminology normalization / internationalization). Read-only transcription snapshot of the project term glossary section 4.0 entry skeleton, plus three community domain slots recorded unfetched.",
+ "domain_slots": [
+  {
+   "content": null,
+   "id": "mathlib-naming-convention",
+   "refresh_conditions": [
+    "fetch only in a user-ordered NETRED pass (candidate order; fetching actual slot content is not part of the current delivery)",
+    "refresh when the upstream naming-convention document revises identifier-naming rules in a way that touches transcribed adjudications",
+    "after any refresh: record the new upstream version in the slot, re-run the seed schema tests, and register the per-launch NETRED ledger entry"
+   ],
+   "source": {
+    "declared_url": "https://leanprover-community.github.io/contribute/naming.html",
+    "declared_url_basis": "canonical mathlib contribution documentation address as commonly cited; recorded as a declared target only, not probed in this delivery",
+    "kind": "community-style-guide",
+    "url_verified": false
+   },
+   "status": "unfetched",
+   "title": "mathlib naming convention"
+  },
+  {
+   "content": null,
+   "id": "lean-style-guide",
+   "refresh_conditions": [
+    "fetch only in a user-ordered NETRED pass (candidate order; fetching actual slot content is not part of the current delivery)",
+    "refresh on a Lean release whose style guidance differs in points consumed by the termbase",
+    "after any refresh: record the new upstream version in the slot, re-run the seed schema tests, and register the per-launch NETRED ledger entry"
+   ],
+   "source": {
+    "declared_url": "https://leanprover-community.github.io/contribute/style.pdf",
+    "declared_url_basis": "Lean community style-guide address as commonly cited; recorded as a declared target only, not probed in this delivery",
+    "kind": "community-style-guide",
+    "url_verified": false
+   },
+   "status": "unfetched",
+   "title": "Lean style guide"
+  },
+  {
+   "content": null,
+   "id": "journal-style",
+   "refresh_conditions": [
+    "fetch only in a user-ordered NETRED pass (candidate order; fetching actual slot content is not part of the current delivery)",
+    "refresh when the user nominates a target venue: fetch that venue's author/style guidelines and record venue + version",
+    "after any refresh: re-run the seed schema tests and register the per-launch NETRED ledger entry"
+   ],
+   "source": {
+    "candidates_local_corpus": [
+     "AIGC usage boundary guide for academic publishing, edition 3.0, as cited in the glossary section 4.6 item E (offline corpus citation, no network pull)",
+     "disclosure three-piece set (usage statement, in-text marking, prompt log) as cited in the glossary section 4.6 item E (offline corpus citation, no network pull)"
+    ],
+    "declared_url": null,
+    "kind": "venue-style-guide",
+    "venue_nomination": "pending (no target venue nominated)"
+   },
+   "status": "unfetched",
+   "title": "journal style"
+  }
+ ],
+ "entries": [
+  {
+   "cells": [
+    "机检（「机器检查」缩写）",
+    "**机器验证**（machine-checked）——首现「机器验证（下称机检）」",
+    "高频核心词；三轮细审缓和案：首现全称+定义后可保留简称"
+   ],
+   "id": "round2-r01",
+   "row_index": 1,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "承重语句",
+    "**关键引理／核心定理**——首现「关键引理（承重语句）」",
+    "「承重」工程隐喻"
+   ],
+   "id": "round2-r02",
+   "row_index": 2,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "钉死桥",
+    "**唯一性引理**（cos 零点唯一性引理）——20261003 三裁递进终值：原裁「唯一性钉定引理」及「钉定引理可保留」缓和案均废止（钉定系非标准语，依《术语修订探讨》20261003）",
+    "「钉死」口语化"
+   ],
+   "id": "round2-r03",
+   "row_index": 3,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "钉定／零点钉定／钉定引理（20261003 新增）",
+    "**零点唯一性刻画／唯一性引理／确定**（按语境；领域标准＝uniqueness / characterization，Coq 社区以「the first positive zero」类表述为惯例）",
+    "「钉定」系非标准术语（检索仅见古籍整理/测量工程/专利/控制理论语境）；论文9 双版 11+0 处已落刀"
+   ],
+   "id": "round2-r04",
+   "row_index": 4,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "半程点",
+    "**中点／半值点**——首现「中点（半程点）」",
+    "w := π_L/2 的数学身份"
+   ],
+   "id": "round2-r05",
+   "row_index": 5,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "值桥",
+    "**值等价引理**（值桥）",
+    "首现括注可保留简称"
+   ],
+   "id": "round2-r06",
+   "row_index": 6,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "零前提闭式",
+    "**无前提闭式定理／无假设闭式引理**",
+    "论文9 核心术语，迁移候专项波"
+   ],
+   "id": "round2-r07",
+   "row_index": 7,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "条件形",
+    "**条件形式／条件版本**",
+    "「条件形」缺中心词"
+   ],
+   "id": "round2-r08",
+   "row_index": 8,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "支付／完整支付（20261006 用户令·主会话自治裁）",
+    "**完成全部证明义务**／**代价已被完整承担**——「完成证明的完整支付」→「完成全部证明义务」；「该代价被完整支付且可复验」→「该代价已被完整承担且可复验」",
+    "经济隐喻（payment·非学术）；论文9 双版各 2 处（:15 摘要＋:38）落刀候 1287 并入；白皮书 v1.7 §4 已同步"
+   ],
+   "id": "round2-r09",
+   "row_index": 9,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "引用锚／主锚／锚机制／引用锚基础设施（20261006 用户问询·1294 检索**定谳裁案乙**）",
+    "**具名语句引用／稳定标识符引用**——「以语句名为主锚、行号为辅助」→「以语句全名（fully qualified name）为主标识符（stable identifier）、行号为辅助快照」；库件名 UpReqPaperAnchor.v／MkPaperAnchor／pan_*（标识符）照录保留",
+    "**检索定谳（20261006 联网·四层源）**：fully qualified name／stable identifier 证实为 Lean/mathlib 社区通行规范形（mathlib4 RFC #2850「stable names」·Lean 4 快速参考「short name vs fully qualified name」·LeanDojo arXiv「fully-qualified name」）→**裁案乙：叙述面规范化＋库件名专名照录**；原「已定义隐喻可保留」判（判据 b＋S1.18 豁免）转首现括注承历史版本兼容；词面群双版各 26 处·正文迁移候专项波；判据与源=E-STAGING-1294-TERMCORPUS"
+   ],
+   "id": "round2-r10",
+   "row_index": 10,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "落点／唯一落点（20261006 用户令·主会话自治裁）",
+    "按语境三形：**唯一所在**（学术主张）／**衔接点**（数学叙述）／**正文位置**（工程叙述）",
+    "工程隐喻·落刀系词族；论文9 双版各 3 处（:23 唯一落点＋:299 逼近关系落点＋:823 正文落点）落刀候 1287 并入；白皮书 v1.7 §4 已同步"
+   ],
+   "id": "round2-r11",
+   "row_index": 11,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "分档机检",
+    "**分级机器验证**——首现说明分档含义（如「按前提强度分档」）",
+    "与「机检」联动"
+   ],
+   "id": "round2-r12",
+   "row_index": 12,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "闭合三角形",
+    "**闭合等价三角／等价三角的闭合形态**",
+    "避免与几何「闭合三角形」混淆"
+   ],
+   "id": "round2-r13",
+   "row_index": 13,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "诚实边界",
+    "**诚实性边界**（三轮细审缓和案；honest boundaries）／局限声明（一轮案）",
+    "⚠ 该词系本库方法论招牌（多轮外部评审正面引用）；两案并列候正文迁移时终裁，倾向「诚实性边界」（保留「诚实」特色仅补中心词）——**20261007 已终裁：诚实性边界**（见三轮裁决表）；20261010 文献对齐复证维持（通行节名 scope and limitations 作英文对照·honest 系非正式惯用语）"
+   ],
+   "id": "round2-r14",
+   "row_index": 14,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "先例披露",
+    "**相关工作披露／先例对照**",
+    "—"
+   ],
+   "id": "round2-r15",
+   "row_index": 15,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "枢纽图",
+    "**依赖关系图／依赖拓扑**",
+    "「枢纽」工程隐喻"
+   ],
+   "id": "round2-r16",
+   "row_index": 16,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "外包点",
+    "**外部精化点**（external refinement point——1294 检索补英文对照：refinement 系形式化方法领域标准词〔refinement calculus Back/von Wright·Event-B·通行搭配 refinement step〕，「refinement point」非既有组合形·point 系项目定义·采 refinement 注源·源=E-STAGING-1294-TERMCORPUS）",
+    "—"
+   ],
+   "id": "round2-r17",
+   "row_index": 17,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "包络精化外包点",
+    "**包络精化的外部精化点**",
+    "拆分表述"
+   ],
+   "id": "round2-r18",
+   "row_index": 18,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "逃逸窗",
+    "**逃逸窗口**（escape window——1294 检索：数论/Diophantine 逼近文献检索未见该术语·项目已定义术语保留〔lic_escape_window 标识符照录·首现英文对照〕·源=E-STAGING-1294-TERMCORPUS）",
+    "「窗」→「窗口」"
+   ],
+   "id": "round2-r19",
+   "row_index": 19,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "供给接口／逐点数值见证／分层供给接口",
+    "**维持原词**（三轮细审确认可保留；首现定义）",
+    "正面确认"
+   ],
+   "id": "round2-r20",
+   "row_index": 20,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "五层 sigT",
+    "**五层依赖对／五层 sigT 类型**——首现「sigT（依赖对）」",
+    "—"
+   ],
+   "id": "round2-r21",
+   "row_index": 21,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "量词范围",
+    "**量词辖域**（scope）",
+    "**三轮细审更正**：辖域系逻辑学规范术语"
+   ],
+   "id": "round2-r22",
+   "row_index": 22,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "双模拟",
+    "**互模拟**（bisimulation）",
+    "**三轮细审更正**：并发理论规范译名"
+   ],
+   "id": "round2-r23",
+   "row_index": 23,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "数据类型精化",
+    "**数据精化**（data refinement）",
+    "**三轮细审更正**：形式化方法规范术语"
+   ],
+   "id": "round2-r24",
+   "row_index": 24,
+   "sub_table": "round2"
+  },
+  {
+   "cells": [
+    "无前提闭式定理",
+    "**assumption-free theorem**／**unconditional result**（采·注源）；「premise-free」检索未见通行·候选废",
+    "逻辑学文献通行「assumption-free rules」（Blok–Esakia via Stable Canonical Rules, UvA；Admissible Bases Via Stable Canonical Rules）；「unconditional result」数学通行——承 §4.0 既有裁「零前提闭式→无前提闭式定理」补英文对照"
+   ],
+   "id": "intl-r01",
+   "row_index": 1,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "节导出条件形式",
+    "**discharged form／section-discharged conditional form**（领域标准词·直接采）；「section-derived」自造组合形候选废",
+    "Coq 官方文档 Section mechanism（rocq-prover.org）：节关闭时局部声明被 **discharged**、定理被 **generalized** 为显式全称参——第一层源"
+   ],
+   "id": "intl-r02",
+   "row_index": 2,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "生成元等式／生成元结构",
+    "**generators**／**generators and relations**／**defining equations (relations)**／**presentation**（领域标准词·直接采）",
+    "代数标准词：Berkeley 通用代数教材「presented by generators and relations」·Barakat arXiv math/0701146 同"
+   ],
+   "id": "intl-r03",
+   "row_index": 3,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "闭包边",
+    "**closure edge**（Bondy–Chvátal closure 语境）／**derived edge**（辅助图语境）——检索未见统一标准词·已定义术语保留（首现英文对照·按语义二选一）",
+    "MathWorld line graph「derived graph」·Bondy–Chvátal closure 文献散见「closure edges」；证明论对应词为 derived rule"
+   ],
+   "id": "intl-r04",
+   "row_index": 4,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "显式模量",
+    "**explicit modulus (of convergence)**／**modulated Cauchy sequence**（领域标准词·直接采）",
+    "Coq stdlib ConstructiveCauchyReals 官方「Cauchy sequences of rational numbers equipped with explicit moduli of convergence」（第一层源）；agda-unimath「modulated Cauchy sequences」；Bishop/Bridger 传统 regular sequences"
+   ],
+   "id": "intl-r05",
+   "row_index": 5,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "柯西见证",
+    "**witness**（泛用标准词·采）＋**Cauchy approximation**（专名·nLab/HoTT·函数形语境）",
+    "nLab「Cauchy approximation」＝regular Cauchy sequence composed with its modulus（approx : ℚ₊ → ℚ·与本库 sigT 打包函数形同构）；HoTT Book §11.3 同；「Cauchy witness」组合形检索未见固定术语"
+   ],
+   "id": "intl-r06",
+   "row_index": 6,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "（sigT）打包",
+    "**dependent pair**（名词·标准词）／**packaged as**（动词·nLab 通行）／**equipped with**（Coq stdlib 搭配）——叙述面「实数＝有理数列＋柯西见证的 sigT 打包」→「实数＝依赖对（有理数列，柯西见证）」",
+    "nLab 实证动词「you package it as approx : ℚ₊ → ℚ」；Coq stdlib「equipped with explicit moduli」；类型论标准词 dependent pair（§4.4 同族）；白皮书 v1.1 已裁「打包→封装」注释轨同步"
+   ],
+   "id": "intl-r07",
+   "row_index": 7,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "率即算法",
+    "**computational content**／**program extraction**／**witness extraction**／**proof mining**（采·按语境选）；「rates-as-algorithms」检索未见·项目自造比喻",
+    "Kreisel 传统「computational content」·realizability/A-translation「witness extraction」·Kohlenbach 学派「proof mining」（有效界与收敛率）；论文7 原题已改「可提取模量」同向；白皮书 v1.7 §4 已同步"
+   ],
+   "id": "intl-r08",
+   "row_index": 8,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "共享",
+    "**shared**——领域标准词·**保留**",
+    "用户令 20261006 登记（无需检索·直接判领域标准词）"
+   ],
+   "id": "intl-r09",
+   "row_index": 9,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "更细的度量",
+    "**finer-grained metrics**——领域标准词·**保留**",
+    "用户令 20261006 登记（同上）"
+   ],
+   "id": "intl-r10",
+   "row_index": 10,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "零 Axiom",
+    "**零公理**",
+    "中文正文用规范形；代码/输出串照录"
+   ],
+   "id": "intl-r11",
+   "row_index": 11,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "公理宇宙",
+    "**公理体系／公理集合**",
+    "—"
+   ],
+   "id": "intl-r12",
+   "row_index": 12,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "深读（核验）",
+    "**深入阅读（核验）**",
+    "自创缩略"
+   ],
+   "id": "intl-r13",
+   "row_index": 13,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "终验",
+    "**最终验证**",
+    "—"
+   ],
+   "id": "intl-r14",
+   "row_index": 14,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "禁引／解除禁引",
+    "**禁止引用／解除禁止引用**",
+    "—"
+   ],
+   "id": "intl-r15",
+   "row_index": 15,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "证体实读",
+    "**证明体实际阅读**",
+    "—"
+   ],
+   "id": "intl-r16",
+   "row_index": 16,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "合流",
+    "**合并／整合**",
+    "版本控制术语"
+   ],
+   "id": "intl-r17",
+   "row_index": 17,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "升格",
+    "**升级**",
+    "—"
+   ],
+   "id": "intl-r18",
+   "row_index": 18,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "在途",
+    "**进行中**",
+    "⚠ 与本表 §4 既有裁「在途→待纳入」分流：件未入册→待纳入；验证/审计进行时→进行中"
+   ],
+   "id": "intl-r19",
+   "row_index": 19,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "开工／施工／未施工",
+    "**启动／实施／未实施**",
+    "工程管理语"
+   ],
+   "id": "intl-r20",
+   "row_index": 20,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "落名／未落名",
+    "**命名／未命名**",
+    "—"
+   ],
+   "id": "intl-r21",
+   "row_index": 21,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "健在证",
+    "**存在性证据**",
+    "—"
+   ],
+   "id": "intl-r22",
+   "row_index": 22,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "真消费／零消费／真走",
+    "**实际使用／未使用／实际使用**",
+    "「零消费」代码引用语境保留（注释轨既有裁决）"
+   ],
+   "id": "intl-r23",
+   "row_index": 23,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "零命中",
+    "**未命中**",
+    "检索语境"
+   ],
+   "id": "intl-r24",
+   "row_index": 24,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "全件／全单执行",
+    "**全文件／全部执行**",
+    "—"
+   ],
+   "id": "intl-r25",
+   "row_index": 25,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "单飞",
+    "**单独检索**",
+    "检索纪律语"
+   ],
+   "id": "intl-r26",
+   "row_index": 26,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "合读",
+    "**综合（多条引理）**",
+    "口语化"
+   ],
+   "id": "intl-r27",
+   "row_index": 27,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "闭形式",
+    "**闭式**",
+    "「闭形式两件」→「闭式定理两件」"
+   ],
+   "id": "intl-r28",
+   "row_index": 28,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "顶点一／二／三",
+    "**第一个/第二个/第三个顶点**或**顶点 π_L**",
+    "自创序数记号"
+   ],
+   "id": "intl-r29",
+   "row_index": 29,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "基建（20261003 新增）",
+    "**基础设施**（缩略语工程/经济语感；论文英文摘要本用 infrastructure 全称形——中英统一；「库基座」之「基座」保留）",
+    "论文9 双版 14→0 处已落刀；混用「基建/基础设施」不一致问题一并消解"
+   ],
+   "id": "intl-r30",
+   "row_index": 30,
+   "sub_table": "intl"
+  },
+  {
+   "cells": [
+    "贡献三柱／三柱",
+    "废止替换",
+    "**三项主要贡献**（three main contributions）；collective 修辞如需保留须首现「三项主要贡献（下称三支柱，three pillars）」",
+    "建筑修辞；学术通行形＝main contributions（承「承重语句→关键引理」同域判）"
+   ],
+   "id": "round3-r01",
+   "row_index": 1,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "柱一／柱二／柱三",
+    "废止替换",
+    "第一／第二／第三项贡献",
+    "自创序数简称"
+   ],
+   "id": "round3-r02",
+   "row_index": 2,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "四机件／机件",
+    "废止替换",
+    "**组件**（component）——「四机件」→「四件机器验证的组件」",
+    "机件系机械工程语（machine parts）；组件系软件工程标准词"
+   ],
+   "id": "round3-r03",
+   "row_index": 3,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "可判定闸门／闸门",
+    "改写＋已定义保留",
+    "叙述面规范形＝**可判定检验（decidable test）**；「出闸门」→「检验转真／检验通过」；库内具名构造 leibsep_gate_open 标识符照录·叙述首现「可判定检验（decidable gate）」",
+    "水利工程隐喻；decidable test 系构造性分析标准表述（bool 载体判定）"
+   ],
+   "id": "round3-r04",
+   "row_index": 4,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "搬运",
+    "废止替换（语境分流）",
+    "数学叙述（Coq transport 义）＝**转移（transport）**——「沿等式转移／transport 引理」；工程叙述义＝迁移（注释白皮书 §4 既裁）",
+    "类型论标准词 transport；「搬运」系物流口语"
+   ],
+   "id": "round3-r05",
+   "row_index": 5,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗／窗内／含入窗内",
+    "规范形",
+    "窗→**窗口**；窗内→**窗口内**；含入窗内→**含于窗口内／纳入窗口**",
+    "承「逃逸窗→逃逸窗口」既裁（1294 检索存档）"
+   ],
+   "id": "round3-r06",
+   "row_index": 6,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗阶",
+    "已定义保留＋规范形",
+    "**窗口级（escape-window level）**——首现定义；叙述倾向「分辨率级」",
+    "承窗口族既裁；级系标准层级词"
+   ],
+   "id": "round3-r07",
+   "row_index": 7,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "候注册",
+    "废止替换",
+    "**待注册**（件未入册义亦可用既裁「待纳入」）",
+    "承 §4.5 候令系→待定/待执行（候X→待X）"
+   ],
+   "id": "round3-r08",
+   "row_index": 8,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "留痕",
+    "废止替换",
+    "**留存记录／留档**",
+    "过程语"
+   ],
+   "id": "round3-r09",
+   "row_index": 9,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "收敛子",
+    "规范形",
+    "**收敛子列（convergent subsequence）**——指子列义时；库内构造名照录标识符·叙述用「收敛构造」；⚠ 连分数语境 convergent 系名词本形（收敛子），非 subsequence 缩略——两义分流（20261010 勘注·PIU1696）",
+    "「收敛子」缺中心词；子列系标准词"
+   ],
+   "id": "round3-r10",
+   "row_index": 10,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "桥件",
+    "废止替换（论文轨）",
+    "**桥接引理（bridge lemma）**",
+    "注释白皮书 §4 既裁同源（适配引理/桥接引理）；标识符本名含 bridge 者照录"
+   ],
+   "id": "round3-r11",
+   "row_index": 11,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "如实／如实标注／如实登记",
+    "废止替换",
+    "**显式标注／显式登记**（承 20260921 诚实*→显式* 家族；20261003 执行记录已行「如实登记→已登记」）；「如实呈现」→「按实际结果呈现」；「如实分层」→「按…分层显式表述」",
+    "元话语自述·评审观感；显式* 系既成家族"
+   ],
+   "id": "round3-r12",
+   "row_index": 12,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "诚实",
+    "终裁落定",
+    "**诚实性**（补中心词）——诚实边界→**诚实性边界**（三轮细审倾向案就此终裁）；诚实面→诚实性披露面；单用形容词→按语境删或改「忠实（faithful）」",
+    "既裁候终裁就此落定"
+   ],
+   "id": "round3-r13",
+   "row_index": 13,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "姊妹论文",
+    "保留＋统一形",
+    "**姊妹篇（companion paper）**——学术可接受（20261003 登记表 R-5 既判）·首现英文对照；「姊妹论文」变体统一为「姊妹篇」",
+    "companion paper 系学术标准词"
+   ],
+   "id": "round3-r14",
+   "row_index": 14,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "不阻塞／阻塞",
+    "语境分流",
+    "论文叙述面＝**不影响／不妨碍**（「不阻塞 X」→「不依赖于 X／不影响 X 的推进」；「不阻塞本声明」→「**不作为本主张的前提／不影响本主张成立**」）；并发/CS 技术语境保留 阻塞/非阻塞（non-blocking 标准词）",
+    "CS 标准词限于技术语境；叙述面系工程隐喻"
+   ],
+   "id": "round3-r15",
+   "row_index": 15,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "认证面",
+    "保留＋首现定义",
+    "**认证面**——§3.3 既定义专属项（已纳入认证发布版本的件·英文 the certified portion）；与「云认证」同域",
+    "面系既定后缀（§4.1 保留裁）·认证系既载标准词"
+   ],
+   "id": "round3-r16",
+   "row_index": 16,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "旗舰认证面／主树／守卫",
+    "旗舰＝§4 既裁复认（→主定理）；旗舰认证面→**主定理认证面**；主树→**主注册线**（承 §4.5 主注册树/双树同族·仓库文件树义内部文书可用）；守卫语境分流——叙述面（哨兵/闸门义）→**检验／检查步骤**（承闸门裁），技术标准语境保留（guardedness 守卫条件·cpu_guard 等工具专名照录）",
+    "复认＋族扩展；guardedness 系 Coq/函数式编程标准术语"
+   ],
+   "id": "round3-r17",
+   "row_index": 17,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "坐标",
+    "保留（分流）",
+    "数学本义**保留**；行号引用义→「引用坐标／行号快照」（坐标声明统一句既裁承载）",
+    "数学标准词"
+   ],
+   "id": "round3-r18",
+   "row_index": 18,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "重锚／工程重锚／坐标重锚工程",
+    "废止替换（正文禁用）",
+    "**引用更新／引用坐标更新**（内部文书「重锚」可用——承 §4.0 换钉行·§4.5 漂移行同源）",
+    "过程语"
+   ],
+   "id": "round3-r19",
+   "row_index": 19,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "凭证面",
+    "已定义保留",
+    "**凭证面（certificate layer）**——保留·首现定义；凭证/证书系构造性数学标准词（§4.1 证书保留裁）＋面系既定后缀",
+    "标准词复合"
+   ],
+   "id": "round3-r20",
+   "row_index": 20,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "代价支付／支付",
+    "既裁扩形",
+    "承 v1.7 支付既裁按语境两形：证明义务语境＝「完成全部证明义务／义务已解除（discharge）」；代价语境＝「承担代价／代价已被完整承担」——裸「支付」作动词废止，「代价支付」→「代价承担」",
+    "经济隐喻 payment 不规范（20261006 既裁父行）"
+   ],
+   "id": "round3-r21",
+   "row_index": 21,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "洁净／审计洁净",
+    "废止替换",
+    "**审计封闭**——或照录 **Closed**（Coq 原样输出串「Closed under the global context」不得改写·§2.1 CLEAN 既立目）；「洁净替代」系内部工程文书判据名（E951）可用·叙述面卫生隐喻废止",
+    "卫生隐喻；Coq 输出串规范"
+   ],
+   "id": "round3-r22",
+   "row_index": 22,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗界／逃逸／不逃逸（窗口族补）",
+    "三分",
+    "窗界→**窗口界（window bound）**——或按语义拆「窗口上界／下界」；逃逸＝窗口族既裁词素**保留**（escape·随「逃逸窗口」首现定义）；不逃逸→**窗口捕获（capture）／未逃逸**——首现定义·叙述倾向捕获形",
+    "承窗口族既裁（1294 存档）；capture 系逼近论通行表述"
+   ],
+   "id": "round3-r23",
+   "row_index": 23,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "最小窗阶（窗口族补）",
+    "规范形",
+    "**最小窗口级（minimal escape-window level）**——首现定义；叙述倾向「最小分辨率级」",
+    "承窗阶→窗口级既裁"
+   ],
+   "id": "round3-r24",
+   "row_index": 24,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "诚实缺口",
+    "家族形＋规范形",
+    "**诚实性缺口**（承诚实→诚实性家族·首现定义）；叙述面可径用 §2.4 既裁规范形「**未消解项（申报）**（declared outstanding item）」",
+    "家族一致性；§2.4 既裁在先"
+   ],
+   "id": "round3-r25",
+   "row_index": 25,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗距守卫／件内／退化／退化搬运·同余搬运·形态搬运／适配桥／源码亲核",
+    "窗距守卫→**窗口距检验（window-distance test）**；件内→**模块内／文件内**（按语境）；退化＝数学标准词**保留**（degenerate）；退化搬运→**退化转移**｜同余搬运→**同余转移**｜形态搬运→**形态转移**（transport 族承既裁·若指表示变换→「表示变换」）；适配桥→**适配引理／桥接引理**（注释白皮书既裁同源）；源码亲核→**源码核验／源码逐行核验**",
+    "transport 族既裁扩展；守卫→检验承闸门裁；退化系 §4.3 规范术语确认族；「亲」系口语拟人"
+   ],
+   "id": "round3-r26",
+   "row_index": 26,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "非依赖记忆的约定",
+    "废止替换",
+    "**自足约定（self-contained convention）**——首现定义；叙述展开形「该约定自带完整定义，不依赖前文回溯」",
+    "「非依赖记忆」双「依」拗口且「记忆」易误读为机器记忆；self-contained 系数学写作通行形"
+   ],
+   "id": "round3-r27",
+   "row_index": 27,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗消／统一窗消没取（窗口族补）",
+    "窗消→**窗口消没（vanishing）**——消没系数学标准词；「统一窗消没取」→**统一窗口消没取法**——拆分表述·首现定义（或展开「统一窗口收敛于零的取参方式」）；库内构造名照录标识符",
+    "承窗→窗口既裁；vanishing 系标准词（消没）"
+   ],
+   "id": "round3-r28",
+   "row_index": 28,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "窗距／窗族／包络面／搬到／顶点",
+    "窗距→**窗口距（window distance）**｜窗族→**窗口族（window family）**｜包络面＝数学标准词**保留**（envelope surface·承「包络精化」既裁保留侧）｜搬到→**转移**（承搬运既裁·口语形）｜顶点＝数学标准词**保留**（vertex·序数简称「顶点一/二/三」→第N个顶点既裁复认）",
+    "窗口族扩展；包络/顶点系标准词复认"
+   ],
+   "id": "round3-r29",
+   "row_index": 29,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "整个装配",
+    "规范形",
+    "**整体装配**（强调全件级时）；其余语境随「装配」保留裁（§4.1 保留裁·instantiation/assembly）",
+    "装配系 20260921 终裁保留词·仅「整个」口语修饰规范化"
+   ],
+   "id": "round3-r30",
+   "row_index": 30,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "逐点紧化宣告（20261012 补裁）",
+    "废止替换（标题／宣告义）",
+    "**逐点见证细化宣告**——分流注：「紧化」在收敛／逼近数学义**保留**（既有复合语「紧化积分证明」等照旧）；「逐点紧化宣告」类标题／宣告义一律→「见证细化」",
+    "词面歧义消除：「紧化」兼有数学紧化（compactification）与过程性收紧两读·标题义改判消歧；论文A 正文该标题词面已按新形迁移（残留 0）"
+   ],
+   "id": "round3-r31",
+   "row_index": 31,
+   "sub_table": "round3"
+  },
+  {
+   "cells": [
+    "判据模板→判据框架",
+    "**20261010 二批用户裁（约定俗成迁移）：叙述面「模板」废止→判据框架**（criterion schema——criterion 系 Niven/Legendre 判据通行族；schema 承参数化义）",
+    "criterion schema",
+    "B"
+   ],
+   "id": "round4-r01",
+   "row_index": 1,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "分离率→分离指数→**分离窗口级**（⚠ **20261020 反向修订**：本行 20261010 裁定的「分离指数」词形已废止；现行名为「分离窗口级」。本行保留作沿革，执法以新裁为准）",
+    "**20261010 二批用户裁：叙述面统一「分离指数」**（「率」形废止——与 irrationality measure/exponent 之「测度/指数」义别混·separation index 直取）；⚠ constructive separation（Chen FOCS 2022）反驳器义同形异义防混注仍适用",
+    "separation index",
+    "B"
+   ],
+   "id": "round4-r02",
+   "row_index": 2,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "诚实性边界",
+    "**维持（20261007 终裁复证）**；通行节名 scope and limitations；honest 仅非正式惯用语（Forster ITP 2022）",
+    "honest boundaries／scope and limitations",
+    "B"
+   ],
+   "id": "round4-r03",
+   "row_index": 3,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "档位 T1/T2/T3/DEV",
+    "**维持**（ACM badging Available/Functional/Reusable 评 artifact 质量与单件验证分级**异范畴正交**·不对齐）；英文对照 verification level",
+    "verification level；ACM AE badges＝对照参照系",
+    "A"
+   ],
+   "id": "round4-r04",
+   "row_index": 4,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "逃逸认证→逃逸引理",
+    "**20261011 五批用户裁（论文A 批次十八·自设术语自设性风险分析）：叙述面「认证」废止→逃逸引理**（escape lemma——「引理」系数学规范表述·「认证」系工程隐喻·承闸门→可判定检验同域判据）",
+    "escape lemma",
+    "B"
+   ],
+   "id": "round4-r05",
+   "row_index": 5,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "认证链→验证流水线",
+    "**20261010 二批用户裁：叙述面统一「验证流水线」**（verification pipeline——audit chain 系安全域撞名·certification chain 次选）",
+    "verification pipeline",
+    "B"
+   ],
+   "id": "round4-r06",
+   "row_index": 6,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "可提取／消解／见证／装配／模量",
+    "**维持复证**（模量 A 级：Coq stdlib 官方「equipped with explicit moduli of convergence」直证；消解＝discharge 类型论规范中译；见证＝witness；装配＝instantiation）",
+    "extractable／discharge／witness／instantiation／modulus",
+    "A/B"
+   ],
+   "id": "round4-r07",
+   "row_index": 7,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "预算",
+    "**叙述面废止→（搜索窗口级）上界**（budget 算法理论通行义＝时间/空间资源约束·与本义不合）；资源约束义语境 budget 保留",
+    "upper bound on the search level",
+    "B"
+   ],
+   "id": "round4-r08",
+   "row_index": 8,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "口径",
+    "中文**保留**（统计/审计通行语）；英文 **counting basis 废→counting convention**（检索未见通行）",
+    "counting convention",
+    "B"
+   ],
+   "id": "round4-r09",
+   "row_index": 9,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "强无理／弱无理",
+    "**维持**（nLab 原文 weakly irrational／strongly or strictly irrational·引 Bauer–Hanson arXiv:2404.01256·与论文A 定义逐义一致）",
+    "strong/weak irrationality",
+    "B"
+   ],
+   "id": "round4-r10",
+   "row_index": 10,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "apartness",
+    "中译**分离关系**（Bridges–Vîță APAL 119 (2003) 61-83）",
+    "apartness relation",
+    "B"
+   ],
+   "id": "round4-r11",
+   "row_index": 11,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "无理性测度",
+    "irrationality measure μ(α)（Bugeaud CTM；MathWorld）——「分离率」非域内固定术语·首现定义保留",
+    "irrationality measure／exponent",
+    "A/B"
+   ],
+   "id": "round4-r12",
+   "row_index": 12,
+   "sub_table": "round4"
+  },
+  {
+   "cells": [
+    "保留确认 13 词",
+    "**文献对齐复证维持**（勘误/划销/复测复核等各给词典级判；多数 C 级未单独联网·如实登记）——其中漂移/对账/预算三词按后裁/文献裁改（见上保留确认行）",
+    "—",
+    "B/C"
+   ],
+   "id": "round4-r13",
+   "row_index": 13,
+   "sub_table": "round4"
+  }
+ ],
+ "entry_skeleton": {
+  "note": "column names and governing prose are transcribed verbatim; entries keep the sub-table cell order; cell text is verbatim including markdown emphasis",
+  "origin_verbatim": "**性质**：用户对照形式化学术惯例给出的十六项替代裁决＋规范术语确认清单（见 §4.3）。**收录即裁决**；正文回改（尤其论文9 核心术语迁移）系大工程，候专项编排波执行——**推荐迁移路径＝「首现括注」方案**（三轮细审总体建议 1）：首次出现写「规范学术术语（下称社区简称）」，如「机器验证（下称机检）」「关键引理（承重语句）」「唯一性钉定引理（钉死桥）」「中点（半程点）」，后文保留简称——兼顾学术规范与术语特色，避免全文硬换。",
+  "sub_tables": {
+   "intl": {
+    "column_count": 3,
+    "columns": [
+     "术语（现用中文）",
+     "国际对应·英文（裁决）",
+     "权威源与判据"
+    ],
+    "english_column_names": [
+     "current_term_zh",
+     "international_equivalent_adjudication",
+     "authority_source_basis"
+    ],
+    "header_verbatim": [
+     "术语（现用中文）",
+     "国际对应·英文（裁决）",
+     "权威源与判据"
+    ],
+    "preamble_verbatim": "**国际对应词检索增补（20261006 联网检索·席 1294·用户令「检索即裁据」；四层源优先级：官方文档→社区风格指南/Zulip→顶会论文 CPP/ITP/JFR/arXiv→构造性分析标准文献 Bishop/Bridges；检索台账与逐词源=E-STAGING-1294-TERMCORPUS）**：",
+    "row_count": 30
+   },
+   "round2": {
+    "column_count": 3,
+    "columns": [
+     "现用词（候选废止）",
+     "规范替代（用户裁）",
+     "备注/甄别注"
+    ],
+    "english_column_names": [
+     "current_term",
+     "normative_replacement",
+     "adjudication_note"
+    ],
+    "header_verbatim": [
+     "现用词（候选废止）",
+     "规范替代（用户裁）",
+     "备注/甄别注"
+    ],
+    "preamble_verbatim": null,
+    "row_count": 24
+   },
+   "round3": {
+    "column_count": 4,
+    "columns": [
+     "现用词（候选废止/讨论）",
+     "裁决",
+     "规范替代形",
+     "依据/甄别注"
+    ],
+    "english_column_names": [
+     "current_term",
+     "disposition",
+     "normative_replacement_form",
+     "basis_note"
+    ],
+    "header_verbatim": [
+     "现用词（候选废止/讨论）",
+     "裁决",
+     "规范替代形",
+     "依据/甄别注"
+    ],
+    "preamble_verbatim": "**三轮术语裁决（20261007 用户「非标准讨论」批·37 词面·主会话自治裁〔承 20261006 支付/落点先例〕；检索证据面＝E-STAGING-1294-TERMCORPUS 存档〔逃逸窗口族〕＋既裁语料；正文普查候切片 3/终验波——在飞修订席不扰）**：",
+    "row_count": 31
+   },
+   "round4": {
+    "column_count": 4,
+    "columns": [
+     "现用词",
+     "文献裁决",
+     "英文对照/权威源",
+     "置信度"
+    ],
+    "english_column_names": [
+     "current_term",
+     "literature_adjudication",
+     "english_equivalent_and_source",
+     "confidence"
+    ],
+    "header_verbatim": [
+     "现用词",
+     "文献裁决",
+     "英文对照/权威源",
+     "置信度"
+    ],
+    "preamble_verbatim": "**四轮术语文献对齐（20261010·双席 PIU1695/1696·用户令「基于文献的标准修订·豁免词同循」·网络 24 发/两席·四层源；回执＝attn\\_tlwPIU1695/1696）**：",
+    "row_count": 13
+   }
+  }
+ },
+ "meta": {
+  "entry_count": 98,
+  "prose_note_count": 3,
+  "source_irregular_rows": [
+   {
+    "actual_cells": 3,
+    "declared_columns": 4,
+    "id": "round3-r17",
+    "note": "source row carries fewer cells than the sub-table header declares (adjacent columns merged in the source itself); transcribed verbatim, not repaired",
+    "row_index": 17,
+    "sub_table": "round3"
+   },
+   {
+    "actual_cells": 3,
+    "declared_columns": 4,
+    "id": "round3-r26",
+    "note": "source row carries fewer cells than the sub-table header declares (adjacent columns merged in the source itself); transcribed verbatim, not repaired",
+    "row_index": 26,
+    "sub_table": "round3"
+   },
+   {
+    "actual_cells": 3,
+    "declared_columns": 4,
+    "id": "round3-r28",
+    "note": "source row carries fewer cells than the sub-table header declares (adjacent columns merged in the source itself); transcribed verbatim, not repaired",
+    "row_index": 28,
+    "sub_table": "round3"
+   },
+   {
+    "actual_cells": 3,
+    "declared_columns": 4,
+    "id": "round3-r29",
+    "note": "source row carries fewer cells than the sub-table header declares (adjacent columns merged in the source itself); transcribed verbatim, not repaired",
+    "row_index": 29,
+    "sub_table": "round3"
+   }
+  ],
+  "sub_table_counts": {
+   "intl": 30,
+   "round2": 24,
+   "round3": 31,
+   "round4": 13
+  }
+ },
+ "prose_notes": [
+  {
+   "label": "reconfirmed_in_register",
+   "text_verbatim": "**已在册复认（本批点名·不另立行）**：施工（§4.0 既裁 启动/实施/未实施）｜头注（§4.5 既裁 正文禁用·注释轨技术名「文件头注释」可用）｜口径＋文献口径（§4.1 保留裁 counting basis·复合随保留）｜主锚（§4.0 引用锚行 既裁 具名语句引用）｜消费（§4 既裁→使用·「零消费」代码引用语境保留）｜在途（§4/§4.0 既裁分流：件未入册→待纳入·验证/审计进行时→进行中）｜旗舰（§4 既裁→主定理）｜装配（§4.1 终裁保留裁·instantiation）｜凭证面（本批既裁保留·certificate layer）。"
+  },
+  {
+   "label": "retention_confirmation",
+   "text_verbatim": "**保留确认（三轮细审；20261010 四轮文献对齐勘正——豁免词同循修订）**：预置/未编译/勘误/勘正/坐标修正/复测复核/语义核验/挂接/划销——正文可保留；**漂移／零漂移**＝行号漂移义正文禁用（§4.5 后裁为准）、数值/测量稳定义可保留；**对账**＝正文禁用→交叉核对（§4.5 20261003 升档·本行原「可保留」未同步·就此勘正）；**预算**＝叙述面改**（搜索窗口级）上界**（budget 算法理论通行义为资源约束·与本义不合——20261010 文献裁·见四轮组）。"
+  },
+  {
+   "label": "conflict_erratum",
+   "text_verbatim": "**冲突勘注（与既有判例）**：①「收口」——本表 §4 裁「→闭合」，白皮书 §9.1 DICT 判例裁「叙事义→concluded/终结、禁换收束」：两裁并存按语境分流（数学闭合义→闭合；叙事终结义→终结），本表此行补注以本勘为准。②「收束」——本表 §2.4 立目为规范形（unification），白皮书判例「叙事义禁换收束」限叙事语境；数学整合义维持「收束」。"
+  }
+ ],
+ "schema": "rocqwash-termbase-seed/1",
+ "slots_policy": "status=unfetched means no network content has been pulled into the slot; fetching real slot content is a candidate order outside the current delivery (user-ordered NETRED pass only); slots carry no content payload by design and the built-in entries below are never overwritten by fetched slot content",
+ "source_of_truth": {
+  "path": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md",
+  "role": "sole maintenance point (self-declared in the file header); the built-in seed mirrors it, it never rules over it",
+  "section": "### 4.0 二轮术语裁决（20260928 用户裁：自创术语规范替代清单；同日三轮细审更正见括注）",
+  "snapshot": {
+   "bytes": 94989,
+   "mtime_utc": "2026-11-09T02:57:54Z",
+   "sha256": "09a3fb3001cfc28ea22de5a18834a06c4df1d850893fb0b2ecaafc330ba3db7d"
+  },
+  "snapshot_discipline": "read-only snapshot; zero in-place edits; refresh only by re-transcription from the source in a dedicated sync pass (then update meta counts and snapshot hash together); DIY entries never land in this snapshot (see diy-channel-SPEC.md)"
+ },
+ "tool": "termbase"
+}

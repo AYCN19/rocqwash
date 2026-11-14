@@ -1,0 +1,855 @@
+{
+  "schema": "rocqwash.seeds.ai-flavor.word-map/1.0",
+  "engine": "ai_flavor",
+  "seed_role": "data-only seed: detection vocabulary plus register-sourced replacement candidates for the 36 wording faces. It carries no executable engine body; the engine faces (selfcheck / norm_lint / wash_shape / evolve) grow from this data per the five-engine design volume (2026-11-14).",
+  "face_count": 36,
+  "candidate_kinds": {
+    "ban-remediation": "the register bans the face outright and registers no substitute word; the candidate records the register's own remediation (remove or restate directly), not a coined replacement",
+    "delete-or-restate": "the register's sentence-family disposition: delete the face or state the point directly",
+    "neutral-direct-form": "a neutral direct wording enumerated by the register as a per-context example for the English stem family"
+  },
+  "candidate_scope": "Family-level, not per-face: glossary 4.6 row A registers the 10 Chinese faces with 'no compliant substitute scenario', and glossary 5 gives the English stem family one shared guidance line (direct neutral wording, per context) instead of a per-face substitution table. No candidate word below was coined; every candidate value is either quoted from the canon or is an action gloss typed by its kind field.",
+  "source_of_truth": {
+    "primary": {
+      "path": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md",
+      "role": "sole maintenance point for wording and terminology (self-declared in its header)",
+      "sections_used": [
+        {
+          "section": "4.6",
+          "title": "AI 味词面登记册",
+          "line_at_snapshot": 292,
+          "snapshot_date": "2026-11-14",
+          "used_for": "the 10 Chinese faces (row A) and the false-positive boundary (row C)"
+        },
+        {
+          "section": "5",
+          "title": "英文术语复核清单",
+          "line_at_snapshot": 381,
+          "snapshot_date": "2026-11-14",
+          "used_for": "the 26 English faces and their registered dispositions"
+        }
+      ],
+      "integrity": "read-only snapshot; this JSON transcribes the canon without alteration; any conflict resolves upward to the canon file"
+    },
+    "secondary": {
+      "path": "D:/ComplexAnalysis/规范术语/注释规范白皮书-v1.0-20260921.md",
+      "section": "4",
+      "contribution_to_this_seed": "none of the 36 faces appear in its section 4 mapping table (that table is the E2 jargon source). Listed in the seed charter as a source; checked 2026-11-14; negative finding with boundary recorded in SPEC.md."
+    },
+    "operating_mirror": {
+      "path": "C:/Users/Live/.zcode/skills/cw-wf-dispatch/references/constraint-blocks.md",
+      "section": "13",
+      "role": "operative mirrored register cited by the detector header. Its English avoid list omits 'comprehensive' relative to glossary 5. This map follows glossary 5 (15 stems, comprehensive included), which matches the detector."
+    }
+  },
+  "detection_reference": {
+    "instrument_path": "D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/ai_flavor_selfcheck.sh",
+    "instrument_lines": 58,
+    "instrument_location_note": "the instrument lives in the attn workspace, not in the rocqwash tree; the rocqwash tree carries document references only (docs/CAPABILITY-INDEX.md:395,396,413; docs/mcp.md:120; docs/vacgen_sop.md:16,340,348; verified 2026-11-14)",
+    "batteries": [
+      {
+        "battery": "CH_3FAMILIES_10FACES",
+        "pattern_literal": "赋能|抓手|深耕|闭环|底层逻辑|组合拳|降本增效|全链路|内容矩阵|深度剖析",
+        "grep_flags": "-c -E (case sensitive)",
+        "detector_line": 29
+      },
+      {
+        "battery": "EN_WORD_STEMS_15FACES",
+        "pattern_literal": "\\bdelv\\w*|\\bunderscor\\w*|\\bleverag\\w*|\\bfoster\\w*|\\bshowcas\\w*|\\bmeticulous\\w*|\\bintricat\\w*|\\bnuanc\\w*|\\bmultifaceted\\b|\\binterplay\\b|\\bholistic\\b|\\bpivotal\\b|\\brealm\\b|\\btapestr\\w*|\\bcomprehensive\\b",
+        "grep_flags": "-c -i -E",
+        "detector_line": 34
+      },
+      {
+        "battery": "EN_SENTENCE_8FACES",
+        "pattern_literal": "It is worth noting that|In the realm of|\\bserves? as\\b|\\bplays? (a )?(crucial|pivotal|vital|key|important) role\\b|\\bsheds? light on\\b|\\bpaves? the way for\\b|\\bnot only\\b[^.]{0,120}?\\bbut also\\b|\\bin conclusion\\b",
+        "grep_flags": "-c -i -E",
+        "detector_line": 39
+      },
+      {
+        "battery": "EN_PARA_INITIAL_3FACES",
+        "pattern_literal": "^(Additionally|Moreover|Furthermore)\\b",
+        "grep_flags": "-c -i -E",
+        "detector_line": 44
+      }
+    ],
+    "exit_codes": {
+      "0": "all batteries zero (CLEAN)",
+      "1": "any hit (RED)",
+      "2": "usage error"
+    },
+    "em_dash_battery": "the instrument counts U+2014 occurrences separately from the 36 faces; see structural_battery_em_dash"
+  },
+  "structural_battery_em_dash": {
+    "character": "U+2014 (em dash)",
+    "excluded_from_face_count": true,
+    "register_rule": "em-dash insertion quota: at most 1 per 1000 characters (glossary 5, structural family)",
+    "instrument_target": 0,
+    "note": "the instrument target (0) is stricter than the register quota (at most 1 per 1000 characters); both are recorded, neither altered"
+  },
+  "faces": [
+    {
+      "id": "zh-01",
+      "face": "赋能",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "赋能",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-02",
+      "face": "抓手",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "抓手",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-03",
+      "face": "深耕",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "深耕",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-04",
+      "face": "闭环",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "闭环",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-05",
+      "face": "底层逻辑",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "底层逻辑",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-06",
+      "face": "组合拳",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "组合拳",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-07",
+      "face": "降本增效",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "降本增效",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-08",
+      "face": "全链路",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "全链路",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-09",
+      "face": "内容矩阵",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "内容矩阵",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "zh-10",
+      "face": "深度剖析",
+      "lang": "zh",
+      "battery": "CH_3FAMILIES_10FACES",
+      "detector_regex_branch": "深度剖析",
+      "match_mode": "substring",
+      "canon_anchor": "canon_excerpts.zh_register_row_a",
+      "register_level": "A/B-level source evidence (register row A: 以上 A/B 级源证)",
+      "candidates": [
+        {
+          "kind": "ban-remediation",
+          "value": "banned on the narrative face; the register records no compliant substitute word; remove the face or restate the sentence in direct wording",
+          "basis": "canon_excerpts.zh_register_row_a (verbatim fragment: 叙述面禁用·无合规替代场景)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-01",
+      "face": "delve",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bdelv\\w*",
+      "match_mode": "stem (inflections included: delves, delving, delved)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-02",
+      "face": "underscore",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bunderscor\\w*",
+      "match_mode": "stem (inflections included: underscores, underscoring, underscored)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-03",
+      "face": "leverage",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bleverag\\w*",
+      "match_mode": "stem (inflections included: leverages, leveraging, leveraged)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-04",
+      "face": "foster",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bfoster\\w*",
+      "match_mode": "stem (inflections included: fosters, fostering, fostered)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-05",
+      "face": "showcase",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bshowcas\\w*",
+      "match_mode": "stem (inflections included: showcases, showcasing, showcased)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-06",
+      "face": "meticulous",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bmeticulous\\w*",
+      "match_mode": "stem (inflections included: meticulously)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-07",
+      "face": "intricate",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bintricat\\w*",
+      "match_mode": "stem (inflections included: intricately)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-08",
+      "face": "nuanced",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bnuanc\\w*",
+      "match_mode": "stem (inflections included: nuance, nuances)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-09",
+      "face": "multifaceted",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bmultifaceted\\b",
+      "match_mode": "exact word",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-10",
+      "face": "interplay",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\binterplay\\b",
+      "match_mode": "exact word",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-11",
+      "face": "holistic",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bholistic\\b",
+      "match_mode": "exact word",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-12",
+      "face": "pivotal",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bpivotal\\b",
+      "match_mode": "exact word",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-13",
+      "face": "realm",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\brealm\\b",
+      "match_mode": "exact word (plural 'realms' not matched by this branch; observation only, recorded in SPEC, no engine change)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-14",
+      "face": "tapestry",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\btapestr\\w*",
+      "match_mode": "stem (inflections included: tapestries)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-word-15",
+      "face": "comprehensive",
+      "lang": "en",
+      "battery": "EN_WORD_STEMS_15FACES",
+      "detector_regex_branch": "\\bcomprehensive\\b",
+      "match_mode": "exact word (adverb form not matched by this branch; observation only, recorded in SPEC, no engine change)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "neutral-direct-form",
+          "value": "explore",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "examine",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        },
+        {
+          "kind": "neutral-direct-form",
+          "value": "important",
+          "basis": "canon_excerpts.en_face_paragraph (family guidance: 叙述面以直陈替代（explore／examine／important 等中性形按语境）)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-01",
+      "face": "It is worth noting that",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "It is worth noting that",
+      "match_mode": "phrase (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-02",
+      "face": "In the realm of",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "In the realm of",
+      "match_mode": "phrase (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-03",
+      "face": "serves as",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bserves? as\\b",
+      "match_mode": "phrase with variants (serve/serves)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-04",
+      "face": "plays a crucial role in",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bplays? (a )?(crucial|pivotal|vital|key|important) role\\b",
+      "match_mode": "regex (play/plays, optional article, five role adjectives)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "detector_note": "the register and the operating mirror both give only 'plays a crucial role in'; the detector branch generalizes to five role adjectives and optional article. Recorded as-is: the branch is the operative detection semantics, and this entry is a transcription of it, not a widening of the register.",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-05",
+      "face": "sheds light on",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bsheds? light on\\b",
+      "match_mode": "phrase with variants (shed/sheds)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-06",
+      "face": "paves the way for",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bpaves? the way for\\b",
+      "match_mode": "phrase with variants (pave/paves)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-07",
+      "face": "not only ... but also",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bnot only\\b[^.]{0,120}?\\bbut also\\b",
+      "match_mode": "regex window (gap of up to 120 non-period characters)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-sent-08",
+      "face": "in conclusion",
+      "lang": "en",
+      "battery": "EN_SENTENCE_8FACES",
+      "detector_regex_branch": "\\bin conclusion\\b",
+      "match_mode": "phrase (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-para-01",
+      "face": "Additionally",
+      "lang": "en",
+      "battery": "EN_PARA_INITIAL_3FACES",
+      "detector_regex_branch": "^(Additionally|Moreover|Furthermore)\\b",
+      "match_mode": "line-initial word (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "canon_note": "the register lists the paragraph-initial chain as one face inside its sentence family (spelled 'Furthermore-Morever-Additionally', see transcription_notes); the detector splits it into three line-initial branches",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-para-02",
+      "face": "Moreover",
+      "lang": "en",
+      "battery": "EN_PARA_INITIAL_3FACES",
+      "detector_regex_branch": "^(Additionally|Moreover|Furthermore)\\b",
+      "match_mode": "line-initial word (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "canon_note": "the register's face line spells this token 'Morever' (see transcription_notes); the map and the detector use the standard spelling",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    },
+    {
+      "id": "en-para-03",
+      "face": "Furthermore",
+      "lang": "en",
+      "battery": "EN_PARA_INITIAL_3FACES",
+      "detector_regex_branch": "^(Additionally|Moreover|Furthermore)\\b",
+      "match_mode": "line-initial word (case-insensitive)",
+      "canon_anchor": "canon_excerpts.en_face_paragraph",
+      "canon_note": "the register lists the paragraph-initial chain as one face inside its sentence family; the detector splits it into three line-initial branches",
+      "candidates": [
+        {
+          "kind": "delete-or-restate",
+          "value": "delete the face or state the point directly",
+          "basis": "canon_excerpts.en_face_paragraph (sentence-family disposition: 删或直陈)"
+        }
+      ]
+    }
+  ],
+  "canon_excerpts": {
+    "zh_register_row_a": {
+      "location": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md line 294 (section 4.6 row A), snapshot 2026-11-14",
+      "verbatim": "**A. 中文 AI 味词语（叙述面禁用·无合规替代场景）**：赋能／抓手／闭环／底层逻辑／组合拳／降本增效／全链路／内容矩阵／深度剖析／深耕（以上 A/B 级源证）／颗粒度（C 级·检索未见单独源证——慎引）。"
+    },
+    "zh_register_row_c_false_positive_boundary": {
+      "location": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md line 296 (section 4.6 row C), snapshot 2026-11-14",
+      "verbatim": "**C. AI 味表述模式（⚠ 误伤边界：句式系最弱检测依据·技术对照句合法）**：「不是…而是…」对称骨架（技术对照句逐一勘验后可维持）／破折号插入语滥用（**英文面** P1·中文破折号为合法标点分流处理）／排比三连／空洞归总句／每段等长·低 burstiness（P2·学术语域天然均匀防误伤——GPTZero 已弃该指标）。",
+      "scope_note": "row C concerns Chinese empirical expression patterns; quoted here only as the register's caution on sentence-shaped detection (weakest evidence; technical contrast sentences are legitimate after case-by-case review)"
+    },
+    "en_face_paragraph": {
+      "location": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md line 402 (section 5), snapshot 2026-11-14",
+      "verbatim": "**AI 味英文词面（20261010 三席收集·处置＝避用或按替代形·词频证据见 Kobak et al. 2025 *Science Advances*／Gray 2024／Liang et al. 2024 arXiv:2403.07183；全表见回执 PIU1698R/1699R）**：delve／underscore／leverage／foster／showcase／underscore／meticulous／intricate／nuanced／multifaceted／interplay／holistic／pivotal／realm／tapestry／comprehensive（超额词频实证族）——叙述面以直陈替代（explore／examine／important 等中性形按语境）；句式族＝It is worth noting that／In the realm of／serves as／plays a crucial role in／sheds light on／paves the way for／Furthermore-Morever-Additionally 段首链／not only...but also／in conclusion（删或直陈）；结构族＝em-dash 插入语（每千字符 ≤1）／rule of three／等长段（P2 防误伤）。**评审工具链对照**（检测在评审流程的位置·非我方闸口）：Turnitin/iThenticate（查重＋AI 检测）·GPTZero·Originality.ai·Sapling·ZeroGPT（AI 检测）·Writefull·Paperpal·Trinka·Grammarly Academic（语言质量）·Statcheck（统计）·Proofig·ImageTwin（图像）·PubPeer（社区核查）；COPE 裁定＝检测器结果不一致时编辑不应单靠检测器判罚。"
+    }
+  },
+  "transcription_notes": [
+    "Verbatim policy: canon_excerpts quote the canon byte-faithfully, including the duplicated 'underscore' token in en_face_paragraph and the 'Morever' spelling in the paragraph-initial chain. The map is keyed by face, so the duplicated token yields one face; face keys use the detector's standard spellings.",
+    "Glossary 5 enumerates 15 distinct English stem faces (the duplicated 'underscore' collapses to one); the operating mirror (constraint-blocks section 13) lists 14, omitting 'comprehensive'. This map follows glossary 5 and the detector (15 stems, comprehensive included).",
+    "The detector's sentence branch for 'plays a crucial role in' is broader than the register literal (five role adjectives, optional article). Transcribed as-is; flagged in en-sent-04; the register itself was not widened.",
+    "Register row A also lists 颗粒度 (C level, sourced weakly, use with care). It is not part of the detector battery and is therefore not among the 36 faces; recorded here only through the verbatim row A quote.",
+    "The instrument groups the 10 Chinese faces under one battery echo label (CH_3FAMILIES_10FACES) without a per-face family assignment; the register likewise treats them as one row. No speculative per-face family taxonomy was invented here.",
+    "This file is RED under its own battery by design: the data is the battery (the canon excerpts and face keys contain the faces). Same exclusion rationale as the instrument, which states its own pattern literals are excluded from its own assertion.",
+    "Snapshot discipline: this file is a read-only transcription snapshot. The canon under D:/ComplexAnalysis/规范术语/ remains the sole maintenance point; amendments go there first, and this snapshot follows it per the sync discipline carried by the seed package."
+  ]
+}
