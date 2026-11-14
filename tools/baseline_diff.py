@@ -1,59 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""baseline_diff.py — 两份堵账基线对比→堵账增减报告（rocqwash tools/·20261111
-工装席铸·纯 JSON 逻辑）
+"""baseline_diff.py: compare two unclog blockage baselines into a blockage delta report (rocqwash tools/, pure JSON logic).
 
-输入两份 unclog --audit 堵账基线（schema rocqwash-unclog/1·audit 形·argv 序＝
-旧→新·时间序由调用方自保证），出「堵账增减报告」：
+Purpose.  Read two `unclog --audit` blockage baselines (schema `rocqwash-unclog/1`, audit form; argv order old
+  then new, chronological order owned by the caller) and emit a blockage delta report. Read-only by default: the
+  only disk writes are the explicit --json/--md report files. A self-consistency precheck rejects hand-edited or
+  mixed-in input fail-loud (rc=2, no report); the candidates_key four-tuple (mode.source, args.src, args.candidates,
+  args.chain_ledgers) must match item by item, otherwise verdict=incomparable (lists empty, score_delta null, rc=1;
+  cross-set deltas are spurious, never force-fit). Comparable runs report new_blocks / resolved_blocks / persistent
+  (wall roots aligned cause by cause; failing files carry a chain-root attribution from the new chain_top dependents,
+  null when absent, no guessing) plus score_delta {n_red, wall_count}; the verdict reads only the failing count
+  (fewer improved, more degraded, equal stable); timing is excluded (excluded_fields=["timing"], the only
+  non-deterministic baseline segment).
 
-  1 账面自洽预检（fail-loud 形坏 rc=2·拒判不出账）：schema＝rocqwash-unclog/1
-    ＋final.red_files 字符串列表无重＋final.wall_count≡|wall|＋audit 形全检
-    （final.verdict=audit·mode.audit=true·rounds 单轮·probe_summary 红账≡
-    final 红账·chain_top 在）——手编账/混入账零容忍·染污对比不出账。
-  2 候选面对齐：candidates_key 四元组（mode.source／args.src／args.candidates
-    ／args.chain_ledgers）两账逐项比对——任一异即 verdict=incomparable 如实
-    拒判（new/resolved/persistent 恒空·score_delta=null·rc=1 响亮——跨候选
-    集的增减是伪信号·禁硬凑）。非 audit 形（闭环活跑报告混入）同判
-    incomparable 并列明理由。args 其余键（timeout/rounds 等）不入候选面——
-    调参不改候选集·增减仍可比。
-  3 堵账增减（可比时）：堵账条目＝红账文件（final.red_files）∪墙账根
-    （wall 键·各带 reason/detail）——
-      new_blocks       新账有旧账无（红文件新堵／墙根新入·kind 分形）
-      resolved_blocks  旧账有新账无（红文件清账／墙根出墙·墙根带旧因）
-      persistent       两账同堵——墙根条目**按链根键·墙账逐因对齐**（old/new
-                       的 reason·detail 逐项＋reason_changed/detail_changed——
-                       因变即战役把墙挪了的响亮面·如 unprobed→self-unwashable）；
-                       红文件条目附新账 chain_top 链根归因（dependents 全表查·
-                       查无即 null——代差型/器因红/根出 TOP 榜者如实 null 禁猜）。
-  4 score_delta＝{n_red, wall_count}（新−旧·红减为负）；verdict 只认红账：
-    红减=improved／红增=degraded／同=stable（墙账增减入三清单不驱动 verdict
-    ——红账是堵账主指标·判读单凭墙账会漏红文件面）。
-  5 timing 段不入对比：耗时各段＝实测墙钟逐跑必异＝基线文件唯一非确定段
-    （excluded_fields=["timing"]·stable 矢量以异 timing 双账实证「同输入
-    重跑字节恒同」对 timing 之外全成立）。
+Interface.  python3 tools/baseline_diff.py OLD.json NEW.json [--json out.json] [--md out.md], or --selftest. Report
+  schema rocqwash-baseline-diff/1; verdict in improved|degraded|stable|incomparable. Deterministic: sort_keys, reruns
+  byte-identical, no wall-clock and no absolute paths in the report (basenames only, full paths on stdout); cw.sh
+  route baseline-diff.
 
-输出确定性（sort_keys·同输入重跑 --json/--md 字节恒同·报告零墙钟零绝对路径
-——路径只出基名·全路径走 stdout 响亮·chain_graph/unclog 同律）：
-  --json report·schema=rocqwash-baseline-diff/1：
-    {schema, old/new{path,verdict,audit_form,n_red,wall_count,red_files,
-     wall_roots,candidates_key}, comparable, incomparable_reasons?,
-     new_blocks[], resolved_blocks[], persistent[], score{old,new},
-     score_delta?（incomparable 时 null）, excluded_fields, verdict}
-    verdict ∈ improved|degraded|stable|incomparable。
-  --md 同报告 markdown（人类判读面·含 timing 注记与退出码口径·detail 截断
-    100 字·管柱转义）。
+Dependencies.  Python 3 stdlib only; pure JSON logic, zero network, zero build step; both inputs read-only.
 
-用法（零网络零编译纯 JSON 逻辑·两入参只读·唯一写盘面＝显式 --json/--md 出账）：
-  python3 tools/baseline_diff.py OLD.json NEW.json [--json out.json] [--md out.md]
-  python3 tools/baseline_diff.py --selftest
+Evidence.  --selftest six vectors on tmp-synthesized baselines (improved / degraded / stable / incomparable / md
+  output / CLI exit codes) asserting byte-identical reruns and unwritten inputs; suite tests/test_baseline_diff.py;
+  companion procedure examples/baselines/README.md.
 
-退出码：0=improved/stable；1=degraded/incomparable（红是数据非器红·响亮
-stdout·verdict 在账在屏——基线回退/不可判都是判读面要接的信号）；2=用法错/
-输入形坏（schema 不对/段缺失/账面自洽破）；9=路径缺失。--selftest：0=全过/
-2=断言失败。
-
-配套规程：examples/baselines/README.md（基线入仓·命名 audit-<域>-<yyyymmdd>.json·
-真树干跑产·timing 注记）。
+Exit-codes.  0 = improved/stable; 1 = degraded/incomparable (a failing result is data, not a tool failure; verdict
+  loud on stdout); 2 = usage error or malformed input; 9 = missing path or report write failure. --selftest:
+  0 = all pass, 2 = assertion failure.
 """
 import argparse
 import io
@@ -64,96 +37,110 @@ import sys
 PROG = "baseline_diff"
 SCHEMA = "rocqwash-baseline-diff/1"
 UNCLOG_SCHEMA = "rocqwash-unclog/1"
-# 数据 verdict → 退出码（红是数据非器红·响亮 stdout·unclog VERDICT_EXIT 同律）
+# data verdict -> exit code (a failing result is data, not a tool failure; loud
+# stdout; same law as unclog VERDICT_EXIT)
 VERDICT_EXIT = {"improved": 0, "stable": 0, "degraded": 1, "incomparable": 1}
-# 基线唯一非确定段（实测墙钟·逐跑必异）不入对比——报告内显式在册
+# the baseline's only non-deterministic segment (measured wall-clock, differs
+# every run) is excluded from the comparison and registered in the report
 EXCLUDED_FIELDS = ["timing"]
-# 候选面四元组（candidates_key）逐项比对字段·任一异即 incomparable
-CK_FIELDS = (("source", "候选面 source"), ("src", "候选树 src"),
-             ("candidates", "候选清单 candidates"),
-             ("chain_ledgers", "链台账 chain_ledgers"))
-CLIP_MD = 100  # --md 表格 detail 截断宽（防长账冲表·确定性截断）
+# candidates_key four-tuple compared item by item; any difference means
+# incomparable
+CK_FIELDS = (("source", "candidates_key.source"),
+             ("src", "candidates_key.src"),
+             ("candidates", "candidates_key.candidates"),
+             ("chain_ledgers", "candidates_key.chain_ledgers"))
+CLIP_MD = 100  # --md table detail clip width (long records must not break the table; deterministic clip)
 
 
 class FormError(Exception):
-    """输入形坏（rc=2·fail-loud 拒判不出账）。"""
+    """Malformed input form (rc=2; fail-loud, refuse to judge, emit no report)."""
 
 
 class MissingPath(Exception):
-    """输入路径缺失（rc=9·fail-loud 不模拟）。"""
+    """Missing input path (rc=9; fail-loud, no simulation)."""
 
 
-# ---- 账载入＋账面自洽预检 ------------------------------------------------------
+# ---- baseline loading and record self-consistency precheck ---------------------
 
 def load_baseline(path, tag):
-    """读一份堵账基线 → 账 dict（缺件 rc=9·JSON 解析失败 rc=2·fail-loud）。"""
+    """Load one blockage baseline into a record dict (missing file rc=9; JSON
+    parse failure rc=2; fail-loud)."""
     if not os.path.isfile(path):
-        raise MissingPath("%s账文件缺失: %s" % (tag, path))
+        raise MissingPath("%s baseline file missing: %s" % (tag, path))
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
             rep = json.load(fh)
     except (ValueError, UnicodeDecodeError) as e:
-        raise FormError("%s账 JSON 解析失败: %s（%s）" % (tag, path, e))
+        raise FormError("%s baseline JSON parse failure: %s (%s)" % (tag, path, e))
     return account_of(rep, path, tag)
 
 
 def account_of(rep, path, tag):
-    """账面结构校验（fail-loud 形坏）＋堵账抽取。
+    """Record structure validation (fail-loud on malformed form) plus blockage
+    extraction.
 
-    自洽校验（手编账/混入账零容忍）：final.red_files 字符串列表无重·
-    final.wall_count≡|wall|·audit 形（verdict=audit＋mode.audit）时 rounds
-    单轮·probe_summary 红账≡final 红账·chain_top 列表在。堵账＝红账文件
-    （去重排序）∪墙账根（{reason,detail} 抽取）·candidates_key＝候选面
-    四元组。"""
-    where = "%s账 %s" % (tag, os.path.basename(path))
+    Self-consistency checks (hand-edited or mixed-in records are rejected):
+    final.red_files a duplicate-free string list; final.wall_count == |wall|;
+    in audit form (verdict=audit plus mode.audit) rounds is a single round,
+    the probe_summary failing set equals the final failing set, and the
+    chain_top list is present. Blockages = failing files (deduplicated,
+    sorted) union wall roots ({reason, detail} extracted); candidates_key =
+    the candidate-surface four-tuple."""
+    where = "%s baseline %s" % (tag, os.path.basename(path))
     if not isinstance(rep, dict):
-        raise FormError("%s 形坏：顶层非 JSON object" % where)
+        raise FormError("%s malformed: top level is not a JSON object" % where)
     if rep.get("schema") != UNCLOG_SCHEMA:
-        raise FormError("%s 形坏：schema=%r 非 %s（本器只对比 unclog 堵账基线）"
+        raise FormError("%s malformed: schema=%r is not %s (this tool compares"
+                        " only unclog blockage baselines)"
                         % (where, rep.get("schema"), UNCLOG_SCHEMA))
     mode, args = rep.get("mode"), rep.get("args")
     wall, final, rounds = rep.get("wall"), rep.get("final"), rep.get("rounds")
     if not isinstance(mode, dict):
-        raise FormError("%s 形坏：mode 段缺失" % where)
+        raise FormError("%s malformed: mode segment missing" % where)
     if not isinstance(args, dict):
-        raise FormError("%s 形坏：args 段缺失" % where)
+        raise FormError("%s malformed: args segment missing" % where)
     if not isinstance(wall, dict) or \
             not all(isinstance(v, dict) for v in wall.values()):
-        raise FormError("%s 形坏：wall 段缺失或值非 object" % where)
+        raise FormError("%s malformed: wall segment missing or values not objects" % where)
     if not isinstance(rounds, list) or not rounds:
-        raise FormError("%s 形坏：rounds 段缺失或空" % where)
+        raise FormError("%s malformed: rounds segment missing or empty" % where)
     if not isinstance(final, dict):
-        raise FormError("%s 形坏：final 段缺失" % where)
+        raise FormError("%s malformed: final segment missing" % where)
     red_raw = final.get("red_files")
     if not isinstance(red_raw, list) or \
             not all(isinstance(x, str) for x in red_raw):
-        raise FormError("%s 形坏：final.red_files 缺失或非字符串列表" % where)
+        raise FormError("%s malformed: final.red_files missing or not a list of strings" % where)
     if len(set(red_raw)) != len(red_raw):
-        raise FormError("%s 形坏：final.red_files 有重（账面自洽破）" % where)
+        raise FormError("%s malformed: final.red_files has duplicates"
+                        " (record self-consistency broken)" % where)
     wc = final.get("wall_count")
     if not isinstance(wc, int) or isinstance(wc, bool) or wc != len(wall):
-        raise FormError("%s 形坏：final.wall_count=%r ≠ |wall|=%d（账面自洽破）"
+        raise FormError("%s malformed: final.wall_count=%r != |wall|=%d"
+                        " (record self-consistency broken)"
                         % (where, wc, len(wall)))
     verdict = final.get("verdict")
     if not isinstance(verdict, str):
-        raise FormError("%s 形坏：final.verdict 缺失" % where)
+        raise FormError("%s malformed: final.verdict missing" % where)
     audit_form = (verdict == "audit" and mode.get("audit") is True)
     chain_top = []
     if audit_form:
         if len(rounds) != 1:
-            raise FormError("%s 形坏：audit 形单轮·rounds=%d" % (where, len(rounds)))
+            raise FormError("%s malformed: audit form is single-round, rounds=%d"
+                            % (where, len(rounds)))
         r0 = rounds[0]
         ps = r0.get("probe_summary") if isinstance(r0, dict) else None
         if not isinstance(ps, dict):
-            raise FormError("%s 形坏：audit 形须 rounds[0].probe_summary 在" % where)
+            raise FormError("%s malformed: audit form requires rounds[0].probe_summary present"
+                            % where)
         ps_red = ps.get("red_files")
         if not isinstance(ps_red, list) or ps.get("n_red") != len(red_raw) \
                 or set(ps_red) != set(red_raw):
-            raise FormError("%s 形坏：probe_summary 红账与 final.red_files 不一致"
-                            "（账面自洽破）" % where)
+            raise FormError("%s malformed: probe_summary failing set inconsistent with"
+                            " final.red_files (record self-consistency broken)" % where)
         ct = r0.get("chain_top")
         if not isinstance(ct, list) or not all(isinstance(t, dict) for t in ct):
-            raise FormError("%s 形坏：audit 形须 rounds[0].chain_top 列表" % where)
+            raise FormError("%s malformed: audit form requires rounds[0].chain_top to be a list"
+                            % where)
         chain_top = ct
     red = sorted(set(red_raw))
     return {
@@ -177,31 +164,37 @@ def account_of(rep, path, tag):
     }
 
 
-# ---- 对比本体（纯 JSON 逻辑·确定性·零墙钟）------------------------------------
+# ---- comparison core (pure JSON logic; deterministic; zero wall-clock) ---------
 
 def comparability_reasons(old, new):
-    """可比性预检 → 理由列表（空＝可比）。audit 形两判＋候选面四元组逐项
-    比对——候选集不同即 incomparable 如实·禁跨集硬凑 delta。"""
+    """Comparability precheck -> reason list (empty = comparable). Two
+    audit-form judgments plus an item-by-item candidates_key four-tuple
+    comparison: a differing candidate set is incomparable, stated as is;
+    cross-set deltas are never force-fit."""
     rs = []
     if not old["audit_form"]:
-        rs.append("旧账非 audit 基线形（final.verdict=%s·mode.audit=%r）"
-                  "——本器只对比 unclog --audit 产堵账基线"
+        rs.append("old baseline is not audit-form (final.verdict=%s,"
+                  " mode.audit=%r); this tool compares only blockage baselines"
+                  " produced by unclog --audit"
                   % (old["verdict"], old["mode_audit"]))
     if not new["audit_form"]:
-        rs.append("新账非 audit 基线形（final.verdict=%s·mode.audit=%r）"
-                  "——本器只对比 unclog --audit 产堵账基线"
+        rs.append("new baseline is not audit-form (final.verdict=%s,"
+                  " mode.audit=%r); this tool compares only blockage baselines"
+                  " produced by unclog --audit"
                   % (new["verdict"], new["mode_audit"]))
     for field, label in CK_FIELDS:
         vo, vn = old["candidates_key"][field], new["candidates_key"][field]
         if vo != vn:
-            rs.append("%s 异：旧 %r ≠ 新 %r（候选集不同即 incomparable 如实）"
+            rs.append("%s differs: old %r != new %r (a differing candidate set"
+                      " is incomparable, stated as is)"
                       % (label, vo, vn))
     return rs
 
 
 def entries_of(acc):
-    """账 → 堵账条目 dict[（kind,key)]→entry：red-file 条目 {kind,key}·
-    wall-root 条目 {kind,key,reason,detail}（墙账因面随条走）。"""
+    """Record -> blockage entry dict[(kind, key)] -> entry: red-file entries
+    {kind, key}; wall-root entries {kind, key, reason, detail} (wall causes
+    travel with their entry)."""
     out = {}
     for k in acc["red_files"]:
         out[("red-file", k)] = {"kind": "red-file", "key": k}
@@ -214,13 +207,16 @@ def entries_of(acc):
 
 
 def sorted_entries(entries):
-    """条目 → (kind,key) 典序列表（确定性·同键 red-file 先于 wall-root）。"""
+    """Entries -> (kind, key)-sorted list (deterministic; for equal keys
+    red-file sorts before wall-root)."""
     return [entries[k] for k in sorted(entries)]
 
 
 def root_of(chain_top, name):
-    """红文件 → 链根归因：chain_top 各根 dependents 全表查·首中即根。查无
-    即 None（代差型/器因红/根出 TOP 榜——如实 null 禁猜）。"""
+    """Failing file -> chain-root attribution: scan the dependents tables of
+    the chain_top roots, first hit is the root. No hit -> None (generation-gap
+    failures, tool-caused failures, roots beyond the reported top list: null
+    as is, no guessing)."""
     for t in chain_top or []:
         if name in (t.get("dependents") or []):
             return t.get("lib")
@@ -228,9 +224,10 @@ def root_of(chain_top, name):
 
 
 def persistent_of(old, new, old_e, new_e):
-    """两账同堵条目（(kind,key) 典序）：墙根**按链根键·墙账逐因对齐**（old/
-    new 的 reason·detail＋reason_changed/detail_changed）·红文件附新账
-    chain_top 链根归因。"""
+    """Entries blocked in both baselines ((kind, key) order): wall roots
+    aligned cause by cause by chain-root key (old/new reason and detail plus
+    reason_changed/detail_changed); red-file entries carry the new baseline's
+    chain_top chain-root attribution."""
     out = []
     for k in sorted(set(old_e) & set(new_e)):
         kind, key = k
@@ -248,9 +245,10 @@ def persistent_of(old, new, old_e, new_e):
 
 
 def diff(old, new):
-    """两账 → diff 报告 dict（schema rocqwash-baseline-diff/1·零墙钟）。
-    不可比 → 三清单恒空·score_delta=null·verdict=incomparable（如实）；
-    可比 → 堵账三清单＋score_delta＋verdict（只认红账 n_red 增减）。"""
+    """Two records -> diff report dict (schema rocqwash-baseline-diff/1; zero
+    wall-clock). Incomparable -> three lists empty, score_delta null, verdict
+    incomparable (as is); comparable -> the three blockage lists plus
+    score_delta plus verdict (reading only the n_red movement)."""
     reasons = comparability_reasons(old, new)
     rep = {
         "schema": SCHEMA,
@@ -281,12 +279,14 @@ def diff(old, new):
 
 
 def score_of(acc):
-    """账 → score 摘要（红账数＋墙根数·堵账两量面）。"""
+    """Record -> score summary (failing-file count plus wall-root count; the
+    two blockage quantities)."""
     return {"n_red": acc["n_red"], "wall_count": acc["wall_count"]}
 
 
 def summary_of(acc):
-    """账 → 报告 old/new 摘要（路径只出基名·红账全列·墙根键列·候选面）。"""
+    """Record -> report old/new summary (path as basename, full failing list,
+    wall-root keys, candidate surface)."""
     return {"path": acc["path"], "verdict": acc["verdict"],
             "audit_form": acc["audit_form"], "n_red": acc["n_red"],
             "wall_count": acc["wall_count"], "red_files": acc["red_files"],
@@ -294,12 +294,13 @@ def summary_of(acc):
             "candidates_key": acc["candidates_key"]}
 
 
-# ---- markdown 出账（人类判读面·确定性）----------------------------------------
+# ---- markdown report (human reading face; deterministic) -----------------------
 
 def _md_cell(s):
-    """md 表格单元格：None→—·管柱转义·超长截断（确定性）。"""
+    """Markdown table cell: None -> "-", pipe escaped, overlong clipped
+    (deterministic)."""
     if s is None:
-        return "—"
+        return "-"
     s = str(s).replace("|", "\\|")
     if len(s) > CLIP_MD:
         s = s[:CLIP_MD - 3] + "..."
@@ -307,45 +308,45 @@ def _md_cell(s):
 
 
 def _delta_table(rep):
-    """score 表（incomparable 时 Δ 列如实 —）。"""
+    """Score table (delta column "-" when incomparable, as is)."""
     o, n = rep["old"], rep["new"]
     sd = rep["score_delta"]
-    d_red = _md_cell(sd["n_red"]) if sd else "—"
-    d_wall = _md_cell(sd["wall_count"]) if sd else "—"
-    return ["| 指标 | 旧账 | 新账 | Δ（新−旧） |", "|---|---|---|---|",
+    d_red = _md_cell(sd["n_red"]) if sd else "-"
+    d_wall = _md_cell(sd["wall_count"]) if sd else "-"
+    return ["| metric | old | new | delta (new - old) |", "|---|---|---|---|",
             "| n_red | %d | %d | %s |" % (o["n_red"], n["n_red"], d_red),
             "| wall_count | %d | %d | %s |" % (o["wall_count"], n["wall_count"],
                                                d_wall)]
 
 
 def report_md(rep):
-    """diff 报告 → markdown（确定性·同输入字节恒同）。"""
+    """Diff report -> markdown (deterministic; same input byte-identical)."""
     o, n = rep["old"], rep["new"]
-    lines = ["# Baseline Diff（堵账基线对比·%s）" % rep["schema"], ""]
-    lines.append("- 旧账: %s（verdict=%s·audit 形=%s·红 %d·墙 %d）"
+    lines = ["# Baseline Diff (blockage baseline comparison, %s)" % rep["schema"], ""]
+    lines.append("- old: %s (verdict=%s, audit form=%s, failing %d, wall %d)"
                  % (o["path"], o["verdict"], str(o["audit_form"]).lower(),
                     o["n_red"], o["wall_count"]))
-    lines.append("- 新账: %s（verdict=%s·audit 形=%s·红 %d·墙 %d）"
+    lines.append("- new: %s (verdict=%s, audit form=%s, failing %d, wall %d)"
                  % (n["path"], n["verdict"], str(n["audit_form"]).lower(),
                     n["n_red"], n["wall_count"]))
     ck = n["candidates_key"]
-    lines.append("- 候选面: source=%s src=%s candidates=%s chain_ledgers=%s"
+    lines.append("- candidate surface: source=%s src=%s candidates=%s chain_ledgers=%s"
                  % (ck["source"], ck["src"], ck["candidates"],
                     ",".join(ck["chain_ledgers"]) or "-"))
     lines.append("")
     lines.append("**verdict: %s**" % rep["verdict"])
     if rep["verdict"] == "incomparable":
         lines.append("")
-        lines.append("如实拒判（delta 恒空·score_delta=null）——理由：")
+        lines.append("Comparison refused as is (delta lists empty, score_delta null); reasons:")
         lines.extend("- %s" % r for r in rep["incomparable_reasons"])
     else:
         sd = rep["score_delta"]
         lines.append("")
-        lines.append("score_delta: n_red %+d（%d→%d）· wall_count %+d（%d→%d）"
+        lines.append("score_delta: n_red %+d (%d -> %d), wall_count %+d (%d -> %d)"
                      % (sd["n_red"], o["n_red"], n["n_red"],
                         sd["wall_count"], o["wall_count"], n["wall_count"]))
     lines.append("")
-    lines.append("## 新堵 new_blocks（%d）" % len(rep["new_blocks"]))
+    lines.append("## new_blocks (%d)" % len(rep["new_blocks"]))
     lines.append("")
     lines.append("| kind | key | reason | detail |")
     lines.append("|---|---|---|---|")
@@ -354,7 +355,7 @@ def report_md(rep):
                      % (e["kind"], _md_cell(e["key"]),
                         _md_cell(e.get("reason")), _md_cell(e.get("detail"))))
     lines.append("")
-    lines.append("## 清账 resolved_blocks（%d）" % len(rep["resolved_blocks"]))
+    lines.append("## resolved_blocks (%d)" % len(rep["resolved_blocks"]))
     lines.append("")
     lines.append("| kind | key | reason | detail |")
     lines.append("|---|---|---|---|")
@@ -363,104 +364,108 @@ def report_md(rep):
                      % (e["kind"], _md_cell(e["key"]),
                         _md_cell(e.get("reason")), _md_cell(e.get("detail"))))
     lines.append("")
-    lines.append("## 仍堵 persistent（%d）·按链根键·墙账逐因对齐"
+    lines.append("## persistent (%d) (chain-root keyed, wall causes aligned one by one)"
                  % len(rep["persistent"]))
     lines.append("")
-    lines.append("| kind | key | 旧因 | 新因 | 变化 | 链根归因 |")
+    lines.append("| kind | key | old reason | new reason | changed | chain-root attribution |")
     lines.append("|---|---|---|---|---|---|")
     for e in rep["persistent"]:
         if e["kind"] == "wall-root":
-            chg = "+".join([t for t, c in (("reason变", e["reason_changed"]),
-                                           ("detail变", e["detail_changed"]))
-                            if c]) or "无"
-            lines.append("| %s | %s | %s | %s | %s | — |"
+            chg = "+".join([t for t, c in (("reason", e["reason_changed"]),
+                                           ("detail", e["detail_changed"]))
+                            if c]) or "none"
+            lines.append("| %s | %s | %s | %s | %s | - |"
                          % (e["kind"], _md_cell(e["key"]),
                             _md_cell(e["old"]["reason"]),
                             _md_cell(e["new"]["reason"]), chg))
         else:
-            lines.append("| %s | %s | — | — | 仍红 | %s |"
+            lines.append("| %s | %s | - | - | still failing | %s |"
                          % (e["kind"], _md_cell(e["key"]),
                             _md_cell(e.get("root"))
-                            if e.get("root") is not None else "—（报告面不可归因）"))
+                            if e.get("root") is not None else "- (not attributable on the report face)"))
     lines.append("")
-    lines.append("## score（Δ＝新−旧·红减为负）")
+    lines.append("## score (delta = new - old; fewer failures is negative)")
     lines.append("")
     lines.extend(_delta_table(rep))
     lines.append("")
     lines.append("---")
     lines.append("")
-    lines.append("注：")
-    lines.append("- timing 段（耗时各段·实测墙钟逐跑必异）不入对比＝基线文件"
-                 "唯一非确定段（excluded_fields=%s）。" % json.dumps(rep["excluded_fields"]))
-    lines.append("- verdict 只认红账 n_red 增减（红减 improved／红增 degraded／"
-                 "同 stable）；墙账增减入上三清单不驱动 verdict。")
-    lines.append("- 退出码：0=improved/stable·1=degraded/incomparable"
-                 "（红是数据非器红·响亮 stdout）·2=输入形坏·9=路径缺失。")
+    lines.append("Notes:")
+    lines.append("- the timing segment (per-stage measured wall-clock, differs every run) is"
+                 " excluded from the comparison: the baseline file's only non-deterministic"
+                 " segment (excluded_fields=%s)." % json.dumps(rep["excluded_fields"]))
+    lines.append("- the verdict reads only the failing-file count n_red (fewer improved /"
+                 " more degraded / equal stable); wall movement lands in the three lists above"
+                 " and never drives the verdict.")
+    lines.append("- exit codes: 0=improved/stable, 1=degraded/incomparable (a failing result"
+                 " is data, not a tool failure; loud stdout), 2=malformed input, 9=missing"
+                 " path.")
     lines.append("")
     return "\n".join(lines)
 
 
-# ---- stdout 响亮进度 -----------------------------------------------------------
+# ---- loud stdout progress -------------------------------------------------------
 
 def _brief(entries, persistent=False, limit=8):
-    """条目列表 → 单行简报（超 8 项缩尾·确定性）。"""
+    """Entry list -> one-line brief (tail elided past 8 items; deterministic)."""
     if not entries:
         return "-"
     parts = []
     for e in entries[:limit]:
         if e["kind"] == "wall-root":
-            tag = "·因变" if (e.get("reason_changed")
-                              or e.get("detail_changed")) else ""
+            tag = ", cause-changed" if (e.get("reason_changed")
+                                        or e.get("detail_changed")) else ""
             parts.append("%s(wall-root%s)" % (e["key"], tag))
         elif persistent and e.get("root") is not None:
-            parts.append("%s(red-file→%s)" % (e["key"], e["root"]))
+            parts.append("%s(red-file -> %s)" % (e["key"], e["root"]))
         else:
             parts.append("%s(red-file)" % e["key"])
     if len(entries) > limit:
-        parts.append("…+%d" % (len(entries) - limit))
+        parts.append("...+%d" % (len(entries) - limit))
     return ", ".join(parts)
 
 
 def print_report(rep, old_path, new_path):
-    """响亮 stdout 进度（全路径走 stdout·verdict 收尾）。"""
+    """Loud stdout progress (full paths on stdout; verdict finale)."""
     o, n = rep["old"], rep["new"]
-    print("=== BASELINE-DIFF 堵账基线对比 ===")
-    print("old: %s 红 %d 墙 %d (verdict=%s·audit 形=%s)"
+    print("=== BASELINE-DIFF blockage baseline comparison ===")
+    print("old: %s failing %d wall %d (verdict=%s, audit form=%s)"
           % (old_path, o["n_red"], o["wall_count"], o["verdict"],
              str(o["audit_form"]).lower()))
-    print("new: %s 红 %d 墙 %d (verdict=%s·audit 形=%s)"
+    print("new: %s failing %d wall %d (verdict=%s, audit form=%s)"
           % (new_path, n["n_red"], n["wall_count"], n["verdict"],
              str(n["audit_form"]).lower()))
     ck = n["candidates_key"]
-    print("候选面: source=%s src=%s candidates=%s chain_ledgers=%s"
+    print("candidate surface: source=%s src=%s candidates=%s chain_ledgers=%s"
           % (ck["source"], ck["src"], ck["candidates"],
              ",".join(ck["chain_ledgers"]) or "-"))
     if rep["verdict"] == "incomparable":
-        print("INCOMPARABLE: 如实拒判（%d 项理由·delta 恒空·score_delta=null）:"
-              % len(rep["incomparable_reasons"]))
+        print("INCOMPARABLE: comparison refused as is (%d reasons; delta lists empty,"
+              " score_delta null):" % len(rep["incomparable_reasons"]))
         for r in rep["incomparable_reasons"]:
             print("  - %s" % r)
     else:
-        print("新堵 %d: %s" % (len(rep["new_blocks"]), _brief(rep["new_blocks"])))
-        print("清账 %d: %s" % (len(rep["resolved_blocks"]),
-                               _brief(rep["resolved_blocks"])))
-        print("仍堵 %d: %s" % (len(rep["persistent"]),
-                               _brief(rep["persistent"], persistent=True)))
+        print("new_blocks %d: %s" % (len(rep["new_blocks"]), _brief(rep["new_blocks"])))
+        print("resolved_blocks %d: %s" % (len(rep["resolved_blocks"]),
+                                          _brief(rep["resolved_blocks"])))
+        print("persistent %d: %s" % (len(rep["persistent"]),
+                                     _brief(rep["persistent"], persistent=True)))
     sd = rep["score_delta"]
     if sd is None:
-        print("VERDICT: incomparable（候选集异等如实拒判）")
+        print("VERDICT: incomparable (refused as is, e.g. differing candidate sets)")
     else:
-        print("VERDICT: %s（n_red %d→%d Δ%+d·wall_count %d→%d Δ%+d）"
+        print("VERDICT: %s (n_red %d -> %d delta%+d, wall_count %d -> %d delta%+d)"
               % (rep["verdict"], o["n_red"], n["n_red"], sd["n_red"],
                  o["wall_count"], n["wall_count"], sd["wall_count"]))
 
 
-# ---- selftest（内嵌矢量组·tmp 合成账·零网络零编译零触真仓）---------------------
+# ---- selftest (embedded vectors; tmp-synthesized baselines; zero network, zero build, zero real-repo touch) ----
 
 def _mk_audit(red, wall, chain_top, src="src", candidates=None, ledgers=None,
               timing=None, verdict="audit", audit_mode=True, extra_args=None):
-    """合成一份 unclog --audit 形基线（fixture 级·形同 unclog.py:794 run_audit
-    产出·字段取自其 report 构造）。"""
+    """Synthesize one unclog --audit-form baseline (fixture grade; shape as
+    produced by unclog.py run_audit, fields taken from its report
+    construction)."""
     red = sorted(set(red))
     source = "chain-ledgers" if ledgers else "probe"
     args = {"rounds": 5, "top": 25, "scan_ids": None, "apply": False,
@@ -492,7 +497,7 @@ def _mk_audit(red, wall, chain_top, src="src", candidates=None, ledgers=None,
 
 
 def _top1(lib, dependents, washable=True):
-    """chain_top 条目（chain_graph libs 形·self 三态）。"""
+    """chain_top entry (chain_graph libs shape; self tri-state)."""
     return {"lib": lib, "n": len(dependents), "dependents": list(dependents),
             "self": {"probed": True, "rc": 0 if washable else 1,
                      "verdict": "GREEN" if washable else "RED-OTHER",
@@ -500,15 +505,17 @@ def _top1(lib, dependents, washable=True):
 
 
 def _wall1(root, reason, detail):
-    """wall 条目（unclog wall_add 形）。"""
+    """wall entry (unclog wall_add shape)."""
     return {"root": root, "reason": reason, "detail": detail}
 
 
 def selftest():
-    """内嵌矢量组（tmp 合成基线·零触真仓零网络零编译）：improved（红减）/
-    degraded（红增＋墙因变）/stable（同·异 timing 实证不入对比）＋幂等字节
-    恒同＋零写输入/incomparable（候选集异＋非 audit 形）＋形坏 rc2／缺件 rc9/
-    md 输出/CLI 四码。"""
+    """Embedded vector group (tmp-synthesized baselines; zero real-repo touch,
+    zero network, zero build): improved (fewer failures) / degraded (more
+    failures plus wall cause change) / stable (equal; differing timing proves
+    exclusion) plus byte-identical idempotence plus unwritten inputs /
+    incomparable (differing candidate set plus non-audit form) / malformed
+    rc=2 / missing rc=9 / md output / CLI four exit codes."""
     import shutil
     import subprocess
     import tempfile
@@ -528,14 +535,15 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_baslinediff_self_")
     try:
-        W_UNPROBED = _wall1("Y", "unprobed", "根件未入候选集（UNPROBED·候补探）")
+        W_UNPROBED = _wall1("Y", "unprobed", "root file not in candidate set (UNPROBED; pending probe)")
         W_SELFUN = _wall1("Y", "self-unwashable",
-                          "根件自身被阻 rc=1 verdict=RED-OTHER（链中环·先治根的因）")
+                          "root file itself blocked rc=1 verdict=RED-OTHER (cycle in the chain; treat the root cause first)")
         W_FROZEN = _wall1("Z", "frozen-in-service",
-                          "根名/根件撞 frozen8 在册（预检红拒·人审域）")
+                          "root name/root file collides with the frozen8 register (preflight failing refusal; human-review domain)")
 
-        # 矢量① improved（红减）：红 3→1·墙账同（Y 同因同 detail·逐因对齐
-        #   reason_changed=False）·清账 C1/D1·仍堵 B 归因链根 A·rc=0
+        # vector 1 improved (fewer failures): failing 3 -> 1; wall equal (Y same
+        #   reason and detail, aligned per cause, reason_changed=False); resolved
+        #   C1/D1; persistent B attributed to chain root A; rc=0
         old1 = _mk_audit(["B", "C1", "D1"], {"Y": W_SELFUN},
                          [_top1("A", ["B", "C1", "D1"])],
                          candidates="cands.tsv")
@@ -548,7 +556,7 @@ def selftest():
         dump(fn, new1)
         j1 = os.path.join(tmp, "diff1.json")
         p = run([fo, fn, "--json", j1])
-        assert p.returncode == 0, "红减应 rc=0 实测 %d\n%s" % (p.returncode, p.stdout)
+        assert p.returncode == 0, "fewer failures should give rc=0, got %d\n%s" % (p.returncode, p.stdout)
         r = json.load(io.open(j1, encoding="utf-8"))
         assert r["schema"] == SCHEMA and r["verdict"] == "improved", r["verdict"]
         assert r["comparable"] is True and r["incomparable_reasons"] == [], r
@@ -567,12 +575,14 @@ def selftest():
                      "detail": W_SELFUN["detail"]},
              "reason_changed": False, "detail_changed": False}], r["persistent"]
         assert r["old"]["path"] == "audit-wash-20261101.json" \
-            and r["new"]["path"] == "audit-wash-20261111.json", "路径应只出基名"
+            and r["new"]["path"] == "audit-wash-20261111.json", "paths must be basenames only"
         assert "VERDICT: improved" in p.stdout, p.stdout
-        print("矢量① improved（红减·清账 C1/D1·墙因对齐无变·rc0）: PASS")
+        print("vector 1 improved (fewer failures, resolved C1/D1, wall causes aligned unchanged, rc0): PASS")
 
-        # 矢量② degraded（红增）：红 1→3·墙 Y 因变（unprobed→self-unwashable）
-        #   ＋新墙根 Z（frozen）·新堵含红文件与墙根两形·rc=1（红是数据非器红）
+        # vector 2 degraded (more failures): failing 1 -> 3; wall Y reason changed
+        #   (unprobed -> self-unwashable) plus new wall root Z (frozen);
+        #   new_blocks carries both red-file and wall-root kinds; rc=1 (a failing
+        #   result is data, not a tool failure)
         old2 = _mk_audit(["B"], {"Y": W_UNPROBED}, [_top1("A", ["B"])],
                          candidates="cands.tsv")
         new2 = _mk_audit(["B", "C1", "D1"], {"Y": W_SELFUN, "Z": W_FROZEN},
@@ -583,7 +593,7 @@ def selftest():
         dump(fn2, new2)
         j2 = os.path.join(tmp, "diff2.json")
         p = run([fo2, fn2, "--json", j2])
-        assert p.returncode == 1, "红增应 rc=1 实测 %d\n%s" % (p.returncode, p.stdout)
+        assert p.returncode == 1, "more failures should give rc=1, got %d\n%s" % (p.returncode, p.stdout)
         r2 = json.load(io.open(j2, encoding="utf-8"))
         assert r2["verdict"] == "degraded", r2["verdict"]
         assert r2["score_delta"] == {"n_red": 2, "wall_count": 1}, r2["score_delta"]
@@ -601,12 +611,14 @@ def selftest():
              "reason_changed": True, "detail_changed": True}], r2["persistent"]
         assert "INCOMPARABLE" not in p.stdout and "VERDICT: degraded" in p.stdout, \
             p.stdout
-        print("矢量② degraded（红增＋墙因变 unprobed→self-unwashable＋新墙根·rc1）: PASS")
+        print("vector 2 degraded (more failures, wall reason change unprobed -> self-unwashable, new wall root, rc1): PASS")
 
-        # 矢量③ stable（同）＋timing 不入对比＋幂等字节恒同＋零写输入：
-        #   双账同堵账·timing 异（total_s 1.111 vs 9.999）·args 异 timeout——
-        #   均不入候选面不入对比 → stable·链根归因 B→A/C1→null 两面全证·
-        #   重跑 --json/--md 字节恒同·输入零被动
+        # vector 3 stable (equal) plus timing excluded plus byte-identical
+        #   idempotence plus unwritten inputs: both records carry the same
+        #   blockages; timing differs (total_s 1.111 vs 9.999) and args timeout
+        #   differs; neither enters the candidate surface nor the comparison ->
+        #   stable; chain-root attribution proved on both faces (B -> A,
+        #   C1 -> null); --json/--md reruns byte-identical; inputs untouched
         old3 = _mk_audit(["B", "C1"], {"Y": W_SELFUN},
                          [_top1("A", ["C1"], washable=False)],
                          candidates="cands.tsv",
@@ -638,38 +650,40 @@ def selftest():
              "old": {"reason": "self-unwashable", "detail": W_SELFUN["detail"]},
              "new": {"reason": "self-unwashable", "detail": W_SELFUN["detail"]},
              "reason_changed": False, "detail_changed": False}], r3["persistent"]
-        assert "timing" not in r3, "timing 段不得入对比报告"
-        # 幂等：重跑字节恒同（json＋md 双面）
+        assert "timing" not in r3, "timing segment must not enter the comparison report"
+        # idempotence: reruns byte-identical (json and md faces)
         before_j, before_m = io.open(j3, "rb").read(), io.open(m3, "rb").read()
         p = run(cmd3)
         assert p.returncode == 0, p.stdout
-        assert io.open(j3, "rb").read() == before_j, "json 字节漂移＝违例"
-        assert io.open(m3, "rb").read() == before_m, "md 字节漂移＝违例"
-        # 零写输入：两份基线字节被动即违例
+        assert io.open(j3, "rb").read() == before_j, "json byte drift = violation"
+        assert io.open(m3, "rb").read() == before_m, "md byte drift = violation"
+        # unwritten inputs: either baseline changed in bytes is a violation
         assert io.open(fo3, "rb").read() == raw_o \
-            and io.open(fn3, "rb").read() == raw_n, "基线输入被写＝违例"
-        print("矢量③ stable（同·异 timing 异 timeout 不入对比·json/md 幂等"
-              "字节恒同·输入零被动）: PASS")
+            and io.open(fn3, "rb").read() == raw_n, "baseline input written = violation"
+        print("vector 3 stable (equal; differing timing and timeout excluded; json/md"
+              " byte-identical reruns; inputs untouched): PASS")
 
-        # 矢量④ incomparable（候选集异如实）：候选清单异 → rc1·delta 恒空·
-        #   score_delta=null·理由列明四元组异项；非 audit 形混入同判 incomparable
+        # vector 4 incomparable (differing candidate set, as is): differing
+        #   candidate list -> rc1, delta lists empty, score_delta null, reasons
+        #   name the differing four-tuple items; non-audit-form input judged
+        #   incomparable likewise
         fn4 = os.path.join(tmp, "new4_othercands.json")
         dump(fn4, _mk_audit(["B", "C1"], {"Y": W_SELFUN},
                             [_top1("A", ["B", "C1"], washable=False)],
                             candidates="other.tsv"))
         j4 = os.path.join(tmp, "diff4.json")
         p = run([fo3, fn4, "--json", j4])
-        assert p.returncode == 1, "候选集异应 rc=1 实测 %d\n%s" \
+        assert p.returncode == 1, "differing candidate set should give rc=1, got %d\n%s" \
             % (p.returncode, p.stdout)
         r4 = json.load(io.open(j4, encoding="utf-8"))
         assert r4["verdict"] == "incomparable" and r4["comparable"] is False, r4
         assert any("candidates" in x for x in r4["incomparable_reasons"]), \
             r4["incomparable_reasons"]
         assert r4["new_blocks"] == [] and r4["resolved_blocks"] == [] \
-            and r4["persistent"] == [], "不可比 delta 应恒空"
+            and r4["persistent"] == [], "incomparable delta lists must be empty"
         assert r4["score_delta"] is None, r4["score_delta"]
-        assert r4["score"]["old"]["n_red"] == 2, "账面摘要应仍在（如实）"
-        # ④b 非 audit 形混入（闭环活跑报告·verdict=wall）
+        assert r4["score"]["old"]["n_red"] == 2, "record summary must still be present (as is)"
+        # vector 4b non-audit form mixed in (closed-loop live run report, verdict=wall)
         fn4b = os.path.join(tmp, "new4b_closedloop.json")
         dump(fn4b, _mk_audit(["B", "C1"], {"Y": W_SELFUN},
                              [_top1("A", ["B", "C1"], washable=False)],
@@ -679,64 +693,69 @@ def selftest():
         assert p.returncode == 1, p.stdout
         r4b = json.load(io.open(j4b, encoding="utf-8"))
         assert r4b["verdict"] == "incomparable" and \
-            any("audit 基线形" in x for x in r4b["incomparable_reasons"]), \
+            any("not audit-form" in x for x in r4b["incomparable_reasons"]), \
             r4b["incomparable_reasons"]
         assert r4b["score_delta"] is None, r4b["score_delta"]
-        print("矢量④ incomparable（候选清单异 rc1·delta 恒空 score_delta=null·"
-              "非 audit 形如实拒判）: PASS")
+        print("vector 4 incomparable (differing candidate list rc1, delta lists empty,"
+              " score_delta null, non-audit form refused as is): PASS")
 
-        # 矢量⑤ md 输出：improved 账 --md 落盘·判读面全段在（verdict/三清单/
-        #   score 表/timing 注记/退出码口径）·基名在册·管柱转义防冲表
+        # vector 5 md output: improved record --md written; all reading-face
+        #   sections present (verdict / three lists / score table / timing note /
+        #   exit codes); basenames registered; pipe escaping protects the table
         m5 = os.path.join(tmp, "diff1.md")
         p = run([fo, fn, "--md", m5])
         assert p.returncode == 0, p.stdout
         md = io.open(m5, encoding="utf-8").read()
-        assert "verdict: improved" in md and "新堵 new_blocks（0）" in md \
-            and "清账 resolved_blocks（2）" in md \
-            and "仍堵 persistent（2）·按链根键·墙账逐因对齐" in md, md[:400]
-        assert "| n_red | 3 | 1 | -2 |" in md, "score 表 Δ 面缺失\n" + md
-        assert "timing 段" in md and "不入对比" in md, "timing 注记缺失"
+        assert "verdict: improved" in md and "## new_blocks (0)" in md \
+            and "## resolved_blocks (2)" in md \
+            and "## persistent (2) (chain-root keyed, wall causes aligned one by one)" in md, md[:400]
+        assert "| n_red | 3 | 1 | -2 |" in md, "score table delta row missing\n" + md
+        assert "timing segment" in md and "excluded from the comparison" in md, "timing note missing"
         assert "audit-wash-20261101.json" in md \
-            and "audit-wash-20261111.json" in md, "基名应入 md"
-        assert "退出码：0=improved/stable" in md, "退出码口径缺失"
-        print("矢量⑤ md 输出（verdict/三清单/score 表/timing 注记/退出码口径）: PASS")
+            and "audit-wash-20261111.json" in md, "basenames must appear in md"
+        assert "exit codes: 0=improved/stable" in md, "exit-code caliber missing"
+        print("vector 5 md output (verdict / three lists / score table / timing note / exit codes): PASS")
 
-        # 矢量⑥ CLI 四码＋形坏拒判不出账：--help 0／未知形参 2／缺参 2／
-        #   形坏（schema 错/账面自洽破）2 且 --json 不落盘／缺件 9
+        # vector 6 CLI four exit codes plus malformed-input refusal with no
+        #   report: --help 0 / unknown flag 2 / missing args 2 / malformed (wrong
+        #   schema or broken self-consistency) 2 with --json not written /
+        #   missing file 9
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag should give rc=2, got %d" % p.returncode
         p = run([])
-        assert p.returncode == 2, "缺两账应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "missing both baselines should give rc=2, got %d" % p.returncode
         p = run([fo])
-        assert p.returncode == 2, "缺新账应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "missing the new baseline should give rc=2, got %d" % p.returncode
         fbad_schema = os.path.join(tmp, "bad_schema.json")
         dump(fbad_schema, {"schema": "rocqwash-other/1", "verdict": "audit"})
         jbad = os.path.join(tmp, "bad_out.json")
         p = run([fo, fbad_schema, "--json", jbad])
         assert p.returncode == 2 and "FAIL-LOUD" in p.stdout, p.stdout
-        assert not os.path.exists(jbad), "形坏拒判应零出账（fail-loud）"
+        assert not os.path.exists(jbad), "malformed input must emit no report (fail-loud)"
         fbad_integ = os.path.join(tmp, "bad_integ.json")
         bad = _mk_audit(["B"], {"Y": W_SELFUN}, [_top1("A", ["B"])])
-        bad["final"]["wall_count"] = 5  # 账面自洽破：|wall|=1≠5
+        bad["final"]["wall_count"] = 5  # self-consistency broken: |wall|=1 != 5
         dump(fbad_integ, bad)
         p = run([fo, fbad_integ])
-        assert p.returncode == 2 and "账面自洽破" in p.stdout, p.stdout
+        assert p.returncode == 2 and "self-consistency broken" in p.stdout, p.stdout
         fbad_json = os.path.join(tmp, "bad.json")
         with io.open(fbad_json, "w", encoding="utf-8") as fh:
-            fh.write("{非 JSON 垃圾")
+            fh.write("{not JSON garbage")
         p = run([fo, fbad_json])
-        assert p.returncode == 2 and "解析失败" in p.stdout, p.stdout
+        assert p.returncode == 2 and "parse failure" in p.stdout, p.stdout
         p = run([fo, os.path.join(tmp, "nope.json")])
-        assert p.returncode == 9, "缺新账文件应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "missing new baseline file should give rc=9, got %d" % p.returncode
         p = run([os.path.join(tmp, "nope.json"), fn])
-        assert p.returncode == 9, "缺旧账文件应 rc=9 实测 %d" % p.returncode
-        print("矢量⑥ CLI 四码（0/2/9·形坏拒判零出账·账面自洽拦手编）: PASS")
+        assert p.returncode == 9, "missing old baseline file should give rc=9, got %d" % p.returncode
+        print("vector 6 CLI exit codes (0/2/9, malformed refusal emits nothing, self-consistency blocks hand-edited records): PASS")
 
-        print("BASELINE-DIFF-SELFTEST PASS: 六矢量全过（improved 红减/degraded"
-              " 红增＋墙因变/stable 同＋timing 不入对比＋幂等字节恒同＋零写输入/"
-              "incomparable 候选集异＋非 audit 形/md 输出/CLI 四码＋形坏拒判）")
+        print("BASELINE-DIFF-SELFTEST PASS: six vectors all pass (improved fewer"
+              " failures / degraded more failures plus wall cause change / stable"
+              " equal plus timing excluded plus byte-identical reruns plus unwritten"
+              " inputs / incomparable differing candidate set plus non-audit form /"
+              " md output / CLI four exit codes plus malformed refusal)")
         return 0
     except AssertionError as e:
         print("BASELINE-DIFF-SELFTEST FAIL: %s" % e)
@@ -750,16 +769,19 @@ def main():
     if "--selftest" in argv:
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
-        prog=PROG, description="两份 unclog --audit 堵账基线对比→堵账增减报告"
-                               "（new_blocks/resolved_blocks/persistent·"
-                               "score_delta·verdict 四态·--md 报告）")
+        prog=PROG, description="compare two unclog --audit blockage baselines"
+                               " into a blockage delta report (new_blocks /"
+                               " resolved_blocks / persistent, score_delta,"
+                               " four-state verdict, --md report)")
     ap.add_argument("old", metavar="OLD.json",
-                    help="旧堵账基线（argv 序＝旧→新·时间序调用方自保证）")
-    ap.add_argument("new", metavar="NEW.json", help="新堵账基线")
+                    help="old blockage baseline (argv order old then new;"
+                         " chronological order owned by the caller)")
+    ap.add_argument("new", metavar="NEW.json", help="new blockage baseline")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="diff 报告 JSON 出账（schema rocqwash-baseline-diff/1）")
+                    help="write the diff report as JSON (schema"
+                         " rocqwash-baseline-diff/1)")
     ap.add_argument("--md", default=None, metavar="out.md",
-                    help="diff 报告 markdown 出账（人类判读面）")
+                    help="write the diff report as markdown (human reading face)")
     args = ap.parse_args(argv)
 
     try:
@@ -768,8 +790,8 @@ def main():
         pass
 
     try:
-        old_acc = load_baseline(args.old, "旧")
-        new_acc = load_baseline(args.new, "新")
+        old_acc = load_baseline(args.old, "old")
+        new_acc = load_baseline(args.new, "new")
     except MissingPath as e:
         print("FAIL-LOUD: %s" % e, file=sys.stderr)
         sys.exit(9)
@@ -789,7 +811,7 @@ def main():
                     fh.write(text)
                 print("%s -> %s" % ("json" if path == args.json else "md", path))
             except OSError as e:
-                print("FAIL-LOUD: 出账写盘失败: %s（%s）" % (path, e),
+                print("FAIL-LOUD: report write failure: %s (%s)" % (path, e),
                       file=sys.stderr)
                 sys.exit(9)
 

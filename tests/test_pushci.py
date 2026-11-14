@@ -352,7 +352,7 @@ def check_s1(scen, res):
         "preflight.toolchain 应 healthy/0 实测 %r" % f["preflight"].get("toolchain")
     assert f["preflight"].get("net") == {"verdict": "STABLE", "rc": 0}, \
         "preflight.net 应 STABLE/0 实测 %r" % f["preflight"].get("net")
-    assert any("flat 注入形" in e for e in
+    assert any("flat injection shape" in e for e in
                (res["report"].get("evidence") or [])), \
         "flat 形 preflight 缺省绿应响亮注记在册: %r" % res["report"].get("evidence")
     # push 段：sha=远端 tip（ls-remote 复核·远端为准）·单发 rc0·无 ghproxy
@@ -425,7 +425,7 @@ def check_s3(scen, res):
     assert lt.get("family") == "A-content-red" \
         and lt.get("action") == "fix-content", \
         "内容红判类应 A-content-red/fix-content（last_triage）实测 %r" % lt
-    assert any("零 rerun" in e for e in
+    assert any("zero rerun" in e for e in
                ((res["report"].get("evidence") or [])
                 + list(lt.get("evidence") or []))), \
         "证据面应响亮在册（零 rerun）: %r" % res["report"].get("evidence")
@@ -452,7 +452,7 @@ def check_s4(scen, res):
     assert f["watch"].get("rounds") == exp["watch_rounds"], \
         "watch.rounds 应 %d（三 NETRED 轮）实测 %r" % (
             exp["watch_rounds"], f["watch"].get("rounds"))
-    assert any("帽" in e for e in (res["report"].get("evidence") or [])), \
+    assert any("cap reached" in e for e in (res["report"].get("evidence") or [])), \
         "证据面应响亮在册（heal 帽达）: %r" % res["report"].get("evidence")
     return "S4 heal 耗尽（NETRED×3·--max-heal 2·verdict heal-exhausted·exit 1）"
 
@@ -504,7 +504,7 @@ def check_s7(scen, res):
     # 「PLAN 」前缀）
     assert any("[1] preflight.toolchain" in ln for ln in f["plan"]), f["plan"]
     assert any("[1] preflight.net" in ln for ln in f["plan"]), f["plan"]
-    assert any("[1] preflight.gate4" in ln and "未启" in ln
+    assert any("[1] preflight.gate4" in ln and "not enabled" in ln
                for ln in f["plan"]), f["plan"]
     # push 计划行：HTTP/1.1 推送形＋分支 main（refs/heads/main 直推路线）
     assert any("[2] push" in ln and "HTTP/1.1" in ln and " main" in ln

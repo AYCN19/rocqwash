@@ -1,93 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""registry_audit.py — 注册册卫生审计器：双册只读出账＋确定性处方（rocqwash tools/·
-v35 登记候卫生波判例代码化·20261111 入账）
+"""registry_audit.py: registry hygiene auditor for the order.txt/_CoqProject book pair: four read-only audits plus a deterministic fix plan (rocqwash tools/).
 
-v35 判例（登记候卫生波·任务书背景）：Set 仓 order.txt/_CoqProject 双册既有 12 模块
-重复行（#40 直并遗留——键同锚异的世系行，registry_union.py:8「坑判例」同源）＋6 锚
-文本重复（R0-d66910/R97-b44a002/3/R0-18dbeac/R97-b43a001/2——跨批携锚撞文本）＋顺序
-号形锚（b48a 系——git 史可勘：e3dc1b8 时代该行缺锚，b3ae0ad 铸 b48a001-014 七位签；
-本仓现存 LW2TrigBridge.v#R152-TBR880 与 u5c_inst_e.v#R43a003 两行在 registry_union
-ANCHOR_RE 口径下皆读作无指纹顺序号形）。本器把该波逐项人工勘验代码化：四账只读出账
-——病灶是数据非器红（ci_triage.py「红是数据非器红·恒 exit 0 响亮出账」同律）。
+Purpose.  Read-only hygiene audits over the order.txt/_CoqProject registry pair: duplicate
+  rows under one key; order-book anchor defects (anchor-text collisions, seq-form,
+  malformed, missing anchors); cross-book orphans on the .v base-name basis; optional
+  --live-src topology reconciliation. Findings are data, not tool failures: loud stdout
+  report, still exit 0; the only writes are the explicit --json/--md output paths.
 
-键式与锚正典零重造（编排零新引擎）：直接 import tools/registry_union.py 同款函数——
-  键式 key_of（registry_union.py:152）：
-    order       行首到首 #（注释/代签止）——键含 .v（如 Local/LW0.v）；
-    coqproject  末个 / 后去 .v 扩展名——键为裸名（如 Arch/ToyR_01.v→ToyR_01）。
-  锚读形 anchor_of/ANCHOR_RE（registry_union.py:81/170）：行内首 #R<序>[-<hex>]；
-  锚正典＝#R<序>-<md5 前 8 hex 小写>（registry_union --reanchor 产出形·wash_shape ⑤
-  锚形洗同源）。非正典逐类如实录：
-    顺序号形  读形无指纹（#R97；#R43a003 读作 #R43、#R152-TBR880 读作 #R152 同归此）；
-    形怪      指纹槽在而非 8 位小写 hex（b48a 系七位签、六位历史铸签 d66910 系、
-              大写 hex、超长）；
-    缺锚      键行无 #R 可读 token。
+Interface.  python3 tools/registry_audit.py --order ORDER.txt --project _CoqProject
+  [--live-src DIR] [--anchor-src DIR] [--json FILE] [--md FILE] [--fix-plan], or --git REPO
+  --ref REF [--git-path-order PATH] [--git-path-project PATH] (exclusive input forms), or
+  --selftest. Key/anchor canonical forms come from registry_union; findings carry exactly
+  {key, lines, kind, evidence}; --json emits schema rocqwash-registry-audit/1 (sections
+  {duplicates, anchors, orphans, live}, live null without --live-src, summary.by_kind);
+  --md the markdown form. --fix-plan grammar (plan-executor contract, defined here): DEDUP
+  book=<book> key='<key>' keep=L<first> drop=L<rest>; ORPHAN-ADD book=<book> key='<base>'
+  template='<row>'; reanchor via the registry_union --reanchor command.
 
-四账（审计项）：
-  ① 重复行账   同键多行逐键列行号组（order/coqproject 各审·键式如上；order 侧
-               锚异注记＝键同锚异世系形，#40 直并遗留判例）。
-  ② 锚账       order 册专审（coqproject 行无锚——wash_shape ⑤ 同律）：锚撞文本
-               （不同键同锚文本·registry_union A3 dup_pairs 读形同款口径）/顺序号
-               形/形怪/缺锚 逐类。
-  ③ 孤儿账     order 有键而 coqproject 无对应（.v 基名口径：order 键剥 .v 取末段
-               路径分量）或反之。order 侧非 .v 键行与 coqproject 旗标/注释行
-               （-Q . "" 等非 .v 结尾行）滤除不参匹配（registry_union「两侧恒同
-               即滤」同律）——滤除数入 stats 不入病灶。
-  ④ 拓扑引用账 可选 --live-src DIR：order 键行（relpath 形·无 .v 尾者补 .v，
-               registry_union resolve_entity 同律）对目录 .v 实件（os.walk 全索引
-               ·posix 相对路径）双向对账——缺件（表有盘无）/多件（盘有表无），
-               relpath 全等口径（select_audit world_index 同款索引法）。
+Dependencies.  Python 3 stdlib only; no third-party imports, no network, no build step. Peer
+  tools/registry_union.py supplies key/anchor canonical definitions and md5 helpers
+  (imported, never modified; import failure exits 9); bash 3.2 compatible via cw.sh.
 
-输入两形（互斥）：
-  双册文件形  --order PATH --project PATH（须成对·缺一即用法错）；
-  git 直读形  --git REPO --ref X（subprocess git -C REPO show REF:PATH——
-              registry_union git_show 同款；--git-path-order/--git-path-project
-              可覆写，缺省 order.txt/_CoqProject）。
-  可选：--live-src DIR（④账）/ --anchor-src DIR（处方 md5 源·wash_shape ⑤ 同律）。
+Evidence.  --selftest: full finding-class spectrum on tmp fixtures; frozen registry_union md5
+  vector "module A content alpha\\n" -> 77c2b9a8; read-only proof via before/after md5 equality;
+  --git form on a tmp clone (bad ref exits 9); CLI exit codes; byte-identical reruns.
 
-输出：--json schema rocqwash-registry-audit/1（sort_keys 确定性·sections{duplicates,
-anchors,orphans,live?}——live 未开时为 null（缺席旁证如实记·push_gate NOT-RUN 同款
-诚实律）·每病灶恰 {key,lines[],kind,evidence} 四键·summary 计数含 by_kind）＋ --md
-出人读台账（markdown·与 JSON 同序）。--fix-plan 只出确定性处方（零写盘——**--apply
-不存在**·处方留 v39 执行器）：
-  dedup 保首    DEDUP book=<册> key='<键>' keep=L<首> drop=L<余,…>（keep=min 行号）；
-  锚刷          直用既有引擎（编排零新引擎）：python3 tools/registry_union.py
-                --main/--base/--branch 同册（或 --git REPO --ref-* 三同 ref）
-                --kind order --reanchor <裸名> --anchor-src <SRC> --out <OUT> --apply
-                ——md5 对 --anchor-src 落地实件重算（registry_union md5_8_of 同款）；
-                给了 --anchor-src 且实件唯一命中即嵌实值（期望锚 #R<序>-<md5_8>），
-                未给/缺件/歧义嵌 <MD5_8> 占位（wash_shape ⑤ plan-miss 同律·不硬造）；
-  孤儿补行模板  ORPHAN-ADD book=<册> key='<基名>' template='<补行>'——order 方向模板
-                <proj原行>#R<SEQ>-<md5_8|占位>（序号须注册决定·非机械可造）；
-  非机械可解    正典形锚撞（8 位 md5 同签＝同内容或误植——重锚重算不改值）如实列
-                人工分判。
-锚刷靶面＝顺序号形/形怪诸键（处方 lines＝该键全表行——registry_union apply_reanchor
-重写该键全表行同口径·正典形撞不列靶）。处方命令文法（DEDUP/ORPHAN-ADD）为
-v39 执行器契约·本文法即定义。
-
-只读纪律（本器铁律）：审计面（--order/--project/--git/--live-src/--anchor-src 指认
-的双册与目录树）零写零触；--apply 形参不存在（喂了即 argparse 用法错 exit 2）；写
-面恰为显式 --json/--md 出账路径（调用方指认）。行号口径＝剥终止符行序 1 基（尾空行
-不计·registry_union read_side 同款）。
-
-退出码：0=出账（病灶是数据·count>0 仍 0·响亮 stdout）；1=--selftest 炸；
-2=用法错（形参咬合/无输入面/半册）；9=输入缺（册件/git show/live-src/anchor-src
-缺）。
-
-用法：
-  python3 tools/registry_audit.py --order ORDER.txt --project _CoqProject \
-      [--live-src DIR] [--anchor-src DIR] [--json out.json] [--md out.md] [--fix-plan]
-  python3 tools/registry_audit.py --git REPO --ref REF [--git-path-order PATH] \
-      [--git-path-project PATH] [同上可选参]
-  python3 tools/registry_audit.py --selftest
-
-确定性：无时间戳无环境噪声·同输入重跑 --json/--md/stdout 字节级恒同（selftest 断
-言）；纯 stdlib 零第三方零网络零编译。
---selftest 矢量（tmp 合成·v35 真账形态样张·零触真仓零网络）：重复行/锚撞/顺序号形/
-形怪/缺锚/孤儿/旗标滤除/live 缺件多件 各判＋处方行正确性（dedup 保首·锚刷命令含正
-确 md5——"module A content alpha\\n"→77c2b9a8 registry_union 冻结向量）＋只读实证
-（双册与 live 树前后 md5 恒同·--apply 不存在）＋--git 直读（本地 tmp clone·坏 ref
-9）＋CLI 四码＋确定性重跑恒同。
+Exit-codes.  0 = audit reported (findings are data; total > 0 still exits 0); 1 = --selftest
+  failed; 2 = usage error (forms mixed, no input, one book of the pair missing, unknown flag,
+  nonexistent --apply); 9 = missing input (book, git show, --live-src, --anchor-src missing).
 """
 import argparse
 import hashlib
@@ -103,10 +44,10 @@ _TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 if _TOOLS_DIR not in sys.path:
     sys.path.insert(0, _TOOLS_DIR)
 try:
-    import registry_union as _ru  # noqa: E402  （键式/锚正典正本·只 import 不改）
+    import registry_union as _ru  # noqa: E402  (key/anchor canonical source; import only, never modify)
 except Exception as _e:  # pragma: no cover
-    print("FAIL-LOUD: 同侪 tools/registry_union.py 不可导入（键式/锚正典零重造"
-          "依赖）: %s" % _e, file=sys.stderr)
+    print("FAIL-LOUD: peer tools/registry_union.py not importable (key/anchor canonical "
+          "dependency): %s" % _e, file=sys.stderr)
     sys.exit(9)
 
 PROG = "registry_audit"
@@ -115,15 +56,15 @@ SCHEMA = "rocqwash-registry-audit/1"
 KIND_ORDER = _ru.KIND_ORDER          # "order"
 KIND_COQPROJECT = _ru.KIND_COQPROJECT  # "coqproject"
 
-# 锚正典：#R<序>-<md5 前 8 hex 小写>（registry_union --reanchor 产出形·wash_shape ⑤ 同源）
+# canonical anchor: #R<seq>-<md5 first 8 hex lowercase> (the form registry_union --reanchor produces)
 CANONICAL_ANCHOR_RE = re.compile(r"^#R\d+-[0-9a-f]{8}$")
-# 顺序号读形（无指纹槽）：ANCHOR_RE 读出 #R<序> 且无 '-'
-MD5_PLACEHOLDER = "<MD5_8>"          # 处方 md5 占位（未给/缺件/歧义·wash_shape plan-miss 同律）
-SEQ_PLACEHOLDER = "<SEQ>"            # 孤儿补行模板序号占位（注册决定·非机械可造）
+# seq-form read (no fingerprint slot): ANCHOR_RE reads #R<seq> with no '-'
+MD5_PLACEHOLDER = "<MD5_8>"          # plan md5 placeholder (source not given / file missing / ambiguous; wash_shape plan-miss convention)
+SEQ_PLACEHOLDER = "<SEQ>"            # orphan add-row template sequence placeholder (decided at registration; not mechanically fabricable)
 GIT_PATH_ORDER_DEFAULT = "order.txt"
 GIT_PATH_PROJECT_DEFAULT = "_CoqProject"
 
-# 病灶 kind 谱（每病灶恰 {key,lines,kind,evidence} 四键·kind 编码册别与病类）
+# finding kind spectrum (each finding carries exactly {key,lines,kind,evidence}; kind encodes book and defect class)
 K_DUP_ORDER = "dup-order"
 K_DUP_PROJECT = "dup-coqproject"
 K_ANCHOR_COLLISION = "anchor-collision"
@@ -135,22 +76,23 @@ K_ORPHAN_PROJECT_ONLY = "orphan-project-only"
 K_LIVE_MISSING = "live-missing"
 K_LIVE_EXTRA = "live-extra"
 
-EVIDENCE_LINE_CAP = 120  # evidence 内原行截断幅（确定性截断）
+EVIDENCE_LINE_CAP = 120  # raw-line clip length inside evidence (deterministic clipping)
 
 
 class UsageError(Exception):
-    """用法错（exit 2）。"""
+    """Usage error (exit 2)."""
 
 
 class MissingInput(Exception):
-    """输入缺失（exit 9）。"""
+    """Missing input (exit 9)."""
 
 
-# ---------- 读面 ----------
+# ---------- read surface ----------
 
 def read_book_file(path, what):
-    """册文件 → 行列表（registry_union read_side 同款口径：剥终止符与首尾空白·
-    尾空行不计）。缺件 fail-loud 9。"""
+    """Book file -> line list (same reading as registry_union read_side: strip terminators
+    and surrounding whitespace, trailing blank lines not counted). A missing file fails
+    loudly with exit 9."""
     try:
         lines, _eol, _final = _ru.read_side(path, what)
     except _ru.MissingInput as e:
@@ -159,7 +101,8 @@ def read_book_file(path, what):
 
 
 def read_book_git(repo, ref, path, what):
-    """git show 直读册（registry_union git_show/read_side_text 同款）。"""
+    """Read a book directly via git show (same helpers as registry_union
+    git_show/read_side_text)."""
     try:
         text = _ru.git_show(repo, ref, path)
     except _ru.MissingInput as e:
@@ -168,14 +111,15 @@ def read_book_git(repo, ref, path, what):
 
 
 def clip(s, cap=EVIDENCE_LINE_CAP):
-    """evidence 原行确定性截断。"""
+    """Deterministic clipping of a raw line for evidence."""
     return s if len(s) <= cap else s[:cap] + "…"
 
 
-# ---------- ① 重复行账 ----------
+# ---------- ① duplicate rows ----------
 
 def audit_duplicates(lines, kind):
-    """同键多行逐键列行号组。返回 findings（kind=dup-order|dup-coqproject）。"""
+    """Group line numbers per key for keys carrying multiple rows. Returns findings
+    (kind=dup-order|dup-coqproject)."""
     groups = {}
     for i, ln in enumerate(lines, 1):
         k = _ru.key_of(ln, kind)
@@ -189,11 +133,11 @@ def audit_duplicates(lines, kind):
         if kind == KIND_ORDER:
             anchors = sorted({_ru.anchor_of(lines[n - 1]) or "" for n in nos})
             if len(anchors) > 1:
-                ev = ("同键 %d 行 L%s·锚异（键同锚异世系形·#40 直并遗留判例）: %s"
+                ev = ("same key %d rows L%s with differing anchors: %s"
                       % (len(nos), ",".join(str(x) for x in nos),
                          " | ".join(clip(lines[n - 1]) for n in nos)))
             else:
-                ev = ("同键 %d 行 L%s·锚同（逐字重复行）: %s"
+                ev = ("same key %d rows L%s with identical anchors (verbatim duplicate rows): %s"
                       % (len(nos), ",".join(str(x) for x in nos),
                          clip(lines[nos[0] - 1])))
             findings.append({"key": k, "lines": nos, "kind": K_DUP_ORDER,
@@ -201,19 +145,20 @@ def audit_duplicates(lines, kind):
         else:
             findings.append({
                 "key": k, "lines": nos, "kind": K_DUP_PROJECT,
-                "evidence": "同键 %d 行 L%s: %s"
+                "evidence": "same key %d rows L%s: %s"
                             % (len(nos), ",".join(str(x) for x in nos),
                                clip(lines[nos[0] - 1]))})
     return findings
 
 
-# ---------- ② 锚账 ----------
+# ---------- ② anchors ----------
 
 def classify_anchor(line):
-    """order 行 → (锚读形 token|None, 形类)。
+    """order row -> (anchor token|None, form class).
 
-    形类：'canonical'（#R<序>-<8 位小写 hex>）/ 'seq-form'（读形无指纹·顺序号形）/
-    'malformed'（指纹槽非 8 位小写 hex·形怪）/ None（无 #R 可读·缺锚）。
+    form class: 'canonical' (#R<seq>-<8 lowercase hex>) / 'seq-form' (read without a
+    fingerprint) / 'malformed' (fingerprint slot not 8 lowercase hex) / None (no readable
+    #R token, anchor missing).
     """
     tok = _ru.anchor_of(line)
     if tok is None:
@@ -226,17 +171,18 @@ def classify_anchor(line):
 
 
 def audit_anchors(order_lines):
-    """order 册锚账：锚撞文本/顺序号形/形怪/缺锚 逐类。"""
+    """order-book anchor audit: anchor-text collisions / seq-form / malformed / missing,
+    one class each."""
     keyed = []  # (line_no, key, raw, tok, form)
     for i, ln in enumerate(order_lines, 1):
         k = _ru.key_of(ln, KIND_ORDER)
         if k is None:
-            continue  # 注释/空行不入锚账（registry_union 键 None 同律）
+            continue  # comment/blank rows carry no key and stay out of the anchor audit (registry_union key None rule)
         tok, form = classify_anchor(ln)
         keyed.append((i, k, ln, tok, form))
 
     findings = []
-    # 锚撞文本：读形 token → 出现键集（>1 键即撞——registry_union A3 读形同款口径）
+    # anchor-text collision: read token -> keys carrying it (more than one key is a collision; same reading as registry_union dup_pairs)
     by_tok = {}
     for i, k, ln, tok, form in keyed:
         if tok is not None:
@@ -250,16 +196,16 @@ def audit_anchors(order_lines):
                 "key": tok,
                 "lines": sorted(i for i, _k, _f in rows),
                 "kind": K_ANCHOR_COLLISION,
-                "evidence": "锚文本 %s 被 %d 键共享（%s·形类 %s）——跨批携锚撞"
-                            "（v35 判例 R0-d66910 系）"
+                "evidence": "cross-key anchor collision: anchor text %s shared by %d keys"
+                            " (%s; forms %s)"
                             % (tok, len(keys), ",".join(keys), "/".join(forms))})
-    # 形类逐键（非正典三类）
+    # form classes per key (the three non-canonical classes)
     for cls, kind_id, why in (
             ("seq-form", K_ANCHOR_SEQ,
-             "锚 %s 读形无指纹（顺序号形·registry_union ANCHOR_RE 口径）"),
-            ("malformed", K_ANCHOR_MALFORMED, None),  # evidence 逐例构造
+             "anchor %s reads without a fingerprint (seq-form; registry_union ANCHOR_RE reading)"),
+            ("malformed", K_ANCHOR_MALFORMED, None),  # evidence built per case
             (None, K_ANCHOR_MISSING,
-             "键行无锚（无 #R 可读 token）")):
+             "keyed row carries no anchor (no readable #R token)")):
         per_key = {}
         for i, k, ln, tok, form in keyed:
             if form == cls:
@@ -270,8 +216,8 @@ def audit_anchors(order_lines):
             if cls == "malformed":
                 tok0 = _ru.anchor_of(order_lines[nos[0] - 1])
                 fp = tok0.split("-", 1)[1]
-                ev = ("锚 %s 指纹 %r 非 md5-8 正典形（%d 位·须 #R<序>-<8 位小写"
-                      " hex>·b48a 系/六位历史铸签同此）: %s"
+                ev = ("anchor %s fingerprint %r is not canonical md5-8 (%d hex digits; must be "
+                      "#R<seq>-<8 lowercase hex>): %s"
                       % (tok0, fp, len(fp), raw))
             else:
                 ev = (why % (_ru.anchor_of(order_lines[nos[0] - 1]),)
@@ -281,20 +227,19 @@ def audit_anchors(order_lines):
     return findings
 
 
-# ---------- ③ 孤儿账 ----------
+# ---------- ③ orphans ----------
 
 def order_base_name(key):
-    """order 键 → .v 基名（剥 .v 后取末段路径分量——Local/LW0.v→LW0）。"""
+    """order key -> .v base name (strip .v, take the last path component; Local/LW0.v -> LW0)."""
     bare = _ru.bare_name(key)
     return bare.rsplit("/", 1)[-1]
 
 
 def audit_orphans(order_lines, project_lines):
-    """order↔coqproject 双册孤儿（.v 基名口径·旗标/注释行滤除）。
-
-    返回 (findings, stats_extra)——stats_extra 携滤除计数。
+    """Orphans between the order and coqproject books (.v base-name basis; flag/comment rows
+    filtered out). Returns (findings, stats_extra); stats_extra carries the filter counts.
     """
-    order_base = {}   # 基名 → [行号]
+    order_base = {}   # base name -> [line numbers]
     order_keyed = 0
     order_nonv = 0
     for i, ln in enumerate(order_lines, 1):
@@ -303,16 +248,16 @@ def audit_orphans(order_lines, project_lines):
             continue
         order_keyed += 1
         if not k.endswith(".v"):
-            order_nonv += 1  # 非 .v 键行不参基名匹配（口径注记）
+            order_nonv += 1  # non-.v keyed rows do not join base-name matching
             continue
         order_base.setdefault(order_base_name(k), []).append(i)
-    proj_keys = {}    # 基名 → [行号]
+    proj_keys = {}    # base name -> [line numbers]
     proj_module = 0
     flag_filtered = 0
-    proj_raw = {}     # 基名 → 原行首例（补行模板用）
+    proj_raw = {}     # base name -> first raw row (for add-row templates)
     for i, ln in enumerate(project_lines, 1):
         if not ln.endswith(".v"):
-            flag_filtered += 1  # 旗标/注释行（-Q . "" 等）滤除不参匹配
+            flag_filtered += 1  # flag/comment rows (-Q . "" and the like) filtered out of matching
             continue
         k = _ru.key_of(ln, KIND_COQPROJECT)
         proj_module += 1
@@ -323,15 +268,15 @@ def audit_orphans(order_lines, project_lines):
         findings.append({
             "key": base, "lines": order_base[base],
             "kind": K_ORPHAN_ORDER_ONLY,
-            "evidence": "order 有 .v 基名 %r（键形 %s）而 coqproject 模块面无对应"
-                        "（基名口径·旗标滤除 %d 行）"
+            "evidence": "order has .v base name %r (key form %s) with no matching "
+                        "coqproject module row (base-name basis; %d flag rows filtered)"
                         % (base, clip(order_lines[order_base[base][0] - 1]),
                            flag_filtered)})
     for base in sorted(set(proj_keys) - set(order_base)):
         findings.append({
             "key": base, "lines": proj_keys[base],
             "kind": K_ORPHAN_PROJECT_ONLY,
-            "evidence": "coqproject 有模块 %r（%s）而 order 册无对应"
+            "evidence": "coqproject has module %r (%s) with no matching order row"
                         % (base, clip(proj_raw[base]))})
     stats_extra = {"order_keyed": order_keyed, "order_keyed_nonv": order_nonv,
                    "project_module_rows": proj_module,
@@ -339,12 +284,13 @@ def audit_orphans(order_lines, project_lines):
     return findings, stats_extra
 
 
-# ---------- ④ 拓扑引用账 ----------
+# ---------- ④ live topology references ----------
 
 def audit_live(order_lines, live_src):
-    """order 键行 vs --live-src .v 实件双向对账（relpath 全等口径）。"""
+    """Reconcile order keyed rows against the actual .v files under --live-src, both
+    directions (exact relpath equality)."""
     if not os.path.isdir(live_src):
-        raise MissingInput("--live-src 目录缺失: %s" % live_src)
+        raise MissingInput("--live-src directory missing: %s" % live_src)
     disk = set()
     for dirpath, _dirs, fnames in os.walk(live_src):
         rel_dir = os.path.relpath(dirpath, live_src)
@@ -352,7 +298,7 @@ def audit_live(order_lines, live_src):
             if fn.endswith(".v"):
                 rel = fn if rel_dir == "." else os.path.join(rel_dir, fn)
                 disk.add(rel.replace(os.sep, "/"))
-    table = {}  # order 表内 relpath → [行号]
+    table = {}  # relpath in the order table -> [line numbers]
     for i, ln in enumerate(order_lines, 1):
         k = _ru.key_of(ln, KIND_ORDER)
         if k is None:
@@ -363,51 +309,56 @@ def audit_live(order_lines, live_src):
     for rel in sorted(set(table) - disk):
         findings.append({
             "key": rel, "lines": table[rel], "kind": K_LIVE_MISSING,
-            "evidence": "order 表有而 live-src 下缺 .v 实件: %s"
+            "evidence": ".v file listed in the order table but missing under live-src: %s"
                         % os.path.join(live_src, rel)})
     for rel in sorted(disk - set(table)):
         findings.append({
             "key": rel, "lines": [], "kind": K_LIVE_EXTRA,
-            "evidence": "live-src 盘有 .v 实件而 order 表无此键: %s" % rel})
+            "evidence": ".v file present under live-src but absent from the order table: %s" % rel})
     return findings
 
 
-# ---------- 处方（--fix-plan·零写盘·v39 执行器契约） ----------
+# ---------- fix plan (--fix-plan; no disk writes; executor contract) ----------
 
 def shq(s):
-    """处方路径值 shell 引用（确定性：含空白/引号/空即单引号转义·否则裸值）。"""
+    """Shell-quote a path value for the plan (deterministic: single-quote escaping when
+    empty or carrying whitespace/quotes; bare otherwise)."""
     if s and re.fullmatch(r"[A-Za-z0-9_./@+=,:^-]+", s):
         return s
     return "'" + s.replace("'", "'\\''") + "'"
 
 
 def shq_always(s):
-    """处方数据值（key/template）恒单引号引用（统一文法·转义确定性）。"""
+    """Always single-quote plan data values (key/template) for a uniform grammar with
+    deterministic escaping."""
     return "'" + s.replace("'", "'\\''") + "'"
 
 
 def resolve_md5_8(bare, anchor_src):
-    """--anchor-src 实件 md5-8 解析（registry_union resolve_entity/md5_8_of 直用）。
+    """Resolve the md5-8 of the actual file for a bare name under --anchor-src
+    (registry_union resolve_entity/md5_8_of used directly).
 
-    未给源/缺件/歧义 → (MD5_PLACEHOLDER, 注记)（wash_shape ⑤ plan-miss 同律·不硬
-    造·审计不因处方 md5 不可解而炸）。
+    Source not given / file missing / ambiguous -> (MD5_PLACEHOLDER, note) (same
+    convention as wash_shape plan-miss; never fabricated; the audit does not fail when
+    a plan md5 cannot be resolved).
     """
     if not anchor_src:
-        return MD5_PLACEHOLDER, "未给 --anchor-src"
+        return MD5_PLACEHOLDER, "--anchor-src not given"
     try:
         entity = _ru.resolve_entity(bare, anchor_src)
     except _ru.UsageError as e:
-        return MD5_PLACEHOLDER, "实体歧义（%s）" % str(e).strip()
+        return MD5_PLACEHOLDER, "ambiguous entity (%s)" % str(e).strip()
     if entity is None:
-        return MD5_PLACEHOLDER, "anchor-src 下缺同名 .v 实件"
-    return _ru.md5_8_of(entity), "实件 %s" % entity
+        return MD5_PLACEHOLDER, "no matching .v file under anchor-src"
+    return _ru.md5_8_of(entity), "file %s" % entity
 
 
 def build_fix_plan(order_lines, project_lines, sections, args):
-    """确定性处方（dedup 保首/锚刷/孤儿补行模板/非机械可解·零写盘）。"""
+    """Deterministic fix plan (dedup keep-first / reanchor / orphan add-row templates /
+    unresolvable; no disk writes)."""
     plan = {"dedup": [], "reanchor": [], "orphan": [], "unresolvable": []}
 
-    # dedup 保首（keep=min 行号·drop=余行升序）
+    # dedup keep-first (keep = min line number; drop = remaining lines ascending)
     for f in sections["duplicates"]:
         book = "order" if f["kind"] == K_DUP_ORDER else "coqproject"
         nos = sorted(f["lines"])
@@ -419,9 +370,11 @@ def build_fix_plan(order_lines, project_lines, sections, args):
                               "keep_line": keep, "drop_lines": drop,
                               "command": cmd})
 
-    # 锚刷靶面：顺序号形/形怪诸键（正典形撞不列靶——重算不改值）。
-    # 处方 lines＝该键全表行（registry_union apply_reanchor 重写该键全表行口径——
-    # 同键良行亦随重算·expected_anchor 取首 affected 行）。
+    # reanchor targets: the seq-form/malformed keys (canonical-form collisions are not
+    # targeted; recomputation would not change their value).
+    # plan lines = every table row under the key (registry_union apply_reanchor rewrites all
+    # rows of the key; well-formed rows under the same key are recomputed too; expected_anchor
+    # taken from the first affected row).
     reanchor_src = args.anchor_src
     for f in sections["anchors"]:
         if f["kind"] not in (K_ANCHOR_SEQ, K_ANCHOR_MALFORMED):
@@ -455,11 +408,11 @@ def build_fix_plan(order_lines, project_lines, sections, args):
             "old_anchor": tok, "md5_8": md5_8, "expected_anchor": expected,
             "md5_source": how, "command": cmd})
 
-    # 孤儿补行模板
+    # orphan add-row templates
     for f in sections["orphans"]:
         if f["kind"] == K_ORPHAN_ORDER_ONLY:
             base = f["key"]
-            # order 键原形（补 _CoqProject 行＝键自身路径形）
+            # raw order key form (the added _CoqProject row is the key's own path form)
             raw = order_lines[sorted(f["lines"])[0] - 1]
             template = raw.split("#", 1)[0].strip()
             cmd = ("ORPHAN-ADD book=coqproject key=%s template=%s"
@@ -476,7 +429,9 @@ def build_fix_plan(order_lines, project_lines, sections, args):
             plan["orphan"].append({"direction": "project-only", "key": base,
                                    "template": template, "command": cmd})
 
-    # 非机械可解：正典形锚撞（同 md5 同签或误植·重锚不改值·人工分判）
+    # not mechanically resolvable: canonical-form anchor collisions (identical md5 signature
+    # means identical content or a transcription slip; reanchoring cannot change the value;
+    # manual triage)
     for f in sections["anchors"]:
         if f["kind"] != K_ANCHOR_COLLISION:
             continue
@@ -485,20 +440,22 @@ def build_fix_plan(order_lines, project_lines, sections, args):
             plan["unresolvable"].append({
                 "reason": "canonical-anchor-collision", "anchor": tok,
                 "lines": f["lines"], "evidence": f["evidence"],
-                "note": "正典形锚撞＝同内容 md5 同签或同签误植——--reanchor 重算"
-                        "不改值·非机械可解·须人工分判（wash_shape plan-miss 同律）"})
+                "note": "canonical-form anchor collision: identical md5 signature means "
+                        "identical content or a slip under the same signature; --reanchor "
+                        "recomputation cannot change the value; manual triage required "
+                        "(wash_shape plan-miss convention)"})
     return plan
 
 
-# ---------- 出账 ----------
+# ---------- reporting ----------
 
 def sort_findings(findings):
-    """病灶确定性序：(kind, key)。lines 已升序。"""
+    """Deterministic finding order: (kind, key). lines are already ascending."""
     return sorted(findings, key=lambda f: (f["kind"], f["key"]))
 
 
 def build_payload(mode, inputs, stats, sections, fix_plan, want_fix):
-    """report（schema rocqwash-registry-audit/1·sort_keys 确定性）。"""
+    """Build the report (schema rocqwash-registry-audit/1; deterministic via sort_keys)."""
     by_kind = {}
     total = 0
     for sec in ("duplicates", "anchors", "orphans", "live"):
@@ -516,7 +473,7 @@ def build_payload(mode, inputs, stats, sections, fix_plan, want_fix):
             "duplicates": sections["duplicates"],
             "anchors": sections["anchors"],
             "orphans": sections["orphans"],
-            "live": sections["live"],  # 未开＝null（缺席如实记）
+            "live": sections["live"],  # null when not enabled (absence recorded as-is)
         },
         "summary": {
             "duplicates": len(sections["duplicates"]),
@@ -533,45 +490,46 @@ def build_payload(mode, inputs, stats, sections, fix_plan, want_fix):
 
 
 def dump_json(path, obj):
-    """确定性 JSON 落盘（sort_keys＋indent=1·registry_union dump_json 同款）。"""
+    """Deterministic JSON write to disk (sort_keys plus indent=1; same form as
+    registry_union dump_json)."""
     with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(obj, fh, indent=1, ensure_ascii=False, sort_keys=True)
         fh.write("\n")
 
 
 def render_md(payload):
-    """人读台账 markdown（与 JSON 同序·确定性）。"""
+    """Human-readable markdown report (same order as the JSON; deterministic)."""
     secs = payload["sections"]
     summ = payload["summary"]
-    out = ["# 注册册卫生台账（%s）" % SCHEMA, ""]
+    out = ["# Registry hygiene report (%s)" % SCHEMA, ""]
     out.append("- mode: %s" % payload["mode"])
     for k in sorted(payload["inputs"]):
         out.append("- %s: %s" % (k, payload["inputs"][k]))
-    out.append("- live_src: %s" % (payload["live_src"] or "（未开）"))
-    out.append("- anchor_src: %s" % (payload["anchor_src"] or "（未给）"))
+    out.append("- live_src: %s" % (payload["live_src"] or "(not enabled)"))
+    out.append("- anchor_src: %s" % (payload["anchor_src"] or "(not given)"))
     st = payload["stats"]
-    out.append("- 行数: order 全行 %d·键行 %d（非 .v 键行 %d）｜coqproject 全行 %d"
-               "·模块行 %d（旗标/注释滤除 %d）"
+    out.append("- rows: order total %d, keyed %d (non-.v keyed %d); coqproject total %d"
+               ", module rows %d (flag/comment rows filtered %d)"
                % (st["order_rows"], st["order_keyed"], st["order_keyed_nonv"],
                   st["project_rows"], st["project_module_rows"],
                   st["flag_filtered"]))
     out.append("")
     titles = {
-        "duplicates": "① 重复行账",
-        "anchors": "② 锚账（order 册·coqproject 行无锚不适用）",
-        "orphans": "③ 孤儿账（.v 基名口径·旗标滤除）",
-        "live": "④ 拓扑引用账",
+        "duplicates": "① duplicate rows",
+        "anchors": "② anchors (order book; coqproject rows carry no anchors)",
+        "orphans": "③ orphans (.v base-name basis; flag rows filtered)",
+        "live": "④ live topology references",
     }
     for sec in ("duplicates", "anchors", "orphans", "live"):
         rows = secs[sec]
         if rows is None:
-            out.append("## %s（未开——--live-src 未给）" % titles[sec])
+            out.append("## %s (not enabled; --live-src not given)" % titles[sec])
             out.append("")
             continue
-        out.append("## %s（%d 病灶）" % (titles[sec], len(rows)))
+        out.append("## %s (%d findings)" % (titles[sec], len(rows)))
         out.append("")
         if not rows:
-            out.append("（零病灶·账面洁净）")
+            out.append("(no findings)")
             out.append("")
             continue
         out.append("| # | kind | key | lines | evidence |")
@@ -580,51 +538,51 @@ def render_md(payload):
             ev = f["evidence"].replace("|", "\\|").replace("\n", " ")
             out.append("| %d | %s | %s | %s | %s |"
                        % (n, f["kind"], f["key"].replace("|", "\\|"),
-                          ",".join(str(x) for x in f["lines"]) or "—", ev))
+                          ",".join(str(x) for x in f["lines"]) or "-", ev))
         out.append("")
     if "fix_plan" in payload:
         fp = payload["fix_plan"]
-        out.append("## 处方（--fix-plan·零写盘·--apply 不存在·v39 执行器专用）")
+        out.append("## Fix plan (--fix-plan; no disk writes; no --apply; consumed by the plan executor)")
         out.append("")
-        out.append("### dedup 保首")
+        out.append("### dedup keep-first")
         out.append("")
         if fp["dedup"]:
             for d in fp["dedup"]:
                 out.append("- `%s`" % d["command"])
         else:
-            out.append("（无）")
+            out.append("(none)")
         out.append("")
-        out.append("### 锚刷（registry_union --reanchor·md5 对 --anchor-src 实件）")
+        out.append("### reanchor (registry_union --reanchor; md5 computed against --anchor-src files)")
         out.append("")
         if fp["reanchor"]:
             for r in fp["reanchor"]:
-                out.append("- `%s`（期望 `%s`←`%s`；md5_8=%s·%s）"
+                out.append("- `%s` (expected `%s` <- `%s`; md5_8=%s; %s)"
                            % (r["command"], r["expected_anchor"],
                               r["old_anchor"], r["md5_8"], r["md5_source"]))
         else:
-            out.append("（无锚刷靶面）")
+            out.append("(no reanchor targets)")
         out.append("")
-        out.append("### 孤儿补行模板")
+        out.append("### orphan add-row templates")
         out.append("")
         if fp["orphan"]:
             for o in fp["orphan"]:
-                out.append("- `%s`（%s）" % (o["command"], o["direction"]))
+                out.append("- `%s` (%s)" % (o["command"], o["direction"]))
         else:
-            out.append("（无）")
+            out.append("(none)")
         out.append("")
-        out.append("### 非机械可解（人工分判）")
+        out.append("### not mechanically resolvable (manual triage)")
         out.append("")
         if fp["unresolvable"]:
             for u in fp["unresolvable"]:
-                out.append("- 锚 `%s`（L%s）：%s"
+                out.append("- anchor `%s` (L%s): %s"
                            % (u["anchor"], ",".join(str(x) for x in u["lines"]),
                               u["note"]))
         else:
-            out.append("（无）")
+            out.append("(none)")
         out.append("")
     out.append("---")
-    out.append("总病灶 %d（duplicates=%d anchors=%d orphans=%d live=%d）——"
-               "病灶是数据·审计器 exit 0（ci_triage 同律）"
+    out.append("total findings %d (duplicates=%d anchors=%d orphans=%d live=%d)"
+               "; findings are data, the auditor exits 0 (same rule as ci_triage)"
                % (summ["total"], summ["duplicates"], summ["anchors"],
                   summ["orphans"], summ["live"]))
     out.append("")
@@ -632,7 +590,7 @@ def render_md(payload):
 
 
 def print_stdout(payload):
-    """响亮 stdout 出账（病灶是数据·rc 恒 0）。"""
+    """Loud stdout report (findings are data; rc always 0)."""
     secs = payload["sections"]
     summ = payload["summary"]
     print("=== REGISTRY-AUDIT (%s·%s) ===" % (payload["mode"], SCHEMA))
@@ -644,44 +602,45 @@ def print_stdout(payload):
           % (st["order_rows"], st["order_keyed"], st["order_keyed_nonv"],
              st["project_rows"], st["project_module_rows"],
              st["flag_filtered"]))
-    for sec, label in (("duplicates", "① 重复行账"), ("anchors", "② 锚账"),
-                       ("orphans", "③ 孤儿账"), ("live", "④ 拓扑引用账")):
+    for sec, label in (("duplicates", "① duplicate rows"), ("anchors", "② anchors"),
+                       ("orphans", "③ orphans"), ("live", "④ live topology references")):
         rows = secs[sec]
         if rows is None:
-            print("--- %s: 未开（--live-src 未给） ---" % label)
+            print("--- %s: not enabled (--live-src not given) ---" % label)
             continue
-        print("--- %s: %d 病灶 ---" % (label, len(rows)))
+        print("--- %s: %d findings ---" % (label, len(rows)))
         for f in rows:
             print("  [%s] key=%s lines=%s" % (f["kind"], f["key"],
                                               ",".join(str(x) for x in f["lines"]) or "-"))
             print("      %s" % f["evidence"])
     if "fix_plan" in payload:
         fp = payload["fix_plan"]
-        print("--- 处方（--fix-plan·零写盘·v39 执行器） ---")
+        print("--- fix plan (--fix-plan; no disk writes; plan executor) ---")
         for d in fp["dedup"]:
             print("  %s" % d["command"])
         for r in fp["reanchor"]:
-            print("  %s  # 期望 %s←%s（md5_8=%s·%s）"
+            print("  %s  # expected %s<-%s (md5_8=%s; %s)"
                   % (r["command"], r["expected_anchor"], r["old_anchor"],
                      r["md5_8"], r["md5_source"]))
         for o in fp["orphan"]:
             print("  %s" % o["command"])
         for u in fp["unresolvable"]:
-            print("  UNRESOLVED 锚 %s: %s" % (u["anchor"], u["note"]))
-    print("REGISTRY-AUDIT: total=%d 病灶（duplicates=%d anchors=%d orphans=%d "
-          "live=%d）——病灶是数据·exit 0"
+            print("  UNRESOLVED anchor %s: %s" % (u["anchor"], u["note"]))
+    print("REGISTRY-AUDIT: total=%d findings (duplicates=%d anchors=%d orphans=%d "
+          "live=%d); findings are data; exit 0"
           % (summ["total"], summ["duplicates"], summ["anchors"],
              summ["orphans"], summ["live"]))
 
 
-# ---------- 主流程 ----------
+# ---------- main flow ----------
 
 def run_audit(args):
-    """审计主流程（读面→四账→payload）。raises UsageError/MissingInput。"""
+    """Main audit flow (read surface -> four audits -> payload). Raises
+    UsageError/MissingInput."""
     if args.live_src is not None and not os.path.isdir(args.live_src):
-        raise MissingInput("--live-src 目录缺失: %s" % args.live_src)
+        raise MissingInput("--live-src directory missing: %s" % args.live_src)
     if args.anchor_src is not None and not os.path.isdir(args.anchor_src):
-        raise MissingInput("--anchor-src 目录缺失: %s" % args.anchor_src)
+        raise MissingInput("--anchor-src directory missing: %s" % args.anchor_src)
 
     if args.git is not None:
         git_po = args.git_path_order or GIT_PATH_ORDER_DEFAULT
@@ -732,30 +691,35 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="注册册卫生审计器：order.txt/_CoqProject 双册只读四账出账"
-                    "＋确定性处方（--apply 不存在·零改盘·v35 判例代码化）")
+        description="registry hygiene auditor: four read-only audits over the "
+                    "order.txt/_CoqProject book pair plus a deterministic fix plan "
+                    "(no --apply, no disk writes)")
     ap.add_argument("--order", default=None, metavar="PATH",
-                    help="order.txt 册（与 --project 成对）")
+                    help="order.txt book (paired with --project)")
     ap.add_argument("--project", default=None, metavar="PATH",
-                    help="_CoqProject 册（与 --order 成对）")
+                    help="_CoqProject book (paired with --order)")
     ap.add_argument("--git", default=None, metavar="REPO",
-                    help="改直读：仓路径（--ref 必配·与双册文件形互斥）")
+                    help="git direct read: repository path (--ref required; exclusive "
+                         "with the book-file form)")
     ap.add_argument("--ref", default=None, metavar="REF",
-                    help="git 直读 ref（审计该时点双册快照）")
+                    help="ref for the git direct read (audits the book snapshot at that ref)")
     ap.add_argument("--git-path-order", default=None, metavar="PATH",
-                    help="仓内 order.txt 路径（缺省 order.txt）")
+                    help="in-repository path of order.txt (default order.txt)")
     ap.add_argument("--git-path-project", default=None, metavar="PATH",
-                    help="仓内 _CoqProject 路径（缺省 _CoqProject）")
+                    help="in-repository path of _CoqProject (default _CoqProject)")
     ap.add_argument("--live-src", default=None, metavar="DIR",
-                    help="④拓扑引用账实件目录（可选·os.walk 收 .v 对账）")
+                    help="directory of actual .v files for the live topology audit "
+                         "(optional; .v files collected via os.walk)")
     ap.add_argument("--anchor-src", default=None, metavar="DIR",
-                    help="处方 md5 源目录（可选·os.walk 取同名 .v 重算）")
+                    help="source directory for plan md5 values (optional; matching .v "
+                         "files recomputed via os.walk)")
     ap.add_argument("--fix-plan", action="store_true",
-                    help="附确定性处方（零写盘·--apply 不存在·留 v39 执行器）")
+                    help="attach the deterministic fix plan (no disk writes; no --apply; "
+                         "consumed by the plan executor)")
     ap.add_argument("--json", default=None, metavar="FILE",
-                    help="出账 JSON（schema rocqwash-registry-audit/1）")
+                    help="JSON report output (schema rocqwash-registry-audit/1)")
     ap.add_argument("--md", default=None, metavar="FILE",
-                    help="出账人读台账 markdown")
+                    help="human-readable markdown report output")
     args = ap.parse_args(argv)
 
     try:
@@ -763,7 +727,7 @@ def main():
     except Exception:
         pass
 
-    # ---- 形参咬合（fail-loud 用法面） ----
+    # ---- flag pairing (fail-loud usage surface) ----
     def die_usage(msg):
         print("FAIL-LOUD: %s" % msg, file=sys.stderr)
         sys.exit(2)
@@ -771,20 +735,22 @@ def main():
     file_mode = args.order is not None or args.project is not None
     git_mode = args.git is not None
     if file_mode and git_mode:
-        die_usage("--order/--project 双册形与 --git 直读形互斥，两形混给")
+        die_usage("--order/--project (book files) and --git (direct read) are exclusive; "
+                  "both forms given")
     if not file_mode and not git_mode:
-        die_usage("无输入面：--order＋--project 双册 或 --git＋--ref 直读"
-                  "（--selftest 除外）")
+        die_usage("no input surface: give --order plus --project, or --git plus --ref"
+                  " (--selftest excepted)")
     if file_mode and (args.order is None or args.project is None):
-        die_usage("--order 与 --project 须成对（双册口径·缺一不可）")
+        die_usage("--order and --project must be given as a pair (both books; one alone "
+                  "is a usage error)")
     if git_mode and args.ref is None:
-        die_usage("--git 直读须 --ref（审计该时点双册快照）")
+        die_usage("--git direct read requires --ref (audits the book snapshot at that ref)")
     if not git_mode and (args.git_path_order or args.git_path_project):
-        die_usage("--git-path-order/--git-path-project 仅 --git 直读形有效")
+        die_usage("--git-path-order/--git-path-project are valid only with --git direct read")
     if args.ref is not None and not git_mode:
-        die_usage("--ref 仅 --git 直读形有效")
+        die_usage("--ref is valid only with --git direct read")
 
-    # ---- 审计（读面缺件→9·其余 fail-loud） ----
+    # ---- audit (missing read input -> 9; everything else fails loudly) ----
     try:
         payload = run_audit(args)
     except MissingInput as e:
@@ -794,7 +760,7 @@ def main():
         print("FAIL-LOUD: %s" % e, file=sys.stderr)
         sys.exit(2)
 
-    # ---- 出账（写面恰为显式 --json/--md 出账路径） ----
+    # ---- report (writes go only to the explicit --json/--md paths) ----
     print_stdout(payload)
     if args.json:
         dump_json(args.json, payload)
@@ -806,16 +772,21 @@ def main():
     sys.exit(0)
 
 
-# ---------- 自证 ----------
+# ---------- selftest ----------
 
 def selftest():
-    """内嵌矢量组（tmp 合成·v35 真账形态样张·零触真仓零网络零编译）：
+    """Embedded vector set (synthesized under tmp; shaped like real registry rows; no real
+    repository touched, no network, no build):
 
-    1  四账判类全谱（重复行/锚撞/顺序号形/形怪/缺锚/孤儿/旗标滤除/live 缺件多件）
-    2  处方行正确性（dedup 保首·锚刷命令含正确 md5——77c2b9a8 冻结向量·占位形）
-    3  只读实证（双册与 live 树前后 md5 恒同·--apply 不存在 rc 2）
-    4  --git 直读（本地 tmp clone·与文件形同账·坏 ref 9）
-    5  CLI 四码＋确定性（help0/bogus2/无输入2/半册2/缺件9/重跑 json md 字节恒同）
+    1  full finding-class spectrum of the four audits (duplicates / anchor collisions /
+       seq-form / malformed / missing anchors / orphans / flag-row filtering / live missing
+       and extra files) plus fix-plan command correctness (dedup keep-first; reanchor
+       command carries the correct md5, the 77c2b9a8 frozen vector, and placeholder forms)
+    2  read-only proof (book and live-tree md5 unchanged before/after; no --apply, rc 2)
+    3  determinism (rerun json/md byte-identical)
+    4  --git direct read (local tmp clone; same findings as the file form; bad ref 9)
+    5  CLI exit codes (help 0 / bogus 2 / no input 2 / half book 2 / mixed --ref 2 /
+       missing book 9 / missing --live-src 9)
     """
     import tempfile
 
@@ -842,25 +813,25 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_ra_self_")
     try:
-        # ---- 真账形态样张（v35 判例形态：键同锚异世系行/跨批撞锚/顺序号形/七位签） ----
+        # ---- fixture rows shaped like real registry rows (same key with differing anchors / shared anchor text / seq-form / seven-digit signature) ----
         order_text = ("\n".join([
-            "A.v#R0-d66910",          # L1 形怪（6 位历史铸签）·撞锚·与 L8 键同锚异
-            "B.v#R0-d66910",          # L2 撞锚（异键同锚文本）
-            "C.v#R97",                # L3 顺序号形（无指纹·registry_union 判例原形）
-            "D.v#R43a003",            # L4 顺序号形（读形 #R43）
-            "E.v#R97-b48a001",        # L5 形怪（七位签·b48a 系判例形）
-            "F.v",                    # L6 缺锚
-            "G.v#R0-11111111",        # L7 正典（8 位小写 hex）
-            "A.v#R40-22222222",       # L8 键同锚异世系行（#40 直并遗留形·锚恰正典形）
-            "# 注释行",               # L9 注释（键 None 不入账）
+            "A.v#R0-d66910",          # L1 malformed (6-hex legacy fingerprint), collides on anchor text, same key as L8 with a different anchor
+            "B.v#R0-d66910",          # L2 anchor-text collision (different key, same anchor text)
+            "C.v#R97",                # L3 seq-form (no fingerprint)
+            "D.v#R43a003",            # L4 seq-form (reads as #R43)
+            "E.v#R97-b48a001",        # L5 malformed (seven-hex-digit signature)
+            "F.v",                    # L6 anchor missing
+            "G.v#R0-11111111",        # L7 canonical (8 lowercase hex)
+            "A.v#R40-22222222",       # L8 same key as L1 with a different anchor (the anchor itself is canonical)
+            "# comment row",          # L9 comment row (key None, not audited)
         ]) + "\n")
         project_text = ("\n".join([
-            "-Q . \"\"",              # L1 旗标行（滤除不参匹配）
+            "-Q . \"\"",              # L1 flag row (filtered out of matching)
             "A.v",                    # L2
-            "A.v",                    # L3 同键重复
+            "A.v",                    # L3 duplicate under the same key
             "C.v",                    # L4
             "E.v",                    # L5
-            "H.v",                    # L6 孤儿（project-only）
+            "H.v",                    # L6 orphan (project-only)
         ]) + "\n")
         d1 = os.path.join(tmp, "case")
         os.makedirs(d1)
@@ -873,7 +844,7 @@ def selftest():
             wf(os.path.join(live, name), content)
         world = os.path.join(d1, "world")
         os.makedirs(world)
-        # registry_union 冻结 md5 向量："module A content alpha\n" → 77c2b9a8
+        # registry_union frozen md5 vector: "module A content alpha\n" -> 77c2b9a8
         wf(os.path.join(world, "A.v"), "module A content alpha\n")
         assert _ru.md5_8_of(os.path.join(world, "A.v")) == "77c2b9a8"
 
@@ -882,20 +853,20 @@ def selftest():
         p = run(["--order", order_f, "--project", project_f,
                  "--live-src", live, "--anchor-src", world,
                  "--json", j1, "--md", m1, "--fix-plan"])
-        assert p.returncode == 0, "出账应 rc=0（病灶是数据）实测 %d\n%s" % (
+        assert p.returncode == 0, "expected rc=0 (findings are data), got %d\n%s" % (
             p.returncode, p.stdout)
         rep = json.load(io.open(j1, encoding="utf-8"))
         assert rep["schema"] == SCHEMA, rep["schema"]
         secs = rep["sections"]
         summ = rep["summary"]
 
-        # ① 重复行账：order A [1,8]（锚异注记）＋coqproject A [2,3]
+        # ① duplicates: order A [1,8] (differing-anchors note) plus coqproject A [2,3]
         dups = {(f["kind"], f["key"]): f for f in secs["duplicates"]}
         assert (K_DUP_ORDER, "A.v") in dups and dups[(K_DUP_ORDER, "A.v")]["lines"] == [1, 8], secs["duplicates"]
-        assert "锚异" in dups[(K_DUP_ORDER, "A.v")]["evidence"], dups[(K_DUP_ORDER, "A.v")]
+        assert "differing anchors" in dups[(K_DUP_ORDER, "A.v")]["evidence"], dups[(K_DUP_ORDER, "A.v")]
         assert (K_DUP_PROJECT, "A") in dups and dups[(K_DUP_PROJECT, "A")]["lines"] == [2, 3], secs["duplicates"]
 
-        # ② 锚账：撞锚/顺序号形/形怪/缺锚 各判·正典 G 不列
+        # ② anchors: collision / seq-form / malformed / missing each detected; canonical G not listed
         an = {(f["kind"], f["key"]): f for f in secs["anchors"]}
         assert (K_ANCHOR_COLLISION, "#R0-d66910") in an, secs["anchors"]
         assert sorted(an[(K_ANCHOR_COLLISION, "#R0-d66910")]["lines"]) == [1, 2], an
@@ -903,28 +874,28 @@ def selftest():
         assert (K_ANCHOR_SEQ, "D.v") in an and "#R43" in an[(K_ANCHOR_SEQ, "D.v")]["evidence"], an
         assert (K_ANCHOR_MALFORMED, "A.v") in an and an[(K_ANCHOR_MALFORMED, "A.v")]["lines"] == [1], an
         assert (K_ANCHOR_MALFORMED, "B.v") in an and an[(K_ANCHOR_MALFORMED, "B.v")]["lines"] == [2], an
-        assert (K_ANCHOR_MALFORMED, "E.v") in an and "7 位" in an[(K_ANCHOR_MALFORMED, "E.v")]["evidence"] \
+        assert (K_ANCHOR_MALFORMED, "E.v") in an and "7 hex digits" in an[(K_ANCHOR_MALFORMED, "E.v")]["evidence"] \
             and "b48a001" in an[(K_ANCHOR_MALFORMED, "E.v")]["evidence"], an
         assert (K_ANCHOR_MISSING, "F.v") in an and an[(K_ANCHOR_MISSING, "F.v")]["lines"] == [6], an
-        assert all("G.v" != f["key"] for f in secs["anchors"]), "正典锚不得列病灶"
+        assert all("G.v" != f["key"] for f in secs["anchors"]), "canonical anchors must not be listed as findings"
 
-        # ③ 孤儿账：order-only {B,D,F,G}·project-only {H}·旗标滤除 1
+        # ③ orphans: order-only {B,D,F,G}; project-only {H}; flag rows filtered 1
         orph = {(f["kind"], f["key"]): f for f in secs["orphans"]}
         assert {(k, ) for (kd, k) in orph if kd == K_ORPHAN_ORDER_ONLY} == {("B",), ("D",), ("F",), ("G",)}, secs["orphans"]
         assert [k for (kd, k) in orph if kd == K_ORPHAN_PROJECT_ONLY] == ["H"], secs["orphans"]
         assert rep["stats"]["flag_filtered"] == 1, rep["stats"]
         assert rep["stats"]["project_module_rows"] == 5, rep["stats"]
 
-        # ④ live 账：缺件 {B,D,F,G}·多件 {H.v}
+        # ④ live: missing {B,D,F,G}; extra {H.v}
         lv = {(f["kind"], f["key"]): f for f in secs["live"]}
         assert {k for (kd, k) in lv if kd == K_LIVE_MISSING} == {"B.v", "D.v", "F.v", "G.v"}, secs["live"]
         assert {k for (kd, k) in lv if kd == K_LIVE_EXTRA} == {"H.v"}, secs["live"]
         assert summ["total"] == 19, summ
-        # 精确盘点：duplicates=2 anchors=7（撞1+怪3+序2+缺1）orphans=5 live=5
+        # exact counts: duplicates=2 anchors=7 (collisions 1 + malformed 3 + seq 2 + missing 1) orphans=5 live=5
         assert summ["duplicates"] == 2 and summ["anchors"] == 7 \
             and summ["orphans"] == 5 and summ["live"] == 5, summ
 
-        # 处方行正确性
+        # fix-plan command correctness
         fp = rep["fix_plan"]
         dd = {(d["book"], d["key"]): d for d in fp["dedup"]}
         assert dd[("order", "A.v")]["command"] == \
@@ -933,27 +904,28 @@ def selftest():
             "DEDUP book=coqproject key='A' keep=L2 drop=L3", fp["dedup"]
         ra = {r["key"]: r for r in fp["reanchor"]}
         assert set(ra) == {"A.v", "B.v", "C.v", "D.v", "E.v"}, fp["reanchor"]
-        # 锚刷命令含正确 md5（77c2b9a8 冻结向量·A 有实件）＋期望锚形
+        # reanchor command carries the correct md5 (77c2b9a8 frozen vector; A has a real file) plus the expected anchor form
         assert ra["A.v"]["md5_8"] == "77c2b9a8", ra["A.v"]
         assert ra["A.v"]["expected_anchor"] == "#R0-77c2b9a8", ra["A.v"]
         assert "--reanchor A" in ra["A.v"]["command"] and "--apply" in ra["A.v"]["command"], ra["A.v"]
-        # 锚刷处方 lines＝该键全表行（apply_reanchor 口径·良行 L8 亦随重算）
+        # reanchor plan lines = every table row under the key (apply_reanchor reading; well-formed L8 is recomputed too)
         assert ra["A.v"]["lines"] == [1, 8], ra["A.v"]
-        # 未给/缺实件 → <MD5_8> 占位（不硬造）
+        # source not given / file missing -> <MD5_8> placeholder (never fabricated)
         assert ra["C.v"]["md5_8"] == MD5_PLACEHOLDER \
             and ra["C.v"]["expected_anchor"] == "#R97-<MD5_8>", ra["C.v"]
         assert ra["D.v"]["seq"] == "43" and ra["E.v"]["seq"] == "97", fp["reanchor"]
         orz = {(o["direction"], o["key"]): o for o in fp["orphan"]}
         assert orz[("order-only", "B")]["template"] == "B.v", fp["orphan"]
         assert orz[("project-only", "H")]["template"] == "H.v#R<SEQ>-<MD5_8>", fp["orphan"]
-        # 正典形撞不列锚刷靶；无正典撞 → unresolvable 空
+        # canonical-form collisions are not reanchor targets; none here -> unresolvable empty
         assert fp["unresolvable"] == [], fp["unresolvable"]
-        b_json = io.open(j1, "rb").read()  # 确定性基线（②覆写前捕获）
+        b_json = io.open(j1, "rb").read()  # determinism baseline (captured before the step-2 overwrite)
         b_md = io.open(m1, "rb").read()
-        print("  [1/5] 四账判类全谱 OK（重复/撞锚/顺序号/形怪/缺锚/孤儿/旗标滤/"
-              "live 缺件多件·total=19）＋处方 dedup 保首/锚刷 77c2b9a8/占位")
+        print("  [1/5] four-audit class spectrum OK (duplicates/collision/seq-form/"
+              "malformed/missing/orphans/flag filter/live missing+extra; total=19) plus "
+              "plan dedup keep-first / reanchor 77c2b9a8 / placeholders")
 
-        # ---- ② 只读实证：双册与 live 树前后 md5 恒同 ----
+        # ---- read-only proof: book and live-tree md5 unchanged before/after ----
         before = ([md5_of(order_f), md5_of(project_f)]
                   + [md5_of(os.path.join(live, n)) for n in sorted(os.listdir(live))])
         p = run(["--order", order_f, "--project", project_f,
@@ -961,26 +933,26 @@ def selftest():
         assert p.returncode == 0, p.stdout
         after = ([md5_of(order_f), md5_of(project_f)]
                  + [md5_of(os.path.join(live, n)) for n in sorted(os.listdir(live))])
-        assert before == after, "只读违例：册/树字节漂移"
+        assert before == after, "read-only violation: book/tree bytes changed"
         assert "fix_plan" not in json.load(io.open(j1, encoding="utf-8")), \
-            "无 --fix-plan 不得附处方"
+            "fix_plan must be absent without --fix-plan"
         p = run(["--order", order_f, "--project", project_f, "--apply"])
-        assert p.returncode == 2, "--apply 不存在（应 argparse rc=2）实测 %d" % p.returncode
-        print("  [2/5] 只读实证 OK（双册+live 树 md5 恒同·无 --fix-plan 无处方·"
-              "--apply 不存在 rc2）")
+        assert p.returncode == 2, "--apply does not exist (argparse rc=2 expected), got %d" % p.returncode
+        print("  [2/5] read-only proof OK (book+live tree md5 unchanged; no --fix-plan no "
+              "plan; --apply absent rc2)")
 
-        # ---- ③ 确定性：同输入重跑 json/md 字节恒同（基线取自①） ----
+        # ---- determinism: same input rerun, json/md byte-identical (baseline from step 1) ----
         p = run(["--order", order_f, "--project", project_f,
                  "--live-src", live, "--anchor-src", world,
                  "--json", j1, "--md", m1, "--fix-plan"])
         assert p.returncode == 0, p.stdout
-        assert io.open(j1, "rb").read() == b_json, "json 字节漂移＝违例"
-        assert io.open(m1, "rb").read() == b_md, "md 字节漂移＝违例"
-        print("  [3/5] 确定性 OK（json/md 重跑逐字节恒同）")
+        assert io.open(j1, "rb").read() == b_json, "json bytes changed (violation)"
+        assert io.open(m1, "rb").read() == b_md, "md bytes changed (violation)"
+        print("  [3/5] determinism OK (json/md byte-identical on rerun)")
 
-        # ---- ④ --git 直读（本地 tmp clone·与文件形同账·坏 ref 9） ----
+        # ---- --git direct read (local tmp clone; same findings as the file form; bad ref 9) ----
         if shutil.which("git") is None:
-            print("  [4/5] git 直读 SKIP（git 不在卷·让席不充红）")
+            print("  [4/5] git direct read SKIP (git not on PATH; skipped, not counted as a failure)")
         else:
             d4 = os.path.join(tmp, "repo")
             os.makedirs(d4)
@@ -1016,36 +988,39 @@ def selftest():
                 and rep4["summary"]["total"] == 14, rep4["summary"]
             assert any(f["kind"] == K_DUP_ORDER and f["key"] == "A.v"
                        for f in rep4["sections"]["duplicates"]), rep4
-            # git 形锚刷处方走 registry_union --git 面（shq 形匹配——路径含
-            # 空格/反斜杠时 shq 引用包裹·POSIX tmp 裸形与原字面恒同）
+            # git-form reanchor plans go through the registry_union --git surface (shq-form match;
+            # paths with spaces or backslashes are shq-quoted; the bare POSIX tmp path quotes to
+            # its literal self)
             assert any(("--git %s" % shq(d4)) in r["command"]
                        for r in rep4["fix_plan"]["reanchor"]), rep4["fix_plan"]
             p = run(["--git", d4, "--ref", "no-such-ref", "--json", j4])
-            assert p.returncode == 9, "坏 ref 应 rc=9 实测 %d" % p.returncode
-            print("  [4/5] git 直读 OK（tmp clone 同账·锚刷处方 --git 面·坏 ref 9）")
+            assert p.returncode == 9, "bad ref must give rc=9, got %d" % p.returncode
+            print("  [4/5] git direct read OK (tmp clone same findings; reanchor plan "
+                  "--git form; bad ref 9)")
 
-        # ---- ⑤ CLI 四码＋schema 面 ----
+        # ---- CLI exit codes plus schema surface ----
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag must give rc=2, got %d" % p.returncode
         p = run([])
-        assert p.returncode == 2, "无输入应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "no input must give rc=2, got %d" % p.returncode
         p = run(["--order", order_f])
-        assert p.returncode == 2, "半册应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "half book pair must give rc=2, got %d" % p.returncode
         p = run(["--order", order_f, "--project", project_f, "--ref", "x"])
-        assert p.returncode == 2, "--ref 混入文件形应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "--ref mixed into file form must give rc=2, got %d" % p.returncode
         p = run(["--order", os.path.join(tmp, "nope.txt"),
                  "--project", project_f])
-        assert p.returncode == 9, "缺册应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "missing book must give rc=9, got %d" % p.returncode
         p = run(["--order", order_f, "--project", project_f,
                  "--live-src", os.path.join(tmp, "nolive")])
-        assert p.returncode == 9, "缺 live-src 应 rc=9 实测 %d" % p.returncode
-        print("  [5/5] CLI 四码 OK（help0/bogus2/无输入2/半册2/混参2/缺册9/"
-              "缺live-src9）")
+        assert p.returncode == 9, "missing --live-src must give rc=9, got %d" % p.returncode
+        print("  [5/5] CLI exit codes OK (help0/bogus2/no-input2/half-book2/mixed-ref2/"
+              "missing-book9/missing-live-src9)")
 
-        print("REGISTRY-AUDIT-SELFTEST PASS: 四账判类全谱/处方保首+md5向量+占位/"
-              "只读实证/确定性/git直读/CLI四码 五判全过")
+        print("REGISTRY-AUDIT-SELFTEST PASS: four-audit class spectrum / plan "
+              "keep-first+md5 vector+placeholders / read-only proof / determinism / git "
+              "direct read / CLI exit codes, all checks passed")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

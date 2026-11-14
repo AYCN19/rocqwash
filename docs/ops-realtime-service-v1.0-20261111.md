@@ -146,7 +146,7 @@ ci-red 事件行（`--once --watch-repo org/repo --branch main --injector … --
 tools/cw_sentinel.py:1240-1265「代跑 unclog（fixture 无 --world）应 rc=9 入账」）：
 
 ```text
-on-red 注记: cmd rc=9（旁路动作·不改哨退出码）
+on-red note: cmd rc=9 (side action; does not change the sentinel's exit code)
 ```
 
 actions 账（`--json` report·非事件流）所记：

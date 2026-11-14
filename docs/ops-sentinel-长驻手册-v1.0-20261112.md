@@ -331,7 +331,7 @@ STATE-REBUILD 注记／同损坏件 `--rebuild-state` → rc0·红事件复现�
 **先轮转再追加**（cw_sentinel.py:36-41·emit_event :490-501）：
 
 ```text
-FILE.1 → FILE.2（旧 FILE.2 覆盖弃·保留 2 代）→ FILE → FILE.1 → 新 FILE 空
+FILE.1 → FILE.2 (old FILE.2 overwritten and discarded; keep two generations) → FILE → FILE.1 → new FILE empty
 ```
 
 - 单行本身超 N＝行不可分割·空档直写（轮转后仍可能单行超帽·下轮追加前即再轮转）；

@@ -37,15 +37,15 @@ echo "DRYRUN_RC=$?"              # 正典判据：0=计划已出·计划文本�
 main --dry-run --json …`，rc=0；stdout 计划原文）：
 
 ```text
-=== ROCQWASH PUSHCI（修复后推送 CI 一键流水线·v36 旗舰）===
+=== ROCQWASH PUSHCI (post-fix push-CI one-shot pipeline) ===
 mode=dry-run steps=preflight,push,watch,heal,verdict
-PLAN [1] preflight.toolchain: python3 tools/toolchain_dyld_doctor.py（--worker 缺省探测·gate verdict=healthy）
-PLAN [1] preflight.net: python3 tools/net_probe.py --rounds 2 --interval 60 --stable-window（gate STABLE）
-PLAN [1] preflight.gate4: 未启（--pre-scan-gate4 未给）
-PLAN [2] push: git -C <repo> -c http.version=HTTP/1.1 push origin main（重试 3 发×45s；三败且 remote host=github.com → ghproxy 换路 2 发）
-PLAN [3] watch: GET /repos/<org/repo>/actions/runs?per_page=30（head_branch=main 且 head_sha=<pushed_sha>·间隔 150s·status-only（updated_at 冻结非僵尸判据·以 status 为准） 至 completed）
-PLAN [4] heal: python3 tools/ci_triage.py --repo <org/repo> --run <id>（帽 3）→ B/E→probe+rerun（403 幂等接受）·A→fix-content 停·C→toolchain 停·表外→人工
-PLAN [5] verdict: report schema rocqwash-pushci/1·退出码 0/1/2/9
+PLAN [1] preflight.toolchain: python3 tools/toolchain_dyld_doctor.py (--worker probed by default, gate verdict=healthy)
+PLAN [1] preflight.net: python3 tools/net_probe.py --rounds 2 --interval 60 --stable-window (gate STABLE)
+PLAN [1] preflight.gate4: not enabled (--pre-scan-gate4 not given)
+PLAN [2] push: git -C <repo> -c http.version=HTTP/1.1 push origin main (3 attempts x 45s wait; after three failures with remote host=github.com, ghproxy reroute 2 attempts)
+PLAN [3] watch: GET /repos/<org/repo>/actions/runs?per_page=30 (head_branch=main and head_sha=<pushed_sha>, every 150s, status-only (a frozen updated_at is not a stall criterion; status is authoritative) until completed)
+PLAN [4] heal: python3 tools/ci_triage.py --repo <org/repo> --run <id> (cap 3); B/E -> probe then rerun (403 accepted idempotently); A -> stop fix-content; C -> stop toolchain; out-of-table -> manual
+PLAN [5] verdict: report schema rocqwash-pushci/1, exit codes 0/1/2/9
 === FINAL VERDICT: dry-run (exit 0) ===
 ```
 

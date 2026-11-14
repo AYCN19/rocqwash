@@ -94,15 +94,15 @@ PY
 --json … --sleep-scale 0` 实测 rc 0，tmp 注入演练）：
 
 ```json
-{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["红件 1/1：ids=[501]", "在册族：A-content-red（判类序取先）"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off（--sleep-scale 0·确定性输出）｜判类=rocqwash-ci-triage/1（ci_triage 子进程 --offline）", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
+{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["红件 1/1：ids=[501]", "在册族：A-content-red（判类序取先）"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off (--sleep-scale 0; deterministic output)|classification=rocqwash-ci-triage/1 (ci_triage subprocess --offline)", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
 ```
 
 **blocking ＋ build-signal 事件行**（`--once --watch-ledgers … --watch-buildlog …
 --sleep-scale 0` 实测 rc 0；台账 B 缺库 A→链根 A）：
 
 ```json
-{"dependents": ["B"], "kind": "blocking", "ledger": "base.json", "n": 1, "note": "ts=off（--sleep-scale 0·确定性输出）｜TOP 链根=chain_graph rocqwash-chain-graph/1 top_order 首名（self 字段判链根可洗性·chain_graph.py:88 判例）", "schema": "rocqwash-sentinel-event/1", "self": {"probed": true, "rc": 0, "verdict": "RC0", "washable": true}, "seq": 1, "top_root": "A"}
-{"hits": ["BUILD-FAIL: round 1", "Error: Unable to locate library | A"], "hits_total": 2, "kind": "build-signal", "log": "build.log", "note": "ts=off（--sleep-scale 0·确定性输出）｜词面 BUILD-FAIL/EXIT=134/Error:（判类谱 A/C token·ci_triage.py:95-118 同源）", "offset_after": 56, "offset_before": 0, "schema": "rocqwash-sentinel-event/1", "seq": 2, "truncated": false}
+{"dependents": ["B"], "kind": "blocking", "ledger": "base.json", "n": 1, "note": "ts=off (--sleep-scale 0; deterministic output)|TOP chain root = first name in chain_graph rocqwash-chain-graph/1 top_order (self field judges chain-root washability; chain_graph.py:88 precedent)", "schema": "rocqwash-sentinel-event/1", "self": {"probed": true, "rc": 0, "verdict": "RC0", "washable": true}, "seq": 1, "top_root": "A"}
+{"hits": ["BUILD-FAIL: round 1", "Error: Unable to locate library | A"], "hits_total": 2, "kind": "build-signal", "log": "build.log", "note": "ts=off (--sleep-scale 0; deterministic output)|tokens BUILD-FAIL/EXIT=134/Error: (classification-spectrum A/C tokens; ci_triage.py:95-118 same source)", "offset_after": 56, "offset_before": 0, "schema": "rocqwash-sentinel-event/1", "seq": 2, "truncated": false}
 ```
 
 **每轮 report**（rocqwash-sentinel/1·覆盖写·节选自同次实跑）：

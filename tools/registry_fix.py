@@ -1,132 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""registry_fix.py — 注册册处方执行器：registry_audit fix-plan 的落刀面（rocqwash
-tools/·v46 待办 2 兑现·卫生波工具环闭合·20261112 入账）
+"""registry_fix.py: registry fix-plan executor for the registry_audit fix-plan (rocqwash tools/).
 
-v46 真仓 demo（Set Live 权威对）实证的 543 病灶（duplicates=12·_CoqProject 尾区
-L492-515 逐字重复块＋anchors=523·撞锚 6 恰 v35 判例原文）由 tools/registry_audit.py
---fix-plan 出确定性处方（DEDUP 保首/锚刷/ORPHAN-ADD 模板/unresolvable）——本器把
-处方逐条落刀：逐条 fail-loud·逐条前后 md5 账·执行后重跑审计断言·炸即回滚。
+Purpose.  Execute the deterministic fix plan produced by `tools/registry_audit.py --fix-plan` over the
+  audited order.txt/_CoqProject book pair: DEDUP keeps the first row of each duplicate group and drops
+  the rest; REANCHOR rewrites anchor rows through the `registry_union.apply_reanchor` engine;
+  non-mechanical prescriptions pass through to the skip list; opt-in `--orphan-add` executes the
+  mechanically solvable ORPHAN-ADD subset. Dry run by default, writes only under `--apply`,
+  per-item md5 accounting, in-memory staging, a same-parameter re-audit after the write, and rollback
+  from the pre-write backups on any assertion breach.
 
-三类处方（audit fix_plan 逐条直执·键式/锚正典/重锚引擎零重造）：
-  ① DEDUP 保首   duplicates 病灶按 fix-plan（keep=min 行号·drop=余行升序）重写册。
-                 行尾/末行换行随正本（registry_union read_side/render_output 引擎
-                 口径直用）；keep/drop 行号按 audit 原行号系逐条对键验尸（键不符
-                 ＝audit↔册漂移→AssertBlast exit 2·禁静默）。
-  ② 锚刷         anchors 病灶非正典形件（fix_plan.reanchor＝顺序号形/形怪诸键·
-                 正典形撞不列靶）→内嵌直调 registry_union.apply_reanchor 同款函数
-                 （md5 对 --anchor-src 落地实件重算·保原序号·该键全表行重写）：
-                 实件缺→留原样列 skip 清单（不硬造）；实件歧义/列名行无锚→引擎
-                 同款 fail-loud；audit 记 md5_8 与实件重算不符→AssertBlast（audit
-                 ↔实件漂移·禁静默）。同输同出断言见 --selftest 矢量三（77c2b9a8
-                 冻结向量：本器内嵌路径与 registry_union CLI 逐字节恒同）。
-  ③ ORPHAN-ADD   缺模板序号 <SEQ>/缺 md5→skip 清单如实直传——补行序号须注册决定
-                 （禁机械造锚）；audit 已列 unresolvable 族（正典形锚撞＝同内容
-                 md5 同签或同签误植·重锚不改值）原样直传人工分判；anchor-missing
-                 病灶（键行无锚·无序号可承）同归 skip 清单。
+Interface.  python3 tools/registry_fix.py --audit-json FILE --order PATH --project PATH [--anchor-src
+  DIR] [--json FILE] [--apply] [--orphan-add] [--work-dir DIR] [--audit-tool PATH], or --selftest.
+  The audit JSON (schema rocqwash-registry-audit/1) must carry a fix_plan and match --order/--project
+  verbatim (plan line numbers bind to the audited books); report schema rocqwash-registry-fix/1 is
+  sort_keys deterministic, byte-identical on reruns, written even on a blast (rollback evidence inside).
 
-断言三判（--apply 执行后·重跑 registry_audit 同参）：
-  A-fix-1  被治键 duplicates=0   重跑审计 duplicates 账中被治（book,key）零残留；
-  A-fix-2  锚撞文本零新增        registry_union A3 同款引擎直算（post 对 pre 逐锚
-           文本重复对数·增即炸——同内容 md5 同签的新撞＝真数据病·须人工分判）；
-  A-fix-3  孤儿不增              重跑审计孤儿账 (kind,key) 集 ⊆ 执行前（不增）。
-  任一炸＝exit 2＋回滚（写前 tmp 备份·炸即还原·还原 md5 对原值复核·证据入
-  report）。处方演算全程内存 staging（零写盘）：逐条 md5 账为 staged-render 字节
-  （行尾/末行随正本）——staging 炸＝册面零触碰零回滚；仅落盘后断言炸才回滚。
+Dependencies.  Python 3 stdlib only, no third-party imports, no network, no build step; peer
+  tools/registry_union.py supplies keying, anchor canonical forms, reanchor and A3 engines (imported, never modified; import failure exits 9).
 
-两态制（缺省干跑）：干跑＝处方逐条预演＋skip 清单＋md5 账（内存仿真如实标注）
-＋断言 NOT-RUN（干跑零写盘·断言不适用——push_gate NOT-RUN 同律诚实记）＋零写盘
-（work-dir 亦不建）；--apply 才写：写面＝显式指认的双册＋work-dir 备份＋显式
---json 出账路径。写前每册 shutil 备份入 --work-dir（缺省 tempfile.mkdtemp·可
---work-dir 固定）——回滚证据（备份路径/还原 md5）入 report。--apply 重跑已治册
-＝stale 爆（keep/drop 行号超界或键不符）exit 2·零写盘（fresh audit 重出方可
-复跑——处方与册面须同代）。
+Evidence.  --selftest: eight vectors on canned tmp fixtures (dry-run zero-write; apply with re-audit;
+  frozen vector "module A content alpha\\n" -> 77c2b9a8 byte-equal to the registry_union CLI on the
+  same input; blast rollback; CLI exit codes; determinism); suite members tests/test_registry_fix_dedup.py,
+  test_registry_fix_orphan_add.py, test_registry_fix_anchor.py.
 
-同参纪律：--audit-json 须为 registry_audit --fix-plan 产出（schema
-rocqwash-registry-audit/1）且其 inputs.order/project 与执行器 --order/--project
-逐字同（处方行号系绑定被审册面·异册即用法错 exit 2）。断言重跑参＝执行器自持
---order/--project/--anchor-src（--fix-plan 不重出·断言只读四账）。
-
-输出：--json schema rocqwash-registry-fix/1（sort_keys 确定性·items 逐条 md5 账/
-skip 清单/writes 盘面账/assertions 三判/rollback 证据）＋响亮 stdout。--apply 模
-式 report 含 work-dir 备份路径（路径随 --work-dir·同输入重跑字节恒同以同
---work-dir 为准）；干跑 report 零易变路径（缺省 work-dir 不现形）。
-
-退出码：0=干跑出账或 --apply 落盘＋断言三过；1=--selftest 炸；2=用法错（schema
-不合/缺 fix_plan/同参破/条目缺键）或 AssertBlast（行号超界/键不符/md5 漂移/歧义/
-无锚/A-fix 三判/写完整性）——AssertBlast 已回滚则报告带证据；9=输入缺（audit
-JSON/双册/audit 器/anchor-src 目录缺）。
-
-用法：
-  python3 tools/registry_fix.py --audit-json AUDIT.json --order ORDER.txt \
-      --project _CoqProject [--anchor-src DIR] [--json REPORT.json]        # 干跑
-  python3 tools/registry_fix.py …同上… --apply [--work-dir DIR]            # 落刀
-  python3 tools/registry_fix.py --selftest
-
-确定性：无时间戳无环境噪声（唯一环境读数＝INJECT_ENV 人工炸点·selftest 专用·
-真跑勿设）；同输入重跑输出字节恒同（selftest 断言）；纯 stdlib 零第三方零网络
-零编译。禁触冻结八件/quad8/更新账.md——本器写面恰为 --apply 指认双册＋work-dir
-备份＋显式 --json，不触任何在册冻结面。真树 --apply 候令不入本波（器备·真仓
-不跑·本波全验在 tmp fixture）。
-
---selftest 矢量（tmp fixture·v46 audit demo 形态样张：_CoqProject 尾区 12 逐字
-重复块＋锚 形怪/顺序号形/撞锚/缺锚/正典撞＋孤儿双向＋缺实件——零触真仓零网络）：
-  1 干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑字节恒同
-  2 --apply：DEDUP 12 重复块→0（重跑审计 duplicates=0）＋断言三过＋md5 账对盘
-  3 锚刷 md5 冻结向量（"module A content alpha\\n"→77c2b9a8）＋同输同出（本器
-    落刀册 bytes ≡ registry_union CLI 同参产物·逐字节）
-  4 回滚实证·人工炸点注入（INJECT_ENV=post-write）→exit 2＋册面逐字节还原
-  5 自然炸点（同内容双键重锚→A-fix-2 新撞锚）→exit 2＋回滚＋A3 引擎同码
-  6 staging 炸（audit 后册面漂移·保首键不符）→exit 2·零写盘（work-dir 不建）
-  7 CLI 四码＋schema 面（help0/bogus2/无输入2/缺件9/坏schema2/无fix_plan2/
-    同参破2/anchor-src 缺9）
-  8 落刀确定性（双 fresh 夹具同处→册面 bytes 与 md5 账恒同）
-
-ORPHAN-ADD apply path (--orphan-add, added 20261114): the order-only
-direction of the orphan prescriptions is mechanically solvable: its
-template is placeholder-free (derived from the order key path form) and
-the coqproject book carries no anchor, so under the opt-in flag
---orphan-add those entries are executed: the template row is appended to
-the coqproject book tail with the same per-item md5 accounting, staging
-guards and post-apply assertions as the other classes. Guards: plan
-template/key consistency under the coqproject keying (FailLoud); the key
-must be present in the order book, else AssertBlast ORPHAN-ADD-KEY-NOT-
-IN-ORDER (stale-audit discipline of the DEDUP stage); a coqproject row
-already hashing to the key under the coqproject keying (for example an
-extension-less module row that the audit .v-suffix criterion cannot see)
-routes the entry to the skip list as ORPHAN-ADD-SKIP-KEY-PRESENT instead
-of double-registering the module. Post-apply
-assertions extend the re-audit face with A-fix-4 orphans_resolved (no
-orphan-order-only finding survives for an executed key) and A-fix-5
-orphan_add_duplicates_zero (the appended row created no duplicate-key
-finding); either blast rolls back like the other assertion blasts.
-Without the flag the tool behavior is byte-identical to the frozen face
-above: every ORPHAN-ADD prescription stays on the skip list. A paired
-project-only entry whose key equals the order-only key after stripping
-repeated ".v" suffixes is a suffix-typo signature (e.g. order "X.v" vs
-_CoqProject "X.v.v": the module is already registered under a misspelled
-row), so such entries are skipped as ORPHAN-ADD-SKIP-SUFFIX-TWIN for
-human adjudication instead of double-registering the module; the
-project-only direction itself always stays non-mechanical because its
-template embeds #R<SEQ> and the sequence number is a registry-side
-decision. Vectors for this path live in
-tests/test_registry_fix_orphan_add.py (fixture-based, zero real-repo
-touch).
-
-REANCHOR residual gate (A-fix-6 treated_anchors_canonical): the
-reanchor stage had no post-apply oracle of its own —
-A-fix-1 covers treated duplicate keys and A-fix-2 compares anchor-text
-collision pairs post vs pre, so a reanchor that silently rewrote nothing
-would still pass. After the same-parameter re-audit, every executed
-REANCHOR key must now carry no anchor-seq-form / anchor-malformed
-finding. The oracle is the audit producer's own classification
-(registry_audit sections.anchors; those two kinds are exactly the
-reanchor target face of its build_fix_plan), so no anchor semantics are
-defined here. Scope is the executed keys only: skip-list keys (missing
-entity, missing anchor) and the collision face (A-fix-2) are untouched.
-A breach is ASSERT-TREATED-ANCHOR-NONZERO and rolls back like the other
-assertion blasts. Vectors live in tests/test_registry_fix_anchor.py.
+Exit-codes.  0 = dry-run report, or apply with all assertions passing; 1 = --selftest failed; 2 = usage
+  error (schema mismatch, no fix_plan, same-parameter breach, entry missing keys) or AssertBlast
+  (line out of range, key mismatch, md5 drift, ambiguity, no anchor, A-fix-1..6 breach, write
+  integrity), with rollback evidence in the report; 9 = missing input (audit JSON, either book, the
+  audit tool, or the anchor-src directory).
 """
+
 import argparse
 import hashlib
 import io
@@ -141,17 +45,17 @@ _TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 if _TOOLS_DIR not in sys.path:
     sys.path.insert(0, _TOOLS_DIR)
 try:
-    import registry_union as _ru  # noqa: E402  （键式/锚正典/重锚/A3 引擎·只 import 不改）
+    import registry_union as _ru  # noqa: E402  (keying/anchor-canonical/reanchor/A3 engines: import only, never modified)
 except Exception as _e:  # pragma: no cover
-    print("FAIL-LOUD: 同侪 tools/registry_union.py 不可导入（键式/锚正典/重锚"
-          "引擎零重造依赖）: %s" % _e, file=sys.stderr)
+    print("FAIL-LOUD: peer tools/registry_union.py not importable (keying/anchor-canonical/"
+          "reanchor engines are imported, never reimplemented): %s" % _e, file=sys.stderr)
     sys.exit(9)
 
 PROG = "registry_fix"
 SCHEMA = "rocqwash-registry-fix/1"
 AUDIT_SCHEMA = "rocqwash-registry-audit/1"
 
-MD5_PLACEHOLDER = "<MD5_8>"   # audit fix_plan 占位形（registry_audit 同款常量语义）
+MD5_PLACEHOLDER = "<MD5_8>"   # audit fix_plan placeholder form (same constant semantics as registry_audit)
 SEQ_PLACEHOLDER = "<SEQ>"     # orphan-row sequence placeholder (registry_audit
                               # SEQ_PLACEHOLDER, same constant semantics)
 BOOK_KINDS = {"order": _ru.KIND_ORDER, "coqproject": _ru.KIND_COQPROJECT}
@@ -165,20 +69,20 @@ PLACEHOLDER_TOKENS = (MD5_PLACEHOLDER, SEQ_PLACEHOLDER)
 # build_fix_plan reanchor target face: K_ANCHOR_SEQ / K_ANCHOR_MALFORMED).
 REANCHOR_TREATED_KINDS = ("anchor-seq-form", "anchor-malformed")
 
-INJECT_ENV = "ROCWASH_REGISTRY_FIX_INJECT_BLAST"  # 人工炸点（selftest 专用·真跑勿设）
+INJECT_ENV = "ROCWASH_REGISTRY_FIX_INJECT_BLAST"  # injected blast point (selftest only; never set in real runs)
 
 
 class FailLoud(Exception):
-    """用法错（exit 2·无 report——audit 同款 FAIL-LOUD 短报面）。"""
+    """Usage error (exit 2, no report; the registry_audit-style FAIL-LOUD short report face)."""
 
 
 def md5_bytes(b):
-    """字节串 md5 全 hex（处方逐条 md5 账基）。"""
+    """Full hex md5 of a byte string (basis of the per-item md5 account)."""
     return hashlib.md5(b).hexdigest()
 
 
 def md5_file(path):
-    """文件 md5 全 hex（盘面真值账基）。"""
+    """Full hex md5 of a file (basis of the on-disk truth account)."""
     h = hashlib.md5()
     with io.open(path, "rb") as fh:
         h.update(fh.read())
@@ -186,66 +90,71 @@ def md5_file(path):
 
 
 def dump_json(path, obj):
-    """确定性 JSON 落盘（sort_keys＋indent=1·registry_audit dump_json 同款）。"""
+    """Deterministic JSON write (sort_keys + indent=1, same form as the registry_audit dump_json)."""
     with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(obj, fh, indent=1, ensure_ascii=False, sort_keys=True)
         fh.write("\n")
 
 
-# ---------- 输入面 ----------
+# ---------- input loading ----------
 
 def load_audit_payload(path):
-    """--audit-json 载入＋schema 验（缺件 9·不可解析/schema 不合＝用法 2）。"""
+    """Load --audit-json and validate its schema (missing input = 9; unparseable or schema mismatch = usage 2)."""
     if not os.path.isfile(path):
-        raise _ru.MissingInput("--audit-json 文件缺失: %s" % path)
+        raise _ru.MissingInput("--audit-json file missing: %s" % path)
     try:
         with io.open(path, encoding="utf-8") as fh:
             payload = json.load(fh)
     except Exception as e:
-        raise FailLoud("--audit-json 不可解析（JSON）: %s" % e)
+        raise FailLoud("--audit-json is not parseable JSON: %s" % e)
     if not isinstance(payload, dict):
-        raise FailLoud("--audit-json 顶层须对象（JSON object）: %s" % path)
+        raise FailLoud("--audit-json top level must be a JSON object: %s" % path)
     if payload.get("schema") != AUDIT_SCHEMA:
-        raise FailLoud("--audit-json schema 不合: %r（须 %s·registry_audit "
-                       "--fix-plan 产出）" % (payload.get("schema"), AUDIT_SCHEMA))
+        raise FailLoud("--audit-json schema mismatch: %r (expected %s, as "
+                       "produced by registry_audit --fix-plan)"
+                       % (payload.get("schema"), AUDIT_SCHEMA))
     return payload
 
 
 def validate_audit(payload, args):
-    """同参纪律＋账面/处方结构验（fail-loud 用法 2）。返回 fix_plan。"""
+    """Same-parameter discipline plus audit/plan structure validation (fail-loud usage 2). Returns the fix_plan."""
     inputs = payload.get("inputs") or {}
     if payload.get("mode") != "files" \
             or inputs.get("order") != args.order \
             or inputs.get("project") != args.project:
         raise FailLoud(
-            "同参纪律破：audit 输入面与执行器双册须逐字同（处方行号系绑定被审"
-            "册面）——audit mode=%r inputs.order=%r inputs.project=%r；执行器"
-            " --order=%r --project=%r"
+            "same-parameter discipline breached: the audit inputs must equal "
+            "the executor's two books verbatim (plan line numbers bind to the "
+            "audited books) - audit mode=%r inputs.order=%r inputs.project=%r;"
+            " executor --order=%r --project=%r"
             % (payload.get("mode"), inputs.get("order"), inputs.get("project"),
                args.order, args.project))
     sections = payload.get("sections")
     if not isinstance(sections, dict):
-        raise FailLoud("audit sections 缺或非对象（audit 自洽破）")
+        raise FailLoud("audit sections missing or not an object (audit self-consistency breached)")
     for k in ("duplicates", "anchors", "orphans"):
         if not isinstance(sections.get(k), list):
-            raise FailLoud("audit sections.%s 缺或非列（audit 自洽破）" % k)
+            raise FailLoud("audit sections.%s missing or not a list (audit self-consistency breached)" % k)
     plan = payload.get("fix_plan")
     if not isinstance(plan, dict):
-        raise FailLoud("audit 未带 fix_plan（registry_audit 须 --fix-plan 产出）"
-                       "——执行器无处方可执")
+        raise FailLoud("audit carries no fix_plan (registry_audit must have "
+                       "run with --fix-plan) - the executor has no plan to apply")
     for k in ("dedup", "reanchor", "orphan", "unresolvable"):
         if not isinstance(plan.get(k), list):
-            raise FailLoud("fix_plan.%s 缺或非列（audit 自洽破）" % k)
+            raise FailLoud("fix_plan.%s missing or not a list (audit self-consistency breached)" % k)
     return plan
 
 
-# ---------- 册态 ----------
+# ---------- book state ----------
 
 class BookState(object):
-    """单册态：正本读形＋处方演化（原行号系 slots 保全·cur 现行）。
+    """One book's state: the original read form plus plan evolution (slots
+    preserves the original line-number basis; cur is the current form).
 
-    行尾/末行换行随正本（read_side 探形·render_output 重建——registry_union
-    引擎口径直用）；md5_staged＝处方演化的 staged-render 字节账。
+    Line endings and the final newline follow the original (probed by
+    read_side, rebuilt by render_output; the registry_union engine
+    semantics used directly); md5_staged = staged-render byte account of
+    the plan evolution.
     """
 
     def __init__(self, path, label):
@@ -253,13 +162,13 @@ class BookState(object):
         self.label = label
         self.kind = BOOK_KINDS[label]
         self.orig_lines, self.eol, self.final_nl = _ru.read_side(
-            path, "--%s" % label)  # 缺件 MissingInput→9
-        self.slots = list(enumerate(self.orig_lines, 1))  # (audit 原行号, 行)
-        self.deleted = set()     # 已处方删除的原行号系
+            path, "--%s" % label)  # missing input: MissingInput -> exit 9
+        self.slots = list(enumerate(self.orig_lines, 1))  # (original audit line number, line)
+        self.deleted = set()     # original line numbers already removed by the plan
         self.cur = list(self.orig_lines)
 
     def apply_deletes(self, orig_nos):
-        """按原行号系删行（dedup 保首·slots 口径一次重组）。"""
+        """Delete rows by the original line-number basis (dedup keep-first; rebuilt once over slots)."""
         self.deleted.update(orig_nos)
         self.cur = [ln for (no, ln) in self.slots if no not in self.deleted]
 
@@ -273,55 +182,60 @@ class BookState(object):
         return self.cur != self.orig_lines
 
 
-# ---------- 处方演算（staging·零写盘） ----------
+# ---------- plan staging (in memory, zero writes) ----------
 
 def stage_dedup(plan, books, items):
-    """① DEDUP 保首：fix_plan.dedup 逐条验尸＋演化（原行号系·keep=min 不动）。"""
+    """① Stage 1 DEDUP keep-first: validate and evolve fix_plan.dedup item by item (original line-number basis; keep=min untouched)."""
     for e in plan["dedup"]:
         if not isinstance(e, dict):
-            raise FailLoud("fix_plan.dedup 条目非对象: %r" % (e,))
+            raise FailLoud("fix_plan.dedup entry is not an object: %r" % (e,))
         book = e.get("book")
         key = e.get("key")
         keep = e.get("keep_line")
         drops = e.get("drop_lines")
         if book not in BOOK_KINDS:
-            raise FailLoud("fix_plan.dedup book 非法: %r（须 order|coqproject）"
-                           % (book,))
+            raise FailLoud("fix_plan.dedup book invalid: %r (must be "
+                           "order|coqproject)" % (book,))
         if not isinstance(key, str) or not key:
-            raise FailLoud("fix_plan.dedup 条目缺 key: %r" % (e,))
+            raise FailLoud("fix_plan.dedup entry missing key: %r" % (e,))
         if not isinstance(keep, int) or not isinstance(drops, list) \
                 or not drops or not all(isinstance(n, int) for n in drops):
-            raise FailLoud("fix_plan.dedup 条目缺 keep_line/drop_lines: key=%r"
-                           % key)
+            raise FailLoud("fix_plan.dedup entry missing keep_line/drop_lines: "
+                           "key=%r" % key)
         bs = books[book]
         for n in [keep] + list(drops):
             if not 1 <= n <= len(bs.slots):
                 raise _ru.AssertBlast(
                     "DEDUP-LINE-OUT-OF-RANGE",
-                    ["book=%s key=%r 行 L%d 超界（1..%d）——audit↔册漂移"
-                     "（stale audit 禁静默）" % (book, key, n, len(bs.slots))])
+                    ["book=%s key=%r line L%d out of range (1..%d) - "
+                     "audit-vs-book drift (a stale audit is never silently "
+                     "tolerated)" % (book, key, n, len(bs.slots))])
         if _ru.key_of(bs.slots[keep - 1][1], bs.kind) != key:
             raise _ru.AssertBlast(
                 "DEDUP-KEEP-KEY-MISMATCH",
-                ["book=%s keep=L%s 现行键 %r ≠ 处方键 %r——audit↔册漂移"
+                ["book=%s keep=L%s current key %r != plan key %r "
+                 "(audit-vs-book drift)"
                  % (book, keep, _ru.key_of(bs.slots[keep - 1][1], bs.kind),
                     key)])
         for n in drops:
             if _ru.key_of(bs.slots[n - 1][1], bs.kind) != key:
                 raise _ru.AssertBlast(
                     "DEDUP-DROP-KEY-MISMATCH",
-                    ["book=%s drop=L%s 现行键 %r ≠ 处方键 %r——audit↔册漂移"
+                    ["book=%s drop=L%s current key %r != plan key %r "
+                     "(audit-vs-book drift)"
                      % (book, n, _ru.key_of(bs.slots[n - 1][1], bs.kind), key)])
         if keep in drops:
             raise _ru.AssertBlast(
                 "DEDUP-KEEP-IN-DROP",
-                ["book=%s key=%r keep=L%d 同时列 drop（audit 处方自洽破）"
+                ["book=%s key=%r keep=L%d is also listed in drop (audit plan "
+                 "self-consistency breached)"
                  % (book, key, keep)])
         overlap = sorted(set(drops) & bs.deleted)
         if overlap:
             raise _ru.AssertBlast(
                 "DEDUP-DROP-ALREADY-DELETED",
-                ["book=%s key=%r drop 行已先治（处方行号交叠·audit 自洽破）: L%s"
+                ["book=%s key=%r drop lines already treated (overlapping plan "
+                 "line numbers, audit self-consistency breached): L%s"
                  % (book, key, ",".join(str(n) for n in overlap))])
         before = bs.md5_staged()
         bs.apply_deletes(set(drops))
@@ -332,43 +246,49 @@ def stage_dedup(plan, books, items):
 
 
 def stage_reanchor(plan, books, items, skips, anchor_src):
-    """② 锚刷：fix_plan.reanchor 逐条→registry_union.apply_reanchor 同款直调。"""
+    """② Stage 2 reanchor: each fix_plan.reanchor item via a direct call to the same registry_union.apply_reanchor engine."""
     bs = books["order"]
     for e in plan["reanchor"]:
         if not isinstance(e, dict):
-            raise FailLoud("fix_plan.reanchor 条目非对象: %r" % (e,))
+            raise FailLoud("fix_plan.reanchor entry is not an object: %r" % (e,))
         key = e.get("key")
         if not isinstance(key, str) or not key:
-            raise FailLoud("fix_plan.reanchor 条目缺 key: %r" % (e,))
+            raise FailLoud("fix_plan.reanchor entry missing key: %r" % (e,))
         bare = _ru.bare_name(key)
         if anchor_src is None:
             skips.append({"kind": "REANCHOR-SKIP-NO-ANCHOR-SRC", "key": key,
-                          "reason": "执行器未给 --anchor-src（md5 无源·留原样"
-                                    "如实列 skip·wash_shape plan-miss 同律）"})
+                          "reason": "no --anchor-src given to the executor "
+                                    "(no md5 source; the row stays as-is on "
+                                    "the skip list, the same honesty rule as "
+                                    "the wash_shape plan-miss listing)"})
             continue
         before = bs.md5_staged()
-        # 引擎同款重锚（歧义 UsageError/无锚 AssertBlast 原样上抛＝引擎语义）
+        # same-engine reanchor (ambiguous -> UsageError, no anchor ->
+        # AssertBlast, both raised as-is: engine semantics)
         out, rewrites, missing, not_in_table = _ru.apply_reanchor(
             bs.cur, [bare], anchor_src, _ru.KIND_ORDER)
         if not_in_table:
             raise _ru.AssertBlast(
                 "REANCHOR-KEY-NOT-IN-TABLE",
-                ["处方键 %r 不在现表（audit↔册漂移·禁静默）: %s"
+                ["plan key %r not in the current table (audit-vs-book drift, "
+                 "never silently tolerated): %s"
                  % (key, not_in_table)])
         if missing:
             skips.append({"kind": "REANCHOR-SKIP-MISSING-ENTITY", "key": key,
                           "bare": bare,
-                          "reason": "anchor-src 下缺同名 .v 实件（留原样·如实"
-                                    "列 skip·不硬造）"})
+                          "reason": "no same-named .v entity under anchor-src "
+                                    "(row stays as-is on the skip list; "
+                                    "nothing is fabricated)"})
             continue
-        entity = _ru.resolve_entity(bare, anchor_src)  # missing 空故非 None
+        entity = _ru.resolve_entity(bare, anchor_src)  # missing is empty here, so the entity is not None
         engine_md5 = rewrites[0]["md5_8"] if rewrites else _ru.md5_8_of(entity)
         audit_md5 = e.get("md5_8")
         if audit_md5 and audit_md5 != MD5_PLACEHOLDER and audit_md5 != engine_md5:
             raise _ru.AssertBlast(
                 "REANCHOR-MD5-DRIFT",
-                ["处方键 %r：audit 记 md5_8=%s 而实件重算=%s（audit↔实件漂移"
-                 "·禁静默）" % (key, audit_md5, engine_md5)])
+                ["plan key %r: audit records md5_8=%s but the entity re-hash "
+                 "gives %s (audit-vs-entity drift, never silently tolerated)"
+                 % (key, audit_md5, engine_md5)])
         bs.cur = out
         items.append({"no": len(items) + 1, "kind": "REANCHOR", "book": "order",
                       "key": key, "bare": bare,
@@ -382,15 +302,17 @@ def stage_reanchor(plan, books, items, skips, anchor_src):
 
 
 def stage_nons(plan, payload, skips):
-    """③ 非机械可解→skip 清单如实直传（孤儿模板/unresolvable/缺锚）。"""
+    """③ Stage 3 non-mechanical -> skip list, passed through as-is (orphan templates / unresolvable / missing anchors)."""
     for o in plan["orphan"]:
         if not isinstance(o, dict) or not o.get("key"):
-            raise FailLoud("fix_plan.orphan 条目缺 key: %r" % (o,))
+            raise FailLoud("fix_plan.orphan entry missing key: %r" % (o,))
         skips.append({"kind": "ORPHAN-ADD-SKIP-NON-MECHANICAL",
                       "key": o.get("key"), "direction": o.get("direction"),
                       "template": o.get("template"),
-                      "reason": "补行序号 <SEQ> 须注册决定·禁机械造锚（模板"
-                                "直传·audit 处方同款）"})
+                      "reason": "the appended-row sequence <SEQ> is a "
+                                "registry-side decision; anchors are never "
+                                "fabricated mechanically (template passed "
+                                "through, same form as the audit prescription)"})
     for u in plan["unresolvable"]:
         skips.append({"kind": "UNRESOLVABLE-PASSTHROUGH", "anchor": u.get("anchor"),
                       "lines": u.get("lines"), "note": u.get("note")})
@@ -398,8 +320,10 @@ def stage_nons(plan, payload, skips):
         if isinstance(f, dict) and f.get("kind") == "anchor-missing":
             skips.append({"kind": "ANCHOR-MISSING-SKIP", "key": f.get("key"),
                           "lines": f.get("lines"),
-                          "reason": "键行无锚（无序号可承·序号须注册决定·禁机械"
-                                    "造锚）"})
+                          "reason": "the key row carries no anchor (no "
+                                    "sequence to inherit; the sequence is a "
+                                    "registry-side decision, anchors are "
+                                    "never fabricated mechanically)"})
 
 
 # ---------- ④ ORPHAN-ADD apply path (opt-in --orphan-add) ----------
@@ -516,16 +440,19 @@ def stage_orphan_add(plan, books, items, skips):
     return residual
 
 
-# ---------- 落盘／断言／回滚 ----------
+# ---------- write / assertions / rollback ----------
 
 def backup_and_write(books, work_dir):
-    """--apply 写面：逐册写前备份→落盘→盘面 md5 对 staged 账复核。
+    """The --apply write face: back up each book, write it, then reconcile the
+    on-disk md5 against the staged account.
 
-    写面恰为显式指认双册＋work-dir 备份；写完整性炸＝AssertBlast（主流程回滚）。
+    The write face is exactly the two books named on the command line plus
+    the work-dir backups; a write-integrity blast is an AssertBlast (the
+    main flow rolls back).
     """
     os.makedirs(work_dir, exist_ok=True)
     out = []
-    for label in sorted(BOOK_KINDS):  # coqproject < order（确定性序）
+    for label in sorted(BOOK_KINDS):  # coqproject < order (deterministic order)
         bs = books[label]
         if not bs.touched():
             continue
@@ -535,14 +462,16 @@ def backup_and_write(books, work_dir):
         shutil.copy2(bs.path, backup)
         if md5_file(backup) != on_disk_before:
             raise _ru.AssertBlast("BACKUP-INTEGRITY",
-                                  ["%s 备份 md5 ≠ 原盘 md5（备份面破·禁落刀）"
-                                   % bs.path])
+                                  ["%s backup md5 != md5 of the original "
+                                   "on-disk file (backup integrity breached; "
+                                   "write refused)" % bs.path])
         with io.open(bs.path, "wb") as fh:
             fh.write(bs.render())
         on_disk_after = md5_file(bs.path)
         if on_disk_after != bs.md5_staged():
             raise _ru.AssertBlast("WRITE-INTEGRITY",
-                                  ["%s 写后盘 md5 %s ≠ 处方账 %s（写完整性破）"
+                                  ["%s on-disk md5 after write %s != staged "
+                                   "account %s (write integrity breached)"
                                    % (bs.path, on_disk_after, bs.md5_staged())])
         out.append({"book": label, "path": bs.path, "eol": bs.eol,
                     "final_nl": bs.final_nl,
@@ -555,7 +484,7 @@ def backup_and_write(books, work_dir):
 
 
 def rollback(writes):
-    """炸即还原：逐册从备份逐字节还原＋md5 对原值复核（证据入 report）。"""
+    """Restore on any blast: copy each book back from its backup byte-for-byte and reconcile the md5 against the pre-write value (evidence goes into the report)."""
     restored = {}
     all_ok = True
     for w in writes:
@@ -570,12 +499,14 @@ def rollback(writes):
 
 
 def run_assertions(audit_payload, books, treated, args, audit_tool, work_dir):
-    """断言三判（--apply 后）：A3 引擎直算＋重跑 registry_audit 同参。"""
-    # A-fix-2 锚撞文本零新增（registry_union A3 同款引擎直算·post 对 pre）
+    """The three assertions (after --apply): the A3 engine called directly, plus a registry_audit re-run at the same parameters."""
+    # A-fix-2 no new anchor-text collisions (registry_union A3 engine called
+    # directly; post vs pre)
     _ru.assert_anchor_no_new_dups(books["order"].cur, books["order"].orig_lines)
-    # 重跑 registry_audit 同参（--fix-plan 不重出·断言只读四账）
+    # re-run registry_audit at the same parameters (no --fix-plan re-emission;
+    # the assertions read the four accounts only)
     if not os.path.isfile(audit_tool):
-        raise _ru.MissingInput("audit 器缺失: %s" % audit_tool)
+        raise _ru.MissingInput("audit tool missing: %s" % audit_tool)
     post_path = os.path.join(work_dir, "post_audit.json")
     cmd = [sys.executable, "-B", audit_tool,
            "--order", args.order, "--project", args.project]
@@ -585,7 +516,7 @@ def run_assertions(audit_payload, books, treated, args, audit_tool, work_dir):
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     if p.returncode != 0:
         raise _ru.AssertBlast("ASSERT-REAUDIT-FAILED",
-                              ["重跑 registry_audit rc=%d: %s"
+                              ["registry_audit re-run rc=%d: %s"
                                % (p.returncode,
                                   p.stdout.decode("utf-8", errors="replace")
                                   [-800:])])
@@ -593,15 +524,17 @@ def run_assertions(audit_payload, books, treated, args, audit_tool, work_dir):
         post = json.load(fh)
     if post.get("schema") != AUDIT_SCHEMA:
         raise _ru.AssertBlast("ASSERT-REAUDIT-SCHEMA",
-                              ["重跑审计 schema 不合: %r" % post.get("schema")])
-    # A-fix-1 被治键 duplicates=0
+                              ["re-run audit schema mismatch: %r"
+                               % post.get("schema")])
+    # A-fix-1 treated keys have duplicates=0 after the re-audit
     hits = ["%s/%s" % (f["kind"], f["key"])
             for f in post["sections"]["duplicates"]
             if (DUP_KIND_TO_BOOK.get(f["kind"]), f.get("key")) in treated]
     if hits:
         raise _ru.AssertBlast("ASSERT-TREATED-DUP-NONZERO",
-                              ["被治键 duplicates 残留: %s" % h for h in hits])
-    # A-fix-3 孤儿不增
+                              ["treated keys still carry duplicate findings "
+                               "after the re-audit: %s" % h for h in hits])
+    # A-fix-3 the orphan account does not grow
     pre_keys = {(f.get("kind"), f.get("key"))
                 for f in audit_payload["sections"]["orphans"]}
     post_keys = {(f.get("kind"), f.get("key"))
@@ -609,7 +542,8 @@ def run_assertions(audit_payload, books, treated, args, audit_tool, work_dir):
     new = sorted("%s/%s" % kv for kv in (post_keys - pre_keys))
     if new:
         raise _ru.AssertBlast("ASSERT-ORPHAN-NEW",
-                              ["孤儿账新增: %s" % k for k in new])
+                              ["the orphan account gained new entries: %s"
+                               % k for k in new])
     return {"ran": True, "anchor_text_no_new_dups": "PASS",
             "treated_duplicates_zero": "PASS", "orphans_no_new": "PASS",
             "reaudit_summary": post["summary"], "reaudit_inputs": post["inputs"]}
@@ -656,7 +590,7 @@ def assert_treated_anchors_canonical(post, treated_keys):
     Reads the same post-apply audit JSON the A-fix face already re-ran at
     the same parameters and asserts, for every executed REANCHOR key, that
     no anchor finding of the reanchor target kinds (anchor-seq-form /
-    anchor-malformed — registry_audit build_fix_plan's own target face)
+    anchor-malformed, registry_audit build_fix_plan's own target face)
     survives. The audit producer's classification is the whole oracle; no
     anchor semantics are defined here. Scope is the executed keys only:
     skip-list keys (missing entity, missing anchor) keep their rows by
@@ -681,7 +615,7 @@ def assert_treated_anchors_canonical(post, treated_keys):
 
 def build_report(args, audit_payload, plan, books, items, skips, writes,
                  assertions, blast):
-    """report（schema rocqwash-registry-fix/1·sort_keys 确定性）。"""
+    """The report (schema rocqwash-registry-fix/1, sort_keys deterministic)."""
     summ = audit_payload.get("summary") or {}
     executed_dedup = sum(1 for it in items if it["kind"] == "DEDUP")
     executed_reanchor = sum(1 for it in items if it["kind"] == "REANCHOR")
@@ -702,8 +636,9 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
                              "mode": audit_payload.get("mode"),
                              "anchor_src": audit_payload.get("anchor_src"),
                              "summary": summ},
-        "engine": ("registry_union.apply_reanchor / assert_anchor_no_new_dups"
-                   " 直用（键式/锚正典/重锚/A3 零新引擎）"),
+        "engine": ("direct calls into registry_union.apply_reanchor / "
+                   "assert_anchor_no_new_dups (keying/anchor-canonical/"
+                   "reanchor/A3 engines reused, none reimplemented)"),
         "stats": {
             "planned": {"dedup": len(plan["dedup"]),
                         "reanchor": len(plan["reanchor"]),
@@ -719,9 +654,10 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
                      "order_after": len(books["order"].cur),
                      "coqproject_before": len(books["coqproject"].orig_lines),
                      "coqproject_after": len(books["coqproject"].cur)},
-            "md5_basis": "逐条 md5＝处方演化的 staged-render 字节（read_side/"
-                         "render_output 引擎口径·行尾/末行随正本）；writes."
-                         "books 盘面 md5＝落盘真值",
+            "md5_basis": "per-item md5 = staged-render bytes of the plan "
+                         "evolution (read_side/render_output engine semantics; "
+                         "line endings and the final newline follow the "
+                         "original); writes.books md5 = on-disk truth",
         },
         "items": items,
         "skip": skips,
@@ -737,7 +673,8 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
             "books_touched": sorted(touched),
             "rolled_back": bool(writes and writes.get("rolled_back")),
             "assertions": ("PASS" if assertions and assertions.get("ran")
-                           else "NOT-RUN（干跑零写盘·断言不适用）"
+                           else "NOT-RUN (dry run writes nothing; assertions "
+                                "not applicable)"
                            if not args.apply else "BLAST"),
         },
     }
@@ -745,23 +682,25 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
 
 
 def print_stdout(rep):
-    """响亮 stdout 出账（确定性·逐条/skip/写面/断言全列）。"""
+    """The loud stdout account (deterministic; items / skip list / writes / assertions all listed)."""
     print("=== REGISTRY-FIX (%s·%s) ===" % (rep["mode"], SCHEMA))
     for k in sorted(rep["inputs"]):
-        print("  %s=%s" % (k, rep["inputs"][k] or "（未给）"))
+        print("  %s=%s" % (k, rep["inputs"][k] or "(not given)"))
     aim = rep["audit_input_meta"]["summary"] or {}
-    print("audit 旁证: duplicates=%s anchors=%s orphans=%s total=%s（mode=%s）"
+    print("audit side evidence: duplicates=%s anchors=%s orphans=%s "
+          "total=%s (mode=%s)"
           % (aim.get("duplicates"), aim.get("anchors"), aim.get("orphans"),
              aim.get("total"), rep["audit_input_meta"].get("mode")))
     st = rep["stats"]
-    print("处方: dedup=%d reanchor=%d（planned orphan=%d unresolvable=%d）"
+    print("plan: dedup=%d reanchor=%d (planned orphan=%d unresolvable=%d)"
           % (st["planned"]["dedup"], st["planned"]["reanchor"],
              st["planned"]["orphan"], st["planned"]["unresolvable"]))
-    print("--- 处方逐条（%d 条·md5 账＝staged-render 口径） ---" % len(rep["items"]))
+    print("--- plan items (%d items; md5 account = staged-render bytes) ---"
+          % len(rep["items"]))
     for it in rep["items"]:
         if it["kind"] == "DEDUP":
             print("  #%d %s DEDUP book=%s key=%s keep=L%d drop=L%s  "
-                  "md5 %s→%s"
+                  "md5 %s->%s"
                   % (it["no"], "APPLIED" if rep["mode"] == "APPLY"
                      else "DRY-STAGED", it["book"], it["key"], it["keep_line"],
                      ",".join("L%d" % n for n in it["drop_lines"]),
@@ -775,20 +714,20 @@ def print_stdout(rep):
                      it["md5_after"][:8]))
         else:
             rws = it["rewrites"]
-            print("  #%d %s REANCHOR key=%s %s→%s（实件 %s·重写 %d 行）  "
-                  "md5 %s→%s"
+            print("  #%d %s REANCHOR key=%s %s->%s (entity %s, %d rows "
+                  "rewritten)  md5 %s->%s"
                   % (it["no"], "APPLIED" if rep["mode"] == "APPLY"
                      else "DRY-STAGED", it["key"],
                      rws[0]["old_anchor"] if rws else it["old_anchor"],
-                     rws[0]["new_anchor"] if rws else "(已正典)",
+                     rws[0]["new_anchor"] if rws else "(already canonical)",
                      it["entity"], len(rws),
                      it["md5_before"][:8], it["md5_after"][:8]))
-    print("--- skip 清单（%d 条·如实直传） ---" % len(rep["skip"]))
+    print("--- skip list (%d items, passed through as-is) ---" % len(rep["skip"]))
     for s in rep["skip"]:
         if s["kind"] == "REANCHOR-SKIP-MISSING-ENTITY":
             print("  %s %s: %s" % (s["kind"], s["key"], s["reason"]))
         elif s["kind"] == "ORPHAN-ADD-SKIP-NON-MECHANICAL":
-            print("  %s %s（%s）: template=%s"
+            print("  %s %s (%s): template=%s"
                   % (s["kind"], s["key"], s.get("direction") or "-",
                      s.get("template")))
         elif s["kind"] == "ORPHAN-ADD-SKIP-SUFFIX-TWIN":
@@ -801,7 +740,7 @@ def print_stdout(rep):
                      ",".join(str(x) for x in s.get("present_lines") or []),
                      s.get("template")))
         elif s["kind"] == "UNRESOLVABLE-PASSTHROUGH":
-            print("  %s 锚 %s L%s: %s"
+            print("  %s anchor %s L%s: %s"
                   % (s["kind"], s.get("anchor"),
                      ",".join(str(x) for x in (s.get("lines") or [])),
                      s.get("note") or ""))
@@ -815,24 +754,27 @@ def print_stdout(rep):
                                    s.get("reason") or ""))
     if rep["writes"] is not None:
         wr = rep["writes"]
-        print("--- 写面（%d 册%s） ---"
+        print("--- writes (%d books%s) ---"
               % (len(wr.get("books") or []),
-                 "·已回滚" if wr.get("rolled_back") else ""))
+                 ", rolled back" if wr.get("rolled_back") else ""))
         for w in wr.get("books") or []:
-            print("  %s %s rows %d→%d md5 %s→%s（备份 %s）"
+            print("  %s %s rows %d->%d md5 %s->%s (backup %s)"
                   % (w["book"], w["path"], w["rows_before"], w["rows_after"],
                      w["md5_on_disk_before"][:8], w["md5_on_disk_after"][:8],
                      w["backup"]))
     else:
-        print("--- 写面: 零写盘（干跑／staging 炸未落刀） ---")
+        print("--- writes: zero writes (dry run, or staging blast before any "
+              "write) ---")
     an = rep["assertions"]
     if an is None:
-        print("--- 断言: NOT-RUN（%s） ---"
-              % ("干跑零写盘·断言不适用——push_gate NOT-RUN 同律"
+        print("--- assertions: NOT-RUN (%s) ---"
+              % ("dry run writes nothing; assertions not applicable (same "
+                 "honesty rule as the push_gate NOT-RUN entry)"
                  if rep["mode"] == "DRY-RUN" else
-                 "staging 炸未落盘·断言未至"))
+                 "staging blast before any write; assertions not reached"))
     elif an.get("ran"):
-        print("--- 断言（重跑 registry_audit 同参） ---")
+        print("--- assertions (registry_audit re-run at the same parameters) "
+              "---")
         print("  treated_duplicates_zero=PASS anchor_text_no_new_dups=PASS "
               "orphans_no_new=PASS")
         if an.get("orphans_resolved"):
@@ -843,10 +785,10 @@ def print_stdout(rep):
             print("  treated_anchors_canonical=%s"
                   % an["treated_anchors_canonical"])
     else:
-        print("--- 断言: NOT-RUN（%s） ---" % an.get("reason"))
+        print("--- assertions: NOT-RUN (%s) ---" % an.get("reason"))
     bl = rep["blast"]
     if bl:
-        print("BLAST %s（%s·rc=2）：" % (bl.get("code"), bl.get("phase")))
+        print("BLAST %s (%s, rc=2):" % (bl.get("code"), bl.get("phase")))
         for it in bl.get("items") or []:
             print("  - %s" % it)
     summ = rep["summary"]
@@ -857,19 +799,19 @@ def print_stdout(rep):
              summ["assertions"]))
 
 
-# ---------- 主流程 ----------
+# ---------- main flow ----------
 
 def run_fix(args):
-    """主流程 → (report, exit_code)。AssertBlast 已收拢（回滚已做·证据入 report）。"""
+    """Main flow -> (report, exit_code). AssertBlast is contained here (rollback already done; evidence in the report)."""
     audit_payload = load_audit_payload(args.audit_json)
     if args.anchor_src is not None and not os.path.isdir(args.anchor_src):
-        raise _ru.MissingInput("--anchor-src 目录缺失: %s" % args.anchor_src)
+        raise _ru.MissingInput("--anchor-src directory missing: %s" % args.anchor_src)
     books = {"order": BookState(args.order, "order"),
              "coqproject": BookState(args.project, "coqproject")}
-    plan = validate_audit(audit_payload, args)  # 同参纪律后置（缺册 9 先于同参破 2）
+    plan = validate_audit(audit_payload, args)  # same-parameter check runs after the books load (missing book = 9 before same-parameter breach = 2)
     if args.apply:
         if not os.path.isfile(args.audit_tool):
-            raise _ru.MissingInput("audit 器缺失: %s" % args.audit_tool)
+            raise _ru.MissingInput("audit tool missing: %s" % args.audit_tool)
 
     items, skips = [], []
     writes = None
@@ -887,11 +829,11 @@ def run_fix(args):
         else:
             stage_nons(plan, audit_payload, skips)
     except _ru.AssertBlast as e:
-        blast = {"code": e.code, "phase": "stage（零写盘·册面零触碰）",
+        blast = {"code": e.code, "phase": "stage (zero writes; books untouched)",
                  "items": list(e.items)}
         report = build_report(args, audit_payload, plan, books, items, skips,
                               None, None, blast)
-        print("ASSERT-BLAST %s（staging·exit 2·零写盘）：" % e.code,
+        print("ASSERT-BLAST %s (staging, exit 2, zero writes):" % e.code,
               file=sys.stderr)
         for it in e.items:
             print("  - %s" % it, file=sys.stderr)
@@ -901,8 +843,10 @@ def run_fix(args):
         report = build_report(args, audit_payload, plan, books, items, skips,
                               None,
                               {"ran": False,
-                               "reason": "dry-run 零写盘·断言不适用（--apply 后"
-                                         "重跑同参方判）"},
+                               "reason": "dry run writes nothing; assertions "
+                                         "not applicable (they run only after "
+                                         "--apply, re-running the audit at the "
+                                         "same parameters)"},
                               None)
         return report, 0
 
@@ -914,8 +858,8 @@ def run_fix(args):
         if os.environ.get(INJECT_ENV, "").strip() == "post-write":
             raise _ru.AssertBlast(
                 "INJECTED-POST-WRITE-BLAST",
-                ["人工炸点注入（%s=post-write·selftest 专用·真跑勿设）"
-                 % INJECT_ENV])
+                ["injected blast point (%s=post-write; selftest only, never "
+                 "set in real runs)" % INJECT_ENV])
         assertions = run_assertions(audit_payload, books, treated, args,
                                     args.audit_tool, work_dir)
         # A-fix-6: executed reanchor keys leave no residual anchor findings
@@ -935,33 +879,34 @@ def run_fix(args):
         ev = rollback(writes["books"]) if writes["books"] else {
             "backups": {}, "restored": {}, "all_restored": True}
         writes["rolled_back"] = True
-        blast = {"code": e.code, "phase": "apply（已落盘→已回滚）",
+        blast = {"code": e.code, "phase": "apply (written, then rolled back)",
                  "items": list(e.items)}
         report = build_report(args, audit_payload, plan, books, items, skips,
                               writes,
                               {"ran": False,
-                               "reason": "断言炸·回滚后不出 PASS（%s）" % e.code},
+                               "reason": "assertion blast; no PASS after "
+                                         "rollback (%s)" % e.code},
                               blast)
         report["rollback_evidence"] = ev
-        print("ASSERT-BLAST %s（exit 2·已回滚）：" % e.code, file=sys.stderr)
+        print("ASSERT-BLAST %s (exit 2, rolled back):" % e.code, file=sys.stderr)
         for it in e.items:
             print("  - %s" % it, file=sys.stderr)
-        print("rollback: %s（all_restored=%s）"
+        print("rollback: %s (all_restored=%s)"
               % (sorted(ev["backups"]), ev["all_restored"]), file=sys.stderr)
         return report, 2
     except OSError as e:
         ev = rollback(writes["books"]) if writes["books"] else {
             "backups": {}, "restored": {}, "all_restored": True}
         writes["rolled_back"] = True
-        blast = {"code": "IO-BLAST", "phase": "apply（已落盘→已回滚）",
+        blast = {"code": "IO-BLAST", "phase": "apply (written, then rolled back)",
                  "items": ["OSError: %s" % e]}
         report = build_report(args, audit_payload, plan, books, items, skips,
                               writes,
                               {"ran": False,
-                               "reason": "IO 炸·回滚后不出 PASS"},
+                               "reason": "IO blast; no PASS after rollback"},
                               blast)
         report["rollback_evidence"] = ev
-        print("ASSERT-BLAST IO-BLAST（exit 2·已回滚）: %s" % e, file=sys.stderr)
+        print("ASSERT-BLAST IO-BLAST (exit 2, rolled back): %s" % e, file=sys.stderr)
         return report, 2
 
     report = build_report(args, audit_payload, plan, books, items, skips,
@@ -975,20 +920,27 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="注册册处方执行器：registry_audit fix-plan 逐条落刀"
-                    "（DEDUP 保首/锚刷引擎直用/孤儿 skip 直传）＋断言三判＋"
-                    "炸即回滚（缺省干跑·--apply 才写）")
+        description="registry fix-plan executor: applies the registry_audit "
+                    "fix-plan item by item (DEDUP keep-first, reanchor via "
+                    "the registry_union engine, non-mechanical prescriptions "
+                    "passed through to the skip list), then re-runs the "
+                    "assertions; any blast rolls back (dry run by default, "
+                    "writes only under --apply)")
     ap.add_argument("--audit-json", default=None, metavar="FILE",
-                    help="registry_audit 产出（rocqwash-registry-audit/1·"
-                         "须 --fix-plan 产出）")
+                    help="registry_audit output (rocqwash-registry-audit/1, "
+                         "must come from --fix-plan)")
     ap.add_argument("--order", default=None, metavar="PATH",
-                    help="order.txt 册（与 --project 成对·须与 audit 同参）")
+                    help="order.txt book (paired with --project; must match "
+                         "the audit parameters)")
     ap.add_argument("--project", default=None, metavar="PATH",
-                    help="_CoqProject 册（与 --order 成对·须与 audit 同参）")
+                    help="_CoqProject book (paired with --order; must match "
+                         "the audit parameters)")
     ap.add_argument("--anchor-src", default=None, metavar="DIR",
-                    help="锚刷 md5 实件源目录（缺件键留原样列 skip）")
+                    help="entity source directory for reanchor md5 (keys "
+                         "with missing entities stay as-is on the skip list)")
     ap.add_argument("--apply", action="store_true",
-                    help="允许落刀（缺省干跑零写盘·写前 tmp 备份·炸即回滚）")
+                    help="allow writing (dry run by default with zero writes; "
+                         "pre-write backups; rollback on any blast)")
     ap.add_argument("--orphan-add", action="store_true",
                     help="execute the mechanically solvable ORPHAN-ADD "
                          "prescriptions (order-only direction: append the "
@@ -996,12 +948,14 @@ def main():
                          "keeps every ORPHAN-ADD prescription on the skip "
                          "list (frozen legacy behavior)")
     ap.add_argument("--work-dir", default=None, metavar="DIR",
-                    help="备份/重跑审计出账目录（--apply 用·缺省 mkdtemp）")
+                    help="directory for the backups and the re-run audit "
+                         "output (--apply only; mkdtemp by default)")
     ap.add_argument("--audit-tool", default=None, metavar="PATH",
-                    help="registry_audit.py 路径（缺省同侪 tools/）")
+                    help="path to registry_audit.py (default: the peer "
+                         "tools/ directory)")
     ap.add_argument("--json", default=None, metavar="FILE",
-                    help="report 出账（schema rocqwash-registry-fix/1·炸时"
-                         "亦出＝回滚证据）")
+                    help="report output path (schema rocqwash-registry-fix/1; "
+                         "written even on a blast, carrying rollback evidence)")
     args = ap.parse_args(argv)
 
     try:
@@ -1014,11 +968,13 @@ def main():
         sys.exit(code)
 
     if not args.audit_json:
-        die("无输入面：--audit-json 必给（registry_audit --fix-plan 产出）", 2)
+        die("no input: --audit-json is required (output of registry_audit "
+            "--fix-plan)", 2)
     if (args.order is None) != (args.project is None):
-        die("--order 与 --project 须成对（双册口径·缺一不可）", 2)
+        die("--order and --project must be given as a pair (two-book "
+            "convention; neither may be omitted)", 2)
     if not args.order:
-        die("无输入面：--order＋--project 双册必给", 2)
+        die("no input: both books --order and --project are required", 2)
     args.audit_tool = args.audit_tool or os.path.join(
         _TOOLS_DIR, "registry_audit.py")
 
@@ -1029,7 +985,7 @@ def main():
     except FailLoud as e:
         die(str(e), 2)
     except _ru.UsageError as e:
-        die("引擎用法炸: %s" % e, 2)
+        die("engine usage error: %s" % e, 2)
 
     print_stdout(report)
     if args.json:
@@ -1037,50 +993,51 @@ def main():
             dump_json(args.json, report)
             print("json -> %s" % args.json)
         except OSError as e:
-            die("--json 出账写盘失败: %s" % e, 2)
+            die("failed to write the --json report: %s" % e, 2)
     sys.exit(code)
 
 
-# ---------- 自证 ----------
+# ---------- selftest ----------
 
 FIXTURE_ORDER = [
-    "ToyA.v#R3-ffffff",        # L1  形怪 6 位签 → 锚刷（实体=冻结向量 77c2b9a8）
-    "SeqB.v#R7",               # L2  顺序号形 → 锚刷（实体在）
-    "Ghost.v#R9-abcabc",       # L3  形怪·缺实件 → skip 清单
-    "NoEnt.v#R11",             # L4  顺序号形·缺实件 → skip 清单
-    "CollA.v#R0-d66910",       # L5  形怪·撞锚（v35 判例形）→ 锚刷解消
-    "CollB.v#R0-d66910",       # L6  形怪·撞锚 → 锚刷解消（异内容）
-    "MissAnchor.v",            # L7  缺锚 → skip 清单（非机械）
-    "CanA.v#R0-11111111",      # L8  正典撞锚 → unresolvable 直传
-    "CanB.v#R0-11111111",      # L9  正典撞锚 → unresolvable 直传
-    "OrphO.v#R5-aaaa0001",     # L10 孤儿（order-only）→ ORPHAN-ADD skip
-    "# 注释行",                # L11 注释（键 None 不入账）
+    "ToyA.v#R3-ffffff",        # L1  malformed 6-hex form -> reanchor (entity = frozen vector 77c2b9a8)
+    "SeqB.v#R7",               # L2  seq form -> reanchor (entity present)
+    "Ghost.v#R9-abcabc",       # L3  malformed, entity missing -> skip list
+    "NoEnt.v#R11",             # L4  seq form, entity missing -> skip list
+    "CollA.v#R0-d66910",       # L5  malformed anchor collision -> resolved by reanchor
+    "CollB.v#R0-d66910",       # L6  malformed anchor collision -> resolved by reanchor (distinct content)
+    "MissAnchor.v",            # L7  no anchor -> skip list (non-mechanical)
+    "CanA.v#R0-11111111",      # L8  canonical anchor collision -> unresolvable passthrough
+    "CanB.v#R0-11111111",      # L9  canonical anchor collision -> unresolvable passthrough
+    "OrphO.v#R5-aaaa0001",     # L10 orphan (order-only) -> ORPHAN-ADD skip
+    "# comment line",          # L11 comment (key None, not in the account)
 ] + ["M%02d.v#R21-aaaa%04x" % (i, i) for i in range(1, 13)]  # L12-L23
 
 FIXTURE_PROJECT_HEAD = [
-    '-Q . ""',                 # L1  旗标行（滤除）
+    '-Q . ""',                 # L1  flag line (filtered out)
     "ToyA.v", "SeqB.v", "Ghost.v", "NoEnt.v", "CollA.v", "CollB.v",
-    "MissAnchor.v", "CanA.v", "CanB.v", "OrphP.v",     # L2-L11（OrphP 孤儿）
+    "MissAnchor.v", "CanA.v", "CanB.v", "OrphP.v",     # L2-L11 (OrphP is the project-only orphan)
 ]
-FIXTURE_PROJECT_DUP = ["M%02d.v" % i for i in range(1, 13)]  # 12 逐字重复块
+FIXTURE_PROJECT_DUP = ["M%02d.v" % i for i in range(1, 13)]  # 12 verbatim duplicate rows
 
 
 def build_fixture(base, shared=False):
-    """v46 audit demo 形态样张夹具（world 实体＋双册·零触真仓零网络）。
+    """The canned audit-demo fixture shape (world entities plus the two books; zero real-repo contact, zero network).
 
-    shared=True 增 SameC/SameD（同内容双键·异形怪锚）＝A-fix-2 自然炸点专用。
-    返回 (order_path, project_path, world_dir)。
+    shared=True adds SameC/SameD (same content under two keys, distinct
+    malformed anchors): the natural A-fix-2 blast-point fixture.
+    Returns (order_path, project_path, world_dir).
     """
     world = os.path.join(base, "world")
     os.makedirs(world)
-    ents = {"ToyA.v": "module A content alpha\n",   # registry_union 冻结向量
+    ents = {"ToyA.v": "module A content alpha\n",   # registry_union frozen vector
             "SeqB.v": "module SeqB beta\n",
             "CollA.v": "module CollA one\n",
             "CollB.v": "module CollB two\n",
             "OrphP.v": "module OrphP\n"}
     if shared:
         ents["SameC.v"] = "module Same shared\n"
-        ents["SameD.v"] = "module Same shared\n"   # 同内容＝重锚新撞炸点
+        ents["SameD.v"] = "module Same shared\n"   # same content = the reanchor new-collision blast point
     for name in sorted(ents):
         with io.open(os.path.join(world, name), "wb") as fh:
             fh.write(ents[name].encode("utf-8"))
@@ -1099,16 +1056,22 @@ def build_fixture(base, shared=False):
 
 
 def selftest():
-    """内嵌矢量组（tmp fixture·v46 audit demo 形态样张·零触真仓零网络零编译）：
+    """Embedded vector set (tmp fixtures in the canned audit-demo shape;
+    zero real-repo contact, zero network, zero compile):
 
-    1 干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑字节恒同
-    2 --apply：DEDUP 12 重复块→0＋断言三过＋md5 账对盘面复核
-    3 锚刷 md5 冻结向量 77c2b9a8＋同输同出（registry_union CLI 逐字节对拍）
-    4 回滚实证·人工炸点注入（post-write→已还原）
-    5 自然炸点（同内容重锚新撞→A3 引擎同码→已回滚）
-    6 staging 炸（audit↔册漂移·零写盘·work-dir 不建）
-    7 CLI 四码＋schema 面
-    8 落刀确定性（双 fresh 夹具册面 bytes/md5 账恒同）
+    1 dry-run zero-write, per-item md5 account, full skip-class spectrum,
+      byte-identical dry-run report on re-run
+    2 --apply: the 12 duplicate rows -> 0, three assertions pass, the md5
+      account reconciles against the on-disk books
+    3 reanchor frozen md5 vector 77c2b9a8 plus same-input-same-output
+      (byte-equal against the registry_union CLI)
+    4 rollback proof with the injected blast point (post-write -> restored)
+    5 natural blast point (same-content reanchor new collision -> the A3
+      engine raises -> rolled back)
+    6 staging blast (audit-vs-book drift, zero writes, no work-dir)
+    7 CLI exit-code matrix plus the schema face
+    8 apply determinism (two fresh fixtures: identical book bytes and md5
+      accounts)
     """
     import tempfile
 
@@ -1138,7 +1101,7 @@ def selftest():
                            stderr=subprocess.STDOUT)
         p.stdout = p.stdout.decode("utf-8", errors="replace") \
             if isinstance(p.stdout, bytes) else (p.stdout or "")
-        assert p.returncode == 0, "audit 出账应 rc=0 实测 %d\n%s" % (
+        assert p.returncode == 0, "audit run should rc=0, got %d\n%s" % (
             p.returncode, p.stdout)
         with io.open(json_p, encoding="utf-8") as fh:
             return json.load(fh)
@@ -1152,7 +1115,7 @@ def selftest():
         return md5_file(path)
 
     def tree_md5(root):
-        """目录树内容指纹（零写盘旁证·文件名+md5 序列）。"""
+        """Content fingerprint of a directory tree (zero-write side evidence; the sorted (relpath, md5) sequence)."""
         rows = []
         for dirpath, _dirs, fnames in os.walk(root):
             for fn in sorted(fnames):
@@ -1162,19 +1125,20 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_rf_self_")
     try:
-        # 冻结向量守卫（引擎 md5 基先验：registry_union 冻结样张内容→77c2b9a8）
+        # frozen-vector guard (engine md5 precondition: the registry_union
+        # frozen sample content hashes to 77c2b9a8)
         d0 = os.path.join(tmp, "vec0")
         os.makedirs(d0)
         wf(os.path.join(d0, "ToyA.v"), "module A content alpha\n")
         assert _ru.md5_8_of(os.path.join(d0, "ToyA.v")) == "77c2b9a8", \
-            "registry_union 冻结向量破（内容→md5-8）"
+            "registry_union frozen vector broken (content -> md5-8)"
 
-        # ---- 矢量 1：干跑零写盘＋逐条 md5 账＋skip 清单全谱＋确定性 ----
+        # ---- vector 1: dry-run zero-write + per-item md5 account + full skip spectrum + determinism ----
         d1 = os.path.join(tmp, "vec1")
         os.makedirs(d1)
         o1, p1, w1 = build_fixture(d1)
         a1 = run_audit(o1, p1, w1, os.path.join(d1, "audit.json"))
-        pre_tree = tree_md5(d1)  # 零写盘基线（audit 出账后取·含 audit.json）
+        pre_tree = tree_md5(d1)  # zero-write baseline (taken after the audit writes its json, which is included)
         assert a1["summary"]["duplicates"] == 12, a1["summary"]
         assert a1["summary"]["anchors"] == 9, a1["summary"]
         assert a1["summary"]["orphans"] == 2, a1["summary"]
@@ -1183,9 +1147,9 @@ def selftest():
         p = run(["--audit-json", os.path.join(d1, "audit.json"),
                  "--order", o1, "--project", p1, "--anchor-src", w1,
                  "--json", r1])
-        assert p.returncode == 0, "干跑应 rc=0 实测 %d\n%s" % (
+        assert p.returncode == 0, "dry run should rc=0, got %d\n%s" % (
             p.returncode, p.stdout)
-        assert tree_md5(d1) == pre_tree, "干跑写盘＝违例（夹具树漂移）"
+        assert tree_md5(d1) == pre_tree, "dry run wrote to disk (fixture tree drift)"
         rep1 = json.load(io.open(r1, encoding="utf-8"))
         assert rep1["schema"] == SCHEMA, rep1["schema"]
         assert rep1["mode"] == "DRY-RUN", rep1["mode"]
@@ -1202,23 +1166,24 @@ def selftest():
             and rep1["items"][0]["book"] == "coqproject" \
             and rep1["items"][0]["keep_line"] == 12 \
             and rep1["items"][0]["drop_lines"] == [24], rep1["items"][0]
-        # 锚刷靶：ToyA 占位 audit md5 已实解（77c2b9a8）·Ghost 缺实件 skip
+        # reanchor targets: ToyA placeholder audit md5 resolved for real (77c2b9a8); Ghost skipped, entity missing
         ra = {it["key"]: it for it in rep1["items"] if it["kind"] == "REANCHOR"}
         assert set(ra) == {"ToyA.v", "SeqB.v", "CollA.v", "CollB.v"}, \
             sorted(ra)
         assert ra["ToyA.v"]["md5_8"] == "77c2b9a8", ra["ToyA.v"]
-        # 干跑确定性：重跑 report 逐字节恒同
+        # dry-run determinism: the re-run report is byte-identical
         r1b = os.path.join(tmp, "rep1b.json")
         p = run(["--audit-json", os.path.join(d1, "audit.json"),
                  "--order", o1, "--project", p1, "--anchor-src", w1,
                  "--json", r1b])
         assert p.returncode == 0, p.stdout
         assert io.open(r1b, "rb").read() == io.open(r1, "rb").read(), \
-            "干跑 report 字节漂移＝违例"
-        print("  [1/8] 干跑零写盘 OK（夹具树恒同·items=16 skip=6 全谱·"
-              "ToyA md5=77c2b9a8·report 重跑字节恒同）")
+            "the dry-run report drifted byte-wise"
+        print("  [1/8] dry-run zero-write OK (fixture tree identical, "
+              "items=16 skip=6 full spectrum, ToyA md5=77c2b9a8, report "
+              "byte-identical on re-run)")
 
-        # ---- 矢量 2：--apply·DEDUP 12 重复块→0＋断言三过＋账对盘 ----
+        # ---- vector 2: --apply, the 12 duplicate rows -> 0, three assertions pass, account vs disk ----
         d2 = os.path.join(tmp, "vec2")
         os.makedirs(d2)
         o2, p2, w2 = build_fixture(d2)
@@ -1228,7 +1193,7 @@ def selftest():
         p = run(["--audit-json", os.path.join(d2, "audit.json"),
                  "--order", o2, "--project", p2, "--anchor-src", w2,
                  "--apply", "--work-dir", wd2, "--json", r2])
-        assert p.returncode == 0, "--apply 应 rc=0 实测 %d\n%s" % (
+        assert p.returncode == 0, "--apply should rc=0, got %d\n%s" % (
             p.returncode, p.stdout)
         rep2 = json.load(io.open(r2, encoding="utf-8"))
         assert rep2["mode"] == "APPLY", rep2["mode"]
@@ -1245,34 +1210,36 @@ def selftest():
             and wr["coqproject"]["rows_after"] == 23, wr["coqproject"]
         assert wr["order"]["rows_before"] == 23 \
             and wr["order"]["rows_after"] == 23, wr["order"]
-        # 账对盘：末条 per-book md5_after ≡ 盘面 md5（clean 夹具 render faithful）
+        # account vs disk: the last per-book md5_after == the on-disk md5 (clean fixture, faithful render)
         for label, path in (("coqproject", p2), ("order", o2)):
             last = [it for it in rep2["items"] if it["book"] == label][-1]
             assert last["md5_after"] == wr[label]["md5_on_disk_after"] \
                 == md5_of(path), (label, last, wr[label])
         assert rep2["writes"]["rolled_back"] is False, rep2["writes"]
-        assert os.path.isfile(wr["order"]["backup"]), "备份证据应在卷"
-        # 重跑独立审计实证：duplicates=0·被治 12 键零残留
+        assert os.path.isfile(wr["order"]["backup"]), "backup evidence should be on record"
+        # independent re-audit proof: duplicates=0, all 12 treated keys residue-free
         post = run_audit(o2, p2, w2, os.path.join(d2, "post_check.json"),
                          fix_plan=False)
         assert post["summary"]["duplicates"] == 0, post["summary"]
         assert post["summary"]["orphans"] == 2, post["summary"]
-        print("  [2/8] --apply OK（12 重复块→0·断言三过·md5 账≡盘面·"
-              "重跑审计 duplicates=0 orphans=2 恒）")
+        print("  [2/8] --apply OK (12 duplicate rows -> 0, three assertions "
+              "pass, md5 account == on-disk, re-audit duplicates=0 "
+              "orphans=2 unchanged)")
 
-        # ---- 矢量 3：锚刷 md5 冻结向量＋同输同出（registry_union CLI 对拍） ----
+        # ---- vector 3: reanchor frozen md5 vector + same-input-same-output (differential run against the registry_union CLI) ----
         seqb_md5 = _ru.md5_8_of(os.path.join(w2, "SeqB.v"))
         colla_md5 = _ru.md5_8_of(os.path.join(w2, "CollA.v"))
         collb_md5 = _ru.md5_8_of(os.path.join(w2, "CollB.v"))
         with io.open(o2, encoding="utf-8") as fh:
             got = [ln.strip() for ln in fh.read().split("\n") if ln.strip()]
-        assert got[0] == "ToyA.v#R3-77c2b9a8", got[0]     # 冻结向量正典形
+        assert got[0] == "ToyA.v#R3-77c2b9a8", got[0]     # frozen vector in canonical form
         assert got[1] == "SeqB.v#R7-%s" % seqb_md5, got[1]
         assert got[4] == "CollA.v#R0-%s" % colla_md5, got[4]
         assert got[5] == "CollB.v#R0-%s" % collb_md5, got[5]
         assert got[2] == "Ghost.v#R9-abcabc" \
-            and got[3] == "NoEnt.v#R11", "缺实件键须留原样"
-        # 同输同出：registry_union CLI 同参（三面同册＋同名清单）→ 逐字节恒同
+            and got[3] == "NoEnt.v#R11", "keys with missing entities must stay as-is"
+        # same-input-same-output: the registry_union CLI at the same parameters
+        # (three identical books + the same name list) must match byte for byte
         d3 = os.path.join(tmp, "vec3")
         os.makedirs(d3)
         o3, p3, w3 = build_fixture(d3)
@@ -1295,11 +1262,13 @@ def selftest():
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         assert pu.returncode == 0, pu.stdout.decode("utf-8", errors="replace")
         assert io.open(u3, "rb").read() == io.open(o3, "rb").read(), \
-            "同输同出违例：registry_union CLI 产物 ≠ 本器落刀册"
-        print("  [3/8] 锚刷向量 OK（ToyA→77c2b9a8 冻结·SeqB/CollA/CollB 实件"
-              "重算·缺件留原样·registry_union 同输同出逐字节恒同）")
+            "same-input-same-output violated: the registry_union CLI output != the book written by this tool"
+        print("  [3/8] reanchor vectors OK (ToyA -> 77c2b9a8 frozen, "
+              "SeqB/CollA/CollB re-hashed from entities, missing entities "
+              "left as-is, byte-identical to the registry_union CLI on the "
+              "same input)")
 
-        # ---- 矢量 4：回滚实证·人工炸点注入（post-write→已还原） ----
+        # ---- vector 4: rollback proof, injected blast point (post-write -> restored) ----
         d4 = os.path.join(tmp, "vec4")
         os.makedirs(d4)
         o4, p4, w4 = build_fixture(d4)
@@ -1311,10 +1280,10 @@ def selftest():
                  "--order", o4, "--project", p4, "--anchor-src", w4,
                  "--apply", "--work-dir", wd4, "--json", r4],
                 env_extra={INJECT_ENV: "post-write"})
-        assert p.returncode == 2, "注入炸应 rc=2 实测 %d\n%s" % (
+        assert p.returncode == 2, "the injected blast should rc=2, got %d\n%s" % (
             p.returncode, p.stdout)
         assert "INJECTED-POST-WRITE-BLAST" in p.stdout, p.stdout[-400:]
-        assert (md5_of(o4), md5_of(p4)) == pre4, "回滚违例：册面未逐字节还原"
+        assert (md5_of(o4), md5_of(p4)) == pre4, "rollback violated: the books were not restored byte-for-byte"
         rep4 = json.load(io.open(r4, encoding="utf-8"))
         assert rep4["writes"]["rolled_back"] is True, rep4["writes"]
         assert rep4["rollback_evidence"]["all_restored"] is True, \
@@ -1323,94 +1292,96 @@ def selftest():
             assert os.path.isfile(w["backup"]), w
             assert rep4["rollback_evidence"]["restored"][w["book"]]["match"] \
                 is True, rep4["rollback_evidence"]
-        print("  [4/8] 回滚实证 OK（人工炸点 post-write→rc2·册面逐字节还原"
-              "·备份与还原 md5 证据入 report）")
+        print("  [4/8] rollback proof OK (injected post-write blast -> rc=2, "
+              "books restored byte-for-byte, backup and restored md5 "
+              "evidence in the report)")
 
-        # ---- 矢量 5：自然炸点（同内容重锚→A-fix-2 新撞→A3 引擎同码） ----
+        # ---- vector 5: natural blast point (same-content reanchor -> a new A-fix-2 collision -> the A3 engine raises) ----
         d5 = os.path.join(tmp, "vec5")
         os.makedirs(d5)
         o5, p5, w5 = build_fixture(d5, shared=True)
         a5 = run_audit(o5, p5, w5, os.path.join(d5, "audit.json"))
         assert a5["summary"]["duplicates"] == 12 \
-            and a5["summary"]["anchors"] == 11, a5["summary"]  # +2 形怪+1 撞
+            and a5["summary"]["anchors"] == 11, a5["summary"]  # +2 malformed, +1 collision
         pre5 = (md5_of(o5), md5_of(p5))
         r5 = os.path.join(d5, "rep.json")
         p = run(["--audit-json", os.path.join(d5, "audit.json"),
                  "--order", o5, "--project", p5, "--anchor-src", w5,
                  "--apply", "--work-dir", os.path.join(d5, "work"),
                  "--json", r5])
-        assert p.returncode == 2, "A-fix-2 自然炸应 rc=2 实测 %d\n%s" % (
+        assert p.returncode == 2, "the natural A-fix-2 blast should rc=2, got %d\n%s" % (
             p.returncode, p.stdout)
         assert "A3-ANCHOR-TEXT-NEW-DUP" in p.stdout, p.stdout[-400:]
-        assert (md5_of(o5), md5_of(p5)) == pre5, "回滚违例（自然炸点）"
+        assert (md5_of(o5), md5_of(p5)) == pre5, "rollback violated (natural blast point)"
         rep5 = json.load(io.open(r5, encoding="utf-8"))
         assert rep5["writes"]["rolled_back"] is True, rep5["writes"]
         assert rep5["blast"]["code"] == "A3-ANCHOR-TEXT-NEW-DUP", rep5["blast"]
-        print("  [5/8] 自然炸点 OK（同内容双键重锚新撞→A3-ANCHOR-TEXT-NEW-DUP"
-              "·rc2·回滚还原）")
+        print("  [5/8] natural blast OK (same-content reanchor creates a new "
+              "collision -> A3-ANCHOR-TEXT-NEW-DUP, rc=2, rollback restored)")
 
-        # ---- 矢量 6：staging 炸（audit↔册漂移·零写盘·work-dir 不建） ----
+        # ---- vector 6: staging blast (audit-vs-book drift, zero writes, no work-dir) ----
         d6 = os.path.join(tmp, "vec6")
         os.makedirs(d6)
         o6, p6, w6 = build_fixture(d6)
         run_audit(o6, p6, w6, os.path.join(d6, "audit.json"))
         wf(p6, 'ZZZ.v#R9-99999999\n' + io.open(p6, "rb").read()
-            .decode("utf-8"))  # 册顶插行→keep=L12 键漂移
+            .decode("utf-8"))  # insert a row at the top -> the keep=L12 key drifts
         pre6 = (md5_of(o6), md5_of(p6))
         wd6 = os.path.join(d6, "work")
         r6 = os.path.join(d6, "rep.json")
         p = run(["--audit-json", os.path.join(d6, "audit.json"),
                  "--order", o6, "--project", p6, "--anchor-src", w6,
                  "--apply", "--work-dir", wd6, "--json", r6])
-        assert p.returncode == 2, "staging 炸应 rc=2 实测 %d\n%s" % (
+        assert p.returncode == 2, "the staging blast should rc=2, got %d\n%s" % (
             p.returncode, p.stdout)
         assert "DEDUP-KEEP-KEY-MISMATCH" in p.stdout, p.stdout[-400:]
-        assert (md5_of(o6), md5_of(p6)) == pre6, "staging 炸不得触册面"
-        assert not os.path.exists(wd6), "staging 炸 work-dir 不应建（零写盘）"
+        assert (md5_of(o6), md5_of(p6)) == pre6, "a staging blast must not touch the books"
+        assert not os.path.exists(wd6), "a staging blast must not create the work-dir (zero writes)"
         rep6 = json.load(io.open(r6, encoding="utf-8"))
         assert rep6["writes"] is None and rep6["blast"]["code"] \
             == "DEDUP-KEEP-KEY-MISMATCH", rep6
-        print("  [6/8] staging 炸 OK（audit↔册漂移→DEDUP-KEEP-KEY-MISMATCH"
-              "·零写盘·work-dir 不建）")
+        print("  [6/8] staging blast OK (audit-vs-book drift -> "
+              "DEDUP-KEEP-KEY-MISMATCH, zero writes, work-dir not created)")
 
-        # ---- 矢量 7：CLI 四码＋schema 面 ----
+        # ---- vector 7: CLI exit codes + schema face ----
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "an unknown flag should rc=2, got %d" % p.returncode
         p = run([])
-        assert p.returncode == 2, "无输入应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "no input should rc=2, got %d" % p.returncode
         p = run(["--audit-json", os.path.join(tmp, "nope.json"),
                  "--order", o1, "--project", p1])
-        assert p.returncode == 9, "缺 audit-json 应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "a missing --audit-json should rc=9, got %d" % p.returncode
         p = run(["--audit-json", os.path.join(d1, "audit.json"),
                  "--order", os.path.join(tmp, "nope.txt"), "--project", p1])
-        assert p.returncode == 9, "缺册应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "a missing book should rc=9, got %d" % p.returncode
         bad = wf(os.path.join(tmp, "badschema.json"),
                  json.dumps({"schema": "bogus/9"}))
         p = run(["--audit-json", bad, "--order", o1, "--project", p1])
-        assert p.returncode == 2, "坏 schema 应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "a bad schema should rc=2, got %d" % p.returncode
         nofp = os.path.join(tmp, "nofix.json")
         run_audit(o1, p1, w1, nofp, fix_plan=False)
         p = run(["--audit-json", nofp, "--order", o1, "--project", p1])
-        assert p.returncode == 2, "无 fix_plan 应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "a missing fix_plan should rc=2, got %d" % p.returncode
         d7 = os.path.join(tmp, "vec7")
         os.makedirs(d7)
         o7, p7, w7 = build_fixture(d7)
         a7 = run_audit(o7, p7, w7, os.path.join(d7, "audit.json"))
         p = run(["--audit-json", os.path.join(d1, "audit.json"),
-                 "--order", o7, "--project", p7])   # 异册同参破
-        assert p.returncode == 2, "同参破应 rc=2 实测 %d\n%s" % (
+                 "--order", o7, "--project", p7])   # different books: same-parameter breach
+        assert p.returncode == 2, "a same-parameter breach should rc=2, got %d\n%s" % (
             p.returncode, p.stdout)
         p = run(["--audit-json", os.path.join(d1, "audit.json"),
                  "--order", o1, "--project", p1,
                  "--anchor-src", os.path.join(tmp, "noworld")])
-        assert p.returncode == 9, "缺 anchor-src 目录应 rc=9 实测 %d" % (
+        assert p.returncode == 9, "a missing anchor-src directory should rc=9, got %d" % (
             p.returncode)
-        print("  [7/8] CLI 四码 OK（help0/bogus2/无输入2/缺audit9/缺册9/"
-              "坏schema2/无fix_plan2/同参破2/缺anchor-src9）")
+        print("  [7/8] CLI exit codes OK (help0/bogus2/no-input2/"
+              "missing-audit9/missing-book9/bad-schema2/no-fix_plan2/"
+              "same-param-breach2/missing-anchor-src9)")
 
-        # ---- 矢量 8：落刀确定性（双 fresh 夹具同处→册面/账恒同） ----
+        # ---- vector 8: apply determinism (two fresh fixtures processed the same way -> identical books/accounts) ----
         outs = []
         for tag in ("a", "b"):
             d8 = os.path.join(tmp, "vec8" + tag)
@@ -1430,14 +1401,16 @@ def selftest():
                          [(it["kind"], it["key"], it["md5_before"],
                            it["md5_after"]) for it in items8]))
         assert outs[0][0] == outs[1][0] and outs[0][1] == outs[1][1], \
-            "落刀册面字节漂移＝违例"
-        assert outs[0][2] == outs[1][2], "逐条 md5 账漂移＝违例"
-        print("  [8/8] 落刀确定性 OK（双 fresh 夹具→册面 bytes＋逐条 md5 账"
-              "恒同）")
+            "the written books drifted byte-wise"
+        assert outs[0][2] == outs[1][2], "the per-item md5 accounts drifted"
+        print("  [8/8] apply determinism OK (two fresh fixtures -> identical "
+              "book bytes and identical per-item md5 accounts)")
 
-        print("REGISTRY-FIX-SELFTEST PASS: 干跑零写盘/12重复块→0+断言三过/"
-              "77c2b9a8同输同出/注入回滚/自然炸回滚/staging零写盘/CLI四码/"
-              "落刀确定性 八判全过")
+        print("REGISTRY-FIX-SELFTEST PASS: dry-run zero-write / 12 duplicate "
+              "rows -> 0 with three assertions passing / 77c2b9a8 "
+              "same-input-same-output / injected-blast rollback / natural-blast "
+              "rollback / staging zero-write / CLI exit codes / apply "
+              "determinism, all 8 vectors passed")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

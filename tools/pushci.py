@@ -1,177 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""pushci.py — one-shot push-then-CI pipeline orchestrator for rocqwash (tools/).
+"""pushci.py: one-shot push-then-CI pipeline orchestrator for rocqwash (tools/).
 
-Five-stage pipeline (orchestrates existing tools rather than reimplementing
-them — doctor/net_probe/ci_triage/gate4 are always invoked as subprocesses;
-this tool supplies only the glue and the state machine; each stage can be
-selected individually with --steps, the default runs all):
-  1 preflight (the preflight checks; the no-initiate rule made executable):
-      ① toolchain: subprocess tools/toolchain_dyld_doctor.py --json <tmp>
-        (--worker probed by default) → unless verdict==healthy, stop with
-        verdict=toolchain;
-      ② net: subprocess tools/net_probe.py --rounds 2 --interval
-        <probe-interval> --stable-window --json <tmp> → unless STABLE, stop
-        with verdict=unstable (each tool already enforces its own
-        single-probe no-initiate check; this tool only honors their verdicts);
-      ③ optional --pre-scan-gate4: git -C <repo> diff --name-only
-        <base>...<branch> collects the changed .v files →
-        verify/gate4_comment_guard.py on each (--file) → proceed only when
-        FAIL=0 (the FAIL list enters the report with verdict=gate4-block;
-        REVIEW files are reported explicitly but do not block — the guard's
-        rc convention is 0=PASS/1=FAIL/2=review; any other exit code fails
-        loudly).
-  2 push: git -C <repo> -c http.version=HTTP/1.1 push <remote> <branch>
-      (3 attempts at 45s intervals; after three failures, when the remote URL
-      has the https://github.com/ form, retry twice through the
-      https://ghproxy.net/ prefix; other shapes are skipped with an explicit
-      note); all attempts fail → verdict=unstable exit 1. pushed_sha is taken
-      after a successful push via ls-remote <remote> refs/heads/<branch> and
-      is the **remote tip** (the "real rc + ls-remote verification"
-      discipline; the 4th git call; CI builds the remote tip, so the remote
-      is authoritative; if it differs from the local rev-parse tip, note it
-      explicitly; the preceding rev-parse is only a branch-presence pre-check
-      that fails loudly with 9; the git call order is fixed — get-url →
-      rev-parse → push → ls-remote, always 4 calls [not a dry-run]).
-  3 resolve+watch: poll GET /repos/{repo}/actions/runs?per_page=30 (the repo
-      is derived from the remote URL; the host must be github.com) for the
-      newest run with head_branch=<branch> and head_sha==pushed_sha
-      (max by (run_number,id), independent of API order); poll every
-      --watch-interval seconds (default 150) until completed. **A frozen
-      updated_at does not imply a stalled run** — status is authoritative
-      (status-only convention; N consecutive in_progress rounds on a long
-      step are normal and are not misjudged; this tool's code path never
-      reads updated_at).
-  4 heal (when a failing run is observed): subprocess tools/ci_triage.py --repo
-      --run (online job classification) → route by family:
-      B/E (NETRED/coqchk-skipped) → net_probe --stable-window; if it passes,
-      POST /runs/{id}/rerun (a 403 already-running response is accepted
-      idempotently) → back to watch (counting heal_round, capped by
-      --max-heal default 3; exceeding the cap → verdict=heal-exhausted
-      exit 1; probe UNSTABLE → the no-initiate rule, verdict=unstable exit 1);
-      A (content failure) → verdict=fix-content, stop, exit 2 (no automatic
-      repair — repair is the operator's responsibility);
-      C → verdict=toolchain, stop, exit 1 (with a suggestion to rerun the
-      doctor);
-      families outside the routing table (D-queue-wall/UNRECOGNIZED etc.) →
-      no automatic rerun → manual identification (verdict=fix-content exit 2,
-      the family recorded verbatim).
-      heal.rounds semantics = the fired-rerun account (only rounds with an
-      actual probe+rerun are counted; A/C/out-of-table halts contribute zero
-      rounds = provably zero reruns); all triage outcomes are recorded in
-      stages.heal.last_triage (family/action/evidence).
-  5 verdict + optional --merge: with --merge, first GET
-      /repos/{repo}/pulls?head=<owner>:<branch>&state=open to resolve the PR
-      number (or pass --pr explicitly; no open PR → 9 target missing) →
-      PUT /pulls/{n}/merge (--merge-method merge|squash, default merge;
-      409 → GET branches/main to re-read the tip, wait 60s, retry ≤3; still
-      409 → verdict=fix-content exit 2 [a merge conflict is live content];
-      any other HTTP error → fail-loud 9).
+    Purpose.  Run the post-fix push-and-CI sequence as one command: preflight
+      checks, push, run watch, heal, verdict, optional PR merge. The four
+      existing tools (doctor, net_probe, ci_triage, gate4) always run as
+      subprocesses; this file supplies only the glue and the state machine.
 
-Offline-testable (hard requirement): the core loop is fully injectable —
-  --injector DIR    injection scenario, **two shapes accepted**:
-      [steps shape] DIR/scenario.json = {"steps":[{at_round,responses:[{method,
-        path,status,body}...]}...], "tools":{doctor,probe canned},
-        "jobs"|"jobs_list"} — responses are consumed strictly in order per
-        round (method+path substring match; mismatch fails loudly); tools
-        canned entries accept {"verdict":str,"rc":int} or {"report":{...}}
-        (verdict taken from report.verdict); a single jobs dict is reused, or
-        jobs_list is consumed one entry per triage call.
-      [flat shape] DIR/scenario.json is the fixture original (recognized by
-        the presence of a "canned" key) or a flat layout under DIR:
-        runs/NNNN.json + jobs/NNNN.json + rerun/NNNN.json + probe/NNNN.json +
-        merge.json: canned.runs consumed per poll (body keys runs and
-        workflow_runs both accepted), canned.probe consumed per heal probe
-        (net_probe report shape, verdict extracted), canned.rerun
-        [{"run_id","status"}] consumed per rerun (run_id cross-checked
-        against the path), canned.merge {"status","body"} serves PUT,
-        canned.jobs consumed per triage call, canned.logs not consumed
-        (test-evidence surface). Flat shape without gate canned entries
-        (doctor/probe) → the preflight checks default to passing with an
-        explicit note (test-contract shape; the real preflight checks are
-        exercised in the steps
-        shape or live mode); merge without a pulls canned entry → --pr must
-        be passed.
-      The API call trace is written to <DIR>/api_calls.json as evidence.
-  --git-caller FILE canned git response scenario (responses[].args_contains
-                    matched strictly in order, as above, fail-loud); the call
-                    trace is written to <FILE minus .json>.calls.json.
-                    Must be paired with --injector (an injector without
-                    canned git = a real push hazard; either side alone is a
-                    usage error, exit 2).
-  --sleep-scale F   multiplies every sleep by F (--selftest uses 0 = zero
-                    real sleep).
-  _api(method,path,body) is a single function (ApiClient.__call__) for easy
-                    injection/substitution.
-  --selftest        eight scenario vectors + unit vectors + resilience-layer
-                    backoff/timeout-kill vectors + CLI four-code checks +
-                    determinism (zero real network, zero real push, zero
-                    compilation; --netrc deliberately points at a nonexistent
-                    path — proof that credentials are read lazily).
+    Interface.  python tools/pushci.py --repo-path DIR --branch B [--base-ref
+      main] [--steps preflight,push,watch,heal,verdict] plus the optional
+      flags listed by --help; offline testability via paired --injector +
+      --git-caller canned scenarios and --sleep-scale 0. Report (--json)
+      schema rocqwash-pushci/1; verdict in success|fix-content|toolchain|
+      unstable|heal-exhausted|gate4-block|dry-run; stage dependencies
+      watch=>push, heal=>watch, --merge=>watch.
 
-Usage (all paths parameterized; zero hardcoded absolute paths; the only
-environment fallback is ROCQWASH_MASK [mask string]):
-  python3 tools/pushci.py --repo-path DIR --branch B [--base-ref main]
-      [--remote origin] [--pre-scan-gate4] [--pr N] [--merge]
-      [--merge-method merge|squash] [--max-heal 3] [--watch-interval 150]
-      [--probe-interval 60] [--watch-max-rounds 0] [--timeout 120]
-      [--retry-max 3]
-      [--steps preflight,push,watch,heal,verdict]
-      [--injector DIR] [--git-caller FILE] [--sleep-scale 1.0] [--netrc PATH]
-      [--json out] [--dry-run]
-  python3 tools/pushci.py --selftest
-  --dry-run = print the plan only, zero side effects, exit 0 (no git, no API,
-    no tool subprocesses).
-  --watch-max-rounds (safety valve, default 0 = unlimited) = poll-round cap;
-    exceeding it fails loudly with 9.
-  --timeout S (resilience layer, default 120) = anti-hang cap for all real
-    subprocesses (the four git calls + the tool subprocesses _run_py): on
-    timeout the subprocess is killed + fail-loud 9 names the call (no
-    hanging); canned injection paths spawn no real subprocess and are not
-    subject to this cap.
-  --retry-max N (resilience layer, default 3) = retry cap for real-urllib
-    _api on 403/429/5xx with exponential backoff (base 2s; a parseable
-    Retry-After second count replaces the current delay; HTTP-date is not
-    guessed and falls back to exponential; when exhausted, the original
-    status is handed to semantic adjudication; 4xx semantic codes
-    401/404/409 etc. are not retried; delay computation lives in the
-    tools/_http_backoff.py pure functions shared by three tools, imported by
-    same-directory sys.path injection, no __init__ package layout; injector
-    canned paths never touch the real network and never retry — the
-    offline-testability rule).
-  Stage dependencies (usage error → 2): watch⇒push, heal⇒watch, --merge⇒watch.
+    Dependencies.  Python 3 stdlib only; same-directory _http_backoff imported
+      via sys.path injection (no __init__ package layout); git on PATH; the
+      only environment fallback is ROCQWASH_MASK; netrc read lazily.
 
-Exit codes: 0 = success/dry-run; 1 = heal-exhausted/unstable/toolchain (a
-  toolchain stop is an environment issue; it maps to 1 like unstable and is
-  recorded explicitly); 2 = fix-content/gate4-block/usage error; 9 = target
-  missing (repo/remote/branch/PR/toolchain component missing, netrc missing,
-  API unreachable, API 4xx/5xx hard errors, watch round cap reached, real
-  subprocess killed on timeout [--timeout]). --selftest: 0 = all pass /
-  2 = assertion failure.
+    Evidence.  --selftest: eight scenario vectors + flat-shape, ghproxy,
+      push-failure, unit, resilience and CLI-exit vectors + byte-identical
+      rerun determinism; zero real network, zero real push (--netrc points
+      at a nonexistent path); suite membership tests/test_pushci.py.
 
-Report schema (--json) = rocqwash-pushci/1:
-  {schema, mode: online|injector|dry-run, steps, args,
-   stages{preflight{toolchain{verdict,rc}, net{verdict,rc},
-                    gate4?{files,pass_files,fail_files,review_files,
-                           skipped_missing,fail_count}},
-          push{sha,remote,url_masked,attempts[{target,rc}],ghproxy_used},
-          watch{run_tag,run_id,rounds,conclusion,policy},
-          heal{rounds[{round,family,action,probe,fired,http,evidence}],
-               fired_total},
-          merge?{pr,method,merged,attempts,main_tip?,merge_sha?}},
-   plan? (dry-run only), evidence, final{conclusion,verdict}, verdict}
-  verdict ∈ success|fix-content|toolchain|unstable|heal-exhausted|
-  gate4-block|dry-run.
-
-Honesty rules (per CONTRIBUTING §0): accept only mechanical evidence; never
-  heal outside the routing table; never auto-repair family A; tokens are
-  never echoed (netrc parsing follows the ci_triage convention: machine
-  github.com 6th column, single-line 6-field and multi-line shapes both
-  accepted); remote-URL embedded credentials and ROCQWASH_MASK strings are
-  masked before reporting; --json is written sorted with sort_keys so reruns
-  on the same input are byte-identical (the report carries no wall-clock
-  fields); stdout is fully data-driven; zero third-party dependencies (pure
-  stdlib); fail-loud, no silent degradation.
+    Exit-codes.  0 = success/dry-run; 1 = heal-exhausted/unstable/toolchain;
+      2 = fix-content/gate4-block/usage error; 9 = target missing (repo,
+      remote, branch, PR, toolchain component, netrc, API unreachable, API
+      4xx/5xx hard error, watch round cap, subprocess timeout kill);
+      --selftest: 0 = all pass, 2 = assertion failure.
 """
 import argparse
 import io
@@ -199,10 +56,11 @@ MERGE_409_RETRIES = 3
 HEAL_RERUN_FAMILIES = ("B-netred", "E-coqchk-skipped")
 STAGE_ALL = ("preflight", "push", "watch", "heal", "verdict")
 RUNS_QUERY = "/actions/runs?per_page=30"
-WATCH_POLICY = "status-only（updated_at 冻结非僵尸判据·以 status 为准）"
+WATCH_POLICY = "status-only (a frozen updated_at is not a stall criterion; status is authoritative)"
 
-# verdict 封册 → 退出码（0=success/dry-run；1=heal-exhausted/unstable/toolchain；
-# 2=fix-content/gate4-block；9 码留给 fail-loud 目标缺失不经此册）
+# verdict-to-exit-code table (0=success/dry-run; 1=heal-exhausted/unstable/
+# toolchain; 2=fix-content/gate4-block; exit 9 is reserved for fail-loud
+# missing targets and never passes through this table)
 VERDICT_EXIT = {
     "success": 0,
     "dry-run": 0,
@@ -221,12 +79,12 @@ TRIAGE_TOOL = os.path.join(TOOLS_DIR, "ci_triage.py")
 GATE4_TOOL = os.path.join(REPO_ROOT, "verify", "gate4_comment_guard.py")
 
 if TOOLS_DIR not in sys.path:
-    sys.path.insert(0, TOOLS_DIR)   # 同目录共享退避小模块（无 __init__ 包结构）
+    sys.path.insert(0, TOOLS_DIR)   # shared same-directory backoff module (no __init__ package layout)
 import _http_backoff
 
 
 class PushciError(Exception):
-    """带退出码的 fail-loud 异常（code: 2=用法/场景形错·9=目标缺失/API 硬错）。"""
+    """Fail-loud exception carrying an exit code (code: 2 = usage/scenario-shape error, 9 = missing target / hard API error)."""
 
     def __init__(self, msg, code=9):
         super(PushciError, self).__init__(msg)
@@ -234,7 +92,7 @@ class PushciError(Exception):
 
 
 class StopVerdict(Exception):
-    """管线裁停（verdict 携带出账·code 为任务书退出码口径·evidence 入 report）。"""
+    """Pipeline stop verdict (carries the verdict out; code is the exit-code caliber; evidence lands in the report)."""
 
     def __init__(self, verdict, code, evidence=None):
         super(StopVerdict, self).__init__(verdict)
@@ -244,27 +102,28 @@ class StopVerdict(Exception):
 
 
 def subproc_run(cmd, timeout, what, merge_stderr=False):
-    """统一真子进程执行＋--timeout 防挂（韧性层 v37·缺省 120s）：超时=子进程
-    杀（subprocess.run 超时即杀后 raises·零悬挂）＋fail-loud 9 报调用名。
-    timeout=None 传穿为无帽（canned 路径零真子进程不受此帽）。"""
+    """Unified real-subprocess execution with the --timeout anti-hang cap
+    (default 120s): on timeout the subprocess is killed (subprocess.run kills
+    then raises, no hanging) and a fail-loud 9 names the call. timeout=None
+    passes through as uncapped (canned paths spawn no real subprocess)."""
     try:
         return subprocess.run(cmd, stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT if merge_stderr
                               else subprocess.PIPE, timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise PushciError("子进程超时被杀（--timeout=%ss·调用: %s）"
-                          % (timeout, what), 9)
+        raise PushciError("subprocess killed on timeout (--timeout=%ss, "
+                          "call: %s)" % (timeout, what), 9)
 
 
-# ---- 小件（确定性 helpers）---------------------------------------------------
+# ---- small deterministic helpers ---------------------------------------------
 
 def sleep_scaled(sec, scale):
-    """time.sleep(sec*scale)·scale=0 零真睡（selftest 矢量依赖）。"""
+    """time.sleep(sec*scale); scale=0 means zero real sleep (selftest vectors rely on this)."""
     time.sleep(max(0.0, float(sec) * float(scale)))
 
 
 def url_secret_masks(url):
-    """远端 URL 内嵌凭据（userinfo 密码部）→ 遮蔽串清单（承 watch.py 同款）。"""
+    """Remote-URL embedded credentials (userinfo password part) to a mask-string list (same convention as watch.py)."""
     masks = []
     for sch in ("https://", "http://"):
         if url.startswith(sch):
@@ -279,7 +138,7 @@ def url_secret_masks(url):
 
 
 def mask_text(s, masks):
-    """把 masks 中每串替换为 ***MASKED***（空串忽略·承 watch.py 同款）。"""
+    """Replace every string in masks with ***MASKED*** (empty entries ignored; same convention as watch.py)."""
     for m in masks:
         if m:
             s = s.replace(m, "***MASKED***")
@@ -287,8 +146,9 @@ def mask_text(s, masks):
 
 
 def collect_masks(url):
-    """遮蔽串总集：URL userinfo 密码部＋env ROCQWASH_MASK（冒号分隔·承
-    watch.py 惯例·env 兜底只认 ROCQWASH_* 任务书钦名）。"""
+    """Full mask-string set: URL userinfo password part plus env ROCQWASH_MASK
+    (colon-separated, watch.py convention; the env fallback accepts only the
+    ROCQWASH_* named variable)."""
     masks = url_secret_masks(url)
     env_masks = os.environ.get("ROCWASH_MASK", "")
     masks += [m for m in env_masks.split(":") if m]
@@ -296,7 +156,7 @@ def collect_masks(url):
 
 
 def url_host(url):
-    """remote URL → host（https://·http://·git@·ssh:// 四形通吃·形外 None）。"""
+    """Remote URL to host (https://, http://, git@, ssh:// shapes; None outside these shapes)."""
     u = url.strip()
     host = None
     if u.startswith("https://") or u.startswith("http://"):
@@ -311,9 +171,11 @@ def url_host(url):
 
 
 def repo_from_url(url):
-    """remote URL → ORG/REPO（取路径末两段去 .git·https/http/git@/ssh 四形通吃；
-    host 不限——测试 shim 远端假域同推导·ghproxy 换路另有 https://github.com/
-    形独立门 ghproxy_url）。形外/段不足 → None（fail-loud 由调用方裁决）。"""
+    """Remote URL to ORG/REPO (last two path segments minus .git; https/http/
+    git@/ssh shapes; host unrestricted so test-shim fake domains derive the
+    same way; the ghproxy reroute has its own https://github.com/ shape gate
+    in ghproxy_url). Other shapes or too few segments return None (the
+    caller fails loudly)."""
     u = url.strip()
     path = None
     if u.startswith("https://") or u.startswith("http://"):
@@ -334,20 +196,23 @@ def repo_from_url(url):
 
 
 def ghproxy_url(url):
-    """ghproxy 换路 URL：仅当 remote URL 为 https://github.com/ 形（判例换路
-    前缀 https://ghproxy.net/https://github.com/）·否则 None（响亮跳过）。"""
+    """ghproxy reroute URL: only when the remote URL has the https://github.com/
+    shape (reroute prefix https://ghproxy.net/https://github.com/), else None
+    (skipped loudly)."""
     if url.strip().startswith("https://" + GHPROXY_HOST + "/"):
         return GHPROXY_PREFIX + url.strip()
     return None
 
 
 def netrc_token(path, machine="github.com"):
-    """netrc 手动解析（承 ci_triage.netrc_token 同款口径）：machine <m> login <l>
-    password <p>·单行 6 列形与多行形通吃 → token。缺文件/无条目/空值 →
-    fail-loud 9（token 永不回显·惰性：仅真模式首个 API 调用才读）。"""
+    """Manual netrc parsing (same caliber as ci_triage.netrc_token):
+    machine <m> login <l> password <p>; single-line 6-column and multi-line
+    shapes both accepted; returns the token. Missing file / no entry / empty
+    value fail loudly with 9 (the token is never echoed; lazy: read only on
+    the first live-mode API call)."""
     if not os.path.isfile(path):
-        raise PushciError("netrc 缺失: %s（线上模式需 machine %s ... password 形凭据）"
-                          % (path, machine), 9)
+        raise PushciError("netrc missing: %s (live mode needs machine %s ... "
+                          "password credentials)" % (path, machine), 9)
     toks = []
     with io.open(path, "r", encoding="utf-8", errors="replace") as fh:
         for line in fh:
@@ -368,17 +233,19 @@ def netrc_token(path, machine="github.com"):
                 if len(tok) >= 2 and tok.startswith('"') and tok.endswith('"'):
                     tok = tok[1:-1]
                 if not tok:
-                    raise PushciError("netrc machine %s password 为空" % machine, 9)
+                    raise PushciError("netrc machine %s password is empty"
+                                      % machine, 9)
                 return tok
             i += 2
             continue
         i += 1
-    raise PushciError("netrc 无 machine %s password 形条目（单行 6 列形：第 6 列"
-                      "=token）: %s" % (machine, path), 9)
+    raise PushciError("netrc has no machine %s password entry (single-line "
+                      "6-column shape: column 6 = token): %s"
+                      % (machine, path), 9)
 
 
 def snippet(body):
-    """API body 摘录（诊断用·帽 160 字符）。"""
+    """API body excerpt for diagnostics, capped at 160 characters."""
     if body is None:
         return ""
     s = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)
@@ -386,7 +253,7 @@ def snippet(body):
 
 
 def parse_body(raw):
-    """响应体 → parsed JSON 或原文（空 → None）。"""
+    """Response body to parsed JSON or raw text (empty becomes None)."""
     if not raw:
         return None
     text = raw.decode("utf-8", errors="replace") \
@@ -397,13 +264,16 @@ def parse_body(raw):
         return text
 
 
-# ---- 注入点①：git caller（缺省真 subprocess·--git-caller 换 canned）-----------
+# ---- injection point 1: git caller (real subprocess by default; --git-caller
+# ---- swaps in canned) ----------------------------------------------------------
 
 class GitCaller(object):
-    """git 调用单点。canned=None → 真 git 子进程（--timeout 防挂帽·超时杀＋9
-    报调用名）；canned=list → 场景脚本严格按序消费（首条未用响应必须命中
-    args_contains 全部子串·否则 fail-loud——场景序bug 当场现形）。调用流水全记
-    self.calls 供 .calls.json 实证。"""
+    """Single git-call point. canned=None runs the real git subprocess (with
+    the --timeout anti-hang cap; on timeout it is killed and a fail-loud 9
+    names the call); canned=list consumes the scenario strictly in order (the
+    first unused response must match every args_contains substring, else
+    fail-loud, so a scenario-order bug surfaces on the spot). All calls are
+    recorded in self.calls as .calls.json evidence."""
 
     def __init__(self, canned=None, timeout=120):
         self.canned = canned
@@ -418,11 +288,12 @@ class GitCaller(object):
                     resp = r
                     break
             if resp is None:
-                raise PushciError("canned git 场景响应耗尽（实调 %r）" % (args,), 2)
+                raise PushciError("canned git scenario responses exhausted "
+                                  "(actual call %r)" % (args,), 2)
             for needle in resp.get("args_contains") or []:
                 if not any(needle in a for a in args):
-                    raise PushciError("canned git 失配：期待含 %r·实调 %r"
-                                      % (needle, args), 2)
+                    raise PushciError("canned git mismatch: expected substring "
+                                      "%r, actual call %r" % (needle, args), 2)
             resp["_used"] = True
             rc = resp.get("rc", 0)
             self.calls.append({"args": [str(a) for a in args], "rc": rc})
@@ -436,16 +307,22 @@ class GitCaller(object):
         return p.returncode, so, se
 
 
-# ---- 注入点②：API 单函数 _api（缺省真 urllib·injector 换 canned）--------------
+# ---- injection point 2: the single _api function (real urllib by default;
+# ---- injector swaps in canned) --------------------------------------------------
 
 class ApiClient(object):
-    """_api(method, path, body) 单函数化。canned=steps 形场景（按 at_round 严格
-    按序消费）·flat=flat 形 canned（runs 逐 poll·rerun 逐 POST·merge 单发·并行
-    席契约形）·皆 None → 真 urllib（token 惰性取 netrc·HTTP 4xx/5xx 返回
-    (code, body) 交语义裁决·连接失败 fail-loud 9）。韧性层 v37：真 urllib 路
-    403/429/5xx 指数退避重试（_http_backoff 纯函数·帽 retry_max·Retry-After
-    秒数头优先·耗尽原码上交语义裁决·4xx 语义面不重试）；injector/canned 路径
-    零真网络一律不重试。调用流水全记 self.calls。"""
+    """The single _api(method, path, body) function. canned = steps-shape
+    scenario (consumed strictly in order per at_round); flat = flat-shape
+    canned (runs consumed per poll, rerun per POST, merge single-shot; the
+    parallel seat-worker contract shape); both None means real urllib (token read
+    lazily from netrc; HTTP 4xx/5xx return (code, body) for semantic
+    adjudication; connection failure fails loudly with 9). Resilience layer:
+    the real-urllib path retries 403/429/5xx with exponential backoff
+    (_http_backoff pure functions, capped by retry_max, Retry-After second
+    counts preferred; when exhausted the original status goes to semantic
+    adjudication; 4xx semantic codes are not retried); injector/canned paths
+    never touch the real network and never retry. All calls recorded in
+    self.calls."""
 
     def __init__(self, canned=None, flat=None, netrc_path=None, timeout=30,
                  retry_max=3, sleep_scale=1.0, _urlopen=None, _sleep=None):
@@ -470,12 +347,13 @@ class ApiClient(object):
         return self._live_call(method, path, body)
 
     def _flat_call(self, method, path, body, round_no):
-        """flat 形 canned：GET runs 逐 poll·POST rerun 逐发（run_id 咬合校验）·
-        PUT merge 单发（canned.merge {"status","body"}·409 流须 steps 形）。"""
+        """Flat-shape canned: GET runs consumed per poll, POST rerun per fire
+        (run_id cross-checked), PUT merge single-shot (canned.merge
+        {"status","body"}; the 409 flow requires the steps shape)."""
         f = self.flat
         if method == "GET" and RUNS_QUERY in path:
             if self._flat_runs_i >= len(f["runs"]):
-                raise PushciError("flat 场景 canned.runs 耗尽（poll %d）"
+                raise PushciError("flat scenario canned.runs exhausted (poll %d)"
                                   % (self._flat_runs_i + 1), 2)
             b = f["runs"][self._flat_runs_i]
             self._flat_runs_i += 1
@@ -484,28 +362,29 @@ class ApiClient(object):
             return 200, b
         if method == "POST" and "/rerun" in path:
             if self._flat_rerun_i >= len(f["rerun"]):
-                raise PushciError("flat 场景 canned.rerun 耗尽（rerun %d）"
-                                  % (self._flat_rerun_i + 1), 2)
+                raise PushciError("flat scenario canned.rerun exhausted "
+                                  "(rerun %d)" % (self._flat_rerun_i + 1), 2)
             e = f["rerun"][self._flat_rerun_i]
             self._flat_rerun_i += 1
             status = e.get("status", 200) if isinstance(e, dict) else int(e)
             m = re.search(r"/runs/(\d+)/rerun$", path)
             if isinstance(e, dict) and e.get("run_id") is not None \
                     and m and str(e["run_id"]) != m.group(1):
-                raise PushciError("flat canned.rerun run_id 失配（canned %s vs "
-                                  "路径 %s）" % (e["run_id"], m.group(1)), 2)
+                raise PushciError("flat canned.rerun run_id mismatch (canned "
+                                  "%s vs path %s)" % (e["run_id"], m.group(1)), 2)
             self.calls.append({"round": round_no, "method": method,
                                "path": path, "status": status})
             return status, None
         if method == "PUT" and "/merge" in path:
             mc = f.get("merge")
             if not isinstance(mc, dict):
-                raise PushciError("flat 场景缺 canned.merge（PUT %s）" % path, 2)
+                raise PushciError("flat scenario missing canned.merge (PUT %s)"
+                                  % path, 2)
             self.calls.append({"round": round_no, "method": method,
                                "path": path, "status": mc.get("status", 200)})
             return mc.get("status", 200), mc.get("body")
-        raise PushciError("flat 场景不支持的 API 调用（pulls GET 须 --pr 显传）: "
-                          "%s %s" % (method, path), 2)
+        raise PushciError("API call not supported in the flat scenario (pulls "
+                          "GET requires explicit --pr): %s %s" % (method, path), 2)
 
     def _canned_call(self, method, path, body, round_no):
         step = None
@@ -514,7 +393,8 @@ class ApiClient(object):
                 step = s
                 break
         if step is None:
-            raise PushciError("injector 场景无 at_round=%s 步（实调 %s %s）"
+            raise PushciError("injector scenario has no at_round=%s step "
+                              "(actual call %s %s)"
                               % (round_no, method, path), 2)
         resp = None
         for r in step.get("responses") or []:
@@ -522,15 +402,17 @@ class ApiClient(object):
                 resp = r
                 break
         if resp is None:
-            raise PushciError("injector 场景 round=%s canned 响应耗尽（实调 %s %s）"
+            raise PushciError("injector scenario round=%s canned responses "
+                              "exhausted (actual call %s %s)"
                               % (round_no, method, path), 2)
         if resp.get("method") != method:
-            raise PushciError("injector 失配：期待 method=%s·实调 %s（path %s）"
+            raise PushciError("injector mismatch: expected method=%s, actual "
+                              "%s (path %s)"
                               % (resp.get("method"), method, path), 2)
         want = resp.get("path") or ""
         if want and want not in path:
-            raise PushciError("injector 失配：canned path %r 非实调 %r 子串"
-                              % (want, path), 2)
+            raise PushciError("injector mismatch: canned path %r is not a "
+                              "substring of actual %r" % (want, path), 2)
         resp["_used"] = True
         status = resp.get("status", 200)
         self.calls.append({"round": round_no, "method": method, "path": path,
@@ -579,11 +461,11 @@ class ApiClient(object):
                     attempt += 1
                     continue
             except (urllib.error.URLError, OSError) as e:
-                raise PushciError("API 不可达: %s (%s)" % (url, e), 9)
+                raise PushciError("API unreachable: %s (%s)" % (url, e), 9)
             return code, parse_body(raw)
 
 
-# ---- 管线本体 ----------------------------------------------------------------
+# ---- pipeline body --------------------------------------------------------------
 
 class Pipeline(object):
 
@@ -595,9 +477,9 @@ class Pipeline(object):
         self.round_no = 0
         self.scen = None
         self.injector_kind = None          # "steps" | "flat" | None
-        self._jobs_i = 0                   # canned jobs 逐判类调用消费指针
-        self._flat_probe_i = 0             # flat canned.probe 逐 heal 探针指针
-        self._flat_gate_noted = False      # flat 形 preflight 双闸缺省绿注记（一次）
+        self._jobs_i = 0                   # canned jobs pointer, consumed per triage call
+        self._flat_probe_i = 0             # flat canned.probe pointer, consumed per heal probe
+        self._flat_gate_noted = False      # flat-shape preflight default-green note (once)
         mode = "online"
         flat_canned = None
         if args.dry_run:
@@ -619,7 +501,8 @@ class Pipeline(object):
                 gscen = json.load(fh)
             if not isinstance(gscen, dict) \
                     or not isinstance(gscen.get("responses"), list):
-                raise PushciError("git-caller 场景形坏（须 {\"responses\":[...]}）: %s"
+                raise PushciError("git-caller scenario shape bad (expected "
+                                  "{\"responses\":[...]}): %s"
                                   % args.git_caller, 2)
             canned_git = [dict(r) for r in gscen["responses"]]
         self.git = GitCaller(canned=canned_git, timeout=args.timeout)
@@ -653,32 +536,36 @@ class Pipeline(object):
             with io.open(path, "r", encoding="utf-8") as fh:
                 return json.load(fh)
         except (ValueError, UnicodeDecodeError) as e:
-            raise PushciError("%s JSON 形坏: %s (%s)" % (what, path, e), 2)
+            raise PushciError("%s JSON shape bad: %s (%s)" % (what, path, e), 2)
 
     def _load_injector(self, inj):
-        """注入场景装载（双形通吃）：
-        〔a〕DIR/scenario.json 含 "canned" dict → flat 形（夹具原件 verbatim·
-             schema/scenario/summary/argv/expect 等未知键忽略）；
-        〔b〕DIR/scenario.json（无 canned）→ steps 形（steps[].at_round）；
-        〔c〕无 scenario.json 但有 runs/ 平铺目录 → flat 形（并行席占位布局：
-             runs/NNNN.json+jobs/NNNN.json+rerun/NNNN.json+probe/NNNN.json+
-             merge.json·文件名字典序＝消费序）。"""
+        """Injection-scenario loader (both shapes accepted):
+        (a) DIR/scenario.json containing a "canned" dict = flat shape (the
+            fixture original verbatim; unknown keys such as schema/scenario/
+            summary/argv/expect are ignored);
+        (b) DIR/scenario.json without "canned" = steps shape (steps[].at_round);
+        (c) no scenario.json but a flat runs/ directory = flat shape (the
+            parallel seat-worker placeholder layout: runs/NNNN.json +
+            jobs/NNNN.json
+            + rerun/NNNN.json + probe/NNNN.json + merge.json; filename sort
+            order = consumption order)."""
         sj = os.path.join(inj, "scenario.json")
         if os.path.isfile(sj):
-            scen = self._load_json_file(sj, "injector 场景")
+            scen = self._load_json_file(sj, "injector scenario")
             if not isinstance(scen, dict):
-                raise PushciError("injector 场景形坏（须 dict）: %s" % sj, 2)
+                raise PushciError("injector scenario shape bad (expected "
+                                  "dict): %s" % sj, 2)
             return scen
         if os.path.isdir(os.path.join(inj, "runs")):
             def rd(kind):
                 d = os.path.join(inj, kind)
-                out = []
-                if os.path.isdir(d):
-                    for fn in sorted(os.listdir(d)):
-                        if fn.endswith(".json"):
-                            out.append(self._load_json_file(
-                                os.path.join(d, fn), "flat canned %s/%s"
-                                % (kind, fn)))
+            out = []
+            if os.path.isdir(d):
+                for fn in sorted(os.listdir(d)):
+                    if fn.endswith(".json"):
+                        out.append(self._load_json_file(
+                            os.path.join(d, fn),
+                            "flat canned %s/%s" % (kind, fn)))
                 return out
             mp = os.path.join(inj, "merge.json")
             merge = self._load_json_file(mp, "flat canned merge") \
@@ -686,16 +573,17 @@ class Pipeline(object):
             return {"canned": {"runs": rd("runs"), "jobs": rd("jobs"),
                                "rerun": rd("rerun"), "probe": rd("probe"),
                                "logs": {}, "merge": merge}}
-        raise PushciError("injector 场景缺失（scenario.json 或 runs/ 平铺目录）: %s"
-                          % inj, 9)
+        raise PushciError("injector scenario missing (scenario.json or flat "
+                          "runs/ directory): %s" % inj, 9)
 
-    # -- 工具子进程（四器编排·零新引擎）---------------------------------------
+    # -- tool subprocesses (orchestrates the four tools, zero new engines) -----
 
     def _run_py(self, tool_path, cli):
-        """python3 -B <tool> <cli> 子进程（stdout+stderr 合流）。缺件 → 9；
-        --timeout 防挂（缺省 120s）：超时=子进程杀＋fail-loud 9 报调用名。"""
+        """python3 -B <tool> <cli> subprocess (stdout+stderr merged). A missing
+        component fails with 9; --timeout anti-hang (default 120s): on timeout
+        the subprocess is killed and a fail-loud 9 names the call."""
         if not os.path.isfile(tool_path):
-            raise PushciError("工具链件缺失: %s" % tool_path, 9)
+            raise PushciError("toolchain component missing: %s" % tool_path, 9)
         p = subproc_run([sys.executable, "-B", tool_path] + list(cli),
                         self.args.timeout,
                         "python3 -B %s %s" % (os.path.basename(tool_path),
@@ -706,7 +594,8 @@ class Pipeline(object):
         return p.returncode, out
 
     def _tool_report(self, tool_path, cli):
-        """跑四器之一（附 --json tmp）→ (rc, report|None, stdout)。"""
+        """Run one of the four tools (with --json tmp), returning
+        (rc, report|None, stdout)."""
         fd, tmp = tempfile.mkstemp(prefix="pushci_toolrep_")
         os.close(fd)
         try:
@@ -729,8 +618,9 @@ class Pipeline(object):
         return t if isinstance(t, dict) else {}
 
     def _next_jobs(self):
-        """判类 canned jobs 取用（逐判类调用消费）：flat 形 canned.jobs 列表→
-        steps 形 jobs_list 列表→steps 形 jobs 单 dict（复用）。"""
+        """Triage canned-jobs fetch (consumed per triage call): flat-shape
+        canned.jobs list, then steps-shape jobs_list list, then steps-shape
+        single jobs dict (reused)."""
         if self.injector_kind == "flat":
             lst = (self.scen.get("canned") or {}).get("jobs") or []
         elif isinstance(self.scen.get("jobs_list"), list):
@@ -738,8 +628,8 @@ class Pipeline(object):
         else:
             return self.scen.get("jobs")
         if self._jobs_i >= len(lst):
-            raise PushciError("injector 场景 canned jobs 耗尽（判类调用 %d）"
-                              % (self._jobs_i + 1), 2)
+            raise PushciError("injector scenario canned jobs exhausted (triage "
+                              "call %d)" % (self._jobs_i + 1), 2)
         j = lst[self._jobs_i]
         self._jobs_i += 1
         return j
@@ -747,7 +637,7 @@ class Pipeline(object):
     def runs_path(self):
         return "/repos/%s%s" % (self.repo, RUNS_QUERY)
 
-    # -- 段 1：preflight -------------------------------------------------------
+    # -- stage 1: preflight ------------------------------------------------------
 
     def stage_preflight(self):
         a = self.args
@@ -756,7 +646,8 @@ class Pipeline(object):
             pf["gate4"] = None
         self.report["stages"]["preflight"] = pf
 
-        # ① toolchain（doctor --worker 缺省探测·verdict≠healthy 即停）
+        # step 1 toolchain (doctor probed with --worker by default; verdict
+        # other than healthy stops)
         if self.injector_kind == "steps":
             tc = self.scen_tools().get("toolchain_dyld_doctor") or {}
             if isinstance(tc.get("report"), dict):
@@ -766,42 +657,44 @@ class Pipeline(object):
             else:
                 verdict, rc, doc_rep = tc.get("verdict"), tc.get("rc", 0), None
             if verdict is None:
-                raise PushciError("injector 场景缺 tools.toolchain_dyld_doctor"
-                                  ".verdict", 2)
+                raise PushciError("injector scenario missing tools."
+                                  "toolchain_dyld_doctor.verdict", 2)
         elif self.injector_kind == "flat":
-            verdict, rc, doc_rep = "healthy", 0, None   # 闸缺省绿·注记在 probe_stable 施
+            verdict, rc, doc_rep = "healthy", 0, None   # gate default green; the note is emitted in probe_stable
         else:
             rc, doc_rep, out = self._tool_report(DOCTOR_TOOL, [])
             verdict = doc_rep.get("verdict") if isinstance(doc_rep, dict) else None
             if verdict is None:
-                raise PushciError("doctor 报告形坏（无 verdict）rc=%d: %s"
-                                  % (rc, out[-200:]), 2)
+                raise PushciError("doctor report shape bad (no verdict) "
+                                  "rc=%d: %s" % (rc, out[-200:]), 2)
         pf["toolchain"] = {"verdict": verdict, "rc": rc}
         if verdict != "healthy":
-            ev = ["doctor verdict=%s rc=%s（≠healthy·禁发射）" % (verdict, rc)]
+            ev = ["doctor verdict=%s rc=%s (not healthy, no initiate)"
+                  % (verdict, rc)]
             if isinstance(doc_rep, dict):
                 for e in doc_rep.get("external_refs") or []:
                     if isinstance(e, dict) and not e.get("exists"):
                         ev.append("missing: %s" % e.get("path"))
             raise StopVerdict("toolchain", 1, ev)
 
-        # ② net（net_probe 双探稳窗·UNSTABLE 即停）
+        # step 2 net (net_probe two-round stable window; UNSTABLE stops)
         verdict, rc = self.probe_stable(with_record=True)
         if verdict != "STABLE":
             raise StopVerdict("unstable", 1,
-                              ["net_probe verdict=%s rc=%s（UNSTABLE·禁发射）"
-                               % (verdict, rc)])
+                              ["net_probe verdict=%s rc=%s (UNSTABLE, no "
+                               "initiate)" % (verdict, rc)])
 
-        # ③ 可选 gate4 预扫（FAIL=0 才放行）
+        # step 3 optional gate4 pre-scan (proceed only when FAIL=0)
         if a.pre_scan_gate4:
             self.gate4_prescan(pf)
 
     def probe_stable(self, with_record=False, source="preflight"):
-        """net_probe --rounds 2 --interval S --stable-window（真子进程或 canned）
-        → (verdict, rc)。verdict 须 STABLE|UNSTABLE。
-        steps 形：tools.net_probe canned（{"verdict"} 或 {"report":{...}}）。
-        flat 形：preflight 闸缺省绿（响亮注记一次）·heal 探针逐消耗
-        canned.probe（net_probe 报告真形取 verdict）。"""
+        """net_probe --rounds 2 --interval S --stable-window (real subprocess
+        or canned) returning (verdict, rc); verdict must be STABLE|UNSTABLE.
+        Steps shape: tools.net_probe canned ({"verdict"} or {"report":{...}}).
+        Flat shape: the preflight gate defaults green (noted loudly once) and
+        heal probes consume canned.probe one per probe (verdict taken from
+        the real net_probe report shape)."""
         a = self.args
         if self.injector_kind == "steps":
             np = self.scen_tools().get("net_probe") or {}
@@ -811,27 +704,30 @@ class Pipeline(object):
             else:
                 verdict, rc = np.get("verdict"), np.get("rc", 0)
             if verdict is None:
-                raise PushciError("injector 场景缺 tools.net_probe.verdict", 2)
+                raise PushciError("injector scenario missing "
+                                  "tools.net_probe.verdict", 2)
         elif self.injector_kind == "flat":
             if source == "preflight":
                 verdict, rc = "STABLE", 0
                 if not self._flat_gate_noted:
                     self._flat_gate_noted = True
                     self.report["evidence"].append(
-                        "flat 注入形：preflight toolchain/net 双闸按缺省绿施"
-                        "（flat 形未携闸 canned·测试契约形·真发射闸走 steps 形"
-                        "或真模式）")
+                        "flat injection shape: preflight toolchain/net gates "
+                        "default green (the flat shape carries no gate canned "
+                        "entries; test-contract shape; the real preflight runs "
+                        "in the steps shape or live mode)")
             else:
                 lst = (self.scen.get("canned") or {}).get("probe") or []
                 if self._flat_probe_i >= len(lst):
-                    raise PushciError("flat 场景 canned.probe 耗尽（heal 探针 %d）"
+                    raise PushciError("flat scenario canned.probe exhausted "
+                                      "(heal probe %d)"
                                       % (self._flat_probe_i + 1), 2)
                 rep = lst[self._flat_probe_i]
                 self._flat_probe_i += 1
                 verdict = rep.get("verdict") if isinstance(rep, dict) else None
                 if verdict not in ("STABLE", "UNSTABLE"):
-                    raise PushciError("flat canned.probe 形坏（verdict=%r）"
-                                      % (verdict,), 2)
+                    raise PushciError("flat canned.probe shape bad "
+                                      "(verdict=%r)" % (verdict,), 2)
                 rc = 0 if verdict == "STABLE" else 1
         else:
             rc, rep, out = self._tool_report(
@@ -840,8 +736,8 @@ class Pipeline(object):
                              "--stable-window"])
             verdict = rep.get("verdict") if isinstance(rep, dict) else None
             if verdict not in ("STABLE", "UNSTABLE"):
-                raise PushciError("net_probe 报告形坏（verdict=%r）rc=%d: %s"
-                                  % (verdict, rc, out[-200:]), 2)
+                raise PushciError("net_probe report shape bad (verdict=%r) "
+                                  "rc=%d: %s" % (verdict, rc, out[-200:]), 2)
         if with_record:
             pf = self.report["stages"].get("preflight")
             if pf is not None:
@@ -849,13 +745,15 @@ class Pipeline(object):
         return verdict, rc
 
     def gate4_prescan(self, pf):
-        """git diff --name-only <base>...<branch> → .v 变更件 → gate4 守卫逐件
-        （--file·真子进程·两态 rc 0=PASS/1=FAIL/2=复核）→ FAIL=0 才放行。"""
+        """git diff --name-only <base>...<branch> to the changed .v files, each
+        run through the gate4 guard (--file, real subprocess; rc 0=PASS/
+        1=FAIL/2=review); proceed only when FAIL=0."""
         a = self.args
         rc, out, err = self.git(["-C", a.repo_path, "diff", "--name-only",
                                  "%s...%s" % (a.base_ref, a.branch)])
         if rc != 0:
-            raise PushciError("git diff 失败 rc=%d: %s" % (rc, err.strip()[:160]), 9)
+            raise PushciError("git diff failed rc=%d: %s"
+                              % (rc, err.strip()[:160]), 9)
         names = [ln.strip() for ln in out.splitlines() if ln.strip()]
         files, skipped = [], []
         for n in names:
@@ -873,25 +771,27 @@ class Pipeline(object):
             elif rc == 2:
                 review_files.append(f)
             else:
-                raise PushciError("gate4 守卫形外退出 rc=%d: %s" % (rc, out[-160:]), 2)
+                raise PushciError("gate4 guard exit outside its contract "
+                                  "rc=%d: %s" % (rc, out[-160:]), 2)
         pf["gate4"] = {"files": sorted(files), "pass_files": pass_files,
                        "fail_files": fail_files, "review_files": review_files,
                        "skipped_missing": sorted(skipped),
                        "fail_count": len(fail_files)}
         if skipped:
             self.report["evidence"].append(
-                "gate4 预扫跳过缺失件 %d（分支删除件无面可扫·响亮在册）: %s"
+                "gate4 pre-scan skipped %d missing files (branch-deleted files "
+                "have no face to scan, recorded loudly): %s"
                 % (len(skipped), ",".join(sorted(skipped))))
         if review_files:
             self.report["evidence"].append(
-                "gate4 REVIEW=%d（复核级不拦·人工可阅）: %s"
+                "gate4 REVIEW=%d (review grade does not block, human-readable): %s"
                 % (len(review_files), ",".join(review_files)))
         if fail_files:
             raise StopVerdict("gate4-block", 2,
-                              ["gate4 FAIL=%d（FAIL=0 才放行）: %s"
+                              ["gate4 FAIL=%d (proceed only when FAIL=0): %s"
                                % (len(fail_files), ",".join(fail_files))])
 
-    # -- 段 2：push ------------------------------------------------------------
+    # -- stage 2: push ------------------------------------------------------------
 
     def stage_push(self):
         a = self.args
@@ -901,11 +801,12 @@ class Pipeline(object):
         rc, out, err = self.git(["-C", a.repo_path, "rev-parse", "--verify",
                                  "refs/heads/%s" % a.branch])
         if rc != 0:
-            raise PushciError("分支缺失: refs/heads/%s（%s）"
+            raise PushciError("branch missing: refs/heads/%s (%s)"
                               % (a.branch, err.strip()[:120]), 9)
         sha_local = out.strip().split()[0] if out.strip() else ""
         if not sha_local:
-            raise PushciError("rev-parse 空输出（refs/heads/%s）" % a.branch, 9)
+            raise PushciError("rev-parse empty output (refs/heads/%s)"
+                              % a.branch, 9)
         rec["url_masked"] = mask_text(self.remote_url, self.masks)
         base_cmd = ["-C", a.repo_path, "-c",
                     "http.version=" + PUSH_HTTP_VERSION, "push"]
@@ -920,31 +821,35 @@ class Pipeline(object):
                     rec["attempts"], mask_text(proxy, self.masks))
             else:
                 self.report["evidence"].append(
-                    "ghproxy 换路不适用（remote URL 非 https://%s/ 形：%s）"
+                    "ghproxy reroute not applicable (remote URL is not the "
+                    "https://%s/ shape: %s)"
                     % (GHPROXY_HOST, mask_text(self.remote_url, self.masks)))
         if not ok:
-            route = "直路 %d 发" % PUSH_TRIES
+            route = "%d direct attempts" % PUSH_TRIES
             if rec["ghproxy_used"]:
-                route += "＋ghproxy %d 发" % GHPROXY_TRIES
+                route += " plus %d ghproxy attempts" % GHPROXY_TRIES
             raise StopVerdict("unstable", 1,
-                              ["push 全败（%s）·rc 逐发在册 stages.push.attempts"
-                               % route])
-        # ls-remote 复核（承 watch.py「真 rc＋ls-remote 复核」纪律·第 4 git 调）：
-        # pushed_sha＝远端 tip（CI 构的是远端 tip·远端为准）；异于本地 tip 响亮注记。
+                              ["all push attempts failed (%s); per-attempt rc "
+                               "recorded in stages.push.attempts" % route])
+        # ls-remote confirmation (watch.py's "real rc + ls-remote confirmation"
+        # discipline; the 4th git call): pushed_sha = the remote tip (CI builds
+        # the remote tip, so the remote is authoritative); a mismatch with the
+        # local tip is noted loudly.
         rc, out, err = self.git(["-C", a.repo_path, "ls-remote", a.remote,
                                  "refs/heads/%s" % a.branch])
         if rc != 0 or not out.strip():
-            raise PushciError("push 后 ls-remote 复核失败 rc=%d（远端 tip 不可证）:"
-                              " %s" % (rc, err.strip()[:120]), 9)
+            raise PushciError("post-push ls-remote confirmation failed rc=%d "
+                              "(remote tip unprovable): %s"
+                              % (rc, err.strip()[:120]), 9)
         sha_remote = out.strip().split()[0]
         if not re.match(r"^[0-9a-fA-F]{40}$", sha_remote):
-            raise PushciError("ls-remote 输出非 40 位 sha 形: %r"
+            raise PushciError("ls-remote output is not a 40-hex-digit sha: %r"
                               % mask_text(sha_remote, self.masks), 9)
         rec["sha"] = sha_remote
         if sha_remote.lower() != sha_local.lower():
             self.report["evidence"].append(
-                "push 后 ls-remote sha 与本地 rev-parse tip 异（远端为准·watch "
-                "锚远端 tip）")
+                "post-push ls-remote sha differs from the local rev-parse tip "
+                "(remote is authoritative; watch anchors the remote tip)")
 
     def _push_tries(self, cmd, tries, attempts_log, target_label):
         for i in range(tries):
@@ -956,26 +861,28 @@ class Pipeline(object):
                 sleep_scaled(PUSH_RETRY_WAIT, self.args.sleep_scale)
         return False
 
-    # -- 段 3：resolve+watch（含段 4 heal 循环）---------------------------------
+    # -- stage 3: resolve+watch (contains the stage 4 heal loop) -----------------
 
     def stage_watch(self):
         a = self.args
         push_rec = self.report["stages"].get("push") or {}
         sha = push_rec.get("sha")
         if not sha:
-            raise PushciError("watch 依赖 pushed_sha（push 段未跑或未成）", 2)
+            raise PushciError("watch depends on pushed_sha (push stage not run "
+                              "or not successful)", 2)
         watch = {"run_tag": None, "run_id": None, "rounds": 0,
                  "conclusion": None, "policy": WATCH_POLICY}
         self.report["stages"]["watch"] = watch
         heal = {"rounds": [], "fired_total": 0, "last_triage": None}
         if "heal" in a.steps:
-            self.report["stages"]["heal"] = heal   # 常在（rounds＝fired 账·绿则空）
+            self.report["stages"]["heal"] = heal   # always present (rounds = fired account; empty when green)
         while True:
             self.round_no += 1
             watch["rounds"] = self.round_no
             if a.watch_max_rounds and self.round_no > a.watch_max_rounds:
-                raise PushciError("watch 轮帽达（--watch-max-rounds=%d）·run 仍未 "
-                                  "completed" % a.watch_max_rounds, 9)
+                raise PushciError("watch round cap reached "
+                                  "(--watch-max-rounds=%d) with the run still "
+                                  "not completed" % a.watch_max_rounds, 9)
             status, body = self.api("GET", self.runs_path(),
                                     round_no=self.round_no)
             if status != 200:
@@ -983,11 +890,12 @@ class Pipeline(object):
                                   % (status, snippet(body)), 9)
             runs = None
             if isinstance(body, dict):
-                runs = body.get("workflow_runs")   # GitHub API 真形
+                runs = body.get("workflow_runs")   # real GitHub API shape
                 if runs is None:
-                    runs = body.get("runs")        # watch.py --runs-json 证据形
+                    runs = body.get("runs")        # watch.py --runs-json evidence shape
             if not isinstance(runs, list):
-                raise PushciError("runs API 形坏（无 workflow_runs/runs 列表）", 9)
+                raise PushciError("runs API shape bad (no workflow_runs/runs "
+                                  "list)", 9)
             matches = [r for r in runs if isinstance(r, dict)
                        and str(r.get("head_branch") or "") == a.branch
                        and str(r.get("head_sha") or "").lower() == sha.lower()]
@@ -1009,20 +917,24 @@ class Pipeline(object):
                 return
             if "heal" not in a.steps:
                 raise StopVerdict("fix-content", 2,
-                                  ["watch 观测红（conclusion=%s）·heal 段未选"
-                                   "（--steps 裁剪）·禁自动处置·人工分诊"
-                                   % conclusion])
+                                  ["watch observed a failing conclusion=%s; "
+                                   "the heal stage was not selected (--steps "
+                                   "trimmed); no automatic handling, manual "
+                                   "triage" % conclusion])
             if len(heal["rounds"]) >= a.max_heal:
                 raise StopVerdict("heal-exhausted", 1,
-                                  ["heal 帽达（--max-heal=%d·已 %d 轮）"
+                                  ["heal cap reached (--max-heal=%d, already "
+                                   "%d rounds)"
                                    % (a.max_heal, len(heal["rounds"]))])
             self.heal_round(run, heal)
             sleep_scaled(a.watch_interval, a.sleep_scale)
 
     def heal_round(self, run, heal):
-        """单轮 heal：ci_triage 判类（真子进程）→ family 分派 → rerun 或裁停。
-        heal.rounds＝fired 重跑账（B/E 实动轮入册·A/C/表外裁停零轮·零 rerun
-        实证）；历次判类 outcome 全量在 heal.last_triage。"""
+        """One heal round: ci_triage classification (real subprocess), family
+        routing, then rerun or stop. heal.rounds = the fired-rerun account
+        (B/E rounds with an actual fire are recorded; A/C/out-of-table stops
+        contribute zero rounds, provably zero reruns); every triage outcome is
+        recorded in full in heal.last_triage."""
         t_rep = self.run_triage(run.get("id"))
         heal["last_triage"] = {"family": t_rep.get("family"),
                                "action": t_rep.get("action"),
@@ -1031,20 +943,24 @@ class Pipeline(object):
         if fam not in HEAL_RERUN_FAMILIES:
             if fam == "A-content-red":
                 raise StopVerdict("fix-content", 2,
-                                  ["heal: family=A-content-red（内容红·禁代修——"
-                                   "修复是席/人职责）·判类证据在册 stages.heal."
-                                   "last_triage.evidence·零 rerun"])
+                                  ["heal: family=A-content-red (content failure, "
+                                   "no automatic repair; repair is the operator's "
+                                   "job); classification evidence recorded in "
+                                   "stages.heal.last_triage.evidence; zero rerun"])
             if fam == "C-toolchain-break":
                 raise StopVerdict("toolchain", 1,
-                                  ["heal: family=C-toolchain-break（环境断链）·"
-                                   "建议重跑 python3 tools/"
-                                   "toolchain_dyld_doctor.py 复诊（只诊断＋"
-                                   "restore 建议·禁代执行）·判类证据在册 "
+                                  ["heal: family=C-toolchain-break (environment "
+                                   "linkage failure); run python3 tools/"
+                                   "toolchain_dyld_doctor.py again to "
+                                   "re-diagnose (diagnosis plus restore "
+                                   "suggestion only, no automatic execution); "
+                                   "classification evidence recorded in "
                                    "stages.heal.last_triage.evidence"])
             raise StopVerdict("fix-content", 2,
-                              ["heal: family=%s（heal 分派表外〔B/E/A/C 之外〕·"
-                               "禁自动 rerun·人工指认·family 原值在册 last_triage）"
-                               % fam])
+                              ["heal: family=%s outside the heal routing table "
+                               "(beyond B/E/A/C); no automatic rerun, manual "
+                               "identification; the family value is recorded "
+                               "verbatim in last_triage" % fam])
         entry = {"round": len(heal["rounds"]) + 1, "family": fam,
                  "action": t_rep.get("action"), "probe": None, "fired": False,
                  "http": None, "evidence": list(t_rep.get("evidence") or [])}
@@ -1053,8 +969,9 @@ class Pipeline(object):
         entry["probe"] = verdict
         if verdict != "STABLE":
             raise StopVerdict("unstable", 1,
-                              ["heal round %d: probe=%s（禁发射律·UNSTABLE 不 "
-                               "rerun）" % (entry["round"], verdict)])
+                              ["heal round %d: probe=%s (no-initiate rule, "
+                               "UNSTABLE does not rerun)"
+                               % (entry["round"], verdict)])
         status, body = self.api(
             "POST", "/repos/%s/actions/runs/%s/rerun" % (self.repo,
                                                          run.get("id")),
@@ -1065,15 +982,17 @@ class Pipeline(object):
         elif status == 403:
             entry["fired"] = True
             entry["evidence"].append(
-                "rerun POST 403（already running 形）幂等接受·回 watch")
+                "rerun POST 403 (already-running shape) accepted "
+                "idempotently, back to watch")
         else:
             raise PushciError("rerun POST HTTP %d: %s"
                               % (status, snippet(body)), 9)
         heal["fired_total"] = sum(1 for r in heal["rounds"] if r["fired"])
 
     def run_triage(self, run_id):
-        """ci_triage 子进程：线上 --repo --run（token 走 --netrc 透传）或
-        injector 模式 --offline canned jobs（真子进程真判类·零网络）。"""
+        """ci_triage subprocess: live --repo --run (token passed through via
+        --netrc) or injector-mode --offline canned jobs (real subprocess, real
+        classification, zero network)."""
         fd, out_json = tempfile.mkstemp(prefix="pushci_triage_")
         os.close(fd)
         jobs_path = None
@@ -1081,8 +1000,9 @@ class Pipeline(object):
             if self.scen is not None:
                 jobs = self._next_jobs()
                 if not isinstance(jobs, dict):
-                    raise PushciError("injector 场景缺 canned jobs（ci_triage "
-                                      "形 {\"total_count\":N,\"jobs\":[...]}）", 2)
+                    raise PushciError("injector scenario missing canned jobs "
+                                      "(ci_triage shape {\"total_count\":N,"
+                                      "\"jobs\":[...]})", 2)
                 fdj, jobs_path = tempfile.mkstemp(prefix="pushci_jobs_")
                 os.close(fdj)
                 with io.open(jobs_path, "w", encoding="utf-8", newline="\n") as fh:
@@ -1093,7 +1013,8 @@ class Pipeline(object):
                        "--netrc", self.args.netrc, "--json", out_json]
             rc, out = self._run_py(TRIAGE_TOOL, cli)
             if rc != 0:
-                raise PushciError("ci_triage 失败 rc=%d: %s" % (rc, out[-200:]), 9)
+                raise PushciError("ci_triage failed rc=%d: %s"
+                                  % (rc, out[-200:]), 9)
             with io.open(out_json, "r", encoding="utf-8") as fh:
                 return json.load(fh)
         finally:
@@ -1107,7 +1028,7 @@ class Pipeline(object):
             except OSError:
                 pass
 
-    # -- 段 5：merge ------------------------------------------------------------
+    # -- stage 5: merge ------------------------------------------------------------
 
     def stage_merge(self):
         a = self.args
@@ -1129,7 +1050,7 @@ class Pipeline(object):
                               if isinstance(p, dict)
                               and isinstance(p.get("number"), int))
             if not nums:
-                raise PushciError("无 open PR（head=%s:%s·目标缺失）"
+                raise PushciError("no open PR (head=%s:%s, missing target)"
                                   % (owner, a.branch), 9)
             pr = nums[0]
             rec["pr"] = pr
@@ -1146,16 +1067,18 @@ class Pipeline(object):
             if status == 409:
                 if i >= MERGE_409_RETRIES:
                     raise StopVerdict("fix-content", 2,
-                                      ["merge 409×%d（重试帽 ≤%d）·PR #%s 冲突"
-                                       "·人工解（verdict=fix-content）"
+                                      ["merge 409 x%d (retry cap <=%d); PR #%s "
+                                       "conflict, resolve manually "
+                                       "(verdict=fix-content)"
                                        % (i + 1, MERGE_409_RETRIES, pr)])
                 bs, bb = self.api("GET", "/repos/%s/branches/main" % self.repo,
                                   round_no=self.round_no)
                 if bs == 200 and isinstance(bb, dict):
                     rec["main_tip"] = (bb.get("commit") or {}).get("sha")
                 self.report["evidence"].append(
-                    "merge 409（attempt %d）→ GET branches/main 重拉 tip=%s → "
-                    "歇 %ds 重试" % (i + 1, rec["main_tip"], MERGE_409_WAIT))
+                    "merge 409 (attempt %d), GET branches/main re-read "
+                    "tip=%s, wait %ds and retry"
+                    % (i + 1, rec["main_tip"], MERGE_409_WAIT))
                 sleep_scaled(MERGE_409_WAIT, a.sleep_scale)
                 continue
             raise PushciError("merge PUT HTTP %d: %s" % (status, snippet(body)), 9)
@@ -1167,63 +1090,68 @@ class Pipeline(object):
         plan = []
         if "preflight" in a.steps:
             plan.append("[1] preflight.toolchain: python3 tools/"
-                        "toolchain_dyld_doctor.py（--worker 缺省探测·gate "
-                        "verdict=healthy）")
+                        "toolchain_dyld_doctor.py (--worker probed by default, "
+                        "gate verdict=healthy)")
             plan.append("[1] preflight.net: python3 tools/net_probe.py --rounds 2"
-                        " --interval %g --stable-window（gate STABLE）"
+                        " --interval %g --stable-window (gate STABLE)"
                         % a.probe_interval)
             if a.pre_scan_gate4:
                 plan.append("[1] preflight.gate4: git -C <repo> diff --name-only "
-                            "%s...%s → .v 件 → python3 verify/"
-                            "gate4_comment_guard.py --file（gate FAIL=0）"
+                            "%s...%s, then the .v files through python3 verify/"
+                            "gate4_comment_guard.py --file (gate FAIL=0)"
                             % (a.base_ref, a.branch))
             else:
-                plan.append("[1] preflight.gate4: 未启（--pre-scan-gate4 未给）")
+                plan.append("[1] preflight.gate4: not enabled (--pre-scan-gate4 "
+                            "not given)")
         if "push" in a.steps:
-            plan.append("[2] push: git -C <repo> -c http.version=%s push %s %s"
-                        "（重试 %d 发×%ds；三败且 remote host=%s → ghproxy 换路 "
-                        "%d 发）" % (PUSH_HTTP_VERSION, a.remote, a.branch,
-                                     PUSH_TRIES, PUSH_RETRY_WAIT, GHPROXY_HOST,
-                                     GHPROXY_TRIES))
+            plan.append("[2] push: git -C <repo> -c http.version=%s push %s %s "
+                        "(%d attempts x %ds wait; after three failures with "
+                        "remote host=%s, ghproxy reroute %d attempts)"
+                        % (PUSH_HTTP_VERSION, a.remote, a.branch,
+                           PUSH_TRIES, PUSH_RETRY_WAIT, GHPROXY_HOST,
+                           GHPROXY_TRIES))
         if "watch" in a.steps:
-            plan.append("[3] watch: GET /repos/<org/repo>%s（head_branch=%s 且 "
-                        "head_sha=<pushed_sha>·间隔 %gs·%s 至 completed）"
+            plan.append("[3] watch: GET /repos/<org/repo>%s (head_branch=%s and "
+                        "head_sha=<pushed_sha>, every %gs, %s until completed)"
                         % (RUNS_QUERY, a.branch, a.watch_interval, WATCH_POLICY))
         if "heal" in a.steps:
             plan.append("[4] heal: python3 tools/ci_triage.py --repo <org/repo> "
-                        "--run <id>（帽 %d）→ B/E→probe+rerun（403 幂等接受）·"
-                        "A→fix-content 停·C→toolchain 停·表外→人工"
+                        "--run <id> (cap %d); B/E -> probe then rerun (403 "
+                        "accepted idempotently); A -> stop fix-content; "
+                        "C -> stop toolchain; out-of-table -> manual"
                         % a.max_heal)
-        plan.append("[5] verdict: report schema %s·退出码 0/1/2/9" % SCHEMA)
+        plan.append("[5] verdict: report schema %s, exit codes 0/1/2/9" % SCHEMA)
         if a.merge:
-            plan.append("[5] merge: GET /pulls?head=<owner>:%s&state=open（%s）"
-                        "→ PUT /pulls/{{n}}/merge（%s·409→GET branches/main 歇 "
-                        "%ds 重试 ≤%d）"
-                        % (a.branch, ("--pr %d 显传" % a.pr) if a.pr
-                           else "解 PR 号", a.merge_method, MERGE_409_WAIT,
-                           MERGE_409_RETRIES))
+            plan.append("[5] merge: GET /pulls?head=<owner>:%s&state=open (%s) "
+                        "then PUT /pulls/{{n}}/merge (%s; 409 -> GET "
+                        "branches/main, wait %ds, retry <=%d)"
+                        % (a.branch, ("explicit --pr %d" % a.pr) if a.pr
+                           else "resolve the PR number", a.merge_method,
+                           MERGE_409_WAIT, MERGE_409_RETRIES))
         self.report["plan"] = plan
         return "dry-run", 0, []
 
-    # -- 主驱动 -------------------------------------------------------------------
+    # -- main driver -----------------------------------------------------------------
 
     def run(self):
         a = self.args
         if a.dry_run:
             return self.run_dry()
         if "push" in a.steps or "watch" in a.steps:
-            # remote URL：push 段（ghproxy 决策）与 watch 段（repo 推导）所需——
-            # 纯 preflight 模式零 git 调
+            # the remote URL is needed by the push stage (ghproxy decision) and
+            # the watch stage (repo derivation); pure preflight mode makes zero
+            # git calls
             rc, out, err = self.git(["-C", a.repo_path, "remote", "get-url",
                                      "--push", a.remote])
             if rc != 0:
-                raise PushciError("远端缺失: %s（%s）"
+                raise PushciError("remote missing: %s (%s)"
                                   % (a.remote, err.strip()[:120]), 9)
             self.remote_url = out.strip()
             self.repo = repo_from_url(self.remote_url)
             if not self.repo:
                 raise PushciError(
-                    "remote URL 路径无法推导 ORG/REPO（末两段）: %s"
+                    "remote URL path cannot derive ORG/REPO (last two "
+                    "segments): %s"
                     % mask_text(self.remote_url, collect_masks(self.remote_url)),
                     9)
             self.masks = collect_masks(self.remote_url)
@@ -1237,10 +1165,11 @@ class Pipeline(object):
             self.stage_merge()
         return "success", 0, []
 
-    # -- 出账 ---------------------------------------------------------------------
+    # -- reporting -----------------------------------------------------------------
 
     def dump_canned_logs(self):
-        """注入模式调用流水落盘（测试实证面·尽力而为不遮主错）。"""
+        """Persist injector-mode call traces (test-evidence surface; best
+        effort, never masks the primary error)."""
         try:
             if self.args.git_caller:
                 base = self.args.git_caller
@@ -1259,9 +1188,11 @@ class Pipeline(object):
             pass
 
     def finalize(self, verdict, extra_evidence, code):
-        """终局裁定＋出账（verdict 段被选时渲染 stdout＋落 --json）。"""
+        """Final adjudication and reporting (renders stdout and writes --json
+        when the verdict stage is selected)."""
         if verdict not in VERDICT_EXIT:
-            raise PushciError("内部错误：verdict 越册 %r" % (verdict,), 2)
+            raise PushciError("internal error: verdict outside the table %r"
+                              % (verdict,), 2)
         rep = self.report
         rep["verdict"] = verdict
         watch = rep["stages"].get("watch")
@@ -1281,8 +1212,8 @@ class Pipeline(object):
 
 
 def render_report(rep, code):
-    """stdout 出账（全数据驱动·零墙钟·确定性）。"""
-    print("=== ROCQWASH PUSHCI（修复后推送 CI 一键流水线·v36 旗舰）===")
+    """stdout reporting (fully data-driven, zero wall-clock, deterministic)."""
+    print("=== ROCQWASH PUSHCI (post-fix push-CI one-shot pipeline) ===")
     print("mode=%s steps=%s" % (rep["mode"], ",".join(rep["steps"])))
     for line in rep.get("plan") or []:
         print("PLAN %s" % line)
@@ -1314,7 +1245,7 @@ def render_report(rep, code):
     watch = st.get("watch")
     if watch:
         print("--- [3] watch ---")
-        print("run=%s rounds=%d conclusion=%s（%s）"
+        print("run=%s rounds=%d conclusion=%s (%s)"
               % (watch["run_tag"] or "-", watch["rounds"],
                  watch["conclusion"] or "-", watch["policy"]))
     heal = st.get("heal")
@@ -1340,80 +1271,98 @@ def render_report(rep, code):
         print("  - %s" % e)
 
 
-# ---- 校验 ---------------------------------------------------------------------
+# ---- validation -------------------------------------------------------------------
 
 def validate(args):
-    """用法校验（fail-loud 2）＋目标校验（fail-loud 9）·全部副作用之前。"""
+    """Usage validation (fail-loud 2) and target validation (fail-loud 9), all
+    before any side effect."""
     steps = []
     for s in args.steps.split(","):
         s = s.strip()
         if s and s not in steps:
             steps.append(s)
     if not steps:
-        raise PushciError("--steps 展开后为空", 2)
+        raise PushciError("--steps expands to empty", 2)
     unknown = [s for s in steps if s not in STAGE_ALL]
     if unknown:
-        raise PushciError("--steps 未知段: %s（册：%s）"
+        raise PushciError("unknown --steps stage: %s (table: %s)"
                           % (",".join(unknown), ",".join(STAGE_ALL)), 2)
     args.steps = steps
     if "watch" in steps and "push" not in steps:
-        raise PushciError("段依赖：watch⇒push（watch 需 pushed_sha）", 2)
+        raise PushciError("stage dependency: watch=>push (watch needs "
+                          "pushed_sha)", 2)
     if "heal" in steps and "watch" not in steps:
-        raise PushciError("段依赖：heal⇒watch", 2)
+        raise PushciError("stage dependency: heal=>watch", 2)
     if args.merge and "watch" not in steps:
-        raise PushciError("段依赖：--merge⇒watch（merge 须绿后施）", 2)
+        raise PushciError("stage dependency: --merge=>watch (merge runs only "
+                          "after green)", 2)
     if args.max_heal < 0:
-        raise PushciError("--max-heal 须≥0 实测 %d" % args.max_heal, 2)
+        raise PushciError("--max-heal must be >=0, got %d" % args.max_heal, 2)
     if args.watch_interval < 0:
-        raise PushciError("--watch-interval 须≥0 实测 %s" % args.watch_interval, 2)
+        raise PushciError("--watch-interval must be >=0, got %s"
+                          % args.watch_interval, 2)
     if args.probe_interval < 0:
-        raise PushciError("--probe-interval 须≥0 实测 %s" % args.probe_interval, 2)
+        raise PushciError("--probe-interval must be >=0, got %s"
+                          % args.probe_interval, 2)
     if args.watch_max_rounds < 0:
-        raise PushciError("--watch-max-rounds 须≥0 实测 %d" % args.watch_max_rounds, 2)
+        raise PushciError("--watch-max-rounds must be >=0, got %d"
+                          % args.watch_max_rounds, 2)
     if args.sleep_scale < 0:
-        raise PushciError("--sleep-scale 须≥0 实测 %s" % args.sleep_scale, 2)
+        raise PushciError("--sleep-scale must be >=0, got %s"
+                          % args.sleep_scale, 2)
     if args.timeout < 1:
-        raise PushciError("--timeout 须≥1 实测 %d" % args.timeout, 2)
+        raise PushciError("--timeout must be >=1, got %d" % args.timeout, 2)
     if args.retry_max < 0:
-        raise PushciError("--retry-max 须≥0 实测 %d" % args.retry_max, 2)
+        raise PushciError("--retry-max must be >=0, got %d" % args.retry_max, 2)
     if args.pr is not None and args.pr < 1:
-        raise PushciError("--pr 须≥1 实测 %d" % args.pr, 2)
+        raise PushciError("--pr must be >=1, got %d" % args.pr, 2)
     if (args.injector is None) != (args.git_caller is None):
-        raise PushciError("--injector 与 --git-caller 须成对（injector 无 canned "
-                          "git＝真 push 危险）", 2)
-    # 目标校验（9）·先于 --branch 必给校验（2）——repo 缺失债 9 优先口径
+        raise PushciError("--injector and --git-caller must be paired (an "
+                          "injector without canned git is a real-push "
+                          "hazard)", 2)
+    # target validation (9) precedes the --branch required check (2): a
+    # missing repo reports 9 first
     if not args.repo_path:
-        raise PushciError("--repo-path 必给", 2)
+        raise PushciError("--repo-path is required", 2)
     if not os.path.isdir(args.repo_path):
-        raise PushciError("仓库目录缺失: %s" % args.repo_path, 9)
+        raise PushciError("repository directory missing: %s" % args.repo_path, 9)
     if not args.branch:
-        raise PushciError("--branch 必给", 2)
+        raise PushciError("--branch is required", 2)
     if args.injector:
         if not os.path.isdir(args.injector):
-            raise PushciError("injector 目录缺失: %s" % args.injector, 9)
+            raise PushciError("injector directory missing: %s"
+                              % args.injector, 9)
         if not os.path.isfile(os.path.join(args.injector, "scenario.json")) \
                 and not os.path.isdir(os.path.join(args.injector, "runs")):
-            raise PushciError("injector 场景缺失（scenario.json 或 runs/ 平铺"
-                              "目录）: %s"
+            raise PushciError("injector scenario missing (scenario.json or "
+                              "flat runs/ directory): %s"
                               % os.path.join(args.injector, "scenario.json"), 9)
     if args.git_caller and not os.path.isfile(args.git_caller):
-        raise PushciError("git-caller 场景缺失: %s" % args.git_caller, 9)
+        raise PushciError("git-caller scenario missing: %s"
+                          % args.git_caller, 9)
 
 
-# ---- 自测（--selftest·八矢量＋单元＋CLI 四码·零真网络零真 push 零编译）----------
+# ---- selftest (--selftest: eight vectors + unit vectors + CLI four codes;
+# ---- zero real network, zero real push, zero compilation) ----------------------
 
 def selftest():
-    """内嵌冻结向量组（--injector canned＋--git-caller canned＋--sleep-scale 0）：
-    ①绿径 preflight→push→success（含确定性字节恒同）
-    ②NETRED×1 愈合→attempt2 success（heal_rounds=1·真 ci_triage --offline 判 B）
-    ③内容红停（A 族·零 rerun 实证·exit 2）
-    ④heal×3 耗尽 exit 1（POST=3·GET=4）
-    ⑤merge 200 流
-    ⑥409→重拉 tip→200
-    ⑦dry-run 计划零副作用（git/API 调用流水皆空）
-    ⑧gate4-block 停（真 gate4 守卫·clean PASS＋dirty FAIL·零 push）
-    ＋单元（repo 推导/ghproxy 形/遮蔽/netrc/verdict 封册）＋CLI 四码。
-    全矢量 --netrc 故意指向不存在路径——凭据惰性读证（任何真 API 企图即 9）。"""
+    """Frozen vector suite (--injector canned + --git-caller canned +
+    --sleep-scale 0):
+    (1) green path preflight -> push -> success (with byte-identical
+        determinism)
+    (2) one NETRED heal then attempt2 success (heal_rounds=1, real ci_triage
+        --offline classifying B)
+    (3) content-failure stop (family A, provably zero reruns, exit 2)
+    (4) heal x3 exhausted exit 1 (POST=3, GET=4)
+    (5) merge 200 flow
+    (6) 409 -> re-read tip -> 200
+    (7) dry-run plan with zero side effects (git/API call traces both empty)
+    (8) gate4-block stop (real gate4 guard, clean PASS + dirty FAIL, zero
+        push)
+    plus unit vectors (repo derivation, ghproxy shape, masking, netrc,
+    verdict table) and the CLI four-code checks.
+    Every vector points --netrc at a nonexistent path on purpose: proof that
+    credentials are read lazily (any real API attempt would exit 9)."""
     import shutil
     import tempfile
 
@@ -1448,7 +1397,8 @@ def selftest():
 
     def git_common(push_rc=0, rev_sha=SHA40, ls_sha=SHA40,
                    url="https://github.com/org/repo.git"):
-        """canned git 序列＝pushci 实调序：get-url→rev-parse→push→ls-remote。"""
+        """Canned git sequence = the pushci call order: get-url, rev-parse,
+        push, ls-remote."""
         return [{"args_contains": ["get-url"], "rc": 0, "stdout": url + "\n"},
                 {"args_contains": ["rev-parse"], "rc": 0,
                  "stdout": rev_sha + "\n"},
@@ -1459,7 +1409,7 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_pushci_self_")
     try:
-        netrc_missing = os.path.join(tmp, "no_such.netrc")  # 惰性凭据读证
+        netrc_missing = os.path.join(tmp, "no_such.netrc")  # lazy-credential proof
 
         def setup(name, git_resps, api_steps, tools=None, jobs=None):
             d = os.path.join(tmp, name)
@@ -1483,7 +1433,8 @@ def selftest():
                     "api_calls": os.path.join(inj, "api_calls.json")}
 
         def setup_flat(name, fixture, git_resps):
-            """flat 形注入目录：并行席夹具原件 verbatim → scenario.json。"""
+            """Flat-shape injection dir: the parallel seat-worker fixture
+            original verbatim becomes scenario.json."""
             d = os.path.join(tmp, name)
             repo = os.path.join(d, "repo")
             inj = os.path.join(d, "inj")
@@ -1519,7 +1470,7 @@ def selftest():
             with io.open(path, "r", encoding="utf-8") as fh:
                 return json.load(fh)
 
-        # 〔一〕绿径 preflight→push→success（①）
+        # vector 1: green path preflight -> push -> success
         s = setup("v1_green", git_common(), poll_steps(["success"]))
         rc, out = fire(s)
         assert rc == 0, out[-500:]
@@ -1538,7 +1489,8 @@ def selftest():
                                          "last_triage": None}, \
             rep["stages"].get("heal")
         assert "merge" not in rep["stages"]
-        assert "repo_path" not in rep["args"], "报告零本地路径（幂等契约）"
+        assert "repo_path" not in rep["args"], \
+            "report carries no local paths (idempotence contract)"
         assert rep["stages"]["preflight"]["toolchain"] == {"verdict": "healthy",
                                                            "rc": 0}
         assert rep["stages"]["preflight"]["net"] == {"verdict": "STABLE", "rc": 0}
@@ -1554,15 +1506,16 @@ def selftest():
             and acalls[0]["status"] == 200 \
             and RUNS_QUERY in acalls[0]["path"], acalls
         assert "FINAL VERDICT: success (exit 0)" in out, out[-300:]
-        # 确定性：同输入重跑 --json 字节级恒同
+        # determinism: rerunning with the same input keeps --json byte-identical
         out2 = s["out"] + ".2"
         rc, out = fire(s, json_path=out2)
         assert rc == 0, out[-300:]
         assert io.open(out2, "rb").read() == io.open(s["out"], "rb").read(), \
-            "json 字节漂移＝违例"
+            "json byte drift is a violation"
 
-        # 〔一b〕远端为准：ls-remote sha 与本地 rev-parse tip 异→响亮注记·
-        # watch 仍锚 ls-remote sha（canned runs head_sha 咬合）
+        # vector 1b remote-is-authoritative: the ls-remote sha differs from the
+        # local rev-parse tip -> loud note; watch still anchors the ls-remote
+        # sha (canned runs head_sha matched)
         s = setup("v1b_remote_tip",
                   git_common(rev_sha="b" * 40, ls_sha=SHA40),
                   poll_steps(["success"]))
@@ -1570,9 +1523,11 @@ def selftest():
         assert rc == 0, out[-500:]
         rep = jload(s["out"])
         assert rep["stages"]["push"]["sha"] == SHA40, rep["stages"]["push"]
-        assert any("远端为准" in e for e in rep["evidence"]), rep["evidence"]
+        assert any("remote is authoritative" in e
+                   for e in rep["evidence"]), rep["evidence"]
 
-        # 〔二〕NETRED×1 愈合→attempt2 success（②·真 ci_triage --offline 判 B）
+        # vector 2: one NETRED heal then attempt2 success (real ci_triage
+        # --offline classifies B)
         s = setup("v2_netred", git_common(),
                   poll_steps(["failure", "success"], rerun_rounds=1),
                   jobs=jobsB)
@@ -1593,30 +1548,36 @@ def selftest():
         assert sum(1 for c in acalls if c["method"] == "POST") == 1, acalls
         assert sum(1 for c in acalls if c["method"] == "GET") == 2, acalls
 
-        # 〔三〕内容红停（③·零 rerun 实证·exit 2）
+        # vector 3: content-failure stop (provably zero reruns, exit 2)
         s = setup("v3_content", git_common(), poll_steps(["failure"]),
                   jobs=jobsA)
         rc, out = fire(s)
-        assert rc == 2, "内容红应 exit 2 实测 %d\n%s" % (rc, out[-400:])
+        assert rc == 2, "content failure should exit 2, got %d\n%s" \
+            % (rc, out[-400:])
         rep = jload(s["out"])
         assert rep["verdict"] == "fix-content"
         h = rep["stages"]["heal"]
         assert h["rounds"] == [] and h["fired_total"] == 0, \
-            "零 rerun 实证＝heal.rounds 空·实测 %r" % (h,)
+            "zero-rerun proof = heal.rounds empty, got %r" % (h,)
         assert h["last_triage"]["family"] == "A-content-red" \
             and h["last_triage"]["action"] == "fix-content", h["last_triage"]
-        assert h["last_triage"]["evidence"], "判类证据应在册 last_triage"
+        assert h["last_triage"]["evidence"], \
+            "classification evidence should be recorded in last_triage"
         acalls = jload(s["api_calls"])
-        assert all(c["method"] != "POST" for c in acalls), "零 rerun 实证失守"
-        assert any("禁代修" in e for e in rep["evidence"]), rep["evidence"]
+        assert all(c["method"] != "POST" for c in acalls), \
+            "zero-rerun proof broken"
+        assert any("no automatic repair" in e for e in rep["evidence"]), \
+            rep["evidence"]
         assert json.dumps(rep["stages"], sort_keys=True).count("rerun") == 0, \
-            "内容红 stages 面零 rerun 形（跨席咬合契约）"
+            "content-failure stages face carries zero rerun tokens " \
+            "(cross-agent coupling contract)"
 
-        # 〔四〕heal×3 耗尽 exit 1（④）
+        # vector 4: heal x3 exhausted exit 1
         s = setup("v4_exhaust", git_common(),
                   poll_steps(["failure"] * 4, rerun_rounds=3), jobs=jobsB)
         rc, out = fire(s, ["--max-heal", "3"])
-        assert rc == 1, "heal 耗尽应 exit 1 实测 %d\n%s" % (rc, out[-400:])
+        assert rc == 1, "heal exhaustion should exit 1, got %d\n%s" \
+            % (rc, out[-400:])
         rep = jload(s["out"])
         assert rep["verdict"] == "heal-exhausted"
         h = rep["stages"]["heal"]
@@ -1628,7 +1589,7 @@ def selftest():
         assert sum(1 for c in acalls if c["method"] == "POST") == 3, acalls
         assert sum(1 for c in acalls if c["method"] == "GET") == 4, acalls
 
-        # 〔五〕merge 200 流（⑤）
+        # vector 5: merge 200 flow
         merge_ok = [{"method": "GET", "path": RUNS_QUERY, "status": 200,
                      "body": runs_body("success")},
                     {"method": "GET", "path": "/pulls?head=org:work",
@@ -1645,7 +1606,7 @@ def selftest():
         assert m["pr"] == 42 and m["merged"] is True and m["attempts"] == [200], m
         assert m["method"] == "merge" and m["merge_sha"] == "c" * 40, m
 
-        # 〔六〕409→重拉 tip→200（⑥）
+        # vector 6: 409 then re-read tip then 200
         merge_409 = [{"method": "GET", "path": RUNS_QUERY, "status": 200,
                       "body": runs_body("success")},
                      {"method": "GET", "path": "/pulls?head=org:work",
@@ -1668,7 +1629,7 @@ def selftest():
         assert any("409" in e and "branches/main" in e
                    for e in rep["evidence"]), rep["evidence"]
 
-        # 〔七〕dry-run 计划零副作用（⑦）
+        # vector 7: dry-run plan with zero side effects
         s = setup("v7_dryrun", [], [])
         rc, out = fire(s, ["--dry-run", "--pre-scan-gate4"])
         assert rc == 0, out[-500:]
@@ -1678,11 +1639,12 @@ def selftest():
         assert any("push" in ln and "HTTP/1.1" in ln for ln in rep["plan"]), \
             rep["plan"]
         assert any("gate4" in ln for ln in rep["plan"]), rep["plan"]
-        assert jload(s["git_calls"]) == [], "dry-run 零 git 调用实证失守"
-        assert jload(s["api_calls"]) == [], "dry-run 零 API 调用实证失守"
+        assert jload(s["git_calls"]) == [], "dry-run zero-git-call proof broken"
+        assert jload(s["api_calls"]) == [], "dry-run zero-API-call proof broken"
         assert "PLAN [2] push" in out, out[-300:]
 
-        # 〔八〕gate4-block 停（⑧·真 gate4 守卫·clean PASS＋dirty FAIL·零 push）
+        # vector 8: gate4-block stop (real gate4 guard, clean PASS + dirty
+        # FAIL, zero push)
         s = setup("v8_gate4",
                   [{"args_contains": ["get-url"], "rc": 0,
                     "stdout": "https://github.com/org/repo.git\n"},
@@ -1690,15 +1652,17 @@ def selftest():
                     "stdout": "clean.v\ndirty.v\n"}], [])
         with io.open(os.path.join(s["repo"], "clean.v"), "w",
                      encoding="utf-8", newline="\n") as fh:
-            fh.write("(* 使命: pushci selftest clean fixture.\n"
-                     "   依赖: 无.\n   对标: 无.\n"
-                     "   构造性: 无公理构造.\n   编译配方: coqc clean.v *)\n"
+            fh.write("(* Mission. pushci selftest clean fixture.\n"
+                     "   Dependencies. none.\n   References. none.\n"
+                     "   Constructivity. axiom-free construction.\n"
+                     "   Build. coqc clean.v *)\n"
                      "Definition pushci_clean_unit : nat := 1.\n")
         with io.open(os.path.join(s["repo"], "dirty.v"), "w",
                      encoding="utf-8", newline="\n") as fh:
             fh.write("Definition pushci_dirty_unit : nat := 1.\n")
         rc, out = fire(s, ["--pre-scan-gate4"])
-        assert rc == 2, "gate4-block 应 exit 2 实测 %d\n%s" % (rc, out[-400:])
+        assert rc == 2, "gate4-block should exit 2, got %d\n%s" \
+            % (rc, out[-400:])
         rep = jload(s["out"])
         assert rep["verdict"] == "gate4-block"
         g4 = rep["stages"]["preflight"]["gate4"]
@@ -1707,11 +1671,15 @@ def selftest():
         assert os.path.join(s["repo"], "clean.v") in g4["pass_files"], g4
         assert os.path.join(s["repo"], "clean.v") not in g4["fail_files"], g4
         gcalls = jload(s["git_calls"])
-        assert len(gcalls) == 2, "gate4-block 应零 rev-parse 零 push: %s" % gcalls
-        assert jload(s["api_calls"]) == [], "gate4-block 应零 API 调用"
+        assert len(gcalls) == 2, "gate4-block should make zero rev-parse and " \
+            "zero push calls: %s" % gcalls
+        assert jload(s["api_calls"]) == [], \
+            "gate4-block should make zero API calls"
 
-        # 〔九〕flat 注入形绿径（并行席夹具 s1_green_path.json 原件 verbatim 直跑
-        # ·pushci.invalid 假域推导·双闸缺省绿·canned.runs 双 poll）
+        # vector 9: flat injection shape green path (parallel seat-worker
+        # fixture s1_green_path.json original verbatim; pushci.invalid
+        # fake-domain derivation; both gates default green; canned.runs two
+        # polls)
         S1SHA = "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee01"
         S2SHA = "c0ffee00c0ffee00c0ffee00c0ffee00c0ffee02"
         INVURL = "https://pushci.invalid/octo-org/rocqwash-verify.git"
@@ -1738,12 +1706,14 @@ def selftest():
             and rep["stages"]["watch"]["conclusion"] == "success"
         assert rep["stages"]["heal"]["rounds"] == [] \
             and rep["stages"]["heal"]["last_triage"] is None
-        assert any("flat 注入形" in e for e in rep["evidence"]), rep["evidence"]
+        assert any("flat injection shape" in e
+                   for e in rep["evidence"]), rep["evidence"]
         assert len(jload(s["api_calls"])) == 2
         assert len(jload(s["git_calls"])) == 4
 
-        # 〔十〕flat 注入形 NETRED 愈合（s2_netred_heal.json 原件直跑·真 triage
-        # --offline 吃 canned.jobs[0]·canned.probe/rerun 逐消耗）
+        # vector 10: flat injection shape NETRED heal (s2_netred_heal.json
+        # original verbatim; real triage --offline consumes canned.jobs[0];
+        # canned.probe/rerun consumed one per use)
         s = setup_flat("v10_flat_s2", "s2_netred_heal", git_flat(S2SHA,
                                                                  "topic-pushci-s2"))
         rc, out = fire(s, branch="topic-pushci-s2")
@@ -1761,8 +1731,9 @@ def selftest():
         assert sum(1 for c in acalls if c["method"] == "POST") == 1, acalls
         assert sum(1 for c in acalls if c["method"] == "GET") == 3, acalls
 
-        # 〔十一〕ghproxy 换路：直路 3 败→ghproxy 首发成（verdict success·
-        # attempts=[origin rc1×3, ghproxy rc0]·ghproxy_used=True）
+        # vector 11: ghproxy reroute, three direct failures then the first
+        # ghproxy attempt succeeds (verdict success; attempts=[origin rc1 x3,
+        # ghproxy rc0]; ghproxy_used=True)
         ghp_url = "https://ghproxy.net/https://github.com/org/repo.git"
         s = setup("v11_ghproxy",
                   [{"args_contains": ["get-url"], "rc": 0,
@@ -1792,7 +1763,8 @@ def selftest():
         gcalls = jload(s["git_calls"])
         assert len(gcalls) == 7, gcalls
 
-        # 〔十二〕push 全败（直路 3 发＋ghproxy 2 发皆红）→ unstable exit 1
+        # vector 12: all push attempts fail (3 direct + 2 ghproxy, all
+        # failing) -> unstable exit 1
         s = setup("v12_push_dead",
                   [{"args_contains": ["get-url"], "rc": 0,
                     "stdout": "https://github.com/org/repo.git\n"},
@@ -1810,20 +1782,24 @@ def selftest():
                     "stderr": "fatal: unable to access\n"}],
                   poll_steps(["success"]))
         rc, out = fire(s)
-        assert rc == 1, "push 全败应 exit 1 实测 %d\n%s" % (rc, out[-400:])
+        assert rc == 1, "all push attempts failing should exit 1, got %d\n%s" \
+            % (rc, out[-400:])
         rep = jload(s["out"])
         assert rep["verdict"] == "unstable"
         push = rep["stages"]["push"]
         assert [a["rc"] for a in push["attempts"]] == [1, 1, 1, 1, 1], push
-        assert any("push 全败" in e for e in rep["evidence"]), rep["evidence"]
+        assert any("all push attempts failed" in e
+                   for e in rep["evidence"]), rep["evidence"]
 
-        # 〔单元〕repo 推导/ghproxy 形/遮蔽/netrc/verdict 封册（零网络）
+        # unit vectors: repo derivation / ghproxy shape / masking / netrc /
+        # verdict table (zero network)
         assert repo_from_url("https://github.com/octo/rocq.git") == "octo/rocq"
         assert repo_from_url("https://tok@github.com/octo/rocq") == "octo/rocq"
         assert repo_from_url("git@github.com:octo/rocq.git") == "octo/rocq"
         assert repo_from_url("ssh://git@github.com/octo/rocq.git") == "octo/rocq"
         assert repo_from_url("https://gitlab.com/o/r.git") == "o/r", \
-            "host 不限（假域 shim 远端同推导·ghproxy 另有形门）"
+            "host unrestricted (fake-domain shim remotes derive the same " \
+            "way; ghproxy has its own shape gate)"
         assert repo_from_url("https://pushci.invalid/octo-org/rocqwash-verify.git") \
             == "octo-org/rocqwash-verify"
         assert repo_from_url("https://github.com/solo") is None
@@ -1841,20 +1817,21 @@ def selftest():
         with io.open(nf, "w", encoding="utf-8") as fh:
             fh.write("machine api.github.com login x password AAAA\n"
                      "machine github.com login octocat password TOK-1234\n")
-        assert netrc_token(nf) == "TOK-1234", "单行 6 列形应取第 6 列"
+        assert netrc_token(nf) == "TOK-1234", \
+            "single-line 6-column shape should take column 6"
         with io.open(nf, "w", encoding="utf-8") as fh:
             fh.write("machine github.com\nlogin octocat\npassword TOK-9\n")
-        assert netrc_token(nf) == "TOK-9", "多行形应同解析"
+        assert netrc_token(nf) == "TOK-9", "multi-line shape should parse the same"
         try:
             netrc_token(os.path.join(tmp, "absent.netrc"))
-            assert False, "缺 netrc 应 fail-loud"
+            assert False, "missing netrc should fail loudly"
         except PushciError as e:
             assert e.code == 9, e.code
         with io.open(nf, "w", encoding="utf-8") as fh:
-            fh.write("machine gitlab.com login x password Y\n")  # 覆写成无 github 形
+            fh.write("machine gitlab.com login x password Y\n")  # overwrite with a no-github shape
         try:
             netrc_token(nf)
-            assert False, "无 github.com 条目应 fail-loud"
+            assert False, "no github.com entry should fail loudly"
         except PushciError as e:
             assert e.code == 9, e.code
         assert set(VERDICT_EXIT) == {"success", "dry-run", "heal-exhausted",
@@ -1867,16 +1844,18 @@ def selftest():
         assert VERDICT_EXIT["fix-content"] == 2 \
             and VERDICT_EXIT["gate4-block"] == 2
 
-        # 〔韧性层〕退避序列＋Retry-After 尊重＋真 urllib _api 重试 runner＋
-        # 子进程超时杀（零网络零真 push·_urlopen/_sleep 注入·判例 403×3→[2,4,8]）
+        # resilience layer: backoff sequence, Retry-After honored, real-urllib
+        # _api retry runner, subprocess timeout kill (zero network, zero real
+        # push; _urlopen/_sleep injected; the 403 x3 case yields [2,4,8])
         assert _http_backoff.backoff_delays(3) == [2.0, 4.0, 8.0]
         assert _http_backoff.backoff_delays(0) == []
         assert _http_backoff.parse_retry_after("45") == 45.0
         assert _http_backoff.parse_retry_after(
-            "Wed, 21 Oct 2026 07:28:00 GMT") is None, "HTTP-date 不猜"
+            "Wed, 21 Oct 2026 07:28:00 GMT") is None, "HTTP-date is not guessed"
 
         class _Resp(object):
-            """canned 响应体（urlopen 假件·零网络·上下文管理器形）。"""
+            """Canned response body (urlopen fake, zero network,
+            context-manager shape)."""
             def __init__(self, payload=b"{}"):
                 self.status = 200
                 self._p = payload
@@ -1899,7 +1878,7 @@ def selftest():
             def _open(req, timeout=None):
                 r = next(it)
                 if isinstance(r, Exception):
-                    raise r          # canned 错件须抛（urlopen 同语义）
+                    raise r          # canned error objects must raise (same semantics as urlopen)
                 return r
             return _open
 
@@ -1923,33 +1902,34 @@ def selftest():
         code, body = ac("PUT", "/repos/o/r/pulls/1/merge",
                         body={"merge_method": "merge"})
         assert code == 200 and slept == [9.0, 4.0, 8.0], \
-            (code, slept)                      # Retry-After 头尊重（替指数）
+            (code, slept)                      # Retry-After header honored (replaces exponential)
         slept = []
         ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
                        _urlopen=_seq_open([_api_err(429)] * 4),
                        _sleep=slept.append)
         code, body = ac("GET", "/repos/o/r/x")
         assert code == 429 and slept == [2.0, 4.0, 8.0], \
-            (code, slept)                      # 耗尽原码上交语义裁决
+            (code, slept)                      # exhausted: original status handed to semantic adjudication
         slept = []
         ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
                        _urlopen=_seq_open([_api_err(401)]), _sleep=slept.append)
         code, body = ac("GET", "/repos/o/r/x")
-        assert code == 401 and slept == [], (code, slept)   # 401 不重试
+        assert code == 401 and slept == [], (code, slept)   # 401 is not retried
         slept = []
         ac = ApiClient(netrc_path=api_netrc, retry_max=3, sleep_scale=0,
                        _urlopen=_seq_open([_api_err(409)]), _sleep=slept.append)
         code, body = ac("PUT", "/repos/o/r/pulls/1/merge")
-        assert code == 409 and slept == [], (code, slept)   # merge 409 不重试
+        assert code == 409 and slept == [], (code, slept)   # merge 409 is not retried
 
-        # 子进程超时杀（canned sleep 子进程·fail-loud 9 报调用名）
+        # subprocess timeout kill (canned sleep subprocess, fail-loud 9 names
+        # the call)
         sleepy = os.path.join(tmp, "sleepy_pushci.py")
         with io.open(sleepy, "w", encoding="utf-8") as fh:
             fh.write("import time\ntime.sleep(30)\n")
         try:
             subproc_run([sys.executable, "-B", sleepy], 2,
-                        "canned-sleep 子进程")
-            assert False, "超时应 fail-loud 9"
+                        "canned-sleep subprocess")
+            assert False, "timeout should fail loudly with 9"
         except PushciError as e:
             assert e.code == 9 and "canned-sleep" in str(e) \
                 and "2s" in str(e), e
@@ -1957,7 +1937,8 @@ def selftest():
                         "fast-proc")
         assert p.returncode == 0, p.returncode
 
-        # 〔CLI 四码〕（真模式·全部在副作用之前 fail-loud）
+        # CLI four-code checks (real mode, all failing loudly before any side
+        # effect)
         def raw(argv):
             p = subprocess.run([sys.executable, "-B", pushci] + argv,
                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -1971,68 +1952,74 @@ def selftest():
         assert p == 0 and "usage" in o and "--timeout" in o \
             and "--retry-max" in o, o[-200:]
         p, o = raw(["--bogus"])
-        assert p == 2, "未知形参应 rc=2 实测 %d" % p
+        assert p == 2, "unknown flag should rc=2, got %d" % p
         p, o = raw([])
-        assert p == 2, "缺必给应 rc=2 实测 %d" % p
+        assert p == 2, "missing required args should rc=2, got %d" % p
         p, o = raw(["--repo-path", os.path.join(tmp, "no_repo"),
                     "--branch", "x"])
-        assert p == 9, "缺仓库应 rc=9 实测 %d" % p
+        assert p == 9, "missing repo should rc=9, got %d" % p
         p, o = raw(["--repo-path", os.path.join(tmp, "no_repo")])
-        assert p == 9, "repo 缺失优先 9（branch 未给不遮蔽）实测 %d" % p
+        assert p == 9, "missing repo takes priority with 9 (absent --branch " \
+            "does not mask it), got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--steps", "bogus"])
-        assert p == 2, "未知段应 rc=2 实测 %d" % p
+        assert p == 2, "unknown stage should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--steps", "watch"])
-        assert p == 2, "watch⇒push 应 rc=2 实测 %d" % p
+        assert p == 2, "watch=>push dependency should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--steps", "heal"])
-        assert p == 2, "heal⇒watch 应 rc=2 实测 %d" % p
+        assert p == 2, "heal=>watch dependency should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x", "--merge",
                     "--steps", "preflight,push"])
-        assert p == 2, "merge⇒watch 应 rc=2 实测 %d" % p
+        assert p == 2, "merge=>watch dependency should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--sleep-scale", "-1"])
-        assert p == 2, "负 sleep-scale 应 rc=2 实测 %d" % p
+        assert p == 2, "negative sleep-scale should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--timeout", "0"])
-        assert p == 2, "timeout<1 应 rc=2 实测 %d" % p
+        assert p == 2, "timeout<1 should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--retry-max", "-1"])
-        assert p == 2, "负 retry-max 应 rc=2 实测 %d" % p
+        assert p == 2, "negative retry-max should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--max-heal", "-1"])
-        assert p == 2, "负 max-heal 应 rc=2 实测 %d" % p
+        assert p == 2, "negative max-heal should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--merge-method", "rebase"])
-        assert p == 2, "merge-method 册外应 rc=2 实测 %d" % p
+        assert p == 2, "merge-method outside the table should rc=2, got %d" % p
         inj = os.path.join(tmp, "v1_green", "inj")
         gitj = os.path.join(tmp, "v1_green", "git.json")
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--injector", inj])
-        assert p == 2, "injector 单边应 rc=2 实测 %d" % p
+        assert p == 2, "injector alone should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--git-caller", gitj])
-        assert p == 2, "git-caller 单边应 rc=2 实测 %d" % p
+        assert p == 2, "git-caller alone should rc=2, got %d" % p
         p, o = raw(["--repo-path", empty_repo, "--branch", "x",
                     "--injector", os.path.join(tmp, "no_inj"),
                     "--git-caller", gitj])
-        assert p == 9, "injector 目录缺失应 rc=9 实测 %d" % p
+        assert p == 9, "missing injector directory should rc=9, got %d" % p
 
-        print("PUSHCI-SELFTEST PASS: 八矢量（绿径+确定性字节恒同+远端为准/NETRED×1 "
-              "愈合/内容红零 rerun/heal×3 耗尽/merge 200/409 重拉/dry-run 零副作用/"
-              "gate4-block 真守卫）＋flat 咬合双矢（并行席 s1/s2 夹具原件 verbatim "
-              "直跑）＋重试纪律双矢（ghproxy 换路成/push 全败 unstable）＋单元（repo "
-              "推导/ghproxy/遮蔽/netrc/verdict 封册）＋韧性层（退避 403×3→[2,4,8]·"
-              "Retry-After 尊重·429 耗尽上交·401/409 不重试·canned sleep 子进程"
-              "超时杀 9 报调用名）＋CLI 四码 全过（零真网络零真 "
-              "push 零编译·--netrc 惰性读证）")
+        print("PUSHCI-SELFTEST PASS: eight vectors (green path + byte-identical "
+              "determinism + remote-is-authoritative / NETRED x1 heal / content "
+              "failure zero rerun / heal x3 exhausted / merge 200 / 409 "
+              "re-read / dry-run zero side effects / gate4-block real guard) + "
+              "two flat-shape vectors (parallel seat-worker s1/s2 fixture "
+              "verbatim) + two retry-discipline vectors (ghproxy reroute "
+              "success / all-push-failed unstable) + unit vectors (repo "
+              "derivation, ghproxy, masking, netrc, verdict table) + "
+              "resilience layer (backoff 403 x3 -> [2,4,8], Retry-After "
+              "honored, 429 exhaustion handed up, 401/409 not retried, canned "
+              "sleep subprocess timeout kill with 9 naming the call) + CLI "
+              "four codes, all passed (zero real network, zero real push, "
+              "zero compilation; --netrc lazily-read proof)")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-# ---- 主流程 -------------------------------------------------------------------
+# ---- main flow -------------------------------------------------------------------
 
 def main():
     argv = sys.argv[1:]
@@ -2044,59 +2031,75 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="修复后推送 CI 一键流水线（preflight 发射闸→push→watch→"
-                    "heal→verdict±merge·v35 四器编排·离线可测注入点内建）")
+        description="one-shot post-fix push-and-CI pipeline (preflight checks, "
+                    "push, watch, heal, verdict, optional merge; orchestrates "
+                    "the four tools; offline-testable injection built in)")
     ap.add_argument("--repo-path", default=None, metavar="DIR",
-                    help="目标仓库目录（零硬编码·全参数化）")
+                    help="target repository directory (zero hardcoding, fully "
+                         "parameterized)")
     ap.add_argument("--branch", default=None, metavar="B",
-                    help="要推送与观测的分支")
+                    help="branch to push and watch")
     ap.add_argument("--base-ref", default="main", metavar="REF",
-                    help="gate4 预扫 diff 基（<base>...<branch>·默认 main）")
+                    help="gate4 pre-scan diff base (<base>...<branch>, "
+                         "default main)")
     ap.add_argument("--remote", default="origin", metavar="NAME",
-                    help="推送远端名（默认 origin）")
+                    help="push remote name (default origin)")
     ap.add_argument("--pre-scan-gate4", action="store_true",
                     dest="pre_scan_gate4",
-                    help="preflight 加做 gate4 头注守卫预扫（FAIL=0 才放行）")
+                    help="preflight also runs the gate4 header-guard pre-scan "
+                         "(proceeds only when FAIL=0)")
     ap.add_argument("--pr", type=int, default=None, metavar="N",
-                    help="PR 号显传（--merge 时跳过 pulls 解析）")
+                    help="explicit PR number (skips pulls resolution under "
+                         "--merge)")
     ap.add_argument("--merge", action="store_true",
-                    help="绿后合并 PR（缺省 merge 方式）")
+                    help="merge the PR after green (default merge method)")
     ap.add_argument("--merge-method", choices=("merge", "squash"),
                     default="merge", dest="merge_method",
-                    help="合并方式（默认 merge〔分支含 merge commit 判例〕）")
+                    help="merge method (default merge, the merge-commit-"
+                         "on-branch precedent)")
     ap.add_argument("--max-heal", type=int, default=3, metavar="N",
-                    help="heal 轮帽（默认 3·超帽 heal-exhausted）")
+                    help="heal round cap (default 3; over the cap = "
+                         "heal-exhausted)")
     ap.add_argument("--watch-interval", type=float, default=150.0, metavar="S",
-                    help="watch 轮询间隔秒（默认 150）")
+                    help="watch poll interval seconds (default 150)")
     ap.add_argument("--probe-interval", type=float, default=60.0, metavar="S",
-                    help="net_probe 轮间隔秒（默认 60）")
+                    help="net_probe round interval seconds (default 60)")
     ap.add_argument("--watch-max-rounds", type=int, default=0, metavar="N",
-                    help="watch 轮帽安全阀（默认 0=不限·超帽 fail-loud 9）")
+                    help="watch round-cap safety valve (default 0 = "
+                         "unlimited; over the cap fails loudly with 9)")
     ap.add_argument("--timeout", type=int, default=120, metavar="S",
-                    help="子进程防挂超时秒（默认 120·git/四器工具真子进程超时"
-                         "=杀＋fail-loud 9 报调用名）")
+                    help="subprocess anti-hang timeout seconds (default 120; "
+                         "git and the four tool subprocesses are killed on "
+                         "timeout, fail-loud 9 names the call)")
     ap.add_argument("--retry-max", type=int, default=3, metavar="N",
-                    help="真 urllib API 403/429/5xx 退避重试帽（默认 3·指数 "
-                         "base 2s·Retry-After 秒数头尊重·canned 路径不重试）")
+                    help="retry cap for real-urllib API 403/429/5xx with "
+                         "backoff (default 3, exponential base 2s, "
+                         "Retry-After seconds header honored, canned paths "
+                         "never retry)")
     ap.add_argument("--steps", default=",".join(STAGE_ALL), metavar="LIST",
-                    help="段独选（默认全跑：%s）" % ",".join(STAGE_ALL))
+                    help="stage selection (default runs all: %s)"
+                         % ",".join(STAGE_ALL))
     ap.add_argument("--injector", default=None, metavar="DIR",
-                    help="离线注入：DIR/scenario.json 场景（steps[].at_round→"
-                         "canned API＋tools canned＋jobs canned）")
+                    help="offline injection: DIR/scenario.json scenario "
+                         "(steps[].at_round -> canned API + canned tools + "
+                         "canned jobs)")
     ap.add_argument("--git-caller", default=None, metavar="FILE",
                     dest="git_caller",
-                    help="离线注入：canned git 响应场景（须与 --injector 成对）")
+                    help="offline injection: canned git response scenario "
+                         "(must be paired with --injector)")
     ap.add_argument("--sleep-scale", type=float, default=1.0, metavar="F",
-                    help="全部 sleep 乘数（selftest 用 0＝零真睡）")
+                    help="multiplier on every sleep (selftest uses 0 = zero "
+                         "real sleep)")
     ap.add_argument("--netrc",
                     default=os.path.join(os.path.expanduser("~"), ".netrc"),
                     metavar="PATH",
-                    help="netrc 路径（默认 ~/.netrc·machine github.com 第 6 列"
-                         "=token·惰性读·injector 模式零读）")
+                    help="netrc path (default ~/.netrc; machine github.com "
+                         "column 6 = token; read lazily; never read in "
+                         "injector mode)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="report 出账（rocqwash-pushci/1·sort_keys）")
+                    help="report output path (rocqwash-pushci/1, sort_keys)")
     ap.add_argument("--dry-run", action="store_true", dest="dry_run",
-                    help="只打计划零副作用 exit 0")
+                    help="print the plan only, zero side effects, exit 0")
     args = ap.parse_args(argv)
 
     try:
@@ -2111,14 +2114,15 @@ def main():
         print("FAIL-LOUD: %s" % e, file=sys.stderr)
         sys.exit(e.code)
     except (ValueError, OSError) as e:
-        print("FAIL-LOUD: 场景装载失败: %s" % e, file=sys.stderr)
+        print("FAIL-LOUD: scenario load failed: %s" % e, file=sys.stderr)
         sys.exit(9)
 
     try:
         verdict, code, ev = pl.run()
     except StopVerdict as sv:
         verdict, code, ev = sv.verdict, sv.code, sv.evidence
-        # 裁停恒响亮（verdict 段未选时 stdout 不出账·stderr 仍必报——禁哑退出）
+        # stops are always loud (without the verdict stage stdout stays
+        # silent, but stderr still reports; silent exit is forbidden)
         print("STOP-VERDICT: %s (exit %d)" % (sv.verdict, sv.code),
               file=sys.stderr)
         for e in ev:

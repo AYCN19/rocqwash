@@ -484,7 +484,7 @@ def row_p2(tmp):
     calls = jl(api_calls)
     assert all(c["method"] != "POST" for c in calls), \
         "内容红下出现 POST rerun＝护栏破: %r" % calls
-    assert any("禁代修" in e for e in rep["evidence"]), rep["evidence"]
+    assert any("no automatic repair" in e for e in rep["evidence"]), rep["evidence"]
 
 
 def row_p3(tmp):
