@@ -7,11 +7,12 @@ Version anchor: pinned clone main at `4be42dedcade0cc0fe4b0da83ca1c82b7d4bbc75`,
 
 ## 1. 定位 · Positioning
 
-本文件是 rocqwash MCP stdio 服务器（`mcp_server.py`）的使用与契约说明：协议面、21 能力 schema 表、启动法、安全面与设计 SKIP 面。任何支持 MCP stdio 的调用者（会话、子代理、自动化任务）零路径知识直调 21 能力；底层 CLI 真名与旗标面以 `docs/CAPABILITY-INDEX.md`（RQW06 契约面）为唯一权威源。
+本文件是 rocqwash MCP stdio 服务器（`mcp_server.py`）的使用与契约说明：协议面、24 能力 schema 表、启动法、安全面与设计 SKIP 面。任何支持 MCP stdio 的调用者（会话、子代理、自动化任务）零路径知识直调 24 能力；底层 CLI 真名与旗标面以 `docs/CAPABILITY-INDEX.md`（RQW06 契约面）为唯一权威源。
 
-This file is the usage and contract document for the rocqwash MCP stdio server (`mcp_server.py`): the protocol face, the 21-capability schema table, startup, the security face, and the design SKIP face. Any MCP-stdio caller (a session, a subagent, an automation task) calls the 21 capabilities with zero path knowledge; the underlying CLI true names and flag faces take `docs/CAPABILITY-INDEX.md` (the RQW06 contract surface) as the single authority.
+This file is the usage and contract document for the rocqwash MCP stdio server (`mcp_server.py`): the protocol face, the 24-capability schema table, startup, the security face, and the design SKIP face. Any MCP-stdio caller (a session, a subagent, an automation task) calls the 24 capabilities with zero path knowledge; the underlying CLI true names and flag faces take `docs/CAPABILITY-INDEX.md` (the RQW06 contract surface) as the single authority.
 
-**扩容注记 Expansion note（RQW13 batch 1，2026-11-14）**：原 8 能力（RQW08 落岸）之外，本批新增 13 件零网络能力，逐件照 INDEX §2 条目行转写；`baseline_diff` 已以 `baselinediff` 名在册，不重复注册。扩容批走追加式（既有 8 件 spec 与其 schema 零改动；仅服务端新增 array 参数型与逐项 `-` 前缀校验，既有调用形不变）。
+**扩容注记 Expansion note（RQW13 batch 1，2026-11-14）**：原 8 能力（RQW08 落岸）之外，本批新增 13 件零网络能力，逐件照 INDEX §2 条目行转写；`baseline_diff` 已以 `baselinediff` 名在册，不重复注册。扩容批走追加式（既有 8 件 spec 与其 schema 零改动；仅服务端新增 array 参数型与逐项 `-` 前缀校验，既有调用形不变）。**引擎本体批注记 Engine-body batch note（引擎本体票·落岸日）**：本批再加 3 件零网络能力（ai_flavor_detect／jargon_plan／i18n_pipeline_dryrun），逐件从 `docs/drafts/mcp-tool-specs-engine-body.md`（道8 稿）在合流环节转正入 `TOOL_SPECS`；追加式同律（既有 21 件 spec 与其 schema 零改动）；全票唯一网络面（i18n http 提供者腿）不在批内，不注册不加闸，保持 default-deny。
+The engine-body batch (the engine-body ticket, at integration) adds 3 further zero-network capabilities (ai_flavor_detect / jargon_plan / i18n_pipeline_dryrun), graduated from docs/drafts/mcp-tool-specs-engine-body.md (the lane-8 draft) by the integration agent; additive again (the 21 existing specs and schemas untouched); the ticket's only network face (the i18n http provider leg) is outside the batch and stays default-deny, neither registered nor gated.
 Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-network capabilities, each transcribed from its INDEX section 2 entry line; `baseline_diff` was already on this face under the name `baselinediff` and is not registered twice. The expansion is additive: the 8 existing specs and their schemas are untouched; the server only gains the array argument type and per-item `-` prefix validation, leaving existing call forms unchanged.
 
 ## 2. 协议面 · Protocol face
@@ -25,7 +26,7 @@ Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-
 |---|---|---|---|---|
 | initialize | request | `protocolVersion`, `capabilities`, `clientInfo` | `protocolVersion`（回显客户端所报，缺省 `2024-11-05`）、`capabilities.tools={listChanged:false}`、`serverInfo={name:"rocqwash-mcp",version}` | 单一能力面＝tools |
 | notifications/initialized | notification | none | 无响应（静默消费，stderr 留一行诊断） | JSON-RPC 通知不回包 |
-| tools/list | request | none | `tools`：21 件，各带 `name`／`description`／`inputSchema`（object·闭属性集·additionalProperties:false） | 清单静态，无分页游标 |
+| tools/list | request | none | `tools`：24 件，各带 `name`／`description`／`inputSchema`（object·闭属性集·additionalProperties:false） | 清单静态，无分页游标 |
 | tools/call | request | `name`, `arguments` | `content[0].text` ＋ `isError` | 执行层失败走 `isError:true` 结果，非协议错误 |
 
 **错误码表 Error codes**：
@@ -43,7 +44,7 @@ Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-
 
 ## 3. 工具 schema 表 · Tool schema table
 
-原 8 能力按 RQW08 工单点名序排列；RQW13 扩容批 13 件按扩容工单点名序追加于表尾。底层条目真名照录 INDEX §2；布尔参数 `true`＝附加旗标、`false`＝省略；`*`＝必填；取值旗标以 `--flag value` 传递；array 参数逐元素展开（位置型按序接续＝argparse `nargs="*"` 面；旗标型逐元素重复 `--flag value`＝argparse `action="append"` 面）；参数值禁止以 `-` 开头（防子 CLI 旗标注入，array 逐元素同查）。
+原 8 能力按 RQW08 工单点名序排列；RQW13 扩容批 13 件按扩容工单点名序追加于表尾；引擎本体票 引擎本体批 3 件追加于表尾末（道8 稿转正·合流环节接线）。底层条目真名照录 INDEX §2；布尔参数 `true`＝附加旗标、`false`＝省略；`*`＝必填；取值旗标以 `--flag value` 传递；array 参数逐元素展开（位置型按序接续＝argparse `nargs="*"` 面；旗标型逐元素重复 `--flag value`＝argparse `action="append"` 面）；参数值禁止以 `-` 开头（防子 CLI 旗标注入，array 逐元素同查）。
 
 | Capability | Underlying entry (INDEX true form) | Arguments (schema properties; * = required) | Security face |
 |---|---|---|---|
@@ -68,6 +69,9 @@ Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-
 | registry_union | `tools/registry_union.py` | base, main, branch, git, ref_base, ref_main, ref_branch, git_path, kind, reanchor, anchor_src, out, apply, json_out | allow（缺省干跑） |
 | abl1_4b_compile | `tools/_abl1_4b_compile.py EXTRACT_DIR [DRIVER.ML]` | extract_dir*（位置型）, driver（位置型） | allow（OCaml 工具链设计 SKIP 面） |
 | http_backoff | `tools/_http_backoff.py --selftest` | （无） | allow（纯函数自检面） |
+| ai_flavor_detect | `tools/ai_flavor.py` | file, tree, json_out, selftest | allow（零网络·报告态零写） |
+| jargon_plan | `tools/jargon_apply.py --plan` | file, tree, json_out | allow（plan 缺省零写·apply 面不暴露） |
+| i18n_pipeline_dryrun | `tools/i18n_pipeline.py --stage p0\|p1` | manifest*, stage, json_out | allow（stage 限 p0/p1 干跑面·p3/p6 写面不暴露） |
 
 表注 Table notes：
 
@@ -115,8 +119,8 @@ Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-
    Child streams are captured; the protocol stream stays clean; the child runs with `cwd=ROCQWASH_HOME`; a hard timeout kills runaway children; arguments pass as an argv list (no shell, no string-concatenation injection face) and string values must not start with `-`.
 4. **零传输 import 面 Zero transport import face**：server 自身仅 import `json`／`os`／`subprocess`／`sys`；无 socket／urllib／http 面，server 本体零网络。
    The server itself imports `json`, `os`, `subprocess`, `sys` only; no socket/urllib/http face; the server body is zero-network.
-5. **扩容批零新闸面 Expansion batch adds no gated face**：13 件扩容能力按 INDEX §1 词面判读全零网络（三通道零命中，或仅本地 git 只读面），不设 `ROCQWASH_MCP_ALLOW_NET` 闸；其本地写面由 CLI 自身缺省干跑与断言/回滚机制约束（§3 表注 2）。服务端硬超时与「参数值禁 `-` 前缀」校验（array 逐元素同查）对全部 21 能力一视同仁。
-   The 13 expansion capabilities all read zero-network under the INDEX section 1 word-face reading (three-channel zero hits, or local git reads only) and carry no `ROCQWASH_MCP_ALLOW_NET` gate; their local write faces stay inside the underlying CLIs' dry-run defaults and assertion/rollback machinery (section 3 table note 2). The server hard timeout and the no-leading-dash argument validation (array items checked the same way) apply to all 21 capabilities equally.
+5. **扩容批零新闸面 Expansion batch adds no gated face**：13 件扩容能力按 INDEX §1 词面判读全零网络（三通道零命中，或仅本地 git 只读面），不设 `ROCQWASH_MCP_ALLOW_NET` 闸；其本地写面由 CLI 自身缺省干跑与断言/回滚机制约束（§3 表注 2）。服务端硬超时与「参数值禁 `-` 前缀」校验（array 逐元素同查）对全部 24 能力一视同仁（引擎本体批三件同律：零网络不设闸）。
+   The 13 expansion capabilities all read zero-network under the INDEX section 1 word-face reading (three-channel zero hits, or local git reads only) and carry no `ROCQWASH_MCP_ALLOW_NET` gate; their local write faces stay inside the underlying CLIs' dry-run defaults and assertion/rollback machinery (section 3 table note 2). The server hard timeout and the no-leading-dash argument validation (array items checked the same way) apply to all 24 capabilities equally (the engine-body three follow the same law: zero network, no gate).
 
 ## 6. 设计 SKIP 面 · Design SKIP face
 
@@ -137,7 +141,7 @@ Beyond the original 8 capabilities (the RQW08 landing), this batch adds 13 zero-
 
 ## 7. 自检 · Self-check
 
-**现役自检器 Active self-check**：`python -I -B tests/t_mcp_face.py`（仓内 tests/ 面；RQW13 扩容批落岸）。子进程拉起 `tools/mcp_server.py`（stdio），单会话逐行断言：①initialize→protocolVersion 回显＋serverInfo；②notifications/initialized 静默无回包；③tools/list 恰 21 件、名单逐字对表（原 8＋扩容 13）、各带 description＋闭属性 inputSchema；④真调抽验 ≥3 件（http_backoff `--selftest` rc=0／norm_lint `--selftest` rc=0／chain_graph `--selftest` rc=0＋chain_graph 临时夹具双账 array 位置型通路 rc=0）；⑤default deny 负样本（net_probe 拒答，isError:true 点名 `ROCQWASH_MCP_ALLOW_NET`）；⑥`-32601`／`-32602`（未知工具＋新件未知参数＋array 负项拒绝）／`-32700` 三错误面。全程零网络（真调仅 selftest 面与临时夹具）。
+**现役自检器 Active self-check**：`python -I -B tests/t_mcp_face.py`（仓内 tests/ 面；RQW13 扩容批落岸）。子进程拉起 `tools/mcp_server.py`（stdio），单会话逐行断言：①initialize→protocolVersion 回显＋serverInfo；②notifications/initialized 静默无回包；③tools/list 恰 24 件、名单逐字对表（原 8＋扩容 13＋引擎本体批 3）、各带 description＋闭属性 inputSchema；④真调抽验 ≥3 件（http_backoff `--selftest` rc=0／norm_lint `--selftest` rc=0／chain_graph `--selftest` rc=0＋chain_graph 临时夹具双账 array 位置型通路 rc=0）；⑤default deny 负样本（net_probe 拒答，isError:true 点名 `ROCQWASH_MCP_ALLOW_NET`）；⑥`-32601`／`-32602`（未知工具＋新件未知参数＋array 负项拒绝）／`-32700` 三错误面。全程零网络（真调仅 selftest 面与临时夹具）。
 
 roster 注记 Roster note：本例**不挂 `tests/run_tests.sh` roster**（照 A1 席 `tests/t_exp_port.py` 先例：roster 计数与 README.md 计数线机械耦合，README* 为本席零触碰面；roster 插入权属持 README 授权的车道）。独立直跑即完整自检。
 
@@ -146,7 +150,7 @@ roster 注记 Roster note：本例**不挂 `tests/run_tests.sh` roster**（照 A
 实测 Measured（2026-11-14，本席实跑）：
 
 ```text
-python -I -B tests/t_mcp_face.py   -> T-MCP-FACE SUITE SHELL PASS (6 probe groups, 21 capabilities, 3 live-call spot checks)  exit 0
+python -I -B tests/t_mcp_face.py   -> T-MCP-FACE SUITE SHELL PASS (6 probe groups, 24 capabilities, 3 live-call spot checks)  exit 0
 python -I handshake.py (RQW08 ws)  -> HANDSHAKE RED: 2 failed assertions（probe 2「exactly 8 tools :: got 21」＋「names match the 8-capability contract :: missing=[] extra=<恰 13 新件名>」）；其余探针（inputSchema 面/capability_index/default deny/-32601/-32602/-32700）全 PASS；exit 1
 ```
 
@@ -172,6 +176,6 @@ Before the expansion, the working-tree mcp.md section 6 exp_append lines carried
 
 **现状 Current**：用户级 MCP config（`~/.zcode/cli/config.json` → `mcp/servers/rocqwash`）拉起形＝`python.exe -I D:/ComplexAnalysis/rocqwash/tools/mcp_server.py`，env＝`ROCQWASH_HOME=D:/ComplexAnalysis/rocqwash`＋`ROCQWASH_MCP_ALLOW_NET=1`；服务器直指本仓活树。重连前客户端现形 **8 件**（sentinel_status/net_probe/baselinediff/ci_triage/vacgen_generate/exp_append/pushci_status/capability_index）。
 
-**重连后 After reconnect**：客户端重启该 stdio 服务器并重连后，`tools/list` 现形 **21 件**（新增 13 件名单照 §3 表：chain_graph/doc_lint/ledger_sync/netname_normalize/norm_lint/render_events/select_audit/registry_audit/registry_fix/registry_regen/registry_union/abl1_4b_compile/http_backoff）。未重启的既有连接保持 8 件旧面（清单静态，`listChanged:false`，无动态变更通知）。验收锚＝勘形卷 §五「重启重连后 MCP 工具数 ≥ 新增批件数」＋「握手＋一次真调 per 新件抽验」。
+**重连后 After reconnect**：客户端重启该 stdio 服务器并重连后，`tools/list` 现形 **24 件**（RQW13 批 13 件名单照 §3 表；引擎本体票再加 3 件：ai_flavor_detect／jargon_plan／i18n_pipeline_dryrun，合流落岸）。未重启的既有连接保持 8 件旧面（清单静态，`listChanged:false`，无动态变更通知）。验收锚＝勘形卷 §五「重启重连后 MCP 工具数 ≥ 新增批件数」＋「握手＋一次真调 per 新件抽验」。
 
-Current: the user-level MCP config (`mcp/servers/rocqwash`) spawns `python.exe -I D:/ComplexAnalysis/rocqwash/tools/mcp_server.py` with `ROCQWASH_HOME` and `ROCQWASH_MCP_ALLOW_NET=1`; the server runs against this live tree, and a connected client currently sees 8 tools. After the client restarts this stdio server and reconnects, `tools/list` shows 21 tools (the 13 new names per the section 3 table). An existing connection that is not restarted keeps the 8-tool face (the listing is static, `listChanged:false`, no change notifications). Acceptance anchors: the expansion ticket's "after restart and reconnect the MCP tool count covers the new batch" plus "handshake and one live call per new tool, spot checked".
+Current: the user-level MCP config (`mcp/servers/rocqwash`) spawns `python.exe -I D:/ComplexAnalysis/rocqwash/tools/mcp_server.py` with `ROCQWASH_HOME` and `ROCQWASH_MCP_ALLOW_NET=1`; the server runs against this live tree, and a connected client currently sees 8 tools. After the client restarts this stdio server and reconnects, `tools/list` shows 24 tools (the RQW13 batch's 13 names per the section 3 table plus the engine-body ticket's ai_flavor_detect / jargon_plan / i18n_pipeline_dryrun, landed at integration). An existing connection that is not restarted keeps the 8-tool face (the listing is static, `listChanged:false`, no change notifications). Acceptance anchors: the expansion ticket's "after restart and reconnect the MCP tool count covers the new batch" plus "handshake and one live call per new tool, spot checked".

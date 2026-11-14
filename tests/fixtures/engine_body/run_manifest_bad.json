@@ -1,0 +1,6 @@
+{
+  "run_id": "i18n-engbody-suite-bad-shape",
+  "target": {"path": "<probe-document>", "face": "repo"},
+  "linkages": ["normalization"],
+  "ledger_path": "<run-dir>/segment-ledger.jsonl"
+}

@@ -31,6 +31,14 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | _abl1_4b_compile.py | 3,451 | 80 | Y | N | 0/0 | zero | ocaml(15) | usage |
 | _gen_fin_mac.py | 9,001 | 166 | Y | Y | 0/6 | zero | ocaml(7), coq(12), thermal(3), runner(1) | arg |
 | _http_backoff.py | 5,082 | 110 | Y | N | 0/0 | zero | none | usage |
+| ai_flavor.py | 20,687 | 481 | Y | Y | 0/5 | zero | none | arg |
+| ai_flavor_apply.py | 54,124 | 1,299 | Y | Y | 0/7 | urllib.request | env | arg |
+| auto_round.py | 84,108 | 1,898 | Y | Y | 2/22 | zero | none | arg |
+| i18n_pipeline.py | 80,939 | 1,939 | Y | Y | 0/4 | zero | env | arg |
+| i18n_translate.py | 45,371 | 1,301 | Y | Y | 0/13 | urllib.request | env | arg |
+| i18n_verify.py | 47,407 | 1,030 | Y | Y | 0/13 | zero | none | arg |
+| jargon_apply.py | 41,610 | 967 | Y | Y | 0/10 | zero | none | arg |
+| termbase.py | 22,477 | 520 | Y | Y | 0/5 | zero | none | arg |
 | baseline_diff.py | 41,200 | 800 | Y | Y | 2/2 | zero | none | arg |
 | chain_graph.py | 14,854 | 335 | Y | Y | 1/3 | zero | none | arg |
 | ci_triage.py | 121,218 | 2,194 | Y | Y | 0/11 | urllib.request | coq(109), win(4), runner(2) | arg |
@@ -65,6 +73,9 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 依文件名字典序 27 件；每条目逐行照录 census，新增仅「示例 Example」一行。
 27 items in filename order; each entry transcribes the census verbatim; the only added line is 示例 Example.
 
+落岸注记 Integration note（引擎本体票·落岸日）：引擎本体批七件按字典序插入本节（ai_flavor／ai_flavor_apply／i18n_pipeline／i18n_translate／i18n_verify／jargon_apply／termbase），条目转录自 `docs/engine-body-capabilities.md`（道8 稿）并经合流环节逐件 `--selftest` 活跑复验；「状态 Status」行为本批增行（增行单列声明律）；§1 总表七行的 Bytes/Lines/Pos-Opt 为合流树活测；下方汇总观察保留 census 时点词面事实不改写。
+Integration note (the engine-body ticket, at integration): the seven engine-body entries are inserted in filename order, transcribed from docs/engine-body-capabilities.md (the lane-8 draft) and re-verified live by the integration agent per file (--selftest); the 状态 Status line is this batch's added line (declared single-line addition); the section 1 rows carry live measurements on the integration tree; the aggregates below stay the census-time word-face facts.
+
 ### tools/_abl1_4b_compile.py
 - 用途 Purpose：内部辅助件：对提取目录中的 OCaml 模块做 mli 先行、依赖不动点轮的增量编译，可选链接并运行 driver；`ocamlc`/`ocamldep` 不在 PATH 即 fail-loud 退出（`_abl1_4b_compile.py:12-20`）。Internal helper: incremental OCaml compilation of an extracted module directory in dependency fixpoint order (interface files first), optionally linking and running a driver; exits loudly if `ocamlc`/`ocamldep` are absent from PATH (`_abl1_4b_compile.py:12-20`).
 - 调用形 Invocation：`python3 _abl1_4b_compile.py <extract_dir> [driver.ml]`（usage 字符串还原，本件无 argparse）
@@ -88,6 +99,24 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 - 依赖 Imports：sys（单件）
 - 网络 Network face：zero
 - SKIP 面：无特殊环境词面标记
+
+### tools/ai_flavor.py
+- 状态 Status：[live]（引擎本体票 道1 交付·合流落岸·E1 检测本体）
+- 用途 Purpose：AI 味词面检测本体：36 词面电池（中文 3 族 10 面、英文词干 15、句式 8、段首 3）加独立 em-dash 电池（U+2014 计数，目标 0），词表只读 `seeds/ai_flavor/word-map.json`（正则字面逐字转录）；命中是数据非错误。Wording detection body: a 36-face battery (10 zh, 15 en stems, 8 sentence, 3 paragraph-initial) plus a separate em-dash battery (target 0); hits are data, not errors; pure exports `detect_text(text, word_map)` and `load_word_map(path)`.
+- 调用形 Invocation：`python -I tools/ai_flavor.py --file <p> [--json <out>]` ／ `--tree <dir>`（*.py *.sh *.md *.json *.ts）／ `--selftest`
+- 示例 Example：`python -I tools/ai_flavor.py --file docs/report.md --json out/ai-flavor-report.json`
+- 依赖 Imports：argparse, json, os, re, sys（全标准库）
+- 网络 Network face：zero
+- SKIP 面：报告态先行零写；exit 1=有命中（数据）；em-dash 目标全域含本件自身；`--selftest` 自排除仅覆盖词面电池（数据豁免律），不覆盖 em-dash
+
+### tools/ai_flavor_apply.py
+- 状态 Status：[live]（引擎本体票 道3 交付·合流落岸·E1 施加面）
+- 用途 Purpose：AI 味施加面：全部写入建议性（advisory）且在写入门（`--apply-handoff`／`--provider http`）后，改写一律经改写提供者（handoff 默认零网络：`--emit-handoff` 出段包、回填后 `--apply-handoff` 校验写入；http 腿 default-deny）；中文 10 面永不机改，词干面取 register 中性直陈形，句式面删或改述；预算帽每目标文件每类一轮（`--state`，缺省落目标件旁 `<file>.aiflavor-state.json`）；改写后重跑检测残留=0 方 GREEN。Advisory apply face: writes only through the rewrite provider (handoff default zero-network; http leg default-deny under the env gate), zh ban faces never machine-written, budget cap per file per class via `--state`, rescan residue zero gates GREEN.
+- 调用形 Invocation：`python -I tools/ai_flavor_apply.py --file <p> [--json <out>] [--emit-handoff <out.jsonl> | --apply-handoff <in.jsonl> --state <p>] [--provider handoff|http]`
+- 示例 Example：`python -I tools/ai_flavor_apply.py --file docs/report.md --emit-handoff out/handoff.jsonl --state out/state.json`
+- 依赖 Imports：argparse, importlib.util, io, json, os, re, sys, tempfile, time, urllib.request ＋ 仓内 `tools/ai_flavor.py`（同目录）
+- 网络 Network face：handoff 面 zero；http 腿 non-zero（default-deny：`ROCQWASH_MCP_ALLOW_NET=1` ＋ `ROCQWASH_LLM_ENDPOINT`／`ROCQWASH_LLM_MODEL`／`ROCQWASH_LLM_KEY` 三缺一响亮拒绝并命名缺项；逐次调用写 NETRED 行含失败；凭据值零落盘零日志）
+- SKIP 面：中文 10 面处置=human 永不上机改；handoff ingest 拒收 fail-loud（`rejected[]` 如实回报）；无模型配置时 handoff 形全功能（执行智能体=模型处）
 
 ### tools/baseline_diff.py
 - 用途 Purpose：对比两份基线文件，产出增减报告（JSON/markdown 双出形）。Compares two baseline files and reports additions and removals (JSON and markdown output).
@@ -153,6 +182,51 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 - 网络 Network face：zero（git 子命令 token 面仅本地操作：status/commit/add）
 - SKIP 面：coq 系词面（7）
 
+### tools/auto_round.py
+- 状态 Status：[live]（引擎本体票 道9 交付·合流落岸·轮次账/回档/salvage 本体）
+- 用途 Purpose：轮次账回档本体：autonomy.json 双档准入（auto 自批/gated 等人批·同一代码路径 admission_decision）加 §7.2 十键轮次账 JSONL（append-only）加 commit trailer（Rocqwash-Round/-Mode/Salvage-Of）加轻量 ref refs/rocqwash/rounds/\<n\> 加回档=先归档 refs/rocqwash/drift/ 后单 revert 回锚（零 reset 零 force 零 push）加 salvage 精修包往返加振荡告警加 max_unreviewed_rounds 软停（--continue 显式放行）加 status/list/log 三查询面。Auto round ledger body: admission per the autonomy gear, one verified commit per round, append-only ledger JSONL, round trailers plus lightweight refs, anchor rollback via drift archive then a single revert (no reset, no force, no push), salvage round-trip, oscillation alarm and a soft stop on unreviewed rounds.
+- 调用形 Invocation：`python -I tools/auto_round.py <command> [--repo-root <p>] [--autonomy <p>] [--state <p>] [--ledger <p>] [--continue]`；commands：commit / approve / anchor / rollback / salvage / merge-salvage / status / list / log；加 `--selftest`
+- 示例 Example：`python -I tools/auto_round.py status --repo-root .`
+- 依赖 Imports：argparse, datetime, json, os, shutil, subprocess, sys, tempfile（全标准库）
+- 网络 Network face：zero（V18 反网络自检自扫描·socket/urllib/ftplib/smtplib/http.client 词面系负扫描 token，非调用面）
+- SKIP 面：git 提交面经 subprocess（git 在场才活）；一切变更面先验证后写；轮次账 append-only（禁回写历史行）
+
+### tools/i18n_pipeline.py
+- 状态 Status：[live]（引擎本体票 道4 交付·合流落岸·E4 编排本体 P0/P1/P3/P6）
+- 用途 Purpose：zh<->en 双向四联动管线编排本体：六操作签名不可变（承 `seeds/i18n/pipeline_stub.py`），本道实现 P0 政策预查（`repo`/`paper`/`supplement` regime 表，refusal 即合法结果 exit 0 记台账）、P1 分段器（保护名单、段=连续散文行区间、段账九键）、P3 四联动编排（L1 termbase 查词、L2 jargon 投影、L3 CJK 零残留加 em-dash 密度、L4 ai_flavor 检测）、P6 段账闭合校验。Pipeline orchestration body: six immutable operation signatures, P0 policy pre-check (refusal is a legal exit-0 ledgered outcome), P1 segmentation under the protection list, P3 four-linkage application, P6 append-only ledger closure gate.
+- 调用形 Invocation：`python -I tools/i18n_pipeline.py --manifest <run.json> --stage p0|p1|p3|p6 [--json <out>]` ／ `--selftest`
+- 示例 Example：`python -I tools/i18n_pipeline.py --manifest out/run.json --stage p1 --json out/segments.json`
+- 依赖 Imports：argparse, io, json, os, re, subprocess, sys, tempfile ＋ 仓内 `tools/jargon_apply.py`／`tools/i18n_translate.py`／`tools/i18n_verify.py`／`tools/termbase.py`（组装面）
+- 网络 Network face：zero（P2 网络面全在 `tools/i18n_translate.py` provider 内）
+- SKIP 面：P0 refusal 是合法结果非故障（台账有行）；闭合校验不满足即 fail-loud 拒闭合；缺道5/道6 模块时组装腿 fail-loud
+
+### tools/i18n_translate.py
+- 状态 Status：[live]（引擎本体票 道5 交付·合流落岸·E4 模型处层 P2）
+- 用途 Purpose：模型处层（P2）：handoff 形默认零网络（`--emit` 出段包、回填后 `--ingest` 九键校验，缺 model_id 或缺标注即违规拒收 fail-loud）；http 形可选 default-deny（OpenAI 兼容端点逐段调用逐段标注 `annotation_site="model"`，NETRED 台账逐次含失败）；prompt 模板 `--prompts <dir>`（缺省内置常数）。Model-site layer P2: handoff form default zero-network with nine-key ingest validation; http form optional default-deny with per-segment annotation and a NETRED ledger line per call.
+- 调用形 Invocation：`python -I tools/i18n_translate.py --segments <p> --emit <out.jsonl> [--prompts <dir>]` ／ `--ingest <in.jsonl>` ／ `--provider handoff|http`
+- 示例 Example：`python -I tools/i18n_translate.py --segments out/segments.json --emit out/handoff.jsonl`
+- 依赖 Imports：argparse, io, json, os, re, sys, tempfile, time, urllib.request
+- 网络 Network face：handoff 面 zero；http 腿 non-zero（default-deny：环境门三变量缺一响亮拒绝并命名缺项；NETRED 行逐次含失败；凭据值零落盘零日志）
+- SKIP 面：全票唯一网络面=http 提供者腿；无环境门拒绝而非降级；零标注机器段=管线违规九键拒收
+
+### tools/i18n_verify.py
+- 状态 Status：[live]（引擎本体票 道6 交付·合流落岸·E4 P4/P5）
+- 用途 Purpose：P4 机械验证编排（子进程调 `tools/ai_flavor.py`／`tools/norm_lint.py --jargon-map`／`tools/doc_lint.py`，汇成验证矩阵 JSON `rocqwash.i18n.verify/1`）；P5 人工十点单面（`--emit-tenpoint` 出审读表单按目标面形态取变体；`--ingest-tenpoint` 校验结论写回段账 `tenpoint_verdict`；引擎不替人判）。P4 runs the mechanical verify instruments as subprocesses into one matrix; P5 emits the human ten-point form and ingests verdicts fail-loud; the engine never judges.
+- 调用形 Invocation：`python -I tools/i18n_verify.py --verify-target <p> [--json <out>]` ／ `--emit-tenpoint <target>` ／ `--ingest-tenpoint <verdicts.json>` ／ `--selftest`
+- 示例 Example：`python -I tools/i18n_verify.py --emit-tenpoint docs/report.en.md --json out/tenpoint-form.json`
+- 依赖 Imports：argparse, io, json, os, subprocess, sys, tempfile ＋ 本地仪器子进程（`tools/ai_flavor.py`／`tools/norm_lint.py`／`tools/doc_lint.py`）
+- 网络 Network face：zero（子进程均为本地工具只读探跑）
+- SKIP 面：P5 十点单为人工门（引擎出表单与写回，不产 verdict）；子进程目标件缺席 fail-loud；结论文件 schema=`rocqwash.tenpoint.verdicts/1`
+
+### tools/jargon_apply.py
+- 状态 Status：[live]（引擎本体票 道2 交付·合流落岸·E2 施加面加纯函数库）
+- 用途 Purpose：黑话到标准术施加面：数据只读 `seeds/jargon/jargon-map.json`（62 条）；只机改 `disposition:"replace"` 条目；`rewrite_or_delete` 永不机改（findings 列出处置=human）；guarded 行默认拒改上报（`--guarded-interactive` 出逐行问询文件）；preserve 豁免走 exempt 机制；标识符位永不改写（反引号跨段遮蔽）；默认 plan 零写列 before/after 对，`--apply` 后自动重扫残留=0 方 exit 0，幂等。Jargon-to-standard apply face over the 62-entry map: replace entries only, human rows listed never applied, guarded rows refuse by default, plan default zero-write, apply rescans to residue zero, idempotent.
+- 调用形 Invocation：`python -I tools/jargon_apply.py --file <p> | --tree <dir> [--plan | --apply] [--json <out>] [--guarded-interactive]` ／ `--selftest`
+- 示例 Example：`python -I tools/jargon_apply.py --tree docs --plan --json out/jargon-plan.json`
+- 依赖 Imports：argparse, importlib.util, io, json, os, re, shutil, subprocess, sys, tempfile ＋ 仓内 `tools/norm_lint.py`（同源匹配器）
+- 网络 Network face：zero
+- SKIP 面：默认零写；`rewrite_or_delete` 行处置=human；重扫残留非零即 exit 非 0（验证红）；幂等（二次 apply 零 would-fix）
+
 ### tools/ledger_sync.py
 - 用途 Purpose：探针台账与状态台账的 TSV 合并同步器（策略参数化）。TSV merge synchronizer between the probe ledger and the status ledger (policy parameterized).
 - 调用形 Invocation：`python tools/ledger_sync.py [--probe] [--ledger] [--out] [--report] [--policy]`
@@ -180,7 +254,7 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 
 ### tools/norm_lint.py
 - 用途 Purpose：注释面规范化 lint，报告态先行（jargon 映射、CJK 阈值与白名单参数化；内置 `--selftest`）。Annotation-face normalization lint, report-first form (jargon map, CJK threshold, and whitelist parameterized; built-in `--selftest`).
-- 调用形 Invocation：`python tools/norm_lint.py [--tree] [--file] [--jargon-map] [--cjk-threshold] [--cjk-whitelist] [--json] [--md] [--selftest]`
+- 调用形 Invocation：`python tools/norm_lint.py [--tree] [--file] [--jargon-map] [--cjk-threshold] [--cjk-whitelist] [--json] [--md] [--selftest]`；落岸增旗 integration addition（引擎本体票·落岸日）：`[--ai-flavor-map]`（可选 ai-flavor 报告面，缺省关闭时报告逐字节不变；optional ai-flavor report face, byte-identical report when absent）
 - 示例 Example：`python tools/norm_lint.py --tree <value> --selftest`
 - 依赖 Imports：argparse, fnmatch, io, json, os, re, shutil, sys, tempfile, tokenize
 - 网络 Network face：zero
@@ -250,6 +324,15 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 - 网络 Network face：zero
 - SKIP 面：opam 词面（2，待轻探判语义）
 
+### tools/termbase.py
+- 状态 Status：[live]（引擎本体票 道6 交付·合流落岸·E3 离线查词薄层）
+- 用途 Purpose：术语库只读薄层：`seeds/termbase/termbase.json` 只读（stdlib json，schema 校验 fail-loud）加 `lookup(term) -> entries` 精确面查词（剥强调与全角括号、按分隔符拆面）加 `--selftest`。Read-only terminology thin layer over the E3 seed: schema validation fails loud, exact-face lookup, zero network; the E3 net interface and DIY channel stay candidates of their own seed SPECs.
+- 调用形 Invocation：`python -I tools/termbase.py --lookup <term> [--db <p>] [--json <out>]` ／ `--schema-check` ／ `--selftest`
+- 示例 Example：`python -I tools/termbase.py --selftest`
+- 依赖 Imports：argparse, json, os, sys（全标准库）
+- 网络 Network face：offline zero（联网接口为 E3 candidate，default-deny，不在本票）
+- SKIP 面：内置快照永不原位编辑（上游术语表唯一维护点）；miss 是数据（空结果 exit 0）
+
 ### tools/toolchain_dyld_doctor.py
 - 用途 Purpose：macOS dyld 工具链断链诊断器（worker/donor 定位、smoke 探测参数化）。Diagnoses broken macOS dyld toolchain links (worker/donor locating and a smoke probe, parameterized).
 - 调用形 Invocation：`python tools/toolchain_dyld_doctor.py [--worker] [--donor] [--smoke] [--coqc] [--guard] [--json]`
@@ -276,7 +359,7 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 - 注记 Note：落岸与路由面见 §3.3。
 
 ### tools/wash_shape.py
-- 用途 Purpose：注释与形状规范化五段流水线（header 映射与预设、多轮 loop、事件流参数化）。Shape-normalizing five-stage pipeline for annotation faces (header maps and presets, multi-round loop, and event stream parameterized).
+- 用途 Purpose：注释与形状规范化五段流水线（header 映射与预设、多轮 loop、事件流参数化）。Shape-normalizing five-stage pipeline for annotation faces (header maps and presets, multi-round loop, and event stream parameterized). 落岸注记 Integration note（引擎本体票·落岸日）：新增 wash 6 (`jargon`)（`tools/jargon_apply.py` 机改 replace 条目）与 wash 7 (`ai-flavor`)（advisory：plan 列建议、`--apply` 仅出 handoff 段包，写入经改写提供者往返），`--only` 接受 `jargon`／`ai-flavor`／`6`／`7`；`--dir` 在选中 6/7 洗时加收 .py/.sh/.md(.json/.ts) 散文面。Washes 6 (`jargon`) and 7 (`ai-flavor`, advisory) joined the pipeline; `--only` accepts the two names and `6`/`7`; `--dir` also collects the prose faces when either is selected.
 - 调用形 Invocation：`python tools/wash_shape.py [--file] [--dir] [--exclude] [--only] [--header-map] [--header-map-preset] [--anchor-src] [--repo-root] [--json] [--apply] [--loop] [--interval] [--sleep-scale] [--max-rounds] [--events] [--injector]`
 - 示例 Example：`python tools/wash_shape.py --file <value> --apply`
 - 依赖 Imports：argparse, datetime, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile, time

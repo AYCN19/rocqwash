@@ -139,6 +139,15 @@ waves:
 3. Until one of the above lands, this seed powers detection and structured
    reporting only; it does not authorize automatic rewrites.
 
+Integration note (the engine-body ticket, integrated this round).  Path 1 above
+has landed: the detection body is `tools/ai_flavor.py`, the advisory apply
+face is `tools/ai_flavor_apply.py` (three dispositions per candidate kind;
+handoff default zero-network, http leg default-deny), and the wash_shape
+integration is the advisory wash 7 stage whose apply arm only emits the
+handoff package.  Mechanical substitution stays banned: every E1 write goes
+through the rewrite provider (contract volume section 4, design change 4).
+The original section text stands unchanged as the pre-integration record.
+
 ## 5. Boundaries carried from the canon
 
 - Row C caution (quote kept in `canon_excerpts`): sentence-shaped faces are

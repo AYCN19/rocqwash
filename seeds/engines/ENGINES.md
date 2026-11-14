@@ -73,6 +73,14 @@ Invocation, Example, Imports, Network face, SKIP face. Status markers:
   form of `tools/mcp_server.py:498-502`); it is not callable until landing and
   the SKIP face says so.
 
+Integration update (the engine-body ticket, integrated this round): the engine
+bodies landed through the integration agent and the markers below flip
+per the integration duty in this section: E1 replacement `[candidate]` ->
+`[live]`, E2 application `[candidate]` -> `[live]`, E3 offline lookup
+`[candidate]` -> `[live]` (the E3 network interface and DIY channel stay
+`[candidate]`), E4 pipeline `[candidate]` -> `[live]`. Original sentences
+are kept; the flips are appended as integration annotations.
+
 Seed paths are given relative to the rocqwash repository root, where the
 `seeds/` tree lands after staging.
 
@@ -91,7 +99,10 @@ Seed paths are given relative to the rocqwash repository root, where the
 - Invocation: detection `[live]` `sh ai_flavor_selfcheck.sh <target.md>` with
   exit 0 clean / 1 red / 2 usage (selfcheck lines 19, 53-58). Replacement
   `[candidate]` after the ai-flavor wash stage lands (roadmap step 2):
-  `python tools/wash_shape.py --file <value> --apply`
+  `python tools/wash_shape.py --file <value> --apply` [integration update: the stage landed as wash 7 `ai-flavor` in wash_shape and the
+  detection body `tools/ai_flavor.py`; the write face runs through the
+  rewrite provider per design change 4, so the wash_shape apply arm emits
+  the handoff package and the round trip completes it]
 - Example: `sh ai_flavor_selfcheck.sh docs/report.md`; candidate form:
   `python tools/wash_shape.py --file docs/report.md --apply`
 - Imports: wash_shape.py already imports argparse, datetime, hashlib, io,
@@ -101,7 +112,8 @@ Seed paths are given relative to the rocqwash repository root, where the
   text edits; no stage of E1 performs network I/O.
 - SKIP face: the replacement stage is `[candidate]`; until landing, requests
   for automated replacement get the registered-ahead-of-landing answer and the
-  detection face keeps its report-only exit-code contract.
+  detection face keeps its report-only exit-code contract. [integration update: the replacement face is `[live]` as the advisory wash 7 stage;
+  machine substitution stays banned, writes go through the provider]
 
 ### E2 jargon (jargon-to-standard mapping)
 - Path: `seeds/jargon/jargon-map.json` (data seed) + `seeds/jargon/SPEC.md`
@@ -114,10 +126,14 @@ Seed paths are given relative to the rocqwash repository root, where the
   `norm_lint.py --jargon-map` and the wash_shape jargon wash stage
   `[candidate]`. The application side is absent today: `command grep -n
   "jargon" tools/wash_shape.py` returns zero hits at the audit (2026-11-14).
+  [integration update: the application face landed as wash 6 `jargon`
+  in wash_shape over `tools/jargon_apply.py`; the gap sentence above is the
+  audit-time fact and stands as written]
 - Invocation: detection `[live]` (report-only; loader at norm_lint.py:154-189
   reads md pipe rows and fails loudly on malformed or duplicate rows):
   `python tools/norm_lint.py --tree <value> --jargon-map docs/jargon-to-standard-mapping-v1.md`
-  Application `[candidate]` wash_shape jargon stage.
+  Application `[candidate]` wash_shape jargon stage. [integration update: the application stage is `[live]`:
+  `python tools/wash_shape.py --dir <value> --apply --only jargon`]
 - Example: `python tools/norm_lint.py --tree tools --jargon-map docs/jargon-to-standard-mapping-v1.md`
   (live); candidate form: `python tools/wash_shape.py --dir <value> --apply --only jargon`
 - Imports: norm_lint.py imports argparse, fnmatch, io, json, os, re, shutil,
@@ -129,6 +145,7 @@ Seed paths are given relative to the rocqwash repository root, where the
 - Network face: zero.
 - SKIP face: norm_lint is report-only first form; writes happen only through
   the future wash_shape stage, which is `[candidate]` until landing.
+  [integration update: that stage is `[live]`]
 
 ### E3 termbase (terminology standardization base)
 - Path: `seeds/termbase/termbase.json` (offline built-in seed) +
@@ -143,7 +160,10 @@ Seed paths are given relative to the rocqwash repository root, where the
 - Invocation: `[candidate]` offline lookup over termbase.json (stdlib json
   read); network interface `[candidate]` fires only under
   `ROCQWASH_MCP_ALLOW_NET=1` (the MCP-layer gate convention,
-  tools/mcp_server.py pushci entry description).
+  tools/mcp_server.py pushci entry description). [integration update:
+  the offline lookup is `[live]` as `python -I tools/termbase.py --lookup
+  <term>` plus `--selftest` (design change 2, offline subset only); the
+  network interface stays `[candidate]`]
 - Example: validation example only at seed stage, `python -I tests/t_engines_seeds.py`
   (termbase schema vectors); no lookup CLI exists until landing.
 - Imports: stdlib json for the seed; the net interface declares its imports at
@@ -166,6 +186,11 @@ Seed paths are given relative to the rocqwash repository root, where the
   duty.
 - Invocation: none executable at seed stage. Skeleton stub after landing runs
   offline smoke only; LLM steps skip loudly naming the missing configuration.
+  [integration update: the pipeline body is `[live]` as
+  `python -I tools/i18n_pipeline.py --manifest <run.json> --stage p0|p1|p3|p6`
+  with the companion faces `tools/i18n_translate.py` (P2) and
+  `tools/i18n_verify.py` (P4/P5); design change 1 registers the promotion
+  beyond the step 4 stub]
 - Example: validation example only at seed stage, `python -I tests/t_engines_seeds.py`
   (i18n spec structure vectors).
 - Imports: stdlib only in the stub face; the LLM interface is declared in the
@@ -243,6 +268,19 @@ Acceptance criteria:
       the law-one acceptance form (tools/evolve.py:231-250).
   A6. wash_shape network face stays zero (word-level replacement only).
 
+Integration record (the engine-body ticket, integrated this round).  DESIGN-CHANGE
+3: the E1/E2 application faces land as wash_shape stages, not as a forked
+engine: wash 6 `jargon` (machine-applies the map's replace disposition through
+`tools/jargon_apply.py`) and wash 7 `ai-flavor` (advisory only, machine
+substitution stays banned).  DESIGN-CHANGE 4: every E1 write goes through the
+rewrite provider (handoff default zero-network; http default-deny); the
+wash_shape apply arm emits the handoff package and the provider round trip
+completes the write, so the rescan reports residual suggestions loudly until
+the round trip lands.  Acceptance run by the integration agent on the
+integrated tree: A1 zero-write plan with before/after pairs, A2 apply then
+zero residual on the jargon leg, A3 idempotence, A6 zero network (the A4/A5
+faces are covered by the suite and the .zh.md archive law respectively).
+
 ### Step 3: E3 built-in plus network
 Work: land `seeds/termbase/termbase.json`, `net-interface-SPEC.md`, and
 `diy-channel-SPEC.md`; implement the offline lookup and the gated network
@@ -259,6 +297,15 @@ Acceptance criteria:
   A5. Snapshot discipline holds: the built-in copy is never edited in place;
       the sync duty against the upstream register is documented in the SPEC.
 
+Integration record (the engine-body ticket, integrated this round).  DESIGN-CHANGE
+2: this ticket takes the Step 3 offline subset only (`tools/termbase.py` over
+`seeds/termbase/termbase.json`, the read-only lookup plus `--selftest`); the
+E3 network interface and the DIY entry channel are outside the ticket and
+stay `[candidate]` per their own seed SPECs.  The order clause above ("a step
+starts only when the previous step's acceptance items all hold") is read with
+the user order commissioning this round as the sequence authority: the offline subset
+lands inside this ticket while the network faces keep their candidate state.
+
 ### Step 4: E4 pipeline
 Work: review the translation SPEC against the manual ten-point checklist,
 then land the skeleton stub per the SPEC.
@@ -273,10 +320,25 @@ Acceptance criteria:
   A4. The English output face passes the ai-flavor battery and the em-dash
       target of 0 before any landing.
 
+Integration record (the engine-body ticket, integrated this round).  DESIGN-CHANGE
+1: E4 lands as the full pipeline body, not the skeleton stub this step
+describes: `tools/i18n_pipeline.py` implements P0/P1/P3/P6, assembles P2
+from `tools/i18n_translate.py` and P4/P5 from `tools/i18n_verify.py`, with
+the handoff and http provider forms and the human ten-point gate.  The
+original step 4 wording (stub face, skip-loud LLM steps) stands above as the
+roadmap text it replaced in fact; the spec file under `seeds/i18n/` carries
+the same record in its section 14.  Basis: the user order commissioning this round ("Max engines, the three
+pieces fully covered").
+
 ### Landing duty (applies to every step)
 Each landed engine transcribes into `docs/CAPABILITY-INDEX.md` section 2 in
 the seven-field form, appends the pending-capability record through
 `tools/exp_port.py append`, and registers its evolve feed slot. The seed copy
+[integration note: the INDEX transcription for the seven
+engine-body files is done by the integration agent; the exp_port append and
+the evolve feed slot registration were not in the contract volume section 5
+checklist for this ticket and are left registered here as an open duty for
+the receiving session, not silently assumed]
 stays a read-only snapshot; the source originals in section 0 remain the sole
 maintenance points. README files, `cw.sh`, and `.github` are outside the seed
 batch and stay untouched.

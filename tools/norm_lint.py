@@ -13,11 +13,11 @@ Purpose.  Machine-checks prose faces (comments, docstrings, shell help,
   30 lines.  Findings are data; the exit code never escalates on them.
 
 Interface.  --tree DIR | --file PATH [--jargon-map P] [--cjk-threshold F]
-  [--cjk-whitelist P] [--json P] [--md P] | --selftest.  Schema
-  rocqwash-norm-lint/1: findings carry {line, kind, term, suggest}, kinds
-  {header, jargon, cjk, forbidden, budget, parse}.  Scans skip dot
-  directories, *.zh.md and docs/zh/ archives, report targets and
-  docs/norm-lint-baseline-*.md faces; the mapping table (default
+  [--cjk-whitelist P] [--ai-flavor-map P] [--json P] [--md P] | --selftest.
+  Schema rocqwash-norm-lint/1: findings carry {line, kind, term, suggest},
+  kinds {header, jargon, ai_flavor, em_dash, cjk, forbidden, budget, parse}.
+  Scans skip dot directories, *.zh.md and docs/zh/ archives, report targets
+  and docs/norm-lint-baseline-*.md faces; the mapping table (default
   docs/jargon-to-standard-mapping-v1.md, missing exits 9) is exempt from
   the jargon check only.
 
@@ -51,6 +51,15 @@ Exit-codes.  0 accounted (findings are data); 1 instrument failure; 2 usage; 9 m
 #                    reported per file and in the summary.
 # --cjk-whitelist P  tree-relative paths exempt from the CJK check while
 #                    their translation is pending; '#' starts a comment.
+# --ai-flavor-map P  optional report face (engine-body batch): load the
+#                    36-face word map through tools/ai_flavor.py and add
+#                    ai_flavor findings (one per face hit on a prose line,
+#                    suggest = the map's candidate kinds) plus em_dash
+#                    findings (one per prose line carrying U+2014); both are
+#                    error-level data.  Absent flag = the face is off and the
+#                    report is byte-identical to the pre-batch form.  The map
+#                    file is exempt from the wording battery only (it carries
+#                    the faces by design); the em-dash count is exempt nowhere.
 # --json P / --md P  report targets, schema rocqwash-norm-lint/1.
 # --selftest         five vectors on temporary fixtures; runs standalone.
 # --gate / --strict  reserved for the future gated form; passing either
@@ -374,7 +383,73 @@ def cjk_stats(segs):
     return cjk, total, (first if first is not None else 1)
 
 
-def scan_file(rel, abspath, kind, terms, threshold, whitelist, map_abspath):
+def load_ai_flavor(map_path):
+    """Optional ai-flavor face: load the detector module beside this file and
+    the word map; returns (module, word_map).  Missing module or map exits 9;
+    an invalid map is an instrument failure (exit 1)."""
+    mod_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            "ai_flavor.py")
+    if not os.path.isfile(mod_path):
+        fail("ai-flavor detector module missing: " + mod_path, 9)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("rqw_ai_flavor_host", mod_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    try:
+        word_map = mod.load_word_map(map_path)
+    except OSError as exc:
+        fail("ai-flavor map unreadable: " + map_path + " (" + str(exc) + ")", 9)
+    except ValueError as exc:
+        fail("ai-flavor map invalid: " + str(exc), 1)
+    return mod, word_map
+
+
+def ai_flavor_suggest(face):
+    """Suggestion cell for one face: the candidate kinds of the word map,
+    with the register-enumerated values where the map lists them."""
+    by_kind = {}
+    order = []
+    for cand in face.get("candidates") or []:
+        kind = cand.get("kind") or ""
+        if kind not in by_kind:
+            by_kind[kind] = []
+            order.append(kind)
+        value = cand.get("value")
+        if isinstance(value, str) and value and len(value) <= 24:
+            by_kind[kind].append(value)
+    parts = []
+    for kind in order:
+        vals = by_kind[kind]
+        parts.append(kind + (": " + " / ".join(vals) if vals else ""))
+    return "; ".join(parts) or "see the word map entry"
+
+
+def ai_flavor_findings(segs, afmod, word_map, wording_exempt):
+    """ai_flavor and em_dash findings over the prose lines: the detector
+    runs line by line so findings keep their real line numbers; the wording
+    battery is skipped for the map file itself, the em-dash count never is."""
+    findings = []
+    faces = dict((f["id"], f) for f in word_map["faces"])
+    for ln, txt in segs:
+        rep = afmod.detect_text(txt, word_map)
+        if not wording_exempt:
+            seen = set()
+            for hit in rep["hits"]:
+                fid = hit["face_id"]
+                if fid in seen:
+                    continue
+                seen.add(fid)
+                findings.append(mk(ln, "ai_flavor", fid,
+                                   ai_flavor_suggest(faces.get(fid, {}))))
+        if rep["em_dash_count"]:
+            findings.append(mk(ln, "em_dash", "U+2014",
+                               "remove the em-dash (register target 0; count on"
+                               " this line: %d)" % rep["em_dash_count"]))
+    return findings
+
+
+def scan_file(rel, abspath, kind, terms, threshold, whitelist, map_abspath,
+              afmod=None, af_map=None, af_map_abspath=None):
     try:
         with io.open(abspath, "r", encoding="utf-8") as fh:
             text = fh.read()
@@ -412,6 +487,9 @@ def scan_file(rel, abspath, kind, terms, threshold, whitelist, map_abspath):
                            "compress the header block to the 30-line budget (banner + doc block)"))
     if abspath != map_abspath:
         findings.extend(jargon_findings(segs, terms))
+    if af_map is not None:
+        findings.extend(ai_flavor_findings(segs, afmod, af_map,
+                                           abspath == af_map_abspath))
     findings.extend(forbidden_findings(segs))
     cjk, total, first = cjk_stats(segs)
     ratio = round(cjk / float(total), 6) if total else 0.0
@@ -484,6 +562,9 @@ def render_md(report):
     s = report["summary"]
     out.append("- mode: " + report["mode"] + " · root: " + report["root"])
     out.append("- jargon map: " + pol["jargon_map"] + " (" + str(pol["active_faces"]) + " active faces)")
+    if pol.get("ai_flavor_map"):
+        out.append("- ai-flavor map: " + pol["ai_flavor_map"] + " ("
+                   + str(pol["ai_flavor_faces"]) + " faces; optional report face on)")
     wl = pol["cjk_whitelist"] or "(none)"
     out.append("- cjk threshold: " + repr(pol["cjk_threshold"]) + " · whitelist: " + wl
                + " (" + str(pol["whitelisted_files"]) + " files) · gate: off (report-only)")
@@ -532,6 +613,12 @@ def run_scan(args):
     if args.cjk_whitelist:
         wl_path = resolve_input(args.cjk_whitelist, root_abs, "cjk whitelist")
         whitelist = load_whitelist(wl_path)
+    afmod = None
+    af_map = None
+    af_path = None
+    if args.ai_flavor_map:
+        af_path = resolve_input(args.ai_flavor_map, root_abs, "ai-flavor map")
+        afmod, af_map = load_ai_flavor(af_path)
     skip_abs = set()
     for p in (args.json, args.md):
         if p:
@@ -546,7 +633,7 @@ def run_scan(args):
         archives = 0
         rels = [(rel, ap, kind)]
     records = [scan_file(rel, ap, kind, terms, args.cjk_threshold,
-                         whitelist, map_path)
+                         whitelist, map_path, afmod, af_map, af_path)
                for rel, ap, kind in rels]
     error = 0
     warn = 0
@@ -579,6 +666,9 @@ def run_scan(args):
         "summary": {"files": len(records), "error": error, "warn": warn,
                     "cjk_ratio": agg},
     }
+    if af_map is not None:
+        report["policy"]["ai_flavor_map"] = display_path(af_path, root_abs)
+        report["policy"]["ai_flavor_faces"] = len(af_map["faces"])
     if args.json:
         write_output(args.json, json.dumps(report, ensure_ascii=False, indent=1,
                                            sort_keys=True) + "\n")
@@ -802,6 +892,11 @@ def main(argv=None):
     ap.add_argument("--cjk-whitelist", metavar="P",
                     help="tree-relative paths exempt from the CJK check")
     ap.add_argument("--json", metavar="P", help="write the rocqwash-norm-lint/1 report there")
+    ap.add_argument("--ai-flavor-map", dest="ai_flavor_map", metavar="P",
+                    default=None,
+                    help="optional ai-flavor report face: word map path loaded"
+                         " through tools/ai_flavor.py; adds ai_flavor and"
+                         " em_dash findings (data, error level)")
     ap.add_argument("--md", metavar="P", help="write the human-readable report there")
     ap.add_argument("--selftest", action="store_true",
                     help="run the five selftest vectors on temporary fixtures")

@@ -87,6 +87,18 @@ Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
   `jargon` ever appears in `tools/wash_shape.py`, the probe fails with an
   instruction to update this section.
 
+Integration note (the engine-body ticket, integrated this round).  The wiring
+candidate above has landed: the jargon wash face is wash 6 in
+`tools/wash_shape.py`, driven by `tools/jargon_apply.py` with this map
+read-only, under the hard rules this section lists (replace entries only;
+`rewrite_or_delete` never machine-applied; guarded rows refuse by default
+with the `--guarded-interactive` query hook; carve-outs ride the exempt
+mechanism; backtick masking).  The drift sentinel in
+`tests/t_engines_seeds.py` (`check_wash_shape_gap`) flipped at this integration
+to assert the wired state: `jargon` now MUST appear in `tools/wash_shape.py`,
+and the probe fails if the wiring is removed.  The original section text
+above stands unchanged as the pre-integration record.
+
 ## 4. Selection rule and the 62-count label
 
 - Mandated count: 62 entries.  Fill rule: the document-order prefix of the

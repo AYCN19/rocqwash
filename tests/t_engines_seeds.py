@@ -553,18 +553,21 @@ def by_face_suggest(seed, face):
 
 
 def check_wash_shape_gap(root, res):
+    # Landed form (the engine-body ticket's integration, SPEC section 3
+    # integration note holds: the application face exists as the jargon
+    # wash stage, and the sentinel fails if the wiring is removed.
     if root is None:
         res.append(("washshape-gap-probe", None,
                     "SKIP — repository root not found (set ROCWASH_ROOT)"))
         return
     text = io.open(os.path.join(root, "tools", "wash_shape.py"), encoding="utf-8").read()
-    if "jargon" in text:
-        res.append(("washshape-gap-probe", False,
-                    "tools/wash_shape.py now mentions jargon — the application face exists; "
-                    "update SPEC section 3 and wire the seed contract accordingly"))
-    else:
+    if "jargon" in text and "KIND_JARGON" in text:
         res.append(("washshape-gap-probe", True,
-                    "wash_shape carries no jargon face; the SPEC section 3 gap claim holds"))
+                    "wash_shape carries the jargon wash stage; the SPEC section 3 integration note holds"))
+    else:
+        res.append(("washshape-gap-probe", False,
+                    "tools/wash_shape.py lost the jargon wash stage; the SPEC section 3 integration "
+                    "note no longer matches the tree: restore the wiring or update the SPEC"))
 
 
 _NL_CACHE = {}

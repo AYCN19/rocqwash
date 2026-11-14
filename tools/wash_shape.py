@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""wash_shape.py — shape-normalizing tool: canonical five-wash pipeline (rocqwash tools/).
+"""wash_shape.py — shape-normalizing tool: canonical seven-wash pipeline (rocqwash tools/).
 
-Purpose.  Applies the canonical five-wash pipeline to every target file in
+Purpose.  Applies the canonical wash pipeline to every target file in
   order (each wash selectable via --only; per-wash contract in the
   extended comment block below): 1 lexical (gate4 word-face findings
   exchanged through the `wash/comment_pack.json` flag_words table,
@@ -15,14 +15,19 @@ Purpose.  Applies the canonical five-wash pipeline to every target file in
   Require faces and carried header), 4 eol (CRLF->LF normalization with
   final-newline preservation), 5 anchor (order.txt line anchors
   re-canonicalized to `#R<seq>-<md5-8>` by `tools/registry_union.py
-  --reanchor`).  Two phases: plan (zero writes; per-wash
-  {kind,action,status,detail} list plus stats) then --apply (execute
-  would-fix items, re-run all five washes, verdict shaped only when the
-  rescan is fully clean).  verdict: clean | shaped | partial |
-  plan-miss.  Dry run by default; writes only under --apply.
+  --reanchor`), 6 jargon (tools/jargon_apply.py plan/apply over the
+  .py/.sh/.md prose faces from the 62-entry seed map; the engine's own
+  apply-then-rescan gate keeps residue zero), 7 ai-flavor (advisory:
+  tools/ai_flavor_apply.py plans the provider suggestions and --apply
+  emits the handoff package; the write itself only happens through the
+  provider round trip, never a machine substitution).  Two phases: plan
+  (zero writes; per-wash {kind,action,status,detail} list plus stats)
+  then --apply (execute would-fix items, re-run all washes, verdict
+  shaped only when the rescan is fully clean).  verdict: clean | shaped
+  | partial | plan-miss.  Dry run by default; writes only under --apply.
 
 Interface.  python3 tools/wash_shape.py --file A.v [--file B.v ...]
-  [--json OUT] | --dir TREE [--exclude NAME ...] [--only 1,3] [--apply]
+  [--json OUT] | --dir TREE [--exclude NAME ...] [--only 1,3,6] [--apply]
   [--header-map M.json | --header-map-preset NAME] [--anchor-src DIR]
   | --loop [--interval S] [--max-rounds N] [--events FILE] | --selftest.
   Report schema rocqwash-shape/1; loop event stream schema
@@ -111,9 +116,32 @@ Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
 #                 no anchors -> not applicable.  Missing entity / ambiguous
 #                 entity / anchorless row -> plan-miss (same rule as
 #                 registry_union's honest skip listing).
+# wash 6 jargon   tools/jargon_apply.py over the .py/.sh/.md prose faces
+#                 (the engine-body ticket, lane 2; roadmap
+#                 step 2 wiring).  Plan runs the engine's --plan (zero
+#                 writes): machine-applicable occurrences from the 62-entry
+#                 seed map are would-fix; guarded and rewrite_or_delete rows
+#                 are human findings -> plan-miss items (never machine
+#                 applied).  --apply runs the engine's --apply, whose own
+#                 rescan keeps residue zero as the exit-zero gate; the
+#                 shaper's re-run of all washes verifies the same state.
+# wash 7 ai-flavor advisory stage (engine-body batch lane 3; ai-flavor seed
+#                 SPEC section 4 path 1; design change: every write goes
+#                 through the rewrite provider, machine substitution stays
+#                 banned).  Plan runs tools/ai_flavor_apply.py plan mode
+#                 (zero writes): provider-eligible suggestions (neutral
+#                 direct forms, delete-or-restate) are would-fix with the
+#                 handoff route as their action; ban-remediation faces and
+#                 em-dash occurrences are human items -> plan-miss items.
+#                 --apply runs the engine's --emit-handoff (the package
+#                 lands beside the target; the target itself is untouched):
+#                 the write completes only after the provider fills the rows
+#                 and --apply-handoff ingests them, so until that round trip
+#                 the rescan reports the residual findings loudly (verdict
+#                 partial, never a silent shaped).
 # two phases      plan (zero writes; per-file per-wash {kind,action,
 #                 status: would-fix|clean|plan-miss, detail} list + stats)
-#                 -> --apply (execute would-fix items -> re-run all five washes
+#                 -> --apply (execute would-fix items -> re-run all washes
 #                 -> verdict shaped only when fully clean; a dirty rescan is
 #                 verdict partial with the residual items listed honestly).
 # loop mode       --loop watch mode: one pass per round; the plan cache keys on
@@ -142,18 +170,23 @@ PROG = "wash_shape"
 SCHEMA = "rocqwash-shape/1"
 EVENT_SCHEMA = "rocqwash-sentinel-event/1"   # --loop event stream, same shape as cw_sentinel
 
-# five wash kinds (canonical order; --only number map 1..5)
+# wash kinds (canonical order; --only number map 1..7)
 KIND_LEXICAL = "lexical"    # wash 1: lexical
 KIND_TOKEN = "token"        # wash 2: token
 KIND_HEADER = "header"      # wash 3: header
 KIND_EOL = "eol"            # wash 4: eol
 KIND_ANCHOR = "anchor"      # wash 5: anchor
-KINDS = (KIND_LEXICAL, KIND_TOKEN, KIND_HEADER, KIND_EOL, KIND_ANCHOR)
+KIND_JARGON = "jargon"      # wash 6: jargon (engine-body batch, roadmap step 2)
+KIND_AIFLAVOR = "ai-flavor"  # wash 7: ai-flavor advisory (provider-gated)
+KINDS = (KIND_LEXICAL, KIND_TOKEN, KIND_HEADER, KIND_EOL, KIND_ANCHOR,
+         KIND_JARGON, KIND_AIFLAVOR)
 KIND_ALIASES = {
     "1": KIND_LEXICAL, "2": KIND_TOKEN, "3": KIND_HEADER,
-    "4": KIND_EOL, "5": KIND_ANCHOR,
+    "4": KIND_EOL, "5": KIND_ANCHOR, "6": KIND_JARGON, "7": KIND_AIFLAVOR,
     KIND_LEXICAL: KIND_LEXICAL, KIND_TOKEN: KIND_TOKEN,
     KIND_HEADER: KIND_HEADER, KIND_EOL: KIND_EOL, KIND_ANCHOR: KIND_ANCHOR,
+    KIND_JARGON: KIND_JARGON, KIND_AIFLAVOR: KIND_AIFLAVOR,
+    "ai_flavor": KIND_AIFLAVOR,
 }
 
 STATUS_WOULD_FIX = "would-fix"
@@ -184,6 +217,15 @@ ACTION_SWEEP_MAP_PRESET = "wash/comment_sweep.py --header-map <preset 渲染> --
 ACTION_CURE = "wash/cure_applier.py --apply"
 ACTION_EOL = "wash_shape:eol-rewrite(CRLF->LF)"
 ACTION_REGU = "tools/registry_union.py --reanchor --apply"
+ACTION_JARGON = "tools/jargon_apply.py --apply"
+ACTION_AIFLAVOR = ("tools/ai_flavor_apply.py --emit-handoff <OUT.jsonl>"
+                   " -> provider fills rows -> --apply-handoff <IN.jsonl>"
+                   " --state <P>")
+
+# prose-face extension sets of the two engine-body stages (the faces their
+# engines document; a target outside the set is not applicable, reported clean)
+JARGON_FACES = (".py", ".sh", ".md")
+AIFLAVOR_FACES = (".py", ".sh", ".md", ".json", ".ts")
 
 # wash-3 header template source (probe order --header-map > --header-map-preset > env > none=plan-miss)
 HEADER_LIB_REL = os.path.join("tests", "fixtures", "header_map_v1.json")
@@ -494,9 +536,10 @@ class Injector(object):
     testability).  Scenario JSON {engine key: {"rc": int, "stdout": str,
     "report": obj?}}; an engine call whose key matches always returns the
     canned response (same response per call) — no real subprocess.  Key set =
-    gate4/scan_v4/cure/sweep/registry_union/frozen8."""
+    gate4/scan_v4/cure/sweep/registry_union/frozen8/jargon/ai_flavor."""
 
-    KEYS = ("gate4", "scan_v4", "cure", "sweep", "registry_union", "frozen8")
+    KEYS = ("gate4", "scan_v4", "cure", "sweep", "registry_union", "frozen8",
+            "jargon", "ai_flavor")
 
     def __init__(self, path):
         if not os.path.isfile(path):
@@ -545,6 +588,13 @@ class WashShape(object):
                                          "frozen8.py")
         self.pack_comment = os.path.join(self.repo_root, "wash",
                                          "comment_pack.json")
+        # engine-body batch stages (washes 6/7): paths resolved here but
+        # existence-checked lazily in their judge faces, so a --only selection
+        # that never names them keeps working in a tree that lacks the batch
+        self.tool_jargon = os.path.join(self.repo_root, "tools",
+                                        "jargon_apply.py")
+        self.tool_aiflavor_detect = os.path.join(self.repo_root, "tools",
+                                                 "ai_flavor_apply.py")
         for label, p in (("gate4", self.tool_gate4),
                          ("scan_v4", self.tool_scan4),
                          ("cure", self.tool_cure),
@@ -865,12 +915,20 @@ class WashShape(object):
     def collect_files(self):
         """--file explicit (existence 9; frozen-surface rejection 2) plus --dir
         whole-tree (.v excluding _-prefixed, the two registry names, hidden
-        dirs skipped; frozen surfaces and --exclude auto-excluded).
-        Dedup by abspath; order by constructed path string (deterministic).
-        Returns (files, excluded records)."""
+        dirs skipped; frozen surfaces and --exclude auto-excluded).  When the
+        selection names wash 6/7, the engine-body prose faces (.py/.sh/.md,
+        plus .json/.ts for wash 7) join the --dir collection; the selection
+        keeps the legacy .v-only collection byte-identical when 6/7 are not
+        named.  Dedup by abspath; order by constructed path string
+        (deterministic).  Returns (files, excluded records)."""
         args = self.args
         files, seen = [], set()
         excluded = []
+        batch_exts = set()
+        if KIND_JARGON in self.kinds:
+            batch_exts.update(JARGON_FACES)
+        if KIND_AIFLAVOR in self.kinds:
+            batch_exts.update(AIFLAVOR_FACES)
 
         def add(path):
             ap = os.path.abspath(path)
@@ -910,6 +968,9 @@ class WashShape(object):
                             continue
                         add(p)
                     elif n in REGISTRY_KINDS:
+                        add(p)
+                    elif batch_exts and \
+                            os.path.splitext(n)[1].lower() in batch_exts:
                         add(p)
         files = sorted(files, key=lambda x: os.path.abspath(x))
         return files, excluded
@@ -1138,6 +1199,84 @@ class WashShape(object):
                        n_fix=len(fix_rows), n_miss=len(miss_rows),
                        modules=modules)
 
+    def judge_jargon(self, path):
+        """Wash 6 jargon: jargon_apply --plan (zero writes) over the
+        .py/.sh/.md prose faces; machine-applicable occurrences are would-fix,
+        guarded and rewrite_or_delete rows are human findings -> plan-miss
+        items (the engine never machine-applies them)."""
+        if not os.path.isfile(self.tool_jargon):
+            raise MissingInput("engine file missing (jargon): %s"
+                               % self.tool_jargon)
+        rc, out, rep, _c = self.run_engine("jargon", self.tool_jargon,
+                                           ["--file", path, "--plan"],
+                                           want_json=True)
+        if rc not in (0, 1):
+            raise UsageError("jargon_apply plan out-of-shape exit rc=%d: %s"
+                             % (rc, tail_of(out)))
+        if not isinstance(rep, dict) or not isinstance(rep.get("summary"), dict):
+            raise UsageError("jargon_apply plan JSON missing/malformed: %s"
+                             % tail_of(out))
+        summary = rep["summary"]
+        n_fix = int(summary.get("would_fix", 0) or 0)
+        n_miss = int(summary.get("human", 0) or 0)
+        parse_errors = int(summary.get("parse_errors", 0) or 0)
+        if parse_errors:
+            return self._w(KIND_JARGON, STATUS_PLAN_MISS,
+                           "prose-face parse error (%d); the face needs a"
+                           " syntax fix before the jargon plan can scan it"
+                           % parse_errors, n_miss=parse_errors)
+        if n_fix:
+            detail = ("machine-applicable=%d human=%d (62-entry seed map)"
+                      % (n_fix, n_miss))
+            if n_miss:
+                detail += "; human rows never machine-applied"
+            return self._w(KIND_JARGON, STATUS_WOULD_FIX, detail,
+                           n_fix=n_fix, n_miss=n_miss)
+        if n_miss:
+            return self._w(KIND_JARGON, STATUS_PLAN_MISS,
+                           "human findings=%d (guarded or rewrite_or_delete"
+                           " rows; per-row handling before any apply)" % n_miss,
+                           n_miss=n_miss)
+        return self._w(KIND_JARGON, STATUS_CLEAN,
+                       "no jargon occurrences on the prose face")
+
+    def judge_aiflavor(self, path):
+        """Wash 7 ai-flavor: ai_flavor_apply plan mode (advisory, zero
+        writes); provider-eligible suggestions are would-fix with the
+        handoff route as their action, ban-remediation faces and em-dash
+        occurrences are human items -> plan-miss items."""
+        if not os.path.isfile(self.tool_aiflavor_detect):
+            raise MissingInput("engine file missing (ai_flavor): %s"
+                               % self.tool_aiflavor_detect)
+        rc, out, rep, _c = self.run_engine("ai_flavor", self.tool_aiflavor_detect,
+                                           ["--file", path],
+                                           want_json=True)
+        if rc not in (0, 1):
+            raise UsageError("ai_flavor_apply plan out-of-shape exit rc=%d: %s"
+                             % (rc, tail_of(out)))
+        if not isinstance(rep, dict) or "findings_total" not in rep:
+            raise UsageError("ai_flavor_apply plan JSON missing/malformed: %s"
+                             % tail_of(out))
+        n_fix = int(rep.get("findings_provider", 0) or 0)
+        n_human = int(rep.get("findings_human", 0) or 0)
+        em = int(rep.get("em_dash_count", 0) or 0)
+        n_miss = n_human + em
+        if n_fix:
+            detail = ("provider-eligible=%d human=%d em_dash=%d (advisory;"
+                      " writes only through the provider round trip)"
+                      % (n_fix, n_human, em))
+            if n_miss:
+                detail += "; human items never machine-written"
+            return self._w(KIND_AIFLAVOR, STATUS_WOULD_FIX, detail,
+                           n_fix=n_fix, n_miss=n_miss)
+        if n_miss:
+            return self._w(KIND_AIFLAVOR, STATUS_PLAN_MISS,
+                           "human findings=%d em_dash=%d (ban-remediation"
+                           " faces and em-dash are never machine-written)"
+                           % (n_human, em), n_miss=n_miss)
+        return self._w(KIND_AIFLAVOR, STATUS_CLEAN,
+                       "no ai-flavor faces and em-dash zero")
+
     # ---- plan assembly ----
 
     def plan_file(self, path):
@@ -1155,6 +1294,7 @@ class WashShape(object):
         except UnicodeDecodeError:
             text = raw.decode("utf-8", errors="replace")
         is_v = path.endswith(".v")
+        ext = os.path.splitext(path)[1].lower()
         g4 = None
         if is_v and (KIND_LEXICAL in kinds or KIND_HEADER in kinds):
             g4 = self.gate4_report(path)
@@ -1166,6 +1306,14 @@ class WashShape(object):
                 washes.append(self.judge_token(path))
             if KIND_HEADER in kinds:
                 washes.append(self.judge_header(path, g4, text))
+            for k, note in ((KIND_JARGON,
+                             "not a tool-repo prose face; jargon wash not"
+                             " applicable to .v certification faces"),
+                            (KIND_AIFLAVOR,
+                             "not a tool-repo prose face; ai-flavor wash not"
+                             " applicable to .v certification faces")):
+                if k in kinds:
+                    washes.append(self._w(k, STATUS_CLEAN, note))
         else:
             for k, note in ((KIND_LEXICAL,
                              "not a .v source; lexical wash not applicable"),
@@ -1175,6 +1323,22 @@ class WashShape(object):
                              "not a .v source; header wash not applicable")):
                 if k in kinds:
                     washes.append(self._w(k, STATUS_CLEAN, note))
+            if KIND_JARGON in kinds:
+                if ext in JARGON_FACES:
+                    washes.append(self.judge_jargon(path))
+                else:
+                    washes.append(self._w(
+                        KIND_JARGON, STATUS_CLEAN,
+                        "extension outside .py/.sh/.md; jargon wash not"
+                        " applicable"))
+            if KIND_AIFLAVOR in kinds:
+                if ext in AIFLAVOR_FACES:
+                    washes.append(self.judge_aiflavor(path))
+                else:
+                    washes.append(self._w(
+                        KIND_AIFLAVOR, STATUS_CLEAN,
+                        "extension outside .py/.sh/.md/.json/.ts; ai-flavor"
+                        " wash not applicable"))
         if KIND_EOL in kinds:
             washes.append(self.judge_eol(path, raw))
         if KIND_ANCHOR in kinds:
@@ -1279,6 +1443,52 @@ class WashShape(object):
                 "detail": "pattern_hits=%d%s" % (hits,
                                                  " (injector canned)" if canned
                                                  else "")}
+
+    def apply_jargon(self, path):
+        """Wash 6 apply: jargon_apply --apply (the engine splices the mapped
+        standards and re-runs its own detector; residue zero is its
+        exit-zero gate, rc 1 = verification red which the shaper's rescan
+        then reports as residual items)."""
+        rc, out, rep, canned = self.run_engine(
+            "jargon", self.tool_jargon, ["--file", path, "--apply"],
+            want_json=True)
+        if rc not in (0, 1):
+            raise UsageError("jargon_apply --apply engine failure rc=%d: %s"
+                             % (rc, tail_of(out)))
+        r = (rep or {}).get("summary") or {}
+        residue = int(r.get("residue_jargon", 0) or 0)
+        if rc == 1 or residue:
+            raise UsageError("jargon_apply --apply verification red"
+                             " (residue=%d; nothing further staged): %s"
+                             % (residue, tail_of(out)))
+        return {"file": path, "kind": KIND_JARGON,
+                "engine": "tools/jargon_apply.py", "rc": 0,
+                "detail": "applied=%d residue=0%s"
+                          % (int(r.get("applied", 0) or 0),
+                             " (injector canned)" if canned else "")}
+
+    def apply_aiflavor(self, path):
+        """Wash 7 apply: ai_flavor_apply --emit-handoff only.  The provider
+        round trip (fill rows, --apply-handoff) is the write face and lives
+        outside this pass, so the emitted package is named in the detail and
+        the rescan keeps reporting the residual suggestions loudly."""
+        base = os.path.basename(path)
+        out_path = base + ".ai-flavor-handoff.jsonl"
+        rc, out, rep, canned = self.run_engine(
+            "ai_flavor", self.tool_aiflavor_detect,
+            ["--file", path, "--emit-handoff", out_path],
+            want_json=True)
+        if rc not in (0, 1):
+            raise UsageError("ai_flavor_apply --emit-handoff engine failure"
+                             " rc=%d: %s" % (rc, tail_of(out)))
+        rows = int((rep or {}).get("handoff_rows", 0) or 0)
+        return {"file": path, "kind": KIND_AIFLAVOR,
+                "engine": "tools/ai_flavor_apply.py", "rc": 0,
+                "detail": "handoff package=%s rows=%d (fill the rows and run"
+                          " --apply-handoff to complete the provider round"
+                          " trip)%s"
+                          % (out_path, rows,
+                             " (injector canned)" if canned else "")}
 
     def apply_header(self, path):
         """Wash 3 apply: comment_sweep --header-map <concrete map> --apply (the
@@ -1390,6 +1600,10 @@ class WashShape(object):
                 return self.apply_eol(path, fh.read())
         if kind == KIND_ANCHOR:
             return self.apply_anchor(path, wash.get("_modules") or [])
+        if kind == KIND_JARGON:
+            return self.apply_jargon(path)
+        if kind == KIND_AIFLAVOR:
+            return self.apply_aiflavor(path)
         raise UsageError("unknown wash kind: %s" % kind)
 
     # ---- verdict and report ----
@@ -1442,6 +1656,7 @@ class WashShape(object):
         if not os.path.isdir(d):
             raise MissingInput("--json output directory missing: %s" % path)
         fd, tmp = tempfile.mkstemp(dir=d, prefix=".wash_shape_json_")
+        os.close(fd)   # the open handle blocks os.replace on Windows (report fd face)
         try:
             with io.open(tmp, "w", encoding="utf-8", newline="\n") as fh:
                 json.dump(rep, fh, indent=1, ensure_ascii=False,
@@ -1457,7 +1672,7 @@ class WashShape(object):
     def one_pass(self, round_no=None):
         """One complete pass: plan (--loop uses the cross-round cache — a stable
         source-md5 domain hits the cache, any change recomputes; --once computes
-        directly without the cache) -> (--apply? apply, then re-run all five
+        directly without the cache) -> (--apply? apply, then re-run all
         washes — rescan always computes fresh, never reuses the cache) ->
         (verdict, report, n_applied)."""
         if self.args.loop:
@@ -1598,7 +1813,9 @@ class WashShape(object):
                                      if self.header_source == "preset"
                                      else "none")),
                       KIND_EOL: ACTION_EOL,
-                      KIND_ANCHOR: ACTION_REGU}.get(kind, "none")
+                      KIND_ANCHOR: ACTION_REGU,
+                      KIND_JARGON: ACTION_JARGON,
+                      KIND_AIFLAVOR: ACTION_AIFLAVOR}.get(kind, "none")
         ent = {"kind": kind, "action": action, "status": status,
                "detail": detail, "_n_fix": n_fix, "_n_miss": n_miss}
         if modules is not None:
@@ -1645,7 +1862,7 @@ def exit_code_of(verdict):
 
 
 def parse_only(spec):
-    """--only parsing: comma/space split; both the numbers 1-5 and kind names
+    """--only parsing: comma/space split; both the numbers 1-7 and kind names
     are accepted; an unknown token is a usage failure; the returned list keeps
     canonical order."""
     if not spec:
@@ -1656,7 +1873,7 @@ def parse_only(spec):
             continue
         k = KIND_ALIASES.get(tok)
         if k is None:
-            raise UsageError("unknown --only item (need %s or 1-5): %s"
+            raise UsageError("unknown --only item (need %s or 1-7): %s"
                              % (",".join(KINDS), tok))
         got.add(k)
     if not got:
@@ -2179,24 +2396,29 @@ def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="shape-normalizing tool: canonical five-wash pipeline"
+        description="shape-normalizing tool: canonical wash pipeline"
                     " (gate4 word-face / token survey + canonical pack / header"
-                    " template / eol normalization / registry re-anchor;"
+                    " template / eol normalization / registry re-anchor /"
+                    " jargon map apply / ai-flavor advisory provider route;"
                     " two-phase plan->apply with rescan verification; schema"
                     " rocqwash-shape/1)")
     ap.add_argument("--file", action="append", default=[], metavar="PATH",
                     help="target files (repeatable; .v runs washes 1-3;"
-                         " order.txt/_CoqProject runs wash 5; any text file"
-                         " runs wash 4)")
+                         " .py/.sh/.md runs washes 6-7 too; .json/.ts runs"
+                         " wash 7; order.txt/_CoqProject runs wash 5; any"
+                         " text file runs wash 4)")
     ap.add_argument("--dir", action="append", default=[], metavar="DIR",
                     help="whole-tree collection (.v plus order.txt/_CoqProject;"
-                         " repeatable)")
+                         " the wash-6/7 prose faces .py/.sh/.md/.json/.ts join"
+                         " the collection when the selection names jargon or"
+                         " ai-flavor; repeatable)")
     ap.add_argument("--exclude", action="append", default=[], metavar="NAME",
                     help="additional excluded names (a basename or a path"
                          " segment; rostered frozen files are auto-excluded)")
     ap.add_argument("--only", default=None, metavar="KINDS",
                     help="wash subset (comma-separated: lexical,token,header,"
-                         "eol,anchor or 1-5; default all five)")
+                         "eol,anchor,jargon,ai-flavor or 1-7; default all"
+                         " seven)")
     ap.add_argument("--header-map", dest="header_map", default=None,
                     metavar="MAP.json",
                     help="wash-3 header full-rewrite template ({basename: header"
@@ -2221,7 +2443,7 @@ def main():
     ap.add_argument("--json", dest="jsonout", default=None, metavar="OUT",
                     help="report output path (schema rocqwash-shape/1)")
     ap.add_argument("--apply", action="store_true",
-                    help="phase two: execute would-fix items and re-run all five"
+                    help="phase two: execute would-fix items and re-run all"
                          " washes for verification (default: plan, zero writes)")
     ap.add_argument("--loop", action="store_true",
                     help="watch mode: one pass per round plus a JSONL event"

@@ -10,7 +10,11 @@ Mission:
     thirteen zero-network capability specs in the expansion ticket order,
     each transcribed from its docs/CAPABILITY-INDEX.md entry line; the
     network-or-heavy candidates stay unregistered awaiting batch 2 (the
-    batch-2 register in docs/mcp.md section 3).
+    batch-2 register in docs/mcp.md section 3). Engine-body batch note:
+    the engine-body ticket appends three further zero-network
+    capability specs graduated from docs/drafts/mcp-tool-specs-engine-body.md
+    (tools/list carries 24 tools); the i18n http provider leg stays
+    default-deny and unregistered.
 
 Protocol:
     Newline-delimited JSON-RPC 2.0 over stdin and stdout, hand written on
@@ -732,6 +736,94 @@ TOOL_SPECS = [
             "selftest, no transport and no IO (tools/_http_backoff.py). This capability exposes "
             "the --selftest face only; the helper's other face is module import by ci_triage, "
             "cw_sentinel and pushci. Zero network face."
+        ),
+    },
+    # ---- engine-body batch (the engine-body ticket): three
+    # zero-network capability specs graduated from the lane-8 draft
+    # docs/drafts/mcp-tool-specs-engine-body.md; additive after the RQW13
+    # batch-1 block (the 21 existing specs and schemas untouched); the
+    # ticket's only network face (the i18n http provider leg) is not part
+    # of this batch and stays unregistered.
+    {
+        "name": "ai_flavor_detect",
+        "kind": "cli",
+        "cli": os.path.join("tools", "ai_flavor.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("file", "--file"),
+            ("tree", "--tree"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "file": {"type": "string", "description": "target file to scan; CLI flag --file"},
+                "tree": {"type": "string", "description": "target directory to scan (*.py *.sh *.md *.json *.ts); CLI flag --tree"},
+                "json_out": {"type": "string", "description": "write the rocqwash.ai-flavor.report/1 report to this path; CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the clean and polluted probe pair; bare CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Run the 36-face AI-flavor wording battery plus the em-dash battery over a file "
+            "or a directory tree (tools/ai_flavor.py, schema rocqwash.ai-flavor.report/1). "
+            "Zero network face, zero writes, report-first. Exit codes: 0 clean, 1 hits "
+            "(findings are data, not errors), 2 usage."
+        ),
+    },
+    {
+        "name": "jargon_plan",
+        "kind": "cli",
+        "cli": os.path.join("tools", "jargon_apply.py"),
+        "net_gated": False,
+        "fixed_args": ["--plan"],
+        "arg_map": (
+            ("file", "--file"),
+            ("tree", "--tree"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "file": {"type": "string", "description": "target file to plan; CLI flag --file"},
+                "tree": {"type": "string", "description": "target directory to plan; CLI flag --tree"},
+                "json_out": {"type": "string", "description": "write the zero-write plan report (before/after pairs) to this path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Plan jargon-to-standard rewrites over a file or a tree with zero writes "
+            "(tools/jargon_apply.py --plan; before/after pairs from the 62-entry map "
+            "seeds/jargon/jargon-map.json). Zero network face. The apply face is not "
+            "exposed over MCP; callers carrying write duty use the CLI directly, where "
+            "plan also stays the default."
+        ),
+    },
+    {
+        "name": "i18n_pipeline_dryrun",
+        "kind": "cli",
+        "cli": os.path.join("tools", "i18n_pipeline.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("manifest", "--manifest"),
+            ("stage", "--stage"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "manifest": {"type": "string", "description": "run manifest path (i18n SPEC section 9 run manifest shape); CLI flag --manifest"},
+                "stage": {"type": "string", "enum": ["p0", "p1"], "description": "dry-run stage: p0 policy pre-check (a refusal is a legal exit-0 outcome with its ledger row) or p1 segmentation with the protection list; p3/p6 are write-bearing and withheld from this face; CLI flag --stage"},
+                "json_out": {"type": "string", "description": "write the stage report to this path; CLI flag --json"},
+            },
+            required=("manifest", "stage"),
+        ),
+        "description": (
+            "Dry-run the analysis stages of the i18n pipeline over a run manifest "
+            "(tools/i18n_pipeline.py --stage p0|p1): p0 policy pre-check and p1 "
+            "segmentation with the protection list (segment ledger rows, i18n SPEC "
+            "section 9 nine-key shape). Zero network face (the P2 model stage lives in "
+            "tools/i18n_translate.py and is not part of this face). Write face: stage "
+            "account rows go to the ledger path named by the manifest; the target face "
+            "is never written at the exposed stages."
         ),
     },
 ]

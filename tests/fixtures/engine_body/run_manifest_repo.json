@@ -1,0 +1,9 @@
+{
+  "run_id": "i18n-engbody-suite-repo",
+  "target": {"path": "<probe-document>", "face": "repo"},
+  "direction": "zh2en",
+  "linkages": ["normalization", "standardization", "internationalization", "de_ai_flavor"],
+  "policy_precheck": {"regime_ref": "glossary-4-6-track-E", "disclosure_required": true, "refusal": false},
+  "verify_faces": ["norm_lint", "doc_lint", "ai_flavor_battery"],
+  "ledger_path": "<run-dir>/segment-ledger.jsonl"
+}

@@ -1,0 +1,5 @@
+sample target for the engine body contract suite
+the bound holds because the map is monotone on the stated domain
+section two restates the argument in plain prose for the delivery face
+path tokens such as docs/example.md stay byte identical
+flag tokens such as --dry-run stay byte identical
