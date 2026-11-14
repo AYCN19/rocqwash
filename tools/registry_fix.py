@@ -81,6 +81,51 @@ JSON/双册/audit 器/anchor-src 目录缺）。
   7 CLI 四码＋schema 面（help0/bogus2/无输入2/缺件9/坏schema2/无fix_plan2/
     同参破2/anchor-src 缺9）
   8 落刀确定性（双 fresh 夹具同处→册面 bytes 与 md5 账恒同）
+
+ORPHAN-ADD apply path (--orphan-add, added 20261114): the order-only
+direction of the orphan prescriptions is mechanically solvable: its
+template is placeholder-free (derived from the order key path form) and
+the coqproject book carries no anchor, so under the opt-in flag
+--orphan-add those entries are executed: the template row is appended to
+the coqproject book tail with the same per-item md5 accounting, staging
+guards and post-apply assertions as the other classes. Guards: plan
+template/key consistency under the coqproject keying (FailLoud); the key
+must be present in the order book, else AssertBlast ORPHAN-ADD-KEY-NOT-
+IN-ORDER (stale-audit discipline of the DEDUP stage); a coqproject row
+already hashing to the key under the coqproject keying (for example an
+extension-less module row that the audit .v-suffix criterion cannot see)
+routes the entry to the skip list as ORPHAN-ADD-SKIP-KEY-PRESENT instead
+of double-registering the module. Post-apply
+assertions extend the re-audit face with A-fix-4 orphans_resolved (no
+orphan-order-only finding survives for an executed key) and A-fix-5
+orphan_add_duplicates_zero (the appended row created no duplicate-key
+finding); either blast rolls back like the other assertion blasts.
+Without the flag the tool behavior is byte-identical to the frozen face
+above: every ORPHAN-ADD prescription stays on the skip list. A paired
+project-only entry whose key equals the order-only key after stripping
+repeated ".v" suffixes is a suffix-typo signature (e.g. order "X.v" vs
+_CoqProject "X.v.v": the module is already registered under a misspelled
+row), so such entries are skipped as ORPHAN-ADD-SKIP-SUFFIX-TWIN for
+human adjudication instead of double-registering the module; the
+project-only direction itself always stays non-mechanical because its
+template embeds #R<SEQ> and the sequence number is a registry-side
+decision. Vectors for this path live in
+tests/test_registry_fix_orphan_add.py (fixture-based, zero real-repo
+touch).
+
+REANCHOR residual gate (A-fix-6 treated_anchors_canonical): the
+reanchor stage had no post-apply oracle of its own —
+A-fix-1 covers treated duplicate keys and A-fix-2 compares anchor-text
+collision pairs post vs pre, so a reanchor that silently rewrote nothing
+would still pass. After the same-parameter re-audit, every executed
+REANCHOR key must now carry no anchor-seq-form / anchor-malformed
+finding. The oracle is the audit producer's own classification
+(registry_audit sections.anchors; those two kinds are exactly the
+reanchor target face of its build_fix_plan), so no anchor semantics are
+defined here. Scope is the executed keys only: skip-list keys (missing
+entity, missing anchor) and the collision face (A-fix-2) are untouched.
+A breach is ASSERT-TREATED-ANCHOR-NONZERO and rolls back like the other
+assertion blasts. Vectors live in tests/test_registry_fix_anchor.py.
 """
 import argparse
 import hashlib
@@ -107,8 +152,18 @@ SCHEMA = "rocqwash-registry-fix/1"
 AUDIT_SCHEMA = "rocqwash-registry-audit/1"
 
 MD5_PLACEHOLDER = "<MD5_8>"   # audit fix_plan 占位形（registry_audit 同款常量语义）
+SEQ_PLACEHOLDER = "<SEQ>"     # orphan-row sequence placeholder (registry_audit
+                              # SEQ_PLACEHOLDER, same constant semantics)
 BOOK_KINDS = {"order": _ru.KIND_ORDER, "coqproject": _ru.KIND_COQPROJECT}
 DUP_KIND_TO_BOOK = {"dup-order": "order", "dup-coqproject": "coqproject"}
+# ORPHAN-ADD prescription direction -> target book (registry_audit
+# build_fix_plan contract: order-only rows land in the coqproject book,
+# project-only rows would land in the order book).
+ORPHAN_DIRECTION_BOOK = {"order-only": "coqproject", "project-only": "order"}
+PLACEHOLDER_TOKENS = (MD5_PLACEHOLDER, SEQ_PLACEHOLDER)
+# Anchor finding kinds the reanchor stage treats (registry_audit
+# build_fix_plan reanchor target face: K_ANCHOR_SEQ / K_ANCHOR_MALFORMED).
+REANCHOR_TREATED_KINDS = ("anchor-seq-form", "anchor-malformed")
 
 INJECT_ENV = "ROCWASH_REGISTRY_FIX_INJECT_BLAST"  # 人工炸点（selftest 专用·真跑勿设）
 
@@ -347,6 +402,120 @@ def stage_nons(plan, payload, skips):
                                     "造锚）"})
 
 
+# ---------- ④ ORPHAN-ADD apply path (opt-in --orphan-add) ----------
+
+def stage_orphan_add(plan, books, items, skips):
+    """④ ORPHAN-ADD apply path: execute the mechanically solvable subset.
+
+    An order-only prescription (target book coqproject, whose rows carry
+    no anchor) with a placeholder-free template is executed by appending
+    the template row to the coqproject book tail, one row per
+    prescription, in plan order, with the same per-item md5 accounting as
+    the DEDUP/REANCHOR stages. Guards (fail-loud):
+      - plan contract: template must be a ".v" row and must hash to the
+        prescription key under the coqproject keying (FailLoud on breach);
+      - audit-vs-book drift: the key must be present in the order book
+        (.v basename criterion, the audit orphan account source), else
+        AssertBlast ORPHAN-ADD-KEY-NOT-IN-ORDER (stale-audit discipline
+        of the DEDUP stage);
+      - already-registered signature: a coqproject row already hashing
+        to the key under the coqproject keying (for example an
+        extension-less module row that the audit .v-suffix criterion
+        cannot see) routes the entry to the skip list as
+        ORPHAN-ADD-SKIP-KEY-PRESENT for human adjudication instead of
+        double-registering the module;
+      - suffix-typo signature: a project-only entry whose key equals the
+        order-only key after stripping repeated ".v" suffixes (e.g. order
+        "X.v" vs coqproject "X.v.v") means the module is already
+        registered under a misspelled row; the entry is skipped as
+        ORPHAN-ADD-SKIP-SUFFIX-TWIN for human adjudication instead of
+        double-registering the module.
+    Order-only entries carrying placeholders and every project-only entry
+    are left in the returned residual list, so the existing non-mechanical
+    passthrough (stage_nons) reports them with its own skip kind
+    unchanged. Callers must invoke this stage after stage_dedup /
+    stage_reanchor and feed the residual list to stage_nons, because the
+    appended rows live in books["coqproject"].cur outside the original
+    line-number slots that apply_deletes rebuilds from.
+    Returns the residual (non-executed) orphan entry list.
+    """
+    bs = books["coqproject"]
+    order_bases = set()
+    for _no, ln in books["order"].slots:
+        k = _ru.key_of(ln, _ru.KIND_ORDER)
+        if k is not None and k.endswith(".v"):
+            order_bases.add(_ru.bare_name(k).rsplit("/", 1)[-1])
+    twins = {}
+    for o in plan["orphan"]:
+        if not isinstance(o, dict) or not o.get("key"):
+            raise FailLoud("fix_plan.orphan entry missing key: %r" % (o,))
+        if o.get("direction") == "project-only":
+            k = o["key"]
+            while isinstance(k, str) and k.endswith(".v"):
+                k = k[:-2]
+            if k in order_bases:
+                twins[k] = o["key"]
+    residual = []
+    for o in plan["orphan"]:
+        key = o["key"]
+        direction = o.get("direction")
+        template = o.get("template")
+        if key in twins:
+            skips.append({"kind": "ORPHAN-ADD-SKIP-SUFFIX-TWIN",
+                          "key": key, "direction": direction,
+                          "template": template, "twin_key": twins[key],
+                          "reason": "paired project-only registration under "
+                                    "a repeated-.v spelling (e.g. X.v.v): "
+                                    "the module is already registered, "
+                                    "appending a second spelling would "
+                                    "double-register it; left for human "
+                                    "adjudication"})
+            continue
+        if direction == "order-only" \
+                and ORPHAN_DIRECTION_BOOK.get(direction) == "coqproject":
+            if not isinstance(template, str) or not template.endswith(".v"):
+                raise FailLoud("fix_plan.orphan order-only template must be "
+                               "a .v row: key=%r template=%r"
+                               % (key, template))
+            if any(ph in template for ph in PLACEHOLDER_TOKENS):
+                residual.append(o)   # non-mechanical passthrough (stage_nons)
+                continue
+            if _ru.key_of(template, _ru.KIND_COQPROJECT) != key:
+                raise FailLoud("fix_plan.orphan template/key mismatch under "
+                               "the coqproject keying: key=%r template=%r"
+                               % (key, template))
+            if key not in order_bases:
+                raise _ru.AssertBlast(
+                    "ORPHAN-ADD-KEY-NOT-IN-ORDER",
+                    ["book=order has no .v basename %r (audit orphan account "
+                     "source face) - audit-vs-book drift, stale audit is not "
+                     "silently tolerated" % key])
+            present = [i for i, ln in enumerate(bs.cur, 1)
+                       if _ru.key_of(ln, _ru.KIND_COQPROJECT) == key]
+            if present:
+                skips.append({"kind": "ORPHAN-ADD-SKIP-KEY-PRESENT",
+                              "key": key, "direction": direction,
+                              "template": template, "present_lines": present,
+                              "reason": "the target book already carries a "
+                                        "row hashing to this key under the "
+                                        "coqproject keying (for example an "
+                                        "extension-less module row that the "
+                                        "audit .v-suffix criterion cannot "
+                                        "see); appending would "
+                                        "double-register the module; left "
+                                        "for human adjudication"})
+                continue
+            before = bs.md5_staged()
+            bs.cur.append(template)
+            items.append({"no": len(items) + 1, "kind": "ORPHAN-ADD",
+                          "book": "coqproject", "key": key, "row": template,
+                          "line_no": len(bs.cur),
+                          "md5_before": before, "md5_after": bs.md5_staged()})
+        else:
+            residual.append(o)       # project-only: non-mechanical passthrough
+    return residual
+
+
 # ---------- 落盘／断言／回滚 ----------
 
 def backup_and_write(books, work_dir):
@@ -446,6 +615,68 @@ def run_assertions(audit_payload, books, treated, args, audit_tool, work_dir):
             "reaudit_summary": post["summary"], "reaudit_inputs": post["inputs"]}
 
 
+def assert_orphan_add_resolved(post_audit_path, executed_keys):
+    """ORPHAN-ADD post-apply assertions (A-fix-4 / A-fix-5).
+
+    Reads the post-apply audit JSON that run_assertions re-ran at the same
+    parameters (work-dir post_audit.json) and asserts, for every executed
+    orphan key:
+      A-fix-4  orphans_resolved            no orphan-order-only finding
+                                           survives for the key;
+      A-fix-5  orphan_add_duplicates_zero  the appended row created no
+                                           duplicate-key finding.
+    Any breach is an AssertBlast like the other assertion blasts (the
+    caller's rollback path applies unchanged).
+    """
+    with io.open(post_audit_path, encoding="utf-8") as fh:
+        post = json.load(fh)
+    resid = sorted(f.get("key") for f in post["sections"]["orphans"]
+                   if f.get("kind") == "orphan-order-only"
+                   and f.get("key") in executed_keys)
+    dups = sorted(f.get("key") for f in post["sections"]["duplicates"]
+                  if f.get("kind") == "dup-coqproject"
+                  and f.get("key") in executed_keys)
+    if resid:
+        raise _ru.AssertBlast(
+            "ASSERT-ORPHAN-ADD-RESIDUAL",
+            ["treated orphan key still unresolved post-apply: %s" % k
+             for k in resid])
+    if dups:
+        raise _ru.AssertBlast(
+            "ASSERT-ORPHAN-ADD-DUP",
+            ["appended row created a duplicate-key finding: %s" % k
+             for k in dups])
+    return {"orphans_resolved": "PASS",
+            "orphan_add_duplicates_zero": "PASS"}
+
+
+def assert_treated_anchors_canonical(post, treated_keys):
+    """REANCHOR post-apply residual gate (A-fix-6 treated_anchors_canonical).
+
+    Reads the same post-apply audit JSON the A-fix face already re-ran at
+    the same parameters and asserts, for every executed REANCHOR key, that
+    no anchor finding of the reanchor target kinds (anchor-seq-form /
+    anchor-malformed — registry_audit build_fix_plan's own target face)
+    survives. The audit producer's classification is the whole oracle; no
+    anchor semantics are defined here. Scope is the executed keys only:
+    skip-list keys (missing entity, missing anchor) keep their rows by
+    design and the collision face stays owned by A-fix-2. Any breach is
+    an AssertBlast (ASSERT-TREATED-ANCHOR-NONZERO) and the caller's
+    rollback path applies unchanged.
+    """
+    resid = sorted("%s/%s" % (f.get("kind"), f.get("key"))
+                   for f in post["sections"]["anchors"]
+                   if f.get("kind") in REANCHOR_TREATED_KINDS
+                   and f.get("key") in treated_keys)
+    if resid:
+        raise _ru.AssertBlast(
+            "ASSERT-TREATED-ANCHOR-NONZERO",
+            ["treated anchor key still carries an anchor finding "
+             "(audit-vs-book drift or reanchor regression): %s" % k
+             for k in resid])
+    return {"treated_anchors_canonical": "PASS"}
+
+
 # ---------- report ----------
 
 def build_report(args, audit_payload, plan, books, items, skips, writes,
@@ -454,6 +685,7 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
     summ = audit_payload.get("summary") or {}
     executed_dedup = sum(1 for it in items if it["kind"] == "DEDUP")
     executed_reanchor = sum(1 for it in items if it["kind"] == "REANCHOR")
+    executed_orphan_add = sum(1 for it in items if it["kind"] == "ORPHAN-ADD")
     skip_by_kind = {}
     for s in skips:
         skip_by_kind[s["kind"]] = skip_by_kind.get(s["kind"], 0) + 1
@@ -464,7 +696,8 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
         "inputs": {"audit_json": args.audit_json, "order": args.order,
                    "project": args.project,
                    "anchor_src": args.anchor_src,
-                   "audit_tool": args.audit_tool},
+                   "audit_tool": args.audit_tool,
+                   "orphan_add": bool(args.orphan_add)},
         "audit_input_meta": {"schema": audit_payload.get("schema"),
                              "mode": audit_payload.get("mode"),
                              "anchor_src": audit_payload.get("anchor_src"),
@@ -479,6 +712,7 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
             "items_total": len(items),
             "items_executed_dedup": executed_dedup,
             "items_executed_reanchor": executed_reanchor,
+            "items_executed_orphan_add": executed_orphan_add,
             "skips_total": len(skips),
             "skips_by_kind": {k: skip_by_kind[k] for k in sorted(skip_by_kind)},
             "rows": {"order_before": len(books["order"].orig_lines),
@@ -497,7 +731,8 @@ def build_report(args, audit_payload, plan, books, items, skips, writes,
         "summary": {
             "mode": "APPLY" if args.apply else "DRY-RUN",
             "items_total": len(items),
-            "items_executed": executed_dedup + executed_reanchor,
+            "items_executed": (executed_dedup + executed_reanchor
+                               + executed_orphan_add),
             "skips_total": len(skips),
             "books_touched": sorted(touched),
             "rolled_back": bool(writes and writes.get("rolled_back")),
@@ -531,6 +766,13 @@ def print_stdout(rep):
                      else "DRY-STAGED", it["book"], it["key"], it["keep_line"],
                      ",".join("L%d" % n for n in it["drop_lines"]),
                      it["md5_before"][:8], it["md5_after"][:8]))
+        elif it["kind"] == "ORPHAN-ADD":
+            print("  #%d %s ORPHAN-ADD book=%s key=%s row=%s ->L%d  "
+                  "md5 %s->%s"
+                  % (it["no"], "APPLIED" if rep["mode"] == "APPLY"
+                     else "DRY-STAGED", it["book"], it["key"], it["row"],
+                     it["line_no"], it["md5_before"][:8],
+                     it["md5_after"][:8]))
         else:
             rws = it["rewrites"]
             print("  #%d %s REANCHOR key=%s %s→%s（实件 %s·重写 %d 行）  "
@@ -548,6 +790,15 @@ def print_stdout(rep):
         elif s["kind"] == "ORPHAN-ADD-SKIP-NON-MECHANICAL":
             print("  %s %s（%s）: template=%s"
                   % (s["kind"], s["key"], s.get("direction") or "-",
+                     s.get("template")))
+        elif s["kind"] == "ORPHAN-ADD-SKIP-SUFFIX-TWIN":
+            print("  %s %s (twin %s): template=%s"
+                  % (s["kind"], s["key"], s.get("twin_key") or "-",
+                     s.get("template")))
+        elif s["kind"] == "ORPHAN-ADD-SKIP-KEY-PRESENT":
+            print("  %s %s (present L%s): template=%s"
+                  % (s["kind"], s["key"],
+                     ",".join(str(x) for x in s.get("present_lines") or []),
                      s.get("template")))
         elif s["kind"] == "UNRESOLVABLE-PASSTHROUGH":
             print("  %s 锚 %s L%s: %s"
@@ -584,6 +835,13 @@ def print_stdout(rep):
         print("--- 断言（重跑 registry_audit 同参） ---")
         print("  treated_duplicates_zero=PASS anchor_text_no_new_dups=PASS "
               "orphans_no_new=PASS")
+        if an.get("orphans_resolved"):
+            print("  orphans_resolved=%s orphan_add_duplicates_zero=%s"
+                  % (an["orphans_resolved"],
+                     an["orphan_add_duplicates_zero"]))
+        if an.get("treated_anchors_canonical"):
+            print("  treated_anchors_canonical=%s"
+                  % an["treated_anchors_canonical"])
     else:
         print("--- 断言: NOT-RUN（%s） ---" % an.get("reason"))
     bl = rep["blast"]
@@ -616,10 +874,18 @@ def run_fix(args):
     items, skips = [], []
     writes = None
     assertions = None
+    executed_orphan_keys = set()
     try:
         stage_dedup(plan, books, items)
         stage_reanchor(plan, books, items, skips, args.anchor_src)
-        stage_nons(plan, audit_payload, skips)
+        if args.orphan_add:
+            residual_orphans = stage_orphan_add(plan, books, items, skips)
+            executed_orphan_keys = {
+                it["key"] for it in items if it["kind"] == "ORPHAN-ADD"}
+            stage_nons(dict(plan, orphan=residual_orphans), audit_payload,
+                       skips)
+        else:
+            stage_nons(plan, audit_payload, skips)
     except _ru.AssertBlast as e:
         blast = {"code": e.code, "phase": "stage（零写盘·册面零触碰）",
                  "items": list(e.items)}
@@ -652,6 +918,19 @@ def run_fix(args):
                  % INJECT_ENV])
         assertions = run_assertions(audit_payload, books, treated, args,
                                     args.audit_tool, work_dir)
+        # A-fix-6: executed reanchor keys leave no residual anchor findings
+        # (same post_audit.json the assertion face just re-ran)
+        executed_anchor_keys = {it["key"] for it in items
+                                if it["kind"] == "REANCHOR"}
+        if executed_anchor_keys:
+            with io.open(os.path.join(work_dir, "post_audit.json"),
+                         encoding="utf-8") as fh:
+                assertions.update(assert_treated_anchors_canonical(
+                    json.load(fh), executed_anchor_keys))
+        if executed_orphan_keys:
+            assertions.update(assert_orphan_add_resolved(
+                os.path.join(work_dir, "post_audit.json"),
+                executed_orphan_keys))
     except _ru.AssertBlast as e:
         ev = rollback(writes["books"]) if writes["books"] else {
             "backups": {}, "restored": {}, "all_restored": True}
@@ -710,6 +989,12 @@ def main():
                     help="锚刷 md5 实件源目录（缺件键留原样列 skip）")
     ap.add_argument("--apply", action="store_true",
                     help="允许落刀（缺省干跑零写盘·写前 tmp 备份·炸即回滚）")
+    ap.add_argument("--orphan-add", action="store_true",
+                    help="execute the mechanically solvable ORPHAN-ADD "
+                         "prescriptions (order-only direction: append the "
+                         "template row to the coqproject book); default off "
+                         "keeps every ORPHAN-ADD prescription on the skip "
+                         "list (frozen legacy behavior)")
     ap.add_argument("--work-dir", default=None, metavar="DIR",
                     help="备份/重跑审计出账目录（--apply 用·缺省 mkdtemp）")
     ap.add_argument("--audit-tool", default=None, metavar="PATH",
@@ -950,7 +1235,8 @@ def selftest():
         assert rep2["assertions"]["ran"] is True \
             and rep2["assertions"]["treated_duplicates_zero"] == "PASS" \
             and rep2["assertions"]["anchor_text_no_new_dups"] == "PASS" \
-            and rep2["assertions"]["orphans_no_new"] == "PASS", \
+            and rep2["assertions"]["orphans_no_new"] == "PASS" \
+            and rep2["assertions"]["treated_anchors_canonical"] == "PASS", \
             rep2["assertions"]
         assert rep2["summary"]["books_touched"] == ["coqproject", "order"], \
             rep2["summary"]

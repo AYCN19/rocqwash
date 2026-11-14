@@ -327,6 +327,9 @@ t_dual_scan \
  t_red_dispatch \
  t_registry_audit \
  t_registry_fix \
+ t_registry_fix_dedup \
+ t_registry_fix_orphan_add \
+ t_registry_fix_anchor \
  t_norm_lint \
  t_contrib_intake \
  t_registry_regen \
@@ -762,11 +765,51 @@ t_registry_audit() {
 t_registry_fix() {
   # 20261112 v47 集成席直挂：注册册处方执行器（tools/registry_fix.py·
   # registry_audit --fix-plan 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD
-  # skip·缺省干跑·--apply 落刀后断言三判（dup 零残留/锚撞零增/孤儿不增）炸即
-  # 回滚·staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema
+  # skip·缺省干跑·--apply 落刀后断言含 dup 零残留/锚撞零增/孤儿不增/被治锚
+  # 键锚残量零（A-fix-6·--orphan-add 时另加孤儿两判）任一炸即回滚·
+  # staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema
   # rocqwash-registry-fix/1——器 --selftest 八矢量全 canned tmp fixture·
   # 零网络零编译零触真仓）
   "$PY" -B "$REPO/tools/registry_fix.py" --selftest
+}
+
+t_registry_fix_dedup() {
+  # RQW09 duplicates-family executor seat (20261114): DEDUP contract unit
+  # tests for tools/registry_fix.py — keep-first fix_plan direction pinned
+  # from the registry_audit --fix-plan producer semantics, dry-run
+  # zero-write, apply keep-first with exact per-item diff and post
+  # re-audit duplicates=0, INJECT_BLAST post-write rollback, stale-plan
+  # staging blast, CLI exit-code spot checks. tmp fixtures only, zero
+  # real-repository contact, zero network, zero compile.
+  "$PY" -B "$REPO/tests/test_registry_fix_dedup.py"
+}
+
+t_registry_fix_orphan_add() {
+  # ORPHAN-ADD apply-path tests for tools/registry_fix.py
+  # (tests/test_registry_fix_orphan_add.py): the opt-in --orphan-add face
+  # executes the mechanically solvable order-only orphan prescriptions
+  # (placeholder-free template appended to the coqproject book) - eight
+  # fixture-based checks: default-off parity pin, dry run, apply with the
+  # full assertion face, project-only skip stability, suffix-typo guard
+  # (paired .v.v registration left for human adjudication), blast-hook
+  # rollback (ROCWASH_REGISTRY_FIX_INJECT_BLAST=post-write), stale-
+  # prescription guard, determinism. All on mkdtemp fixtures, zero
+  # real-repo touch, zero network, zero compile.
+  "$PY" -B "$REPO/tests/test_registry_fix_orphan_add.py"
+}
+
+t_registry_fix_anchor() {
+  # REANCHOR-face tests for tools/registry_fix.py
+  # (tests/test_registry_fix_anchor.py): the anchor residual gate
+  # (A-fix-6 treated_anchors_canonical) plus the suite shell face — the
+  # frozen --selftest marker, --help smoke, exit-code spot checks
+  # (bogus=2/no-input=2/missing-audit-json=9), dry-run zero-write, apply
+  # with the four assertion fields green, re-audit with executed keys
+  # residual-free while skip-class keys stay by design, and six unit
+  # vectors on the residual gate (blast on treated seq-form/malformed;
+  # silent for untreated/collision/missing kinds). All on mkdtemp
+  # fixtures, zero real-repo touch, zero network, zero compile.
+  "$PY" -B "$REPO/tests/test_registry_fix_anchor.py"
 }
 
 t_norm_lint() {
