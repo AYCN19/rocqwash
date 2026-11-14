@@ -1,12 +1,12 @@
-# rocqwash - Coq/Rocq Constructive Proof Unblocking Engine
+# rocqos (rocqwash) - the Rocq operations suite: constructive-proof unblocking and repository operations
 
 > Chinese main page: [README.md](README.md)
 
 **rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. Diagnoses are type-theoretic structural checks, fixes are idempotent and replayable, and verdicts come from exit codes, byte-level artifacts, and kernel-level census rather than from self-reported statements.
 
-> **Core principle**: What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models. （凡可用类型论结构性判据机检的，一律不交给概率模型猜。）
+> **Core principle**: What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models. (The motto appears in Chinese on the [main page](README.md).)
 
-Status snapshot: 2026-11-14, repository main at `090be654`. Modules land continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
+Status snapshot: 2026-11-15, public repository, release tag `rw-v0.1.0-20261114` (GPG-signed, GitHub-verified). Formal name **rocqos**, the Rocq operations suite; the repository link name stays `rocqwash` (one repo, two names). Main advances continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
 
 ## What it is
 
@@ -153,7 +153,7 @@ bash tools/cpu_guard.sh -Reg /tmp/my_reg -Front 0 -Mid 1 -- rocq c -native-compi
 
 ## Tool map
 
-The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one entry per registered tool, 27 entries at the index's version anchor; the index carries the full seven-field contract and a version-anchor duty). The table therefore does not enumerate every file under `tools/`: `tools/mcp_server.py`, the MCP stdio server that landed after the index anchor, is documented in [`docs/mcp.md`](docs/mcp.md), and `tools/cpu_guard.sh`, the thermal wrapper, is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. Invocation lines are restored from each tool's argparse or usage text, with prefixes normalized to `python3` (the documented usage strings mix `python` and `python3` - use the interpreter available in your environment); "network" marks the five tools whose source text contains transport-class imports or network-class git subcommands, which therefore need a network window and remote access rights.
+The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one entry per registered tool; the index is the live authority and carries the full seven-field contract and a version-anchor duty). The table therefore does not enumerate every file under `tools/`: `tools/mcp_server.py`, the MCP stdio server (24 capabilities, registered in [`docs/mcp.md`](docs/mcp.md)), and newer tools below the table, and `tools/cpu_guard.sh`, the thermal wrapper, is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. Invocation lines are restored from each tool's argparse or usage text, with prefixes normalized to `python3` (the documented usage strings mix `python` and `python3` - use the interpreter available in your environment); "network" marks the five tools whose source text contains transport-class imports or network-class git subcommands, which therefore need a network window and remote access rights.
 
 | File | Purpose | Example invocation | Network |
 |---|---|---|---|
@@ -187,6 +187,8 @@ The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one 
 
 `tools/cpu_guard.sh` is the thermal wrapper used around compiles and is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. The Lean-side procedure for vacgen is in [`docs/vacgen_sop.md`](docs/vacgen_sop.md) with an English page at [`docs/en/vacgen.md`](docs/en/vacgen.md). Further reading: bundled full-chain demo [`examples/README.md`](examples/README.md), suite reference [`tests/README.md`](tests/README.md), contribution guide [`CONTRIBUTING.md`](CONTRIBUTING.md), changelog [`CHANGELOG.md`](CHANGELOG.md).
 
+Newer waves through tag `rw-v0.1.0`: the language-engine stack landed in the engine-body batch. `tools/ai_flavor.py` runs a 36-face AI-flavor wording battery plus an em-dash battery; `tools/ai_flavor_apply.py` plans advisory rewrites through handoff or HTTP providers (HTTP deny-by-default); `tools/jargon_apply.py` rewrites jargon to standard terms from the 62-entry map; `tools/termbase.py` is a read-only terminology lookup over the seed termbase; `tools/i18n_pipeline.py` orchestrates the zh-en four-linkage pipeline with a policy pre-check; `tools/i18n_translate.py` is the model-stage handoff emitter and ingester with nine-key per-segment annotation; `tools/i18n_verify.py` orchestrates the verification matrix plus the human ten-point gate; `tools/auto_round.py` keeps the round ledger with dual-gear admission, rollback, and salvage. `tools/exp_port.py` appends to the experience ledger (schema rocqwash-exp/1, idempotent), and `tools/periscope.py` collects six-source peripheral intelligence. Engine registration and growth rules live in [`seeds/engines/ENGINES.md`](seeds/engines/ENGINES.md); the per-tool contract face stays [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md).
+
 ## Testing
 
 ```bash
@@ -203,7 +205,7 @@ Idempotence and zero repository writes are documented suite properties in [`docs
 
 Environment limits, stated as recorded rather than as aspirations:
 
-- Scale: 63 cases at this documentation anchor; [`tests/README.md`](tests/README.md) is the live authority for the case table.
+- Scale: the case roster grows with the tree (67 cases at tag `rw-v0.1.0`); [`tests/README.md`](tests/README.md) is the live authority for the case table. Red-set discipline: post-change reds must be a subset of the pre-change roster (zero-new-red; see CONTRIBUTING.md section 4).
 - Canonical macOS environment: at the closes recorded in `README.md`'s per-version snapshot entries (v55 through v57, 2026-11-13), the suite measured 62 pass, 0 red, 1 by-design skip (`t_quad8_check`, which needs canonical world copies). Suite-green claims in this document apply to that environment.
 - Compile-dependent cases are gated by environment variables (`ROCWASH_ROCQ`, `GATE7_PROBE_SCRIPT`, `GATE6_SCRIPT`, `BORN_WORLD_ROCQ`, per the `README.md` snapshot entry v47, 2026-11-12) and record a SKIP when the gated piece is absent; a SKIP is recorded, never counted as green.
 - Windows (Git Bash): on this project's Windows development machine at anchor `090be654`, a full run with a real CPython on `PATH` recorded 44 pass, 15 red, 4 skip, and a same-day repeat run recorded 45 pass, 14 red, 4 skip (one case flipped green between the two runs); the union of both red rosters is these 15 case names: `t_verify_vo`, `t_cpu_guard_direct_smoke`, `t_cpu_guard_direct_rc`, `t_frozen_call`, `t_verify_fresh`, `t_extract_magic`, `t_probe_engine`, `t_toolchain_dyld_doctor`, `t_cw_sentinel`, `t_wash_shape`, `t_unclog`, `t_relay_e2e`, `t_destructive_matrix`, `t_red_dispatch`, `t_registry_audit`. The 4 skips (`t_gate7_wrapper`, `t_quad8_check`, `t_gate6_born_wrapper`, `t_verify_gate6`) need out-of-repo canonical references. No green claim is made for this environment.
@@ -223,4 +225,4 @@ Environment limits, stated as recorded rather than as aspirations:
 
 ## License
 
-Apache 2.0. See [LICENSE](LICENSE).
+AGPL-3.0-or-later. See [LICENSE](LICENSE) for the full text and [NOTICE](NOTICE) for attribution and the authorship statement. Contributions are made under the Individual Contributor License Agreement ([CLA/ICLA.md](CLA/ICLA.md)) before a first merged contribution, and represent substantial human authorship with AI tools allowed as instruments (CONTRIBUTING.md, section 0.5).
