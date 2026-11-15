@@ -374,6 +374,11 @@ defects rather than environment noise, and are closed here.
   does not set the execute bit there), so the CLI vector failed for a reason
   that has nothing to do with the tool. The selftest now reports the honest
   skip (rc 111) on a non-POSIX host instead of a false red.
+- `tests/test_toolchain_dyld_doctor.py`: the harness still judged that
+  honest skip as a failure, because it only accepted rc=0 plus the pass
+  marker. It now accepts rc 111 with a skip banner and exits 111 itself, so
+  the suite records the case as SKIP (the suite's standing rc 111 contract)
+  rather than red.
 
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表

@@ -34,19 +34,34 @@ def run(args):
 
 def main():
     fails = []
+    skipped = False
     rc, out = run(["--selftest"])
-    if rc != 0 or MARK not in out:
+    if rc == 111 and "SKIP" in out:
+        # Honest skip: the canned otool stub is a POSIX shell script, so the
+        # CLI vector cannot run on a non-POSIX host. A skip is not a failure;
+        # report it with the repo's honest-skip code so the suite records it
+        # as SKIP rather than red.
+        skipped = True
+        print(out)
+    elif rc != 0 or MARK not in out:
         fails.append("判1 --selftest 应 rc=0 且含 %r（实测 rc=%d）" % (MARK, rc))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:
         fails.append("判2 --help 应 rc=0（实测 rc=%d）" % rc)
         print(out)
-    print("== test_toolchain_dyld_doctor: %d 过 / %d 红 =="
-          % (2 - len(fails), len(fails)))
-    for f in fails:
-        print("FAIL:", f)
-    return 1 if fails else 0
+    if fails:
+        print("== test_toolchain_dyld_doctor: %d 过 / %d 红 =="
+              % (2 - len(fails), len(fails)))
+        for f in fails:
+            print("FAIL:", f)
+        return 1
+    if skipped:
+        print("== test_toolchain_dyld_doctor: SKIP（POSIX 宿主 required·"
+              "honest skip rc=111）==")
+        return 111
+    print("== test_toolchain_dyld_doctor: 2 过 / 0 红 ==")
+    return 0
 
 
 if __name__ == "__main__":
