@@ -1,0 +1,90 @@
+{
+  "rows": [
+    {
+      "schemaVersion": 2,
+      "familyId": "ineq.real.const-lt-field-re",
+      "cluster": "annum",
+      "match": {
+        "target": "assumption.type",
+        "regex": "^\\s*(?:(\\(\\s*\\d+\\s*/\\s*\\d+\\s*:\\s*ℝ\\s*\\))|(\\d+\\s*/\\s*\\d+)|(\\(\\s*\\d+\\s*:\\s*ℝ\\s*\\)))\\s*<\\s*[A-Za-z_\\u0100-\\uffff][\\w'.!]*\\s*\\.\\s*re\\s*$",
+        "flags": ""
+      },
+      "priority": 50,
+      "confidence": "HIGH",
+      "witnessStrategy": "probe-point real-part bite + envelope existentialization (v1 native face); numeric-constant boundary block only when this row is matched",
+      "witnessTemplate": {
+        "bites": [
+          "theorem {p}_point_re : (⟨{P}, 0⟩ : ℂ).re = {P} := rfl"
+        ],
+        "boundary": {
+          "kind": "numeric-constant",
+          "template": "{num} / {den}"
+        }
+      },
+      "requireVarBinding": true,
+      "mathlibAnchors": [
+        {
+          "symbol": "differentiableOn_riemannZeta",
+          "relPath": "Mathlib/NumberTheory/LSeries/RiemannZeta.lean",
+          "line": 141
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point",
+        "tactics",
+        "noclassic",
+        "band"
+      ],
+      "boundaryApplicability": "numeric-constant",
+      "gapKeywords": [
+        "zeta",
+        "critical strip",
+        "LSeries"
+      ],
+      "sourceLane": "v1-transcription",
+      "sourceRowId": "v1-PREMISE_INEQ_RE",
+      "notes": "builtin fail-safe starter row: verbatim data transcription of v1 PREMISE_INEQ_RE + CONST_ALT (vacgen.py:227-233)"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.real.const-lt-field-re-exists",
+      "cluster": "physics-misc",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\s*\\(\\s*∃\\s+[A-Za-z_\\u0100-\\uffff][\\w\\x27.!\\x2a]*\\s*:\\s*ℂ\\s*,\\s*\\(\\s*\\d+\\s*/\\s*\\d+\\s*:\\s*ℝ\\s*\\)\\s*<\\s*[A-Za-z_\\u0100-\\uffff][\\w\\x27.!\\x2a]*\\s*\\.\\s*re\\s*\\)\\s*$",
+        "flags": ""
+      },
+      "priority": 35,
+      "confidence": "MID",
+      "witnessStrategy": "existential-witness bite: exhibit one explicit complex point whose real part exceeds the numeric constant, then lift by the envelope existentialization; the numeric-constant boundary block applies only when this row is matched",
+      "witnessTemplate": {
+        "bites": [
+          "theorem {p}_halfplane_pt : (⟨{C}, 0⟩ : ℂ).re = {C} := rfl"
+        ],
+        "boundary": {
+          "kind": "numeric-constant",
+          "template": "{num} / {den}"
+        }
+      },
+      "mathlibAnchors": [
+        {
+          "symbol": "Complex.re",
+          "relPath": "Mathlib/Data/Complex/Basic.lean",
+          "line": 92,
+          "pinStatus": "candidate-unverified"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point"
+      ],
+      "boundaryApplicability": "numeric-constant",
+      "gapKeywords": [],
+      "notes": "rendered from the real W1 gap cluster shape:(∃ <id> : ℂ, (<num> / <num> : ℝ) < <id>) (count=1, gap-0001 of gap-ledger-w2.json); the source cast graded band with one degenerate top-type battery face (degeneracy data, not a row defect); gapKeywords is empty because the W1 face carries no keyword field; anchor line 92 is a candidate pin facing the C3.3 anchor gate; priority 35 orders below the landed premise families (50 builtin, 40 abs sibling draft) because this family renders the conclusion witness face",
+      "sourceGapId": "gap-0001",
+      "sourceLane": "row-render-handoff",
+      "tenpointVerdict": "PENDING"
+    }
+  ]
+}
