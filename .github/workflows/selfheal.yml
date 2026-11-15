@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload triage artifacts
         if: always() && (env.RUN_ID != '' || env.RECONCILE == '1')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: selfheal-${{ env.RUN_ID || github.run_id }}
           path: selfheal-out/
