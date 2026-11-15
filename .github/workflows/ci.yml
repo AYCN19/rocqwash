@@ -94,6 +94,12 @@ jobs:
     env:
       ROCWASH_PY: ${{ matrix.py }}
       ROCWASH_TESTS_EXCLUDE: ${{ matrix.platform_roster }}
+      # Windows runners default to an ANSI stdout codepage (charmap on the
+      # hosted image, gbk on a zh-CN host). The suite prints Chinese prose
+      # and math symbols, which raises UnicodeEncodeError and turns whole
+      # cases red. Force UTF-8 I/O plus the UTF-8 mode on every platform.
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v5
 
@@ -129,6 +135,12 @@ jobs:
     env:
       ROCWASH_PY: ${{ matrix.py }}
       ROCWASH_TESTS_ONLY: ${{ matrix.platform_roster }}
+      # Windows runners default to an ANSI stdout codepage (charmap on the
+      # hosted image, gbk on a zh-CN host). The suite prints Chinese prose
+      # and math symbols, which raises UnicodeEncodeError and turns whole
+      # cases red. Force UTF-8 I/O plus the UTF-8 mode on every platform.
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v5
 

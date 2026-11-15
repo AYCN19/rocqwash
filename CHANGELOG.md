@@ -275,6 +275,27 @@ independent reasons, none of them caused by the v58 wash-map fix.
   re-issuing the frozen roster through the tool's own `freeze` face
   (idempotent replay byte-identical, `frozen8 check` OK, 0 changed).
 
+### v60 — Windows stdout-codepage wave: UTF-8 I/O forced on every lane (2026-11-16)
+
+After v59 the macOS and Linux lanes were green, but both Windows lanes were
+still red — the hosted one across 34 cases, the local self-hosted one across
+5.
+
+**Fixed**
+
+- `.github/workflows/ci.yml`: Windows runners default to an ANSI stdout
+  codepage (charmap on the hosted image, gbk on a zh-CN host). The suite
+  prints Chinese prose and math symbols, so `print()` raised
+  `UnicodeEncodeError` and took whole cases down with it — the hosted Windows
+  lane lost 34 cases to it. Both jobs now set `PYTHONIOENCODING=utf-8` and
+  `PYTHONUTF8=1`. Reproduced byte-identically before the fix
+  (`PYTHONIOENCODING=gbk` raises `UnicodeEncodeError: 'gbk' codec can't
+  encode character '\u2282' in position 59`, the same message the runner
+  logged).
+- `verify/erasure_classifier.py`: the selftest wrote its scratch file to the
+  hardcoded POSIX path `/tmp/erasure_selftest_<pid>.mli`, which does not
+  exist on a Windows runner. It now uses `tempfile.gettempdir()`.
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

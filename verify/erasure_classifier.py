@@ -29,7 +29,7 @@
 
     Exit-codes.  0 = ran; 2 = usage or failing selftest; 9 = input missing.
 """
-import argparse, hashlib, io, json, os, re, sys
+import argparse, hashlib, io, json, os, re, sys, tempfile
 
 TYPE_PREMISE_RE = re.compile(r"^[ \t]*type\s+(?P<name>[A-Za-z_][\w']*)\s*=.*__")
 HEADER_ERASE_RE = re.compile(r"^[ \t]*type\s+__\s*=\s*Obj\.t\s*$")
@@ -250,7 +250,8 @@ val sorted_now : SortedCarrier
 val counter_ex :
     (Q list, (Q list, (__, Q Not) And) sigT) sigT
 """
-    io_tmp = "/tmp/erasure_selftest_%d.mli" % os.getpid()
+    io_tmp = os.path.join(tempfile.gettempdir(),
+                          "erasure_selftest_%d.mli" % os.getpid())
     with io.open(io_tmp, "w", encoding="utf-8") as f:
         f.write(sample)
     res = classify(io_tmp)
