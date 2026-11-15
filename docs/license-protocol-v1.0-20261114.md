@@ -111,3 +111,38 @@ extent permitted by law no liability for damages arising from use —
 including damages arising from autonomous actions the operator enabled.
 The budget caps and audit ledger exist precisely so the operator can
 bound and audit what the tools do before enabling them.
+
+
+## 7. AI-assistance disclosure (standard form)
+
+Contributions produced with AI agent assistance carry the following
+disclosure in the pull-request description (three sentences, fixed
+order; the bracketed parts are filled per change):
+
+> AI-assistance disclosure (standard form): this change was produced
+> through the project's own self-evolution pipeline — AI agents executed
+> construction, verification, and assembly under the direction of the
+> human engineer [name] ([steward / contributor]), who reviewed and
+> accepted the results and takes full responsibility for the content.
+> Substantive design decisions follow the workorder specification and
+> the repository's canonical forms; boundaries and open items are
+> registered in [section]. This statement is made under the NOTICE
+> Authorship Statement and ICLA §5.2 (AI as instrument — human
+> authorship).
+
+Chinese mirror (for bilingual descriptions):
+
+> AI 辅助披露（标准形）：本变更经本项目自带的递归式演进管线产出——AI
+> 智能体在人类工程师［姓名］（［Steward／贡献者］）的方向指导下执行构
+> 筑、复核与组装；该工程师复核验收结果并对内容负全责。实质设计决策沿
+> 工单规格与仓既有正典形落位；边界与未决项登记于［节］。本声明依
+> NOTICE Authorship Statement 与 ICLA §5.2（AI as instrument — human
+> authorship）作出。
+
+Rules: (a) the human principal is named with their project role —
+internal seat, wave, or line labels are not part of the public
+disclosure; (b) the responsibility sentence is effective only while the
+contributor's ICLA (§5.2 included) is on file — file the ICLA before or
+with the first merged contribution; (c) this section is the single
+wording source for the disclosure — do not paraphrase it per pull
+request.
