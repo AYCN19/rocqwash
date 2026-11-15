@@ -1,26 +1,135 @@
 name: rocqwash CI
 
+# Three-platform matrix (audit P0-5 follow-up: the workflow ran macOS only
+# while the suite carries platform-sensitive cases; historical CI failure
+# rate 27.9%). Two jobs per platform:
+#   selftest      - blocking. Runs the default roster minus the
+#                   platform-sensitive roster (ROCWASH_TESTS_EXCLUDE, a
+#                   run_tests.sh selection mechanism). macOS keeps the full
+#                   canonical sweep.
+#   flaky-watch   - advisory (continue-on-error). Runs exactly the
+#                   platform-sensitive roster (ROCWASH_TESTS_ONLY) on Linux
+#                   and Windows so those cases stay observed; a red here is
+#                   recorded as a warning and does not fail the run
+#                   (failure-rate target < 5%).
+# Roster provenance (space-separated case names, kept in one place per
+# matrix entry). Base: the Windows red union recorded in README_EN.md
+# ("Windows (Git Bash)" paragraph, anchor 090be654), then corrected by the
+# live 81-case Windows suite run at the 2026-11-15/16 working anchor after
+# the T0-5 platform-defect fixes, classified per case from the run log:
+#   t_retrofit_dryrun        md5 fixture anchor vs CRLF-smudged checkout
+#                            (core.autocrlf=true rewrites LF fixtures to
+#                            CRLF in the working tree)
+#   t_verify_vo              vo_fresher mtime equality granularity (equal
+#                            timestamps observed between v and vo)
+#   t_push_gate              c4 cert-green runs an indirect suite leg that
+#                            is red on Windows
+#   t_cpu_guard_direct_smoke t_cpu_guard_direct_rc
+#                            cpu_guard.sh needs taskpolicy (macOS-only
+#                            command; rc=127 elsewhere)
+#   t_verify_fresh           freshness judgment rides the same mtime
+#                            granularity as t_verify_vo
+#   t_extract_magic          delegates to a real rocq/ocamlc toolchain
+#                            (rocq rc=-8 observed here)
+#   t_probe_engine           probe verdict text matching differs on Windows
+#                            (RED-UNKNOWN instead of BORN-CLEAN)
+#   t_cw_entry               cw.sh routes invoke a bare python3, which on
+#                            Windows is the Microsoft Store stub (rc=49)
+#   t_registry_union         reanchor md5 vector mismatch observed on
+#                            Windows (same EOL/md5 family)
+#   t_toolchain_dyld_doctor  macOS dyld/otool face
+#   t_contrib_intake         fixture snapshot path resolution face on Windows
+# Went green after the fixes (removed from the old differential):
+#   t_cw_sentinel, t_wash_shape, t_red_dispatch, t_destructive_matrix,
+#   t_unclog, t_relay_e2e, t_scan_station, t_verify_born, t_frozen8,
+#   t_world_hook, t_recipe_s07, t_recipe_pw1, t_precedent_station,
+#   t_frozen_call, t_registry_audit. Deliberately NOT in this roster:
+#   t_registry_regen — its red (CRLF-expecting byte assertion vs LF bytes)
+#   is platform-independent content debt and stays visible in the blocking
+#   suite on every platform.
+# A case leaves this roster only with green evidence from both non-macOS
+# platforms; content-level reds are never hidden here (they stay in the
+# blocking suite on every platform).
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   selftest:
-    name: Self-test suite (macOS)
-    runs-on: macos-15
+    name: Self-test suite (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            label: macOS
+            py: python3
+            platform_roster: ""
+          - os: ubuntu-latest
+            label: Linux
+            py: python3
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+          - os: windows-latest
+            label: Windows
+            py: python
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+    env:
+      ROCWASH_PY: ${{ matrix.py }}
+      ROCWASH_TESTS_EXCLUDE: ${{ matrix.platform_roster }}
     steps:
       - uses: actions/checkout@v5
 
-      - name: Run self-test suite
+      - name: Run self-test suite (stable roster)
         run: bash tests/run_tests.sh
 
       - name: Suite verdict
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "ROCQWASH-CI-ALL-GREEN (self-contained suite; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
+            echo "ROCQWASH-CI-ALL-GREEN (stable roster, ${{ matrix.label }}; platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
           else
-            echo "::error::self-test suite red — see the failed step log above"
+            echo "::error::self-test suite red on ${{ matrix.label }} — see the failed step log above"
+          fi
+
+  flaky-watch:
+    name: Platform-sensitive roster watch (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+            py: python3
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+          - os: windows-latest
+            label: Windows
+            py: python
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+    env:
+      ROCWASH_PY: ${{ matrix.py }}
+      ROCWASH_TESTS_ONLY: ${{ matrix.platform_roster }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run platform-sensitive roster (advisory; red does not fail the run)
+        run: bash tests/run_tests.sh
+
+      - name: Watch verdict
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "PLATFORM-SENSITIVE ROSTER GREEN on ${{ matrix.label }} (candidate for roster removal with two-green evidence)"
+          else
+            echo "::warning::platform-sensitive roster red on ${{ matrix.label }} (advisory record, non-blocking; tracked against the <5% failure-rate target)"
           fi

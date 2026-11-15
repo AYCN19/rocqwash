@@ -381,7 +381,13 @@ def main():
         rc = 1
     elif args.apply:
         if new_text != text:
-            with io.open(args.file, "w", encoding="utf-8") as f:
+            # newline="" pins the byte face (the T0-5 md5-caliber contract,
+            # same fix as cure_applier.py): on-disk bytes are exactly
+            # new_text.encode("utf-8") on every platform, so the reported
+            # md5_after always describes the file actually written; the
+            # unpinned default let Windows text mode translate \n to \r\n,
+            # which then also re-flagged the eol wash on rescan.
+            with io.open(args.file, "w", encoding="utf-8", newline="") as f:
                 f.write(new_text)
         t2, r2 = run(new_text, pack, header_map=header_map,
                      name=os.path.basename(args.file))

@@ -1942,7 +1942,11 @@ def selftest():
             if isinstance(p.stdout, bytes) else (p.stdout or "")
         return p.returncode, out
 
-    def wf(path, text, newline=None):
+    def wf(path, text, newline="\n"):
+        # fixture writer pins newline to "\n" so fixture bytes are identical on
+        # every platform; the previous default (None) let Windows text mode turn
+        # the LF-only fixtures into CRLF, which shifted the eol wash verdicts
+        # and made the selftest red off-macOS (the T0-5 platform-defect family).
         with io.open(path, "w", encoding="utf-8", newline=newline) as fh:
             fh.write(text)
         return path
@@ -2289,8 +2293,14 @@ def selftest():
                     "wash/comment_pack.json",
                     "tools/registry_union.py",
                     "certify/frozen8.py"):
-            os.symlink(os.path.join(real_root, rel),
-                       os.path.join(iso, rel))
+            # plain copy, not os.symlink: Windows symlink creation needs
+            # SeCreateSymbolicLinkPrivilege (WinError 1314 without admin or
+            # developer mode), which crashed this vector off-admin machines
+            # (T0-5 platform-defect family). The vector only needs the seven
+            # engine files present at their canonical relative paths, and a
+            # copy satisfies that identically.
+            shutil.copyfile(os.path.join(real_root, rel),
+                            os.path.join(iso, rel))
         rc16b, out16b = run(["--file", clean_v, "--header-map-preset",
                              "campaign_set_diamond", "--repo-root", iso])
         c16 = (rc == 1 and "PLAN-MISS" in out
