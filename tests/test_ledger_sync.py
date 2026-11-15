@@ -17,7 +17,7 @@ probe×状态台账合并同步十节判：
                 记录（red_count/md5_match）直吞
   8 CLI＋列校验 四码（help0/bogus2/缺参2/缺件9）＋缺必需列 rc2 不产出＋
                 行宽不齐 rc2＋幂等重跑字节恒同
-  9 items 壳    席位冻结账形（items 子键）直吞——records 消费、壳键零幽灵；
+  9 items 壳    席位冻结账形（items 子键）直吞——records 使用、壳键零幽灵；
                 裸 dict 形 batch_meta 元数据键响亮滤除（PROBE-META-SKIP·零
                 幽灵误报）；全元数据零记录 → rc2 fail-loud 不产出
   10 分歧出账   divergence_with 记录 → GEN-DIVERGENCE 逐笔响亮＋行注记

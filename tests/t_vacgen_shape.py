@@ -30,7 +30,8 @@ def main() -> int:
         f.write(FIXTURE)
     out = os.path.join(tmp, "out")
     r = subprocess.run([sys.executable, "-I", VACGEN, "--in", fx, "--out", out],
-                       capture_output=True, text=True)
+                       capture_output=True, text=True, encoding="utf-8",
+                       errors="replace")
     if r.returncode != 0:
         print("FAIL: vacgen rc=", r.returncode, r.stderr[-300:])
         return 1

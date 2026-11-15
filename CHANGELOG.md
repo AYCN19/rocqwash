@@ -123,7 +123,7 @@ v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段�
 - `tests/test_relay_e2e.py` — cw_sentinel `--on-red-preset unclog` 端到端三判
   （事件触发／unclog 干跑 rc=0 零写盘／JSONL 同盘 report 路径）＋
   [`docs/ops-realtime-service-v1.0-20261111.md`](docs/ops-realtime-service-v1.0-20261111.md)
-  运行手册（后台哨标准命令与 JSONL 消费／on-red 预设三式对照／真实树活跑
+  运行手册（后台哨标准命令与 JSONL 使用／on-red 预设三式对照／真实树活跑
   规程 audit 基线→人审→apply 白名单／主会话让路配合）。
 
 **Changed**

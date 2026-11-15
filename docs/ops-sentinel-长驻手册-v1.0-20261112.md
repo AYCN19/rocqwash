@@ -1,6 +1,6 @@
 # ops-sentinel — 哨长驻运维手册 v1.0（2026-11-12）
 
-> **正本声明**：本手册是 `tools/cw_sentinel.py` **长驻（--loop）运维手册**——部署／消费／
+> **正本声明**：本手册是 `tools/cw_sentinel.py` **长驻（--loop）运维手册**——部署／使用／
 > 轮转与恢复／实证账四节，全部内容引既有实账（更新账 v37-v47 各节＋既有手册与嵌段
 > 三档＋器 docstring），**零码改零新器零新旗标**（文档波·逐条命令为既有正典块转抄或
 > v44/v47/v48 实跑原文转录，无杜撰形参）。行号一律锚 rocqwash v47 6217808 工作树现势
@@ -181,7 +181,7 @@ nohup bash examples/sentinel_supervisor.sh >/dev/null 2>&1 &
 
 ---
 
-## §2 消费（事件流→台账→接驳→工作流）
+## §2 使用（事件流→台账→接驳→工作流）
 
 ### 2.1 JSONL 逐行 schema（rocqwash-sentinel-event/1）
 
@@ -414,7 +414,7 @@ FILE.1 → FILE.2 (old FILE.2 overwritten and discarded; keep two generations) �
 | 更新账.md:3999 | v50 崩溃判例：哨长驻 round10 IncompleteRead 崩＝传输层器债第二类·监督壳补偿已部署·器修入 v51（§1.6 判例源） |
 | roadmap-v43-plus-20261111.md:30-38 | 候选② sentinel --loop 长驻首战（价值/依赖/成本/风险＋验证方式 :38） |
 | roadmap-v43-plus-20261111.md:13/:35 | 积分静默窗：**观测类候选静默期零事件亦属合法观测非器红**（排程面口径） |
-| ops-live-run-log-20261111.md:79-111 | 后台哨可运行态声明（依赖面 :83-85·启动命令 :87-94·JSONL 消费 :96-100·活体烟测 :102-111） |
+| ops-live-run-log-20261111.md:79-111 | 后台哨可运行态声明（依赖面 :83-85·启动命令 :87-94·JSONL 使用 :96-100·活体烟测 :102-111） |
 | ops-realtime-service-v1.0-20261111.md 全册 | v38 态上游手册（命令块/preset 对照/真树活跑规程 §3/让路配合 §4）——与本册逐字兼容 |
 | backend-sentinel.md 全册 | 嵌段①正典（命令块 §1/消费端 §2/退出码 §4/伪码 §5） |
 

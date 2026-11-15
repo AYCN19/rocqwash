@@ -97,7 +97,7 @@
 
 | 价值 | 依赖 | 成本 | 风险 |
 |---|---|---|---|
-| 哨事件流从「grep 消费」升「artifact 台账化」——事件＋轮转代际＋baseline_diff 堵账差分聚合一页；多战役横向对比面；后台任务可见性 | ②首战真实事件语料（消费面落地要真形）；**零新引擎纪律**（聚合器纯 stdlib 读 JSONL/JSON）；集成面（cw.sh 路由四处同步＋总套挂接）归集成席 | 中（新器一枚：schema＋sort_keys 确定性＋幂等字节恒同＋`tools/cw_sentinel.py` 同款 `--injector` canned 事件矢量＋集成面） | 事件 schema 演进（聚合器须 fail-loud 缺键红拒·禁静默容错）；轮转代际边界对账（seq 跨代不重号）；新器入 doc_lint 旗标对账面（十九→二十器的表查负担·集成席面） |
+| 哨事件流从「grep 使用」升「artifact 台账化」——事件＋轮转代际＋baseline_diff 堵账差分聚合一页；多战役横向对比面；后台任务可见性 | ②首战真实事件语料（消费面落地要真形）；**零新引擎纪律**（聚合器纯 stdlib 读 JSONL/JSON）；集成面（cw.sh 路由四处同步＋总套挂接）归集成席 | 中（新器一枚：schema＋sort_keys 确定性＋幂等字节恒同＋`tools/cw_sentinel.py` 同款 `--injector` canned 事件矢量＋集成面） | 事件 schema 演进（聚合器须 fail-loud 缺键红拒·禁静默容错）；轮转代际边界对账（seq 跨代不重号）；新器入 doc_lint 旗标对账面（十九→二十器的表查负担·集成席面） |
 
 **验证方式**：聚合器 `--selftest` 矢量 rc=0＋canned 事件→台账页 sort_keys 落盘两跑字节恒同（幂等）＋真实 JSONL 样例（②产出）入账＋退出码 0/1/2/9 三码实考＋三闸不动红。
 

@@ -3,7 +3,7 @@
 """_gen_fin_mac.py — censusFIN 模板 Mac 适配生成器（S 系 Prop 清除战役·工具链 Mac 适配席·20261022）
 
 模板血统：censusFIN/SortAlive_Probe_FIN1640.v（_set1640_S10FIN_sbx·S10 五证第④关 censusFIN
-对表器）——SortAlive __-census 探针：语句名清单→具名透明别名→**单命令多名一轮全提**
+对表器）——SortAlive __-census 检验：语句名清单→具名透明别名→**单命令多名一轮全提**
 Separate Extraction（§1·E 律 1 单命令多名全提律：逐命令重置输出 last-write-wins，多目标
 必须单命令全提）→解析 `(** val alive_N : ... **)` 型注与 let 体——RED iff "__"（提取擦除
 语义·词表无关内核级判定，红线②第六关）。

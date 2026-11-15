@@ -172,7 +172,7 @@ wash_shape 编排落刀面）；**疏通**＝chain/unclog/baseline-diff 三器�
 | v36-③ | 更新账.md:3607（③） | README 快照面 | README.md 无 v35 快照行（v35 波未入主 README·本轮只补 v36 行内点名） | — |
 | v36-④ | 更新账.md:3607（④） | 不代改史 | tests/README.md「在册 47 例」系当时现势陈述·遵不代前轮改史原样保留 | — |
 | v37-① | 更新账.md:3632（§三） | 跨席计数漂移 | 哨席 cw.sh 头注计数十三与 usage 十二不一致→集成席统一十五（跨席计数漂移·集成收口职·判例） | 计数漂移归集成收口职的成文先例 |
-| v37-② | 更新账.md:3633（§三） | injector 哲学 | unclog `--injector`＝「canned 探针·真编排」——chain/cure/scan/frozen8 注入下照旧真跑（非傀儡测试）·离线可测与真实编排并存 | 白皮书 §1 纪律④机理节同源 |
+| v37-② | 更新账.md:3633（§三） | injector 哲学 | unclog `--injector`＝「canned 检验·真编排」——chain/cure/scan/frozen8 注入下照旧真跑（非傀儡测试）·离线可测与真实编排并存 | 白皮书 §1 纪律④机理节同源 |
 | v38-① | 更新账.md:3663（§三裁决登记） | 同槽互斥 | `--on-red-preset` 与 `--on-red` 同给＝互斥 rc=2（任务书「preset 优先」vs selftest「互斥」张力→按库同槽互斥纪律裁决·docstring 记界） | ops 手册 §2.2 负例表在册 |
 | v38-② | 更新账.md:3664（§三） | 双钟不并铃 | cw_sentinel `--timeout`（HTTP 单请求）与 `--subproc-timeout`（子进程帽）两物分立（v37 既约口径不动） | v40 §三延续登记 |
 | v39-① | 更新账.md:3693（§三） | 扩容诚实 | cure_pack v1.4 单式扩容＝勘察诚实结论（三源无第二件复现的形态按律候勘·非扩容不足） | 「宁缺毋滥」代码化（header_map 缺 evidence 拒载） |

@@ -19,7 +19,7 @@
 
 ### 0.2 总判定语义 Top-Level Verdict Semantics
 
-- **一切发现皆数据 Data, never errors**: 负发现（404 定谳/帽尽未取/窗口死）与 C1 触发都响亮登记、exit 0——升级通道（重扫/披露）候令不自动。
+- **一切发现皆数据 Data, never errors**: 负发现（404 已证结论/帽尽未取/窗口死）与 C1 触发都响亮登记、exit 0——升级通道（重扫/披露）候令不自动。
 - **草案≠裁定 Draft ≠ verdict**: 草案的机械行（初筛三态/哨判/排窗建议）是初筛；裁定是判读方的事。哨判词效力只及实测轮（负发现自划边界律同款）。
 
 ## 一、CLI 面 CLI Face（六旗标）
@@ -81,7 +81,7 @@ Schema `rocqwash-periscope-config/1` 顶层键：`schema` / `sentinel` / `defaul
 | 帽 Cap | 每源 8 发（config `cap` 可改 1–16）；哨拍与 comments 子面发同样逐发入账 |
 | 取到即停 Stop-when-obtained | 任一发 HTTP 200 且体可解析 → 该源终态 `obtained`，剩余帽不烧 |
 | 失败重试 Retry | 非 200 非 404 → sleep 60s → **改参**重发：每次重试的有效超时放宽 30s（`curl-timeout:NNs` 记入 NETRED `changed=`），config `retry_param_overrides` 的逐次覆盖一并记 `config-override:n` |
-| 404 定谳 Negative-definite | 404 即停（不退避·保帽），404 体保全为 `raw/<key>.retry.json` 作四要素证据 |
+| 404 已证结论 Negative-definite | 404 即停（不退避·保帽），404 体保全为 `raw/<key>.retry.json` 作四要素证据 |
 | 帽尽未取 Cap-exhausted | 终态 `cap-exhausted-registered`＝登记非失败，四要素草案强制 |
 | 解析败 Parse-error | 200 但体不可解析 → `parse-error-retryable`，照失败重试面走（首轮判例：体解析败＝管道数据非窗口数据） |
 

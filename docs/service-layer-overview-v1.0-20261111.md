@@ -35,7 +35,7 @@
 ┌───────────────── 诊断层 v35 ＋ v29-v32 底座 ──────────────────────────┐
 │  排障三器：doctor（dyld 断链）·net-probe（双探稳窗）·triage（五族判类）│
 │  手术器：union（注册册 union·缺省干跑）                               │
-│  底座：scan4 普查·probe 探针·chain 链根·cure 治愈·sync-ledger·        │
+│  底座：scan4 普查·probe 检验·chain 链根·cure 治愈·sync-ledger·        │
 │        erasure·dual-scan·netname-normalize·select-audit               │
 └───────────────────────────────────────────────────────────────────────┘
         统一入口：bash cw.sh <tool>（二十工具＋help·1:1 透传·bash 3.2）

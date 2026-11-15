@@ -26,7 +26,7 @@ timing 段）。对象器＝`tools/unclog.py --audit`（probe 归集一段占真
 
 ## 2. 采集法（probe --jobs K 剖面采集三步）
 
-**第一步·固定面**：候选面用 `--candidates TSV` 直喂（枚举面引入 enumerate
+**第一步·固定面**：候选面用 `--candidates TSV` 直接代入（枚举面引入 enumerate
 噪声）·同一 TSV 三跑复用；`--src/--world/--rocq-cmd/--timeout` 全固定——
 `args` 段逐跑全记·前后可比面以 args 段一致为先决（任一异即伪信号·禁比）。
 

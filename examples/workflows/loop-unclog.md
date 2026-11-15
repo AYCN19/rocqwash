@@ -25,7 +25,7 @@
 ```bash
 # ── loop-unclog 嵌段·第 1 步：干跑（在 rocqwash 仓根执行）────────────
 SRC=src/                          # 源树根（根件 <根>.v 取自此）
-WORLD=world/                      # 世界目录（probe 探针 cwd·.vo 基座调用方播种）
+WORLD=world/                      # 世界目录（probe 检验 cwd·.vo 基座调用方播种）
 CANDS=cands.tsv                   # 候选清单 TSV（表头「件名\tmd5」·probe_engine 同款）
 
 bash cw.sh unclog --src "$SRC" --world "$WORLD" --candidates "$CANDS" \
@@ -181,7 +181,7 @@ VERDICT: wall (exit 1)
 候选面三源任选（互斥·docstring「候选面三源任选」节）：
 
 ```bash
-# 源①候选 TSV 直喂（表头「件名<TAB>md5」）
+# 源①候选 TSV 直接代入（表头「件名<TAB>md5」）
 bash cw.sh unclog --src "$SRC" --world "$WORLD" --candidates cands.tsv --json r.json
 # 源②既有 probe 台账并入（argv 序=合并序·后批覆盖前批·merge 模式无逐轮全量重探）
 bash cw.sh unclog --src "$SRC" --chain-ledgers l1.json l2.json --json r.json

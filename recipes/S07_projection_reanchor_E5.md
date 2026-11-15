@@ -26,7 +26,7 @@
 3. **语句面写裸投影名**：件语句面全写在字段投影上（`Import RealInterfaceEnhancedMod`
    裸名＋`Notation R := Real`，无 Let 锚位），而证明体与依赖链
    （UpReqAlgebra/UpReqDist/S02）全走具体面——**两表示系交叉即 Obj.magic**。
-   实测：重锚前 CI 探针 magic=293（seat_magic6 台账 §一 P1 行在卷）。
+   实测：重锚前 CI 检验 magic=293（seat_magic6 台账 §一 P1 行在卷）。
 4. **树内健康判例**（同病灶已愈件）：树内 `UpReqAlgebra.v`（`req_plus_zero_r :
    forall a : R, real_eq (plus a zero) a`，源 :48 邻域）同款保留 Import＋
    `Notation R := Real`＋裸 plus/mult 字段名、**仅关系面用具体名**，树内 magic=0。

@@ -88,7 +88,7 @@ pushci 编排 v35 四器（doctor/net_probe/ci_triage/gate4 守卫·pushci.py:5-
 - **编排零新引擎是双向的**——工作流侧也不要为「再判一次红/再挑一次根」写新
   逻辑：调器，读它的 JSON。器已把判据代码化（发射闸/四判据/诚实墙）。
 - 真编译一律经 cpu_guard 温控包裹（CONTRIBUTING §5）：哨自身零编译零网络
-  （cw_sentinel docstring「编排律」）；需要真编译的是 probe_engine 探针——
+  （cw_sentinel docstring「编排律」）；需要真编译的是 probe_engine 检验——
   unclog 以 `--guard PATH --guard-reg DIR --guard-front N --guard-mid N
   --guard-maxwait N` 透传（`--help` 实有）。
 
@@ -211,7 +211,7 @@ bash cw.sh pushci --repo-path . --branch feature/x \
 | 旗标对账 | 每嵌段引用旗标 grep 对照各器 `--help` 输出 | 见交付说明（全部存在·零凭空） |
 
 未实跑项（如实声明）：pushci 真发段（需真远端凭据·用户面）；probe_engine 真编译
-探针（需 rocq 世界基座·用户面·真编译必经 cpu_guard）。两者的命令形均以
+检验（需 rocq 世界基座·用户面·真编译必经 cpu_guard）。两者的命令形均以
 `--help`/docstring 为正本给出，未经本席实跑验证运行时行为。
 
 ## 附录 B　变更与归属

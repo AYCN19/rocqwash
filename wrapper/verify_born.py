@@ -18,7 +18,7 @@ fix（本件）：born 轮后接 verify_vo --v/--vo/--exit-file/--log 判绿。v
               归一化为裸形暂存件（系统临时目录·判后即清）仍走 --exit-file；
        余形                          → FAIL-LOUD exit 2（形不识别绝不判绿）。
   3. 判绿：dispatch `python3 -B verify/verify_vo.py --v V --vo VO --exit-file EF
-     [--log LOG] [--json J]`，退出码原样传播（0=PASS／1=FAIL／9=缺件）——判词
+     [--log LOG] [--json J]`，退出码原样传播（0=PASS／1=FAIL／9=缺件）——结论
      只出正本，本件不背书不代判。
 
 实盘文件形普查（20261031·work_Main_full/sandbox 59 件 *.born.rc 首行）：

@@ -77,12 +77,12 @@ The banned faces are enumerated in §4.1–4.3 and classified in §4.4; Appendix
 
 ### 4.1 Hard faces (literal ban, multi-character, error on any prose hit)
 
-- Campaign/organization family: 席位, 席名, 波次, 批次, 战役, 收官, 派单, 派发, 工单, 挂单, 交棒, 停写令, 候令, 候查, 收账, 收编, 回执, 上云, 落刀, 扒皮, 让位, 活账, 死账, 台账, 挂账, 整改波, 候施工票, 一刀, 盯守, 对账（工程义）, 对表.
-- Engineering-metaphor family: 金标, 现势, 旗舰, 实勘, 收割, 装机, 喂参, 直喂, 直配, 换装, 宣言, 判词, 收口, 自愈, 钦名, 对拍, 普查, 断链, 疏通, 堵账, 定谳, 总装, 红线, 铁律, 元卖点, 底档, 脊柱, 核验定谳, 锻造, 直排, 回潮, 新伤, 落盘, 在盘, 入库, 算术马, 无据不铸, 红炉, 绿判, 红屏, 亮红, 秒红, 假绿, 假红, 全绿, 红温, 发射闸, 洗形, 摘牌, 计功, 缝合, 双杀, 击坠, 翻牌, 清盘, 增薄, 机判, 卸出, 环账, 上车, born-clean, born-in-place.
+- Campaign/organization family: 席位, 席名, 波次, 批次, 战役, 收官, 派单, 派发, 工单, 挂单, 交棒, 停写令, 候令, 候查, 收账, 并入, 回执, 上云, 落刀, 扒皮, 让位, 活账, 死账, 台账, 遗留事项, 整改波, 候施工票, 一刀, 盯守, 对账（工程义）, 对表.
+- Engineering-metaphor family: 金标, 现势, 旗舰, 核验, 收束, 注册, 传参, 直接代入, 直接匹配, 重述, 声明, 结论, 收口, 自愈, 钦名, 对拍, 普查, 断链, 疏通, 堵账, 已证结论, 装配, 红线, 铁律, 元卖点, 底档, 脊柱, 核验定谳, 锻造, 直排, 回潮, 新伤, 落盘, 在盘, 入库, 算术马, 无据不铸, 红炉, 绿判, 红屏, 亮红, 秒红, 假绿, 假红, 全绿, 红温, 发射闸, 洗形, delisted, credit tally, splice, double failure, shot down, overturned, liquidated, thinned, machine ruling, unloaded, cyclic account, 上车, born-clean, born-in-place.
 
 ### 4.2 Context faces (error when used in the engineering sense of their Appendix A row)
 
-席（角色义）, 洗（工程义）, 炮, 红（工程义）, 绿（工程义）, 炉, 闸（工程义）, 堵, 哨, 哨兵（叙述义）, 探针（叙述义）, 分诊, 判类, 兜底, 归一, 干跑, 正典（内部行话义）, 榜, 手术, 仓. Each face's sense boundary and standard form = its Appendix A row's context note; identifier citations are exempt (Appendix A §6).
+席（角色义）, 洗（工程义）, 炮, 红（工程义）, 绿（工程义）, 炉, 闸（工程义）, 堵, 哨, 哨兵（叙述义）, 检验（叙述义）, 分诊, 判类, 兜底, 归一, 干跑, 正典（内部行话义）, 榜, 手术, 仓. Each face's sense boundary and standard form = its Appendix A row's context note; identifier citations are exempt (Appendix A §6).
 
 ### 4.3 English slang / hyperbole faces (literal ban, word boundary, error)
 

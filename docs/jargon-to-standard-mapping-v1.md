@@ -33,7 +33,7 @@
 | 炮 | run | "重炮" → rerun; "BACK 发炮" → issue the run. 3 files (e.g. wash/probe_engine.py:37, verify/_parse_fin_mac.py:12). |
 | 红 | failing | Engineering sense only. The repo maxim 「红是数据非器红」 → "a failing result is data, not a tool failure" (Table C). 103 files. |
 | 挂单 | queued | Banned face in gate4 extended family (gate4_comment_guard.py:173). Queue-state context: queued / awaiting scheduling. 1 file. |
-| 收编 | absorb | In the 65-face consolidated base (gate4_comment_guard.py:72). Merge-into sense: absorb. 1 file. |
+| 并入 | absorb | In the 65-face consolidated base (gate4_comment_guard.py:72). Merge-into sense: absorb. 1 file. |
 | 让位 | yield | 0 repository hits; precedence/concurrency context: yield (to a higher-priority run). |
 | 扒皮 | strip | 0 repository hits; stripping process narration from comments: strip. |
 | born-clean | axiom-free born | Classification face in wash/probe_engine.py:17-21 (BORN-CLEAN verdict line) — the verdict token stays as identifier; prose says axiom-free born. 6 files. |
@@ -49,7 +49,7 @@
 | 底档 | source transcript | JARGON base row; verbatim archive sense. 0 repository hits. |
 | 脊柱 | evidence chain | JARGON base row; backbone metaphor. 0 repository hits. |
 | 红线 | non-negotiable constraint | JARGON base row; discipline metaphor — prose states the constraint itself. 16 files. |
-| 核验定谳 | independently verified | JARGON base row. 定谳 is its own row below. 0 combined-face hits. |
+| 核验定谳 | independently verified | JARGON base row. 已证结论 is its own row below. 0 combined-face hits. |
 | 一刀 | apply the revision | JARGON base row (一刀/落刀 family); 落刀 has its own Table A row. 0 repository hits. |
 | 玩具（过程义） | toy instance (first use defined) / delete | Academic toy instance may stay with English gloss at first use; process-narrative sense is deleted. 0 repository hits. |
 | 铁律 | invariant / hard requirement | JARGON base row; state the rule itself. 31 files. |
@@ -62,9 +62,9 @@
 | 在盘 | present in the tree | JARGON base row. 0 repository hits. |
 | 入库 | archived / written into the repository | JARGON base row; whole-word judgment only (§1.2). 0 repository hits. |
 | 收口 | conclude / close | JARGON base row; narrative sense only, never re-lexified into a different internal word (§1.4). 17 files. |
-| 定谳 | finally established | JARGON base row; in the 65-face consolidated base (gate4_comment_guard.py:72). 10 files. |
-| 总装 | integration | JARGON base row. 2 files. |
-| 挂账 | pending item | In the 65-face consolidated base (gate4_comment_guard.py:71); JARGON base v1.3 row (遗留事项). 0 repository hits. |
+| 已证结论 | finally established | JARGON base row; in the 65-face consolidated base (gate4_comment_guard.py:72). 10 files. |
+| 装配 | integration | JARGON base row. 2 files. |
+| 遗留事项 | pending item | In the 65-face consolidated base (gate4_comment_guard.py:71); JARGON base v1.3 row (遗留事项). 0 repository hits. |
 | 整改波 | revision round | JARGON base v1.1 row (整改轮次/修订批次). 0 repository hits. |
 | 候施工票 | pending work item | JARGON base v1.1 row (候审工作项). 0 repository hits. |
 | 算术马 | primary arithmetic component | JARGON base v1.1 row (arith workhorse). 0 repository hits. |
@@ -80,9 +80,9 @@
 | 回执 | execution record | In the 65-face consolidated base. 2 files. |
 | 工单 | task instruction | In the 65-face consolidated base and gate4 extended family (gate4_comment_guard.py:173). 16 files. |
 | 哨 / 哨兵 | sentinel / mechanical watch | The tool `cw_sentinel.py` is an identifier; narrative 哨/哨兵 → sentinel tool or mechanical watch. 哨兵 is banned outright on the .v-comment track (65-face base). 38 files. |
-| 探针 | probe (tool citation) / check (generic sense) | The `probe` tool (`wash/probe_engine.py`, cw.sh probe) is an identifier; generic prose sense → check. 探针 banned outright on the .v-comment track. 44 files. |
+| 检验 | probe (tool citation) / check (generic sense) | The `probe` tool (`wash/probe_engine.py`, cw.sh probe) is an identifier; generic prose sense → check. 检验 banned outright on the .v-comment track. 44 files. |
 | 分诊 | triage | Standard English term — translation mapping, not a purge; `ci_triage.py` identifier stays. 22 files. |
-| 判词 | conclusion | In the 65-face consolidated base; `verdict` is reserved for the JSON schema field name (pushci verdict states). 22 files. |
+| 结论 | conclusion | In the 65-face consolidated base; `verdict` is reserved for the JSON schema field name (pushci verdict states). 22 files. |
 | 判类 | classification | Classification of failing runs into the family spectrum. 36 files. |
 | 炉 | build | 红炉 → failing build (红炉分诊 → failing-build triage, Table C). 21 files. |
 | 绿（工程义） | passing | 全绿 → all passing; 绿判四件套 → four-point pass criterion (Table C). 68 files. |
@@ -96,16 +96,16 @@
 | 收官 | wrap-up | 1 file. |
 | 现势 | current state | 21 files. |
 | 旗舰 | main / primary | In the 65-face consolidated base; 旗舰定理 → main theorem. 6 files. |
-| 实勘 | verify | In the 65-face consolidated base. 4 files. |
-| 收割 | close out | In the 65-face consolidated base. 4 files. |
-| 装机 | register | In the 65-face consolidated base; single-character 组装 is not triggered (assembly guard). 1 file. |
+| 核验 | verify | In the 65-face consolidated base. 4 files. |
+| 收束 | close out | In the 65-face consolidated base. 4 files. |
+| 注册 | register | In the 65-face consolidated base; single-character 组装 is not triggered (assembly guard). 1 file. |
 | 派发 | route / distribute | In the 65-face consolidated base; `red_dispatch.py` identifier stays. 4 files. |
-| 喂参 | pass parameters | In the 65-face consolidated base. 1 file. |
-| 直喂 | pass directly | In the 65-face consolidated base. 7 files. |
-| 直配 | direct match | In the 65-face consolidated base. 1 file. |
-| 回收 | restore / recover | In the 65-face consolidated base; toolchain-restore context (doctor). 1 file. |
-| 换装 | restate | In the 65-face consolidated base. 1 file. |
-| 宣言 | declaration | In the 65-face consolidated base. 1 file. |
+| 传参 | pass parameters | In the 65-face consolidated base. 1 file. |
+| 直接代入 | pass directly | In the 65-face consolidated base. 7 files. |
+| 直接匹配 | direct match | In the 65-face consolidated base. 1 file. |
+| 复原 | restore / recover | In the 65-face consolidated base; toolchain-restore context (doctor). 1 file. |
+| 重述 | restate | In the 65-face consolidated base. 1 file. |
+| 声明 | declaration | In the 65-face consolidated base. 1 file. |
 | 干跑 | dry run | Standard English — translation mapping, keep as dry run. 39 files. |
 | 对拍 | differential comparison | 双器对拍 → two-scanner differential run. 18 files. |
 | 手术 | operation | registry union 手术 → union operation. 13 files. |
@@ -116,18 +116,18 @@
 | 归一 | normalize | Standard term — translation mapping, keep as normalize (净名归一 → name normalization). 24 files. |
 | 洗形 | shape normalization | `wash_shape.py` / `wash-shape` identifier stays; prose → shape normalization. 18 files. |
 | 正典（内部行话义） | canonical | canonical is the standard English term and is kept; the internal-canon sense maps to canonical specification. 45 files. |
-| 缝合 | splice | In the 65-face consolidated base. 2 files. |
+| splice | splice | In the 65-face consolidated base. 2 files. |
 | 上车 | registered together | In the 65-face consolidated base; process word, deleted rather than kept in comments. 1 file. |
-| 摘牌 | delisted | In the 65-face consolidated base. 1 file. |
-| 计功 | credit tally | In the 65-face consolidated base. 1 file. |
-| 双杀 | double failure | In the 65-face consolidated base. 1 file. |
-| 击坠 | shot down | In the 65-face consolidated base. 1 file. |
-| 翻牌 | overturned | In the 65-face consolidated base. 1 file. |
-| 清盘 | liquidated | In the 65-face consolidated base. 1 file. |
-| 增薄 | thinned | In the 65-face consolidated base. 1 file. |
-| 机判 | machine ruling | In the 65-face consolidated base; → machine-checked decision. 1 file. |
-| 卸出 | unloaded | In the 65-face consolidated base. 1 file. |
-| 环账 | cyclic account | In the 65-face consolidated base. 1 file. |
+| delisted | delisted | In the 65-face consolidated base. 1 file. |
+| credit tally | credit tally | In the 65-face consolidated base. 1 file. |
+| double failure | double failure | In the 65-face consolidated base. 1 file. |
+| shot down | shot down | In the 65-face consolidated base. 1 file. |
+| overturned | overturned | In the 65-face consolidated base. 1 file. |
+| liquidated | liquidated | In the 65-face consolidated base. 1 file. |
+| thinned | thinned | In the 65-face consolidated base. 1 file. |
+| machine ruling | machine ruling | In the 65-face consolidated base; → machine-checked decision. 1 file. |
+| unloaded | unloaded | In the 65-face consolidated base. 1 file. |
+| cyclic account | cyclic account | In the 65-face consolidated base. 1 file. |
 | 批次 | batch (process sense) | gate4 extended family (战役组织族). 1 file. |
 | 对表 | cross-check against the reference | gate4 extended family (gate4_comment_guard.py:173). 1 file. |
 | 断点 | checkpoint | gate4 extended family; resume-point sense. 1 file. |

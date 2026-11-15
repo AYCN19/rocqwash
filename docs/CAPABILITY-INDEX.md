@@ -438,7 +438,7 @@ Each item below is a negative finding of that scan, not an absolute claim (trans
 - **CI 锚**：本 head 之炉 #43421710372 conclusion=success（对账回执 N3 实测，2026-11-13；同 head 前三炉连续 success）。
 - **CI anchor**: the run at this head, #43421710372, concluded success (reconciliation receipt channel N3, measured 2026-11-13; the three prior runs at earlier heads were all success).
 
-### 3.4 记账 · Provenance
+### 3.4 记录 · Provenance
 
 - 扫描树：钉住克隆 `D:/ComplexAnalysis/rocqwash` @ `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`（本地 `git rev-parse HEAD` 实测，2026-11-14；工作树 porcelain 0 行）。
 - Scan tree: pinned clone `D:/ComplexAnalysis/rocqwash` at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` (measured locally via `git rev-parse HEAD`, 2026-11-14; working tree porcelain 0 lines).

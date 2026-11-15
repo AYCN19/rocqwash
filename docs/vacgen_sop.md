@@ -218,6 +218,80 @@
 
 每条缺位判词还须附**复审条件**（扫描面何时重扫：上游快照推进即重跑普查）；无复审条件的挂起不予收口。
 
+### 2.5 Erratum (2026-11-14): as-cast envelope malformed-shape registration (registered engine debt)
+
+**Defect statement (first-hand evidence on record)**: for artifacts whose
+headline theorem declares *implicit binders* (e.g. `{K : Set (Fin n → ℝ)}`),
+the as-cast witness envelope is malformed Lean: the binder's **type** is
+spliced into the conjunction chain as a bare conjunct (`∧ Set (Fin n → ℝ)` —
+a `Type`-sorted expression in a `Prop` conjunction) and the binder variable is
+left **unbound** (referenced by later conjuncts with no existential prefix
+segment of its own). Root cause (engine-side, two cooperating faces):
+(a) the L1 splitter classification — explicit hypotheses land in `S1 vars`
+(`hK : IsCompact K` became a "var") while implicit binders land in
+`S2 assumptions` (`K : Set (Fin n → ℝ)` became an "assumption");
+(b) `envelope_statement` splicing (`tools/vacgen.py:640-650` at revision
+2.0.1) joins `S2_assumps` types verbatim into the `∧` chain and prefixes only
+`S1_vars`. First-hand evidence: batch-1 item-16 verdict (MahlerConjecture.lean,
+sha256 `40718172…20ea0`, §三 账 1 — malformed signature transcribed there) and
+the rqw11 round-1 replay (`recast/16` cast log + witness fire rc=1 with
+`SMul ℝ ℤ` synthesis failure and `unknown constant …_premises_witness`).
+
+**Checker blind spot (registered alongside)**: the cast's own bound-form
+invariant `envelope_free_vars_zero` reports PASS on the malformed envelope
+(word-face free-variable scan sees the binder name absent from the envelope
+body, not the type-as-conjunct ill-typedness) — a bound-form PASS is therefore
+**not** evidence of envelope well-typedness until the checker is extended.
+
+**Handling (same grade as §2.1 expected-green-face-red)**: an expected-green
+witness face failing on the malformed envelope is a probe-side defect, never a
+judgment about the audited artifact. Canonical hand-cast repair form (zero
+premise weakening; transcribed from the batch-1 item-16 verdict §三 账 1):
+
+```text
+∃ n : ℕ, ∃ K : Set (Fin n → ℝ),
+  1 ≤ n ∧ IsCompact K ∧ Convex ℝ K ∧ (∀ x ∈ K, -x ∈ K) ∧ (interior K).Nonempty
+```
+
+with the registered fill precedent `K := Metric.closedBall (0 : Fin 1 → ℝ) 1`
+(compact, convex, symmetric, nonempty interior; repair round 2 of the ≤2
+budget, rc=0, PA 3-standard, `sorryAx` 0). Anchor set measured first-hand
+2026-11-14: `isCompact_closedBall`
+(`Mathlib/Analysis/InnerProductSpace/EuclideanDist.lean:79`), `convex_closedBall`
+(`Mathlib/Analysis/Normed/Module/Convex.lean:70`), `interior_closedBall`
+(`Mathlib/Analysis/Normed/Module/RCLike/Real.lean:76`) — the batch-1 verdict's
+scratch citations carried abbreviated paths; this section carries the measured
+locations.
+
+**Open engine debt (honestly registered, not repaired by this wave)**: the
+engine-side repair (L1 splitter classification, `envelope_statement` splicing,
+bound-form checker extension) lies outside the auto-apply surface of the
+healing wave (this erratum + the shape-table row + test assertions only).
+Re-audit condition: after the engine repair wave lands, re-cast every artifact
+cast under this erratum and re-run `tests/t_vacgen_envelope_shape.py`; until
+then every implicit-binder artifact requires the hand-cast repair above.
+
+**Registered self-healing surfaces (this wave, all verified)**:
+1. **Shape-table row**: `tools/taxonomy.json` landed 2026-11-14 (builtin
+   starter row carried verbatim + `geo.symmetric-set-premise` row matching the
+   `∀ v ∈ S, -v ∈ S` premise face). Measured effect on the Mahler-family
+   artifact: L3 coverage 0/5 → 1/5 (top family `geo.symmetric-set-premise`);
+   the row registers the family and the fill precedent in data — it does not
+   repair the engine splice. `requireVarBinding` deliberately false: the set
+   variable is not among `S1 var` names under the current classification, so
+   the v1 parity binding check would block recognition.
+2. **Test assertions**: `tests/t_vacgen_envelope_shape.py` (fixture A pins the
+   well-formed-envelope contract on a well-formed face; fixture B pins the
+   registered debt signature `∧ Set (` on an implicit-binder face as a
+   loud known-debt vector — red there means the engine debt was FIXED and the
+   pin must be updated with the engine repair registration). The two existing
+   vacgen tests (`tests/t_vacgen_shape.py`, `tests/t_vacgen_expectedred.py`)
+   were **unwired** in `tests/run_tests.sh` (zero mentions found by grep
+   2026-11-14) and are wired by this wave; `tests/t_vacgen_shape.py`'s
+   subprocess read face additionally lacked `encoding="utf-8"` (GBK-locale
+   reader-thread decode failure on cast reports with math symbols) and was
+   aligned with the `t_vacgen_expectedred.py` read face.
+
 ---
 
 ## 三、独立仓候选 README 骨架 Independent-Repo Candidate README Skeleton
