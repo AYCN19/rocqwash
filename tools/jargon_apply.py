@@ -491,7 +491,7 @@ def _rescan(args, target_abs, root_abs, table_path, tmpdir):
     """Detector rerun after apply: norm_lint fed with the projected table."""
     nlm = norm_lint_module()
     out_path = os.path.join(tmpdir, "rescan.json")
-    cmd = [sys.executable, "-I", NL_PATH,
+    cmd = [sys.executable, "-I", "-X", "utf8", NL_PATH,
            "--tree" if root_abs else "--file", target_abs,
            "--jargon-map", table_path, "--json", out_path]
     try:

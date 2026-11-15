@@ -29,7 +29,7 @@ def main() -> int:
     with open(fx, "w", encoding="utf-8") as f:
         f.write(FIXTURE)
     out = os.path.join(tmp, "out")
-    r = subprocess.run([sys.executable, "-I", VACGEN, "--in", fx, "--out", out],
+    r = subprocess.run([sys.executable, "-I", "-X", "utf8", VACGEN, "--in", fx, "--out", out],
                        capture_output=True, text=True, encoding="utf-8",
                        errors="replace")
     if r.returncode != 0:

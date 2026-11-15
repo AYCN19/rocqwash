@@ -982,7 +982,7 @@ def test_i18n_pipeline_stub_selftest(stub_path=None):
     path = Path(stub_path) if stub_path is not None else _default_stub_path()
     assert path.is_file(), "stub missing: %s" % path
     proc = subprocess.run(
-        [sys.executable, "-I", str(path), "--selftest"],
+        [sys.executable, "-I", "-X", "utf8", str(path), "--selftest"],
         capture_output=True,
         text=True,
         timeout=SELFTEST_TIMEOUT_S,

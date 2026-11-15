@@ -328,7 +328,7 @@ def _extension(target):
 def _run_normlint(target, tool, jargon_map, selected, report_dir):
     """One norm_lint run serving the jargon and cjk faces; rows per face."""
     instrument = tool
-    shape = [sys.executable, "-I", instrument, "--file", target,
+    shape = [sys.executable, "-I", "-X", "utf8", instrument, "--file", target,
              "--jargon-map", jargon_map, "--json", "<tmp-report>"]
     rows = []
     if not os.path.isfile(tool):
@@ -346,7 +346,7 @@ def _run_normlint(target, tool, jargon_map, selected, report_dir):
                              % "/".join(REPO_FACES)))
         return rows, "blind"
     tmp = os.path.join(report_dir, "norm_lint_report.json")
-    argv = [sys.executable, "-I", instrument, "--file", target,
+    argv = [sys.executable, "-I", "-X", "utf8", instrument, "--file", target,
             "--jargon-map", jargon_map, "--json", tmp]
     rc, out, err = _run(argv)
     if rc == 9:
@@ -385,7 +385,7 @@ def _run_normlint(target, tool, jargon_map, selected, report_dir):
 
 def _run_ai_flavor(target, tool, report_dir):
     instrument = tool
-    shape = [sys.executable, "-I", instrument, "--file", target,
+    shape = [sys.executable, "-I", "-X", "utf8", instrument, "--file", target,
              "--json", "<tmp-report>"]
     if not os.path.isfile(tool):
         return _row("ai_flavor", instrument, shape, None,
@@ -397,7 +397,7 @@ def _run_ai_flavor(target, tool, report_dir):
                          "human gate substitutes"
                     % "/".join(AI_FLAVOR_FACES)), "blind"
     tmp = os.path.join(report_dir, "ai_flavor_report.json")
-    rc, out, err = _run([sys.executable, "-I", instrument, "--file", target,
+    rc, out, err = _run([sys.executable, "-I", "-X", "utf8", instrument, "--file", target,
                          "--json", tmp])
     if rc == 2:
         return _row("ai_flavor", instrument, shape, rc, "instrument-error",
@@ -422,13 +422,13 @@ def _run_ai_flavor(target, tool, report_dir):
 
 def _run_doc_lint(repo, tool, report_dir):
     instrument = tool
-    shape = [sys.executable, "-I", instrument, "--repo", repo,
+    shape = [sys.executable, "-I", "-X", "utf8", instrument, "--repo", repo,
              "--json", "<tmp-report>"]
     if not os.path.isfile(tool):
         return _row("doc_lint", instrument, shape, None, "missing-instrument",
                     note="instrument file not found on disk"), "missing"
     tmp = os.path.join(report_dir, "doc_lint_report.json")
-    rc, out, err = _run([sys.executable, "-I", instrument, "--repo", repo,
+    rc, out, err = _run([sys.executable, "-I", "-X", "utf8", instrument, "--repo", repo,
                          "--json", tmp])
     if rc == 9:
         return _row("doc_lint", instrument, shape, rc, "missing-input",
@@ -454,7 +454,7 @@ def _run_selftests(tools, report_dir):
     rows = []
     worst = "ok"
     for name, tool in sorted(tools.items()):
-        shape = [sys.executable, "-I", tool, "--selftest"]
+        shape = [sys.executable, "-I", "-X", "utf8", tool, "--selftest"]
         if not os.path.isfile(tool):
             rows.append(_row("selftests", tool, shape, None,
                              "missing-instrument", note="subject %s" % name,

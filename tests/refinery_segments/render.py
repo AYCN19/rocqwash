@@ -202,7 +202,7 @@ def run_renderer(args):
     """Run the renderer CLI with the isolated interpreter and a neutral
     environment; returns the completed process object."""
     return subprocess.run(
-        [sys.executable, "-I", RENDER_TOOL] + [str(a) for a in args],
+        [sys.executable, "-I", "-X", "utf8", RENDER_TOOL] + [str(a) for a in args],
         capture_output=True, text=True, timeout=TOOL_TIMEOUT_S,
         env=child_env(), cwd=ROOT, encoding="utf-8", errors="replace")
 

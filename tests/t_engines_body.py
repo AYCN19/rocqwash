@@ -198,7 +198,7 @@ def run_tool(rel_path, args, extra_env=None, strip_gate=True, cwd=None):
     neutral environment; returns the completed process object."""
     path = rel_path if os.path.isabs(rel_path) else os.path.join(ROOT, rel_path)
     return subprocess.run(
-        [sys.executable, "-I", path] + [str(a) for a in args],
+        [sys.executable, "-I", "-X", "utf8", path] + [str(a) for a in args],
         capture_output=True, text=True, timeout=TOOL_TIMEOUT_S,
         env=base_env(extra_env, strip_gate), cwd=cwd or ROOT,
         encoding="utf-8", errors="replace")
@@ -593,7 +593,7 @@ def run_segment_regression():
         # variable family (the -E implication), and the seed suite loads
         # tools dynamically, which would otherwise leave a cache artifact
         proc = subprocess.run(
-            [sys.executable, "-I", "-B", SEEDS_SUITE_PATH],
+            [sys.executable, "-I", "-X", "utf8", "-B", SEEDS_SUITE_PATH],
             capture_output=True, text=True, timeout=SUITE_TIMEOUT_S,
             env=base_env(), cwd=ROOT, encoding="utf-8", errors="replace")
         summary = ""

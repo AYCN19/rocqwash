@@ -145,7 +145,7 @@ def _cast_fixture(src_text, with_report=False):
         fh.write(src_text)
     out = os.path.join(tmp, "out")
     report_path = os.path.join(tmp, "report.json") if with_report else None
-    cmd = [sys.executable, "-I", VACGEN, "--in", fx, "--out", out]
+    cmd = [sys.executable, "-I", "-X", "utf8", VACGEN, "--in", fx, "--out", out]
     if report_path:
         cmd += ["--report", report_path]
     proc = subprocess.run(cmd, capture_output=True, text=True,

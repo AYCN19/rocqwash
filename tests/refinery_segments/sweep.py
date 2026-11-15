@@ -48,7 +48,7 @@ TAXONOMY_SCHEMA = "rocqwash.taxonomy-candidates/1"
 def _run(argv, timeout=180):
     """Run one tool subprocess (isolated interpreter, no bytecode writes)
     and normalize stdout to text (utf-8, errors replaced)."""
-    proc = subprocess.run([sys.executable, "-I", "-B"] + argv,
+    proc = subprocess.run([sys.executable, "-I", "-X", "utf8", "-B"] + argv,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           timeout=timeout)
     proc.stdout = proc.stdout.decode("utf-8", errors="replace") \

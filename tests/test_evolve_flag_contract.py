@@ -55,7 +55,7 @@ def run(cmd, **kw):
 
 
 def evolve_child(args):
-    return run([sys.executable, "-I", EVOLVE] + args)
+    return run([sys.executable, "-I", "-X", "utf8", EVOLVE] + args)
 
 
 def check(name, ok, detail):

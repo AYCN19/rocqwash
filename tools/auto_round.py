@@ -143,7 +143,7 @@ DEFAULT_AUTONOMY = {
     "oscillation_alert": 2,
 }
 # default gate: the repository self-check the baseline report pins as green
-DEFAULT_VERIFY_CMD = [sys.executable, "-I", "tools/norm_lint.py", "--selftest"]
+DEFAULT_VERIFY_CMD = [sys.executable, "-I", "-X", "utf8", "tools/norm_lint.py", "--selftest"]
 
 ROW_KEYS = ("round_id", "mode", "base_sha", "head_sha", "classes_applied",
             "admissions", "files", "verify_rc", "oscillation_count",
@@ -1355,12 +1355,12 @@ def _mkrepo(tmp, name, autonomy):
 
 def _good_gate():
     """A gate command that exits 0 (fixture stand-in for the repo gate)."""
-    return [sys.executable, "-I", "-c", "import sys; sys.exit(0)"]
+    return [sys.executable, "-I", "-X", "utf8", "-c", "import sys; sys.exit(0)"]
 
 
 def _red_gate():
     """A gate command that exits 7 (fixture stand-in for a red gate)."""
-    return [sys.executable, "-I", "-c", "import sys; sys.exit(7)"]
+    return [sys.executable, "-I", "-X", "utf8", "-c", "import sys; sys.exit(7)"]
 
 
 def _base_cfg(**overrides):
@@ -1740,7 +1740,7 @@ def selftest_repo_vectors(tmp, check):
     for argv, want in ((["--bogus-flag"], 2),
                        (["commit", "--classes", "x"], 2),
                        ([], 2), (["no-such-command"], 2)):
-        proc = subprocess.run([sys.executable, "-B", "-I", tool] + argv,
+        proc = subprocess.run([sys.executable, "-B", "-I", "-X", "utf8", tool] + argv,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT, encoding="utf-8",
                               errors="replace")

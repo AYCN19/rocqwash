@@ -367,7 +367,7 @@ def selftest():
         import subprocess
         tool = os.path.abspath(__file__)
         return subprocess.run(
-            [sys.executable, "-I", tool] + [str(a) for a in args],
+            [sys.executable, "-I", "-X", "utf8", tool] + [str(a) for a in args],
             capture_output=True, timeout=120)
 
     def write(path, text):

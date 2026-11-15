@@ -47,7 +47,7 @@ PORT_MARK = "EXP-PORT-SELFTEST PASS"
 def run_tool(tool, args):
     """Run one inspected tool in a subprocess (stdout+stderr merged)."""
     proc = subprocess.run(
-        [sys.executable, "-B", "-I", tool] + list(args),
+        [sys.executable, "-B", "-I", "-X", "utf8", tool] + list(args),
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return proc.returncode, proc.stdout.decode("utf-8", errors="replace")
 

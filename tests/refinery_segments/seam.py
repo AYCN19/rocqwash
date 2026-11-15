@@ -56,7 +56,7 @@ class ChainError(Exception):
 
 
 def _run(cmd, timeout_s=120):
-    proc = subprocess.run([sys.executable, "-I"] + cmd, cwd=REPO,
+    proc = subprocess.run([sys.executable, "-I", "-X", "utf8"] + cmd, cwd=REPO,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                           timeout=timeout_s)
     return proc.returncode, proc.stdout.decode("utf-8", "replace"), \

@@ -75,13 +75,13 @@ def assert_true(cond, message):
 def _run_tool(args, timeout=TOOL_TIMEOUT_S):
     """Run the gap tool in a clean interpreter (-I) and return the process."""
     return subprocess.run(
-        [sys.executable, "-I", GAP_TOOL] + [str(a) for a in args],
+        [sys.executable, "-I", "-X", "utf8", GAP_TOOL] + [str(a) for a in args],
         capture_output=True, timeout=timeout)
 
 
 def _run_ai_flavor(path, timeout=TOOL_TIMEOUT_S):
     return subprocess.run(
-        [sys.executable, "-I", AI_FLAVOR_TOOL, "--file", path],
+        [sys.executable, "-I", "-X", "utf8", AI_FLAVOR_TOOL, "--file", path],
         capture_output=True, timeout=timeout)
 
 

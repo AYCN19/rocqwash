@@ -34,7 +34,7 @@ PY = sys.executable or "python"
 
 def run(args):
     p = subprocess.run(
-        [PY, "-I", SENTINEL] + args,
+        [PY, "-I", "-X", "utf8", SENTINEL] + args,
         capture_output=True, text=True,
         encoding="utf-8", errors="replace",
         cwd=ROOT,

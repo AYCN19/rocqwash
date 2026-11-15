@@ -43,7 +43,7 @@ MARK = "EXP-PORT-SELFTEST PASS"
 
 def run(args, cwd=None):
     """Run the port in a subprocess (stdout+stderr merged)."""
-    p = subprocess.run([sys.executable, "-B", "-I", TOOL] + args,
+    p = subprocess.run([sys.executable, "-B", "-I", "-X", "utf8", TOOL] + args,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                        cwd=cwd)
     return p.returncode, p.stdout.decode("utf-8", errors="replace")

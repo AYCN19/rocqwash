@@ -87,7 +87,7 @@ def _session(requests):
         (r if isinstance(r, str) else json.dumps(r)) + "\n" for r in requests
     )
     proc = subprocess.run(
-        [sys.executable, "-I", "-B", SERVER],
+        [sys.executable, "-I", "-X", "utf8", "-B", SERVER],
         input=payload.encode("utf-8"),
         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         cwd=REPO, env=env, timeout=120,
