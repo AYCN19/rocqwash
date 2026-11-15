@@ -380,6 +380,21 @@ defects rather than environment noise, and are closed here.
   the suite records the case as SKIP (the suite's standing rc 111 contract)
   rather than red.
 
+### v64 — destructive-matrix write-face judgment: git metadata out of scope (2026-11-16)
+
+**Fixed**
+
+- `tests/test_destructive_matrix.py`: the write-face judgment compared a full
+  directory manifest, `.git` included. Git legitimately rewrites its own
+  metadata (reflog, index, gc.log) when it resolves HEAD or refreshes the
+  index, so on a runner whose git touches that metadata during the freeze the
+  row read it as "the freeze wrote outside its write face" and went red
+  (observed on the macOS lane; the judgment passed on every other platform and
+  in every earlier run, which is what made it a flake rather than a defect).
+  The manifest now skips the `.git` directory, so the row states what it
+  means: the tool's own write face. The rows that guard git-object writes
+  assert on the object store explicitly.
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

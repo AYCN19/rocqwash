@@ -158,11 +158,19 @@ def md5_of(path):
     return h.hexdigest()
 
 
-def tree_manifest(root):
-    """目录全文件 {rel(POSIX): md5} 清单（增删改一字节即现形·unclog 同款口径）。"""
+def tree_manifest(root, skip_dirs=(".git",)):
+    """目录全文件 {rel(POSIX): md5} 清单（增删改一字节即现形·unclog 同款口径）。
+
+    The .git directory is skipped by default: git legitimately rewrites its
+    own metadata (reflog, index, gc.log) when it resolves HEAD or refreshes
+    the index, and counting those bytes turns the tool's write-face judgment
+    into a statement about git's internal bookkeeping. The rows that guard
+    git-object writes assert on the object store explicitly, not on the
+    surrounding metadata.
+    """
     out = {}
     for dirpath, dirnames, filenames in os.walk(root):
-        dirnames.sort()
+        dirnames[:] = sorted(d for d in dirnames if d not in skip_dirs)
         for fn in sorted(filenames):
             fp = os.path.join(dirpath, fn)
             out[os.path.relpath(fp, root).replace(os.sep, "/")] = md5_of(fp)
