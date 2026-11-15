@@ -8,13 +8,11 @@
       ordering with the TODO-SEAT delta and rise flag, the default/explicit
       absence rule, the exit-code convention, determinism of both output
       faces, and the read-only posture on the live repository.
-    Interface.  `py tests/t_evolution_dashboard_shape.py` (run directly;
-      deliberately not rostered in tests/run_tests.sh - the same coupling
-      as tests/t_exp_port.py, tests/t_periscope_shape.py and
-      tests/t_symbiosis_shape.py: the roster count is mechanically coupled
-      to count lines in README.md through doc_lint's second check, and
-      roster insertion belongs to the work stream holding that
-      authorization).  Seven checks, each driving the tool's real argparse
+    Interface.  `py tests/t_evolution_dashboard_shape.py` (rostered in
+      tests/run_tests.sh as case t_evolution_dashboard_shape on 20261115,
+      audit finding P0-6; the roster count is derived one-way from the
+      CASES block in tests/run_tests.sh through doc_lint's second check).
+      Seven checks, each driving the tool's real argparse
       face in a subprocess, plus one live read (read-only, zero writes).
     Dependencies.  Python 3 stdlib only; fixture checks run under one
       mkdtemp root; the live check reads the repository's standing account

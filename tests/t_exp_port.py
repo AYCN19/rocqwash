@@ -8,10 +8,10 @@ Purpose.  Hook the experience-bus port into the tests/ suite and smoke its
   loud/query vectors/minted-id sequence) runs under --selftest and is
   attested by its frozen marker line.
 
-Interface.  `python3 tests/t_exp_port.py` (run directly; deliberately not
-  rostered in tests/run_tests.sh yet — the roster count is mechanically
-  coupled to count lines in README.md, which the A1 integration may not touch;
-  roster insertion belongs to a work stream holding that authorization).
+Interface.  `python3 tests/t_exp_port.py` (rostered in tests/run_tests.sh
+  as case t_exp_port on 20261115, audit finding P0-6; the roster count is
+  derived one-way from the CASES block in tests/run_tests.sh by doc_lint's
+  second check).
   Four checks: --selftest rc=0 with the `EXP-PORT-SELFTEST PASS` marker;
   --help rc=0 with a usage face; exit-code convention spot checks
   (--bogus=2, append without --points=2, query on an absent ledger=9);

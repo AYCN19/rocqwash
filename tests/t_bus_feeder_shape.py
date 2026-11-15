@@ -10,11 +10,12 @@
       damaged-package refusals, usage and exit codes, the status mapping
       face, the write surface, and the gap_cluster aggregation boundary.
 
-    Interface.  `py tests/t_bus_feeder_shape.py` (run directly;
-      deliberately not rostered in tests/run_tests.sh: the roster count
-      is coupled to the README count lines via doc_lint's second check,
-      the t_exp_port / t_periscope / t_symbiosis / t_uplink precedent);
-      seven checks drive one tool's argparse face each in a subprocess.
+    Interface.  `py tests/t_bus_feeder_shape.py` (rostered in
+      tests/run_tests.sh as case t_bus_feeder_shape on 20261115, audit
+      finding P0-6; the roster count is derived one-way from the CASES
+      block in tests/run_tests.sh by doc_lint's second check, and the
+      README count lines follow that derived count); seven checks drive
+      one tool's argparse face each in a subprocess.
 
     Dependencies.  Python 3 stdlib only; every check runs on temporary
       fixtures under one mkdtemp root; the repository is never written;
