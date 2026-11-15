@@ -176,3 +176,74 @@ Import mapping (envelope → append contract):
   contract, on the `capability_index` wiring (it returns the full text of
   `docs/symbiosis_sop.md` resolved from `ROCQWASH_HOME`; zero network face,
   no side effects; see `docs/mcp.md` for the server face).
+
+## 六、缺口账喂送面 The Gap-Ledger Feed Face (tools/bus_feeder.py)
+
+主题句：交换包喂入缺口账；喂送是独立的下游工具面，总线 `import` 腿仍只落经验账，单口誓言不变。
+
+- **位置 Positioning**: downstream of `export`: an exported package
+  (schema `rocqwash-symbio/1`) feeds the TODO-SEAT gap account through
+  `tools/bus_feeder.py`, a separate tool and not a new face of the bus;
+  the bus `import` leg keeps writing the experience ledger only (the
+  single-port oath of section 〇.2 is unchanged).
+- **识别集 Recognition set** (documented order, first hit wins, reported
+  per row in the `recognition` field): the pitfall category token U+5751
+  under the top-level `category` key or under the source dict's
+  `category` / zh key spellings; the literal `TODO-SEAT` token in points
+  or evidence; the literal `status=todo_seat` token in evidence.  A
+  non-gap entry is counted and excluded; zero gap rows are data at
+  exit 0.
+- **族形状到缺口行 Family shape to gap row**: one gap row per selected
+  entry lands in the gap feed ledger (default `docs/gap-feed-ledger.jsonl`,
+  `--ledger` overrides).  The row keeps the swap entry verbatim (schema
+  `rocqwash-exp/1`, the fingerprint domain untouched) plus three schema
+  increments outside the fingerprint domain: `correlationId` synthesized
+  as `feed:<sourceRepo>@<anchor>` from the envelope, `shapeKey` computed
+  by the `tools/gap_cluster.py` key chain (`fam:<familyId>` when an
+  explicit familyId is present, `fam:<token>` when the points text
+  carries a family token after `TODO-SEAT`, else `shape:<abstracted>`),
+  and `recognition` naming the rule that selected the entry.
+
+| Face | Input | Output | Write face | Exit semantics |
+|---|---|---|---|---|
+| `feed` | one swap package (deep-validated) | one fed/skip line per selected entry plus the summary line | the gap feed ledger only; `--dry-run` writes nothing | 0 (skips and zero gap rows are data); 2 usage or IO; 9 missing or corrupt input, nothing written |
+| `status` | the gap feed ledger, optional swap packages | count lines plus the shape-to-rows mapping plus per-package present/new counts | none | 0 whenever the ledger is readable; 2 usage or IO; 9 missing or corrupt |
+
+- **幂等与跳过轴 Idempotency and skip axes** (the `exp_port` taxonomy,
+  precedence preserved): a repeated id skips on the `id` axis; otherwise
+  a repeated fingerprint skips on the `fingerprint` axis; both print the
+  loud skip line and write nothing at exit 0; a repeated id with a
+  different fingerprint is a collision reported as data; rows are
+  append-only and never mutated.  The same package replays
+  byte-identically into fresh ledgers: ids and time points ride entry
+  content, the runtime clock never enters the logic.
+- **写面与誓言 Write surface and pledges**: `feed` writes only the gap
+  feed ledger; `feed --dry-run` and `status` write nothing; no face of
+  the feeder reads or writes `docs/exp-ledger.jsonl`.  Exit codes
+  `0/1/2/9`: 0 face answered, 1 selftest red, 2 usage or IO, 9 missing
+  or corrupt input with nothing written.  Zero network by design (the
+  NETRED register row states `no network by design`).
+- **边界（负发现四要素） Boundary (negative-finding, four elements)**:
+  scanned = the three recognition rules above over envelope-validated
+  entry lines; not scanned = free text outside the points / evidence /
+  category / familyId fields, and gap markers in other spellings; not an
+  absolute claim = a row's gap face rests on this recognition set;
+  aliased equivalents were not exhaustively ruled out.  Rescan
+  condition: the recognition set changes or a new package arrives.
+  Named divergence: `tools/gap_cluster.py` pins its category token as
+  the escape `\u5748` (code point U+5748) while its own producer
+  (`tools/vacgen.py` line 2470) emits U+5751, and reads only the
+  `category` key spelling; aggregation of a fed ledger therefore
+  recognizes the `TODO-SEAT` / status rows and does not read
+  category-only rows (asserted mechanically in
+  `tests/t_bus_feeder_shape.py` check 7).
+- **真实样本 Real sample**: `docs/symbiosis-swap-round1.jsonl` (envelope
+  `rocqwash@2bd712f`, 27 entries) validates on the dry-run face and
+  reports `would-feed=1 nonGap=26`; a real feed writes only the
+  caller-named ledger, never a repository file.
+- **shape 测试 Shape test**: `tests/t_bus_feeder_shape.py` runs directly
+  and is deliberately not rostered in `tests/run_tests.sh` (the roster
+  count is mechanically coupled to the README count lines through
+  doc_lint's second check; roster insertion belongs to the work stream
+  holding that authorization; the `t_exp_port` / `t_periscope_shape` /
+  `t_symbiosis_shape` / `t_uplink_shape` precedent applies).
