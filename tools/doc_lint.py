@@ -139,7 +139,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 32     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28->32, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last; the 20261114 bump follows the measured registry size 32 - an over-cap tool has an empty help set and every doc flag cited against it is misjudged phantom)
+DEFAULT_HELP_CAP = 47     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28->32->47, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last; the latest bump follows the measured registry size 47 - the symbiosis-bus route plus the two on-disk lane tools entered the registry; an over-cap tool has an empty help set and every doc flag cited against it is misjudged phantom)
 HELP_TIMEOUT = 60         # --help subprocess second cap (local-file hang guard; fail-loud)
 DETAIL_CAP = 300          # checks[].detail clip (the cw_doctor non_form ln[:120] form)
 DRIFT_LINE_CAP = 20       # check 3 per-file phantom/dangling list cap (the total is honest; the cw_doctor cap-20 form)
@@ -477,8 +477,23 @@ def check_counts(repo):
 
 # ---- check 3: the flags ----
 
+# one argparse subparser face row: 2-6 spaces of indent, a bare lowercase
+# dash-word name, two or more spaces, then the face description (the nested
+# shape argparse renders inside the "positional arguments:" block; flat
+# positional placeholders such as OLD.json or LEDGER.json never match, and
+# description continuation lines sit deeper than the name rows)
+SUBCOMMAND_ROW_RE = re.compile(r"^ {2,6}([a-z][a-z0-9-]*) {2,}(\S.*)$")
+
+
 def run_help_flags(repo, rel):
-    """A real subprocess --help run -> the actually emitted flag set (wrap repair included).  rc != 0 / timeout = tool failure 9."""
+    """A real subprocess --help run -> the actually emitted flag set (wrap
+    repair included).  rc != 0 / timeout = tool failure 9.  A subparser-form
+    CLI (the "positional arguments:" block listing one indented lowercase
+    face row per subcommand) gets one extra --help run per listed face and
+    the face's emitted flags merge into the same set, so a doc citation of a
+    subcommand flag verifies against the real face; a face row whose extra
+    run fails or times out contributes no flags (the top-level face stays
+    the authority)."""
     p = os.path.join(repo, rel)
     try:
         pr = subprocess.run([sys.executable, "-B", p, "--help"],
@@ -492,7 +507,34 @@ def run_help_flags(repo, rel):
         raise ToolError("--help tool failure rc=%d: %s (%s)"
                         % (pr.returncode, rel, out[-200:]))
     fixed = HYPHEN_WRAP_RE.sub(r"\1-\2", out)
-    return set("--" + t for t in HELP_TOKEN_RE.findall(fixed))
+    flags = set("--" + t for t in HELP_TOKEN_RE.findall(fixed))
+    in_positional = False
+    for line in out.split("\n"):
+        if line.startswith("positional arguments:"):
+            in_positional = True
+            continue
+        if in_positional and line and not line[0].isspace():
+            in_positional = False
+        if not in_positional:
+            continue
+        row = SUBCOMMAND_ROW_RE.match(line)
+        if row is None:
+            continue
+        try:
+            sub = subprocess.run([sys.executable, "-B", p, row.group(1),
+                                  "--help"],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT,
+                                 timeout=HELP_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            continue
+        if sub.returncode != 0:
+            continue
+        sub_out = sub.stdout.decode("utf-8", "replace") \
+            if isinstance(sub.stdout, bytes) else (sub.stdout or "")
+        sub_fixed = HYPHEN_WRAP_RE.sub(r"\1-\2", sub_out)
+        flags |= set("--" + t for t in HELP_TOKEN_RE.findall(sub_fixed))
+    return flags
 
 
 class LintCtx(object):

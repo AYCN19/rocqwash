@@ -1,0 +1,5 @@
+# schema rocqwash-uplink/1 - the intake register of docs/uplink-intake.jsonl (one JSON object per row; append-only; the intake face of tools/uplink.py is the single writer).
+# Readers skip any line whose first character is "#" (this schema header and the example below are comment lines, not rows; rows are counted after skipping "#" lines).
+# Fields (six pinned by the specification, plus the schema string carried per row): schema = constant "rocqwash-uplink/1"; package = return-package zip path as ingested; source-seat = producer label carried with the package; md5 = sidecar digest of the package zip (32-character lowercase hex); verified = true only when every member digest matched at intake time; landed-ref = branch or PR reference the package content maps to; exit = the intake face exit code recorded at intake time.
+# Example row shape (placeholder values only, not a real entry):
+# {"schema":"rocqwash-uplink/1","package":"<package.zip>","source-seat":"<producer>","md5":"<32-hex>","verified":true,"landed-ref":"<branch-or-pr-ref>","exit":0}
