@@ -14,7 +14,10 @@ Mission:
     the engine-body ticket appends three further zero-network
     capability specs graduated from docs/drafts/mcp-tool-specs-engine-body.md
     (tools/list carries 24 tools); the i18n http provider leg stays
-    default-deny and unregistered.
+    default-deny and unregistered. Symbiosis batch note: the symbiosis
+    ticket's spec (section 1.1, named in docs/symbiosis_sop.md) appends one
+    read-only file capability, symbiosis_status over docs/symbiosis_sop.md,
+    on the capability_index wiring (tools/list carries 25 tools).
 
 Protocol:
     Newline-delimited JSON-RPC 2.0 over stdin and stdout, hand written on
@@ -826,6 +829,25 @@ TOOL_SPECS = [
             "is never written at the exposed stages."
         ),
     },
+    # ---- symbiosis batch (the symbiosis ticket, section 1.1): one
+    # read-only capability registered on the capability_index wiring (a
+    # file-kind spec; no subprocess, no gate); additive after the
+    # engine-body block (the 24 existing specs and schemas untouched).
+    {
+        "name": "symbiosis_status",
+        "kind": "file",
+        "path": os.path.join("docs", "symbiosis_sop.md"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (),
+        "schema": _object_schema({}),
+        "description": (
+            "Return the full text of docs/symbiosis_sop.md, the single "
+            "symbiosis-bus contract surface, resolved from ROCQWASH_HOME. "
+            "Read-only file face on the capability_index wiring: zero "
+            "network face, no subprocess, no side effects."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -1022,12 +1044,20 @@ def _handle_tools_call(msg_id, params):
     if spec["kind"] == "file":
         path = os.path.join(home, spec["path"])
         if not os.path.isfile(path):
-            return _tool_result(msg_id, "capability_index: file not found: {0}".format(path), True)
+            return _tool_result(
+                msg_id,
+                "capability '{0}': file not found: {1}".format(name, path),
+                True,
+            )
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as handle:
                 text = handle.read()
         except OSError as exc:
-            return _tool_result(msg_id, "capability_index: read failed: {0}".format(exc), True)
+            return _tool_result(
+                msg_id,
+                "capability '{0}': read failed: {1}".format(name, exc),
+                True,
+            )
         return _tool_result(msg_id, text, False)
     cli_path = os.path.join(home, spec["cli"])
     if not os.path.isfile(cli_path):
