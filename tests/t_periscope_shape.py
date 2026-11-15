@@ -10,11 +10,10 @@ Purpose.  Hook the periscope sweep tool into the tests/ suite and smoke its
   marker line; this shell re-checks the subprocess faces a suite reader
   cares about.
 
-Interface.  `python3 tests/t_periscope_shape.py` (run directly; deliberately
-  not rostered in tests/run_tests.sh — the roster count is mechanically
-  coupled to count lines in README.md via doc_lint's second check, and
-  roster insertion belongs to a wave holding that authorization; same
-  standing decision as tests/t_exp_port.py).  Six checks: --selftest rc=0
+Interface.  `python3 tests/t_periscope_shape.py` (rostered in
+  tests/run_tests.sh as case t_periscope_shape on 20261115, audit finding
+  P0-6; the roster count is derived one-way from the CASES block in
+  tests/run_tests.sh via doc_lint's second check).  Six checks: --selftest rc=0
   with the `PERISCOPE-SELFTEST PASS` marker; --help rc=0 naming the six
   flags of the CLI face; exit-code convention spot checks (--bogus=2, a
   bare run refused with rc=2 naming --out, --config on an absent file

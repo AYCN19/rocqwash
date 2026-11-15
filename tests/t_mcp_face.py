@@ -14,11 +14,10 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
   symbiosis INDEX entry line lands with the integration increment).
 
-Interface.  `python3 tests/t_mcp_face.py` (run directly; deliberately not
-  rostered in tests/run_tests.sh - the same coupling as tests/t_exp_port.py:
-  the roster count is mechanically coupled to count lines in README.md,
-  which this stream may not touch; roster insertion belongs to a work
-  stream holding that authorization).
+Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
+  as case t_mcp_face on 20261115, audit finding P0-6; the roster count is
+  derived one-way from the CASES block in tests/run_tests.sh by doc_lint's
+  second check).
 
 Probes (one session, in order; zero network):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp

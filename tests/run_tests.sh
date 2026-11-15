@@ -188,6 +188,32 @@
 #         --help smoke plus exit-code spot checks bogus=2/no-input=2/
 #         apply-without-out=2/negative-seq=2/missing-base=9; tmp fixtures
 #         only, zero writes, zero network)
+#       tools/symbiosis_bus.py + tools/bus_feeder.py + tools/uplink.py +
+#         tools/evolution_dashboard.py + tools/mcp_server.py + tools/exp_port.py
+#         + tools/periscope.py shape shells (tests/t_symbiosis_shape.py +
+#         t_bus_feeder_shape.py + t_uplink_shape.py +
+#         t_evolution_dashboard_shape.py + t_mcp_face.py + t_exp_port.py +
+#         t_periscope_shape.py · 20261115 roster hookup, audit finding P0-6:
+#         the five new tool faces and the two bus-family shells were cast
+#         with a standing "not rostered" note; each shell drives its tool's
+#         real argparse face in subprocesses, offline by construction, tmp
+#         fixtures only, zero repository writes; t_mcp_face drives one
+#         newline-delimited JSON-RPC session over the 25-capability stdio
+#         server face; t_evolution_dashboard_shape adds one read-only live
+#         check over the standing account paths)
+#       engine-body contract suites (tests/t_engines_body.py nine segments
+#         60 checks over ai_flavor / jargon_apply / ai_flavor_apply /
+#         i18n_pipeline / i18n_translate / i18n_verify + termbase, and
+#         tests/t_engines_seeds.py five seed segments 40 checks E1..E5 ·
+#         20261115 roster hookup; modules load dynamically from tools/, a
+#         not-yet-landed module is one loud SKIP line, never a silent pass;
+#         zero network, zero writes outside mkdtemp)
+#       negative-vector pins (tests/test_evolve_flag_contract.py four checks
+#         pinning the evolve.py user-facing flag contract, and
+#         tests/test_watch_repo_form.py three checks pinning the
+#         cw_sentinel --watch-repo ORG/REPO form refusal · 20261115 roster
+#         hookup; the form check fires before any fetch, zero network,
+#         tmpdir fixtures, zero repository writes)
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -337,11 +363,75 @@ t_dual_scan \
  t_clean_mode \
  t_vacgen_shape \
  t_vacgen_expectedred \
- t_refinery"
+ t_refinery \
+ t_symbiosis_shape \
+ t_bus_feeder_shape \
+ t_uplink_shape \
+ t_evolution_dashboard_shape \
+ t_mcp_face \
+ t_exp_port \
+ t_periscope_shape \
+ t_engines_body \
+ t_engines_seeds \
+ t_evolve_flag_contract \
+ t_watch_repo_form"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
   NCASES=$((NCASES + 1))
+fi
+
+# ---------- roster selection: platform-sensitive / flaky separation ----------
+#   ROCWASH_TESTS_ONLY     space-separated case names; run ONLY these.
+#   ROCWASH_TESTS_EXCLUDE  space-separated case names; run the default roster
+#                          minus these (each excluded case prints one loud
+#                          SELECTED-OUT line and is not counted).
+#   Carried by the CI matrix (ci.yml): ubuntu/windows jobs exclude the
+#   platform-sensitive roster for the blocking job and run it alone in the
+#   advisory flaky-watch job, so a platform-bound red cannot mask a real
+#   regression and cannot fail the run either (failure-rate target <5%).
+#   Unknown ONLY names are a loud rc=2 (the caller named a case that does
+#   not exist); unknown EXCLUDE names print one loud note and are ignored
+#   (rosters evolve). The exit contract (0 all green / 1 any red) is
+#   unchanged; selection never turns a red into a pass.
+if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ]; then
+  _sel_all="$CASES"
+  if [ -n "${ROCWASH_TESTS_ONLY:-}" ]; then
+    for _want in $ROCWASH_TESTS_ONLY; do
+      _hit=0
+      for _c in $_sel_all; do
+        [ "$_c" = "$_want" ] && _hit=1 && break
+      done
+      if [ "$_hit" != "1" ]; then
+        echo "SELECTION-ERROR: ROCWASH_TESTS_ONLY name is not in the roster: $_want"
+        exit 2
+      fi
+    done
+  fi
+  _selected=""
+  for _c in $_sel_all; do
+    _drop=0
+    if [ -n "${ROCWASH_TESTS_ONLY:-}" ]; then
+      _drop=1
+      for _want in $ROCWASH_TESTS_ONLY; do
+        [ "$_c" = "$_want" ] && _drop=0 && break
+      done
+    else
+      for _ex in $ROCWASH_TESTS_EXCLUDE; do
+        if [ "$_c" = "$_ex" ]; then
+          _drop=1
+          printf 'SELECTED-OUT %-26s (platform-sensitive roster; advisory watch job covers it)\n' "$_c"
+        fi
+      done
+    fi
+    [ "$_drop" != "1" ] && _selected="$_selected $_c"
+  done
+  CASES="$_selected"
+  NCASES=$(echo $CASES | wc -w | tr -d ' ')
+  if [ -z "$(echo $CASES | tr -d ' ')" ]; then
+    echo "SELECTION-ERROR: case selection is empty (ONLY matched nothing usable)"
+    exit 2
+  fi
 fi
 
 # ---------- 用例（每例自管退出码；0=该例绿） ----------
@@ -904,6 +994,124 @@ t_refinery() {
   # render / calib / sweep) into one SUMMARY + TOTAL line. Import-safe,
   # zero network, zero compile; an absent segment file is one loud SKIP.
   "$PY" -B "$REPO/tests/t_refinery.py"
+}
+
+t_symbiosis_shape() {
+  # 20261115 roster hookup (audit finding P0-6): cross-repository
+  # experience bus shape shell (tests/t_symbiosis_shape.py over
+  # tools/symbiosis_bus.py) - seven subprocess checks: the export schema
+  # matrix (rocqwash-symbio/1 envelope), import through the single
+  # exp_port append face (rocqwash-exp/1 rows), idempotent re-import,
+  # status and diff faces, exit-code convention, dry-run zero-write.
+  # Offline by construction, tmp fixtures only. Supersedes the file's
+  # earlier standing "not rostered" note.
+  "$PY" -B "$REPO/tests/t_symbiosis_shape.py"
+}
+
+t_bus_feeder_shape() {
+  # 20261115 roster hookup (audit finding P0-6): gap-ledger feeder shape
+  # shell (tests/t_bus_feeder_shape.py over tools/bus_feeder.py) - seven
+  # checks: the tool's own frozen selftest group, the real sample
+  # docs/symbiosis-swap-round1.jsonl through the dry-run face (read-only),
+  # the export-to-gap-rows end-to-end leg, idempotent re-feed, damaged
+  # package refusals, usage and exit codes, status mapping and the write
+  # surface. Offline, tmp fixtures.
+  "$PY" -B "$REPO/tests/t_bus_feeder_shape.py"
+}
+
+t_uplink_shape() {
+  # 20261115 roster hookup (audit finding P0-6): external return-package
+  # intake gate shell (tests/t_uplink_shape.py over tools/uplink.py) -
+  # three faces on tmp zip+md5 fixtures: verify (fail-loud red on any
+  # digest mismatch or missing member, per-file evidence), intake (exactly
+  # one docs/uplink-intake.jsonl row, schema rocqwash-uplink/1, nothing
+  # else written) and pr-prep (a draft file only, never opens a pull
+  # request); the repository-tree checksum must stay unchanged.
+  "$PY" -B "$REPO/tests/t_uplink_shape.py"
+}
+
+t_evolution_dashboard_shape() {
+  # 20261115 roster hookup (audit finding P0-6): self-evolution dashboard
+  # shape shell (tests/t_evolution_dashboard_shape.py over
+  # tools/evolution_dashboard.py) - seven fixture checks (three-source
+  # aggregation over rocqwash-exp/1 + rocqwash-round/1 + vacgen v2 report
+  # faces, conversion math, coverageLowerPct curve ordering with the
+  # TODO-SEAT delta, default/explicit absence rule, exit codes,
+  # determinism of both output faces) plus one read-only live check over
+  # the standing account paths.
+  "$PY" -B "$REPO/tests/t_evolution_dashboard_shape.py"
+}
+
+t_mcp_face() {
+  # 20261115 roster hookup (audit finding P0-6): MCP stdio server face
+  # shell (tests/t_mcp_face.py spawning tools/mcp_server.py) - one
+  # newline-delimited JSON-RPC session asserting the 25-capability face
+  # (legacy 8 + batch-1 zero-network 13 + engine-body 3 + symbiosis 1)
+  # plus live-call spot checks; zero network by construction.
+  "$PY" -B "$REPO/tests/t_mcp_face.py"
+}
+
+t_exp_port() {
+  # 20261115 roster hookup (audit finding P0-6): experience-bus port
+  # shell (tests/t_exp_port.py over tools/exp_port.py) - four checks:
+  # --selftest rc=0 with the EXP-PORT-SELFTEST PASS frozen marker, --help
+  # usage face, exit-code spot checks (bogus=2, append without
+  # --points=2, query on an absent ledger=9), copy dry-run reports a
+  # would-be id and writes nothing.
+  "$PY" -B "$REPO/tests/t_exp_port.py"
+}
+
+t_periscope_shape() {
+  # 20261115 roster hookup (audit finding P0-6): periscope sweep shell
+  # (tests/t_periscope_shape.py over tools/periscope.py) - six checks:
+  # --selftest rc=0 with the PERISCOPE-SELFTEST PASS frozen marker, --help
+  # naming the six CLI flags, exit-code convention spot checks, a valid
+  # six-source config dry-run, the draft-template invariants (five
+  # judgment-template sections plus four negative-finding element labels),
+  # and the dry-run writing zero bytes.
+  "$PY" -B "$REPO/tests/t_periscope_shape.py"
+}
+
+t_engines_body() {
+  # 20261115 roster hookup (audit finding P0-6): engine-body contract
+  # suite (tests/t_engines_body.py, nine segments / 60 checks over the
+  # ai_flavor, jargon_apply, ai_flavor_apply, i18n_pipeline,
+  # i18n_translate, i18n_verify and termbase modules) - clean and polluted
+  # probes, exit codes, idempotence, zero-write defaults, nine-key ledger
+  # validation, the default-deny network gate, the budget cap and the
+  # legal refusal path; modules load dynamically from tools/ and a
+  # not-yet-landed module is one loud SKIP line, never a silent pass.
+  "$PY" -B "$REPO/tests/t_engines_body.py"
+}
+
+t_engines_seeds() {
+  # 20261115 roster hookup (audit finding P0-6): five-engine seed
+  # assertions (tests/t_engines_seeds.py, E1..E5 segments / 40 checks with
+  # EXPECTED_SEGMENTS accounting); seeds are located relative to the file,
+  # and off-machine anchors report SKIP with a reason, never a silent
+  # pass; zero network, zero writes.
+  "$PY" -B "$REPO/tests/t_engines_seeds.py"
+}
+
+t_evolve_flag_contract() {
+  # 20261115 roster hookup (audit finding P0-6): evolve.py flag-face
+  # contract pin (tests/test_evolve_flag_contract.py, four checks: the six
+  # cycle-3 ask flags verbatim in the --help face, the
+  # --sentinel-events/--sentinel-state pair accepted without --watch-repo,
+  # a no-signal-source round exits 2 fail-loud, the registry pair against
+  # a book-less repository exits 9 fail-loud); tmpdir fixtures, zero
+  # network, zero repository writes.
+  "$PY" -B "$REPO/tests/test_evolve_flag_contract.py"
+}
+
+t_watch_repo_form() {
+  # 20261115 roster hookup (audit finding P0-6): cw_sentinel --watch-repo
+  # ORG/REPO form negative vectors (tests/test_watch_repo_form.py, three
+  # checks: a local-directory form and a bare token are both refused with
+  # rc=2 and the ORG/REPO message, and the REPO_RE match gate stays
+  # anchored in tools/cw_sentinel.py; the form check fires before any
+  # fetch, so zero network is reached).
+  "$PY" -B "$REPO/tests/test_watch_repo_form.py"
 }
 
 # ---------- 汇总执行 ----------

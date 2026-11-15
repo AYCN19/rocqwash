@@ -9,10 +9,11 @@
       nothing else written), and `pr-prep` (a PR description draft file; it never
       opens a pull request).  The repository-tree checksum must stay unchanged.
 
-    Interface.  `python3 tests/t_uplink_shape.py` (run directly; deliberately not
-      rostered in tests/run_tests.sh, same standing decision as tests/t_exp_port.py
-      and tests/t_periscope_shape.py: roster insertion belongs to a work stream
-      holding that authorization).  Faces pinned by the uplink ticket: `verify
+    Interface.  `python3 tests/t_uplink_shape.py` (rostered in
+      tests/run_tests.sh as case t_uplink_shape on 20261115, audit finding
+      P0-6; the roster count is derived one-way from the CASES block in
+      tests/run_tests.sh by doc_lint's second check).  Faces pinned by the
+      uplink ticket: `verify
       --package P.zip --manifest M.md5`; `intake --package P.zip --manifest M.md5
       [--registry F]` (it re-verifies; the source provenance pair lands in the
       registry row); `pr-prep --registry F --package NAME --out DRAFT.md`;

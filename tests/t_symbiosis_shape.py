@@ -11,13 +11,12 @@
       status and diff faces, the exit-code convention, and dry-run
       zero-write.
 
-    Interface.  `py tests/t_symbiosis_shape.py` (run directly; deliberately
-      not rostered in tests/run_tests.sh — the same coupling as
-      tests/t_exp_port.py and tests/t_periscope_shape.py: the roster count
-      is mechanically coupled to count lines in README.md via doc_lint's
-      second check, and roster insertion belongs to a work stream holding
-      that authorization).  Seven checks total, each driving the tool's real
-      argparse face in a subprocess:
+    Interface.  `py tests/t_symbiosis_shape.py` (rostered in
+      tests/run_tests.sh as case t_symbiosis_shape on 20261115, audit
+      finding P0-6; the roster count is derived one-way from the CASES
+      block in tests/run_tests.sh by doc_lint's second check, and the
+      README count lines follow that derived count).  Seven checks total,
+      each driving the tool's real argparse face in a subprocess:
       `export --ledger L --out P [--source-repo NAME] [--anchor HEX]
       [--dry-run]` | `import --swap P --ledger L [--dry-run]` |
       `status [--ledger L] [--swap F]` | `diff --a A --b B`, plus
