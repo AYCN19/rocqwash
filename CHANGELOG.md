@@ -380,6 +380,36 @@ defects rather than environment noise, and are closed here.
   the suite records the case as SKIP (the suite's standing rc 111 contract)
   rather than red.
 
+### v65 — probe engine: Windows path folding and timeout visibility (2026-11-16)
+
+**Fixed**
+
+- `wash/probe_engine.py`: the probe command template was handed to `bash -c`
+  as text, and a backslash inside that text is an escape character to the
+  shell, not a path separator. A Windows path in the template was folded into
+  a different word (`C:\a\b.sh` -> `C:ab.sh`), the command was not found, and
+  every candidate was recorded as `RED-UNKNOWN` with rc 127. The MSYS runtime
+  rewrites an argv path to forward slashes by itself, but not a path embedded
+  in the text of `bash -c`. Drive-letter paths in the template, in the guard
+  path and in the guard registry are now rewritten to forward slashes before
+  they reach the shell; a POSIX path, a shell escape and a non-path `C:` text
+  are left alone.
+- `wash/probe_engine.py`: the probe command is a shell line, so the compiler
+  it runs is a grandchild of the probe process. On a timeout only the direct
+  child was killed, leaving that grandchild alive with the write end of the
+  captured pipes still in its hands; the interpreter then waited for the pipe
+  to reach EOF, so a 2s timeout was reported only after the grandchild's own
+  lifetime (30s) had elapsed. The probe now runs in its own process group
+  (Windows: a new process group) and a timeout reaps the whole tree, so the
+  timeout is observable when it happens.
+
+**Tests**
+
+- `tests/test_probe_engine.py` grew two regression sections (9 -> 11): the
+  drive-letter path in a command template must reach the stub (rc 0, not
+  127), and a timeout must be visible at the deadline. The first also pins
+  that the rewrite touches nothing but drive-letter paths.
+
 ### v64 — destructive-matrix write-face judgment: git metadata out of scope (2026-11-16)
 
 **Fixed**

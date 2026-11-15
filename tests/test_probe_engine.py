@@ -3,26 +3,29 @@
 """test_probe_engine.py — wash/probe_engine.py 自测（tests/·v30 实战判例工具化·
 承 W13 probe_batch.py 工具化轮·20261103）
 
-批量闭包相容探针引擎十节判：
+批量闭包相容探针引擎十一节判（编号＝执行序）：
   1 工具自证    --selftest 四判全过（rc 0）
   2 stub 全链   桩探针三分：WASHABLE（rc0+RED>0）／BORN-CLEAN（rc0+RED=0）／
                 RED-MISSING_LIB（rc1·missing 库名捕获·red_count/md5_match 回填）
   3 NO-SRC      清单有名源树无件 → rc=NO_SRC verdict=NO-SRC（不编译如实出账）
   4 TIMEOUT     桩 sleep→--timeout 2 → rc=124 verdict=TIMEOUT
-  5 resume 幂等 重跑同候选集 → SKIP(done) 行＋台账字节级恒同
-  6 --fresh     推倒重探→台账字节级恒同（确定性落盘·sort_keys）
-  7 guard 包裹  --guard tools/cpu_guard.sh（队列制）＋桩 rc=7 → 记录 rc=7
+  5 resume 幂等 重跑同候选集 → SKIP(done) 行＋台账字节级恒同（--fresh 同账）
+  6 guard 包裹  --guard tools/cpu_guard.sh（队列制）＋桩 rc=7 → 记录 rc=7
                 真取（退出码透传无改写·无管道）
-  8 RED 缺列    候选清单无 RED 列 → rc0 verdict=RC0（三分不可判如实出）
-  9 CLI 四码    --help 0／未知形参 2／缺参数 2／路径缺失 9
-  10 真 rocq 门控节（ROCWASH_ROCQ 环境门控·缺省 SKIP 不充红）：仓 fixtures
+  7 RED 缺列    候选清单无 RED 列 → rc0 verdict=RC0（三分不可判如实出）
+  8 CLI 四码    --help 0／未知形参 2／缺参数 2／路径缺失 9
+  9 盘符路径归一 --rocq-cmd 模板里的 Windows 盘符路径须转正斜杠（bash -c 文本里
+                反斜杠是转义符·会把命令词折叠成 127·回归向量）
+ 10 TIMEOUT 树收割 超时须收割整棵进程树（编译器是孙进程·仍握管道写端·
+                只杀直接子进程会把 2s 超时拖到 30s·回归向量）
+ 11 真 rocq 门控节（ROCWASH_ROCQ 环境门控·缺省 SKIP 不充红）：仓 fixtures
      probe_pass_sample.v（绿）＋probe_red_sample.v（缺库红）全链——guard 包裹
      ＋世界纯度（探针后五件产物移出·世界零残留）＋logdir 留证
 
 零触律：全部夹具在临时目录自造（桩脚本＋迷你源树/世界）＋仓 fixtures 只读复制；
 stub 节零真编译零网络；真 rocq 节仅在 ROCWASH_ROCZ...ROCWASH_ROCQ 在卷时跑且
 一切编译经 tools/cpu_guard.sh 包裹（温控铁律）。幂等：python3 -B 禁 __pycache__·
-临时目录即写即清。退出码：0=十节全过；1=任一红。
+临时目录即写即清。退出码：0=十一节全过；1=任一红。
 """
 import importlib.util
 import io
@@ -235,6 +238,68 @@ def sec7_no_red_col(tmp):
     return "RED 缺列→RC0 三分不可判如实出"
 
 
+def sec8_win_path_normalized(tmp):
+    """Windows 路径归一：--rocq-cmd 模板里的盘符路径须转成正斜杠。
+
+    回归向量（缺陷根因）：bash -c 的文本里反斜杠是转义符，MSYS bash 会把
+    命令词 C:\\a\\b.sh 折叠成 C:ab.sh，命令找不到（127），探针把每个候选都
+    记成 RED-UNKNOWN。工具须在交给 shell 前把盘符路径转成正斜杠（MSYS 的
+    argv 路径本就会被自动转，文本里的不会）。
+    """
+    bs = chr(92)
+    win = "C:" + bs + "dir" + bs + "sub" + bs + "stub.sh {name}.v"
+    posix = "C:/dir/sub/stub.sh {name}.v"
+    got = pe.win_path_to_posix(win)
+    assert got == posix, "盘符路径须转正斜杠·实测 %r" % got
+    # 不误伤：POSIX 路径、shell 转义、非路径的 "C:" 文本一律不动
+    for keep in ("/usr/bin/rocq {name}.v",
+                 "echo " + bs + "n",
+                 '"C: is a drive"',
+                 "ABC:" + bs + "x"):
+        assert pe.win_path_to_posix(keep) == keep, \
+            "归一误伤 %r -> %r" % (keep, pe.win_path_to_posix(keep))
+    # 端到端：模板里放盘符路径，桩须真被找到（rc=0），不是 127
+    stage, src, world, logdir, stub, cands = make_stage(
+        tmp, "s10", files=[("WinPathCand", "0")], red_names=set())
+    tpl = stub.replace("/", bs) if os.name == "nt" else stub
+    led = os.path.join(stage, "ledger.json")
+    rc, out = run(["--candidates", cands, "--src", src, "--world", world,
+                   "--out", led, "--logdir", logdir,
+                   "--rocq-cmd", tpl + " {name}.v"])
+    assert rc == 0, out
+    acc = json.load(io.open(led, encoding="utf-8"))
+    r = acc["records"]["WinPathCand"]
+    assert r["rc"] == 0 and r["verdict"] == "BORN-CLEAN", \
+        "盘符路径模板须真找到桩·实测 %r" % r
+    return "盘符路径模板归一（bash -c 文本反斜杠折叠·127 回归）"
+
+
+def sec9_timeout_reaps_tree(tmp):
+    """TIMEOUT 到点可见：超时须收割整棵进程树，不能等孙进程放手管道。
+
+    回归向量（缺陷根因）：探针命令是 shell 行，编译器是孙进程；只杀直接子
+    进程时孙进程仍握住捕获管道的写端，Windows 上解释器要等管道 EOF 才能返
+    回超时，于是 2s 超时被拖到孙进程自己的寿命（30s）才报出来。
+    """
+    stage, src, world, logdir, stub, cands = make_stage(
+        tmp, "s11", files=[("SlowCand", "0")], red_names=set())
+    with io.open(stub, "w", encoding="utf-8") as fh:
+        fh.write("#!/bin/bash\nsleep 30\nexit 0\n")
+    os.chmod(stub, 0o755)
+    led = os.path.join(stage, "ledger.json")
+    t0 = time.time()
+    rc, out = run(["--candidates", cands, "--src", src, "--world", world,
+                   "--out", led, "--logdir", logdir,
+                   "--rocq-cmd", stub + " {name}.v", "--timeout", "2"])
+    dt = time.time() - t0
+    assert rc == 0, out
+    acc = json.load(io.open(led, encoding="utf-8"))
+    r = acc["records"]["SlowCand"]
+    assert r["rc"] == 124 and r["verdict"] == "TIMEOUT", r
+    assert dt < 15, "超时应到点可见（进程树收割）·实测 %.1fs" % dt
+    return "TIMEOUT rc=124 到点可见（进程树收割·不被孙进程拖住）"
+
+
 def sec8_cli_codes(tmp):
     rc, out = run(["--help"])
     assert rc == 0 and "usage" in out, out[-200:]
@@ -312,14 +377,16 @@ def main():
             ("6 guard 包裹真取", lambda: sec6_guard_wrap(tmp)),
             ("7 RED 缺列 RC0", lambda: sec7_no_red_col(tmp)),
             ("8 CLI 四码", lambda: sec8_cli_codes(tmp)),
-            ("9 真 rocq 门控节", lambda: sec9_real_rocq(tmp)),
+            ("9 盘符路径归一", lambda: sec8_win_path_normalized(tmp)),
+            ("10 TIMEOUT 树收割", lambda: sec9_timeout_reaps_tree(tmp)),
+            ("11 真 rocq 门控节", lambda: sec9_real_rocq(tmp)),
         ]
         n = 0
         for name, fn in secs:
             note = fn()
             n += 1
-            print("  [%d/9] %-22s OK — %s" % (n, name, note))
-        print("TEST-PROBE-ENGINE PASS: 9/9 节全过")
+            print("  [%d/11] %-22s OK — %s" % (n, name, note))
+        print("TEST-PROBE-ENGINE PASS: 11/11 节全过")
         return 0
     except AssertionError as e:
         print("TEST-PROBE-ENGINE FAIL: %s" % e)

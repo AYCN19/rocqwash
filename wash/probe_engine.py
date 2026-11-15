@@ -45,6 +45,32 @@ PROG = "probe_engine"
 SCHEMA = "rocqwash-probe-ledger/1"
 DEFAULT_ROCQ_CMD = 'rocq c -Q . "" {name}.v'
 
+# A Windows path arriving in argv is rewritten to forward slashes by the
+# MSYS runtime itself; a path embedded in the text of "bash -c" is not,
+# because the shell treats a backslash as an escape character and folds
+# the word ("C:\a\b.sh" -> "C:ab.sh"), so the command is not found and the
+# probe reports 127 for every candidate. Only drive-letter paths are
+# rewritten; a shell escape elsewhere in the text is left alone.
+_WIN_PATH_QUOTED = re.compile(r'"([A-Za-z]:[\\/][^"]*)"')
+_WIN_PATH_BARE = re.compile(r"(?<![A-Za-z0-9_])([A-Za-z]:[\\/][^\s\"']*)")
+
+
+def win_path_to_posix(text):
+    """Rewrite the backslashes of an absolute Windows path into forward
+    slashes, so that a shell can read the path.
+
+    Quoted and bare drive-letter paths are both handled; every other
+    character (a shell escape, a POSIX path, a brace) is left untouched.
+    """
+    def _quoted(m):
+        return '"' + m.group(1).replace("\\", "/") + '"'
+
+    def _bare(m):
+        return m.group(1).replace("\\", "/")
+
+    text = _WIN_PATH_QUOTED.sub(_quoted, text)
+    return _WIN_PATH_BARE.sub(_bare, text)
+
 
 def _clean_mode():
     # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
@@ -148,6 +174,32 @@ def verdict_of_rc(rc, red_count):
     return "WASHABLE" if red_count > 0 else "BORN-CLEAN"
 
 
+def _kill_process_tree(proc):
+    """Terminate a timed-out probe together with the whole process tree it
+    spawned.
+
+    The probe command is a shell line, so the compiler it runs is a
+    grandchild of the probe process. Killing only the direct child leaves
+    that grandchild alive, still holding the write end of the captured
+    pipes: on Windows the interpreter then waits for the pipe to reach EOF
+    before it can return the timeout, so a 2s timeout was reported only
+    after the grandchild's own lifetime (30s) had elapsed. Reaping the tree
+    makes the timeout observable when it happens.
+    """
+    try:
+        if os.name == "nt":
+            subprocess.call(["taskkill", "/F", "/T", "/PID", str(proc.pid)],
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            os.killpg(os.getpgid(proc.pid), 9)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    try:
+        proc.kill()
+    except OSError:
+        pass
+
+
 def probe_one(name, src_dir, world_dir, logdir, rocq_cmd, guard, guard_reg,
               guard_front, guard_mid, guard_maxwait, timeout, ulimit_stack):
     """One probe: copy → compile → real exit code → failure extraction →
@@ -162,23 +214,32 @@ def probe_one(name, src_dir, world_dir, logdir, rocq_cmd, guard, guard_reg,
     inner = ""
     if ulimit_stack:
         inner += "ulimit -s %d; " % ulimit_stack
-    inner += rocq_cmd.replace("{name}", name)
+    inner += win_path_to_posix(rocq_cmd).replace("{name}", name)
     if guard:
-        cmd = ["bash", guard, "-Reg", guard_reg,
+        cmd = ["bash", win_path_to_posix(guard), "-Reg", win_path_to_posix(guard_reg),
                "-Front", str(guard_front), "-Mid", str(guard_mid),
                "-MaxWaitSec", str(guard_maxwait), "--", "bash", "-c", inner]
     else:
         cmd = ["bash", "-c", inner]
     try:
-        p = subprocess.run(cmd, cwd=world_dir, capture_output=True,
-                           text=True, timeout=timeout)
-        rc, out, err = p.returncode, p.stdout or "", p.stderr or ""
-    except subprocess.TimeoutExpired as e:
-        rc = 124
-        out = e.stdout.decode("utf-8", errors="replace") \
-            if isinstance(e.stdout, bytes) else (e.stdout or "")
-        err = e.stderr.decode("utf-8", errors="replace") \
-            if isinstance(e.stderr, bytes) else (e.stderr or "")
+        if os.name == "nt":
+            popen_kw = {"creationflags": 0x00000200}  # CREATE_NEW_PROCESS_GROUP
+        else:
+            popen_kw = {"start_new_session": True}
+        proc = subprocess.Popen(cmd, cwd=world_dir, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, text=True, **popen_kw)
+        try:
+            out, err = proc.communicate(timeout=timeout)
+            rc = proc.returncode
+        except subprocess.TimeoutExpired:
+            _kill_process_tree(proc)
+            try:
+                out, err = proc.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                out, err = "", ""
+            rc = 124
+    except OSError as e:
+        rc, out, err = 127, "", str(e)
     with io.open(os.path.join(logdir, name + ".stderr.log"), "w",
                  encoding="utf-8") as f:
         f.write(err + "\n===STDOUT===\n" + out)
