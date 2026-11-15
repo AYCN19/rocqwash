@@ -334,7 +334,11 @@ t_dual_scan \
  t_contrib_intake \
  t_registry_regen \
  t_evolve \
- t_clean_mode"
+ t_clean_mode \
+ t_vacgen_shape \
+ t_vacgen_expectedred \
+ t_vacgen_envelope_shape \
+ t_refinery"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -869,6 +873,38 @@ t_clean_mode() {
   # selftest faces still pass under the switch. Zero compile, zero network,
   # zero writes outside mkdtemp. Census: docs/clean-mode-manual-20261114.md.
   "$PY" -B "$REPO/tests/test_clean_mode.py"
+}
+
+t_vacgen_shape() {
+  # 20261114 递归自愈席补挂接：vacgen 四账骨架形状自测（tests/t_vacgen_shape.py
+  # ·zeta 面 fixture 铸形·四账 8 文件在盘断言·零编译零网络）。此例与
+  # t_vacgen_expectedred 自 20261113 落位起即未接线（run_tests.sh 零提及＝
+  # 套件不可见·RQW12 判例同款缺口），本轮一并补挂；subprocess 读取面补
+  # encoding=utf-8（GBK locale 读线程解码破·对齐 expectedred 读形）。
+  "$PY" -B "$REPO/tests/t_vacgen_shape.py"
+}
+
+t_vacgen_expectedred() {
+  # 20261114 递归自愈席补挂接：vacgen 预期红契约自测（tests/t_vacgen_expectedred.py
+  # ·三判：EXPECTED-FAIL 逐面登记/反判契约向量/红绿边界·预期红=数据非器红·
+  # 未登记红才是缺陷·零编译零网络）。
+  "$PY" -B "$REPO/tests/t_vacgen_expectedred.py"
+}
+
+t_vacgen_envelope_shape() {
+  # 20261114 递归自愈席新铸：witness 包络词面形状自测（tests/t_vacgen_envelope_shape.py
+  # ·fixture A 良形面契约钉（无裸型连言肢）＋fixture B 隐式 binder 面已知债钉
+  # （债签名 ∧ Set ( 在场=钉绿·引擎修后钉红=按 SOP §2.5 勘误更新钉）·
+  # 20261114 登记引擎债的唯一机检守卫·零编译零网络）。
+  "$PY" -B "$REPO/tests/t_vacgen_envelope_shape.py"
+}
+
+t_refinery() {
+  # refinery merge contract suite (tests/t_refinery.py): aggregates the six
+  # lane segments under tests/refinery_segments/ (seam / vacgen / gap /
+  # render / calib / sweep) into one SUMMARY + TOTAL line. Import-safe,
+  # zero network, zero compile; an absent segment file is one loud SKIP.
+  "$PY" -B "$REPO/tests/t_refinery.py"
 }
 
 # ---------- 汇总执行 ----------

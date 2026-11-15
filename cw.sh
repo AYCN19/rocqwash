@@ -117,6 +117,16 @@
 #               cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]
 #   termbase    read-only terminology thin layer over seeds/termbase/termbase.json (exact-face lookup; schema validation fail-loud; a miss is data, exit 0) -> tools/termbase.py
 #               cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest
+#   gap-cluster aggregate TODO-SEAT and gap ledger entries into a family-shape-keyed gap ledger (deterministic; byte-identical reruns; zero gaps is data) -> tools/gap_cluster.py
+#               cw.sh gap-cluster [--ledger P]... [--reports P]... [--out FILE] [--json] | --selftest
+#   row-render  gap ledger to candidate taxonomy rows through the E4 P2 handoff form (vacgen admission gate; ten-point human gate; a draft is written only on full admission) -> tools/row_render.py
+#               cw.sh row-render --gaps P --emit OUT.jsonl | --ingest ROWS.jsonl | --check-draft DRAFT.json | --emit-tenpoint | --ingest-tenpoint V.json [--draft-out P] [--vacgen P] [--json]
+#   calibration-ledger  pair vacgen v2 predicted confidence with the measured compile-leg rc into per-row calibration entries (correlationId; idempotent seen set; row-rot signal face; signals are data) -> tools/calibration_ledger.py
+#               cw.sh calibration-ledger --report R.json --rc-file RC.json [--leg-map LM.json] [--default-leg NAME] [--ledger P] [--signal-threshold F] [--strict] [--dry-run] | --selftest
+#   lean-sweep  vacuity probe batch sweep orchestrator (bins, dedups, casts with a zero-compile precheck; the compile leg is a designed SKIP unless --fire and the toolchain probe passes) -> tools/lean_sweep.py
+#               cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest
+#   verdict-diff mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py
+#               cw.sh verdict-diff --results-lane "DIR/results-lane*.tsv" [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -308,6 +318,16 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]
   termbase    read-only terminology thin layer over seeds/termbase/termbase.json (exact-face lookup; schema validation fail-loud; a miss is data, exit 0) -> tools/termbase.py
               cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest
+  gap-cluster aggregate TODO-SEAT and gap ledger entries into a family-shape-keyed gap ledger (deterministic; byte-identical reruns; zero gaps is data) -> tools/gap_cluster.py
+              cw.sh gap-cluster [--ledger P]... [--reports P]... [--out FILE] [--json] | --selftest
+  row-render  gap ledger to candidate taxonomy rows through the E4 P2 handoff form (vacgen admission gate; ten-point human gate; a draft is written only on full admission) -> tools/row_render.py
+              cw.sh row-render --gaps P --emit OUT.jsonl | --ingest ROWS.jsonl | --check-draft DRAFT.json | --emit-tenpoint | --ingest-tenpoint V.json [--draft-out P] [--vacgen P] [--json]
+  calibration-ledger  pair vacgen v2 predicted confidence with the measured compile-leg rc into per-row calibration entries (correlationId; idempotent seen set; row-rot signal face; signals are data) -> tools/calibration_ledger.py
+              cw.sh calibration-ledger --report R.json --rc-file RC.json [--leg-map LM.json] [--default-leg NAME] [--ledger P] [--signal-threshold F] [--strict] [--dry-run] | --selftest
+  lean-sweep  vacuity probe batch sweep orchestrator (bins, dedups, casts with a zero-compile precheck; the compile leg is a designed SKIP unless --fire and the toolchain probe passes) -> tools/lean_sweep.py
+              cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest
+  verdict-diff mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py
+              cw.sh verdict-diff --results-lane "DIR/results-lane*.tsv" [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -363,6 +383,11 @@ hint_for() {  # $1=tool
     i18n-verify) echo "cw.sh i18n-verify --verify-target <p> [--json out] | --emit-tenpoint <target> | --ingest-tenpoint verdicts.json | --selftest   # P4 mechanical verify orchestration + P5 human ten-point form (the engine never judges) -> tools/i18n_verify.py" ;;
     jargon-apply) echo "cw.sh jargon-apply --file <p> | --tree DIR [--plan | --apply] [--json out] [--guarded-interactive] [--selftest]   # jargon-to-standard apply face (replace entries only; plan zero-write default; apply rescans to residue zero; idempotent) -> tools/jargon_apply.py" ;;
     termbase)    echo "cw.sh termbase --lookup <term> [--db <p>] [--json out] | --schema-check | --selftest   # read-only terminology thin layer (exact-face lookup; schema fail-loud; a miss is data) -> tools/termbase.py" ;;
+    gap-cluster) echo "cw.sh gap-cluster [--ledger P]... [--reports P]... [--out FILE] [--json] | --selftest   # aggregate TODO-SEAT and gap ledger entries into a family-shape-keyed gap ledger (deterministic; byte-identical reruns; zero gaps is data) -> tools/gap_cluster.py" ;;
+    row-render)  echo "cw.sh row-render --gaps P --emit OUT.jsonl | --ingest ROWS.jsonl | --check-draft DRAFT.json | --emit-tenpoint | --ingest-tenpoint V.json [--draft-out P] [--vacgen P] [--json]   # gap ledger to candidate taxonomy rows through the E4 P2 handoff form (vacgen admission gate; ten-point human gate; a draft is written only on full admission) -> tools/row_render.py" ;;
+    calibration-ledger) echo "cw.sh calibration-ledger --report R.json --rc-file RC.json [--leg-map LM.json] [--default-leg NAME] [--ledger P] [--signal-threshold F] [--strict] [--dry-run] | --selftest   # pair vacgen v2 predicted confidence with the measured compile-leg rc into per-row calibration entries (correlationId; idempotent seen set; row-rot signal face; signals are data) -> tools/calibration_ledger.py" ;;
+    lean-sweep)  echo "cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest   # vacuity probe batch sweep orchestrator (bins, dedups, casts with a zero-compile precheck; the compile leg is a designed SKIP unless --fire and the toolchain probe passes) -> tools/lean_sweep.py" ;;
+    verdict-diff) echo "cw.sh verdict-diff --results-lane DIR/results-lane*.tsv [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest   # mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py" ;;
     *) return 1 ;;
   esac
 }
@@ -425,6 +450,11 @@ case "${1:-}" in
   i18n-verify) shift; run_tool i18n-verify "tools/i18n_verify.py"   "$@" ;;
   jargon-apply) shift; run_tool jargon-apply "tools/jargon_apply.py"   "$@" ;;
   termbase)    shift; run_tool termbase    "tools/termbase.py"   "$@" ;;
+  gap-cluster) shift; run_tool gap-cluster "tools/gap_cluster.py" "$@" ;;
+  row-render)  shift; run_tool row-render  "tools/row_render.py" "$@" ;;
+  calibration-ledger) shift; run_tool calibration-ledger "tools/calibration_ledger.py" "$@" ;;
+  lean-sweep)  shift; run_tool lean-sweep  "tools/lean_sweep.py" "$@" ;;
+  verdict-diff) shift; run_tool verdict-diff "tools/verdict_diff.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

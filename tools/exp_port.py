@@ -13,8 +13,8 @@ Purpose.  The single write/read port of the in-repository experience ledger
   corruption is loud.
 
 Interface.  `append --tool T --points P [--evidence E] [--batch B] [--id ID]
-  [--ts TS] [--source-file P] [--ledger P] [--dry-run]` | `query [--id ID]
-  [--tool SUB] [--batch SUB] [--limit N] [--ledger P]` | `--selftest`.
+  [--ts TS] [--source-file P] [--correlation-id ID] [--ledger P] [--dry-run]`
+  | `query [--id ID] [--tool SUB] [--batch SUB] [--limit N] [--ledger P]` | `--selftest`.
   Ledger resolution: --ledger wins, then ROCWASH_EXPERIENCE_DIR, then
   <repo>/docs/exp-ledger.jsonl.  Stdout carries `appended id=<ID>`,
   `duplicate-skip id=<ID>` or `dry-run id=<ID>` (nothing written).
@@ -44,6 +44,10 @@ Exit-codes.  0 appended / duplicate-skip / query answered (matches are
 #   batch        optional: batch label grouping related entries
 #   fingerprint  sha256 of the four carrier fields; the seen-set key that
 #                makes repeated appends idempotent without an explicit id
+#   correlationId  optional schema-increment field (additive): a run
+#                report id threading exp/round/event accounts together; the
+#                fingerprint does not cover it, so the idempotent seen set
+#                stays on the four carrier fields exactly as before
 #   source       optional: verbatim import provenance (--source-file JSON
 #                object), so a foreign draft's extra fields survive the ride
 #
@@ -196,6 +200,8 @@ def cmd_append(args):
     }
     if source is not None:
         entry["source"] = source
+    if args.correlation_id:
+        entry["correlationId"] = args.correlation_id
 
     if args.id and args.id in seen_ids:
         sys.stdout.write("duplicate-skip id=%s axis=id ledger=%s\n"
@@ -450,6 +456,10 @@ def build_parser():
                         help="append: ISO date/timestamp (default: now UTC)")
     parser.add_argument("--source-file", default="", dest="source_file",
                         help="append: JSON object kept verbatim as import provenance")
+    parser.add_argument("--correlation-id", default="", dest="correlation_id",
+                        help="append: optional run report id carried as "
+                             "correlationId (schema increment, not part of "
+                             "the fingerprint seen set)")
     parser.add_argument("--ledger", default="", help="ledger path override")
     parser.add_argument("--dry-run", action="store_true", dest="dry_run",
                         help="append: validate and report the would-be id, write nothing")

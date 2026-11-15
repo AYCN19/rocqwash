@@ -22,8 +22,8 @@ Dependencies.  Python 3 standard library only; instruments run under
   file; temporary report files never named in output.
 
 Evidence.  --selftest: form shape for both variants; ingest accept and
-  reject vectors; ledger append plus idempotent rerun; matrix runs on
-  stub instruments; verbatim constants byte-checked; zero em-dash face.
+  reject vectors; ledger append and idempotent rerun over pipeline
+  policy and close records; stub matrix; zero em-dash face.
 
 Exit-codes.  0 accounted (clean matrix, emitted form, accepted ingest,
   selftest green); 1 data findings or rejected verdict file (named
@@ -45,7 +45,11 @@ Exit-codes.  0 accounted (clean matrix, emitted form, accepted ingest,
 # P5 write-back is append-only: one superseding ledger row per segment
 # id, latest state copied, only tenpoint_verdict (and timestamp_utc when
 # the run carries one) changed; rerun with the same frame appends zero
-# rows.  Without --ledger nothing is written.
+# rows.  Ledger rows carrying a pipeline record_type other than segment
+# (the P0 policy row and the P6 close record of i18n_pipeline.py) are
+# skipped, not judged and never rewritten; the ingest report counts them
+# under ledger_records_skipped.  Rows with no record_type key keep the
+# segment-row contract.  Without --ledger nothing is written.
 # Verbatim transcription note: the ten-point constants below are seed
 # source text carried as data, byte-faithful to the transcription source;
 # the em-dash pair inside point 8 is written as escape sequences so the
@@ -238,9 +242,17 @@ def validate_verdicts(verdicts, line_count=None):
 
 
 def ledger_plan(lines, frame, timestamp=None):
-    """Plan the append-only write-back; returns (latest, rows, already, problems)."""
+    """Plan the append-only write-back; returns (latest, rows, already,
+    skipped, problems).
+
+    Rows carrying a record_type other than segment are the pipeline's own
+    bookkeeping (the P0 policy row and the P6 close record written by
+    i18n_pipeline.py): they are skipped, never judged and never rewritten,
+    and the skip count is returned so the ingest report can register it
+    loudly.  A row with no record_type key keeps the legacy treatment."""
     problems = []
     latest = {}
+    skipped = 0
     for pos, raw in enumerate(lines, 1):
         if not raw.strip():
             continue
@@ -249,6 +261,10 @@ def ledger_plan(lines, frame, timestamp=None):
         except ValueError as exc:
             problems.append("ledger line %d: not JSON (%s)" % (pos, exc))
             continue
+        if isinstance(row, dict) \
+                and row.get("record_type") not in (None, "segment"):
+            skipped += 1
+            continue
         if not isinstance(row, dict) or not isinstance(row.get("segment_id"), str) \
                 or not isinstance(row.get("tenpoint_verdict"), str):
             problems.append("ledger line %d: not a segment row (missing %s)"
@@ -256,9 +272,9 @@ def ledger_plan(lines, frame, timestamp=None):
             continue
         latest[row["segment_id"]] = row
     if problems:
-        return {}, [], False, problems
+        return {}, [], False, 0, problems
     if not latest:
-        return {}, [], False, ["ledger: no segment rows to write back"]
+        return {}, [], False, skipped, ["ledger: no segment rows to write back"]
     already = all(row["tenpoint_verdict"] == frame for row in latest.values())
     rows = []
     if not already:
@@ -268,7 +284,7 @@ def ledger_plan(lines, frame, timestamp=None):
             if timestamp:
                 row["timestamp_utc"] = timestamp
             rows.append(row)
-    return latest, rows, already, []
+    return latest, rows, already, skipped, []
 
 
 def read_lines(path):
@@ -709,6 +725,67 @@ def selftest(out):
               main(["--ingest-tenpoint", verdicts_path,
                     "--ledger", headless]) == 1)
 
+        # the seam vector: a real pipeline ledger carries a P0 policy row
+        # (record_type "policy") and can carry a P6 close record; the
+        # write-back must skip both, leave their bytes untouched, and append
+        # superseding rows for the segment rows only
+        policy_row = json.dumps({
+            "schema": "rocqwash.i18n.pipeline.policy/1",
+            "record_type": "policy", "run_id": "seam-vector",
+            "policy_precheck_ref": "P0-repo-seam-vector",
+            "target": "fixture.py", "face": "repo", "direction": "zh2en",
+            "regime_ref": "SPEC-7-E-repo-face", "disclosure_required": True,
+            "refusal": False, "disclosure_form": [], "red_lines": [],
+            "verdict": "accepted", "timestamp_utc": "2000-01-01T00:00:00Z",
+        }, sort_keys=True)
+        close_row = json.dumps({
+            "schema": "rocqwash.i18n.pipeline.close/1",
+            "record_type": "close", "run_id": "seam-vector",
+            "segments_total": 2, "machine_segments": 2, "human_segments": 0,
+            "verdict": "closed", "timestamp_utc": "2000-01-01T00:00:00Z",
+        }, sort_keys=True)
+        mixed = os.path.join(work, "mixed-ledger.jsonl")
+        with io.open(mixed, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(policy_row + "\n")
+            handle.write(_ledger_line("s0001") + "\n")
+            handle.write(_ledger_line("s0002") + "\n")
+            handle.write(close_row + "\n")
+        policy_bytes = (policy_row + "\n").encode("utf-8")
+        filled = _fill_verdicts(dict(form_v), "N-FAIL", fails=(2,))
+        filled["schema"] = VERDICT_SCHEMA
+        filled["target"] = v_target
+        write_output(verdicts_path, render(filled))
+        report_path = os.path.join(work, "ingest-mixed.json")
+        rc = main(["--ingest-tenpoint", verdicts_path, "--ledger", mixed,
+                   "--timestamp", "2000-01-02T00:00:00Z",
+                   "--json", report_path])
+        with io.open(report_path, "r", encoding="utf-8") as handle:
+            report = json.load(handle)
+        after = [json.loads(line) for line in read_lines(mixed)]
+        check("ledger-skips-record-type-rows", rc == 0)
+        check("ledger-skip-count-registered",
+              report["ledger_records_skipped"] == 2 and report["appended"] == 2)
+        check("ledger-policy-row-byte-intact",
+              io.open(mixed, "rb").read().startswith(policy_bytes))
+        check("ledger-write-back-carries-segment-rows-only",
+              len(after) == 6
+              and all(row.get("record_type") is None for row in after[4:]))
+        rc = main(["--ingest-tenpoint", verdicts_path, "--ledger", mixed,
+                   "--json", report_path])
+        with io.open(report_path, "r", encoding="utf-8") as handle:
+            rerun = json.load(handle)
+        check("ledger-mixed-idempotent",
+              rc == 0 and rerun["appended"] == 0
+              and rerun["ledger_records_skipped"] == 2
+              and len(read_lines(mixed)) == 6)
+        policy_only = os.path.join(work, "policy-only-ledger.jsonl")
+        with io.open(policy_only, "w", encoding="utf-8",
+                     newline="\n") as handle:
+            handle.write(policy_row + "\n")
+        check("reject-ledger-without-segment-rows",
+              main(["--ingest-tenpoint", verdicts_path,
+                    "--ledger", policy_only]) == 1)
+
         stub_a_clean = os.path.join(work, "stub_a_clean.py")
         _write_stub(stub_a_clean, 0, {"hits": [], "em_dash_count": 0})
         stub_a_red = os.path.join(work, "stub_a_red.py")
@@ -887,6 +964,7 @@ def _ingest(verdict_path, ledger_path, timestamp, json_out):
     problems, frame = validate_verdicts(verdicts, line_count)
     appended = 0
     already = None
+    skipped = 0
     wrote = False
     if problems:
         raise VerifyError("rejected",
@@ -895,7 +973,7 @@ def _ingest(verdict_path, ledger_path, timestamp, json_out):
     if ledger_path:
         if not os.path.isfile(ledger_path):
             raise VerifyError("missing", "ledger not found: %s" % ledger_path)
-        latest, rows, already, ledger_problems = ledger_plan(
+        latest, rows, already, skipped, ledger_problems = ledger_plan(
             read_lines(ledger_path), frame, timestamp)
         if ledger_problems:
             raise VerifyError("rejected",
@@ -915,6 +993,7 @@ def _ingest(verdict_path, ledger_path, timestamp, json_out):
               "frame": frame, "points": POINT_COUNT,
               "citation_range_checked": line_count is not None,
               "ledger": ledger_path, "appended": appended,
+              "ledger_records_skipped": skipped,
               "already_consistent": already, "wrote": wrote}
     _write_or_print(report, json_out)
     return 0

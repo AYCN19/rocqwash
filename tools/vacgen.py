@@ -61,7 +61,23 @@ TOOL_NAME = "vacgen"
 # decompose_head (cast mode) - non-theorem-face heads (def/class/axiom/
 # structure/abbrev/opaque) front-reject with marker `non-theorem-declaration`,
 # never classified, never fire `recognized` (negative-sample piece D fix).
-TOOL_VERSION = "2.0.1"
+# 2.1.0 (P2-2 envelope double-layer fix): (a) L1 splitter
+# re-homes named instance binders - `[inst : Foo A]` splits into binder name
+# plus clean type, and the existential prefix renders `(_ : Foo A)` (the
+# previous face leaked the name into the type position, `(_ : inst : Foo A)`).
+# (b) W5 cast-time self-check internalized: the witness envelope's premise
+# conjunction is front-gated at cast time; a bare-type conjunct limb
+# (canonical word face "∧ Set (", plus the self-built per-limb family) cannot
+# elaborate as a Prop, so the deformed cast dies rc=1 with marker
+# `bare-type-conjunct-limb` before any skeleton text is emitted.  (c) W6
+# two-dimensional verdict: after a GREEN cast the degenerate battery word-face
+# scans the witness envelope (emptyset / single-point / zero-element /
+# top-type / always-true faces) and the report verdict gains the `strength`
+# face over the refutationForms five-word vocabulary; degeneracy is data, the
+# exit-code semantics never change, and battery counters carry monotone
+# bounds only (never exact-equality invariants, per the artifact-verifier
+# design law).
+TOOL_VERSION = "2.1.0"
 
 DEFAULT_GUARD = "D:/ComplexAnalysis/infra/thermal/cpu_guard_v3.ps1"
 DEFAULT_LAKE = "C:/Users/Live/.elan/bin/lake.exe"
@@ -474,10 +490,33 @@ def split_signature(joined, head_name):
     return sig_text[:ci], sig_text[ci + 1:].strip()
 
 
+def split_instance_binder(text):
+    """Split a named instance binder face `[inst : Foo A]` into
+    (binder name, clean type).  Anonymous faces `[Foo A]` carry no top-level
+    colon and return ("", text).  Only a TOP-LEVEL colon counts
+    (find_top_colon is bracket-depth aware), and only a single plain
+    identifier on the colon's left side is a binder name - anything else
+    keeps the raw face.  This is the 2.1.0 L1 re-homing: without the split
+    the existential prefix rendered the name into the type position
+    (`_ : inst : Foo A`), a malformed Lean binder."""
+    text = text.strip()
+    ci = find_top_colon(text)
+    if ci < 0:
+        return "", text
+    head = text[:ci].strip()
+    ty = text[ci + 1:].strip()
+    if head and ty and IDENT_TOK.fullmatch(head):
+        return head, ty
+    return "", text
+
+
 def parse_binders(region):
     """Bracket scanner over a binder region (verbatim v1, vacgen.py:396-420):
     explicit (...) / implicit {...} with name lists, instance [...] binders,
-    raw groups without a top-level colon."""
+    raw groups without a top-level colon.  2.1.0: instance binders carry the
+    split result (instanceName / cleanType) alongside the raw type, so the
+    envelope prefix renders the clean type while the falsify face keeps the
+    v1 `[inst : Foo A]` form."""
     binders = []
     i = 0
     n = len(region)
@@ -488,7 +527,9 @@ def parse_binders(region):
             end, inner = scan_balanced(region, i)
             kind = kind_map[c]
             if kind == "instance":
-                binders.append({"kind": kind, "names": [], "type": inner.strip()})
+                inst_nm, inst_ty = split_instance_binder(inner.strip())
+                binders.append({"kind": kind, "names": [], "type": inner.strip(),
+                                "instanceName": inst_nm, "cleanType": inst_ty})
             else:
                 ci = find_top_colon(inner)
                 if ci < 0:
@@ -511,7 +552,9 @@ def sort_binders_into_segments(binders):
     for b in binders:
         rec_source = b.get("source", "signature")
         if b["kind"] == "instance":
-            S2_instances.append({"name": "", "type": b["type"],
+            S2_instances.append({"name": b.get("instanceName", ""),
+                                 "type": b["type"],
+                                 "cleanType": b.get("cleanType") or b["type"],
                                  "source": rec_source, "line0": b.get("line0")})
         elif looks_like_data_type(b["type"]):
             for nm in (b["names"] or ["_"]):
@@ -637,10 +680,16 @@ def star_to_universe0(t):
 
 def envelope_statement(stmt):
     """v2 replacement for vacgen.py:563-573.  Existentialize S1 vars AND
-    instance binders; hypotheses become conjuncts AFTER the prefix."""
+    instance binders; hypotheses become conjuncts AFTER the prefix.
+    2.1.0 double-layer assembly: the conjunction chain draws from the
+    explicit-assumption segment ONLY (S2_assumps; empty conjunction renders
+    the truth identity `True`, which the W6 battery measures as degeneracy
+    data), and instance binders render their clean type so a named instance
+    binder `[inst : Foo A]` never leaks its name into the type position."""
     conj = " \u2227 ".join(a["type"] for a in stmt["S2_assumps"]) or "True"
     prefix = ["(%s : %s)" % (v["name"], star_to_universe0(v["type"])) for v in stmt["S1_vars"]]
-    prefix += ["(_ : %s)" % i["type"] for i in stmt["S2_instances"]]
+    prefix += ["(_ : %s)" % (i.get("cleanType") or i["type"])
+               for i in stmt["S2_instances"]]
     body = conj
     for p in reversed(prefix):
         body = "\u2203 %s, %s" % (p, body)
@@ -650,7 +699,8 @@ def envelope_statement(stmt):
 def envelope_prefix_segments(stmt):
     segs = ["\u2203 (%s : %s)" % (v["name"], star_to_universe0(v["type"]))
             for v in stmt["S1_vars"]]
-    segs += ["\u2203 (_ : %s)" % i["type"] for i in stmt["S2_instances"]]
+    segs += ["\u2203 (_ : %s)" % (i.get("cleanType") or i["type"])
+             for i in stmt["S2_instances"]]
     return segs
 
 
@@ -673,6 +723,70 @@ def envelope_free_var_hits(stmt, env_text):
             if frag in var_names and frag not in bound:
                 hits.add(frag)
     return sorted(hits)
+
+
+# ---- W5 cast-time envelope front gate (criterion self-built; this revision
+# ---- is the first envelope test face in the repo - the refinery suite's
+# ---- vacgen segment builds its vectors on this word-face family) ----
+
+BARE_TYPE_LIMB_MARKER = "bare-type-conjunct-limb"
+# canonical literal face of the family: a type expression sitting in a
+# Prop position after a conjunction operator (`Set (...)` applied forms)
+BARE_TYPE_LIMB_CANONICAL = "∧ Set ("
+
+
+def is_bare_type_limb(limb):
+    """Word-face test: can this conjunction limb be a bare TYPE expression?
+    Conservative (fail-safe) side: any limb carrying a proposition marker,
+    a bare equality, a dependent-binder colon inside its paren group, or a
+    multi-token application face reads as a proposition and never flags.
+    Only pure type-expression faces (looks_like_type_v2 family) and pure
+    type-application faces (`Set (...)`: one identifier head onto one
+    parenthesized argument group holding no top-level colon) flag.  `True`
+    (the empty-conjunction identity) is W6's degeneracy datum, never a W5
+    hit."""
+    t = limb.strip()
+    if not t or t == "True":
+        return False
+    if PROP_MARK.search(t) or BARE_EQ.search(t):
+        return False
+    if looks_like_type_v2(t):
+        return True
+    m = re.match(r"^[^\W\d][\w'.!]*\s*\(", t)
+    if m:
+        opener = t.find("(")
+        try:
+            _end, inner = scan_balanced(t, opener)
+        except ParseError:
+            return False
+        tail = t[opener + 1 + len(inner) + 1:].strip()
+        if tail:
+            return False  # structure after the group: not the bare family
+        if find_top_colon(inner) >= 0:
+            return False  # dependent-binder face: proposition
+        return True
+    return False
+
+
+def envelope_bare_type_limb_hits(stmt, env_text=None):
+    """W5 cast-time self-check: bare-type conjunct limbs in the witness
+    envelope.  Two prongs over one word-face family: the canonical literal
+    face `∧ Set (` found in the assembled envelope text, and the per-limb
+    family over the statement's explicit-assumption segment (the only
+    segment feeding the conjunction chain - a bare type in a conjunct limb
+    position cannot elaborate as a Prop, so the deformed cast must die at
+    cast time, before the compile leg ever runs).  Returns the sorted
+    unique hit list; empty = clean."""
+    if env_text is None:
+        env_text = envelope_statement(stmt)
+    hits = []
+    if BARE_TYPE_LIMB_CANONICAL in env_text:
+        hits.append(BARE_TYPE_LIMB_CANONICAL)
+    for a in stmt["S2_assumps"]:
+        t = a["type"].strip()
+        if is_bare_type_limb(t):
+            hits.append(t)
+    return sorted(set(hits))
 
 
 # ---------------------------------------------------------------- L2 taxonomy
@@ -960,6 +1074,96 @@ def negative_finding_block(scanned_what):
         "rescanCondition": ("taxonomy row generation (new lanes/rows), mathlib "
                             "re-pull into the pinned worktree, or census window "
                             "change (new censusId) - earliest triggers re-scan"),
+    }
+
+
+# ---------------------------------------------------------------- W6 strength
+# Two-dimensional verdict (satisfiable x strength): after a GREEN cast the
+# degenerate battery word-face scans the witness envelope for `trivial-element`
+# witness faces.  Degeneracy is DATA (the exit-code semantics never change);
+# battery counters are closed-window snapshots and every invariant over them
+# is a monotone bound (artifact-verifier design law: no exact-equality
+# checks on live counters).
+
+DEGENERATE_BATTERY = (
+    # (class, word faces) - word-face level, lower-bound semantics: a hit
+    # names a `trivial-element` witness FACE; elaboration-time witness
+    # degeneracy stays invisible (declared honest boundary).
+    ("emptyset", ("\u2205", r"Set\.empty\b", r"=\s*\{\s*\}")),
+    ("single-point", (r"\{\s*[^\s{}|]+\s*\}",)),
+    ("zero-element", (r"=\s*\(?\s*0\b", r"\bZero\.zero\b")),
+    ("top-type", (r"\bTrue\b", "\u22a4", r"\bP?Unit\b")),
+    ("always-true", (r"\b(\w[\w'.!]*)\s*=\s*\1\b",)),
+)
+# registered judgment table (word-face level): a battery hit class lowers the
+# witness strength grade to the mapped refutation form.  The grade vocabulary
+# is the refutationForms five-word face; the strength order
+# band < noclassic < tactics < point < full is the registered scale and the
+# grade is its minimum over hit classes (monotone: a dirtier battery can only
+# grade lower).  A clean battery grades "full".
+STRENGTH_CLASS_TO_FORM = {
+    "always-true": "band",
+    "top-type": "band",
+    "emptyset": "noclassic",
+    "single-point": "tactics",
+    "zero-element": "point",
+}
+STRENGTH_ORDER = ("full", "point", "tactics", "noclassic", "band")
+FORM_RANK = {"full": 4, "point": 3, "tactics": 2, "noclassic": 1, "band": 0}
+
+
+def degenerate_battery_hits(env_text):
+    """W6 degenerate battery: word-face scan of the witness envelope text.
+    Returns the sorted unique hit list [(class, matched face)]; empty list =
+    clean.  A hit is a `trivial-element` witness FACE on this closed scan
+    window, never a semantic judgment."""
+    hits = []
+    for cls, faces in DEGENERATE_BATTERY:
+        for rx in faces:
+            for m in re.finditer(rx, env_text):
+                hits.append((cls, m.group(0)))
+    return sorted(set(hits))
+
+
+def strength_face(env_text, satisfiable, ts_utc):
+    """Build the report verdict.strength face (2.1.0 additive schema): the
+    two-dimensional verdict (satisfiable x strength).  Degeneracy is data,
+    not error: this face never feeds the exit code, and the battery runs
+    after a GREEN verdict only (on a RED cast the face records that no
+    strength reading exists)."""
+    if not satisfiable:
+        return {
+            "satisfiable": False,
+            "battery": [],
+            "degenerate": None,
+            "grade": None,
+            "order": list(STRENGTH_ORDER),
+            "scannedFace": None,
+            "note": ("battery runs after GREEN only; satisfiable=false - no "
+                     "strength reading on a RED cast"),
+        }
+    hits = degenerate_battery_hits(env_text)
+    classes = sorted(set(cls for cls, _f in hits))
+    if classes:
+        grade = min((STRENGTH_CLASS_TO_FORM[c] for c in classes),
+                    key=lambda f: FORM_RANK[f])
+    else:
+        grade = "full"
+    by_class = []
+    for c in classes:
+        faces = sorted(f for cls, f in hits if cls == c)
+        by_class.append({"class": c, "faces": faces, "count": len(faces)})
+    return {
+        "satisfiable": True,
+        "battery": by_class,
+        "degenerate": bool(classes),
+        "grade": grade,
+        "order": list(STRENGTH_ORDER),
+        "scannedFace": ("witness envelope statement, word-face degenerate "
+                        "battery, closed window %s" % ts_utc),
+        "note": ("degeneracy is data, not error: exit-code semantics "
+                 "unchanged; counters carry monotone bounds only - "
+                 "exact-equality invariants on live counters are forbidden"),
     }
 
 
@@ -1864,6 +2068,14 @@ def run_checks_v2(cast, ledger, files_text, report, taxonomy_info):
         "rowsLoaded=%d builtin=%s source=%s" % (taxonomy_info["rowsLoaded"],
                                                 taxonomy_info["builtin"], taxonomy_info["source"]))
 
+    # 6. envelope_bare_type_limbs_zero: W5 internalized self-check (2.1.0).
+    # Closed-window bound-form invariant on THIS cast's assembled envelope
+    # (same family as check 1); the cast-time front gate already rejects
+    # before emission, so a RED here would mean the gate was bypassed.
+    limb_hits = envelope_bare_type_limb_hits(stmt, env)
+    add("envelope_bare_type_limbs_zero", not limb_hits,
+        "bare-type conjunct limbs in the envelope: %s" % (limb_hits or "none"))
+
     return checks, blockers
 
 
@@ -1912,6 +2124,20 @@ def do_cast(args, ts_utc):
     except ParseError as exc:
         print("  FAIL-LOUD: statement-face parse failed: %s" % exc)
         print("  no skeleton cast (the audit seat must transcribe the statement face by hand).")
+        return 1
+
+    # W5 cast-time envelope front gate (2.1.0): a bare-type conjunct limb in
+    # the witness envelope cannot elaborate as a Prop, so the deformed cast
+    # dies here with rc=1, before any skeleton text is emitted (fail-loud;
+    # the statement face must be re-shaped or transcribed by hand before a
+    # cast can run).  Existing output directories are never touched here.
+    env_text = envelope_statement(stmt)
+    limb_hits = envelope_bare_type_limb_hits(stmt, env_text)
+    if limb_hits:
+        print("  FAIL-LOUD: %s in the witness envelope (cast-time self-check): %s"
+              % (BARE_TYPE_LIMB_MARKER, "; ".join(limb_hits)))
+        print("  no skeleton cast (the premise conjunction cannot elaborate as"
+              " a Prop; canonical family face: %s)" % BARE_TYPE_LIMB_CANONICAL)
         return 1
 
     stripped_all = lean_strip_comments(src)
@@ -2116,7 +2342,12 @@ def do_cast(args, ts_utc):
     todo_by_file = {r["file"]: r["todo_seats"] for r in ledger if r["file"] != "gap_anchors.txt"}
     report = {
         "reportId": "vacgenv2-%s-%s" % (cast.name, ts_utc[:10]),
-        "tool": {"name": "vacgen2", "version": TOOL_VERSION},
+        "tool": {"name": "vacgen2", "version": TOOL_VERSION,
+                 "schemaNote": ("2.1.0 additive: verdict.strength face (W6 "
+                                "two-dimensional verdict), W5 cast-time "
+                                "bare-type-conjunct-limb front gate, named "
+                                "instance binder clean-type prefix rendering; "
+                                "consumers ignore unknown fields")},
         "in": {"path": os.path.abspath(args.in_path).replace("\\", "/"), "sha256": sha},
         "taxonomy": {"path": os.path.abspath(tax_info["path"]).replace("\\", "/") if tax_info["path"] else None,
                      "source": tax_info["source"], "rowsLoaded": tax_info["rowsLoaded"],
@@ -2141,6 +2372,10 @@ def do_cast(args, ts_utc):
     blockers = blockers + v2_blockers
     report["verdict"]["checks"] = [[n, ok, d] for n, ok, d in checks]
     report["verdict"]["ok"] = not blockers
+    # W6 two-dimensional verdict (2.1.0): the degenerate battery runs after a
+    # GREEN verdict only; the strength face is additive report data and never
+    # feeds the exit code (degeneracy is data, not error).
+    report["verdict"]["strength"] = strength_face(env_text, not blockers, ts_utc)
 
     print("[FOUR-ACCOUNT LEDGER]  (per-file, verbatim counts)")
     green = [r for r in ledger if r["file"] == "witness.lean" or r["file"] == "boundary.lean"]
@@ -2179,6 +2414,23 @@ def do_cast(args, ts_utc):
     print("[CHECKS - bound-form invariants on the cast window %s]" % ts_utc)
     for name, ok, detail in checks:
         print("  [%s] %s  (%s)" % ("PASS" if ok else "RED", name, detail))
+
+    str_face = report["verdict"]["strength"]
+    print("[STRENGTH]  (satisfiable x strength two-dimensional verdict;"
+          " degeneracy is data, exit-code semantics unchanged)")
+    if str_face["satisfiable"]:
+        print("  grade: %s | degenerate: %s | order: %s"
+              % (str_face["grade"], str_face["degenerate"],
+                 " < ".join(str_face["order"])))
+        for row in str_face["battery"]:
+            print("  battery %s: count=%d (monotone bound, no exact-equality"
+                  " invariant) faces=%s"
+                  % (row["class"], row["count"], ", ".join(row["faces"][:3])))
+        if not str_face["battery"]:
+            print("  battery: clean (zero trivial-element witness faces on"
+                  " this scan window)")
+    else:
+        print("  battery not run (GREEN-only face; satisfiable=false)")
 
     # optional outputs
     if args.report:

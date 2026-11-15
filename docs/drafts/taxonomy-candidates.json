@@ -1,0 +1,171 @@
+{
+  "schema": "rocqwash.taxonomy-candidates/1",
+  "rows": [
+    {
+      "schemaVersion": 2,
+      "familyId": "ineq.real.const-lt-field-abs",
+      "cluster": "annum",
+      "match": {
+        "target": "assumption.type",
+        "regex": "^\\s*(?:(\\(\\s*\\d+\\s*/\\s*\\d+\\s*:\\s*ℝ\\s*\\))|(\\d+\\s*/\\s*\\d+)|(\\(\\s*\\d+\\s*:\\s*ℝ\\s*\\)))\\s*<\\s*[A-Za-z_\\u0100-\\uffff][\\w'.!]*\\s*\\.\\s*abs\\s*$",
+        "flags": ""
+      },
+      "priority": 40,
+      "confidence": "MID",
+      "witnessStrategy": "probe-point modulus bite: exhibit one complex point whose modulus realizes the numeric constant, then lift by envelope existentialization; the numeric-constant boundary block applies only when this row is matched",
+      "witnessTemplate": {
+        "bites": [
+          "theorem {p}_point_abs : (⟨{P}, 0⟩ : ℂ).abs = {P} := by simp"
+        ],
+        "boundary": {
+          "kind": "numeric-constant",
+          "template": "{num} / {den}"
+        }
+      },
+      "mathlibAnchors": [
+        {
+          "symbol": "Complex.abs",
+          "relPath": "Mathlib/Data/Complex/Basic.lean",
+          "line": 92,
+          "pinStatus": "candidate-unverified"
+        },
+        {
+          "symbol": "differentiableOn_riemannZeta",
+          "relPath": "Mathlib/NumberTheory/LSeries/RiemannZeta.lean",
+          "line": 141,
+          "pinStatus": "inherited-v1-pin"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point",
+        "tactics",
+        "noclassic",
+        "band"
+      ],
+      "boundaryApplicability": "numeric-constant",
+      "gapKeywords": [
+        "modulus",
+        "critical strip",
+        "boundary block"
+      ],
+      "notes": "rendered from gap-0001 of the seed ledger; sibling of the landed ineq.real.const-lt-field-re family (vacgen.py BUILTIN_STARTER_ROW) on the abs projection face; anchor line 92 is a candidate pin facing the C3.3 anchor gate",
+      "sourceGapId": "gap-0001",
+      "sourceLane": "row-render-handoff",
+      "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "ineq.log.upper-bound-term",
+      "cluster": "physics-misc",
+      "match": {
+        "target": "assumption.type",
+        "regex": "^\\s*\\d+\\s*(?:≤|<)\\s*Real\\.log\\s+[A-Za-z_\\u0100-\\uffff][\\w'.!]*$",
+        "flags": ""
+      },
+      "priority": 30,
+      "confidence": "MID",
+      "witnessStrategy": "monotone-lift bite: bound the logarithmic term at one explicit point and transfer through monotonicity of Real.log on the declared interval; the band boundary block covers growth-order conclusions",
+      "witnessTemplate": {
+        "bites": [
+          "theorem {p}_log_point : Real.log {T} ≤ {C} := by exact {h}"
+        ],
+        "boundary": {
+          "kind": "band",
+          "template": "{k} * Real.log {T}"
+        }
+      },
+      "mathlibAnchors": [
+        {
+          "symbol": "Real.log",
+          "relPath": "Mathlib/Analysis/SpecialFunctions/Log/Basic.lean",
+          "line": 34,
+          "pinStatus": "candidate-unverified"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point",
+        "tactics",
+        "noclassic",
+        "band"
+      ],
+      "boundaryApplicability": "band",
+      "gapKeywords": [
+        "log growth",
+        "monotone lift"
+      ],
+      "notes": "rendered from gap-0002 of the seed ledger; the premise family is a numeric upper bound on a logarithmic term, discharged through Real.log monotonicity; anchor line 34 is a candidate pin facing the C3.3 anchor gate",
+      "sourceGapId": "gap-0002",
+      "sourceLane": "row-render-handoff",
+      "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "instance.complete-carrier-funspace",
+      "cluster": "physics-misc",
+      "match": {
+        "target": "instance.type",
+        "regex": "^\\s*CompleteSpace\\s+[A-Za-z_(]",
+        "flags": ""
+      },
+      "priority": 20,
+      "confidence": "MID",
+      "witnessStrategy": "instance-carry bite: the conclusion is discharged by the pinned completeness instance once the carrier type is fixed; no numeric boundary block applies to this row",
+      "witnessTemplate": {
+        "bites": [
+          "theorem {p}_complete_carry : CompleteSpace {X} := inferInstance"
+        ]
+      },
+      "mathlibAnchors": [
+        {
+          "symbol": "CompleteSpace",
+          "relPath": "Mathlib/Topology/EMetricSpace/Complete.lean",
+          "line": 40,
+          "pinStatus": "candidate-unverified"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point",
+        "tactics",
+        "noclassic",
+        "band"
+      ],
+      "boundaryApplicability": "none-declared",
+      "gapKeywords": [
+        "completeness",
+        "instance face"
+      ],
+      "notes": "rendered from gap-0003 of the seed ledger; exercises the instance.type lookup face of the admission enum; anchor line 40 is a candidate pin facing the C3.3 anchor gate",
+      "sourceGapId": "gap-0003",
+      "sourceLane": "row-render-handoff",
+      "tenpointVerdict": "PENDING"
+    }
+  ],
+  "provenance": {
+    "sourceLedger": "D:/ComplexAnalysis/rqw_refinery_out_20261115/OUT/tmp/rowrender/gap-ledger-seed.json",
+    "renderMode": "handoff-ingest",
+    "renderCommand": "py -I tools/row_render.py --gaps <ledger.json> --ingest <backfill.jsonl> --draft-out docs/drafts/taxonomy-candidates.json",
+    "negativeFinding": {
+      "scannedWhat": "candidate rows rendered from the gap-cluster ledger at D:/ComplexAnalysis/rqw_refinery_out_20261115/OUT/tmp/rowrender/gap-ledger-seed.json (the families that ledger declares; no other surface was scanned)",
+      "notScanned": "live vacgen preflight output (no census or pinned mathlib snapshot on this working surface), gap families outside the source ledger, and anchor line pins (the C3.3 gate needs a pinned mathlib snapshot)",
+      "nonAbsoluteClaim": true,
+      "aliasesNotExhausted": true,
+      "rescanCondition": "the first real gap-cluster ledger from tools/gap_cluster.py, or a pinned mathlib snapshot becoming available for the C3.3 anchor gate, re-renders this draft"
+    }
+  },
+  "admission": {
+    "gate": "tools/vacgen.py validate_row (C3.4)",
+    "hostVacgen": "D:\\ComplexAnalysis\\rqw_refinery_out_20261115\\frozen\\vacgen_head.py (--vacgen flag)",
+    "rowsAdmitted": 3,
+    "rowsRejected": 0,
+    "rowsTotal": 3,
+    "anchorVerification": {
+      "verified": false,
+      "gate": "py -I tools/vacgen.py --verify-anchors --mathlib <pinned snapshot root> (C3.3)",
+      "reason": "no pinned mathlib snapshot on this working surface; anchor line values are candidate pins"
+    },
+    "tenpointVerdict": "PENDING"
+  }
+}
