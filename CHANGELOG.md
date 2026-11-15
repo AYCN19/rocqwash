@@ -226,6 +226,55 @@ v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段�
   red on the `jargon/snapshot-md5` drift).
 - Destructive-surface matrix 23/23 green (new row J1 PASS).
 
+### v59 — platform-reproducible CI wave: three independent red causes (2026-11-16)
+
+CI was red on all three hosted platforms (runs #89/#90/#91) for three
+independent reasons, none of them caused by the v58 wash-map fix.
+
+**Fixed**
+
+- `tools/bus_feeder.py`: the selftest located its scratch directory through
+  `TMP` or `TEMP` only and exited 9 when neither was set. GitHub runners
+  expose `RUNNER_TEMP`/`TMPDIR`, not `TMP`, so `t_bus_feeder_shape` failed on
+  every POSIX runner while passing on Windows (where `TMP` always exists).
+  The scratch root now falls back through TMP/TEMP/TMPDIR to
+  `tempfile.gettempdir()`.
+- `certify/frozen8.py`: selftest judgment 9 amends a scratch commit and
+  expects the git-anchor ring to report drift. An amend landing inside the
+  same commit-timestamp granularity as the original commit reproduces the
+  identical SHA (same tree, same message, same author and committer second),
+  so no drift is visible and the assertion fails on fast machines (observed on
+  the Linux and Windows runners). The amended commit now carries a pinned
+  author date, so the new SHA cannot collide with the original.
+- `.gitattributes` (new): the Windows checkout is CRLF while every committed
+  blob and every recorded md5 pin is LF, so the byte-level assertions never
+  matched the committed bytes — fourteen cases red on the Windows lane
+  (t_gate4_clean, t_wash_judgments, t_wash_engine, t_scan_station,
+  t_verify_born, t_frozen8, t_frozen8_check, t_frozen_call, t_world_hook,
+  t_select_audit, t_recipe_s07, t_recipe_pw1, t_precedent_station,
+  t_netname_normalize). The checkout is now pinned to LF on every platform.
+  Every blob in the repository is already LF, so there is no renormalization
+  churn.
+
+**Added**
+
+- `.github/workflows/ci.yml`: a local self-hosted lane
+  (`runs-on: [self-hosted, Windows, X64]`, runner LIVE-ROCQWASH on this
+  machine) runs the same stable roster locally instead of on a hosted runner,
+  so a long suite is not bound by the hosted runner's job duration wall and a
+  flaky hosted runner cannot block the signal.
+
+**Verification**
+
+- CI-shaped reproduction (a fresh clone with the system `core.autocrlf=true`
+  setting: the checkout is LF only because of the new `.gitattributes`): the
+  local suite went from 60 pass / 17 red / 4 skip to 70 pass / 7 red / 4 skip.
+  Six of the seven remaining reds are platform-dependent and already sit in
+  the CI Linux/Windows platform roster; the seventh (`t_frozen8_check`) was
+  caused by this wave's own edit to `certify/frozen8.py` and was closed by
+  re-issuing the frozen roster through the tool's own `freeze` face
+  (idempotent replay byte-identical, `frozen8 check` OK, 0 changed).
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。
