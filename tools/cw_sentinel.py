@@ -251,6 +251,7 @@ import json
 import os
 import re
 import socket
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -280,6 +281,29 @@ if TOOLS_DIR not in sys.path:
     sys.path.insert(0, TOOLS_DIR)   # same-directory shared backoff helper (no __init__ package layout)
 import _http_backoff
 
+def _find_bash():
+    """bash executable resolution for the bash -n syntax-check face: on
+    Windows the PATH-first `bash` is frequently the WSL System32 launcher
+    stub (it cannot syntax-check a file; it prints a wsl-install notice and
+    exits non-zero), so a Git-for-Windows installation is preferred and a
+    PATH hit is only accepted outside System32. Returns None when no
+    functional bash exists — the caller prints a loud skip note for that
+    vector (fail-loud, never a silent pass). POSIX returns "bash" unchanged.
+    (T0-5 platform-defect family, found by the selftest vector [15].)"""
+    if os.name != "nt":
+        return "bash"
+    cands = [r"C:\Program Files\Git\bin\bash.exe",
+             r"C:\Program Files (x86)\Git\bin\bash.exe",
+             r"C:\Program Files\Git\usr\bin\bash.exe"]
+    found = shutil.which("bash")
+    if found and "system32" not in found.lower():
+        cands.insert(0, found)
+    for c in cands:
+        if c and os.path.isfile(c):
+            return c
+    return None
+
+
 # --on-red-preset preset table (designated templates; program paths located
 # relative to the sentinel itself, following the TOOLS_DIR precedent; zero
 # hardcoded absolute paths): static placeholders {src}/{repo_path}/{branch}/
@@ -290,16 +314,28 @@ import _http_backoff
 # pushci with --dry-run = print the plan only, zero side effects; triage
 # substitutes {repo}/{run} from the event = re-diagnose the same failing
 # run; cw-doctor with no arguments = full default checkup.
+# delegate interpreter: sys.executable (the interpreter actually running the
+# sentinel), quoted for shell=True, instead of a bare "python3" literal — on
+# Windows a bare python3 resolves to the Microsoft Store stub (rc=9009,
+# command not recognized), which made every preset delegation a silent
+# non-execution off-POSIX (T0-5 platform-defect family).
+_DELEGATE_PY = '"%s"' % sys.executable
+
 ON_RED_PRESETS = {
-    "unclog": "python3 -B %s --src {src} --json {emit_dir}/unclog_{run}.json"
+    "unclog": _DELEGATE_PY +
+              " -B %s --src {src} --json {emit_dir}/unclog_{run}.json"
               % UNCLOG_TOOL,
-    "pushci": "python3 -B %s --repo-path {repo_path} --branch {branch} "
+    "pushci": _DELEGATE_PY +
+              " -B %s --repo-path {repo_path} --branch {branch} "
               "--json {emit_dir}/pushci_{run}.json --dry-run" % PUSHCI_TOOL,
-    "wash-shape": "python3 -B %s --dir {src} --json "
+    "wash-shape": _DELEGATE_PY +
+                  " -B %s --dir {src} --json "
                   "{emit_dir}/wash_shape_{run}.json" % WASH_SHAPE_TOOL,
-    "triage": "python3 -B %s --repo {repo} --run {run} "
+    "triage": _DELEGATE_PY +
+              " -B %s --repo {repo} --run {run} "
               "--json {emit_dir}/triage_{run}.json" % TRIAGE_TOOL,
-    "cw-doctor": "python3 -B %s --json {emit_dir}/doctor_{run}.json"
+    "cw-doctor": _DELEGATE_PY +
+                 " -B %s --json {emit_dir}/doctor_{run}.json"
                  % CW_DOCTOR_TOOL,
 }
 ON_RED_PRESET_TOOLS = {"unclog": UNCLOG_TOOL, "pushci": PUSHCI_TOOL,
@@ -1731,11 +1767,18 @@ def selftest():
             "negative token examples matched"
 
         # [4] --on-red placeholder-substitution execution proof (canned
-        # command writes a tmp marker file)
+        # command writes a tmp marker file). The canned command is a
+        # sys.executable one-liner, not a POSIX printf redirect: shell=True
+        # lands on cmd.exe on Windows, where printf does not exist, so the
+        # marker was never written off-macOS and the read below raised
+        # FileNotFoundError (T0-5 platform-defect family). Double quotes
+        # only, so the string parses identically under sh and cmd.exe.
         marker_dir = os.path.join(tmp, "markers")
         os.mkdir(marker_dir)
-        cmd = ("printf '%s|%s|%s' {family} {run} {repo} > "
-               + os.path.join(marker_dir, "red.marker"))
+        marker4 = os.path.join(marker_dir, "red.marker")
+        cmd = ('"%s" -c "import io;io.open(r\'%s\',\'w\','
+               'encoding=\'utf-8\').write(\'{family}|{run}|{repo}\')"'
+               % (sys.executable, marker4))
         state4 = os.path.join(tmp, "state4.json")
         emit4 = os.path.join(tmp, "events4.jsonl")
         p = run(["--once", "--watch-repo", REPO, "--injector", inj_path,
@@ -1864,12 +1907,14 @@ def selftest():
         # argument errors rc=2
         ev9 = os.path.join(tmp, "events9.jsonl")
         cmd = expand_on_red_preset("unclog", ["src=/abs/fake_src"], ev9)
-        assert cmd == ("python3 -B %s --src /abs/fake_src --json "
-                       "%s/unclog_{run}.json" % (UNCLOG_TOOL, tmp)), cmd
+        assert cmd == ("%s -B %s --src /abs/fake_src --json "
+                       "%s/unclog_{run}.json" % (_DELEGATE_PY, UNCLOG_TOOL,
+                                                 tmp)), cmd
         cmd = expand_on_red_preset("pushci", ["repo_path=/r", "branch=main"],
                                    ev9)
-        assert cmd == ("python3 -B %s --repo-path /r --branch main --json "
-                       "%s/pushci_{run}.json --dry-run" % (PUSHCI_TOOL, tmp)), \
+        assert cmd == ("%s -B %s --repo-path /r --branch main --json "
+                       "%s/pushci_{run}.json --dry-run"
+                       % (_DELEGATE_PY, PUSHCI_TOOL, tmp)), \
             cmd
         assert cmd.endswith("--dry-run") and "{run}" in cmd, cmd  # dry run by default; {run} left for the executor
         for bad in (lambda: expand_on_red_preset("bogus", [], ev9),
@@ -1906,8 +1951,8 @@ def selftest():
         assert rep.get("on_red_preset") == "unclog", rep.get("on_red_preset")
         assert len(rep["actions"]) == 1, rep["actions"]
         act = rep["actions"][0]
-        assert act["cmd"] == ("python3 -B %s --src %s --json %s/unclog_178.json"
-                              % (UNCLOG_TOOL, psrc, tmp)), \
+        assert act["cmd"] == ("%s -B %s --src %s --json %s/unclog_178.json"
+                              % (_DELEGATE_PY, UNCLOG_TOOL, psrc, tmp)), \
             "preset expansion mismatch: %r" % act["cmd"]
         assert act["rc"] == 9, "delegate-run unclog (fixture has no " \
             "--world) should log rc=9: %r" % act
@@ -1956,20 +2001,23 @@ def selftest():
         # fast).
         ev9b = os.path.join(tmp, "events9b.jsonl")
         cmd = expand_on_red_preset("wash-shape", ["src=/abs/ws_src"], ev9b)
-        assert cmd == ("python3 -B %s --dir /abs/ws_src --json "
-                       "%s/wash_shape_{run}.json" % (WASH_SHAPE_TOOL, tmp)), \
+        assert cmd == ("%s -B %s --dir /abs/ws_src --json "
+                       "%s/wash_shape_{run}.json"
+                       % (_DELEGATE_PY, WASH_SHAPE_TOOL, tmp)), \
             cmd
         assert "{run}" in cmd, cmd                    # dynamic family left for event substitution
         cmd = expand_on_red_preset("triage", [], ev9b)
-        assert cmd == ("python3 -B %s --repo {repo} --run {run} --json "
-                       "%s/triage_{run}.json" % (TRIAGE_TOOL, tmp)), cmd
+        assert cmd == ("%s -B %s --repo {repo} --run {run} --json "
+                       "%s/triage_{run}.json"
+                       % (_DELEGATE_PY, TRIAGE_TOOL, tmp)), cmd
         assert "{repo}" in cmd and "{run}" in cmd, cmd  # event-substitution family left as-is
         cmd = expand_on_red_preset("triage", ["repo=o/r", "run=178"], ev9b)
-        assert cmd == ("python3 -B %s --repo o/r --run 178 --json "
-                       "%s/triage_178.json" % (TRIAGE_TOOL, tmp)), cmd  # static override
+        assert cmd == ("%s -B %s --repo o/r --run 178 --json "
+                       "%s/triage_178.json"
+                       % (_DELEGATE_PY, TRIAGE_TOOL, tmp)), cmd  # static override
         cmd = expand_on_red_preset("cw-doctor", [], ev9b)
-        assert cmd == ("python3 -B %s --json %s/doctor_{run}.json"
-                       % (CW_DOCTOR_TOOL, tmp)), cmd
+        assert cmd == ("%s -B %s --json %s/doctor_{run}.json"
+                       % (_DELEGATE_PY, CW_DOCTOR_TOOL, tmp)), cmd
         # missing required / malformed / duplicate key / unknown key / empty
         # surface → 2 (same guard; the dynamic-family exemption does not
         # cover the static family)
@@ -1996,10 +2044,10 @@ def selftest():
         # go through event substitution); given order, zero reordering
         cmds = expand_on_red_presets(["unclog", "triage"], ["src=/s"], ev9b)
         assert cmds == [
-            "python3 -B %s --src /s --json %s/unclog_{run}.json"
-            % (UNCLOG_TOOL, tmp),
-            "python3 -B %s --repo {repo} --run {run} --json "
-            "%s/triage_{run}.json" % (TRIAGE_TOOL, tmp)], cmds
+            "%s -B %s --src /s --json %s/unclog_{run}.json"
+            % (_DELEGATE_PY, UNCLOG_TOOL, tmp),
+            "%s -B %s --repo {repo} --run {run} --json "
+            "%s/triage_{run}.json" % (_DELEGATE_PY, TRIAGE_TOOL, tmp)], cmds
         for bad in (lambda: expand_on_red_presets(["unclog", "cw-doctor"],
                                                   ["world=/w"], ev9b),
                     lambda: expand_on_red_presets(["pushci", "cw-doctor"],
@@ -2034,14 +2082,16 @@ def selftest():
             rep.get("on_red_preset")
         assert len(rep["actions"]) == 2, rep["actions"]
         act1, act2 = rep["actions"]
-        assert act1["cmd"] == ("python3 -B %s --src %s --json "
+        assert act1["cmd"] == ("%s -B %s --src %s --json "
                                "%s/unclog_178.json"
-                               % (UNCLOG_TOOL, esrc, tmp)), act1["cmd"]
+                               % (_DELEGATE_PY, UNCLOG_TOOL, esrc, tmp)), \
+            act1["cmd"]
         assert act1["rc"] == 9, "leg1 unclog (empty src) should log rc=9: " \
             "%r" % act1
-        assert act2["cmd"] == ("python3 -B %s --dir %s --json "
+        assert act2["cmd"] == ("%s -B %s --dir %s --json "
                                "%s/wash_shape_178.json"
-                               % (WASH_SHAPE_TOOL, esrc, tmp)), act2["cmd"]
+                               % (_DELEGATE_PY, WASH_SHAPE_TOOL, esrc, tmp)), \
+            act2["cmd"]
         assert act2["rc"] == 0, "leg2 wash-shape dry-run plan should be " \
             "rc=0 (continue-after-failure proof; leg1 rc=9 does not " \
             "halt): %r" % act2
@@ -2400,12 +2450,22 @@ def selftest():
             os.pardir, "examples", "sentinel_supervisor.sh"))
         assert os.path.isfile(sup_sh), \
             "supervisor deployment script missing: %s" % sup_sh
-        p = subprocess.run(["bash", "-n", sup_sh],
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        out14 = p.stdout.decode("utf-8", errors="replace") \
-            if isinstance(p.stdout, bytes) else (p.stdout or "")
-        assert p.returncode == 0, "bash -n syntax check should pass with " \
-            "rc=0: %s" % out14[-300:]
+        bash_exe = _find_bash()
+        if bash_exe is None:
+            # loud skip, not a silent pass: this machine carries no usable
+            # bash (the Windows PATH-first `bash` is the WSL System32
+            # launcher stub, not a syntax checker); the POSIX-face syntax
+            # leg is covered by the canonical-machine full sweep. The
+            # platform-independent key-line assertions below always run.
+            print("CW-SENTINEL-SELFTEST NOTE: bash -n leg skipped "
+                  "(no functional bash found; WSL stub or absent)")
+        else:
+            p = subprocess.run([bash_exe, "-n", sup_sh],
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            out14 = p.stdout.decode("utf-8", errors="replace") \
+                if isinstance(p.stdout, bytes) else (p.stdout or "")
+            assert p.returncode == 0, \
+                "bash -n syntax check should pass with rc=0: %s" % out14[-300:]
         sup_text = io.open(sup_sh, encoding="utf-8").read()
         assert sup_text.startswith("#!/bin/bash"), \
             "the deployment shape should start with a bash shebang"

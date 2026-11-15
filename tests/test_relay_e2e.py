@@ -184,8 +184,13 @@ def main():
         except (ValueError, OSError) as e:
             fails.append("判1 哨 report 应可读: %s" % e)
         acts = rep.get("actions") or []
-        want_cmd = ("python3 -B %s --src %s --json %s/unclog_178.json"
-                    % (UNCLOG, src, emit_dir))
+        # the preset embeds the sentinel's own interpreter (sys.executable,
+        # quoted), not a bare "python3" literal — on Windows a bare python3
+        # resolves to the Store stub (T0-5 platform-defect family); this test
+        # spawns the sentinel with sys.executable (run() at :80), so the
+        # expected expansion carries the same interpreter.
+        want_cmd = ('"%s" -B %s --src %s --json %s/unclog_178.json'
+                    % (sys.executable, UNCLOG, src, emit_dir))
         if len(acts) != 1 or acts and acts[0].get("cmd") != want_cmd \
                 or acts and acts[0].get("rc") != 9:
             fails.append("判1 actions 账应 1 笔且 cmd=preset 展开（%s）·代跑 "

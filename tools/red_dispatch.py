@@ -70,8 +70,14 @@ PARAM_KEYS = ("repo_path", "branch", "max_heal", "src", "world", "file", "apply"
 APPLY_TRUTHY = ("1", "true", "yes", "on")
 
 V_FILE_RE = re.compile(r"[A-Za-z0-9_./][A-Za-z0-9_./-]*\.v\b")  # word boundary; .vo is not swallowed
-# shell metacharacters; a value containing any of these is refused at command construction
-_SHELL_UNSAFE = set('; & | < > ( ) $ ` " \' \t \r \n \\')
+# shell metacharacters; a value containing any of these is refused at command
+# construction. The set covers both executor shells the tool can land on:
+# the POSIX sh specials (first half) and the cmd.exe-active specials `%`
+# (variable expansion) and `^` (escape) — subprocess shell=True runs cmd.exe
+# on Windows, so a value carrying % or ^ would execute differently per
+# platform (same input, different command), which the determinism contract
+# forbids (T0-5 platform-defect family).
+_SHELL_UNSAFE = set('; & | < > ( ) $ ` " \' \t \r \n \\ % ^')
 
 
 class DispatchError(Exception):
@@ -93,6 +99,22 @@ def shell_unsafe(v):
     """metacharacter guard on the command-construction face (injection defense; a value
     containing a metacharacter is refused)."""
     return any(c in _SHELL_UNSAFE for c in str(v))
+
+
+def cmd_path(v):
+    """command-construction path canonicalization (T0-5 platform-defect fix at
+    the _SHELL_UNSAFE gate): on Windows the native separator (os.sep,
+    backslash) is refused by shell_unsafe (it is an escape character under
+    sh), so path-shaped parameter values are rewritten to forward slashes,
+    which both executor shells (sh, cmd.exe) and every routed tool accept.
+    No-op where os.sep is already "/"; a literal backslash inside a value on
+    POSIX stays refused (fail-loud preserved, no silent rewrite). Apply this
+    to path-shaped parameter values before shell_unsafe, never to branch
+    names or free-text values."""
+    v = str(v)
+    if os.sep != "/":
+        v = v.replace(os.sep, "/")
+    return v
 
 
 # ---- input parsing --------------------------------------------------------------
@@ -225,6 +247,8 @@ def build_route(ev, kind, params, repo_path):
         if fam in PUSHCI_FAMILIES:
             route["id"] = "pushci"
             rp, s1 = resolve_param("repo_path", ev, params, event_field="repo")
+            if rp is not None:
+                rp = cmd_path(rp)   # path-shaped param: canonical separator face
             br, s2 = resolve_param("branch", ev, params, event_field="branch")
             mh, s3 = resolve_param("max_heal", ev, params)
             if mh is None:
@@ -276,6 +300,10 @@ def build_route(ev, kind, params, repo_path):
         world, s2 = resolve_param("world", ev, params)
         if world is None:
             world, s2 = derive_world(repo_path)
+        if src is not None:
+            src = cmd_path(src)     # path-shaped param: canonical separator face
+        if world is not None:
+            world = cmd_path(world)
         for k, v in (("src", src), ("world", world)):
             if v is None:
                 problems.append("unclog route parameter unsolvable: %s (absent from "
@@ -307,6 +335,7 @@ def build_route(ev, kind, params, repo_path):
                 for m in V_FILE_RE.findall(str(h)):
                     if m not in files:
                         files.append(m)
+        files = [cmd_path(f) for f in files]   # path-shaped params: canonical separator face
         if not files:
             problems.append("wash-shape route parameter unsolvable: file (--param, "
                             "event file, and .v collection from the hits text are "
@@ -687,7 +716,8 @@ def selftest():
         r_bl, pbl = build_route(EV_BL, "blocking", {}, tmp)
         check("v1BL unclog derivation", r_bl["id"] == "unclog" and not pbl
               and r_bl.get("cmd") ==
-              "bash cw.sh unclog --src %s --world %s" % (live, live)
+              "bash cw.sh unclog --src %s --world %s" % (cmd_path(live),
+                                                         cmd_path(live))
               and r_bl["params"]["src"]["source"] == "derive", str(r_bl.get("cmd")))
         r_bs, pbs = build_route(EV_BS, "build-signal", {}, None)
         check("v1BS wash-shape collection", r_bs["id"] == "wash-shape" and not pbs
