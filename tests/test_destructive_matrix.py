@@ -93,6 +93,16 @@
         锚 tools/axiom_guard.py:main env gate (rc 111 / rc 9 ahead of
         guard()) + :guard private mkdtemp (write faces = workdir and the
         caller-named --out only)
+  ⑨ tools/jargon_apply.py (wash-map applier; write face = the .py/.sh/.md
+     prose faces under --tree, or the one --file target)
+     J1 self-reference guard: the wash map's own source table
+        (--a2-table, default docs/jargon-to-standard-mapping-v1.md) is never
+        a wash target — --tree excludes it from the target set and --file on
+        it is refused rc=1 loud (a tool never washes its own map; the
+        e04f2f6 round washed it and stripped 11 of the 13 contract rows the
+        seed pins by md5)
+        锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484
+        （--file 红拒面）
 
 离线纪律（硬要求）：全判据走 tmp fixture＋--injector 罐装（unclog probe/resprobe
 canned·wash_shape 引擎键 canned·pushci steps/jobs/git-caller canned·sentinel
@@ -107,7 +117,7 @@ canned API）——零真网络零真仓零真编译；真子进程仅限纯 std
 ROCWASH_ROCQ／ROCWASH_COQCHK 剥除·防环境渗判防真编译渗阵）；fail-loud——
 任一行炸（含环境异常）按破计不静默。
 
-退出码：0=22 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
+退出码：0=23 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
 
 用法：
   python3 tests/test_destructive_matrix.py          # 套件内经 run_tests.sh 调
@@ -131,6 +141,7 @@ REGISTRY_UNION = os.path.join(REPO, "tools", "registry_union.py")
 CURE_APPLIER = os.path.join(REPO, "wash", "cure_applier.py")
 AXIOM_GUARD = os.path.join(REPO, "tools", "axiom_guard.py")
 FROZEN8 = os.path.join(REPO, "certify", "frozen8.py")
+JARGON_APPLY = os.path.join(REPO, "tools", "jargon_apply.py")
 JOBS_A = os.path.join(REPO, "tests", "fixtures", "ci_triage_A_content_red.json")
 JOBS_B = os.path.join(REPO, "tests", "fixtures", "ci_triage_B_netred.json")
 
@@ -927,6 +938,33 @@ def row_f2(tmp):
     assert tree_manifest(tmp) == before, "timestamp 失败路径越界写盘＝护栏破"
 
 
+def row_j1(tmp):
+    """洗面器自引用护栏：映射源表（--a2-table）永不进洗面目标面——--tree 目标面
+    排除它（--plan 零写盘·报告面可查），--file 显式指认则 rc=1 红拒。
+    锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484（--file 红拒）。"""
+    d = os.path.join(tmp, "j1")
+    os.makedirs(d)
+    mapdoc = wf(os.path.join(d, "jargon-to-standard-mapping-v1.md"),
+                "| 判词 | conclusion | contract row. |\n")
+    wf(os.path.join(d, "victim.md"), "这里有一个判词。\n")
+    rep = os.path.join(tmp, "j1-report.json")
+    before = tree_manifest(d)
+    rc, out = sh(JARGON_APPLY, ["--tree", d, "--plan", "--a2-table", mapdoc,
+                                "--json", rep])
+    assert rc == 0, "plan 应 rc=0 实测 %d\n%s" % (rc, out[-400:])
+    paths = [f["path"] for f in jl(rep)["files"]]
+    assert "jargon-to-standard-mapping-v1.md" not in paths, \
+        "映射源表不得进洗面目标面（器不洗自己的地图）: %s" % paths
+    assert "victim.md" in paths, \
+        "同目录普通件应仍在目标面（排除不得过宽）: %s" % paths
+    assert tree_manifest(d) == before, "plan 路径越界写盘＝护栏破"
+    rc, out = sh(JARGON_APPLY, ["--file", mapdoc, "--plan",
+                                "--a2-table", mapdoc])
+    assert rc == 1, "显式指认映射源表应红拒 rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert "never washes its own map" in out, out[-300:]
+    assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
+
+
 # ---- 矩阵总装 -----------------------------------------------------------------
 
 L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A 可洗链根·B 缺 A
@@ -976,6 +1014,8 @@ ROWS = [
      "certify/frozen8.py:806,772", row_f2),
     ("G1", "axiom_guard", "compile-leg write face temp-only: rc 111 honest skip with zero judgment and no --out / missing binaries rc=9 ahead of every work face",
      "tools/axiom_guard.py:main env gate, guard mkdtemp", row_g1),
+    ("J1", "jargon_apply", "洗面器自引用护栏：映射源表永不入目标面（--tree 排除·--file rc=1 红拒）",
+     "tools/jargon_apply.py:550-560,471-484", row_j1),
 ]
 
 
@@ -1005,9 +1045,10 @@ def main():
             print("  破口 %s @ %s — %s\n    违据: %s" % (rid, anchor, guard,
                                                         detail))
         return 1
-    print("DESTRUCTIVE-MATRIX PASS: 22 行拒写判据全过（unclog×4/wash_shape×4/"
+    print("DESTRUCTIVE-MATRIX PASS: 23 行拒写判据全过（unclog×4/wash_shape×4/"
           "pushci×3/cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/"
-          "axiom_guard×1·全 tmp fixture＋injector 罐装零真网络零真仓零真编译）")
+          "axiom_guard×1/jargon_apply×1·全 tmp fixture＋injector 罐装零真网络"
+          "零真仓零真编译）")
     return 0
 
 

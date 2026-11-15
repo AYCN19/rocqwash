@@ -184,6 +184,48 @@ v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段�
   文档链接文件名日期×6·cli/rocqwash `retrofit` 子动词名×4）＋四器行内注释
   残留（jargon 2-14·cjk_ratio 0.11-0.19）。
 
+### v58 — self-evolution guardrail wave: wash-map self-reference guard (2026-11-16)
+
+**Fixed**
+
+- `docs/jargon-to-standard-mapping-v1.md`: restored the 27 rows rewritten by the
+  `e04f2f6` E2 jargon mechanical pass (收编→并入, 定谳→已证结论, 缝合→splice
+  and 24 more). That pass rewrote the banned faces *themselves* inside the
+  mapping table, which (a) dropped 11 of the 13 faces the seed contract says
+  this table supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)
+  and (b) wrote plain English standard terms into the face column of 10 rows,
+  so `norm_lint`'s default map started treating delisted / machine ruling /
+  cyclic account and 7 more ordinary English phrases as banned jargon. After
+  the restore the file md5 is exactly the seed-pinned value
+  `9440fbd102187e15e01183e853242e30` (the seed needs no edit), the contract
+  faces are back 13/13, and every corrupted English face is gone from the
+  loader.
+- `tools/jargon_apply.py`: new **self-reference guard** — the wash map's own
+  source table (`--a2-table`, default
+  `docs/jargon-to-standard-mapping-v1.md`) is never a wash target. `--tree`
+  excludes it from the target set; `--file` on it is refused rc=1 loud. This
+  closes the recurrence vector: before the fix `--tree . --plan` still
+  reported would_fix=28 on that table (the next autonomous round would have
+  washed its own map source again); after the fix the table leaves the scan
+  face (files 232→231, would_fix 73→45).
+
+**Added**
+
+- `tests/test_destructive_matrix.py`: destructive-surface matrix gains row J1
+  ("wash-map self-reference guard": tree exclusion + file refusal, both paths
+  zero-write). The matrix goes 22→23 rows.
+
+**Verification**
+
+- Full local suite: 72 pass / 5 red / 4 skip over 81 cases (before the fix:
+  70 pass / 7 red). All 5 remaining reds are platform-dependent and sit in
+  the CI Linux/Windows platform roster (t_cpu_guard_direct_smoke /
+  t_cpu_guard_direct_rc / t_extract_magic / t_probe_engine /
+  t_toolchain_dyld_doctor).
+- `t_engines_body` 60/60 green and `t_engines_seeds` 42/42 green (both were
+  red on the `jargon/snapshot-md5` drift).
+- Destructive-surface matrix 23/23 green (new row J1 PASS).
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

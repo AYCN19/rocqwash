@@ -12,11 +12,11 @@ Purpose.  Reads seeds/jargon/jargon-map.json (62 entries) read-only and
   context guard, and rows with context-keyed slash alternatives, are
   guarded (default reject-and-report; --guarded-interactive emits the
   query file); carve-outs ride the exempt mechanism; backticks are masked.
+  The map's own source table (--a2-table) is never a wash target.
 
-Interface.  Pure functions load_map, project_table (row-for-row equal to
-  the seed test projector), plan_rewrites, apply_rewrites; CLI --file |
-  --tree with --plan (default zero writes) | --apply, --json,
-  --guarded-interactive, --selftest.
+Interface.  Pure functions load_map, project_table, plan_rewrites,
+  apply_rewrites; CLI --file | --tree with --plan (default zero writes) |
+  --apply, --json, --guarded-interactive, --selftest.
 
 Dependencies.  Python 3 standard library only; tools/norm_lint.py is the
   same-source matcher, prose-face extraction, and rescan detector (absent
@@ -476,6 +476,9 @@ def _collect_targets(args, skip_abs):
         if ext not in FACES:
             fail("unsupported face (need .py/.sh/.md): " + args.file, 2)
         ap = os.path.abspath(args.file)
+        if ap in skip_abs:
+            fail("target file is the wash map's own source table; a tool "
+                 "never washes its own map: " + args.file, 1)
         return [("file", os.path.basename(ap), ap, ext[1:])], None
     if not os.path.isdir(args.tree):
         fail("tree root not found: " + args.tree, 9)
@@ -552,6 +555,11 @@ def run_plan_or_apply(args):
         skip_abs.add(os.path.abspath(args.json))
     if args.guarded_interactive:
         skip_abs.add(os.path.abspath(args.guarded_out))
+    # Self-reference guard: the wash map's own source table carries the
+    # banned faces by construction.  Rewriting it would strip the faces it
+    # must supply (13 contract rows) and break the seed's pinned-source
+    # md5 contract.  A tool never washes its own map.
+    skip_abs.add(os.path.abspath(args.a2_table or DEFAULT_A2_PATH))
     targets, root_abs = _collect_targets(args, skip_abs)
     tmpdir = tempfile.mkdtemp(prefix="rqw_jargon_apply_")
     applied_total = 0
