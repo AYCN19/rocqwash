@@ -427,5 +427,5 @@ rocqwash is designed to **complement** LLM agents, not compete with them:
 
 - **Code:** AGPL-3.0-or-later, see [LICENSE](LICENSE).
 - **Audit documents:** `docs/audits/**` and release assets of tags `f1p-audit-*` are CC-BY-4.0, free to reuse with attribution.
-- Zenodo record DOI pending publish.
+- Zenodo record (audit package): DOI 10.5281/zenodo.24238998
 - Zenodo (tool release v0.1.0): DOI 10.5281/zenodo.24225678
