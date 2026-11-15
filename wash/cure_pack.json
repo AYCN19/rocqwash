@@ -1,7 +1,7 @@
 {
   "pack": "consumer-cure canonical pack",
-  "version": "1.4.0",
-  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs. v1.2 adds the S07-lineage adaptation forms (W66 field report): parameterized-shell drop against an argument-less interface Class, the notation rebind line-insertion, the @field projection-bridge bare form, the predicate-face convergence token map (targets must be the consuming supply lemma's conclusion constant names), and a report-only binder-shell station for the manual binder surgery. v1.3 adds the two CI #178 extraction-defect families as cures: E3 generic-interface instantiation (the abstract-carrier application stations of a generic supply lemma are rewritten to a concrete-carrier specialization shim inserted after the last import) and E2 record polymorphic field (the un-annotated field-consumption Definition is restated as an explicit-type-annotated middleware, with the downstream arity stations adapted and a report-only station asserting the sweep completion). v1.4 adds one corpus-survey wave pattern (20261111 evidence-gated survey, b48-52 wash-wave citation): interface-quantified connective qualification — bare order connectives (lt/le/plus) in statement faces of RI0-context files are pinned to the @S01_BaseRing.lt/le/plus RI0 projection form, the tree's canonical no-bare-connectives shape (survey rule held: forms with thinner citations stay in the pending list, none cast).",
+  "version": "1.4.1",
+  "description": "Deterministic rewrite patterns for consumer-position cures in Rocq/Coq statement faces and proof bodies. Each pattern carries a deterministic trigger (regex, token-station, or face-scoped regex), a rewrite template, and is idempotent: running the applier twice changes nothing on the second run. Canonical shapes are mirrored from Set-carrier libraries (QeqT/Qeq bridges, qualified successor references, NatLe bridges). v1.1 adds ten statement-face patterns from the 20261103 wash-campaign field report: Qle/Qlt carrier-face downshifts (token and %-scoped notation forms), the refl bridge opener, Import-shadow direct-face qualification (two exclusive variants), and NatLe premise-lift / drop-wrap pairs. v1.2 adds the S07-lineage adaptation forms (W66 field report): parameterized-shell drop against an argument-less interface Class, the notation rebind line-insertion, the @field projection-bridge bare form, the predicate-face convergence token map (targets must be the consuming supply lemma's conclusion constant names), and a report-only binder-shell station for the manual binder surgery. v1.3 adds the two CI #178 extraction-defect families as cures: E3 generic-interface instantiation (the abstract-carrier application stations of a generic supply lemma are rewritten to a concrete-carrier specialization shim inserted after the last import) and E2 record polymorphic field (the un-annotated field-consumption Definition is restated as an explicit-type-annotated middleware, with the downstream arity stations adapted and a report-only station asserting the sweep completion). v1.4 adds one corpus-survey wave pattern (20261111 evidence-gated survey, b48-52 wash-wave citation): interface-quantified connective qualification — bare order connectives (lt/le/plus) in statement faces of RI0-context files are pinned to the @S01_BaseRing.lt/le/plus RI0 projection form, the tree's canonical no-bare-connectives shape (survey rule held: forms with thinner citations stay in the pending list, none cast). v1.4.1 hardens the two scoped-notation triggers (P0-2 audit finding): the cure7/cure9 lhs operand class excludes colons and commas and gains the pack's word-boundary start guard, so the declaration head can no longer be swallowed into the operand match, and the cure2 gate reads the conclusion (goal) face instead of the whole statement face, so premise-position QeqT on an ==-face goal no longer triggers the door opener.",
   "patterns": [
     {
       "id": "cure1_qeqT_imp_qeq_rewrite_wrap",
@@ -19,8 +19,8 @@
       "engine": "proof-first-tactic",
       "trigger_regex": "^(?P<ind>[ \\t]*)(reflexivity|ring|apply\\s+(?!qeq_imp_qeqT)[A-Za-z_'][A-Za-z0-9_']*(?:\\s+[^.]*)?)\\.[ \\t]*$",
       "template": "\\g<ind>apply qeq_imp_qeqT. \\g<2>.",
-      "context": "only fires when the enclosing statement face contains QeqT",
-      "idempotence_note": "After the cure the first tactic is apply qeq_imp_qeqT, which the trigger excludes."
+      "context": "only fires when the statement's conclusion (goal) face carries QeqT; premise-position QeqT does not open the gate",
+      "idempotence_note": "After the cure the first tactic is apply qeq_imp_qeqT, which the trigger excludes. The gate reads the goal face (forall-stripped statement body after its last depth-0 arrow), not the whole statement face, so a QeqT premise on an ==-face goal never fires."
     },
     {
       "id": "cure3_qeq_refl_replace_reflexivity",
@@ -62,10 +62,10 @@
       "scope": "face",
       "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
       "face_exclude": ["QleT'"],
-      "trigger_regex": "(?P<lhs>[^\\n()<>=-]+?)[ \\t]*<=[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
+      "trigger_regex": "(?<![A-Za-z0-9_'])(?P<lhs>[^\\n()<>=:,-]+?)[ \\t]*<=[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
       "template_fn": "qle_notation_downshift",
       "target": "QleT'",
-      "idempotence_note": "Post-cure faces carry QleT' (excluded) and no `<=` before %Q remains; the trigger cannot re-match."
+      "idempotence_note": "Post-cure faces carry QleT' (excluded) and no `<=` before %Q remains; the trigger cannot re-match. The lhs class additionally excludes colons and commas and is start-guarded: the declaration head always ends at the statement colon and forall binder lists at commas, so the operand match can never span the head (the P0-2 head-eating form `QleT' (Lemma t : forall x : Q, Qabs x) 2%Q` is structurally unreachable)."
     },
     {
       "id": "cure8_qlt_token_downshift",
@@ -89,10 +89,10 @@
       "scope": "face",
       "decl_exclude": ["^[ \\t]*(Definition|Fixpoint)\\b"],
       "face_exclude": ["QltT"],
-      "trigger_regex": "(?P<lhs>[^\\n()<>=-]+?)[ \\t]*<(?!=)[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
+      "trigger_regex": "(?<![A-Za-z0-9_'])(?P<lhs>[^\\n()<>=:,-]+?)[ \\t]*<(?!=)[ \\t]*(?P<rhs>[^\\n()<>=-]+?)%Q",
       "template_fn": "qle_notation_downshift",
       "target": "QltT",
-      "idempotence_note": "Post-cure faces carry QltT (excluded) and no `<` before %Q remains."
+      "idempotence_note": "Post-cure faces carry QltT (excluded) and no `<` before %Q remains. The lhs class additionally excludes colons and commas and is start-guarded, mirroring cure7: the declaration head can never be swallowed into the operand match."
     },
     {
       "id": "cure10_qle_refl_bridge_open",

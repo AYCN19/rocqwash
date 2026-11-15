@@ -7,27 +7,37 @@
       qualified successor references, NatLe supply bridges, statement-face downshifts, import-shadow
       qualification, lineage adaptation forms, extraction-defect cures, connective qualification —
       are canonical, idempotent rewrites: a second application changes nothing, and every --apply
-      asserts idempotence mechanically (fail-loud).
+      asserts idempotence mechanically (fail-loud) beside a compile leg (v41): when a compiler is
+      configured, the before/after texts are both compiled and a green->red regression blocks the
+      write — the delivered verdict is "idempotent and compilable", never "idempotent but broken".
 
     Interface.  python3 wash/cure_applier.py --file f.v [--pack cure_pack.json] [--only id1,id2]
-      [--json out.json] [--apply] | --selftest.  stdout report per pattern (matches, engine); --json
+      [--json out.json] [--apply] [--rocq BIN] | --selftest.  stdout report per pattern (matches, engine); --json
       report {file, mode, md5_before, md5_after, report{pattern_id: {matches, engine}},
-      idempotence_ok}.  Patterns may declare exclusive_group: two selected patterns of one group both
-      matching is a variant-choice conflict and fails loud — the caller picks one variant via --only.
-      Engines: line-regex, proof-first-tactic, token-station, face-regex (face/proof-scoped triggers
-      with per-face token guards), line-insert, station-report (report-only advisory stations, never
-      rewritten, excluded from the idempotence residual); routed as `cure` in cw.sh.
+      idempotence_ok, compile_check}.  Compile-leg path resolution: --rocq flag, then the
+      ROCWASH_ROCQ environment; unset = the leg is honestly not run (recorded, write proceeds —
+      external clones without a toolchain keep working); configured but missing = rc 9 fail-loud.
+      The leg compiles temp-only copies (the .vo output face never touches the repository tree);
+      wrap the whole invocation in tools/cpu_guard.sh for guarded runs.  Patterns may declare
+      exclusive_group: two selected patterns of one group both matching is a variant-choice conflict
+      and fails loud — the caller picks one variant via --only.  Engines: line-regex,
+      proof-first-tactic, token-station, face-regex (face/proof-scoped triggers with per-face token
+      guards), line-insert, station-report (report-only advisory stations, never rewritten, excluded
+      from the idempotence residual); routed as `cure` in cw.sh.
 
     Dependencies.  Python 3 standard library only; scan/scan_v4_token.py (sys.path injection, same repository) for the token-station engine; the pattern pack is data next to this script.
 
     Evidence.  --selftest in-memory vector groups over the shipped pack: every canonical pattern
       fires, skips guarded positions and is idempotent as specified, the exclusive-group conflict
-      fails loud, whole-pack second passes report zero matches; tests/test_cure_pack.py reruns them.
+      fails loud, whole-pack second passes report zero matches; tests/test_cure_pack.py reruns them
+      and exercises the compile leg (env-gated) including the cure7/cure9 head-eating disease form.
 
-    Exit-codes.  0 = ran (dry run, or applied with idempotence verified); 1 = idempotence assertion
-      failed (fail-loud, file not written); 2 = usage; 4 = exclusive-group conflict (two variants of
-      one group matched — pick one via --only); 5 = unknown pattern id; 9 = file or pack missing."""
-import argparse, hashlib, io, json, os, re, sys
+    Exit-codes.  0 = ran (dry run, or applied with idempotence verified and the compile leg not
+      red); 1 = idempotence assertion failed, or the compile leg intercepted a compile regression
+      (fail-loud, file not written); 2 = usage; 4 = exclusive-group conflict (two variants of one
+      group matched — pick one via --only); 5 = unknown pattern id; 9 = file or pack missing, or
+      (--apply with a changed text) the configured compiler binary is missing."""
+import argparse, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 os.pardir, "scan"))
@@ -90,9 +100,87 @@ def apply_line_regex(text, pat, fid):
     return out, len(matches)
 
 
+def _conclusion_face(face_text):
+    """Goal (conclusion) face of a statement, for the cure2 gate: the
+    forall-stripped statement body after its last depth-0 arrow.  The
+    first depth-0 colon locates the statement body behind the declaration
+    head (binder colons sit at depth 1); a leading forall binder block is
+    stripped at its depth-0 separator comma; the last depth-0 arrow
+    separates premises from the conclusion.  Depth-0 scanning skips nested
+    comments and string literals (the _statement_period masking
+    discipline).  Mirrors the scanner-side premise/conclusion split
+    (scan/mac_stmt_scan.py depth-0 arrow location plus forall stripping)
+    so the applier gate and the scanner's conclusion position agree.
+    Deterministic; input with no depth-0 colon returns the input whole."""
+    depth = 0
+    i, n = 0, len(face_text)
+    colon = -1
+    while i < n:
+        sk = _skip_comment_string(face_text, i)
+        if sk is not None:
+            i = sk
+            continue
+        c = face_text[i]
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth = max(0, depth - 1)
+        elif c == ":" and depth == 0:
+            colon = i
+            break
+        i += 1
+    if colon < 0:
+        return face_text
+    body = face_text[colon + 1:]
+    m = re.match(r"[ \t]*forall\b", body)
+    if m:
+        depth = 0
+        comma = -1
+        i = m.end()
+        while i < len(body):
+            sk = _skip_comment_string(body, i)
+            if sk is not None:
+                i = sk
+                continue
+            c = body[i]
+            if c in "([{":
+                depth += 1
+            elif c in ")]}":
+                depth = max(0, depth - 1)
+            elif c == "," and depth == 0:
+                comma = i
+                break
+            i += 1
+        if comma >= 0:
+            body = body[comma + 1:]
+    depth = 0
+    arrow = -1
+    i = 0
+    while i < len(body) - 1:
+        sk = _skip_comment_string(body, i)
+        if sk is not None:
+            i = sk
+            continue
+        c = body[i]
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth = max(0, depth - 1)
+        elif c == "-" and body[i + 1] == ">" and depth == 0:
+            arrow = i
+            i += 1
+        i += 1
+    if arrow >= 0:
+        body = body[arrow + 2:]
+    return body
+
+
 def apply_proof_first_tactic(text, pat, fid):
     """cure2 engine: prefix apply qeq_imp_qeqT to the first ==-face closing
-    tactic inside proofs of QeqT-face statements."""
+    tactic inside proofs of statements whose conclusion (goal) face carries
+    QeqT.  The gate reads the goal face (_conclusion_face), not the whole
+    statement face: a QeqT premise on an ==-face goal must not open the
+    door (the audit's green->red false-positive form)."""
     trig = re.compile(pat["trigger_regex"])
     out_lines = text.split("\n")
     faces = statement_faces(text)
@@ -102,14 +190,16 @@ def apply_proof_first_tactic(text, pat, fid):
     for l in out_lines:
         offs.append(offs[-1] + len(l) + 1)
     line_face = [None] * n
+    concl_cache = {}
     for face, body, ps, pe in faces:
+        concl_cache[face] = _conclusion_face(face)
         for i in range(n):
             if offs[i] >= ps and offs[i] < pe:
                 line_face[i] = (face, body)
     changed = 0
     for i in range(n):
         lf = line_face[i]
-        if lf is None or "QeqT" not in lf[0]:
+        if lf is None or "QeqT" not in concl_cache[lf[0]]:
             continue
         m = trig.match(out_lines[i])
         if m and "apply qeq_imp_qeqT" not in out_lines[i]:
@@ -243,11 +333,17 @@ def _paren_term(t):
 
 def _fn_qle_notation(m, pat):
     """`X <= Y%Q` -> `QleT' (X) Y%Q`: carrier predicate application with the
-    scope mark retained on the literal RHS operand."""
+    scope mark retained on the literal RHS operand.  The tightened lhs class
+    (v1.4.1) can start at the whitespace separating the operand from a
+    colon/comma/arrow; that leading run is preserved verbatim so the cured
+    face keeps its original spacing."""
     target = pat.get("target", "QleT'")
-    lhs = m.group("lhs").strip()
+    raw_lhs = m.group("lhs")
+    lhs = raw_lhs.strip()
     rhs = m.group("rhs").strip()
-    return "%s %s %s%%Q" % (target, _paren_term(lhs), _paren_term(rhs))
+    lead = raw_lhs[:len(raw_lhs) - len(raw_lhs.lstrip())]
+    return "%s%s %s %s%%Q" % (lead, target, _paren_term(lhs),
+                              _paren_term(rhs))
 
 
 def _fn_natle_premise_lift(m, pat):
@@ -547,6 +643,68 @@ def md5s(text):
     return hashlib.md5(text.encode("utf-8")).hexdigest()
 
 
+# ---------------------------------------------------------------------------
+# v41 (T0-2/T0-3): the --apply compile leg.  The idempotence assertion is
+# bolted beside a before/after compile comparison, so the written verdict is
+# "idempotent and compilable" and never "idempotent but broken" (the audit's
+# P0-2 fake-green form: "idempotence verified; file written" on output that
+# no longer compiles).  Thermal contract: this tool does not embed a guard;
+# wrap the whole applier invocation in tools/cpu_guard.sh for guarded runs —
+# compile children stay inside the guard's process tree (the
+# verify/extract_magic_check.py contract form).
+# ---------------------------------------------------------------------------
+
+COMPILE_TIMEOUT_SEC = 600
+
+
+def compile_leg(rocq_bin, target_path, before_text, after_text):
+    """Before/after single-file compile comparison in a private temp dir.
+    Returns (verdict, detail) with verdict in:
+      compile-ok         the after text compiles (before state recorded in
+                         the rc pair);
+      compile-regression the before text compiled and the after text does
+                         not — the cure turned a compiling file into a
+                         non-compiling one (fail-loud, rc 1, file NOT
+                         written);
+      baseline-broken    the before text does not compile (missing sibling
+                         world or a pre-existing red face) — the leg cannot
+                         judge and records that honestly instead of passing
+                         silently; the write proceeds with the record.
+    Write face: copies compile inside a mkdtemp dir (the .vo output face is
+    temp-only) with the target file's own directory mapped as the logical
+    root, so sibling worlds resolve read-only; the repository tree gains no
+    bytes.  Deterministic for a fixed input pair and toolchain."""
+    stem = os.path.splitext(os.path.basename(target_path))[0]
+    fdir = os.path.dirname(os.path.abspath(target_path))
+    tmp = tempfile.mkdtemp(prefix="rw_cure_leg_")
+    try:
+        rcs = []
+        for tag, seg in (("before", before_text), ("after", after_text)):
+            copy = os.path.join(tmp, "%s_%s.v" % (stem, tag))
+            with io.open(copy, "w", encoding="utf-8", newline="") as f:
+                f.write(seg)
+            argv = [rocq_bin, "c", "-native-compiler", "no", "-q",
+                    "-Q", fdir, "", copy]
+            try:
+                p = subprocess.run(argv, stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   timeout=COMPILE_TIMEOUT_SEC)
+                rcs.append((p.returncode,
+                            p.stdout.decode("utf-8", "replace")[-400:]))
+            except subprocess.TimeoutExpired:
+                rcs.append((None, "compile leg timeout"))
+        rc_b, rc_a = rcs[0][0], rcs[1][0]
+        detail = {"rocq": rocq_bin, "rc_before": rc_b, "rc_after": rc_a,
+                  "tail_before": rcs[0][1], "tail_after": rcs[1][1]}
+        if rc_b == 0 and rc_a != 0:
+            return "compile-regression", detail
+        if rc_b != 0:
+            return "baseline-broken", detail
+        return "compile-ok", detail
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
 def selftest():
     ok = True
     pack = json.load(io.open(os.path.join(
@@ -578,6 +736,21 @@ def selftest():
     c2b = n2b == 0
     print("cure2 gate/idempotent:", c2, c2b)
     ok = ok and c2 and c2b
+
+    # cure2 target-face gate (v1.4.1, P0-3): a QeqT premise on an ==-face
+    # goal no longer opens the door (the audit's green->red form); a QeqT
+    # conclusion behind premises still does
+    q2d = ("Lemma falsepos2 : forall a : Q, QeqT a a -> a == a.\n"
+           "Proof.\n  intro.\n  reflexivity.\nQed.\n")
+    t2d, n2d = apply_one(q2d, p2)
+    c2c = n2d == 0 and "apply qeq_imp_qeqT" not in t2d
+    q2e = ("Lemma posgoal : H -> QeqT a b.\n"
+           "Proof.\n  intro.\n  reflexivity.\nQed.\n")
+    t2e, n2e = apply_one(q2e, p2)
+    c2f = n2e == 1 and "apply qeq_imp_qeqT. reflexivity." in t2e
+    print("cure2 target-face gate (premise no-fire / conclusion fires):",
+          c2c, c2f)
+    ok = ok and c2c and c2f
 
     # cure3: door-prefixed reflexivity -> Qeq_refl; plain reflexivity untouched
     p3 = pats["cure3_qeq_refl_replace_reflexivity"]
@@ -685,6 +858,24 @@ def selftest():
     c10b = n9b == 0
     print("cure9 Qlt notation downshift/idempotent:", c10, c10b)
     ok = ok and c10 and c10b
+
+    # cure7/cure9 tightening (v1.4.1, P0-2): the declaration head can no
+    # longer be swallowed into the lhs operand — the audit's broken form
+    # (`QleT' (Lemma t : forall x : Q, Qabs x) 2%Q`) is structurally
+    # unreachable, while the canonical operand forms still cure
+    f7d = ("Lemma d1 : forall x : Q, Qabs x <= 2%Q.\n"
+           "Proof. intros. apply xq_Qle_bool_le. Qed.\n"
+           "Theorem d2 : Qabs y <= 3%Q.\n"
+           "Proof. apply Qle_refl. Qed.\n")
+    t7d, n7d = apply_one(f7d, p7)
+    c9d = (n7d == 2
+           and "forall x : Q, QleT' (Qabs x) 2%Q." in t7d
+           and "Theorem d2 : QleT' (Qabs y) 3%Q." in t7d
+           and "QleT' (Lemma" not in t7d and "QleT' (Theorem" not in t7d)
+    t9d, n9d = apply_one("Lemma d3 : forall x : Q, Qabs x < 1%Q.\n", p9)
+    c9e = n9d == 1 and "Lemma d3 : forall x : Q, QltT (Qabs x) 1%Q." in t9d
+    print("cure7/9 head-eating unreachable (v1.4.1):", c9d, c9e)
+    ok = ok and c9d and c9e
 
     # cure10: refl bridge opener inside proofs of already-downshifted faces
     p10 = v["cure10_qle_refl_bridge_open"]
@@ -1021,6 +1212,10 @@ def main():
     ap.add_argument("--json", help="write application report JSON here")
     ap.add_argument("--apply", action="store_true",
                     help="write the cured file (default dry-run)")
+    ap.add_argument("--rocq", default=os.environ.get("ROCWASH_ROCQ", ""),
+                    help="rocq binary for the --apply compile leg "
+                         "(default ROCWASH_ROCQ; unset = leg not configured, "
+                         "honest not-run record; set but missing = rc 9)")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
 
@@ -1073,6 +1268,7 @@ def main():
     print("total matches: %d" % total)
 
     rc = 0
+    compile_check = None
     if args.apply:
         # idempotence assertion: second pass must find nothing (fail-loud).
         # report-mode patterns (engine station-report) are advisory stations,
@@ -1087,13 +1283,66 @@ def main():
             print("file NOT written; report the residual to the caller")
             rc = 1
         else:
-            with io.open(args.file, "w", encoding="utf-8") as f:
-                f.write(new_text)
-            print("idempotence verified (second pass zero matches); file written")
+            # compile leg (v41): bolted beside the idempotence assertion.
+            # Path resolution: --rocq flag, then ROCWASH_ROCQ.  No path
+            # configured -> the leg is honestly not run (explicit record;
+            # external clones without a toolchain keep working).  A path
+            # configured but missing -> fail-loud rc 9, never a simulated
+            # green.  A green->red regression -> fail-loud rc 1, file NOT
+            # written.  A broken baseline -> the leg records that it cannot
+            # judge and the write proceeds with the record.
+            write_allowed = True
+            if new_text == text:
+                compile_check = {"status": "skipped-no-change"}
+            else:
+                rocq_bin = args.rocq
+                if rocq_bin and not os.path.exists(rocq_bin):
+                    print("COMPILE-LEG: FAIL-LOUD configured compiler "
+                          "missing: %s" % rocq_bin)
+                    print("file NOT written (rc 9)")
+                    compile_check = {"status": "fail-loud-compiler-missing",
+                                     "rocq": rocq_bin}
+                    write_allowed = False
+                    rc = 9
+                elif rocq_bin:
+                    verdict, detail = compile_leg(rocq_bin, args.file,
+                                                  text, new_text)
+                    compile_check = dict(status=verdict, **detail)
+                    if verdict == "compile-regression":
+                        print("COMPILE-LEG: compile-regression intercepted "
+                              "(before rc=%s ok, after rc=%s broken); file "
+                              "NOT written" % (detail["rc_before"],
+                                               detail["rc_after"]))
+                        print("  after-tail: %s"
+                              % " | ".join(detail["tail_after"].splitlines()
+                                           [-3:]))
+                        write_allowed = False
+                        rc = 1
+                    else:
+                        print("COMPILE-LEG: %s (rc before=%s after=%s)"
+                              % (verdict, detail["rc_before"],
+                                 detail["rc_after"]))
+                else:
+                    compile_check = {"status": "not-configured",
+                                     "hint": "pass --rocq or set "
+                                             "ROCWASH_ROCQ for the leg"}
+                    print("COMPILE-LEG: SKIP (no compiler configured); "
+                          "write proceeds with the not-run record")
+            if write_allowed:
+                # newline="" pins the byte face: on-disk bytes are exactly
+                # new_text.encode("utf-8") on every platform, so the reported
+                # md5_after (md5s = md5 of the utf-8 text) always matches the file
+                # actually written. Without it, Windows text mode translates \n to
+                # \r\n and the reported md5 no longer describes the file (the
+                # T0-5 md5-caliber defect).
+                with io.open(args.file, "w", encoding="utf-8", newline="") as f:
+                    f.write(new_text)
+                print("idempotence verified (second pass zero matches); "
+                      "file written")
     if args.json:
         out = dict(file=args.file, mode=mode, md5_before=before,
                    md5_after=md5s(new_text), report=report,
-                   idempotence_ok=(rc == 0))
+                   idempotence_ok=(rc == 0), compile_check=compile_check)
         with io.open(args.json, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=1)
         print("report json -> %s" % args.json)
