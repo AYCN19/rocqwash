@@ -325,6 +325,35 @@ self-hosted lane.
   every child it spawns, so a child that prints Chinese prose or math symbols
   cannot die with `UnicodeEncodeError` on an ANSI-codepage host.
 
+### v62 — isolated-mode encoding wave: `-X utf8` reaches every child (2026-11-16)
+
+**Fixed**
+
+- The encoding guarantee from v60 did not reach the children: Python's
+  isolated mode (`-I`) implies `-E`, which ignores every `PYTHON*`
+  environment variable — so `PYTHONIOENCODING` and `PYTHONUTF8` were dropped
+  exactly where they were needed, in the children that print Chinese prose or
+  math symbols. The hosted Windows lane still raised
+  `UnicodeEncodeError: 'charmap' codec ...` and the `norm_lint` selftest
+  reported zero PASS lines.
+- `-X utf8` is a command-line switch, so `-E` cannot discard it. Five test
+  files already used that form (`t_bus_feeder_shape`, `t_periscope_shape`,
+  `t_symbiosis_shape`, `t_uplink_shape`, `t_evolution_dashboard_shape`); this
+  extends the same form to the remaining 29 isolated-mode call sites across
+  18 files, so the whole repository now spawns children in UTF-8 mode. The two
+  non-Python `-I` sites (the `ocamlc` include-directory flag in
+  `verify/extract_magic_check.py` and `tools/_abl1_4b_compile.py`) are left
+  untouched.
+
+**Verification**
+
+- CI run #95 on `b9dd1a7`: **success**. All four blocking lanes green —
+  Self-test suite (macOS), (Linux), (Windows) and
+  (Windows (local self-hosted), the runner LIVE-ROCQWASH on this machine).
+  The two platform-sensitive roster watch jobs stay red by design (they run
+  exactly the cases the blocking roster excludes, and the job carries
+  `continue-on-error: true`).
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。
