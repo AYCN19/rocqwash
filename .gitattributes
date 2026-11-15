@@ -1,0 +1,13 @@
+# Byte-level checkout discipline.
+#
+# This repository's test suite asserts byte-level md5 pins (frozen8's frozen
+# eight, the precedent/recipe stations, the registry anchors). GitHub runners
+# check out with different autocrlf behaviour per platform -- Windows CRLF,
+# POSIX LF -- so a pin recorded from one worktree shape never matches a
+# checkout of another shape, and the same commit verifies green on the
+# developer worktree while failing every platform runner.
+#
+# Pin the checkout to LF on every platform so the asserted bytes are the
+# committed bytes. Every blob in this repository is already LF, so this adds
+# no renormalization churn.
+* text=auto eol=lf

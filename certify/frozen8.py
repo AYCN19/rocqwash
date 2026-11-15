@@ -1007,9 +1007,16 @@ def selftest():
         # Judgment 9 history rewrite surfaces: amend the scratch commit under
         # the anchor → current HEAD no longer descends from freeze_commit →
         # ring 5 drift rc=1.
+        # Pin the amended commit's author date so the new commit SHA cannot
+        # collide with the original: an amend landing inside the same
+        # commit-timestamp granularity as the original reproduces the very
+        # same SHA (same tree, same message, same author and committer
+        # second), which reads as "no drift" and fails this judgment on fast
+        # machines (observed on the CI runners).
         rc, so, se = run_out(["git", "-C", skel, "-c", "user.name=frozen8-selftest",
                               "-c", "user.email=frozen8@selftest.invalid",
-                              "commit", "--amend", "--no-edit", "-q"])
+                              "commit", "--amend", "--no-edit", "--quiet",
+                              "--date=2001-01-01T00:00:00"])
         assert rc == 0, "判⑨ scratch amend 失败\n%s%s" % (so, se)
         rc, so, se = run_out([sys.executable, "-B", me, "check",
                               "--repo", skel, "--list", skel_lst])

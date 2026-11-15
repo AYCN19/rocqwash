@@ -81,6 +81,16 @@ jobs:
             label: Windows
             py: python
             platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+          # Local self-hosted lane (runner LIVE-ROCQWASH, D:\actions-runner-rocqwash):
+          # the same stable roster executed on this machine instead of a cloud
+          # runner, so a long suite is not bound by the hosted runner's job
+          # duration wall and a flaky hosted runner cannot block the signal.
+          # Same platform roster as the Windows lane (identical platform
+          # constraints: no pmset, no otool, no rocq toolchain).
+          - os: [self-hosted, Windows, X64]
+            label: Windows (local self-hosted)
+            py: python
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
     env:
       ROCWASH_PY: ${{ matrix.py }}
       ROCWASH_TESTS_EXCLUDE: ${{ matrix.platform_roster }}
