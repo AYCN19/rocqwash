@@ -9,7 +9,9 @@
 #         linter (norm-lint) plus the contribution registration-row
 #         regenerator (registry-regen) plus the contribution intake
 #         inspector (contrib-intake) plus the autonomous evolution engine
-#         (evolve) — twenty-eight tools in total
+#         (evolve) plus the cross-repository experience bus (symbiosis-bus)
+#         plus the external return-package intake gate (uplink)
+#         — twenty-nine tools in total
 #         (repository root, bash 3.2 compatible)
 #
 # Usage: bash cw.sh <tool> [args...]
@@ -127,6 +129,10 @@
 #               cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest
 #   verdict-diff mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py
 #               cw.sh verdict-diff --results-lane "DIR/results-lane*.tsv" [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest
+#   symbiosis-bus  cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py
+#               cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
+#   uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
+#               cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -210,7 +216,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — unified entry for the rocqwash tool suite (28 tools · bash 3.2 compatible)
+cw.sh — unified entry for the rocqwash tool suite (29 tools · bash 3.2 compatible)
 （中文过渡注 zh transition note: this help is English-first; the full original Chinese quick reference is archived in README-cw.zh.md）
 
 Usage: bash cw.sh <tool> [args...]
@@ -328,6 +334,10 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest
   verdict-diff mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py
               cw.sh verdict-diff --results-lane "DIR/results-lane*.tsv" [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest
+  symbiosis-bus  cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py
+              cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
+  uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
+              cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -388,6 +398,8 @@ hint_for() {  # $1=tool
     calibration-ledger) echo "cw.sh calibration-ledger --report R.json --rc-file RC.json [--leg-map LM.json] [--default-leg NAME] [--ledger P] [--signal-threshold F] [--strict] [--dry-run] | --selftest   # pair vacgen v2 predicted confidence with the measured compile-leg rc into per-row calibration entries (correlationId; idempotent seen set; row-rot signal face; signals are data) -> tools/calibration_ledger.py" ;;
     lean-sweep)  echo "cw.sh lean-sweep --batches B.json --out DIR [--json F] [--fire] [--lanes N] [--skip-ledgers F]... [--taxonomy FILE] [--bisect-max N] | --selftest   # vacuity probe batch sweep orchestrator (bins, dedups, casts with a zero-compile precheck; the compile leg is a designed SKIP unless --fire and the toolchain probe passes) -> tools/lean_sweep.py" ;;
     verdict-diff) echo "cw.sh verdict-diff --results-lane DIR/results-lane*.tsv [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest   # mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py" ;;
+    symbiosis-bus) echo "cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B   # cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; duplicate ids skip idempotently; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py" ;;
+    uplink)      echo "cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]   # external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py" ;;
     *) return 1 ;;
   esac
 }
@@ -455,6 +467,8 @@ case "${1:-}" in
   calibration-ledger) shift; run_tool calibration-ledger "tools/calibration_ledger.py" "$@" ;;
   lean-sweep)  shift; run_tool lean-sweep  "tools/lean_sweep.py" "$@" ;;
   verdict-diff) shift; run_tool verdict-diff "tools/verdict_diff.py" "$@" ;;
+  symbiosis-bus) shift; run_tool symbiosis-bus "tools/symbiosis_bus.py" "$@" ;;
+  uplink)      shift; run_tool uplink "tools/uplink.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

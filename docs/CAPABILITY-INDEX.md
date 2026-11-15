@@ -59,8 +59,10 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | registry_union.py | 42,872 | 931 | Y | Y | 0/14 | zero | coq(4) | arg |
 | render_events.py | 26,635 | 547 | Y | Y | 0/5 | zero | none | arg |
 | select_audit.py | 32,930 | 654 | Y | Y | 0/6 | zero | ocaml/opam token(2) | arg |
+| symbiosis_bus.py | 39,500 | 878 | Y | Y | 1/9 | zero | none | arg |
 | toolchain_dyld_doctor.py | 23,777 | 492 | Y | Y | 0/6 | zero | env, coq(32), dyld(39), thermal(5) | arg |
 | unclog.py | 103,325 | 1,943 | Y | Y | 0/30 | zero | coq(5), thermal(2) | arg |
+| uplink.py | 59,383 | 1,392 | Y | Y | 1/15 | zero | none | arg |
 | vacgen.py | 122,111 | 2,625 | Y | Y | 0/20 | zero | lean(64), thermal(3) | arg |
 | wash_shape.py | 110,172 | 2,285 | Y | Y | 0/16 | zero | env, coq(6) | arg |
 
@@ -75,6 +77,12 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 
 落岸注记 Integration note（引擎本体票·落岸日）：引擎本体批七件按字典序插入本节（ai_flavor／ai_flavor_apply／i18n_pipeline／i18n_translate／i18n_verify／jargon_apply／termbase），条目转录自 `docs/engine-body-capabilities.md`（道8 稿）并经合流环节逐件 `--selftest` 活跑复验；「状态 Status」行为本批增行（增行单列声明律）；§1 总表七行的 Bytes/Lines/Pos-Opt 为合流树活测；下方汇总观察保留 census 时点词面事实不改写。
 Integration note (the engine-body ticket, at integration): the seven engine-body entries are inserted in filename order, transcribed from docs/engine-body-capabilities.md (the lane-8 draft) and re-verified live by the integration agent per file (--selftest); the 状态 Status line is this batch's added line (declared single-line addition); the section 1 rows carry live measurements on the integration tree; the aggregates below stay the census-time word-face facts.
+
+合流注记 Integration note（共生总线票·集成合流）：本节 symbiosis_bus 条目按文件名字典序插入，用途/调用形/示例行转录自本树 `python tools/symbiosis_bus.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为合流树活测；「状态 Status」行为本批增行（增行单列声明律）；`tests/t_mcp_face.py` 的 `symbiosis_status` MCP face（25 capability 名册）即挂本条目契约面。`tools/uplink.py` 在盘未追踪（uplink 票交付件），其 census 级条目候其自身合流增量，本注记不代写。
+Integration note (the symbiosis ticket, at integration): the symbiosis_bus entry below is inserted in filename order; the purpose, invocation, and example lines are transcribed from this tree's live `python tools/symbiosis_bus.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on the integration tree; the 状态 Status line is this batch's added line (declared single-line addition). The `symbiosis_status` MCP face in `tests/t_mcp_face.py` (the 25-capability roster) hangs its contract on this entry. `tools/uplink.py` sits on disk untracked (the uplink ticket's deliverable); its census-grade entry awaits that lane's own integration increment and is deliberately not hand-written here.
+
+合流注记 Integration note（uplink 票·集成合流）：本节 uplink 条目按文件名字典序插入，用途/调用形/示例行转录自本树 `python tools/uplink.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为合流树活测；「状态 Status」行为本批增行（增行单列声明律）；`cw.sh uplink` 路由（头表/usage/hint_for/case 四处）随本批增量落位，`grep -c uplink cw.sh` 实测见合流注记附随证据；登记面 `docs/uplink-intake.jsonl`（schema `rocqwash-uplink/1`·首行注释形·零真实条目）与 `tests/t_uplink_shape.py`（直跑形·不入 run_tests 名册；名册计数与 README 计数行耦合，改动权在持授权的工单流）挂本条目契约面。`docs/uplink_sop.md` 为其操作规程。
+Integration note (the uplink ticket, at integration): the uplink entry below is inserted in filename order; the purpose, invocation, and example lines are transcribed from this tree's live `python tools/uplink.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on the integration tree; the 状态 Status line is this batch's added line (declared single-line addition). The `cw.sh uplink` route (header table / usage / hint_for / case, all four places) lands with this increment; the measured `grep -c uplink cw.sh` count rides with this note as its evidence. The register file `docs/uplink-intake.jsonl` (schema `rocqwash-uplink/1`, comment-header form, zero real rows) and `tests/t_uplink_shape.py` (run directly, deliberately not rostered in tests/run_tests.sh: the roster count is coupled to the README count lines, whose rewrite belongs to the work stream holding that authorization) hang their contracts on this entry. `docs/uplink_sop.md` is the operation manual.
 
 ### tools/_abl1_4b_compile.py
 - 用途 Purpose：内部辅助件：对提取目录中的 OCaml 模块做 mli 先行、依赖不动点轮的增量编译，可选链接并运行 driver；`ocamlc`/`ocamldep` 不在 PATH 即 fail-loud 退出（`_abl1_4b_compile.py:12-20`）。Internal helper: incremental OCaml compilation of an extracted module directory in dependency fixpoint order (interface files first), optionally linking and running a driver; exits loudly if `ocamlc`/`ocamldep` are absent from PATH (`_abl1_4b_compile.py:12-20`).
@@ -324,6 +332,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 网络 Network face：zero
 - SKIP 面：opam 词面（2，待轻探判语义）
 
+### tools/symbiosis_bus.py
+- 状态 Status：[live]（共生总线票 道1-3 交付·集成合流·规格 §1.1 四 face 本体）
+- 用途 Purpose：跨仓共生经验总线：export 把本仓 `docs/exp-ledger.jsonl`（schema `rocqwash-exp/1`）导出为离线交换包（schema `rocqwash-symbio/1`·首行 envelope 携 `sourceRepo`/`anchor`/`entryCount`·随后每行一条原样条目）；import 逐条经 `tools/exp_port.py` append 单口落账（重复 id/fingerprint 幂等跳过·correlationId 携 `symbio:<sourceRepo>@<anchor>` 路由标记）；status 双向计数（入向 bus 行计数＋对给定交换包的 present/new 计数·时点取自条目内容）；diff 出两本账的条目 id 差集清单。零网络设计（交换走离线文件·NETRED 登记面写明 no network by design）。Cross-repository experience bus: export renders the local ledger as an offline swap package (schema `rocqwash-symbio/1`, one envelope line carrying `sourceRepo`/`anchor`/`entryCount`, then one verbatim entry line per entry); import lands each entry through the `tools/exp_port.py` append face (duplicate ids and fingerprints skip idempotently; a `symbio:<sourceRepo>@<anchor>` correlationId marks the route); status counts both directions from entry content; diff lists the entry-id difference of two ledgers. No network face by design (exchange walks offline files; the NETRED register row states no network by design).
+- 调用形 Invocation：`python tools/symbiosis_bus.py [--selftest] {export,import,status,diff} [--out SWAP.jsonl] [--swap SWAP.jsonl] [--ledger P] [--source-repo NAME] [--anchor HEX] [--a LEDGER_A] [--b LEDGER_B] [--dry-run]`（`--swap` import 面恰一·status 面可重复；export 真跑需 `--out`）
+- 示例 Example：`python tools/symbiosis_bus.py export --ledger docs/exp-ledger.jsonl --out swap-round1.jsonl --source-repo rocqwash`
+- 依赖 Imports：argparse, json, os, sys ＋ 仓内 `tools/exp_port.py`（同目录；import 腿经其 append 契约与 ledger 解析）
+- 网络 Network face：zero（三通道零命中；no network by design）
+- SKIP 面：exit 0=读数是数据（duplicate-skip／零差集／零计数）；1=selftest 矢量组报错退出；2=用法或 IO；9=缺件或损坏输入零写入；时间戳取自条目内容禁运行时注入；写面=export 的 `--out` 一件＋import 经 append 口的账本
+
 ### tools/termbase.py
 - 状态 Status：[live]（引擎本体票 道6 交付·合流落岸·E3 离线查词薄层）
 - 用途 Purpose：术语库只读薄层：`seeds/termbase/termbase.json` 只读（stdlib json，schema 校验 fail-loud）加 `lookup(term) -> entries` 精确面查词（剥强调与全角括号、按分隔符拆面）加 `--selftest`。Read-only terminology thin layer over the E3 seed: schema validation fails loud, exact-face lookup, zero network; the E3 net interface and DIY channel stay candidates of their own seed SPECs.
@@ -348,6 +365,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 依赖 Imports：argparse, hashlib, io, json, os, shutil, subprocess, sys, tempfile, time
 - 网络 Network face：zero
 - SKIP 面：coq 系词面（5）、cpu_guard 词面（2）；清理对象面向 Coq/Rocq 编译环境
+
+### tools/uplink.py
+- 状态 Status：[live]（uplink 票 交付三件·集成合流·规格 §1.2 三 face 本体）
+- 用途 Purpose：外产回传包标准上行门：`verify` 把包 zip 与 md5 旁证（32 位十六进制串或旁证文件）及 md5sum 行格式逐文件 manifest 做机器比对，stdout 出逐件证据清单（ok／mismatch／missing／unlisted／declared-surface／dir／info＋汇总行），任一失配或缺件即 fail-loud 终态 rc=1；`intake` 先内置复验同一比对面（红即拒绝、零落笔），green 才向登记面 append 恰一行（schema `rocqwash-uplink/1`·六字段 `package`/`source-seat`/`md5`/`verified`/`landed-ref`/`exit`·同参重跑 duplicate-skip 幂等·`--dry-run` 只报 would-append 行）；`pr-prep` 从登记行渲染 PR 描述草稿文件（只收 verified=true 行·零 git 调用·绝不开 PR）。zip 读取自足（中央目录解析＋RFC 1951 inflate·stored 与 deflate·CRC-32 校验；零第三方依赖）；ZIP64、加密件、未知压缩法、多盘、超预算（2 GiB）为结构化拒跑 rc=9。确定性：同输入同字节输出，时间戳不进逻辑（登记 schema 无时间字段）。零网络设计（全部交换走离线文件·NETRED 登记面写明 no network by design）。Standard intake gate for external return packages: `verify` compares the package zip against its md5 sidecar and md5sum-style manifest member by member with a per-file evidence list (any mismatch or missing declared member is fail-loud rc=1); `intake` re-runs the same comparison and, only on green, appends exactly one register row (schema `rocqwash-uplink/1`, six fields, duplicate-skip idempotent, `--dry-run` reports the would-append line and writes nothing); `pr-prep` renders the pull-request description draft of one register row (verified rows only, zero git calls, never opens a pull request). The zip reader is self-contained (central directory plus RFC 1951 inflate, stored and deflate members, CRC-32 checked); ZIP64, encrypted, unknown-method, multi-disk, and over-budget (2 GiB) archives are structured refusals rc=9. Deterministic byte-identical output; no clock in the logic (the register schema carries no timestamp). No network face by design (all exchange rides offline files; the NETRED register row states no network by design).
+- 调用形 Invocation：`python tools/uplink.py [--selftest] {verify,intake,pr-prep} --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] --source-seat SEAT --landed-ref REF [--register PATH] [--dry-run] --out DRAFT.md [--signature LINE]`（`--register` 与 `--registry` 同槽双拼；verify 面需 `--digest` 或 `--manifest` 至少其一；intake 面另需 `--source-seat` 与 `--landed-ref`；pr-prep 面需 `--out`）
+- 示例 Example：`python tools/uplink.py verify --package return.zip --manifest MANIFEST.md5`
+- 依赖 Imports：argparse, hashlib, json, os, re, sys（全标准库）
+- 网络 Network face：zero（三通道零命中；no network by design）
+- SKIP 面：exit 0=green 终态（appended／duplicate-skip／dry-run／draft written）；1=fail-loud（失配/缺件/未验证行/selftest 矢量报错，零静默跳过）；2=用法、IO 或输入内容非法（非 zip 包、manifest 行格式坏、寄存行损坏前的拒读不属此列）；9=缺件或结构化拒跑（包/旁证/manifest 缺席、寄存行坏 JSON、ZIP64、加密、未知压缩法、多盘、超预算）；写面=intake 的登记面一件（缺省 `docs/uplink-intake.jsonl`）＋pr-prep 的 `--out` 一件，仓树其余零字节（shape 测试以全树 checksum 断言）；`--selftest` 19 矢量冻结组跑临时夹具（夹具外零写入）
 
 ### tools/vacgen.py
 - 用途 Purpose：Lean vacuity 探针骨架生成器：四层形状识别（前提分解、taxonomy 查表、置信评分、分层回归），含零编译覆盖 preflight 与难度地图（`--preflight-all`）；本普查时点在岸，为 tools/ 新增件（newly added item），文件头自述 v2。Lean vacuity probe skeleton generator with a four-layer shape-recognition engine (premise decomposition, taxonomy lookup, confidence scoring, tiered harness), including a zero-compile coverage preflight and a difficulty map (`--preflight-all`); present on disk at census time and newly added to tools/, self-described as v2 in its docstring.
