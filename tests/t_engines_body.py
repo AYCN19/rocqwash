@@ -178,6 +178,12 @@ def base_env(extra=None, strip_gate=True):
     # child runs (the seed suite loads tools dynamically the same way) keep
     # their cache artifacts out of the tree too
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    # Force UTF-8 I/O in every child: on a Windows host the default stdout
+    # codepage (charmap on the hosted image, gbk on a zh-CN host) makes a
+    # child that prints Chinese prose or math symbols die with
+    # UnicodeEncodeError, which the parent then reads as a red case.
+    env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
     if strip_gate:
         for key in ("ROCQWASH_MCP_ALLOW_NET", "ROCQWASH_LLM_ENDPOINT",
                     "ROCQWASH_LLM_MODEL", "ROCQWASH_LLM_KEY"):

@@ -296,6 +296,35 @@ still red — the hosted one across 34 cases, the local self-hosted one across
   hardcoded POSIX path `/tmp/erasure_selftest_<pid>.mli`, which does not
   exist on a Windows runner. It now uses `tempfile.gettempdir()`.
 
+### v61 — Windows lane closure wave: quoting, autocrlf and encoding (2026-11-16)
+
+After v60 the macOS and Linux lanes were green and the hosted Windows lane
+had dropped from 34 red cases to 2, with one more red on the local
+self-hosted lane.
+
+**Fixed**
+
+- `wrapper/frozen_call.py`: the child was launched with `os.execv(argv[0],
+  argv)`. On Windows `os.execv` rebuilds the command line by joining the argv
+  with spaces and does not quote it, so an interpreter path containing a space
+  (`C:\Program Files\Python313\python.exe`) was split and the child died on
+  `argv[0]="C:\Program"` ("can't open file '...Files\Python313\python.exe'").
+  The child is now spawned through the list form, which keeps the exit-code
+  passthrough without the quoting hazard.
+- `tools/registry_regen.py`: the CRLF-preservation vector of the selftest
+  builds a scratch git repository whose base books carry CRLF and asserts the
+  regenerated draft preserves it. On a Windows host whose git has
+  `core.autocrlf=true` the CRLF base books are normalized to LF on commit, so
+  the vector failed for a reason that has nothing to do with the tool. Every
+  git call of the selftest now runs with an injected `core.autocrlf=false`
+  (config injected into the environment, not written into the repository).
+- `tests/run_tests.sh`: the suite entry point now exports `PYTHONIOENCODING`
+  and `PYTHONUTF8` itself, so the UTF-8 guarantee holds for every caller and
+  not only for the CI job environment.
+- `tests/t_engines_body.py`: `base_env` forces the same two variables into
+  every child it spawns, so a child that prints Chinese prose or math symbols
+  cannot die with `UnicodeEncodeError` on an ANSI-codepage host.
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

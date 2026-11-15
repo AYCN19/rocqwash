@@ -931,6 +931,15 @@ def selftest():
                     "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t",
                     "GIT_AUTHOR_DATE": "2026-11-11T00:00:00 +0000",
                     "GIT_COMMITTER_DATE": "2026-11-11T00:00:00 +0000"})
+        # Pin the scratch repositories to autocrlf=false for every git call:
+        # the CRLF-preservation vector below is about the tool's own byte
+        # discipline, not about the host's core.autocrlf. On a Windows host
+        # with autocrlf=true the CRLF base books get normalized to LF on
+        # commit, so the vector fails for a reason that has nothing to do
+        # with the tool (injected config, not the repo's own settings).
+        env.update({"GIT_CONFIG_COUNT": "1",
+                    "GIT_CONFIG_KEY_0": "core.autocrlf",
+                    "GIT_CONFIG_VALUE_0": "false"})
 
         def git(repo, *a):
             p = subprocess.run(["git", "-C", repo] + list(a), env=env,

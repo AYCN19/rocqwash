@@ -45,6 +45,7 @@ import argparse
 import io
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime
 
@@ -166,7 +167,13 @@ def run_call(args):
           % (reg_rel, live, os.path.basename(args.manifest),
              doc.get("tier2_md5_of_tier1_text"), args.log), file=sys.stderr)
     argv = dispatch_argv(copy) + list(args.command[1:])
-    os.execv(argv[0], argv)  # 透传：退出码＝被调命令退出码
+    # os.execv on Windows rebuilds the command line by joining argv with
+    # spaces and does not quote it, so an interpreter path containing a space
+    # ("C:\Program Files\Python313\python.exe") is split and the child dies
+    # on argv[0]="C:\Program". Spawning through the list form keeps the
+    # exit-code passthrough without the quoting hazard.
+    proc = subprocess.run(argv)
+    sys.exit(proc.returncode)
 
 
 def selftest():

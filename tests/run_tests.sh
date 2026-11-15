@@ -227,6 +227,14 @@ set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 FIX="$REPO/tests/fixtures"
 PY=${ROCWASH_PY:-python3}
+# Force UTF-8 I/O for every case and every child process they spawn: on a
+# Windows host the default stdout codepage (charmap on the hosted runner
+# image, gbk on a zh-CN host) makes a tool that prints Chinese prose or math
+# symbols die with UnicodeEncodeError, which the suite then reads as a red
+# case. Pinned here, in the suite's own entry point, so the guarantee holds
+# for every caller and not only for the CI job environment.
+export PYTHONIOENCODING=utf-8
+export PYTHONUTF8=1
 
 # ---------- 正本环境探针（CI 准入）----------
 # 四例（t_gate7_wrapper/t_quad8_check/t_gate6_born_wrapper/t_verify_gate6）的
