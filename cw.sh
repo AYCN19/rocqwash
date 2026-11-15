@@ -133,6 +133,10 @@
 #               cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
 #   uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
 #               cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
+#   evolution-dashboard  self-evolution dashboard over the three standing accounts (experience ledger + round ledger + vacgen v2 TODO-SEAT reports -> coverageLowerPct curve + rounds conversion + per-run gap thermometer; JSON + markdown faces; absent standing paths are data) -> tools/evolution_dashboard.py
+#               cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
+#   bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
+#               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -338,6 +342,10 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
   uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
               cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
+  evolution-dashboard  self-evolution dashboard over the three standing accounts (experience ledger + round ledger + vacgen v2 TODO-SEAT reports -> coverageLowerPct curve + rounds conversion + per-run gap thermometer; JSON + markdown faces; absent standing paths are data) -> tools/evolution_dashboard.py
+              cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
+  bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
+              cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -400,6 +408,8 @@ hint_for() {  # $1=tool
     verdict-diff) echo "cw.sh verdict-diff --results-lane DIR/results-lane*.tsv [--expected F | --batches F] [--json F] [--md F] [--baseline OLD.json] | --selftest   # mechanical judge for sweep ledgers (GREEN/ALERT/BLOCKED/MISSING/SKIPPED-TIERT plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) -> tools/verdict_diff.py" ;;
     symbiosis-bus) echo "cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B   # cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; duplicate ids skip idempotently; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py" ;;
     uplink)      echo "cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]   # external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py" ;;
+    evolution-dashboard) echo "cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]   # self-evolution dashboard over the three standing accounts (experience ledger rocqwash-exp/1 + round ledger rocqwash-round/1 + vacgen v2 TODO-SEAT report faces -> coverageLowerPct curve with per-run TODO-SEAT delta and rise flag, rounds conversion greenPct/classConversionPct, per-run gap count thermometer; absent default-path inputs are data with present=false, explicitly flagged absent paths exit 9; writes only caller-named --json-out/--md-out files; zero network) -> tools/evolution_dashboard.py" ;;
+    bus-feeder)  echo "cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest   # gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py" ;;
     *) return 1 ;;
   esac
 }
@@ -469,6 +479,8 @@ case "${1:-}" in
   verdict-diff) shift; run_tool verdict-diff "tools/verdict_diff.py" "$@" ;;
   symbiosis-bus) shift; run_tool symbiosis-bus "tools/symbiosis_bus.py" "$@" ;;
   uplink)      shift; run_tool uplink "tools/uplink.py" "$@" ;;
+  evolution-dashboard) shift; run_tool evolution-dashboard "tools/evolution_dashboard.py" "$@" ;;
+  bus-feeder)  shift; run_tool bus-feeder "tools/bus_feeder.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
