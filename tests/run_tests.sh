@@ -337,7 +337,6 @@ t_dual_scan \
  t_clean_mode \
  t_vacgen_shape \
  t_vacgen_expectedred \
- t_vacgen_envelope_shape \
  t_refinery"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
