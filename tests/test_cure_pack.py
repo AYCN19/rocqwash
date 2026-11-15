@@ -21,9 +21,13 @@ Vectors:
   5. compile check (env-gated): with ROCWASH_ROCQ set to the rocq binary
      (Rocq/Coq 9.x), tests/fixtures/cure_examples.v compiles rc=0 in a temp
      dir, and a negative-control variant (bare reflexivity directly on the
-     carrier face) fails — the opacity the cure3 pattern addresses.  Skipped
-     (rc 111) when ROCWASH_ROCQ is unset, so external clones pass without a
-     toolchain.
+     carrier face) fails — the opacity the cure3 pattern addresses.  The
+     v1.4.1 compile-leg arc runs here too: the old-class disease form is
+     intercepted by the --apply compile leg (rc 1, file untouched), the
+     shipped class cures canonically, the cured face compiles after the
+     documented proof re-fit, and the leg records a real compile-ok pass.
+     Skipped (rc 111) when ROCWASH_ROCQ is unset, so external clones pass
+     without a toolchain.
   6. v1.2 S07-lineage flows: the cure32 adaptation arc — pre-cure station
      count (report-only, file untouched), full-pack dry-run counts on the
      base fixture, apply + documented binder surgery + all-zero re-run,
@@ -77,10 +81,32 @@ def run(cmd, **kw):
                           **kw)
 
 
+def _bash_argv():
+    """bash invocation argv for the cpu_guard wrapper.  On Windows, bare
+    "bash" in a subprocess resolves to the System32 WSL Store stub
+    (CreateProcess searches System32 before PATH; the stub answers with a
+    UTF-16 'wsl --update' banner and a nonzero rc), so resolve explicitly:
+    ROCWASH_BASH overrides, then a PATH scan that skips the known stub;
+    other platforms keep the plain name."""
+    if os.name != "nt":
+        return ["bash"]
+    override = os.environ.get("ROCWASH_BASH", "")
+    if override and os.path.isfile(override):
+        return [override]
+    for d in os.environ.get("PATH", "").split(os.pathsep):
+        p = os.path.join(d, "bash.exe")
+        if os.path.isfile(p) and "system32" not in p.lower():
+            return [p]
+    return ["bash"]
+
+
+BASH_ARGV = _bash_argv()
+
+
 # 1. applier mechanics
 r = run([sys.executable, "-B", APPLIER, "--selftest"])
 check("applier --selftest rc=0", r.returncode == 0,
-      "" if r.returncode == 0 else r.stdout.decode()[-300:])
+      "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
 
 # 2. pack integrity
 import json
@@ -108,7 +134,7 @@ check("v1.2 five present", want_v32 <= set(ids))
 check("v1.3 five present", want_v34 <= set(ids))
 check("v1.4 one present", want_v39 <= set(ids))
 check("pattern count 5+9+5+5+1", len(pack["patterns"]) == 25)
-check("pack version 1.4.0", pack["version"] == "1.4.0")
+check("pack version 1.4.1", pack["version"] == "1.4.1")
 check("every pattern has trigger+template+idempotence",
       all(("trigger_regex" in p or "trigger" in p or "token_map" in p
            or "station_regex" in p or "insert_line" in p)
@@ -171,7 +197,7 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure4_datatypes_s_qualify"])
     check("apply rc=0 (idempotence verified)", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-300:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("bare stations qualified",
           cured.count("+ Datatypes.S n + Datatypes.S n.") == 1
@@ -196,7 +222,7 @@ try:
     shutil.copy(QLE_F, tgt)
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply"])
     check("qle fixture apply rc=0", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("qle notation downshifted",
           "QleT' (Qabs x) 2%Q." in cured, cured[:0])
@@ -223,7 +249,7 @@ try:
     shutil.copy(NATLE_F, tgt)
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply"])
     check("natle fixture apply rc=0", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("premise lifted (qualified carrier name)",
           "S01_BaseRing.NatLe (gnPrf f pf) k -> NatOK f pf k." in cured
@@ -246,14 +272,14 @@ try:
     before_txt = io.open(tgt, encoding="utf-8").read()
     r = run([sys.executable, "-B", APPLIER, "--file", tgt])
     check("variant pair conflict rc=4 (no --only)", r.returncode == 4,
-          r.stdout.decode()[-200:])
+          r.stdout.decode("utf-8", "replace")[-200:])
     check("conflict left the file untouched",
           io.open(tgt, encoding="utf-8").read() == before_txt)
     # variant (a) alone: delete the shadowing Import line
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure11_import_shadow_delete"])
     check("variant (a) apply rc=0", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-300:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("variant (a) deleted the Import line only",
           "Import RealInterfaceEnhancedMod." not in cured
@@ -266,7 +292,7 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure12_shadow_direct_face_qualify"])
     check("variant (b) apply rc=0", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-300:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("variant (b) qualified all five shadowed tokens",
           "S02_CauchyComplete.real_eq (S07_RealSetoidExpLog.real_log "
@@ -279,7 +305,7 @@ try:
     # negative: same bare shape without the Import — zero matches
     r = run([sys.executable, "-B", APPLIER, "--file", SHADOW_PLAIN_F])
     check("no-import file: both variants at zero matches",
-          "total matches: 0" in r.stdout.decode())
+          "total matches: 0" in r.stdout.decode("utf-8", "replace"))
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
@@ -323,7 +349,7 @@ try:
     #     re-run is all-zero
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply"])
     check("S07 fixture apply rc=0", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("shell dropped at annotation and binder",
           ": RealInterfaceEnhancedSetoid :=" in cured
@@ -388,7 +414,7 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure34_E3_use_station_spec,cure34_E3_spec_shim"])
     check("E3 apply rc=0 (idempotence verified)", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("E3 shim inserted after the import",
           "Require Import Cure34E23World.\n"
@@ -421,7 +447,7 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure34_E2_field_annot,cure34_E2_use_arity"])
     check("E2 apply rc=0 (idempotence verified)", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("E2 middleware annotated + arity adapted",
           "Definition unann (n : nat) : nat := wf theW nat n." in cured
@@ -458,7 +484,7 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", tgt, "--apply",
              "--only", "cure39_ifq_connective_qualify"])
     check("cure39 apply rc=0 (idempotence verified)", r.returncode == 0,
-          "" if r.returncode == 0 else r.stdout.decode()[-400:])
+          "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
     cured = io.open(tgt, encoding="utf-8").read()
     check("cure39 compat faces qualified",
           "@S01_BaseRing.lt RI0 a b -> @S01_BaseRing.le RI0 c d ->"
@@ -483,8 +509,8 @@ try:
     r = run([sys.executable, "-B", APPLIER, "--file", T13_PLAIN_F,
              "--only", "cure39_ifq_connective_qualify"])
     check("differently-named context: zero matches (gate)",
-          "total matches: 0" in r.stdout.decode(),
-          r.stdout.decode()[-200:])
+          "total matches: 0" in r.stdout.decode("utf-8", "replace"),
+          r.stdout.decode("utf-8", "replace")[-200:])
 finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
@@ -497,7 +523,7 @@ if rocq and os.path.exists(rocq):
     os.makedirs(reg, exist_ok=True)
 
     def guarded(args):
-        return run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+        return run(BASH_ARGV + [guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
                     "-MaxWaitSec", "600", "--"] + args)
     try:
         ex = os.path.join(tmp, "cure_examples.v")
@@ -505,7 +531,7 @@ if rocq and os.path.exists(rocq):
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", tmp, "", ex])
         check("cure_examples compiles rc=0 (guard-wrapped)", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         # negative control: bare reflexivity on the carrier face is opaque
         neg = io.open(EXAMPLES, encoding="utf-8").read() + """
 
@@ -529,18 +555,18 @@ Qed.
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", wdir, "", os.path.join(wdir, "Cure32S07World.v")])
         check("S07 world compiles rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         basef = os.path.join(wdir, "Cure32S07Fixture.v")
         shutil.copy(S07_F, basef)
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", wdir, "", basef])
-        sout = r.stdout.decode()
+        sout = r.stdout.decode("utf-8", "replace")
         check("S07 base fails with Illegal application (red face of record)",
               r.returncode != 0 and "Illegal application" in sout,
               sout[-200:])
         r = run([sys.executable, "-B", APPLIER, "--file", basef, "--apply"])
         check("S07 mechanical cures apply rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
         t = io.open(basef, encoding="utf-8").read()
         t = re.sub(r"forall \(R : Set\) \{RIS : RealInterfaceEnhancedSetoid\}"
                    r"\s*\(beta : R\),", "forall beta : Real,", t)
@@ -549,7 +575,7 @@ Qed.
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", wdir, "", basef])
         check("S07 cured+surgery compiles rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         extdir = os.path.join(tmp, "ext")
         os.makedirs(extdir)
         drv = os.path.join(extdir, "ext_driver.v")
@@ -559,12 +585,12 @@ Qed.
             "Separate Extraction Cure32S07Fixture.ufx_sample.\n")
         # extraction output lands in the driver's cwd — pin it to extdir so
         # nothing leaks into the repo
-        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+        r = run(BASH_ARGV + [guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
                  "-MaxWaitSec", "600", "--", rocq, "c",
                  "-native-compiler", "no", "-q", "-Q", wdir, "", drv],
                 cwd=extdir)
         check("extraction run rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         magics, mfiles = 0, 0
         for name in os.listdir(extdir):
             if name.endswith(".ml") or name.endswith(".mli"):
@@ -594,7 +620,7 @@ Qed.
                      "-Q", w34dir, "",
                      os.path.join(w34dir, "Cure34E23World.v")])
         check("E23 world compiles rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
 
         e3f = os.path.join(w34dir, "Cure34E3Fixture.v")
         shutil.copy(E3_F, e3f)
@@ -602,14 +628,14 @@ Qed.
                      "-Q", w34dir, "", e3f])
         check("E3 pre-fix compiles green (extraction-time family)",
               r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         r = run([sys.executable, "-B", APPLIER, "--file", e3f, "--apply"])
         check("E3 cures apply rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", w34dir, "", e3f])
         check("E3 cured compiles rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         e3ext = os.path.join(tmp, "ext34e3")
         os.makedirs(e3ext)
         drv = os.path.join(e3ext, "ext_driver.v")
@@ -617,7 +643,7 @@ Qed.
             "From Stdlib Require Import Extraction.\n"
             "Require Import Cure34E3Fixture.\n"
             "Separate Extraction Cure34E3Fixture.ufx_nat.\n")
-        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+        r = run(BASH_ARGV + [guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
                  "-MaxWaitSec", "600", "--", rocq, "c",
                  "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
                 cwd=e3ext)
@@ -646,7 +672,7 @@ Qed.
                      "-Q", w34dir, "", e2f])
         check("E2 pre-fix compiles green (extraction-time family)",
               r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         e2pre_ext = os.path.join(tmp, "ext34e2pre")
         os.makedirs(e2pre_ext)
         drv = os.path.join(e2pre_ext, "ext_driver.v")
@@ -654,7 +680,7 @@ Qed.
             "From Stdlib Require Import Extraction.\n"
             "Require Import Cure34E2Fixture.\n"
             "Separate Extraction Cure34E2Fixture.use_unann.\n")
-        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+        r = run(BASH_ARGV + [guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
                  "-MaxWaitSec", "600", "--", rocq, "c",
                  "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
                 cwd=e2pre_ext)
@@ -668,11 +694,11 @@ Qed.
               pre_sig[-120:] if pre_sig else "mli missing")
         r = run([sys.executable, "-B", APPLIER, "--file", e2f, "--apply"])
         check("E2 cures apply rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-400:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-400:])
         r = guarded([rocq, "c", "-native-compiler", "no", "-q",
                      "-Q", w34dir, "", e2f])
         check("E2 cured compiles rc=0", r.returncode == 0,
-              "" if r.returncode == 0 else r.stdout.decode()[-300:])
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
         e2ext = os.path.join(tmp, "ext34e2")
         os.makedirs(e2ext)
         drv = os.path.join(e2ext, "ext_driver.v")
@@ -680,7 +706,7 @@ Qed.
             "From Stdlib Require Import Extraction.\n"
             "Require Import Cure34E2Fixture.\n"
             "Separate Extraction Cure34E2Fixture.use_unann.\n")
-        r = run([guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
+        r = run(BASH_ARGV + [guard, "-Reg", reg, "-Front", "0", "-Mid", "1",
                  "-MaxWaitSec", "600", "--", rocq, "c",
                  "-native-compiler", "no", "-q", "-Q", w34dir, "", drv],
                 cwd=e2ext)
@@ -712,6 +738,124 @@ Qed.
         check("E2 consumer-unit magic 0/0; world accessor debt pinned=1",
               magics_cons == 0 and wmagic == 1,
               "consumer magics=%d world magics=%d" % (magics_cons, wmagic))
+
+        # v1.4.1 compile-leg arc (T0-2/T0-3, audit P0-2/P0-3): the disease
+        # form of the old lhs class is intercepted by the --apply compile
+        # leg, the shipped (tightened) class cures canonically, the cured
+        # statement face compiles after the documented proof re-fit, and
+        # the leg records a real compile-ok pass.  The proof re-fit mirrors
+        # the documented binder surgery of the S07 arc above: statement-
+        # face downshifts obligate a downstream proof re-fit (cure10 exists
+        # for exactly this), so the arc pins the obligation instead of
+        # hiding it.
+        legdir = os.path.join(tmp, "leg")
+        os.makedirs(legdir)
+        disease = os.path.join(legdir, "disease.v")
+        io.open(disease, "w", encoding="utf-8", newline="\n").write(
+            "From Stdlib Require Import QArith.QArith QArith.Qabs List.\n"
+            "Import ListNotations.\n"
+            "Definition QleT' (x y : Q) : Set := (Qle_bool x y) = true.\n"
+            "\n"
+            "Lemma lem1 : forall x : Q, In x [0; 0; 2] -> Qabs x <= 2%Q.\n"
+            "Proof.\n"
+            "  intros x Hx. simpl in Hx.\n"
+            "  destruct Hx as [Hx|[Hx|[Hx|[]]]]; subst x;\n"
+            "    apply (proj1 (Qle_bool_iff _ _)); vm_compute; reflexivity.\n"
+            "Qed.\n")
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", legdir, "", disease])
+        check("disease base file compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
+        old_pack_path = os.path.join(legdir, "old_class_pack.json")
+        old_pack = json.load(io.open(PACK, encoding="utf-8"))
+        tightened = old_pack["patterns"][0]  # marker: replacement verified below
+        replaced = 0
+        for p in old_pack["patterns"]:
+            if p["id"] in ("cure7_qle_notation_downshift",
+                           "cure9_qlt_notation_downshift"):
+                if "(?<![A-Za-z0-9_'])(?P<lhs>[^\\n()<>=:,-]+?)" \
+                        in p["trigger_regex"]:
+                    p["trigger_regex"] = p["trigger_regex"].replace(
+                        "(?<![A-Za-z0-9_'])(?P<lhs>[^\\n()<>=:,-]+?)",
+                        "(?P<lhs>[^\\n()<>=-]+?)", 1)
+                    p["idempotence_note"] = \
+                        "old-class probe pack (pre-v1.4.1 trigger)"
+                    replaced += 1
+        check("old-class probe pack built (two triggers reverted)",
+              replaced == 2 and tightened is not None)
+        json.dump(old_pack, io.open(old_pack_path, "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=1)
+        d_old = os.path.join(legdir, "disease_old.v")
+        shutil.copy(disease, d_old)
+        before_bytes = io.open(d_old, "rb").read()
+        r = run([sys.executable, "-B", APPLIER, "--file", d_old,
+                 "--pack", old_pack_path,
+                 "--only", "cure7_qle_notation_downshift", "--apply"])
+        sout = r.stdout.decode("utf-8", "replace")
+        check("old-class disease intercepted by the compile leg (rc=1)",
+              r.returncode == 1 and "compile-regression intercepted" in sout,
+              sout[-200:])
+        check("intercepted file NOT written (byte-constant)",
+              io.open(d_old, "rb").read() == before_bytes)
+        d_new = os.path.join(legdir, "canon_new.v")
+        io.open(d_new, "w", encoding="utf-8", newline="\n").write(
+            "From Stdlib Require Import QArith.QArith QArith.Qabs List.\n"
+            "Import ListNotations.\n"
+            "Definition QleT' (x y : Q) : Set := (Qle_bool x y) = true.\n"
+            "\n"
+            "Lemma lem1 : forall x : Q, (Qle_bool x (2#1)) = true -> "
+            "x <= 2%Q.\n"
+            "Proof.\n"
+            "  intros x H. apply (proj1 (Qle_bool_iff _ _)). exact H.\n"
+            "Qed.\n")
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", legdir, "", d_new])
+        check("canonical base file compiles rc=0", r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
+        r = run([sys.executable, "-B", APPLIER, "--file", d_new,
+                 "--only", "cure7_qle_notation_downshift", "--apply",
+                 "--rocq", ""])
+        check("shipped class cures canonically (leg not configured -> rc=0)",
+              r.returncode == 0, r.stdout.decode("utf-8", "replace")[-200:])
+        cured_text = io.open(d_new, encoding="utf-8").read()
+        check("cured face canonical; head-eating form absent",
+              "= true -> QleT' x 2%Q." in cured_text
+              and "QleT' (Lemma" not in cured_text)
+        # documented proof re-fit: the premise already carries the carrier
+        # face's bool equation, so the cured Set goal closes by exact H
+        # (the re-fit obligation of a statement-face downshift; the old
+        # goal-Prop form would break here by or-elimination into Set)
+        refit = cured_text.replace(
+            "intros x H. apply (proj1 (Qle_bool_iff _ _)). exact H.",
+            "intros x H. exact H.")
+        io.open(d_new, "w", encoding="utf-8", newline="\n").write(refit)
+        r = guarded([rocq, "c", "-native-compiler", "no", "-q",
+                     "-Q", legdir, "", d_new])
+        check("cured face + documented proof re-fit compiles rc=0",
+              r.returncode == 0,
+              "" if r.returncode == 0 else r.stdout.decode("utf-8", "replace")[-300:])
+        # a real before/after compile-ok pass through the leg: a proof- and
+        # semantics-agnostic probe pattern (inserts one valid Definition)
+        probe_pack_path = os.path.join(legdir, "leg_probe_pack.json")
+        json.dump({"pack": "leg_probe", "version": "0", "patterns": [
+            {"id": "leg_probe_insert", "title": "compile-leg pass probe",
+             "engine": "line-insert",
+             "insert_line": "Definition leg_probe := 1.",
+             "insert_after": "last-import",
+             "idempotence_note": "present line skips (count 0)"}]},
+            io.open(probe_pack_path, "w", encoding="utf-8"),
+            ensure_ascii=False, indent=1)
+        d_pass = os.path.join(legdir, "leg_pass.v")
+        shutil.copy(disease, d_pass)
+        r = run([sys.executable, "-B", APPLIER, "--file", d_pass,
+                 "--pack", probe_pack_path, "--apply"])
+        sout = r.stdout.decode("utf-8", "replace")
+        check("compile leg records a real compile-ok pass (rc pair 0/0)",
+              r.returncode == 0 and "COMPILE-LEG: compile-ok" in sout
+              and "(rc before=0 after=0)" in sout, sout[-200:])
+        check("probe insert landed on disk",
+              "Definition leg_probe := 1." in io.open(
+                  d_pass, encoding="utf-8").read())
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 else:

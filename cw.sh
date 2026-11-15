@@ -137,6 +137,8 @@
 #               cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
 #   bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
 #               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
+#   axiom-guard repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; env-gated, rc 111 honest skip; zero repository writes) -> tools/axiom_guard.py
+#               cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -346,6 +348,8 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
   bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
+  axiom-guard repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; env-gated, rc 111 honest skip; zero repository writes) -> tools/axiom_guard.py
+              cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -410,6 +414,7 @@ hint_for() {  # $1=tool
     uplink)      echo "cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]   # external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py" ;;
     evolution-dashboard) echo "cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]   # self-evolution dashboard over the three standing accounts (experience ledger rocqwash-exp/1 + round ledger rocqwash-round/1 + vacgen v2 TODO-SEAT report faces -> coverageLowerPct curve with per-run TODO-SEAT delta and rise flag, rounds conversion greenPct/classConversionPct, per-run gap count thermometer; absent default-path inputs are data with present=false, explicitly flagged absent paths exit 9; writes only caller-named --json-out/--md-out files; zero network) -> tools/evolution_dashboard.py" ;;
     bus-feeder)  echo "cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest   # gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py" ;;
+    axiom-guard) echo "cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]   # repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; write faces: the caller-named --out report and the private temp workdir only; rc 0=PASS 1=red 2=usage 9=fail-loud missing binary 111=honest skip unconfigured toolchain; ROCWASH_ROCQ/ROCWASH_COQCHK env gating; zero repository writes) -> tools/axiom_guard.py" ;;
     *) return 1 ;;
   esac
 }
@@ -481,6 +486,7 @@ case "${1:-}" in
   uplink)      shift; run_tool uplink "tools/uplink.py" "$@" ;;
   evolution-dashboard) shift; run_tool evolution-dashboard "tools/evolution_dashboard.py" "$@" ;;
   bus-feeder)  shift; run_tool bus-feeder "tools/bus_feeder.py" "$@" ;;
+  axiom-guard) shift; run_tool axiom-guard "tools/axiom_guard.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

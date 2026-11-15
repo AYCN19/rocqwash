@@ -54,23 +54,60 @@
         锚 tools/registry_union.py:826＋:883-885
   ⑥ wash/cure_applier.py（正典包落刀器·写面＝--file 目标件）
      C1 干跑缺省零写盘：缺省只出报告·目标件 md5 恒同
-        锚 wash/cure_applier.py:1109/:1134（if args.apply 写闸）
+        锚 wash/cure_applier.py:1272/:1338（if args.apply 写闸）
      C2 --apply 才落刀＋幂等断言拒写：--apply 落刀且二遍零残才写盘；幂等断言
         败（自定义非幂等包）→ rc=1 file NOT written
-        锚 wash/cure_applier.py:1134-1150（IDEMPOTENCE-FAIL 拒写）
+        锚 wash/cure_applier.py:1282-1285（IDEMPOTENCE-FAIL 拒写）
+     C3 write-face byte contract: after --apply on an LF fixture the on-disk
+        bytes md5 equals the reported md5_after and no \r\n ever lands on
+        disk (io.open newline="" pin; without it Windows text mode wrote
+        CRLF while the report md5 was LF-caliber — the T0-5 md5-caliber
+        defect; second pass must stay byte-identical)
+        anchor wash/cure_applier.py:1338-1341 (pinned write face)
+     C4 compile-leg write face (T0-2/T0-3 S1 sync): the --apply compile
+        leg compiles temp-only copies (.vo never lands in the repo tree);
+        env unset -> honest not-run record with the write proceeding
+        unchanged; env set but binary missing -> rc=9 fail-loud with the
+        file NOT written (never a simulated green)
+        锚 wash/cure_applier.py:660（compile_leg）＋:1286-1336（leg 总闸）＋
+        :1300-1306（rc=9 fail-loud 面）
+  ⑦ certify/frozen8.py（冻结名单器·写面＝freeze 显式 --out/--tier2 两径＋
+     timestamp 显式 --out 回执一径）
+     F1 freeze 只落显式两径＋账载漂移 fail-closed 拒出名单（rc=1 零写）：
+        scratch git skeleton 十件冻结面 freeze 后仓树 md5 恒同；verify_vo.py
+        一字节篡改 → 拒出名单且 --out 零字节
+        锚 certify/frozen8.py:357,366（显式两写口）＋:334（拒出名单 fail-closed）
+     F2 timestamp 唯一写面＝显式 --out 回执且绑定复验后才落：--out 缺席
+        rc=2 零写；TSA 不可达（闭合回环指认 ROCWASH_TSA_URL）rc=9 零写
+        ——回执只在 digest 绑定本地复验通过后落盘
+        锚 certify/frozen8.py:806（唯一写口·:799-803 绑定闸前置）＋:772
+        （可达性自勘失败 rc=9）
+  ⑧ tools/axiom_guard.py (axiom guard; write face = the caller-named --out
+     report volume plus one private temp workdir path; the .vo output face
+     is temp-only, zero bytes into the repository tree)
+     G1 compile-leg write face temp-only + honest skip: toolchain
+        unconfigured (no env, no flags) -> rc=111 honest skip, zero
+        judgment, the watched scratch tree md5-constant, no --out created;
+        configured binaries missing -> rc=9 fail-loud before any work
+        (zero writes, zero compiles)
+        锚 tools/axiom_guard.py:main env gate (rc 111 / rc 9 ahead of
+        guard()) + :guard private mkdtemp (write faces = workdir and the
+        caller-named --out only)
 
 离线纪律（硬要求）：全判据走 tmp fixture＋--injector 罐装（unclog probe/resprobe
 canned·wash_shape 引擎键 canned·pushci steps/jobs/git-caller canned·sentinel
 canned API）——零真网络零真仓零真编译；真子进程仅限纯 stdlib 离线引擎
-（chain_graph/cure_applier/scan_v4_token/frozen8 --ledger/gate4/ci_triage
---offline·判例：各器自带 --selftest 同款）。唯一例外 W3 递真在册件**路径**——
+（chain_graph/cure_applier/scan_v4_token/frozen8 --ledger/--selftest/freeze
+（scratch skeleton）/gate4/ci_triage --offline·判例：各器自带 --selftest
+同款）。唯一例外 W3 递真在册件**路径**——
 工具在 collect_files 即红拒·零读零写（wash_shape 自身判8 同款先例）。
 
 自体纪律：python3 -B 禁 __pycache__；零仓写盘（全部工件在 tempfile.mkdtemp）；
-输出确定性（零墙钟零绝对仓路径）；env 兜底清洗（ROCWASH_HEADER_MAP 剥除·
-防环境渗判）；fail-loud——任一行炸（含环境异常）按破计不静默。
+输出确定性（零墙钟零绝对仓路径）；env 兜底清洗（ROCWASH_HEADER_MAP／
+ROCWASH_ROCQ／ROCWASH_COQCHK 剥除·防环境渗判防真编译渗阵）；fail-loud——
+任一行炸（含环境异常）按破计不静默。
 
-退出码：0=17 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
+退出码：0=22 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
 
 用法：
   python3 tests/test_destructive_matrix.py          # 套件内经 run_tests.sh 调
@@ -92,6 +129,7 @@ PUSHCI = os.path.join(REPO, "tools", "pushci.py")
 SENTINEL = os.path.join(REPO, "tools", "cw_sentinel.py")
 REGISTRY_UNION = os.path.join(REPO, "tools", "registry_union.py")
 CURE_APPLIER = os.path.join(REPO, "wash", "cure_applier.py")
+AXIOM_GUARD = os.path.join(REPO, "tools", "axiom_guard.py")
 FROZEN8 = os.path.join(REPO, "certify", "frozen8.py")
 JOBS_A = os.path.join(REPO, "tests", "fixtures", "ci_triage_A_content_red.json")
 JOBS_B = os.path.join(REPO, "tests", "fixtures", "ci_triage_B_netred.json")
@@ -120,11 +158,19 @@ def tree_manifest(root):
     return out
 
 
-def sh(tool_abs, argv):
-    """python3 -B <tool> 子进程（stdout+stderr 合流·env 清洗 ROCWASH_HEADER_MAP
-    防环境渗判）。"""
+def sh(tool_abs, argv, env_extra=None):
+    """python3 -B <tool> subprocess (stdout+stderr merged; environment
+    sanitation strips ROCWASH_HEADER_MAP/ROCWASH_ROCQ/ROCWASH_COQCHK so no
+    caller environment leaks into a verdict and no real compile leaks into
+    the offline matrix).  env_extra is the explicit injection face for the
+    configured-but-missing fail-loud rows only (it can never launch a real
+    compile: the missing binary check precedes every work face)."""
     env = dict(os.environ)
     env.pop("ROCWASH_HEADER_MAP", None)
+    env.pop("ROCWASH_ROCQ", None)
+    env.pop("ROCWASH_COQCHK", None)
+    if env_extra:
+        env.update(env_extra)
     p = subprocess.run([sys.executable, "-B", tool_abs] + list(argv),
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env)
     out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
@@ -586,7 +632,7 @@ def row_s2(tmp):
     assert "--emit" in out2, out2[-300:]
 
 
-# ---- ⑤ registry_union／cure_applier 四行 --------------------------------------
+# ---- ⑤ registry_union／cure_applier 五行 --------------------------------------
 
 def r_fixture(tmp, tag):
     d = os.path.join(tmp, tag)
@@ -679,6 +725,208 @@ def row_c2(tmp):
     assert md5_of(g) == g_before, "幂等断言败后件被写＝护栏破（file NOT written 失守）"
 
 
+def row_c3(tmp):
+    """Write-face byte contract (S1 sync for the T0-5 newline change at
+    wash/cure_applier.py:1090): after --apply on an all-LF fixture the
+    on-disk byte md5 must equal the report's md5_after (md5s = md5 of the
+    utf-8 text), no \\r\\n may land on disk, and the second idempotent pass
+    must leave the bytes unchanged. Without the newline="" pin, Windows text
+    mode wrote CRLF while the report md5 stayed LF-caliber, so the reported
+    md5 never described the file it claims to describe."""
+    d = os.path.join(tmp, "c3")
+    os.makedirs(d)
+    f = wf(os.path.join(d, "t3.v"), CURE13_BODY)
+    rep = os.path.join(d, "rep.json")
+    rc, out = sh(CURE_APPLIER, ["--file", f, "--apply",
+                                "--json", os.path.join(d, "rep.json")])
+    assert rc == 0, "--apply canonical write should exit 0, got %d\n%s" \
+        % (rc, out[-400:])
+    raw = open(f, "rb").read()
+    r = jl(rep)
+    on_disk_md5 = hashlib.md5(raw).hexdigest()
+    assert on_disk_md5 == r["md5_after"], \
+        "on-disk byte md5 %s != report md5_after %s = newline contract " \
+        "broken (CRLF-caliber write face)" % (on_disk_md5, r["md5_after"])
+    assert b"\r\n" not in raw, \
+        "CRLF landed on disk from an all-LF fixture = byte face translated"
+    rc2, out2 = sh(CURE_APPLIER, ["--file", f, "--apply",
+                                  "--json", os.path.join(d, "rep2.json")])
+    assert rc2 == 0, "second idempotent pass should exit 0, got %d\n%s" \
+        % (rc2, out2[-300:])
+    assert open(f, "rb").read() == raw, \
+        "second pass drifted the on-disk bytes = idempotence broken"
+
+
+# ---- ⑧ axiom_guard one row (T0-2 axiom guard S1 sync) ------------------------
+
+def row_g1(tmp):
+    """axiom_guard compile-leg write face (T0-2 axiom guard S1 sync): the
+    run's only write faces are the caller-named --out report and its
+    private temp workdir (the .vo output face is temp-only).  Face 1:
+    toolchain unconfigured (env stripped by matrix sanitation) -> rc 111
+    honest skip, zero judgment, the watched scratch tree gains zero bytes,
+    and --out is not even created (the skip precedes every write face).
+    Face 2: configured-but-missing binaries -> rc 9 fail-loud before any
+    work (no compile can launch), the tree still gains zero bytes.  Face 3
+    re-checks the --out non-creation explicitly with --out passed.  The
+    real-compile coverage of the temp-only .vo face lives in the seat's
+    live evidence run, outside the offline matrix (zero-real-compile
+    discipline)."""
+    d = os.path.join(tmp, "g1")
+    tree = os.path.join(d, "tree")
+    os.makedirs(tree)
+    wf(os.path.join(tree, "one.v"), "Definition x := 1.\n")
+    before = tree_manifest(tree)
+    outp = os.path.join(d, "evid")
+    rc, out = sh(AXIOM_GUARD, ["--repo", tree, "--out", outp])
+    assert rc == 111, \
+        "unconfigured toolchain must honestly skip rc 111, got %d\n%s" \
+        % (rc, out[-400:])
+    assert "SKIP" in out, \
+        "rc 111 face must carry the SKIP banner: %s" % out[-300:]
+    assert tree_manifest(tree) == before, \
+        "skip face wrote the watched tree = write-face contract broken"
+    assert not os.path.exists(outp), \
+        "skip face created the --out dir = skip precedes every write face"
+    rc2, out2 = sh(AXIOM_GUARD, ["--repo", tree],
+                   env_extra={"ROCWASH_ROCQ": "D:/no_such_dir/rocq.exe",
+                              "ROCWASH_COQCHK": "D:/no_such_dir/coqchk.exe"})
+    assert rc2 == 9, \
+        "configured-but-missing binaries must fail loud rc 9, got %d\n%s" \
+        % (rc2, out2[-400:])
+    assert "FAIL-LOUD" in out2, \
+        "rc 9 face must carry the fail-loud banner: %s" % out2[-300:]
+    assert tree_manifest(tree) == before, \
+        "rc 9 face wrote the watched tree = write-face contract broken"
+
+
+# ---- ⑥ addendum: the cure_applier compile-leg row (T0-2/T0-3 S1 duty:
+# whoever writes a face, pins it in this matrix) -----------------------------
+
+def row_c4(tmp):
+    """cure_applier compile-leg write face (T0-2/T0-3 S1 sync): the --apply
+    compile leg compiles temp-only copies (the repository tree gains zero
+    bytes from the leg) and never activates offline.  Face 1: toolchain env
+    stripped by matrix sanitation -> the leg records the honest
+    not-configured status and the write proceeds with rc unchanged.
+    Face 2: env set but the binary missing -> rc 9 fail-loud with the file
+    NOT written (never a simulated green; the binary existence check
+    precedes any compile launch, so this face stays offline).
+    Face 3: a no-change second pass -> the leg records skipped-no-change
+    without launching any compile.  The green->red interception and the
+    temp-only .vo face of a live compile live in tests/test_cure_pack.py's
+    env-gated section and the seat's evidence run, outside the offline
+    matrix."""
+    d = os.path.join(tmp, "c4")
+    os.makedirs(d)
+    f = wf(os.path.join(d, "t4.v"), CURE13_BODY)
+    rep = os.path.join(d, "rep.json")
+    rc, out = sh(CURE_APPLIER, ["--file", f, "--apply", "--json", rep])
+    assert rc == 0, "offline --apply should exit 0, got %d\n%s" \
+        % (rc, out[-400:])
+    assert "COMPILE-LEG: SKIP" in out, \
+        "unconfigured leg must carry the SKIP record: %s" % out[-300:]
+    r = jl(rep)
+    assert r.get("compile_check", {}).get("status") == "not-configured", \
+        "not-configured leg must be recorded honestly: %r" % r.get("compile_check")
+    d2 = os.path.join(tmp, "c4b")
+    os.makedirs(d2)
+    g = wf(os.path.join(d2, "g.v"), CURE13_BODY)
+    g_before = md5_of(g)
+    rc2, out2 = sh(CURE_APPLIER, ["--file", g, "--apply"],
+                   env_extra={"ROCWASH_ROCQ": "D:/no_such_dir/rocq.exe"})
+    assert rc2 == 9, \
+        "configured-but-missing compiler must fail loud rc 9, got %d\n%s" \
+        % (rc2, out2[-400:])
+    assert "FAIL-LOUD" in out2, \
+        "rc 9 face must carry the fail-loud banner: %s" % out2[-300:]
+    assert md5_of(g) == g_before, \
+        "rc 9 face wrote the target = write-face contract broken"
+    rc3, out3 = sh(CURE_APPLIER, ["--file", f, "--apply",
+                                  "--json", os.path.join(d, "rep3.json")])
+    assert rc3 == 0, "no-change second pass should exit 0, got %d" % rc3
+    r3 = jl(os.path.join(d, "rep3.json"))
+    assert r3.get("compile_check", {}).get("status") == "skipped-no-change", \
+        "no-change pass must record skipped-no-change: %r" \
+        % r3.get("compile_check")
+
+
+# ---- ⑦ frozen8 两行（A1 席 S1 强化律·20261115·谁写谁进阵）--------------------
+
+F8_ROSTER = [
+    "certify/freeze_manifest.py",
+    "certify/frozen8.py",
+    "certify/push_gate.py",
+    "names/mac_stmt_names.py",
+    "scan/mac_stmt_scan.py",
+    "seam/seam_probe.py",
+    "tools/cpu_guard.sh",
+    "verify/gate4_comment_guard.py",
+    "verify/verify_vo.py",
+    "wash/wash_engine.py",
+]
+
+
+def f8_skeleton(root):
+    """scratch git skeleton: byte-identical copies of the ten roster files,
+    one scratch commit → usable as a freeze --repo target (offline)."""
+    os.makedirs(root)
+    for rel in F8_ROSTER:
+        fp = os.path.join(root, rel.replace("/", os.sep))
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        shutil.copyfile(os.path.join(REPO, rel.replace("/", os.sep)), fp)
+    ident = ["-c", "user.name=dm-frozen8", "-c", "user.email=dm@frozen8.invalid"]
+    subprocess.run(["git", "-C", root, "init", "-q"], check=True)
+    subprocess.run(["git", "-C", root] + ident + ["add", "-A"], check=True)
+    subprocess.run(["git", "-C", root] + ident + ["commit", "-q", "-m", "dm"],
+                   check=True)
+
+
+def row_f1(tmp):
+    """freeze 写面：只落显式 --out/--tier2 两径；账载漂移 fail-closed 拒出
+    名单（rc=1·--out 零字节）。锚 certify/frozen8.py:357,366＋:334。"""
+    skel = os.path.join(tmp, "skel")
+    f8_skeleton(skel)
+    before = tree_manifest(skel)
+    rc, out = sh(FROZEN8, ["freeze", "--repo", skel,
+                           "--out", os.path.join(tmp, "m.json"),
+                           "--tier2", os.path.join(tmp, "t2.md5")])
+    assert rc == 0, "freeze 绿径应 0 实测 %d\n%s" % (rc, out[-400:])
+    assert tree_manifest(skel) == before, \
+        "freeze 越界写仓树＝护栏破（写面仅显式 --out/--tier2）"
+    vo = os.path.join(skel, "verify", "verify_vo.py")
+    with open(vo, "rb") as fh:
+        data = bytearray(fh.read())
+    data[len(data) // 2] ^= 0x01
+    with open(vo, "wb") as fh:
+        fh.write(bytes(data))
+    out2 = os.path.join(tmp, "m2.json")
+    rc2, o2 = sh(FROZEN8, ["freeze", "--repo", skel, "--out", out2])
+    assert rc2 == 1, "账载漂移 freeze 应 rc=1 实测 %d\n%s" % (rc2, o2[-400:])
+    assert not os.path.exists(out2), "拒出名单仍落 --out＝护栏破（零写）"
+    assert "拒出名单" in o2, o2[-400:]
+
+
+def row_f2(tmp):
+    """timestamp 写面：唯一写面＝显式 --out 回执且绑定复验后才落；--out 缺席
+    rc=2 零写；TSA 不可达 rc=9 零写。锚 certify/frozen8.py:806＋:772。"""
+    before = tree_manifest(tmp)
+    man = os.path.join(REPO, "certify", "frozen8_manifest.json")
+    rc, out = sh(FROZEN8, ["timestamp", "--list", man])
+    assert rc == 2, "--out 缺席应 rc=2 实测 %d\n%s" % (rc, out[-300:])
+    assert "需 --out" in out, out[-300:]
+    tsr = os.path.join(tmp, "x.tsr")
+    os.environ["ROCWASH_TSA_URL"] = "http://127.0.0.1:1/tsr"  # closed loopback
+    try:
+        rc9, o9 = sh(FROZEN8, ["timestamp", "--list", man, "--out", tsr])
+    finally:
+        os.environ.pop("ROCWASH_TSA_URL", None)
+    assert rc9 == 9, "TSA 不可达应 rc=9 实测 %d\n%s" % (rc9, o9[-300:])
+    assert "可达性自勘失败" in o9, o9[-300:]
+    assert not os.path.exists(tsr), "不可达仍落回执＝护栏破（零写）"
+    assert tree_manifest(tmp) == before, "timestamp 失败路径越界写盘＝护栏破"
+
+
 # ---- 矩阵总装 -----------------------------------------------------------------
 
 L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A 可洗链根·B 缺 A
@@ -715,9 +963,19 @@ ROWS = [
     ("R2", "registry_union", "--apply 才落刀（＋无 --out rc=2 禁隐式覆写）",
      "tools/registry_union.py:826,883-885", row_r2),
     ("C1", "cure_applier", "干跑缺省零写盘（目标件 md5 恒同）",
-     "wash/cure_applier.py:1109,1134", row_c1),
+     "wash/cure_applier.py:1272,1338", row_c1),
     ("C2", "cure_applier", "--apply 才落刀＋幂等断言败拒写（rc=1 零字节动）",
-     "wash/cure_applier.py:1134-1150", row_c2),
+     "wash/cure_applier.py:1282-1285", row_c2),
+    ("C3", "cure_applier", "write-face byte contract: on-disk md5 == report md5_after, no CRLF, second pass byte-stable",
+     "wash/cure_applier.py:1338-1341", row_c3),
+    ("C4", "cure_applier", "compile-leg write face: temp-only copies, honest skip record, missing-binary rc=9 refuses the write, no-change pass compiles nothing",
+     "wash/cure_applier.py:660,1286-1336,1300-1306", row_c4),
+    ("F1", "frozen8", "freeze 只落显式 --out/--tier2（账载漂移拒出名单 rc=1 零写）",
+     "certify/frozen8.py:357,366,334", row_f1),
+    ("F2", "frozen8", "timestamp 唯一写面=显式 --out 回执绑定复验后落（缺参 rc=2/不可达 rc=9 皆零写）",
+     "certify/frozen8.py:806,772", row_f2),
+    ("G1", "axiom_guard", "compile-leg write face temp-only: rc 111 honest skip with zero judgment and no --out / missing binaries rc=9 ahead of every work face",
+     "tools/axiom_guard.py:main env gate, guard mkdtemp", row_g1),
 ]
 
 
@@ -747,9 +1005,9 @@ def main():
             print("  破口 %s @ %s — %s\n    违据: %s" % (rid, anchor, guard,
                                                         detail))
         return 1
-    print("DESTRUCTIVE-MATRIX PASS: 17 行拒写判据全过（unclog×4/wash_shape×4/"
-          "pushci×3/cw_sentinel×2/registry_union×2/cure_applier×2·全 tmp "
-          "fixture＋injector 罐装零真网络零真仓零真编译）")
+    print("DESTRUCTIVE-MATRIX PASS: 22 行拒写判据全过（unclog×4/wash_shape×4/"
+          "pushci×3/cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/"
+          "axiom_guard×1·全 tmp fixture＋injector 罐装零真网络零真仓零真编译）")
     return 0
 
 
