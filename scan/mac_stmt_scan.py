@@ -7,7 +7,7 @@ Unicode 名道/implyM 守卫/属性前缀道/混合面判据全部原样继承�
 
   1. 删除 v3 --regression 的 Windows 路径靶（D:\ 系）——Mac 端无此盘面，回归以
      --baseline S09（Set 树 worldT_mac 基准试射）替代。
-  2. E364 盲区律落地「报清单不报清白」：输出永不出现「CLEAN=无泄露」结论——只出命中清单＋
+  2. E364 盲区律落地「报清单不报清白」：输出永不出现「CLEAN=无泄露」判词——只出命中清单＋
      逐 hit 归类注记（lawful-keep 候选提示），真命中定谳唯内核 census（SortAlive __-census，
      红线②第六关）。任何 0 命中须另过负证对照（--selftest 内嵌 E364 向量）方可采信。
   3. --manifest 保留（§1·E 律 4 pocket 吞名对账断言：swallowed/blind/kind_drift/line_drift
@@ -686,7 +686,7 @@ BASELINE_S09_NOTE = ("S09_EntropyReal（Set 树·worldT_mac 805c7642c6ddfc181db2
 
 
 def print_inventory(res, hits_csv=None):
-    """E364 盲区律：只出清单＋归类注记，禁出「清白」结论。"""
+    """E364 盲区律：只出清单＋归类注记，禁出「清白」判词。"""
     rows = []
     for h in res["hits"]:
         rows.append((h["line"], h["cat"], h["cls"], h["pos"], h["hint"], h["tok"][:100]))

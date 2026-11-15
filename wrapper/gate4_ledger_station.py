@@ -30,7 +30,7 @@ carrier_exemption_ledger_final.tsv（find/ls 实测），故默认 --emit-ledger
 ＝出台账指认卡不透传。
 
 退出码：0=过；2=站级用法错/台账缺席；9=正本缺失；其余＝正本口径透传
-（正本 --emit-ledger FATAL exit 2、结论 exit 0/1/2 等原样可达，fail-loud 不改写）。
+（正本 --emit-ledger FATAL exit 2、判词 exit 0/1/2 等原样可达，fail-loud 不改写）。
 
 幂等律：本站零写盘——不写正本、不写台账、不写临时（run_tests.sh 幂等口径兼容；
 smoke 验证输出由调用者显式指定到自席沙箱）。

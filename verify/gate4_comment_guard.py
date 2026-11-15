@@ -119,7 +119,7 @@ EXT_WORD_FAMILIES = {
     },
 }
 
-# 长词优先合并（组装机>注册；塌缩腿>塌缩；身换壳留/休眠水库 最长——v2.0 新解）
+# 长词优先合并（组装机>装机；塌缩腿>塌缩；身换壳留/休眠水库 最长——v2.0 新解）
 _ALL_WORDS = [(w, FAMILY_BASE) for w in BANNED_WORDS]
 for fam, spec in EXT_WORD_FAMILIES.items():
     _ALL_WORDS.extend((w, fam) for w in spec["words"])
@@ -550,7 +550,7 @@ def check_file(path, length_cap=30, length_fail=False, principle=True):
 
 def scan_tree(tree):
     """非递归平扫（gate1 同款）——子目录存在即响亮警示。
-    v2.2 [U2] `_*` 下划线守卫：下划线前缀件（沙箱/检验/临时件，素不在
+    v2.2 [U2] `_*` 下划线守卫：下划线前缀件（沙箱/探针/临时件，素不在
     build/coqchk 认证面——cw_build/cw_chk 依 order 拓扑消费注册名）同样
     素不在注释卫生认证面；扫描域与认证面口径对齐（20260926，R134RB 判例：
     vo 树 15 件 `_*` 探针把闸拖入与认证面无关的红）。"""
