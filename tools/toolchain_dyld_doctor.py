@@ -244,6 +244,15 @@ def selftest():
     """
     import shutil as _shutil
 
+    if os.name != "posix":
+        # The canned otool stub is a POSIX shell script: a Windows host cannot
+        # execute it (chmod does not set the execute bit there), so the CLI
+        # vector would fail for a reason that has nothing to do with the
+        # tool. Report the honest skip instead of a false red.
+        print("DYLD-DOCTOR-SELFTEST SKIP: POSIX host required (the canned "
+              "otool stub is a shell script)")
+        return 111
+
     def wfile(path, data=b"x\n"):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with io.open(path, "wb") as fh:

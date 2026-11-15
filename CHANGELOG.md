@@ -354,6 +354,27 @@ self-hosted lane.
   exactly the cases the blocking roster excludes, and the job carries
   `continue-on-error: true`).
 
+### v63 — platform-sensitive roster wave: guard exit-code passthrough (2026-11-16)
+
+The two platform-sensitive roster watch jobs stay red by design (they run
+exactly the cases the blocking roster excludes). Two of their reds were real
+defects rather than environment noise, and are closed here.
+
+**Fixed**
+
+- `tools/cpu_guard.sh`: the guard launched the wrapped command through
+  `taskpolicy`, which is a macOS-only binary. On a Linux or Windows host the
+  command is not found, so the shell reported 127 and the wrapped command's
+  real exit code was swallowed — the probe's "the guard must pass the child's
+  exit code through unchanged" judgment saw 127 where it expected 7. The
+  guard now degrades in steps (taskpolicy → nice → direct exec); every step
+  still passes the child's exit code through unchanged.
+- `tools/toolchain_dyld_doctor.py`: the selftest injects a canned `otool`
+  written as a POSIX shell script. A Windows host cannot execute it (chmod
+  does not set the execute bit there), so the CLI vector failed for a reason
+  that has nothing to do with the tool. The selftest now reports the honest
+  skip (rc 111) on a non-POSIX host instead of a false red.
+
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。

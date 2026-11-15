@@ -29,9 +29,22 @@ while [[ $# -gt 0 ]]; do case "$1" in
   --) shift; break;;
   *) break;;
 esac; done
+# 降级执行：taskpolicy 是 macOS 专属命令，在 Linux/Windows 上不存在——直接调用会
+# 变成 command not found=127，把被包裹命令的真实退出码整个吃掉（探针的 rc 透传
+# 判据即栽在这：宿主非 macOS 时 BACK 档把子命令的 rc=7 换成 127）。按
+# taskpolicy → nice → 直执行 逐级降级，三档都透传子命令退出码。
+run_child(){
+  if command -v taskpolicy >/dev/null 2>&1; then
+    taskpolicy -b nice -n 19 "$@"
+  elif command -v nice >/dev/null 2>&1; then
+    nice -n 10 "$@"
+  else
+    "$@"
+  fi
+}
 if [ "$Direct" = "1" ]; then
   echo "[cpu_guard] DIRECT bypass" >&2
-  taskpolicy -b nice -n 19 "$@"; exit $?
+  run_child "$@"; exit $?
 fi
 ts=$(date +%s)
 seq=0; [ -f "$REG/.seq" ] && seq=$(cat "$REG/.seq" 2>/dev/null || echo 0)
@@ -72,8 +85,8 @@ done
 case $TIER in
   FRONT) echo "[cpu_guard] FRONT launch pos=$P waited=${waited}s tlevel=$(sysctl -n machdep.xcpm.cpu_thermal_level 2>/dev/null || echo ?)" >&2; "$@" ;;
   MID)   echo "[cpu_guard] MID launch pos=$P nice10 waited=${waited}s" >&2; nice -n 10 "$@" ;;
-  BACK)  echo "[cpu_guard] BACK degraded queued=${waited}s" >&2; taskpolicy -b nice -n 19 "$@" ;;
-  *)     echo "[cpu_guard] tier anomaly" >&2; taskpolicy -b nice -n 19 "$@" ;;
+  BACK)  echo "[cpu_guard] BACK degraded queued=${waited}s" >&2; run_child "$@" ;;
+  *)     echo "[cpu_guard] tier anomaly" >&2; run_child "$@" ;;
 esac
 rc=$?
 exit $rc
