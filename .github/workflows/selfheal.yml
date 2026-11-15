@@ -1,0 +1,87 @@
+# selfheal.yml - rocqwash self-heal CI watch (v1, 20261115).
+#
+# Mirror of the Main repo watch (rocqwash-triage.yml + rocqwash_triage.py)
+# adapted for a hosted-runner, stateless face:
+#   * trigger: workflow_run of "rocqwash CI" failure + */30 reconcile pass
+#     + workflow_dispatch test mode (run_id input)
+#   * triage: transient-infra vs content-red (suite-step verdict wins)
+#   * heal: rerun-failed-jobs for transient-infra ONLY, three guards
+#     (cancel-intent / attempt==1 stateless at-most-once / live re-check)
+#   * reconcile: cancelled runs recorded as intent (NEVER revived, 20261115
+#     order) + queue governor (MAX_QUEUED_RUNS, oldest trimmed)
+#   * content reds: recorded for the desk (artifact + job log) - the
+#     E1/E2 wash engines take them once cast
+# Rollback: delete this file and .github/scripts/selfheal_rocqwash.py.
+name: rocqwash self-heal
+
+on:
+  workflow_run:
+    workflows: ["rocqwash CI"]
+    types: [completed]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'CI run id to triage (test mode; empty = reconcile only)'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  selfheal:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - name: Guard (red run, dispatch test, or reconcile)
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "watch: rocqwash CI run ${{ github.event.workflow_run.id }} concluded ${{ github.event.workflow_run.conclusion }}"
+            echo "RUN_ID=${{ github.event.workflow_run.id }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.run_id }}" ]; then
+            echo "watch: dispatch test mode, run ${{ inputs.run_id }}"
+            echo "RUN_ID=${{ inputs.run_id }}" >> "$GITHUB_ENV"
+          else
+            echo "watch: scheduled reconcile pass"
+            echo "RECONCILE=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Check out driver
+        if: env.RUN_ID != '' || env.RECONCILE == '1'
+        uses: actions/checkout@v5
+
+      - name: Self-heal leg (triage + heal, or reconcile)
+        if: env.RUN_ID != '' || env.RECONCILE == '1'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p selfheal-out
+          if [ -n "${RUN_ID:-}" ]; then
+            python3 .github/scripts/selfheal_rocqwash.py \
+              --repo "${{ github.repository }}" \
+              --run "$RUN_ID" \
+              --out selfheal-out \
+              --heal
+          else
+            python3 .github/scripts/selfheal_rocqwash.py \
+              --repo "${{ github.repository }}" \
+              --run 0 \
+              --out selfheal-out \
+              --reconcile
+          fi
+
+      - name: Upload triage artifacts
+        if: always() && (env.RUN_ID != '' || env.RECONCILE == '1')
+        uses: actions/upload-artifact@v4
+        with:
+          name: selfheal-${{ env.RUN_ID || github.run_id }}
+          path: selfheal-out/
+          if-no-files-found: error
