@@ -178,6 +178,20 @@
       "auto_repairable": false,
       "prescription": "The runner workspace .git is shallow (.git/shallow present): merge-base cannot see the freeze-commit ancestry and false-flags DRIFT. Desk one-time fix: git fetch --unshallow from the local dev tree (file:// transport, zero-network) in the runner workspace. Durable fix: frozen8 check detects the shallow state first and downgrades the git-anchor ring (desk-gated, frozen face).",
       "guard": "ci.yml self-hosted checkout carries fetch-depth: 0; the runner workspace keeps full history after one unshallow."
+    },
+    {
+      "id": "R12",
+      "title": "environment-conditional contract branch x runner PATH drift",
+      "markers": [
+        "keeps rc1 contract",
+        "COMPILED-ALL 0 modules",
+        "clean reports"
+      ],
+      "precedence": 12,
+      "family": "content-red",
+      "auto_repairable": false,
+      "prescription": "A report/refuse branch keyed on environment presence flipped when the runner PATH gained a dependency: move the clean-mode check ABOVE the presence gate (report always, exit 1, never execute), make the rc-asserting test vectors environment-aware, verify the fix on BOTH faces (PATH stub simulates presence), then rerun the failed jobs. Diagnosis: _runner_loop.log timeline + PATH-stub reproduction on the old blob. Desk-gated: the repair touches tool + test contract.",
+      "guard": "Every report/refuse branch keyed on environment presence must be executed on BOTH faces before landing (PATH stub simulates presence); report-not-execute contracts live ABOVE the presence gate; rc-asserting test vectors are environment-aware (assert the invariant, not one environment rc)."
     }
   ]
 }

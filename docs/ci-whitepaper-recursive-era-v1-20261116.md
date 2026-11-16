@@ -58,7 +58,7 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - Auto-repairable: the rewiring is a one-time landing (done via autonomy.json), after which this class is structurally closed.
 
 ### R6 — Watchdog reflexivity (the watch itself is the failure surface)
-- Symptom variants: (a) run-level conclusion `skipped` misread as red; (b) the watch dies with the runner it guards; (c) the runner's checkout depends on an out-of-repo tree staying current (path-rewritten dependency), so a lagging tree fails `not our ref` at checkout — **the local self-hosted face class**.
+- Symptom variants: (a) run-level conclusion `skipped` misread as red; (b) the watch dies with the runner it guards; (c) the runner's checkout depends on an out-of-repo tree staying current (path-rewritten dependency), so a lagging tree fails `not our ref` at checkout — **the local self-hosted face class**. Variant (c) refinement (2026-11-17): for rocqwash the bridge resolves to the DESK DEV TREE ITSELF (`.gitconfig` insteadOf → `file:///D:/ComplexAnalysis/rocqwash`), so the desk tree lagging remote by one commit reproduces the red; and `not our ref` must be adjudicated compare-API-first — verify ancestry (behind=0 = NOT an orphan) before concluding a force-push casualty (the 2026-11-17 case was a rebase landing, not an orphaning).
 - Mechanism: guards and watchers are code too; their own lifecycle and dependencies are part of the failure surface.
 - Guard: skip≠red judgment (three-way conclusion reading); runner heartbeat + schedule-failure alarm (watch-the-watch); the dependency tree must be kept current (sync before landing) and the dependency documented in the service map (`techdocs/本机服务面与勿扰清单`).
 - Prescription: correct the judgment (skip = guard-correct); sync the dependency tree; escalate watch-death to the desk with the heartbeat evidence.
@@ -101,15 +101,24 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - **Prescription**: desk one-time unshallow of the runner workspace; durable fix = frozen8 check detects the shallow state and downgrades the git-anchor ring (desk-gated, frozen face).
 - **Auto-repairable**: no (frozen face; desk-gated).
 
+
+### R12 — environment-conditional contract branch × runner PATH drift (2026-11-17 live case)
+
+- **Symptom**: one test red on the local self-hosted face only, all hosted faces green, every other face passing (t_clean_mode V16: `rc=0 out='COMPILED-ALL 0 modules ...'` against a report-and-refuse rc1 contract); the same job was green the day before with zero content change.
+- **Mechanism**: a report/refuse branch keyed on environment presence (the clean-mode report lived INSIDE the import-time toolchain gate) silently changes meaning when the machine's PATH gains the dependency — ROCWASH_CLEAN=1 stopped being honored and the tool executed under clean mode. Content fingerprints cannot see environment drift: the suite went green→red with no code change (the runner PATH gained the Rocq/OCaml toolchain).
+- **Guard**: every report/refuse branch keyed on environment presence must be executed on BOTH faces before landing (a PATH stub simulates presence); report-not-execute contracts must be checked ABOVE the presence gate, never inside it; test vectors asserting rc must be environment-aware (assert the invariant — marker absence, contract rc per branch — not one environment's rc); the test docstring's own "machine-independent" claim must hold per vector (it was false for V16/V17).
+- **Prescription**: move the clean-mode check above the toolchain gate (report always, exit 1, never execute; keep the standing FATAL byte-identical for the absent path); make the default-mode vector environment-aware. Diagnosis recipe: `_runner_loop.log` timeline (green before / red after the environment change) + PATH-stub byte-level reproduction on the old blob.
+- **Auto-repairable**: no (contract repair touches tool + test; desk-gated). Sibling class: R7 (a fix carrying an unexercised branch) — R12 is the environment-drift flip of an exercised branch.
+
 ## 3. Judgment matrix
 
 | Surface | Role |
 |---|---|
-| macOS hosted | primary judge (canonical suite) |
 | Linux / Windows hosted | blocking faces (stable roster) |
-| Windows self-hosted (LIVE-ROCQWASH) | blocking face + canonical-path evidence (depends on R6 tree-currency) |
+| Windows self-hosted (LIVE-ROCQWASH) | blocking face + canonical-path evidence (depends on R6 tree-currency; the bridge resolves to the dev tree itself — see R6(c) variant) |
+| macOS hosted (mac-verify.yml) | advisory face (`continue-on-error`): a capacity-starved macos-15 queue must never block the pipeline (2026-11-17 routing redundancy — the mac face moved out of the blocking matrix) |
 | Platform-sensitive watch seats | advisory (`continue-on-error`), never block; host-noise tracked here |
-| self-heal watch | triage + transient heal + content-red recording; **its own skips are guard-correct, not red** |
+| self-heal watch | triage + transient heal + content-red recording + weekly branch census (merged-stale stubs reported as deletion CANDIDATES, never deleted in-run); **its own skips are guard-correct, not red** |
 
 ## 4. Repair playbook (procedure per red)
 
@@ -122,6 +131,7 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 ## 5. Case files
 
 - **Run 43860918397** (two reds): R7 (Linux, tempfile import missing in the TMP-fallback branch — fix c9f23d3) + R6(c) (Windows self-hosted, `not our ref` at checkout — the runner's path-rewritten dependency tree lagged the shore; resolved by syncing that tree, and registered as a standing dependency in the service map).
+- **Run 43922602217** (attempt 3, 2026-11-17, three chained events): R6(c) variant (checkout `not our ref d8ba0a86` — the bridge resolves to the dev tree itself; the desk tree lagged the fresh rebase landing by one commit; hosted faces green; fix = desk fetch+ff then rerun-failed-jobs) → R12 (t_clean_mode V16 — the runner PATH gaining the Rocq/OCaml toolchain flipped the clean-mode contract branch; fix 35d7f63 = report-not-execute above the gate + environment-aware V17; verified 18/18 on BOTH faces; the desk-side triage agent independently reproduced the red with a PATH stub on the old blob and dug the green→red timeline from `_runner_loop.log`) → **CI #116 all green** with the routing redundancy live (mac-verify advisory green twice; the macos-15 capacity jam structurally cured by moving the mac face out of the blocking matrix + concurrency supersede on the CI group).
 
 ## 6. Lineage
 

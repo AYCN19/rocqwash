@@ -9,6 +9,10 @@
 #     (cancel-intent / attempt==1 stateless at-most-once / live re-check)
 #   * reconcile: cancelled runs recorded as intent (NEVER revived, 20261115
 #     order) + queue governor (MAX_QUEUED_RUNS, oldest trimmed)
+#   * branch census: weekly READ-ONLY pass on the */30 schedule (run-number
+#     gate, 336 = one week; dispatch input branch_census=true forces it) -
+#     merged-stale branches reported to the desk log as deletion CANDIDATES;
+#     never deleted in-run (20261117 order)
 #   * content reds: recorded for the desk (artifact + job log) - the
 #     E1/E2 wash engines take them once cast
 # Rollback: delete this file and .github/scripts/selfheal_rocqwash.py.
@@ -26,6 +30,11 @@ on:
         description: 'CI run id to triage (test mode; empty = reconcile only)'
         required: false
         default: ''
+        type: string
+      branch_census:
+        description: 'force the weekly branch census in reconcile mode (true/false)'
+        required: false
+        default: 'false'
         type: string
 
 permissions:
@@ -51,6 +60,10 @@ jobs:
           else
             echo "watch: scheduled reconcile pass"
             echo "RECONCILE=1" >> "$GITHUB_ENV"
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.branch_census }}" = "true" ]; then
+            echo "census: forced by dispatch input"
+            echo "ROCWASH_BRANCH_CENSUS=1" >> "$GITHUB_ENV"
           fi
 
       - name: Check out driver

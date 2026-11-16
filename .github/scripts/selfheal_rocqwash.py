@@ -12,6 +12,10 @@ rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
     (20261115 desk order, same as the Main watch)
   * queue governor (reconcile): keep at most MAX_QUEUED_RUNS queued runs,
     oldest trimmed; in-progress runs are never touched
+  * branch census (reconcile, weekly): a stateless run-number gate
+    (BRANCH_CENSUS_EPOCH) runs a READ-ONLY branch census - merged-stale
+    stubs are reported to the desk as deletion CANDIDATES, never deleted
+    in-run (20261117 desk order)
   * content reds: MECHANICAL classes are auto-repaired via the landed
     repair_scope roster (20261116 desk order: the watch repairs, not only
     records); non-mechanical classes stay desk-gated pending E1/E2 model
@@ -34,6 +38,7 @@ WF_FILE = "ci.yml"
 FURNACE_NAME = "rocqwash CI"
 MAX_QUEUED_RUNS = 3
 RECONCILE_WINDOW_H = 48
+BRANCH_CENSUS_EPOCH = 336  # half-hour reconcile passes per week (7d * 48)
 HEAL_DELAY_S = 90
 TRANSIENT_WORDS = ("checkout", "connection", "timeout", "fetch", "runner",
                    "network", "set up")
@@ -450,6 +455,53 @@ def reconcile_leg(args, repo):
     return out
 
 
+def branch_census(token, repo):
+    """Weekly branch census (READ-ONLY, 20261117 desk order): every
+    non-main branch is judged against main via the compare API plus its PR
+    history; merged-stale stubs are reported to the desk as deletion
+    CANDIDATES. The census never deletes - the deletion itself is an
+    outward-facing desktop order (GitHub keeps a restore window)."""
+    lines = []
+    branches, err = gh_api(token, "/repos/%s/branches?per_page=100" % repo)
+    if err or not branches:
+        return ["census skipped(branches list: %s)" % err]
+    owner = repo.split("/")[0]
+    rows = branches if isinstance(branches, list) else (
+        branches.get("branches") or [])
+    names = [b.get("name", "") for b in rows
+             if b.get("name") and b["name"] != "main"]
+    if not names:
+        return ["clean (single-branch repo: main only)"]
+    for name in names:
+        cmp_, cerr = gh_api(token, "/repos/%s/compare/main...%s"
+                            % (repo, name))
+        if cerr or not cmp_:
+            lines.append("%s: skipped(compare: %s)" % (name, cerr))
+            continue
+        ahead = cmp_.get("ahead_by", 0)
+        behind = cmp_.get("behind_by", 0)
+        prs, perr = gh_api(token, "/repos/%s/pulls?head=%s:%s&state=all"
+                           "&per_page=5" % (repo, owner, name))
+        merged_pr = ""
+        if not perr and isinstance(prs, list):
+            for p in prs:
+                if p.get("merged_at"):
+                    merged_pr = "#%s" % p.get("number")
+                    break
+        if merged_pr:
+            lines.append("%s: MERGED-STALE deletion-candidate (PR %s merged; "
+                         "ahead=%d behind=%d; squash/rebase form - verify "
+                         "content equivalence before delete)"
+                         % (name, merged_pr, ahead, behind))
+        elif ahead == 0:
+            lines.append("%s: FULLY-CONTAINED deletion-candidate (ahead=0 "
+                         "behind=%d, no merged PR)" % (name, behind))
+        else:
+            lines.append("%s: UNMERGED-LIVE desk-review (ahead=%d behind=%d, "
+                         "no merged PR)" % (name, ahead, behind))
+    return lines
+
+
 RECONCILE_MAX_PER_PASS = 4
 
 
@@ -478,7 +530,22 @@ def main():
     if args.reconcile:
         lines = reconcile_leg(args, args.repo)
         report = "reconcile pass:\n" + "\n".join(lines) + "\n"
-        write_out(args.out, [("reconcile-report.txt", report)])
+        files = [("reconcile-report.txt", report)]
+        # Weekly branch census (read-only): stateless gate on the workflow
+        # run number - 336 half-hour passes per week - with a
+        # ROCWASH_BRANCH_CENSUS=1 override for dispatch tests. Never
+        # deletes; the report is the desk's deletion-order input.
+        forced = os.environ.get("ROCWASH_BRANCH_CENSUS", "").strip() == "1"
+        num = int(os.environ.get("GITHUB_RUN_NUMBER", "0") or 0)
+        if forced or (num > 0 and num % BRANCH_CENSUS_EPOCH == 0):
+            census = branch_census(os.environ.get("GITHUB_TOKEN", ""),
+                                   args.repo)
+            census_out = ("branch census (weekly gate hit, run #%d):\n"
+                          % num) + "\n".join(census) + "\n"
+            files.append(("branch-census.txt", census_out))
+            for x in census:
+                log("census: " + x)
+        write_out(args.out, files)
         print(report)
         return 0
 
