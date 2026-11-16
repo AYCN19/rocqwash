@@ -17,7 +17,12 @@ on:
 
 concurrency:
   group: mac-verify-${{ github.ref }}
-  cancel-in-progress: true
+  # cancel-in-progress is OFF (20261117 root cure): with it ON, an older
+  # QUEUED run cancels the newer IN-FLIGHT tip run the moment the queued
+  # one starts (run 138 killed mid-suite by run 136). In-flight runs are
+  # protected; stale QUEUED runs are retired by the self-heal queue
+  # governor (ci_queue_governor) before they ever start.
+  cancel-in-progress: false
 
 defaults:
   run:

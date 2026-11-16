@@ -537,6 +537,7 @@ def reconcile_leg(args, repo):
                            % (gnum, MAX_QUEUED_RUNS))
     out.extend("automerge: " + x for x in automerge_leg(token, repo))
     out.extend("parse-probe: " + x for x in parse_death_probe(token, repo))
+    out.extend("ci-queue: " + x for x in ci_queue_governor(token, repo))
     if busy and not out:
         out.append("skipped(furnace-busy)")
     for rid, num, age_h in cancelled[:RECONCILE_MAX_PER_PASS]:
@@ -544,6 +545,46 @@ def reconcile_leg(args, repo):
                    "only, age %.1fh)" % (num, age_h))
     if not out:
         out = ["clean"]
+    return out
+
+
+CI_QUEUE_WORKFLOWS = ("ci.yml", "mac-verify.yml")
+
+
+def ci_queue_governor(token, repo):
+    """Stale-queued trimmer for the suite workflows (20261117 root cure):
+    with concurrency cancel-in-progress OFF, an older QUEUED run would
+    otherwise start later and its entry would have cancelled the newer
+    in-flight tip run (run 136 killed run 138 mid-suite). The governor
+    retires stale QUEUED runs per head branch BEFORE they ever start:
+    keep the newest run per branch (any state), cancel every other QUEUED
+    run. In-flight (in_progress) runs are NEVER touched."""
+    out = []
+    for wf in CI_QUEUE_WORKFLOWS:
+        runs, err = gh_api(token, "/repos/%s/actions/workflows/%s/runs"
+                           "?per_page=30" % (repo, wf))
+        if err or not runs:
+            out.append("%s skipped(runs-list: %s)" % (wf, err))
+            continue
+        by_branch = {}
+        for r in (runs.get("workflow_runs") or []):
+            if r.get("status") not in ("queued", "in_progress"):
+                continue
+            by_branch.setdefault(r.get("head_branch") or "",
+                                 []).append(r)
+        for br, rows in by_branch.items():
+            rows.sort(key=lambda r: r.get("run_number") or 0, reverse=True)
+            for r in rows[1:]:
+                if r.get("status") != "queued":
+                    continue
+                _, cerr = gh_api(token,
+                                 "/repos/%s/actions/runs/%d/cancel"
+                                 % (repo, r["id"]), method="POST")
+                out.append("%s/%s #%s stale-queued %s"
+                           % (wf, br, r.get("run_number"),
+                              "trimmed" if not cerr else "cancel rc%s" % cerr))
+    if not out:
+        out = ["clean (no stale queued runs)"]
     return out
 
 
@@ -673,6 +714,7 @@ def main():
         token = os.environ.get("GITHUB_TOKEN", "")
         lines = ["automerge-only: " + x
                  for x in automerge_leg(token, args.repo)]
+        lines += ["ci-queue: " + x for x in ci_queue_governor(token, args.repo)]
         report = "automerge-only pass:\n" + "\n".join(lines) + "\n"
         write_out(args.out, [("automerge-report.txt", report)])
         print(report)
