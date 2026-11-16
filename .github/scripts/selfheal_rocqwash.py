@@ -372,9 +372,19 @@ def automerge_leg(token, repo):
             out.append("#%s skip (draft)" % num)
             continue
         if pr.get("mergeable") is not True:
-            out.append("#%s hold (mergeable=%s)"
-                       % (num, pr.get("mergeable")))
-            continue
+            # The PR LIST endpoint does not populate `mergeable` (computed
+            # asynchronously, single-PR GET only) - re-read the single PR
+            # before holding (R13 family: a field the chosen endpoint
+            # never populates is a stall, not a verdict).
+            one, oerr = gh_api(token, "/repos/%s/pulls/%d" % (repo, num))
+            if oerr or not one:
+                out.append("#%s hold (pr-read: %s)" % (num, oerr))
+                continue
+            if one.get("merged"):
+                continue
+            if one.get("mergeable") is False:
+                out.append("#%s hold (merge conflict)" % num)
+                continue
         # Head CI across all producing events: push runs (main-line),
         # branch dispatches (head_sha == the PR head), and pull_request
         # runs (head_sha is the merge-ref commit - match via the
