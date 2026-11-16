@@ -63,6 +63,12 @@ name: rocqwash CI
 on:
   push:
     branches: [main]
+  pull_request:
+    # PR validation: the supply/* lane merges automatically on a green
+    # head CI (self-heal automerge leg). The mac advisory face and the
+    # local self-hosted face stay main-only - the local face's
+    # bridge-resolved checkout cannot serve PR refs (R6(c) class).
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 # Routing redundancy (20261116): a newer push on the same ref supersedes
@@ -82,6 +88,11 @@ jobs:
     name: Self-test suite (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
+    # main_only faces (the local self-hosted lane) serve main-line evidence
+    # only: a PR or branch-dispatch checkout would fetch refs/pull/* the
+    # bridge (the desk dev tree) does not carry. PR validation is fully
+    # covered by the hosted faces.
+    if: matrix.main_only != true || github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -103,6 +114,7 @@ jobs:
           - os: [self-hosted, Windows, X64]
             label: Windows (local self-hosted)
             py: python
+            main_only: true
             platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
     env:
       ROCWASH_PY: ${{ matrix.py }}

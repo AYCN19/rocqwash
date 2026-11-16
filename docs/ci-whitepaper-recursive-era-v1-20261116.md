@@ -110,6 +110,15 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - **Prescription**: move the clean-mode check above the toolchain gate (report always, exit 1, never execute; keep the standing FATAL byte-identical for the absent path); make the default-mode vector environment-aware. Diagnosis recipe: `_runner_loop.log` timeline (green before / red after the environment change) + PATH-stub byte-level reproduction on the old blob.
 - **Auto-repairable**: no (contract repair touches tool + test; desk-gated). Sibling class: R7 (a fix carrying an unexercised branch) — R12 is the environment-drift flip of an exercised branch.
 
+
+### R13 — silent gate stall (a gate reads a signal no trigger produces; 2026-11-17 live case)
+
+- **Symptom**: no red anywhere — a standing automation just never acts. PR #10 sat open with `hold (no head CI yet)` in every reconcile pass while its head commit had ZERO check runs; the desk noticed only because the user asked why the merge never happened.
+- **Mechanism**: the automerge green gate matched push-event runs by head SHA, but ci.yml triggers only on `push: [main]` and `workflow_dispatch` — a supply/* PR head can NEVER produce the signal the gate waits for. The gate was implemented correctly against a pipeline that did not exist: the trigger was never extended when the gate landed.
+- **Guard**: every gate's required signal must be wired end to end (trigger → run → verdict). Landing a gate demands the same audit as landing a lane: enumerate the producing trigger, the matching key, and the verdict source — a gate with no producer is a stall, not a hold. A reconcile log line repeating identically for hours is the stall's fingerprint.
+- **Prescription**: extend the trigger (`pull_request` types opened/synchronize/reopened), broaden the match (push / workflow_dispatch / pull_request runs — a PR-event run's head_sha is the MERGE-ref commit, so match via the `pull_requests` link too), and let the gate self-start the missing signal (dispatch ci.yml at the PR head branch when no run exists). Gate on the hosted faces via the jobs API, never the run-level conclusion: the local self-hosted face is main-only evidence (main_only gate) and a branch dispatch from a ref whose ci.yml predates that gate still runs it.
+- **Auto-repairable**: partial (match widening + dispatch-on-demand is mechanical; trigger changes touch the blocking workflow — desk-gated).
+
 ## 3. Judgment matrix
 
 | Surface | Role |

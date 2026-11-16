@@ -375,16 +375,62 @@ def automerge_leg(token, repo):
             out.append("#%s hold (mergeable=%s)"
                        % (num, pr.get("mergeable")))
             continue
-        cruns, rerr = gh_api(token, "/repos/%s/actions/runs?head_sha=%s"
-                             "&per_page=6" % (repo, sha))
-        mine = [r for r in ((cruns or {}).get("workflow_runs") or [])
-                if r.get("event") == "push"]
+        # Head CI across all producing events: push runs (main-line),
+        # branch dispatches (head_sha == the PR head), and pull_request
+        # runs (head_sha is the merge-ref commit - match via the
+        # pull_requests link instead).
+        runs_a, aerr = gh_api(token, "/repos/%s/actions/workflows/%s/runs"
+                              "?head_sha=%s&per_page=10"
+                              % (repo, WF_FILE, sha))
+        runs_b, berr = gh_api(token, "/repos/%s/actions/workflows/%s/runs"
+                              "?event=pull_request&per_page=20"
+                              % (repo, WF_FILE))
+        seen, mine = set(), []
+        for r in (((runs_a or {}).get("workflow_runs") or [])
+                  + ((runs_b or {}).get("workflow_runs") or [])):
+            if r.get("id") in seen:
+                continue
+            linked = any((p or {}).get("number") == num
+                         for p in (r.get("pull_requests") or []))
+            if ((r.get("head_sha") == sha or linked)
+                    and r.get("event") in ("push", "workflow_dispatch",
+                                           "pull_request")):
+                seen.add(r.get("id"))
+                mine.append(r)
         if not mine:
-            out.append("#%s hold (no head CI yet)" % num)
+            _, derr = gh_api(token,
+                             "/repos/%s/actions/workflows/%s/dispatches"
+                             % (repo, WF_FILE), method="POST",
+                             body={"ref": ref})
+            if derr:
+                out.append("#%s hold (no head CI yet; dispatch refused: %s)"
+                           % (num, derr))
+            else:
+                out.append("#%s hold (no head CI yet - dispatched "
+                           "ci.yml@%s)" % (num, ref))
             continue
-        if not all(r.get("conclusion") == "success" for r in mine):
-            out.append("#%s hold (head CI %s)"
-                       % (num, {r.get("conclusion") for r in mine}))
+        if any(r.get("status") != "completed" for r in mine):
+            out.append("#%s hold (head CI running)" % num)
+            continue
+        # Gate on the hosted faces: the local self-hosted face is main-only
+        # evidence and must not gate a PR merge (a branch dispatch from a
+        # ref whose ci.yml predates the main_only gate still runs it, and
+        # its bridge-resolved checkout cannot serve non-main refs).
+        hosted_seen, hosted_ok = False, True
+        for r in mine:
+            jobs, jerr = gh_api(token, "/repos/%s/actions/runs/%s/jobs"
+                                "?per_page=20" % (repo, r["id"]))
+            for jb in ((jobs or {}).get("jobs") or []):
+                if "local self-hosted" in (jb.get("name") or ""):
+                    continue
+                hosted_seen = True
+                if jb.get("conclusion") not in ("success", "skipped"):
+                    hosted_ok = False
+        if not hosted_seen:
+            out.append("#%s hold (head CI has no hosted faces)" % num)
+            continue
+        if not hosted_ok:
+            out.append("#%s hold (head CI hosted faces red)" % num)
             continue
         if merged_any:
             out.append("#%s queued (one merge per pass)" % num)
@@ -548,6 +594,20 @@ def main():
         write_out(args.out, files)
         print(report)
         return 0
+
+    if args.heal and args.run:
+        token = os.environ.get("GITHUB_TOKEN", "")
+        meta, merr = gh_api(token, "/repos/%s/actions/runs/%d"
+                            % (args.repo, args.run))
+        if not merr and (meta or {}).get("event") == "pull_request":
+            verdict = "pr-face"
+            detail = ("PR-event CI run: no auto-heal - repairs belong on "
+                      "the PR branch, not main; recorded for the desk")
+            write_out(args.out,
+                      [("triage-report.txt", verdict + "\n" + detail + "\n"),
+                       ("summary.txt", "verdict=%s" % verdict)])
+            log("%s | %s" % (verdict, detail))
+            return 0
 
     verdict, detail, files = triage_leg(args, args.repo, args.run)
     files = files or [("triage-report.txt", verdict + "\n" + detail + "\n"),

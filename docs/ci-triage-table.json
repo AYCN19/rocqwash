@@ -192,6 +192,20 @@
       "auto_repairable": false,
       "prescription": "A report/refuse branch keyed on environment presence flipped when the runner PATH gained a dependency: move the clean-mode check ABOVE the presence gate (report always, exit 1, never execute), make the rc-asserting test vectors environment-aware, verify the fix on BOTH faces (PATH stub simulates presence), then rerun the failed jobs. Diagnosis: _runner_loop.log timeline + PATH-stub reproduction on the old blob. Desk-gated: the repair touches tool + test contract.",
       "guard": "Every report/refuse branch keyed on environment presence must be executed on BOTH faces before landing (PATH stub simulates presence); report-not-execute contracts live ABOVE the presence gate; rc-asserting test vectors are environment-aware (assert the invariant, not one environment rc)."
+    },
+    {
+      "id": "R13",
+      "title": "silent gate stall (a gate reads a signal no trigger produces)",
+      "markers": [
+        "hold (no head CI yet",
+        "automerge: PR #",
+        "dispatched ci.yml@"
+      ],
+      "precedence": 13,
+      "family": "structural",
+      "auto_repairable": false,
+      "guard": "Every gate requires its signal wired end to end (trigger -> run -> verdict); a gate with no producer is a stall, not a hold; a reconcile line repeating identically for hours is the stall fingerprint.",
+      "prescription": "Extend the trigger (pull_request opened/synchronize/reopened), broaden the match (push/workflow_dispatch/pull_request runs - PR-event head_sha is the merge-ref commit, match the pull_requests link too), self-start the missing signal (dispatch ci.yml at the PR head branch), and gate on the hosted faces via the jobs API (the local self-hosted face is main-only evidence)."
     }
   ]
 }
