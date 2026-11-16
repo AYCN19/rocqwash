@@ -1,0 +1,18 @@
+{
+  "ci": {
+    "family": "none"
+  },
+  "compare": {
+    "ahead": 2,
+    "behind": 9,
+    "content_landed_in_base": true,
+    "head_in_base": false
+  },
+  "mergeable": false,
+  "mergeable_state": "dirty",
+  "merged": false,
+  "note": "calibration S-4: sandbox SL supply-test branch, closed unmerged, content landed via 75404d9/8e70342, base advanced many generations; CI color not recorded in the row",
+  "pr": 16,
+  "repo": "dotcom/ConstructiveWorld-Main",
+  "schema": "rocqwash-automerge-facts/1"
+}

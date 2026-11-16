@@ -1,0 +1,18 @@
+{
+  "ci": {
+    "family": "content"
+  },
+  "compare": {
+    "ahead": 1,
+    "behind": 0,
+    "content_landed_in_base": false,
+    "head_in_base": false
+  },
+  "mergeable": true,
+  "mergeable_state": "unstable",
+  "merged": false,
+  "note": "calibration S-5 (constructed): head CI red with a recognized content family plus mergeable=true; the UNRECOGNIZED-family escalation variant is pinned inside --selftest",
+  "pr": 0,
+  "repo": "any",
+  "schema": "rocqwash-automerge-facts/1"
+}

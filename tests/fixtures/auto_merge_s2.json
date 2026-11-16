@@ -1,0 +1,18 @@
+{
+  "ci": {
+    "family": "content"
+  },
+  "compare": {
+    "ahead": 3,
+    "behind": 6,
+    "content_landed_in_base": true,
+    "head_in_base": false
+  },
+  "mergeable": false,
+  "mergeable_state": "dirty",
+  "merged": false,
+  "note": "calibration S-2: three head pushes (3fb4d9e, 75c3c33, 4f9fc0f), gate4 red for rounds, closed unmerged, content landed via the SL25 piece; base advanced",
+  "pr": 15,
+  "repo": "dotcom/ConstructiveWorld-Main",
+  "schema": "rocqwash-automerge-facts/1"
+}

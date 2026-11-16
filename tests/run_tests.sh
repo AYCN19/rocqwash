@@ -225,6 +225,20 @@
 #         the green criterion, the one-way CASES roster discipline, the
 #         budget cap, and the shared repair_scope gate), --help rc=0, and
 #         exit-code spot checks 2/9; 20261116 roster hookup)
+#       auto-merge gate judge hookup (tools/auto_merge.py, X5 gate;
+#         tests/test_auto_merge.py five checks: --selftest rc=0 with the
+#         AUTO-MERGE-SELFTEST PASS frozen marker (24 vectors: the five
+#         calibration samples S-1..S-5 pinned to already-landed /
+#         superseded-landed-elsewhere / merge-ok / superseded-
+#         landed-elsewhere / hold-red, the unrecognized-family escalation,
+#         the merged-anchor-beats-red and containment-beats-conflict
+#         ordering pins, the supply/* whitelist both ways, the daily budget cap,
+#         dry-run zero-write, the duplicate refusals, the post-merge
+#         revert arc four families, byte-identical reports, CLI codes),
+#         --help face, exit-code spots 2/9, the five calibration fixtures
+#         judged through the real CLI face, and the dry-run zero-write
+#         pledge; tmp fixtures only, zero network, zero repository
+#         writes; 20261116 roster hookup)
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -395,7 +409,9 @@ t_dual_scan \
  t_evolve_flag_contract \
  t_watch_repo_form \
  t_flaky_guard \
- t_roster_resync"
+ t_roster_resync \
+ t_auto_merge \
+ t_selfheal_guards"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -866,12 +882,19 @@ t_doclint() {
 
 t_destructive_matrix() {
   # 20261111 v40 破坏面席铸件·集成席挂接：破坏面复核矩阵·一行一拒写判据
-  # （tests/test_destructive_matrix.py·17 行会写盘器×写面×护栏锚 file:line
-  # 逐行断言拒写护栏：unclog×4/wash_shape×4/pushci×3/cw_sentinel×2/
-  # registry_union×2/cure_applier×2——干跑零写盘/--apply 才落刀/frozen 红拒/
-  # 内容红零 rerun/heal 帽尽停/report-only 缺省零动作等；全 tmp fixture＋
-  # injector 罐装·零真网络零真仓零真编译（唯一例外 W3 递真在册件路径·
-  # 收件即拒零读零写）·矩阵红＝护栏破·exit 1 响亮列破口 file:line＋违据）
+  # （tests/test_destructive_matrix.py·现役 33 行会写盘器×写面×护栏锚
+  # file:line 逐行断言拒写护栏：unclog×4/wash_shape×4/pushci×3/
+  # cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/axiom_guard×1/
+  # jargon_apply×1——干跑零写盘/--apply 才落刀/frozen 红拒/内容红零 rerun/
+  # heal 帽尽停/report-only 缺省零动作等；X6 波谁写谁进阵新入 10 行：
+  # scheduler_lite×2（SL1 缺 --out 零写盘·dryRun 恒真／SL2 唯一写面=显式
+  # --out 两跑字节恒同）＋auto_merge×3（AM1 缺 --apply 零写盘／AM2 hold 永不
+  # 授权＋越权分支白名单红拒／AM3 日预算帽＋重复拒）＋repair_scope×1
+  # （RS1 --check 查询面零写盘＋共享名册判词咬合）＋E 波四守卫×4
+  # （E2A lane-extract／E2B roster-resync／E2C flaky-quarantine／E2D
+  # doc-count·四类皆干跑零写零账＋排除闸＋预算帽只落升格行）；全 tmp
+  # fixture＋injector 罐装·零真网络零真仓零真编译（唯一例外 W3 递真在册件
+  # 路径·收件即拒零读零写）·矩阵红＝护栏破·exit 1 响亮列破口 file:line＋违据）
   "$PY" -B "$REPO/tests/test_destructive_matrix.py"
 }
 
@@ -1194,6 +1217,35 @@ t_roster_resync() {
   # shared repair_scope exclusion gate; zero writes outside mkdtemp, zero
   # network, zero compile).
   "$PY" -B "$REPO/tests/test_roster_resync.py"
+}
+
+t_auto_merge() {
+  # 20261116 X5-gate hookup: auto-merge gate judge plus safety rail
+  # (tools/auto_merge.py; tests/test_auto_merge.py five checks: --selftest
+  # rc=0 with the AUTO-MERGE-SELFTEST PASS frozen marker (24 vectors incl.
+  # the five calibration samples S-1..S-5 pinned to their verdicts, the
+  # supply/* whitelist both ways, the daily budget cap, dry-run zero-write,
+  # the duplicate refusals, the post-merge revert arc four families),
+  # --help face, exit-code spots 2/9, the five calibration fixtures judged
+  # through the real CLI face, dry-run zero-write plus the rail refusal
+  # exit contract; tmp fixtures only, zero network, zero repository
+  # writes).
+  "$PY" -B "$REPO/tests/test_auto_merge.py"
+}
+
+t_selfheal_guards() {
+  # 20261116 X6-seat hookup: the three self-heal guardrail reinforcement
+  # points as frozen vectors (.github/scripts/selfheal_rocqwash.py;
+  # tests/test_selfheal_guards.py five vector groups 20 checks: the
+  # attempt cap skipped(attempt-cap) at-most-once budget, the
+  # cancel-intent never-revive gate plus its cap-outranks-intent order
+  # pin, the live re-check before the rerun POST (in-progress/cancelled/
+  # transport-error all skip; only a still-completed run reaches exactly
+  # one rerun-failed-jobs POST), the transient-only family whitelist, and
+  # the reconcile intent recording (cancelled=intent, never revived, zero
+  # POSTs).  The script module loads by path with gh_api/time stubbed
+  # in-process: zero network, zero real sleep, zero repository writes.
+  "$PY" -B "$REPO/tests/test_selfheal_guards.py"
 }
 
 # ---------- 汇总执行 ----------

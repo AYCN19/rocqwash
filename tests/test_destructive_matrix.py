@@ -103,13 +103,61 @@
         seed pins by md5)
         锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484
         （--file 红拒面）
+  ⑩ tools/scheduler_lite.py（排程 lite·X2 面·写面＝显式 --out 一径）
+     SL1 plan 缺省零写盘：全旗标 tmp fixture 罐装下 plan 出 due 判面而
+        tmp 树 md5 恒同·无 --out 即无任何落盘（dryRun=true 恒钉）
+        锚 tools/scheduler_lite.py:364-366（run_plan if args.out 唯一写闸）
+        ＋:309（build_plan dryRun=True 恒真）
+     SL2 唯一写面＝显式 --out 且字节确定：给 --out 恰落一文件（plan 文档）
+        ·输入树 md5 恒同·两跑字节恒同（plan_bytes sort_keys 确定性字节形）
+        锚 tools/scheduler_lite.py:364-366＋:328-331（plan_bytes 确定性字节）
+  ⑪ tools/auto_merge.py（自动合并门·X5 面·写面＝--apply 合并账 append 一径）
+     AM1 缺 --apply 零写盘：merge-ok＋supply/* 白名单内（rail 裁 allowed）
+        而台账不落盘不创建（report --json 显式另计）
+        锚 tools/auto_merge.py:244-247（run_rail if apply_mode append 总闸）
+     AM2 hold 永不授权＋越权分支红拒：hold-red 判定 --apply 亦零写（rail
+        not-eligible 先于合并账）；非 supply/* 头 rc=1 白名单红拒零写
+        锚 tools/auto_merge.py:220-221（verdict!=merge-ok 先决）＋:225-228
+        （branch 白名单闸）
+     AM3 日预算帽＋重复拒：--daily-cap 3 恰 3 行 authorize 后第 4 拒
+        rc=1·同日同 PR 重复拒 rc=1·合并账恰 3 行不增
+        锚 tools/auto_merge.py:229-233（日帽闸）＋:234-239（重复闸）
+  ⑫ tools/repair_scope.py（共享排除名册·F1/E2 单源）＋E 波四守卫类
+     RS1 --check 查询面零写盘＋排除判词咬合：共享 full_frozen_files（运行
+        LEDGER8 AST 读·缺件退化快照 loud）＋FROZEN_DIR_FAMILIES＋
+        LEGAL_DATA_DIR_FAMILIES＋docs/zh＋.zh.md 档案镜像全 EXCLUDED；
+        class-2 三可修面（tests/README.md·README.md·账面）REPAIRABLE；
+        查询零写盘
+        锚 tools/repair_scope.py:140-160（exclusion_roster/full_frozen_files）
+        ＋:556-576（RosterResyncScope.refusal_reason）＋:590-620（check_faces）
+     E2A class-1 lane-extract（--lane-detect/--lane-apply）：缺省零写零账；
+        排除账面（seeds/ 族）rc=2 红拒且零创建；预算帽（2 前科）rc=2
+        拒写·套件字节恒同·只落 escalated(budget-cap) 账行
+        锚 tools/repair_scope.py:477-482（excluded face 拒）＋:400-411
+        （_lane_ledger_gate 账面同闸）＋:487-493（预算帽）
+     E2B class-2 roster-resync（tools/roster_resync.py）：缺省零写零账；
+        --apply 单向派生（roster 文件字节恒同·计数面修至=名册值·一
+        修复一账行）；预算帽 rc=1 拒写·面字节恒同·只落 escalated 行
+        锚 tools/roster_resync.py:246-248（缺省零写盘闸）＋:256-265（预算帽）
+        ＋:327-334（frozen 面升格不落刀）＋tools/repair_scope.py:556-576
+     E2C class-3 flaky-quarantine（tools/flaky_guard.py --move）：冻结靶
+        （seeds/ 族名册）rc=1 红拒零写零账（scope 闸先于探针）；预算帽
+        rc=1 拒写·名册字节恒同·只落 escalated 账行
+        锚 tools/flaky_guard.py:390-396（_scope_check 单源消费·先于一切
+        计划）＋:514-523（预算帽）
+     E2D class-4 doc-count（--doc-count-detect/--doc-count-apply）：缺省
+        零写零账；--apply 修至 face=source 且幂等（二遍零字节）；预算帽
+        rc=2 拒写·目标面字节恒同·只落 escalated(budget-cap) 行
+        锚 tools/repair_scope.py:917-926（apply 写面前置闸）＋:975-994
+        （预算帽）＋:997-1009（post-assertion 拒写）
 
 离线纪律（硬要求）：全判据走 tmp fixture＋--injector 罐装（unclog probe/resprobe
 canned·wash_shape 引擎键 canned·pushci steps/jobs/git-caller canned·sentinel
 canned API）——零真网络零真仓零真编译；真子进程仅限纯 stdlib 离线引擎
 （chain_graph/cure_applier/scan_v4_token/frozen8 --ledger/--selftest/freeze
 （scratch skeleton）/gate4/ci_triage --offline·判例：各器自带 --selftest
-同款）。唯一例外 W3 递真在册件**路径**——
+同款；E2C 预算帽面经 flaky_guard 探针跑 tmp 内三行 bash 夹具套件，
+flaky_guard --selftest 同款先例）。唯一例外 W3 递真在册件**路径**：
 工具在 collect_files 即红拒·零读零写（wash_shape 自身判8 同款先例）。
 
 自体纪律：python3 -B 禁 __pycache__；零仓写盘（全部工件在 tempfile.mkdtemp）；
@@ -117,7 +165,7 @@ canned API）——零真网络零真仓零真编译；真子进程仅限纯 std
 ROCWASH_ROCQ／ROCWASH_COQCHK 剥除·防环境渗判防真编译渗阵）；fail-loud——
 任一行炸（含环境异常）按破计不静默。
 
-退出码：0=23 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
+退出码：0=33 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
 
 用法：
   python3 tests/test_destructive_matrix.py          # 套件内经 run_tests.sh 调
@@ -142,6 +190,11 @@ CURE_APPLIER = os.path.join(REPO, "wash", "cure_applier.py")
 AXIOM_GUARD = os.path.join(REPO, "tools", "axiom_guard.py")
 FROZEN8 = os.path.join(REPO, "certify", "frozen8.py")
 JARGON_APPLY = os.path.join(REPO, "tools", "jargon_apply.py")
+SCHEDULER_LITE = os.path.join(REPO, "tools", "scheduler_lite.py")
+AUTO_MERGE = os.path.join(REPO, "tools", "auto_merge.py")
+REPAIR_SCOPE = os.path.join(REPO, "tools", "repair_scope.py")
+ROSTER_RESYNC = os.path.join(REPO, "tools", "roster_resync.py")
+FLAKY_GUARD = os.path.join(REPO, "tools", "flaky_guard.py")
 JOBS_A = os.path.join(REPO, "tests", "fixtures", "ci_triage_A_content_red.json")
 JOBS_B = os.path.join(REPO, "tests", "fixtures", "ci_triage_B_netred.json")
 
@@ -973,6 +1026,492 @@ def row_j1(tmp):
     assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
 
 
+# ---- ⑩ scheduler_lite 两行（X6 波·谁写谁进阵）--------------------------------
+
+SL_GAP = json.dumps({
+    "schema": "rocqwash-exp/1", "id": "fix-001", "ts": "T0",
+    "tool": "matrix-fixture", "batch": "b",
+    "points": "uncovered face (TODO-SEAT counted, no silent "
+              "degradation): ineq.demo @ D:/fix/x.lean",
+    "evidence": "status=todo_seat", "fingerprint": "4" * 64}) + "\n"
+
+SL_ROUNDS = (json.dumps({"schema": "rocqwash-round/1", "round_id": 1,
+                         "timestamp_utc": "2026-11-15T04:49:24Z",
+                         "verify_rc": 0, "mode": "auto"}) + "\n"
+             + json.dumps({"schema": "rocqwash-round/1", "round_id": 2,
+                           "timestamp_utc": "2026-11-15T16:05:30Z",
+                           "verify_rc": 0, "mode": "auto"}) + "\n")
+
+SL_AUTONOMY = json.dumps({"mode": "auto"}) + "\n"
+SL_STATE = json.dumps({"schema": "rocqwash.round-state/1",
+                       "admitted_classes": [
+                           {"class": "jargon", "confidence": 1.0,
+                            "basis": "matrix fixture"}]}) + "\n"
+
+
+def sl_fixture(tmp, tag):
+    d = os.path.join(tmp, tag)
+    os.makedirs(d)
+    ledger = wf(os.path.join(d, "gap.jsonl"), SL_GAP)
+    rounds = wf(os.path.join(d, "rounds.jsonl"), SL_ROUNDS)
+    marker = wf(os.path.join(d, "ef-done.marker"), "abcdef1234567890\n")
+    autonomy = wf(os.path.join(d, "autonomy.json"), SL_AUTONOMY)
+    state = wf(os.path.join(d, "state.json"), SL_STATE)
+    return ledger, rounds, marker, autonomy, state
+
+
+def sl_run(argv, now="2026-11-17T00:00:00Z"):
+    return sh(SCHEDULER_LITE, list(argv) + ["--now-utc", now])
+
+
+def row_sl1(tmp):
+    """排程 plan 缺省零写盘：全旗标 tmp 罐装（gap/rounds/marker/gear 全绿）
+    plan 出 due 判面而 tmp 树 md5 恒同：无 --out 即无任何落盘；dryRun=true
+    恒钉（ignition 面只 informational，此面永不点火）。"""
+    ledger, rounds, marker, autonomy, state = sl_fixture(tmp, "sl1")
+    before = tree_manifest(tmp)
+    rc, out = sl_run(["plan", "--gap-ledger", ledger, "--rounds", rounds,
+                      "--ef-marker", marker, "--autonomy", autonomy,
+                      "--state", state, "--json"])
+    assert rc == 0, "plan 数据态应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    plan = json.loads(out)
+    assert plan["schema"] == "rocqwash.scheduler-lite.plan/1", plan["schema"]
+    assert plan["verdict"] == "due" and plan["fireReady"] is True, plan
+    assert plan["dryRun"] is True, "dryRun 恒真失守＝护栏破: %r" % plan["dryRun"]
+    assert plan["ignitePipeline"] and all(s.startswith("py -I")
+                                          for s in plan["ignitePipeline"]), \
+        "点火管线只 informational"
+    assert tree_manifest(tmp) == before, \
+        "plan 缺 --out 下 tmp 树字节被动＝护栏破（零写盘失守）"
+
+
+def row_sl2(tmp):
+    """排程唯一写面＝显式 --out：给 --out 恰落一文件（确定性 plan 文档）·
+    输入树 md5 恒同·两跑字节恒同（sort_keys 确定性形）。"""
+    ledger, rounds, marker, autonomy, state = sl_fixture(tmp, "sl2")
+    outp = os.path.join(tmp, "sl2", "plan.json")
+    before = tree_manifest(tmp)
+    rc, out = sl_run(["plan", "--gap-ledger", ledger, "--rounds", rounds,
+                      "--ef-marker", marker, "--autonomy", autonomy,
+                      "--state", state, "--out", outp])
+    assert rc == 0, "plan --out 应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert os.path.isfile(outp), "--out 未落盘＝写面失守"
+    assert tree_manifest(tmp) == before | {
+        os.path.relpath(outp, tmp).replace(os.sep, "/"): md5_of(outp)}, \
+        "--out 之外出现写面＝护栏破（写面越界）"
+    plan = jl(outp)
+    assert plan["dryRun"] is True and plan["verdict"] == "due", plan
+    first = io.open(outp, "rb").read()
+    rc2, _ = sl_run(["plan", "--gap-ledger", ledger, "--rounds", rounds,
+                     "--ef-marker", marker, "--autonomy", autonomy,
+                     "--state", state, "--out", outp])
+    assert rc2 == 0, rc2
+    assert io.open(outp, "rb").read() == first, \
+        "两跑 plan 字节漂移＝确定性形破（字节失守）"
+
+
+# ---- ⑪ auto_merge 三行（X6 波·谁写谁进阵）------------------------------------
+
+AM_SHA = "1befa2798beef00112233445566778899aabbccd"
+
+
+def am_facts(path, pr, branch="supply/seat-pack", family="green", merged=False,
+             ahead=1, mergeable=True, state="clean"):
+    return wj(path, {
+        "schema": "rocqwash-automerge-facts/1", "pr": pr,
+        "repo": "rocqwash", "merged": merged, "mergeable": mergeable,
+        "mergeable_state": state, "ci": {"family": family},
+        "compare": {"ahead": ahead, "behind": 0,
+                    "head_in_base": False,
+                    "content_landed_in_base": False},
+        "head_branch": branch, "note": "matrix fixture"})
+
+
+def am_run(base, facts, extra):
+    return sh(AUTO_MERGE, ["--facts", facts, "--ledger",
+                           os.path.join(base, "am-ledger.jsonl")]
+              + list(extra))
+
+
+def row_am1(tmp):
+    """缺 --apply 零写盘：merge-ok＋supply/* 白名单内（rail 裁 allowed）而
+    合并账不落盘不创建：allowed 判面只走报告面（--json 显式另计）。"""
+    d = os.path.join(tmp, "am1")
+    os.makedirs(d)
+    facts = am_facts(os.path.join(d, "facts.json"), 7)
+    rep = os.path.join(d, "rep.json")
+    before = tree_manifest(d)
+    rc, out = am_run(d, facts, ["--head-branch", "supply/seat-pack",
+                                "--json", rep])
+    assert rc == 0, "allowed 干跑应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert "AUTO-MERGE-VERDICT: merge-ok" in out, out[-300:]
+    assert "AUTO-MERGE-RAIL: allowed" in out, out[-300:]
+    assert "dry run, row not written" in out, "allowed 干跑应响亮出干跑账"
+    assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
+        "缺 --apply 时合并账落盘＝护栏破（零写盘失守）"
+    r = jl(rep)
+    assert r["rail"]["ledger_row_written"] is False, r["rail"]
+    assert tree_manifest(d) == before | {
+        os.path.relpath(rep, d).replace(os.sep, "/"): md5_of(rep)}, \
+        "--json 报告面之外出现写盘＝护栏破"
+
+
+def row_am2(tmp):
+    """hold 永不授权＋越权分支红拒：hold-red 判定 --apply 亦零写（rail
+    not-eligible 先于合并账）；非 supply/* 头 rc=1 白名单红拒零写。"""
+    d = os.path.join(tmp, "am2")
+    os.makedirs(d)
+    hold = am_facts(os.path.join(d, "hold.json"), 15, family="content",
+                    mergeable=False, state="dirty")
+    foreign = am_facts(os.path.join(d, "foreign.json"), 16)
+    before = tree_manifest(d)
+    rc, out = am_run(d, hold, ["--head-branch", "supply/old-head",
+                               "--apply"])
+    assert rc == 0, "hold 判定是数据应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert "AUTO-MERGE-VERDICT: hold-red" in out, out[-300:]
+    assert "AUTO-MERGE-RAIL: not-eligible:hold-red" in out, out[-300:]
+    assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
+        "hold 裁定 --apply 落合并账＝护栏破（hold 永不授权失守）"
+    rc2, out2 = am_run(d, foreign, ["--head-branch", "feature/quick-fix",
+                                    "--apply"])
+    assert rc2 == 1, "越权分支应 rc=1 红拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert "refused:branch-whitelist" in out2, out2[-300:]
+    assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
+        "白名单红拒仍落合并账＝护栏破（零写失守）"
+    assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
+
+
+def row_am3(tmp):
+    """日预算帽＋重复拒：--daily-cap 3 恰 3 行 authorize 后第 4 拒 rc=1；
+    同日同 PR 重复拒 rc=1；合并账恰 3 行不增（帽尽即停无第 4 行）。"""
+    d = os.path.join(tmp, "am3")
+    os.makedirs(d)
+    ledger = os.path.join(d, "am-ledger.jsonl")
+    f1 = am_facts(os.path.join(d, "f1.json"), 101, branch="supply/seat-1")
+    rc, out = am_run(d, f1, ["--head-branch", "supply/seat-1", "--apply",
+                             "--ledger", ledger])
+    assert rc == 0, "首发应 allowed exit 0 实测 %d\n%s" % (rc, out[-400:])
+    dup = am_facts(os.path.join(d, "dup.json"), 101, branch="supply/seat-1b")
+    rc2, out2 = am_run(d, dup, ["--head-branch", "supply/seat-1b", "--apply",
+                                "--ledger", ledger])
+    assert rc2 == 1, "同日重复应 rc=1 拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert "refused:duplicate-authorization" in out2, out2[-300:]
+    for i in (2, 3):
+        f = am_facts(os.path.join(d, "f%d.json" % i), 100 + i,
+                     branch="supply/seat-%d" % i)
+        rc, out = am_run(d, f, ["--head-branch", "supply/seat-%d" % i,
+                                "--apply", "--ledger", ledger])
+        assert rc == 0, "第 %d 发应 allowed exit 0 实测 %d\n%s" \
+            % (i, rc, out[-300:])
+    rows = [json.loads(ln) for ln in io.open(ledger, encoding="utf-8")
+            if ln.strip()]
+    assert len(rows) == 3 and all(r["kind"] == "authorize"
+                                  and r["decision"] == "allowed"
+                                  for r in rows), rows
+    f4 = am_facts(os.path.join(d, "f4.json"), 104, branch="supply/seat-4")
+    rc, out = am_run(d, f4, ["--head-branch", "supply/seat-4", "--apply",
+                             "--ledger", ledger])
+    assert rc == 1, "帽尽第 4 发应 rc=1 拒实测 %d\n%s" % (rc, out[-400:])
+    assert "refused:daily-budget" in out, out[-300:]
+    rows2 = [json.loads(ln) for ln in io.open(ledger, encoding="utf-8")
+             if ln.strip()]
+    assert len(rows2) == 3, "帽尽/重复后合并账不增（恰 3 行）实测 %d" % len(rows2)
+
+
+# ---- ⑫ repair_scope 共享名册一行＋E 波四守卫类四行（X6 波·谁写谁进阵）--------
+
+LANE_SUITE = (
+    '#!/bin/bash\n'
+    '# matrix fixture suite (tmp only)\n'
+    'CASES="\\\n'
+    't_real_one \\\n'
+    't_ghost_lane"\n'
+    'NCASES=$(echo $CASES | wc -w | tr -d \' \')\n'
+    '\n'
+    't_real_one() {\n'
+    '  "$PY" -B "$REPO/tests/t_real_one.py"\n'
+    '}\n'
+    '\n'
+    't_ghost_lane() {\n'
+    '  "$PY" -B "$REPO/tests/t_ghost_lane.py"\n'
+    '}\n')
+
+
+def row_rs1(tmp):
+    """repair_scope --check 查询面零写盘＋排除判词咬合：快照退化场（沙箱无
+    frozen8.py·fallback loud）下，append-only 账面/frozen 行/family 目录/
+    legal-data 面/zh 档案全 EXCLUDED，class-2 三可修面 REPAIRABLE；查询
+    零写盘。"""
+    d = os.path.join(tmp, "rs1")
+    os.makedirs(d)
+    before = tree_manifest(d)
+    rc, out = sh(REPAIR_SCOPE,
+                 ["--repo", d, "--check", "更新账.md", "wash/wash_engine.py",
+                  "certify/x.py", "README-cw.zh.md", "docs/mcp.md",
+                  "tests/README.md", "README.md", "docs/repair-ledger.jsonl"])
+    assert rc == 1, "有排除面查询应 exit 1（判词是数据）实测 %d\n%s" \
+        % (rc, out[-400:])
+    excluded = {ln.split()[1] for ln in out.splitlines()
+                if ln.startswith("EXCLUDED ")}
+    repairable = {ln.split()[1] for ln in out.splitlines()
+                  if ln.startswith("REPAIRABLE ")}
+    assert excluded == {"更新账.md", "wash/wash_engine.py", "certify/x.py",
+                        "README-cw.zh.md", "docs/mcp.md"}, excluded
+    assert repairable == {"tests/README.md", "README.md",
+                          "docs/repair-ledger.jsonl"}, repairable
+    assert tree_manifest(d) == before, "查询路径越界写盘＝护栏破"
+
+
+def lane_repo(tmp, tag):
+    """lane-extract 夹具仓：套件（CASES 两车道）＋真件在位（$REPO/tests/
+    引用形）·幽灵件缺席（tests/t_ghost_lane.py 不落盘＝R1 ENOENT 形）。
+    → (repo, suite_path)。"""
+    d = os.path.join(tmp, tag)
+    os.makedirs(os.path.join(d, "tests"))
+    sp = wf(os.path.join(d, "run_tests.sh"), LANE_SUITE)
+    wf(os.path.join(d, "tests", "t_real_one.py"), "# fixture lane file\n")
+    return d, sp
+
+
+def row_e2a(tmp):
+    """E2-1 lane-extract（--lane-detect/--lane-apply）：干跑零写零账；排除
+    账面（seeds/ 族）rc=2 红拒且零创建；预算帽（2 前科）rc=2 拒写·
+    套件字节恒同·只落 escalated(budget-cap) 账行。"""
+    d, sp = lane_repo(tmp, "e2a")
+    before = md5_of(sp)
+    rc, out = sh(REPAIR_SCOPE, ["--repo", d, "--suite", "run_tests.sh",
+                                "--lane-detect", "--json-out",
+                                os.path.join(tmp, "e2a-rep.json")])
+    assert rc == 0, "干跑侦应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    rep = jl(os.path.join(tmp, "e2a-rep.json"))
+    assert [g["lane"] for g in rep["ghosts"]] == ["t_ghost_lane"], rep["ghosts"]
+    assert rep["applied"] is False, rep
+    assert md5_of(sp) == before, "干落下套件字节被动＝护栏破"
+    assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
+        "干跑建账＝护栏破"
+    rc2, out2 = sh(REPAIR_SCOPE, ["--repo", d, "--suite", "run_tests.sh",
+                                  "--lane-detect", "--lane-apply",
+                                  "--ledger", "seeds/ledger.jsonl"])
+    assert rc2 == 2, "排除账面应 rc=2 红拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert "REFUSED" in out2 and "excluded ledger face" in out2, out2[-300:]
+    assert not os.path.isfile(os.path.join(d, "seeds", "ledger.jsonl")), \
+        "排除面红拒仍建账＝护栏破（零写失守）"
+    d4 = os.path.join(tmp, "e2a-budget")
+    os.makedirs(os.path.join(d4, "tests"))
+    sp4 = wf(os.path.join(d4, "run_tests.sh"), LANE_SUITE)
+    wf(os.path.join(d4, "tests", "t_real_one.py"), "# fixture lane file\n")
+    led = os.path.join(tmp, "e2a-ledger.jsonl")
+    prior = {"schema": "rocqwash-repair-ledger/1", "class": "lane-extract",
+             "target": "run_tests.sh",
+             "outcome": "repaired(lane-unregister)", "utc": "T0"}
+    with io.open(led, "a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+    md5_4 = md5_of(sp4)
+    rc3, out3 = sh(REPAIR_SCOPE, ["--repo", d4, "--suite", "run_tests.sh",
+                                  "--lane-detect", "--lane-apply",
+                                  "--ledger", led])
+    assert rc3 == 2, "预算帽应 rc=2 拒写实测 %d\n%s" % (rc3, out3[-400:])
+    assert "budget exhausted" in out3, out3[-300:]
+    assert md5_of(sp4) == md5_4, "帽尽落刀＝护栏破（套件字节恒同失守）"
+    rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
+            if ln.strip()]
+    assert len(rows) == 3 and rows[-1]["outcome"] == "escalated(budget-cap)", \
+        "帽面只落升格账行: %r" % rows[-1]
+
+
+def row_e2b(tmp):
+    """E2-2 roster-resync（tools/roster_resync.py）：干跑零写零账；--apply
+    单向派生（roster 字节恒同·计数面修至名册值·一修复一账行）；预算帽
+    rc=1 拒写·面字节恒同·只落 escalated 行。"""
+    MINI = ('#!/bin/bash\nCASES="\\\nt_a \\\nt_b"\n'
+            'for c in $CASES; do :; done\n')
+    d = os.path.join(tmp, "e2b")
+    os.makedirs(os.path.join(d, "tests"))
+    rt = wf(os.path.join(d, "tests", "run_tests.sh"), MINI)
+    cov = wf(os.path.join(d, "tests", "README.md"),
+             "# mini\n\n预期 2 过\n\n## 覆盖面（3 例）\n")
+    wf(os.path.join(d, "README.md"),
+       "# mini\ntests/  # 自测套件（2 例） - test suite (2 cases)\n")
+    md5_rt = md5_of(rt)
+    before_cov = md5_of(cov)
+    rc, out = sh(ROSTER_RESYNC, ["--repo", d])
+    assert rc == 1, "漂移干跑应 exit 1（漂移是数据）实测 %d\n%s" \
+        % (rc, out[-400:])
+    assert "drift=1" in out, out[-300:]
+    assert md5_of(cov) == before_cov, "干跑写计数面＝护栏破"
+    assert md5_of(rt) == md5_rt, "干跑写名册＝护栏破（roster 单向失守）"
+    assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
+        "干跑建账＝护栏破"
+    rc2, out2 = sh(ROSTER_RESYNC, ["--repo", d, "--apply"])
+    assert rc2 == 0, "apply 应修复至净实测 %d\n%s" % (rc2, out2[-400:])
+    assert "applied=1" in out2 and "escalated=0" in out2, out2[-300:]
+    assert md5_of(rt) == md5_rt, "apply 越界写名册＝护栏破（单向失守）"
+    assert "覆盖面（2 例）" in io.open(cov, encoding="utf-8").read(), \
+        "计数面未修至名册值"
+    led = os.path.join(d, "docs", "repair-ledger.jsonl")
+    rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
+            if ln.strip()]
+    assert len(rows) == 1 and rows[0]["class"] == "roster-resync" \
+        and rows[0]["outcome"] == "repaired(count-resync)", rows
+    d4 = os.path.join(tmp, "e2b-budget")
+    os.makedirs(os.path.join(d4, "tests"))
+    rt4 = wf(os.path.join(d4, "tests", "run_tests.sh"), MINI)
+    cov4 = wf(os.path.join(d4, "tests", "README.md"),
+              "# mini\n\n预期 2 过\n\n## 覆盖面（9 例）\n")
+    wf(os.path.join(d4, "README.md"),
+       "# mini\ntests/  # 自测套件（2 例） - test suite (2 cases)\n")
+    led4 = os.path.join(tmp, "e2b-ledger4.jsonl")
+    prior = {"schema": "rocqwash-repair/1", "class": "roster-resync",
+             "target": "tests/README.md:1", "branch": "unknown",
+             "outcome": "repaired(count-resync)", "ts": "T0"}
+    with io.open(led4, "a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+    md5_cov4 = md5_of(cov4)
+    rc3, out3 = sh(ROSTER_RESYNC, ["--repo", d4, "--apply",
+                                   "--ledger", led4])
+    assert rc3 == 1, "预算帽应 rc=1 拒写实测 %d\n%s" % (rc3, out3[-400:])
+    assert "escalated(budget-cap)" in out3, out3[-300:]
+    assert md5_of(cov4) == md5_cov4, "帽尽落刀＝护栏破（面字节恒同失守）"
+    rows4 = [json.loads(ln) for ln in io.open(led4, encoding="utf-8")
+             if ln.strip()]
+    assert len(rows4) == 3 and rows4[-1]["outcome"] == "escalated(budget-cap)", \
+        "帽面只落升格账行: %r" % rows4[-1]
+
+
+def flaky_repo(tmp, tag):
+    """flaky-quarantine 夹具仓：套件（CASES 一车道·ONLY 探针单独跑绿）
+    ＋空名册。→ (repo, suite_path, roster_path)。"""
+    d = os.path.join(tmp, tag)
+    os.makedirs(d)
+    suite = ('#!/bin/bash\n'
+             'CASES="\\\n'
+             't_a"\n'
+             'if [ -n "${ROCWASH_TESTS_ONLY:-}" ]; then exit 0; fi\n'
+             'exit 1\n')
+    sp = wf(os.path.join(d, "run_tests.sh"), suite)
+    roster = wf(os.path.join(d, "advisory_roster.txt"), "# empty\n")
+    return d, sp, roster
+
+
+def row_e2c(tmp):
+    """E2-3 flaky-quarantine（tools/flaky_guard.py --move）：冻结靶（seeds/
+    族名册）rc=1 红拒零写零账（scope 闸先于探针）；预算帽 rc=1 拒写·名册
+    字节恒同·只落 escalated 账行。"""
+    d, sp, roster = flaky_repo(tmp, "e2c")
+    before = tree_manifest(d)
+    rc, out = sh(FLAKY_GUARD, ["--repo", d, "--suite",
+                               os.path.join(d, "run_tests.sh"),
+                               "--roster", os.path.join(d, "seeds", "adv.txt"),
+                               "--ledger", os.path.join(d, "led.jsonl"),
+                               "--move", "t_a", "--apply"])
+    assert rc == 1, "冻结靶应 rc=1 红拒实测 %d\n%s" % (rc, out[-400:])
+    assert "REFUSED" in out and "outside the repair scope" in out, out[-300:]
+    assert tree_manifest(d) == before, \
+        "冻结靶红拒越界写盘＝护栏破（零写零账失守）"
+    d2, _sp2, roster2 = flaky_repo(tmp, "e2c-budget")
+    led = os.path.join(d2, "led.jsonl")
+    prior = {"schema": "rocqwash-repair-ledger/1", "kind": "repair",
+             "class": "flaky-quarantine", "ticket": "E2-3", "target": "t_x",
+             "outcome": "repaired", "branch": "nogit", "head_sha": "nogit",
+             "roster": "advisory_roster.txt", "ts_utc": "T0"}
+    with io.open(led, "a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+    md5_r2 = md5_of(roster2)
+    rc2, out2 = sh(FLAKY_GUARD, ["--repo", d2, "--suite",
+                                 os.path.join(d2, "run_tests.sh"),
+                                 "--roster", roster2, "--ledger", led,
+                                 "--move", "t_a", "--apply"])
+    assert rc2 == 1, "预算帽应 rc=1 拒写实测 %d\n%s" % (rc2, out2[-400:])
+    assert "budget exhausted" in out2, out2[-300:]
+    assert md5_of(roster2) == md5_r2, "帽尽落刀＝护栏破（名册字节恒同失守）"
+    rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
+            if ln.strip()]
+    assert len(rows) == 3 and rows[-1]["outcome"] == "escalated", \
+        "帽面只落升格账行: %r" % rows[-1]
+
+
+def row_e2d(tmp):
+    """E2-4 doc-count（--doc-count-detect/--doc-count-apply）：干跑零写零
+    账；--apply 修至 face=source 且幂等（二遍零字节）；预算帽 rc=2 拒写·
+    目标面字节恒同·只落 escalated(budget-cap) 行。"""
+    CW = ("#!/usr/bin/env bash\nset -u\nusage() {\ncat <<'EOF'\n"
+          "alpha   tools/alpha.py\nbeta    tools/beta.py\nEOF\n}\n"
+          "hint_for() {\n  case \"$1\" in\n"
+          "    alpha) echo a ;;\n    beta) echo b ;;\n  esac\n}\n"
+          "case \"${1:-}\" in\n"
+          "  alpha) shift; run_tool alpha \"tools/alpha.py\" \"$@\" ;;\n"
+          "  beta) shift; run_tool beta \"tools/beta.py\" \"$@\" ;;\n"
+          "  *) usage; exit 2 ;;\nesac\n")
+    MINI_RT = '#!/usr/bin/env bash\nCASES="\\\nt_one \\\nt_two \\\n"\n'
+    TOOL = '#!/usr/bin/env python3\n"""mini tool fixture."""\n'
+
+    def mk_repo(tag, routes, tools_n):
+        d = os.path.join(tmp, tag)
+        os.makedirs(os.path.join(d, "tools"))
+        os.makedirs(os.path.join(d, "tests"))
+        wf(os.path.join(d, "cw.sh"), CW)
+        wf(os.path.join(d, "tests", "run_tests.sh"), MINI_RT)
+        wf(os.path.join(d, "tools", "alpha.py"), TOOL)
+        wf(os.path.join(d, "tools", "beta.py"), TOOL)
+        wf(os.path.join(d, "README-cw.md"),
+           "# cw.sh - unified entry quick reference (rocqos (rocqwash) tool"
+           " suite | %d routes over %d tools)\n" % (routes, tools_n))
+        return d
+
+    d = mk_repo("e2d", 3, 4)
+    readme = os.path.join(d, "README-cw.md")
+    before = md5_of(readme)
+    rc, out = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-detect"])
+    assert rc == 1, "漂移侦应 exit 1（漂移是数据）实测 %d\n%s" \
+        % (rc, out[-400:])
+    assert "drift" in out and "doc={'routes': 3, 'tools': 4}" in out, \
+        out[-400:]
+    assert md5_of(readme) == before, "干跑写目标面＝护栏破"
+    assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
+        "干跑建账＝护栏破"
+    rc2, out2 = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-apply"])
+    assert rc2 == 0, "apply 应修复至净实测 %d\n%s" % (rc2, out2[-400:])
+    assert "outcome=repaired" in out2, out2[-300:]
+    assert io.open(readme, encoding="utf-8").read() == \
+        ("# cw.sh - unified entry quick reference (rocqos (rocqwash) tool"
+         " suite | 2 routes over 2 tools)\n"), \
+        "face 未修至 source 值"
+    md5_mid = md5_of(readme)
+    led = os.path.join(d, "docs", "repair-ledger.jsonl")
+    rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
+            if ln.strip()]
+    assert len(rows) == 1 and rows[0]["class"] == "doc-count" \
+        and rows[0]["outcome"] == "repaired(doc-count-sync)", rows
+    rc3, _ = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-apply"])
+    assert rc3 == 0 and md5_of(readme) == md5_mid, \
+        "二遍非幂等＝护栏破（零字节失守）"
+    rows3 = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
+             if ln.strip()]
+    assert len(rows3) == 1, "幂等遍不得加账行实测 %d" % len(rows3)
+    d4 = mk_repo("e2d-budget", 9, 9)
+    readme4 = os.path.join(d4, "README-cw.md")
+    led4 = os.path.join(tmp, "e2d-ledger4.jsonl")
+    prior = {"schema": "rocqwash-repair-ledger/1", "class": "doc-count",
+             "target": "README-cw.md", "outcome": "repaired(doc-count-sync)",
+             "utc": "T0"}
+    with io.open(led4, "a", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+        fh.write(json.dumps(prior, sort_keys=True) + "\n")
+    md5_r4 = md5_of(readme4)
+    rc4, out4 = sh(REPAIR_SCOPE, ["--repo", d4, "--doc-count-apply",
+                                  "--ledger", led4])
+    assert rc4 == 2, "预算帽应 rc=2 拒写实测 %d\n%s" % (rc4, out4[-400:])
+    assert "budget exhausted" in out4, out4[-300:]
+    assert md5_of(readme4) == md5_r4, "帽尽落刀＝护栏破（目标面恒同失守）"
+    rows4 = [json.loads(ln) for ln in io.open(led4, encoding="utf-8")
+             if ln.strip()]
+    assert len(rows4) == 3 and rows4[-1]["outcome"] == "escalated(budget-cap)", \
+        "帽面只落升格账行: %r" % rows4[-1]
+
+
 # ---- 矩阵总装 -----------------------------------------------------------------
 
 L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A 可洗链根·B 缺 A
@@ -1024,6 +1563,26 @@ ROWS = [
      "tools/axiom_guard.py:main env gate, guard mkdtemp", row_g1),
     ("J1", "jargon_apply", "洗面器自引用护栏：映射源表永不入目标面（--tree 排除·--file rc=1 红拒）",
      "tools/jargon_apply.py:550-560,471-484", row_j1),
+    ("SL1", "scheduler_lite", "plan 缺省零写盘（全旗标罐装出 due 判面·树恒同·dryRun 恒真）",
+     "tools/scheduler_lite.py:364-366,309", row_sl1),
+    ("SL2", "scheduler_lite", "唯一写面=显式 --out（恰落一文件·输入树恒同·两跑字节恒同）",
+     "tools/scheduler_lite.py:364-366,328-331", row_sl2),
+    ("AM1", "auto_merge", "缺 --apply 零写盘（rail allowed 而合并账不创建）",
+     "tools/auto_merge.py:244-247", row_am1),
+    ("AM2", "auto_merge", "hold 永不授权（--apply 亦零写）＋越权分支 rc=1 白名单红拒零写",
+     "tools/auto_merge.py:220-221,225-228", row_am2),
+    ("AM3", "auto_merge", "日预算帽＋重复拒（恰 3 行 authorize 后第 4/同 PR 拒·合并账不增）",
+     "tools/auto_merge.py:229-233,234-239", row_am3),
+    ("RS1", "repair_scope", "--check 查询面零写盘（共享名册判词咬合·快照退化 loud）",
+     "tools/repair_scope.py:140-160,556-576,590-620", row_rs1),
+    ("E2A", "repair_scope", "class-1 lane-extract：缺省零写零账／排除账面 rc=2 零创建／预算帽拒写只落升格行",
+     "tools/repair_scope.py:477-482,400-411,487-493", row_e2a),
+    ("E2B", "roster_resync", "class-2 roster-resync：缺省零写零账／roster 单向＋一修复一行／预算帽拒写只落升格行",
+     "tools/roster_resync.py:246-248,256-265,327-334", row_e2b),
+    ("E2C", "flaky_guard", "class-3 flaky-quarantine：冻结靶 rc=1 零写零账（scope 闸先于探针）／预算帽拒写只落升格行",
+     "tools/flaky_guard.py:390-396,514-523", row_e2c),
+    ("E2D", "repair_scope", "class-4 doc-count：干跑零写零账／apply 修至 face=source 幂等二遍零字节／预算帽 rc=2 拒写",
+     "tools/repair_scope.py:917-926,975-994,997-1009", row_e2d),
 ]
 
 
@@ -1053,9 +1612,10 @@ def main():
             print("  破口 %s @ %s — %s\n    违据: %s" % (rid, anchor, guard,
                                                         detail))
         return 1
-    print("DESTRUCTIVE-MATRIX PASS: 23 行拒写判据全过（unclog×4/wash_shape×4/"
+    print("DESTRUCTIVE-MATRIX PASS: 33 行拒写判据全过（unclog×4/wash_shape×4/"
           "pushci×3/cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/"
-          "axiom_guard×1/jargon_apply×1·全 tmp fixture＋injector 罐装零真网络"
+          "axiom_guard×1/jargon_apply×1/scheduler_lite×2/auto_merge×3/"
+          "repair_scope×1+E波四守卫×4·全 tmp fixture＋injector 罐装零真网络"
           "零真仓零真编译）")
     return 0
 

@@ -139,7 +139,7 @@ import tempfile
 PROG = "doc_lint"
 SCHEMA = "rocqwash-doclint/1"
 
-DEFAULT_HELP_CAP = 53     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28->32->47->48->49->50->53, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last; the latest bump follows the measured registry size 53 - the flaky-guard and repair-scope routes entered the registry alongside the concurrent roster-resync registration; an over-cap tool has an empty help set and every doc flag cited against it is misjudged phantom)
+DEFAULT_HELP_CAP = 55     # check 3 --help real-run tool cap (raised 20->24->25->26->27->28->32->47->48->49->50->53->55, one bump per tool registration; the same precedent every time: registry_rel sorted order puts wash/probe_engine.py last; the latest bump follows the measured registry size 55 - the auto-merge route entered the registry in this wave plus the concurrent scheduler-lite route already standing in cw.sh; an over-cap tool has an empty help set and every doc flag cited against it is misjudged phantom)
 HELP_TIMEOUT = 60         # --help subprocess second cap (local-file hang guard; fail-loud)
 DETAIL_CAP = 300          # checks[].detail clip (the cw_doctor non_form ln[:120] form)
 DRIFT_LINE_CAP = 20       # check 3 per-file phantom/dangling list cap (the total is honest; the cw_doctor cap-20 form)
