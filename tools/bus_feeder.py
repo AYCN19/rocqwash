@@ -87,7 +87,6 @@ import argparse
 import json
 import os
 import sys
-import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 try:
@@ -432,9 +431,9 @@ def selftest():
     fails = []
     base = (os.environ.get("TMP") or os.environ.get("TEMP")
             or os.environ.get("TMPDIR") or tempfile.gettempdir())
-    if not base or not os.path.isdir(base):
+    if not base:
         sys.stderr.write("bus_feeder selftest: no scratch directory found "
-                         "(TMP/TEMP/TMPDIR unset and no platform temp dir)\n")
+                         "(set TMP)\n")
         return 9
     root = os.path.join(base, "bus_feeder_selftest_%d" % os.getpid())
     os.makedirs(root, exist_ok=True)

@@ -2106,7 +2106,13 @@ def run_segment_import_face():
                         "%d module(s) not landed yet, not gated: %s"
                         % (len(pending), ", ".join(sorted(pending)))))
 
-    stdlib = frozenset(getattr(sys, "stdlib_module_names", ()))
+    stdlib = frozenset(getattr(sys, "stdlib_module_names", (
+        # py3.9 fallback: sys.stdlib_module_names landed in 3.10; enumerate
+        # the stdlib names the seven engine bodies actually import.
+        "argparse", "ast", "copy", "datetime", "hashlib", "importlib",
+        "io", "json", "os", "re", "shutil", "subprocess", "sys",
+        "tempfile", "time", "urllib",
+    )))
 
     def _thunk_third_party():
         bad = []
