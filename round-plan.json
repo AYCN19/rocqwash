@@ -1,0 +1,3034 @@
+{
+ "autonomy": {
+  "mode": "auto",
+  "source": "autonomy.json"
+ },
+ "files": [
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "CHANGELOG.md",
+   "rewrites": [
+    {
+     "after": "nical pass (收编→并入, 已证结论→已证结论, 缝合→splice",
+     "before": "nical pass (收编→并入, 定谳→已证结论, 缝合→splice",
+     "disposition": "replace",
+     "end": 48,
+     "face_id": "J007",
+     "line": 192,
+     "reason": "replace",
+     "replacement": "已证结论",
+     "start": 46,
+     "term": "定谳"
+    },
+    {
+     "after": "n mechanical pass (并入→并入, 定谳→已证结论, 缝合→sp",
+     "before": "n mechanical pass (收编→并入, 定谳→已证结论, 缝合→sp",
+     "disposition": "replace",
+     "end": 41,
+     "face_id": "J038",
+     "line": 192,
+     "reason": "replace",
+     "replacement": "并入",
+     "start": 39,
+     "term": "收编"
+    },
+    {
+     "after": "s (收编→并入, 定谳→已证结论, splice→splice",
+     "before": "s (收编→并入, 定谳→已证结论, 缝合→splice",
+     "disposition": "replace",
+     "end": 57,
+     "face_id": "J028",
+     "line": 192,
+     "reason": "replace",
+     "replacement": "splice",
+     "start": 55,
+     "term": "缝合"
+    },
+    {
+     "after": "/摘牌/计功/缝合/双杀/环账/卸出/shot down/翻牌)",
+     "before": "/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 52,
+     "face_id": "J043",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "shot down",
+     "start": 50,
+     "term": "击坠"
+    },
+    {
+     "after": "/机判/摘牌/计功/缝合/双杀/环账/unloaded/击坠/翻牌)",
+     "before": "/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 49,
+     "face_id": "J037",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "unloaded",
+     "start": 47,
+     "term": "卸出"
+    },
+    {
+     "after": "(清盘/增薄/机判/摘牌/计功/缝合/double failure/环账/卸出/击坠/翻牌)",
+     "before": "(清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 43,
+     "face_id": "J029",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "double failure",
+     "start": 41,
+     "term": "双杀"
+    },
+    {
+     "after": "table supplies (清盘/thinned/机判/摘牌/计功/缝合/双杀/环账/",
+     "before": "table supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/",
+     "disposition": "replace",
+     "end": 28,
+     "face_id": "J021",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "thinned",
+     "start": 26,
+     "term": "增薄"
+    },
+    {
+     "after": "supplies (清盘/增薄/机判/delisted/计功/缝合/双杀/环账/卸出/击坠/",
+     "before": "supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/",
+     "disposition": "replace",
+     "end": 34,
+     "face_id": "J026",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "delisted",
+     "start": 32,
+     "term": "摘牌"
+    },
+    {
+     "after": "le supplies (清盘/增薄/machine ruling/摘牌/计功/缝合/双杀/环账/卸出/",
+     "before": "le supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/",
+     "disposition": "replace",
+     "end": 31,
+     "face_id": "J022",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "machine ruling",
+     "start": 29,
+     "term": "机判"
+    },
+    {
+     "after": "is table supplies (liquidated/增薄/机判/摘牌/计功/缝合/双杀/",
+     "before": "is table supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/",
+     "disposition": "replace",
+     "end": 25,
+     "face_id": "J011",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "liquidated",
+     "start": 23,
+     "term": "清盘"
+    },
+    {
+     "after": "/增薄/机判/摘牌/计功/缝合/双杀/cyclic account/卸出/击坠/翻牌)",
+     "before": "/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 46,
+     "face_id": "J035",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "cyclic account",
+     "start": 44,
+     "term": "环账"
+    },
+    {
+     "after": "es (清盘/增薄/机判/摘牌/计功/splice/双杀/环账/卸出/击坠/翻牌)",
+     "before": "es (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 40,
+     "face_id": "J028",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "splice",
+     "start": 38,
+     "term": "缝合"
+    },
+    {
+     "after": "/计功/缝合/双杀/环账/卸出/击坠/overturned)",
+     "before": "/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 55,
+     "face_id": "J045",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "overturned",
+     "start": 53,
+     "term": "翻牌"
+    },
+    {
+     "after": "plies (清盘/增薄/机判/摘牌/credit tally/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "before": "plies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
+     "disposition": "replace",
+     "end": 37,
+     "face_id": "J027",
+     "line": 195,
+     "reason": "replace",
+     "replacement": "credit tally",
+     "start": 35,
+     "term": "计功"
+    }
+   ],
+   "scanned": true,
+   "would_fix": 14
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "CLA/CCLA.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "CLA/ICLA.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "CLA/README.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "CLA/commercial_license_template.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "名·冻结解禁后、`certify/` 收口——见",
+     "disposition": "human",
+     "end": 37,
+     "face_id": "J018",
+     "line": 50,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 35,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "CONTRIBUTING.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "README-cw.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "README_EN.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "certify/freeze_manifest.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "certify/frozen8.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "certify/push_gate.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "cw.sh",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/CAPABILITY-INDEX.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 5,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "次, 批次, 战役, 收官, 派单, 派发, 工单, 挂单, 交棒, 停写令, ",
+     "disposition": "human",
+     "end": 62,
+     "face_id": "J016",
+     "line": 80,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 60,
+     "term": "派发"
+    },
+    {
+     "after": null,
+     "before": "d, cyclic account, 上车, born-clean, born-",
+     "disposition": "human",
+     "end": 372,
+     "face_id": "J046",
+     "line": 81,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 370,
+     "term": "上车"
+    },
+    {
+     "after": null,
+     "before": " 直接匹配, 重述, 声明, 结论, 收口, 自愈, 钦名, 对拍, 普查, 断",
+     "disposition": "human",
+     "end": 85,
+     "face_id": "J018",
+     "line": 81,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 83,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "or family: 金标, 现势, 旗舰, 核验, 收束, 注册, 传参, 直",
+     "disposition": "human",
+     "end": 41,
+     "face_id": "J012",
+     "line": 81,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 39,
+     "term": "旗舰"
+    },
+    {
+     "after": null,
+     "before": ", 炉, 闸（工程义）, 堵, 哨, 哨兵（叙述义）, 检验（叙述义）, 分诊,",
+     "disposition": "human",
+     "end": 54,
+     "face_id": "J061",
+     "line": 85,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 52,
+     "term": "哨兵"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/annotation-standard-v1.0-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/clean-mode-manual-20261114.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/contrib-isolation-protocol-v1.0-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/docking/README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/docking/alignment-and-pr-protocol.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/docking/component-map.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/docking/recursive-evolution-paradigm.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/draft-evolve-v55-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "false`），预先铸三候选注册条目；接线（写进 `tools/mcp_serv",
+     "disposition": "human",
+     "end": 254,
+     "face_id": "J003",
+     "line": 3,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 252,
+     "term": "接线"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/drafts/mcp-tool-specs-engine-body.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/en/architecture.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/en/vacgen.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/engine-body-capabilities.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/evolve-cycle1-verdict-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/evolve-draft-cycle1-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/evolve-draft-cycle2-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/exp-bus-backlog.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/license-protocol-v1.0-20261114.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/mcp.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/ops-evolve-手册-v1.0-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/ops-live-run-log-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "| 墙账 | `wall.<root>.rea",
+     "disposition": "human",
+     "end": 4,
+     "face_id": "J024",
+     "line": 225,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 2,
+     "term": "墙账"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/ops-realtime-service-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/ops-sentinel-长驻手册-v1.0-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 2,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "填：DS4 真树实测（主会话·路线图①收口）",
+     "disposition": "human",
+     "end": 40,
+     "face_id": "J018",
+     "line": 157,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 38,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "填：三账齐·负边际加速如实录（DS4 收口）",
+     "disposition": "human",
+     "end": 38,
+     "face_id": "J018",
+     "line": 167,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 36,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/perf-profile-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/periscope_sop.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/push-gate-dual-door-assessment-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/repair-weekly-20261117.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/retro-triage-Main仓全史-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/roadmap-v43-plus-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "t.py` | 服务层（v39） | 收口（四职能外） | v39 | 文档←→",
+     "disposition": "human",
+     "end": 55,
+     "face_id": "J018",
+     "line": 151,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 53,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/rocqwash-service-campaign-total-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 7,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "t.py` | 服务层（v39） | 收口（四职能外） | v39 | 文档←→",
+     "disposition": "human",
+     "end": 55,
+     "face_id": "J018",
+     "line": 194,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 53,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": " commit·零码改纯运行·路线图②收口）",
+     "disposition": "human",
+     "end": 41,
+     "face_id": "J018",
+     "line": 337,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 39,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "  收口·⑤⑥⑦候令（更新账.md:3853）",
+     "disposition": "human",
+     "end": 4,
+     "face_id": "J018",
+     "line": 374,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 2,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": " 9.1 编译器依赖面 | v43 ④收口（9.3 直替·:3800）＋v47 ",
+     "disposition": "human",
+     "end": 26,
+     "face_id": "J018",
+     "line": 506,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 24,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "s.py` | 服务层（v45） | 收口（台账渲染） | v45 | 哨事件 ",
+     "disposition": "human",
+     "end": 65,
+     "face_id": "J018",
+     "line": 535,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 63,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "双维速读增补（接 §2）：**收口**面添 render-events（",
+     "disposition": "human",
+     "end": 17,
+     "face_id": "J018",
+     "line": 540,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 15,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "绿·非 9.1 复绿**——v43 ④收口/v47 ⑧关闭同口径",
+     "disposition": "human",
+     "end": 37,
+     "face_id": "J018",
+     "line": 583,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 35,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/rocqwash-service-campaign-total-v2.0-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 15,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "│  收口＝doc-lint 文档←→实现一致性",
+     "disposition": "human",
+     "end": 5,
+     "face_id": "J018",
+     "line": 29,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 3,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": " 诊断层 v35 ＋ v29-v32 底座 ──────────────────",
+     "disposition": "human",
+     "end": 39,
+     "face_id": "J048",
+     "line": 35,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 37,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "│  底座：scan4 普查·probe 检验·",
+     "disposition": "human",
+     "end": 5,
+     "face_id": "J048",
+     "line": 38,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 3,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "用 v35 诊断层与 v29-v32 底座）。",
+     "disposition": "human",
+     "end": 50,
+     "face_id": "J048",
+     "line": 45,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 48,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "union 四新器（＋v29-v32 底座 scan4/cure/probe/c",
+     "disposition": "human",
+     "end": 68,
+     "face_id": "J048",
+     "line": 60,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 66,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "can_v4_token.py` | 底座 | token 级限定名普查 |",
+     "disposition": "human",
+     "end": 40,
+     "face_id": "J048",
+     "line": 71,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 38,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "cure_applier.py` | 底座·清洗 | 消费位治愈正典包（缺省干跑",
+     "disposition": "human",
+     "end": 38,
+     "face_id": "J048",
+     "line": 72,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 36,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "probe_engine.py` | 底座 | 批量闭包相容探针 |",
+     "disposition": "human",
+     "end": 39,
+     "face_id": "J048",
+     "line": 73,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 37,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "/chain_graph.py` | 底座·疏通 | 多账合并链根图 |",
+     "disposition": "human",
+     "end": 39,
+     "face_id": "J048",
+     "line": 74,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 37,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "/ledger_sync.py` | 底座 | probe 台账×状态台账合并同",
+     "disposition": "human",
+     "end": 45,
+     "face_id": "J048",
+     "line": 75,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 43,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "e_classifier.py` | 底座 | 擦除位分类顾问 |",
+     "disposition": "human",
+     "end": 49,
+     "face_id": "J048",
+     "line": 76,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 47,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "an/dual_scan.py` | 底座 | 双器对拍驱动 |",
+     "disposition": "human",
+     "end": 40,
+     "face_id": "J048",
+     "line": 77,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 38,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "/doc_lint.py` | 服务·收口 | 文档←→实现一致性三查 |",
+     "disposition": "human",
+     "end": 42,
+     "face_id": "J018",
+     "line": 87,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 40,
+     "term": "收口"
+    },
+    {
+     "after": null,
+     "before": "me_normalize.py` | 底座（v39 入口补齐） | .v.v 双",
+     "disposition": "human",
+     "end": 57,
+     "face_id": "J048",
+     "line": 88,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 55,
+     "term": "底座"
+    },
+    {
+     "after": null,
+     "before": "select_audit.py` | 底座（v39 入口补齐） | 批选审计器（",
+     "disposition": "human",
+     "end": 47,
+     "face_id": "J048",
+     "line": 89,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 45,
+     "term": "底座"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/service-layer-overview-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/symbiosis_sop.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/uplink_sop.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 2,
+   "human_findings": [
+    {
+     "after": null,
+     "before": " COMPILE-MUST-FAIL 哨兵：编译绿即警报，红保持即健康。",
+     "disposition": "human",
+     "end": 55,
+     "face_id": "J061",
+     "line": 65,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 53,
+     "term": "哨兵"
+    },
+    {
+     "after": null,
+     "before": "编译、全役 md5 manifest 收口，分别属铸造席/自检席/汇编席职权面，",
+     "disposition": "human",
+     "end": 102,
+     "face_id": "J018",
+     "line": 456,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 100,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/vacgen_sop.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/workflow-integration-whitepaper-v1.0-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/判例-R3复发-route2tierA自愈-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/勘形-Main新内容预热-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/勘形-multi-repo-Main仓适配-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/复核-UNREC-14事件-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/检验-PR48-intake四闸-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/演示-evolve首轮-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/演练-哨事件消费-20261113.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "＋pushci.py:3「v36 旗舰·20261111 入账」＋READM",
+     "disposition": "human",
+     "end": 19,
+     "face_id": "J012",
+     "line": 197,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 17,
+     "term": "旗舰"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/评估-push_gate推窗四判据与pushci归一-20261111.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/验证-Main档案位实用化-20261112.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "examples/README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "- 墙账 graph 判例全记：unprobe",
+     "disposition": "human",
+     "end": 4,
+     "face_id": "J024",
+     "line": 16,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 2,
+     "term": "墙账"
+    }
+   ],
+   "kind": "md",
+   "path": "examples/baselines/README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "examples/baselines/audit-ConstructiveWorld_Live-20261111.note.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "那页管**战况面**（红账/墙账·degraded 是回退信号），本页",
+     "disposition": "human",
+     "end": 16,
+     "face_id": "J024",
+     "line": 4,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 14,
+     "term": "墙账"
+    }
+   ],
+   "kind": "md",
+   "path": "examples/baselines/perf-README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "examples/sentinel_supervisor.sh",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "examples/workflows/backend-sentinel.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": ".py` docstring（v37 旗舰·",
+     "disposition": "human",
+     "end": 64,
+     "face_id": "J012",
+     "line": 5,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 62,
+     "term": "旗舰"
+    }
+   ],
+   "kind": "md",
+   "path": "examples/workflows/loop-unclog.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": ".py` docstring（v36 旗舰·五段管线",
+     "disposition": "human",
+     "end": 47,
+     "face_id": "J012",
+     "line": 5,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 45,
+     "term": "旗舰"
+    }
+   ],
+   "kind": "md",
+   "path": "examples/workflows/step-pushci.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "names/mac_stmt_names.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "rn（全 rc=0），成品 born 收口 | 24 链件按 order.txt",
+     "disposition": "human",
+     "end": 82,
+     "face_id": "J018",
+     "line": 41,
+     "reason": "note-guard",
+     "replacement": null,
+     "start": 80,
+     "term": "收口"
+    }
+   ],
+   "kind": "md",
+   "path": "recipes/ENBIG7_same_domain_collision_PW1.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "recipes/S07_projection_reanchor_E5.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "scan/dual_scan.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "scan/mac_stmt_scan.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "scan/scan_v4_token.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seam/seam_probe.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/ai_flavor/SPEC.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/ai_flavor/test_snippet.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/engines/ENGINES.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/engines/test_snippet.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/i18n/SPEC-翻译引擎-20261114.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/i18n/pipeline_stub.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/i18n/test_snippet.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/jargon/SPEC.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/jargon/test_snippet.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/termbase/diy-channel-SPEC.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "seeds/termbase/net-interface-SPEC.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "seeds/termbase/test_snippet.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "templates/ci-green-watch.sh",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "templates/pr-body-template.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "tests/README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "tests/fixtures/engine_body/README.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "tests/i18n_output_strings_census.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/calib.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/gap.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/render.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/seam.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/sweep.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/refinery_segments/vacgen.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "tests/run_tests.sh",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_bus_feeder_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_engines_body.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_engines_seeds.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_evolution_dashboard_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_exp_port.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_mcp_face.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_periscope_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_refinery.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_symbiosis_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_uplink_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_vacgen_expectedred.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/t_vacgen_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_baseline_diff.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_chain_graph.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_ci_triage.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_clean_mode.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_comment_pack.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_contrib_intake.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_cure_pack.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_cw_doctor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "tests/test_cw_entry.sh",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_cw_sentinel.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_destructive_matrix.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_doc_lint.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_dual_scan.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_erasure_classifier.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_evolve.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_evolve_flag_contract.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_extract_magic.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_flaky_guard.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_gate6_born_wrapper.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_gate7_wrapper.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_ledger_sync.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_net_probe.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_netname_normalize.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_norm_lint.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_precedent_station.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_probe_engine.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_pushci.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_recipe_enbig7_pw1.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_recipe_s07.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "器口径 0=处理完成·红是数据非器红·派发 rc≠0/超时/跳过皆入账",
+     "disposition": "human",
+     "end": 30,
+     "face_id": "J016",
+     "line": 18,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 28,
+     "term": "派发"
+    }
+   ],
+   "kind": "py",
+   "path": "tests/test_red_dispatch.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_audit.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_fix_anchor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_fix_dedup.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_fix_orphan_add.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_regen.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_registry_union.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_relay_e2e.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_retrofit_dryrun.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_roster_resync.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_scan_station.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_scan_v4_token.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_select_audit.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_toolchain_dyld_doctor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_unclog.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_verify_born.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_verify_fresh.py",
+   "rewrites": [
+    {
+     "after": "~1ms·检验 40 轮 26 轮同刻）→「vo 严",
+     "before": "~1ms·探针 40 轮 26 轮同刻）→「vo 严",
+     "disposition": "replace",
+     "end": 7,
+     "face_id": "J010",
+     "line": 19,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 5,
+     "term": "探针"
+    },
+    {
+     "after": "粒度（~1ms）→ 同刻概率 65%（检验 40 轮 26 轮），第 2 节正判",
+     "before": "粒度（~1ms）→ 同刻概率 65%（探针 40 轮 26 轮），第 2 节正判",
+     "disposition": "replace",
+     "end": 23,
+     "face_id": "J010",
+     "line": 60,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 21,
+     "term": "探针"
+    }
+   ],
+   "scanned": true,
+   "would_fix": 2
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_verify_gate6.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_wash_engine.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_wash_fixture.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_wash_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_watch_repo_form.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_world_hook.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/_abl1_4b_compile.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/_gen_fin_mac.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/_http_backoff.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/ai_flavor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/ai_flavor_apply.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/auto_round.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/axiom_guard.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/baseline_diff.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/bus_feeder.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/calibration_ledger.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/chain_graph.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/ci_triage.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/contrib_intake.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "tools/cpu_guard.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/cw_doctor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/cw_sentinel.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/doc_lint.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/evolution_dashboard.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/evolve.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/exp_port.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/flaky_guard.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/gap_cluster.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/i18n_pipeline.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/i18n_translate.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/i18n_verify.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/jargon_apply.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/lean_sweep.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/ledger_sync.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/mcp_server.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/net_probe.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "—依赖网假性缺口。本器把「净名归一」机械化：",
+     "disposition": "human",
+     "end": 29,
+     "face_id": "J033",
+     "line": 7,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 26,
+     "term": "机械化"
+    }
+   ],
+   "kind": "py",
+   "path": "tools/netname_normalize.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/norm_lint.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/periscope.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/pushci.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/red_dispatch.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/registry_audit.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/registry_fix.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/registry_regen.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/registry_union.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/render_events.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/repair_scope.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/repair_weekly.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/roster_resync.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/row_render.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 1,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "混入他席件之险）。本器把「全表实读」机械化：",
+     "disposition": "human",
+     "end": 41,
+     "face_id": "J033",
+     "line": 10,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 38,
+     "term": "机械化"
+    }
+   ],
+   "kind": "py",
+   "path": "tools/select_audit.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/selfevolve_round.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/symbiosis_bus.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/termbase.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/toolchain_dyld_doctor.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/unclog.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/uplink.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/vacgen.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "tools/vacgen_env_note.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/verdict_diff.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/wash_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/_parse_fin_mac.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/erasure_classifier.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/extract_magic_check.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/gate4_comment_guard.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/retrofit_gate7_irr.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/verify_gate6.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "verify/verify_vo.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/_abl1_wash.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/comment_sweep.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/cure_applier.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/probe_engine.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/wash_engine.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wash/world_hook.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "watch/watch.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/born_world.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/coqc_shim.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/frozen_call.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/gate4_ledger_station.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/gate6_census.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/gate7_probe.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/guard.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/precedent_station.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/push_gate_rq.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/quad8_reconcile.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/scan_station.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/verify_born.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "wrapper/wash_station.py",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "sh",
+   "path": "wrapper/watch_rq.sh",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  },
+  {
+   "excluded": "frozen",
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "更新账.md",
+   "rewrites": [],
+   "scanned": false,
+   "would_fix": 0
+  }
+ ],
+ "map": {
+  "entries": 62,
+  "path": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\align-wt\\seeds\\jargon\\jargon-map.json",
+  "schema": "rocqwash-jargon-map/1"
+ },
+ "mode": "plan",
+ "rescan": {
+  "detail": "plan mode is zero-write",
+  "ran": false
+ },
+ "schema": "rocqwash.jargon-apply.report/1",
+ "summary": {
+  "applied": 0,
+  "apply_failed": 0,
+  "excluded_frozen": 48,
+  "files": 246,
+  "human": 44,
+  "parse_errors": 0,
+  "residue_jargon": 0,
+  "would_fix": 16
+ },
+ "target": ".",
+ "target_kind": "tree",
+ "tool": "jargon_apply"
+}

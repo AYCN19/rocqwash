@@ -15,7 +15,17 @@
 #     never deleted in-run (20261117 order)
 #   * content reds: recorded for the desk (artifact + job log) - the
 #     E1/E2 wash engines take them once cast
-# Rollback: delete this file and .github/scripts/selfheal_rocqwash.py.
+#   * heartbeat: the workflow_dispatch `heartbeat` input appends ONE tick
+#     line (UTC timestamp + status) to docs/heartbeat.jsonl, append-only
+#     (existing lines never rewritten); when the gap since the previous
+#     tick is strictly over 90 minutes (three missed */30 ticks) the
+#     writer appends an ALERT line ahead of the tick (loss-of-contact
+#     rule; line schema rocqwash.heartbeat/1). The Main-side runner
+#     heartbeat is BLOCKED (403): the hosted workflow_dispatch tick is
+#     the only heartbeat face, and the limitation is recorded in the
+#     limits ledger.
+# Rollback: delete this file, .github/scripts/selfheal_rocqwash.py and
+#   .github/scripts/selfheal_heartbeat.py.
 name: rocqwash self-heal
 
 on:
@@ -33,6 +43,11 @@ on:
         type: string
       branch_census:
         description: 'force the weekly branch census in reconcile mode (true/false)'
+        required: false
+        default: 'false'
+        type: string
+      heartbeat:
+        description: 'append one heartbeat tick line to docs/heartbeat.jsonl (true/false)'
         required: false
         default: 'false'
         type: string
@@ -72,10 +87,36 @@ jobs:
             echo "census: forced by dispatch input"
             echo "ROCWASH_BRANCH_CENSUS=1" >> "$GITHUB_ENV"
           fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.heartbeat }}" = "true" ]; then
+            echo "heartbeat: dispatch tick requested"
+            echo "HEARTBEAT=1" >> "$GITHUB_ENV"
+          fi
 
       - name: Check out driver
-        if: env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1'
+        if: env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1' || env.HEARTBEAT == '1'
         uses: actions/checkout@v5
+
+      # heartbeat tick face: the append-only writer owns the >90min ALERT
+      # rule (.github/scripts/selfheal_heartbeat.py); the commit-back makes
+      # the line durable and a push race fails loud (resolve: re-dispatch)
+      - name: Heartbeat tick (append-only JSONL; ALERT on a >90min silence gap)
+        if: env.HEARTBEAT == '1'
+        shell: bash
+        run: |
+          python3 .github/scripts/selfheal_heartbeat.py \
+            --file docs/heartbeat.jsonl \
+            --status ok \
+            --source workflow_dispatch \
+            --apply
+          if [ ! -f docs/heartbeat.jsonl ]; then
+            echo "heartbeat: writer reported apply but no ledger exists" >&2
+            exit 1
+          fi
+          git config user.name "rocqwash heartbeat"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/heartbeat.jsonl
+          git commit -m "heartbeat tick [skip ci]"
+          git push origin HEAD:"${{ github.ref_name }}"
 
       - name: Self-heal leg (triage + heal, or reconcile, or automerge-only)
         if: env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1'

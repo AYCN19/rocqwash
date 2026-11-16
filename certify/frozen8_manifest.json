@@ -3,10 +3,10 @@
   "certify/frozen8.py",
   "certify/push_gate.py"
  ],
- "freeze_commit": "0a8223f34c9f485edca3d07374adf2b7db844363",
+ "freeze_commit": "547bbcde3d2a55a90111658c917625f508b7aa30",
  "ledger_source": "更新账.md §三（在役八组件冻结自证·账载口径）",
  "n_files": 10,
- "root": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\anchor-wt",
+ "root": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\align-wt",
  "schema": "rocqwash-frozen8-manifest/2",
  "tier1": [
   [
@@ -15,7 +15,7 @@
   ],
   [
    "certify/frozen8.py",
-   "1ce376b3601816d182c018ae2b3a0847"
+   "15241c819665cbd6bd3dbc743f8ddc35"
   ],
   [
    "certify/push_gate.py",
@@ -50,5 +50,5 @@
    "664446bc717395d8496c8c30a5af9ccf"
   ]
  ],
- "tier2_md5_of_tier1_text": "808e3214ba2025b98e4f0c178923f606"
+ "tier2_md5_of_tier1_text": "e0b0d770e0754fab49d8cc1f0ff4aa5e"
 }
