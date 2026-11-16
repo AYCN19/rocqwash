@@ -43,14 +43,49 @@ jobs:
           # object; a depth-1 checkout false-flags DRIFT (20261116 red chain)
           fetch-depth: 0
 
-      - name: Run self-test suite (canonical sweep, advisory)
+      - name: Fingerprint gate
+        id: fp
+        run: |
+          FP="${{ hashFiles('**', '!docs/ci-whitepaper-recursive-era-v1-*.md', '!**/*.zh.md') }}"
+          echo "key=ci-verdict-macOS-${FP}" >> "$GITHUB_OUTPUT"
+
+      - name: Verdict cache (fingerprint-keyed)
+        id: verdict
+        uses: actions/cache@v6
+        with:
+          path: .ci-verdict-marker
+          key: ${{ steps.fp.outputs.key }}
+
+      - name: Decide mode (rerun/dispatch = always FULL)
+        id: mode
+        run: |
+          if [ "${{ github.run_attempt }}" != "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=FULL" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.verdict.outputs.cache-hit }}" = "true" ]; then
+            echo "mode=ANCHORS" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=FULL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run self-test suite (FULL, fingerprint cold / rerun / dispatch)
+        if: steps.mode.outputs.mode == 'FULL'
         run: bash tests/run_tests.sh
+
+      - name: Run anchor tier (ANCHORS - fingerprint unchanged since last green)
+        if: steps.mode.outputs.mode == 'ANCHORS'
+        env:
+          ROCWASH_TESTS_ONLY: "t_frozen8 t_frozen8_check t_frozen_call t_precedent_station t_registry_audit"
+        run: bash tests/run_tests.sh
+
+      - name: Mark verdict green (saves the fingerprint cache on FULL)
+        if: success() && steps.mode.outputs.mode == 'FULL'
+        run: echo "green ${{ github.run_id }}" > .ci-verdict-marker
 
       - name: Suite verdict
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "MAC-VERIFY-GREEN (canonical sweep, advisory lane)"
+            echo "MAC-VERIFY-GREEN (mode=${{ steps.mode.outputs.mode }}, canonical sweep or anchor tier, advisory lane)"
           else
             echo "::warning::mac advisory suite red (macos-15 queue jam or platform facet) - advisory, non-blocking; the blocking signal is ci.yml"
           fi

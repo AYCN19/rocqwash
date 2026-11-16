@@ -118,14 +118,49 @@ jobs:
           # workspace every run and false-flags DRIFT (20261116 red chain)
           fetch-depth: 0
 
-      - name: Run self-test suite (stable roster)
+      - name: Fingerprint gate
+        id: fp
+        run: |
+          FP="${{ hashFiles('**', '!docs/ci-whitepaper-recursive-era-v1-*.md', '!**/*.zh.md') }}"
+          echo "key=ci-verdict-${{ matrix.label }}-${FP}" >> "$GITHUB_OUTPUT"
+
+      - name: Verdict cache (fingerprint-keyed)
+        id: verdict
+        uses: actions/cache@v6
+        with:
+          path: .ci-verdict-marker
+          key: ${{ steps.fp.outputs.key }}
+
+      - name: Decide mode (rerun/dispatch = always FULL)
+        id: mode
+        run: |
+          if [ "${{ github.run_attempt }}" != "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=FULL" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.verdict.outputs.cache-hit }}" = "true" ]; then
+            echo "mode=ANCHORS" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=FULL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run self-test suite (FULL, fingerprint cold / rerun / dispatch)
+        if: steps.mode.outputs.mode == 'FULL'
         run: bash tests/run_tests.sh
+
+      - name: Run anchor tier (ANCHORS - fingerprint unchanged since last green)
+        if: steps.mode.outputs.mode == 'ANCHORS'
+        env:
+          ROCWASH_TESTS_ONLY: "t_frozen8 t_frozen8_check t_frozen_call t_precedent_station t_registry_audit"
+        run: bash tests/run_tests.sh
+
+      - name: Mark verdict green (saves the fingerprint cache on FULL)
+        if: success() && steps.mode.outputs.mode == 'FULL'
+        run: echo "green ${{ github.run_id }}" > .ci-verdict-marker
 
       - name: Suite verdict
         if: always()
         run: |
           if [ "${{ job.status }}" = "success" ]; then
-            echo "ROCQWASH-CI-ALL-GREEN (stable roster, ${{ matrix.label }}; platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
+            echo "ROCQWASH-CI-ALL-GREEN (mode=${{ steps.mode.outputs.mode }}, ${{ matrix.label }}; FULL=full suite, ANCHORS=fingerprint-match skip with anchor tier; platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
           else
             echo "::error::self-test suite red on ${{ matrix.label }} — see the failed step log above"
           fi
