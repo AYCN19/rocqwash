@@ -265,7 +265,7 @@ def main():
         check("G13形_Extraction命令", m5 == "driver" and t5 == ["g_a"],
               "%s %s" % (m5, t5))
         # 盲区收窄≠静默扩容：未知 vernacular 仍 fail-loud rc=9
-        unk = wf(tmp, "unk.v", "Frobnicate widget.\nDefinition unk_ok := 1.\n")
+        unk = wf(tmp, "unk.v", "Bogonize widget.\nDefinition unk_ok := 1.\n")
         try:
             emc.collect_targets(unk)
             check("未知仍红9", False, "未触发 SystemExit")

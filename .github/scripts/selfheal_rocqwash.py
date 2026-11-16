@@ -97,6 +97,83 @@ def classify(jobs):
     return "no-jobs", []
 
 
+def load_triage_table(repo_root="."):
+    """The whitepaper's machine face: docs/ci-triage-table.json
+    (schema rocqwash.ci-triage-table/1).  Absent/damaged = None (the
+    classification falls back to the built-in family logic)."""
+    path = os.path.join(repo_root, "docs", "ci-triage-table.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception as exc:
+        log("triage-table load failed: %r" % exc)
+        return None
+
+
+class _LogNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def fetch_run_log_text(token, repo, run_id, cap=400000):
+    """Whole-run logs zip via the 302 dance (auth first hop, header-less
+    second hop - forwarding the token to the blob store yields 401);
+    per-job .txt members concatenated, tail-capped for marker matching."""
+    import zipfile
+    opener = urllib.request.build_opener(_LogNoRedirect())
+    url = "https://api.github.com/repos/%s/actions/runs/%d/logs" % (repo,
+                                                                    run_id)
+    req = urllib.request.Request(url, headers={
+        "Authorization": "Bearer " + token,
+        "User-Agent": "rocqwash-selfheal"})
+    loc = None
+    try:
+        opener.open(req, timeout=120)
+        return ""
+    except urllib.error.HTTPError as e302:
+        if e302.code in (301, 302, 303, 307):
+            loc = e302.headers.get("Location")
+        if not loc:
+            return ""
+    req2 = urllib.request.Request(loc, headers={"User-Agent":
+                                                "rocqwash-selfheal"})
+    try:
+        with urllib.request.urlopen(req2, timeout=180) as resp:
+            raw = resp.read()
+    except Exception:
+        return ""
+    texts = []
+    try:
+        zf = zipfile.ZipFile(io.BytesIO(raw))
+        for name in zf.namelist():
+            if name.endswith(".txt"):
+                texts.append(zf.read(name).decode("utf-8",
+                                                  errors="replace"))
+    except Exception:
+        return raw.decode("utf-8", errors="replace")
+    return chr(10).join(texts)[-cap:]
+
+
+def match_classes(log_text, table):
+    """Match the ten failure classes by markers (precedence order);
+    returns the matched class summaries (id/title/auto_repairable/
+    prescription/hit_markers)."""
+    matched = []
+    for cls in sorted(table.get("classes", []),
+                      key=lambda c: c.get("precedence", 99)):
+        markers = [m for m in (cls.get("markers") or []) if m]
+        hit = [m for m in markers if m in log_text]
+        if hit:
+            matched.append({
+                "id": cls.get("id"),
+                "title": cls.get("title"),
+                "auto_repairable": cls.get("auto_repairable"),
+                "prescription": cls.get("prescription", ""),
+                "hit_markers": hit[:3],
+            })
+    return matched
+
+
 def triage_leg(args, repo, run_id):
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
@@ -113,6 +190,18 @@ def triage_leg(args, repo, run_id):
         return "skipped(jobs-fetch: %s)" % jerr, info, []
     family, failed_steps = classify(jobs.get("jobs"))
     log("triage: family=%s failed_steps=%s" % (family, failed_steps[:4]))
+    triage_matched, triage_note = [], ""
+    try:
+        log_text = fetch_run_log_text(token, repo, run_id)
+        table = load_triage_table(".")
+        if table and log_text:
+            triage_matched = match_classes(log_text, table)
+            triage_note = "; ".join(
+                "%s[auto=%s]" % (c["id"], c["auto_repairable"])
+                for c in triage_matched)
+    except Exception as exc:
+        triage_note = "table-consume failed: %r" % exc
+    log("triage-table: %s" % (triage_note[:200] or "no class matched"))
 
     heal_verdict, heal_detail = "skipped(disabled)", "no --heal"
     if args.heal:
@@ -129,13 +218,23 @@ def triage_leg(args, repo, run_id):
     points = ("rocqwash CI red run %d: family=%s failed_steps=%s (auto "
               "triage by rocqwash self-heal)" % (run_id, family,
                                                  failed_steps[:3]))
+    triage_section = ""
+    if triage_matched:
+        triage_section = "\ntriage-table matched classes:\n" + "\n".join(
+            "- %s (%s): auto_repairable=%s\n  prescription: %s"
+            % (c["id"], c["title"], c["auto_repairable"],
+               c["prescription"][:200])
+            for c in triage_matched)
     return "OBTAINED", info + " | family=" + family, [
         ("triage-report.txt",
          "run=%d\n%s\nfamily=%s\nfailed_steps=%s\nheal=%s\n%s\n"
-         % (run_id, info, family, failed_steps, heal_verdict, heal_detail)),
+         "%s\n"
+         % (run_id, info, family, failed_steps, heal_verdict, heal_detail,
+            triage_section)),
         ("summary.txt",
-         "verdict=OBTAINED run=%d family=%s heal=%s repair=%s"
-         % (run_id, family, heal_verdict, repair_verdict)),
+         "verdict=OBTAINED run=%d family=%s heal=%s repair=%s\n"
+         "triage-table=%s"
+         % (run_id, family, heal_verdict, repair_verdict, triage_note)),
     ]
 
 
