@@ -77,7 +77,7 @@ WRAP_NAME = "wrapper/wash_station.py"
 # station never edits canonicals.
 CANONICALS = {
     "names": {"rel": "names/mac_stmt_names.py",
-              "pin": "01dc635ce445b05628bdd6e728990ce3"},
+              "pin": "9e26c0db2c60ced3629a13a821bdf615"},
     "gate4": {"rel": "verify/gate4_comment_guard.py",
               "pin": "d7ab397c5f0243d0c7320f91d0f14481"},
     "probe": {"rel": "seam/seam_probe.py",
@@ -380,7 +380,7 @@ def station_selftest():
     ok = ok and j
 
     # v9 assertion shape check: valid 32-hex passes, bogus values rejected
-    j = (norm_hex(" 01dc635ce445b05628bdd6e728990ce3 ") == "01dc635ce445b05628bdd6e728990ce3"
+    j = (norm_hex(" 9e26c0db2c60ced3629a13a821bdf615 ") == "9e26c0db2c60ced3629a13a821bdf615"
          and norm_hex("zz") is None and norm_hex("01dc") is None)
     print("  judge9 assertion shape check pass/reject:", "PASS" if j else "FAIL")
     ok = ok and j

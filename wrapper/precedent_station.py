@@ -87,7 +87,7 @@ WRAP_NAME = "wrapper/precedent_station.py"
 # 在飞席位可持续改版）——其 md5 只录站账不设 pin（录词不判·防在飞误红）。
 CANONICALS = {
     "names": {"rel": "names/mac_stmt_names.py",
-              "pin": "01dc635ce445b05628bdd6e728990ce3"},
+              "pin": "9e26c0db2c60ced3629a13a821bdf615"},
     "gate4": {"rel": "verify/gate4_comment_guard.py",
               "pin": "d7ab397c5f0243d0c7320f91d0f14481"},
     "gate7": {"rel": "wrapper/gate7_probe.sh",
@@ -416,7 +416,7 @@ def station_selftest():
     ok = ok and j
 
     # 判9 断言形制核：32-hex 正过、伪值拒
-    j = (norm_hex(" 01dc635ce445b05628bdd6e728990ce3 ") == "01dc635ce445b05628bdd6e728990ce3"
+    j = (norm_hex(" 9e26c0db2c60ced3629a13a821bdf615 ") == "9e26c0db2c60ced3629a13a821bdf615"
          and norm_hex("zz") is None and norm_hex("01dc") is None)
     print("  judge9 断言形制核正过伪拒:", "PASS" if j else "FAIL")
     ok = ok and j
