@@ -494,10 +494,25 @@ def cmd_check(args):
             print("git 历史锚（HEAD 为 freeze_commit 后代）: PASS (%s)" % fc[:12])
             rings["git_anchor"] = "pass"
         elif rc == 1:
-            print("  DRIFT git锚   HEAD %s 非 freeze_commit %s 后代"
-                  "（改史/回滚现形）" % (head[:12], fc[:12]))
-            drift = True
-            rings["git_anchor"] = "drift"
+            # S2 v2 (20261117 user order): squash landings carry no parent
+            # chain, so a non-descendant HEAD with all four content faces green
+            # is the squash shape, not a rewrite.  Content equivalence
+            # (tier2/ledger/side/disk all green) downgrades to a registration;
+            # any content drift still fails loud below the rollback backstop.
+            content_ok = (rings.get("tier2_ok") and rings.get("ledger_ok")
+                          and rings.get("side_ok") and rings.get("disk_ok"))
+            if content_ok:
+                print("  git-anchor: DOWNGRADED（HEAD %s 非 freeze_commit %s 后代"
+                      "——squash 落岸无父链·四内容面全绿=内容等价·降档登记"
+                      "不硬败；追责在 S1 台账与回滚弧）" % (head[:12], fc[:12]))
+                downgrades.append("git-anchor: squash-shape (content-equivalent; freeze_commit=%s head=%s)"
+                                  % (fc[:12], head[:12]))
+                rings["git_anchor"] = "downgraded"
+            else:
+                print("  DRIFT git锚   HEAD %s 非 freeze_commit %s 后代"
+                      "（改史/回滚现形）" % (head[:12], fc[:12]))
+                drift = True
+                rings["git_anchor"] = "drift"
         else:
             # Object missing etc. — shallow fetch or pruned history: cannot
             # verify here (CI shallow clones), honest downgrade, re-verify in
