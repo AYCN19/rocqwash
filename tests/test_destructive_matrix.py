@@ -103,13 +103,75 @@
         seed pins by md5)
         锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484
         （--file 红拒面）
+  ⑩ .github/scripts/selfheal_heartbeat.py (heartbeat tick writer; write face
+     = the caller-named --file JSONL volume, strictly append-only)
+     H1 default dry run zero-write; --apply appends exactly one tick line
+        per run and prior ledger bytes stay byte-identical (content pins,
+        never mtime pins: back-to-back writes can land on one mtime tick)
+        anchor .github/scripts/selfheal_heartbeat.py (run gate + append face)
+     H2 loss-of-contact rule: a gap strictly over 90 minutes appends an ALERT
+        line ahead of the tick; exactly 90 minutes stays silent; an ALERT
+        line is never a tick source
+        anchor .github/scripts/selfheal_heartbeat.py (planned_records gap gate)
+     H3 fail-loud: a corrupt or schema-mismatched last ledger line refuses
+        the append with rc=9 and zero bytes written; bad --now, nonpositive
+        --alert-minutes and an empty --file are usage errors rc=2
+        anchor .github/scripts/selfheal_heartbeat.py (last_tick raises + run
+        validation)
+     H4 yml wiring line-scan (stdlib only, no YAML parser dependency): the
+        heartbeat input defaults to false, HEARTBEAT=1 is exported only
+        under workflow_dispatch, the step invokes the writer with --apply
+        against docs/heartbeat.jsonl, checkout covers HEARTBEAT, the
+        rollback line names the new script
+        anchor .github/workflows/selfheal.yml (input block, guard block,
+        heartbeat step, checkout condition, rollback line)
+  ⑪ tools/repair_weekly.py (repair-outcome weekly distribution face; write
+     faces = the caller-named --out markdown face + --json report + the
+     ledger append through --record --apply; the aggregate face is
+     read-only over the ledger)
+     K1 aggregate write face: dry-run default zero-write (no --out ->
+        stdout only, tree manifest constant); with --out the face file is
+        the only write and reruns are byte-identical; the ledger input
+        never gains a byte
+        anchor tools/repair_weekly.py:main aggregate branch +
+        :render_markdown caller-named write face
+     K2 record write face: --record without --apply is plan-only (zero
+        bytes); --record --apply appends exactly one
+        rocqwash-repair-ledger/2 row; the vocabulary refusals (escalated
+        without an evidence package, a watch-only reason outside the enum,
+        a value outside the vocabulary) refuse before any byte moves
+        anchor tools/repair_weekly.py:record_row (vocabulary gate) +
+        :ledger_append (the only append face)
+     K3 fail-loud input faces: a malformed ledger row rc=2 and an
+        explicitly named absent ledger rc=9, both with zero writes
+        anchor tools/repair_weekly.py:ledger_rows (fail-loud parse) +
+        :main explicit-ledger gate
+  ⑫ wording-face honesty rows (honest-degradation wording alignment; read-only
+     line-scans: zero writes, zero subprocesses, zero tmp fixtures)
+     N1 README evolve wording alignment: the v55 snapshot line states the
+        tool in substance as a signal-to-task-brief generator, the
+        "autonomous evolution engine" label survives only as the cited
+        module-title face pending rename adjudication, and the draft-only
+        spawn-gate fact tokens stay on the line
+        anchor README.md:19 (v55 snapshot line)
+     N2 evolve.py docstring honesty note: the Purpose block carries the
+        draft-only token and the selection-not-implemented-in-this-code
+        clause while keeping the no-execution and no-repository-write
+        facts, the module title keeps its name, and the five-field doc
+        block stays within the 30-line budget
+        anchor tools/evolve.py:13-14 (docstring Purpose note lines)
+     N3 CAPABILITY-INDEX evolution_dashboard positioning note: the entry
+        carries the KPI-aggregation positioning line, the rename candidate
+        is declared but not applied, and the entry name, path, invocation
+        form, and route tokens stay untouched
+        anchor docs/CAPABILITY-INDEX.md:209 (evolution_dashboard note line)
 
 离线纪律（硬要求）：全判据走 tmp fixture＋--injector 罐装（unclog probe/resprobe
 canned·wash_shape 引擎键 canned·pushci steps/jobs/git-caller canned·sentinel
 canned API）——零真网络零真仓零真编译；真子进程仅限纯 stdlib 离线引擎
 （chain_graph/cure_applier/scan_v4_token/frozen8 --ledger/--selftest/freeze
-（scratch skeleton）/gate4/ci_triage --offline·判例：各器自带 --selftest
-同款）。唯一例外 W3 递真在册件**路径**——
+（scratch skeleton）/gate4/ci_triage --offline/selfheal_heartbeat --apply·
+判例：各器自带 --selftest 同款）。唯一例外 W3 递真在册件**路径**——
 工具在 collect_files 即红拒·零读零写（wash_shape 自身判8 同款先例）。
 
 自体纪律：python3 -B 禁 __pycache__；零仓写盘（全部工件在 tempfile.mkdtemp）；
@@ -117,7 +179,7 @@ canned API）——零真网络零真仓零真编译；真子进程仅限纯 std
 ROCWASH_ROCQ／ROCWASH_COQCHK 剥除·防环境渗判防真编译渗阵）；fail-loud——
 任一行炸（含环境异常）按破计不静默。
 
-退出码：0=23 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
+退出码：0=33 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
 
 用法：
   python3 tests/test_destructive_matrix.py          # 套件内经 run_tests.sh 调
@@ -142,13 +204,17 @@ CURE_APPLIER = os.path.join(REPO, "wash", "cure_applier.py")
 AXIOM_GUARD = os.path.join(REPO, "tools", "axiom_guard.py")
 FROZEN8 = os.path.join(REPO, "certify", "frozen8.py")
 JARGON_APPLY = os.path.join(REPO, "tools", "jargon_apply.py")
+SELFHEAL_HEARTBEAT = os.path.join(REPO, ".github", "scripts",
+                                  "selfheal_heartbeat.py")
+SELFHEAL_YML = os.path.join(REPO, ".github", "workflows", "selfheal.yml")
+REPAIR_WEEKLY = os.path.join(REPO, "tools", "repair_weekly.py")
 JOBS_A = os.path.join(REPO, "tests", "fixtures", "ci_triage_A_content_red.json")
 JOBS_B = os.path.join(REPO, "tests", "fixtures", "ci_triage_B_netred.json")
 
 SCHEMA_UNCLOG = "rocqwash-unclog/1"
 
 
-# ---- 小件 ---------------------------------------------------------------------
+# ---- small pieces ---------------------------------------------------------------------
 
 def md5_of(path):
     h = hashlib.md5()
@@ -220,7 +286,7 @@ def jl(path):
         return json.load(fh)
 
 
-# ---- unclog 注入夹具（probe/resprobe canned 台账·与 unclog --selftest 同形）----
+# ---- unclog injector fixtures (probe/resprobe canned ledger; same shape as unclog --selftest) ----
 
 CURE13_BODY = ("Theorem t8 : forall f pf k,\n"
                "  (gnPrf f pf <= k)%nat -> NatOK f pf k.\n"
@@ -870,7 +936,7 @@ def row_c4(tmp):
         % r3.get("compile_check")
 
 
-# ---- ⑦ frozen8 两行（A1 席 S1 强化律·20261115·谁写谁进阵）--------------------
+# ---- ⑦ frozen8 two rows (S1 hardening law 20261115: whoever writes a write face enters this matrix) --------------------
 
 F8_ROSTER = [
     "certify/freeze_manifest.py",
@@ -973,7 +1039,393 @@ def row_j1(tmp):
     assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
 
 
-# ---- 矩阵总装 -----------------------------------------------------------------
+# ---- ⑩ selfheal_heartbeat rows (new-face section; English only) ---------------
+
+def row_h1(tmp):
+    """Default dry run is zero-write; under --apply exactly one tick line is
+    appended per run and the prior ledger bytes stay byte-identical.
+    Content pins, never mtime pins: back-to-back writes can land on one
+    mtime tick, so an mtime comparison would be a probabilistic flake.
+    anchor .github/scripts/selfheal_heartbeat.py (run gate + append face)."""
+    d = os.path.join(tmp, "h1")
+    os.makedirs(d)
+    f = os.path.join(d, "heartbeat.jsonl")
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", f, "--now",
+                                      "2026-01-01T00:00:00Z"])
+    assert rc == 0, "read-only run should exit 0, got %d\n%s" % (rc, out[-300:])
+    assert not os.path.exists(f), "read-only run must not create the ledger"
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", f, "--now",
+                                      "2026-01-01T00:00:00Z", "--apply"])
+    assert rc == 0, "apply run should exit 0, got %d\n%s" % (rc, out[-300:])
+    with io.open(f, "rb") as fh:
+        b1 = fh.read()
+    recs = [json.loads(x) for x in b1.decode("utf-8").splitlines()]
+    assert len(recs) == 1, "one apply run must append exactly one line: %s" % recs
+    assert recs[0]["schema"] == "rocqwash.heartbeat/1" \
+        and recs[0]["kind"] == "tick" \
+        and recs[0]["tick"] == "2026-01-01T00:00:00Z" \
+        and recs[0]["status"] == "ok", recs
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", f, "--now",
+                                      "2026-01-01T00:10:00Z", "--apply"])
+    assert rc == 0, "second apply run should exit 0, got %d\n%s" % (rc, out[-300:])
+    with io.open(f, "rb") as fh:
+        b2 = fh.read()
+    assert b2.startswith(b1), "append-only: prior bytes must stay identical"
+    recs2 = [json.loads(x) for x in b2.decode("utf-8").splitlines()]
+    assert len(recs2) == 2 and all(r["kind"] == "tick" for r in recs2), recs2
+
+
+def row_h2(tmp):
+    """Loss-of-contact rule: a gap strictly over 90 minutes appends an ALERT
+    line ahead of the tick; exactly 90 minutes stays silent; a ledger ending
+    in an ALERT line still measures silence from the previous TICK, so a
+    normal next interval does not stack alerts.
+    anchor .github/scripts/selfheal_heartbeat.py (planned_records gap gate)."""
+    d = os.path.join(tmp, "h2")
+    os.makedirs(d)
+    at = os.path.join(d, "at.jsonl")        # exactly at the threshold
+    past = os.path.join(d, "past.jsonl")    # one second past the threshold
+    src = os.path.join(d, "src.jsonl")      # alert line never a tick source
+    sh(SELFHEAL_HEARTBEAT, ["--file", at, "--now", "2026-01-01T00:00:00Z",
+                            "--apply"])
+    sh(SELFHEAL_HEARTBEAT, ["--file", at, "--now", "2026-01-01T01:30:00Z",
+                            "--apply"])
+    with io.open(at, encoding="utf-8") as fh:
+        recs = [json.loads(x) for x in fh.read().splitlines()]
+    assert len(recs) == 2 and all(r["kind"] == "tick" for r in recs), \
+        "a gap of exactly 90 minutes must stay silent: %s" % recs
+    sh(SELFHEAL_HEARTBEAT, ["--file", past, "--now", "2026-01-01T00:00:00Z",
+                            "--apply"])
+    sh(SELFHEAL_HEARTBEAT, ["--file", past, "--now", "2026-01-01T01:30:01Z",
+                            "--apply"])
+    with io.open(past, encoding="utf-8") as fh:
+        recs = [json.loads(x) for x in fh.read().splitlines()]
+    assert len(recs) == 3, recs
+    assert recs[1]["kind"] == "alert" and recs[2]["kind"] == "tick", \
+        "the ALERT line must land ahead of the tick: %s" % recs
+    assert recs[1]["since"] == "2026-01-01T00:00:00Z" \
+        and recs[1]["gap_minutes"] > 90 \
+        and recs[1]["status"] == "loss-of-contact" \
+        and recs[1]["threshold_minutes"] == 90, recs[1]
+    sh(SELFHEAL_HEARTBEAT, ["--file", src, "--now", "2026-01-01T00:00:00Z",
+                            "--apply"])
+    sh(SELFHEAL_HEARTBEAT, ["--file", src, "--now", "2026-01-01T02:00:00Z",
+                            "--apply"])
+    sh(SELFHEAL_HEARTBEAT, ["--file", src, "--now", "2026-01-01T02:29:00Z",
+                            "--apply"])
+    with io.open(src, encoding="utf-8") as fh:
+        recs = [json.loads(x) for x in fh.read().splitlines()]
+    alerts = [r for r in recs if r["kind"] == "alert"]
+    assert len(alerts) == 1, "alert must not become a tick source: %s" % recs
+
+
+def row_h3(tmp):
+    """Fail-loud: a corrupt or schema-mismatched last ledger line refuses the
+    append with rc=9 and zero bytes written; bad --now, nonpositive
+    --alert-minutes and an empty --file are usage errors (rc=2).
+    anchor .github/scripts/selfheal_heartbeat.py (last_tick raises + run
+    validation + main exit map)."""
+    d = os.path.join(tmp, "h3")
+    os.makedirs(d)
+    f = os.path.join(d, "corrupt.jsonl")
+    sh(SELFHEAL_HEARTBEAT, ["--file", f, "--now", "2026-01-01T00:00:00Z",
+                            "--apply"])
+    with io.open(f, "a", encoding="utf-8") as fh:
+        fh.write("not-json\n")
+    with io.open(f, "rb") as fh:
+        before = fh.read()
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", f, "--now",
+                                      "2026-01-01T01:00:00Z", "--apply"])
+    assert rc == 9, "corrupt ledger must fail loud rc=9, got %d\n%s" \
+        % (rc, out[-300:])
+    assert "not valid JSON" in out, out[-300:]
+    with io.open(f, "rb") as fh:
+        assert fh.read() == before, "refused run must write zero bytes"
+    g = os.path.join(d, "wrongschema.jsonl")
+    with io.open(g, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps({"schema": "other/1", "kind": "tick"}) + "\n")
+    with io.open(g, "rb") as fh:
+        before = fh.read()
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", g, "--now",
+                                      "2026-01-01T01:00:00Z", "--apply"])
+    assert rc == 9 and "schema mismatch" in out, out[-300:]
+    with io.open(g, "rb") as fh:
+        assert fh.read() == before, "refused run must write zero bytes"
+    u = os.path.join(d, "u1.jsonl")
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", u, "--apply",
+                                      "--now", "not-a-date"])
+    assert rc == 2 and "bad --now" in out, out[-300:]
+    assert not os.path.exists(u), "a refused run must not create the ledger"
+    u = os.path.join(d, "u2.jsonl")
+    rc, out = sh(SELFHEAL_HEARTBEAT, ["--file", u, "--apply",
+                                      "--alert-minutes", "0"])
+    assert rc == 2 and "must be positive" in out, out[-300:]
+    assert not os.path.exists(u), "a refused run must not create the ledger"
+    rc, out = sh(SELFHEAL_HEARTBEAT, [])
+    assert rc == 2 and "--file is required" in out, out[-300:]
+
+
+def row_h4(tmp):
+    """Wiring face of the yml, line-scanned with the stdlib only (no YAML
+    parser dependency): the heartbeat input defaults to false, HEARTBEAT=1
+    is exported only under workflow_dispatch, the step calls the writer
+    with --apply against docs/heartbeat.jsonl, the checkout condition
+    covers HEARTBEAT, and the rollback line names the new script.
+    anchor .github/workflows/selfheal.yml (input block, guard block,
+    heartbeat step, checkout condition, rollback line)."""
+    del tmp
+    with io.open(SELFHEAL_YML, "r", encoding="utf-8") as fh:
+        yml = fh.read()
+    for needle in (
+        "      heartbeat:",
+        "        description: 'append one heartbeat tick line to "
+        "docs/heartbeat.jsonl (true/false)'",
+        "        default: 'false'",
+        'echo "HEARTBEAT=1" >> "$GITHUB_ENV"',
+        "if: env.HEARTBEAT == '1'",
+        "--file docs/heartbeat.jsonl",
+        "--apply",
+        "selfheal_heartbeat.py",
+    ):
+        assert needle in yml, "yml wiring missing: %r" % needle
+    lines = yml.splitlines()
+    guard = [i for i, x in enumerate(lines)
+             if "HEARTBEAT=1" in x and "$GITHUB_ENV" in x]
+    assert len(guard) == 1, "HEARTBEAT=1 must be exported exactly once: %s" % guard
+    g = guard[0]
+    assert 'github.event_name }}" = "workflow_dispatch"' in lines[g - 2] \
+        and "inputs.heartbeat" in lines[g - 2], \
+        "the heartbeat env must sit under the dispatch-only guard: %s" \
+        % lines[g - 2]
+    step = [i for i, x in enumerate(lines)
+            if x.strip().startswith("python3 .github/scripts/selfheal_heartbeat.py")]
+    assert len(step) == 1, "exactly one writer invocation expected: %s" % step
+    s = step[0]
+    assert "--apply" in "\n".join(lines[s:s + 6]), \
+        "the CI invocation must carry --apply: %s" % lines[s:s + 6]
+    co = [i for i, x in enumerate(lines)
+          if x.strip().startswith("uses: actions/checkout@")]
+    assert co and any("env.HEARTBEAT == '1'" in lines[i - 1] for i in co), \
+        "checkout must cover the heartbeat-only dispatch"
+    assert "selfheal_heartbeat.py" in yml.split("Rollback:")[1], \
+        "the rollback line must name the new script"
+
+
+# ---- ⑪ repair_weekly rows (new-face section; English only) --------------------
+
+def row_k1(tmp):
+    """Aggregate write face: dry-run default is zero-write (stdout only,
+    tree manifest constant); with --out the caller-named face file is the
+    only write and reruns are byte-identical; the ledger input never gains
+    a byte.
+    anchor tools/repair_weekly.py:main aggregate branch + :render_markdown
+    caller-named write face."""
+    d = os.path.join(tmp, "k1")
+    os.makedirs(d)
+    led = os.path.join(d, "repair-ledger.jsonl")
+    wf(led, json.dumps(
+        {"class": "flaky-quarantine", "evidence": {"verdict": "content-red"},
+         "kind": "repair", "outcome": "escalated", "schema":
+         "rocqwash-repair-ledger/1", "target": "t_case", "ticket": "E2-3",
+         "ts_utc": "2026-11-16T14:31:34Z"}, sort_keys=True) + "\n")
+    before = tree_manifest(d)
+    led_md5 = md5_of(led)
+    rc, out = sh(REPAIR_WEEKLY, ["--ledger", led, "--date", "2026-11-17"])
+    assert rc == 0, "dry-run aggregate should exit 0, got %d\n%s" % (
+        rc, out[-300:])
+    assert "repair-outcome" in out, "the E6 census must be on the face"
+    assert tree_manifest(d) == before, "dry-run path wrote to disk = guard broken"
+    face = os.path.join(d, "weekly.md")
+    rc, out = sh(REPAIR_WEEKLY, ["--ledger", led, "--date", "2026-11-17",
+                                 "--out", face])
+    assert rc == 0, "--out run should exit 0, got %d\n%s" % (rc, out[-300:])
+    after1 = tree_manifest(d)
+    assert "weekly.md" in after1, "the face file must be the only new file"
+    assert md5_of(led) == led_md5, "the ledger input must never gain a byte"
+    rc, out = sh(REPAIR_WEEKLY, ["--ledger", led, "--date", "2026-11-17",
+                                 "--out", face])
+    assert rc == 0, "rerun should exit 0, got %d\n%s" % (rc, out[-300:])
+    assert tree_manifest(d) == after1, "rerun byte drift on the write face"
+
+
+def row_k2(tmp):
+    """Record write face: --record without --apply is plan-only (zero
+    bytes); --record --apply appends exactly one rocqwash-repair-ledger/2
+    row; the vocabulary refusals (escalated without an evidence package, a
+    watch-only reason outside the enum, a value outside the vocabulary)
+    refuse before any byte moves.
+    anchor tools/repair_weekly.py:record_row (vocabulary gate) +
+    :ledger_append (the only append face)."""
+    d = os.path.join(tmp, "k2")
+    os.makedirs(d)
+    led = os.path.join(d, "repair-ledger.jsonl")
+    wf(led, "")
+    base = ["--record", "--ledger", led, "--class", "flaky-quarantine",
+            "--target", "t_case"]
+    before = tree_manifest(d)
+    led_md5 = md5_of(led)
+    rc, out = sh(REPAIR_WEEKLY, base + [
+        "--repair-outcome", "watch-only(guard-correct: budget)"])
+    assert rc == 0, "plan should exit 0, got %d\n%s" % (rc, out[-300:])
+    assert "PLAN record-row=" in out, out[-300:]
+    assert tree_manifest(d) == before, "plan path wrote to disk = guard broken"
+    rc, out = sh(REPAIR_WEEKLY, base + [
+        "--repair-outcome", "watch-only(guard-correct: budget)",
+        "--apply"])
+    assert rc == 0, "apply should exit 0, got %d\n%s" % (rc, out[-300:])
+    assert "APPLIED record-row-appended=1" in out, out[-300:]
+    rows = [json.loads(x) for x in io.open(led, encoding="utf-8")
+            if x.strip()]
+    assert len(rows) == 1, "exactly one appended row expected: %s" % rows
+    assert rows[0]["schema"] == "rocqwash-repair-ledger/2" \
+        and rows[0]["repair-outcome"] == "watch-only(guard-correct: budget)", \
+        rows
+    after_apply = tree_manifest(d)
+    for value, why in (
+            ("escalated(evidence-package)", "escalated without evidence"),
+            ("watch-only(guard-correct: vibes)", "reason outside the enum"),
+            ("possibly-fine", "value outside the vocabulary")):
+        rc, out = sh(REPAIR_WEEKLY, base + ["--repair-outcome", value,
+                                            "--apply"])
+        assert rc == 2, "%s should refuse rc=2, got %d\n%s" % (why, rc,
+                                                              out[-300:])
+        assert tree_manifest(d) == after_apply, \
+            "%s refused but a byte moved = guard broken" % why
+        assert md5_of(led) == md5_of(os.path.join(
+            d, "repair-ledger.jsonl")), "the ledger changed on a refusal"
+
+
+def row_k3(tmp):
+    """Fail-loud input faces: a malformed ledger row exits rc=2 and an
+    explicitly named absent ledger exits rc=9, both with zero writes.
+    anchor tools/repair_weekly.py:ledger_rows (fail-loud parse) + :main
+    explicit-ledger gate."""
+    d = os.path.join(tmp, "k3")
+    os.makedirs(d)
+    bad = os.path.join(d, "bad.jsonl")
+    wf(bad, "{not json\n")
+    absent = os.path.join(d, "absent.jsonl")
+    before = tree_manifest(d)
+    rc, out = sh(REPAIR_WEEKLY, ["--ledger", bad, "--date", "2026-11-17"])
+    assert rc == 2, "malformed ledger row should exit 2, got %d\n%s" % (
+        rc, out[-300:])
+    assert "FAIL-LOUD" in out, out[-300:]
+    rc, out = sh(REPAIR_WEEKLY, ["--ledger", absent, "--date", "2026-11-17"])
+    assert rc == 9, "explicitly absent ledger should exit 9, got %d\n%s" % (
+        rc, out[-300:])
+    assert "FAIL-LOUD" in out, out[-300:]
+    assert not os.path.exists(absent), "the absent ledger must stay absent"
+    assert tree_manifest(d) == before, "fail-loud path wrote to disk = guard broken"
+
+
+# ---- ⑫ wording-face honesty rows (read-only line-scans; English only) ----------
+
+README_MD = os.path.join(REPO, "README.md")
+EVOLVE_PY = os.path.join(REPO, "tools", "evolve.py")
+CAP_INDEX = os.path.join(REPO, "docs", "CAPABILITY-INDEX.md")
+
+
+def row_n1(tmp):
+    """README evolve wording alignment: the v55 snapshot line states the tool
+    in substance as a signal-to-task-brief generator, the "autonomous
+    evolution engine" label survives only as the cited module-title face
+    pending rename adjudication, and the draft-only spawn-gate fact tokens
+    stay on the line.
+    anchor README.md:19 (v55 snapshot line)."""
+    del tmp
+    with io.open(README_MD, "r", encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    snap = [x for x in lines if x.startswith("> **v55 snapshot")]
+    assert len(snap) == 1, \
+        "exactly one v55 snapshot line expected, found %d" % len(snap)
+    line = snap[0]
+    assert "signal-to-task-brief generator" in line, \
+        "the substance wording must be on the line: %s" % line[:160]
+    raw = line.count("autonomous evolution engine")
+    cited = line.count("`autonomous evolution engine v1`")
+    assert raw == 1 and cited == 1, \
+        "the label must survive only as the cited module-title face " \
+        "(raw %d, cited %d)" % (raw, cited)
+    assert "autonomous-evolution" not in line, \
+        "the hyphenated label form must be gone from the line"
+    assert "pending rename adjudication" in line, \
+        "the rename-pending trace must be on the line"
+    assert "draft-only spawn gate" in line \
+        and "never writes the repository" in line, \
+        "the draft-only spawn-gate fact tokens must stay on the line"
+
+
+def row_n2(tmp):
+    """evolve.py docstring honesty note: the Purpose block carries the
+    draft-only token and the selection-not-implemented-in-this-code clause
+    while keeping the no-execution and no-repository-write facts, the module
+    title keeps its name, and the five-field doc block stays within the
+    30-line budget.
+    anchor tools/evolve.py:13-14 (docstring Purpose note lines)."""
+    del tmp
+    with io.open(EVOLVE_PY, "r", encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    opener = 2                       # file line 3, the module docstring opener
+    assert lines[opener].startswith('"""evolve.py'), \
+        "docstring opener drifted: %s" % lines[opener][:80]
+    assert "autonomous evolution engine v1" in lines[opener], \
+        "the module title keeps its name pending rename adjudication"
+    closer = None
+    for i in range(opener + 1, len(lines)):
+        if lines[i] == '"""':
+            closer = i
+            break
+    assert closer is not None, "docstring closer not found"
+    budget = closer - opener + 1
+    assert budget <= 30, \
+        "the five-field doc block must stay within the 30-line budget: %d" \
+        % budget
+    block = "\n".join(lines[opener:closer + 1])
+    flat = " ".join(block.split())   # collapse rewrap whitespace, match phrases
+    for field in ("Purpose.", "Interface.", "Dependencies.", "Evidence.",
+                  "Exit-codes."):
+        assert field in block, "five-field block lost %s" % field
+    assert "draft-only" in flat, "the draft-only token must be present"
+    assert "selection is not implemented in this code" in flat, \
+        "the selection-not-in-code clause must be present"
+    assert "no candidate is executed" in flat \
+        and "the repository is never written" in flat, \
+        "the no-execution and no-repository-write facts must stay in Purpose"
+
+
+def row_n3(tmp):
+    """CAPABILITY-INDEX evolution_dashboard positioning note: the entry
+    carries the KPI-aggregation positioning line, the rename candidate is
+    declared but not applied, the census-transcribed Purpose face stays
+    verbatim, and the entry name, path, invocation form, and route tokens
+    stay untouched.
+    anchor docs/CAPABILITY-INDEX.md:209 (evolution_dashboard note line)."""
+    del tmp
+    with io.open(CAP_INDEX, "r", encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    heads = [i for i, x in enumerate(lines)
+             if x.startswith("### tools/evolution_dashboard.py")]
+    assert len(heads) == 1, \
+        "exactly one evolution_dashboard entry expected, found %d" % len(heads)
+    h = heads[0]
+    ends = [i for i in range(h + 1, len(lines))
+            if lines[i].startswith("### ")]
+    body = "\n".join(lines[h:ends[0] if ends else len(lines)])
+    assert "a KPI aggregation read-out" in body, \
+        "the KPI-aggregation positioning note must be inside the entry"
+    assert "rename candidate awaiting adjudication" in body, \
+        "the rename candidate must be declared but not applied"
+    assert "Self-evolution dashboard: aggregates the three standing accounts" \
+        in body, \
+        "the census-transcribed Purpose face must stay verbatim (rename is " \
+        "a candidate, not an applied change)"
+    for token in ("python -I tools/evolution_dashboard.py",
+                  "cw.sh evolution-dashboard"):
+        assert token in "\n".join(lines), \
+            "the entry path/invocation/route tokens stay untouched: %r" % token
+
+
+# ---- matrix assembly -----------------------------------------------------------------
 
 L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A 可洗链根·B 缺 A
 
@@ -1024,6 +1476,26 @@ ROWS = [
      "tools/axiom_guard.py:main env gate, guard mkdtemp", row_g1),
     ("J1", "jargon_apply", "洗面器自引用护栏：映射源表永不入目标面（--tree 排除·--file rc=1 红拒）",
      "tools/jargon_apply.py:550-560,471-484", row_j1),
+    ("H1", "selfheal_heartbeat", "default dry run zero-write; --apply appends exactly one tick line, prior ledger bytes byte-identical (content pins, never mtimes)",
+     ".github/scripts/selfheal_heartbeat.py:run gate, append_records", row_h1),
+    ("H2", "selfheal_heartbeat", "loss-of-contact rule: gap strictly > 90min appends an ALERT line ahead of the tick; exactly 90min silent; ALERT never a tick source",
+     ".github/scripts/selfheal_heartbeat.py:planned_records gap gate", row_h2),
+    ("H3", "selfheal_heartbeat", "fail-loud: corrupt/schema-mismatched last line rc=9 zero bytes; bad --now / nonpositive --alert-minutes / empty --file rc=2",
+     ".github/scripts/selfheal_heartbeat.py:last_tick raises, run validation", row_h3),
+    ("H4", "selfheal_heartbeat", "yml wiring line-scan: dispatch-only HEARTBEAT guard, --apply + docs/heartbeat.jsonl invocation, input default false, checkout covers HEARTBEAT, rollback line names the script",
+     ".github/workflows/selfheal.yml:heartbeat input, guard block, heartbeat step", row_h4),
+    ("K1", "repair_weekly", "aggregate write face: dry-run default zero-write, --out is the only write and reruns are byte-identical, the ledger input never gains a byte",
+     "tools/repair_weekly.py:main aggregate branch, render_markdown", row_k1),
+    ("K2", "repair_weekly", "record write face: plan-only without --apply, --record --apply appends exactly one rocqwash-repair-ledger/2 row, vocabulary refusals move zero bytes",
+     "tools/repair_weekly.py:record_row, ledger_append", row_k2),
+    ("K3", "repair_weekly", "fail-loud input faces: malformed ledger row rc=2 and explicitly absent ledger rc=9, both zero-write",
+     "tools/repair_weekly.py:ledger_rows, main explicit-ledger gate", row_k3),
+    ("N1", "README.md", "evolve wording alignment: substance wording on the v55 snapshot line, the label cited as module title only (rename pending), draft-only spawn-gate tokens stay",
+     "README.md:19", row_n1),
+    ("N2", "evolve.py", "docstring honesty note: draft-only plus selection-not-in-code in Purpose, title name kept, five-field block within the 30-line budget",
+     "tools/evolve.py:13-14", row_n2),
+    ("N3", "CAPABILITY-INDEX", "evolution_dashboard positioning note: KPI-aggregation line inside the entry, rename candidate declared unapplied, Purpose face and path/invocation/route tokens untouched",
+     "docs/CAPABILITY-INDEX.md:209", row_n3),
 ]
 
 
@@ -1053,10 +1525,11 @@ def main():
             print("  破口 %s @ %s — %s\n    违据: %s" % (rid, anchor, guard,
                                                         detail))
         return 1
-    print("DESTRUCTIVE-MATRIX PASS: 23 行拒写判据全过（unclog×4/wash_shape×4/"
+    print("DESTRUCTIVE-MATRIX PASS: 33 行拒写判据全过（unclog×4/wash_shape×4/"
           "pushci×3/cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/"
-          "axiom_guard×1/jargon_apply×1·全 tmp fixture＋injector 罐装零真网络"
-          "零真仓零真编译）")
+          "axiom_guard×1/jargon_apply×1/selfheal_heartbeat×4/repair_weekly×3/"
+          "wording×3·全 tmp fixture＋injector 罐装零真网络零真仓零真编译；"
+          "wording rows are read-only line-scans, zero writes）")
     return 0
 
 
