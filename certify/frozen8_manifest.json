@@ -3,10 +3,10 @@
   "certify/frozen8.py",
   "certify/push_gate.py"
  ],
- "freeze_commit": "3625f879281a9410a4ebcb70b0bb263c748f2f0c",
+ "freeze_commit": "ac62a4b43bec778c43d2d5c61d80008748895d5c",
  "ledger_source": "更新账.md §三（在役八组件冻结自证·账载口径）",
  "n_files": 10,
- "root": "D:\\ComplexAnalysis\\rocqwash",
+ "root": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\resign-wt",
  "schema": "rocqwash-frozen8-manifest/2",
  "tier1": [
   [
