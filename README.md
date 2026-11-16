@@ -3,6 +3,8 @@
 # rocqwash — Coq/Rocq Constructive Proof Unblocking Engine
 > English: [README_EN.md](README_EN.md)
 
+[![CI](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/ci.yml) [![macOS advisory](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/mac-verify.yml/badge.svg?branch=main)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/mac-verify.yml) [![certification](https://img.shields.io/badge/certification-machine--checked-brightgreen)](docs/ci-whitepaper-recursive-era-v1-20261116.md) [![Rocq](https://img.shields.io/badge/Rocq-9.3.0-blue)](https://rocq-prover.org) [![tag](https://img.shields.io/badge/tag-rw--v0.1.1--20261117-blue)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/tree/rw-v0.1.1-20261117)
+
 **rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. It is designed to **naturally surpass LLM/probabilistic approaches** in proof-unblocking: every diagnostic is a type-theoretic structural property, every fix is idempotent and replayable, every verification is independently reproducible.
 
 > **Core Principle**: 凡可用类型论结构性判据机检的，一律不交给概率模型猜。
