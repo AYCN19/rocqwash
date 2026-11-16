@@ -1,0 +1,53 @@
+# selfevolve-cron.yml - the standing self-evolution cadence (20261117 desk
+# order: one deterministic mechanical round per tick, zero model cost).
+#
+#   * census (jargon_apply --plan) -> apply -> verify -> auto_round commit
+#     (ledger + anchor, jargon admitted at 1.0 >= 0.80) -> push -> dispatch
+#     the CI judge (the push rides GITHUB_TOKEN: GitHub suppresses its push
+#     event, so the round dispatches ci.yml@main itself - R13 sub-face 4).
+#   * zero qualifying fixes = clean no-op pass (no commit, no push, no CI).
+#   * frozen faces (certify/scan/verify/wrapper + repair roster) are
+#     excluded by jargon_apply itself (the round-1 standing rule).
+#   * concurrency: one round at a time, never cancelled mid-flight.
+#   * the desktop long-loop (24h x N) remains the deep cadence; this cron
+#     is the standing shallow cadence between sessions.
+# Rollback: delete this file and tools/selfevolve_round.py.
+name: rocqwash self-evolve cron
+
+on:
+  schedule:
+    - cron: '17 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: selfevolve-round
+  cancel-in-progress: false
+
+jobs:
+  round:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: One deterministic mechanical round
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python3 tools/selfevolve_round.py
+
+      - name: Round reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: selfevolve-round-${{ github.run_id }}
+          path: |
+            round-plan.json
+            round-apply.json
+          if-no-files-found: ignore
