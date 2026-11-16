@@ -40,6 +40,9 @@ on:
 permissions:
   actions: write
   contents: write
+  # PUT /pulls/{n}/merge (the automerge leg) requires the pull-requests
+  # scope; without it the merge PUT returns 403 Forbidden (20261117 PR #12).
+  pull-requests: write
 
 jobs:
   selfheal:
