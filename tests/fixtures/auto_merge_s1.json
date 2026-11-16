@@ -1,0 +1,18 @@
+{
+  "ci": {
+    "family": "green"
+  },
+  "compare": {
+    "ahead": 0,
+    "behind": 4,
+    "content_landed_in_base": true,
+    "head_in_base": true
+  },
+  "mergeable": null,
+  "mergeable_state": "none",
+  "merged": false,
+  "note": "calibration S-1: content landed through the direct push 1c526b2; PR closed unmerged (merged=False); CI color not disputed by the row",
+  "pr": 14,
+  "repo": "dotcom/ConstructiveWorld-Main",
+  "schema": "rocqwash-automerge-facts/1"
+}

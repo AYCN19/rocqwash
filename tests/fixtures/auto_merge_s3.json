@@ -1,0 +1,18 @@
+{
+  "ci": {
+    "family": "green"
+  },
+  "compare": {
+    "ahead": 0,
+    "behind": 0,
+    "content_landed_in_base": true,
+    "head_in_base": true
+  },
+  "mergeable": null,
+  "mergeable_state": "none",
+  "merged": true,
+  "note": "calibration S-3: eight-seat pack product, merged=True (1befa27), CI green; the merge-ok positive anchor",
+  "pr": 3,
+  "repo": "dotcom/rocqwash",
+  "schema": "rocqwash-automerge-facts/1"
+}
