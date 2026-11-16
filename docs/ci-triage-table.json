@@ -59,12 +59,13 @@
         "skipped(intent-cancelled)",
         "cancelled=intent",
         "queue-trimmed",
-        "skipped(furnace-busy)"
+        "skipped(furnace-busy)",
+        "cancelled by queued run entry (cancel-in-progress churn)"
       ],
       "precedence": 4,
       "family": "watch-only-guard-correct",
       "auto_repairable": false,
-      "prescription": "None - the guard is the repair. Manual rerun remains available to the desk.",
+      "prescription": "None - the guard is the repair. Manual rerun remains available to the desk. Churn variant: cancel-in-progress OFF + ci_queue_governor trims stale QUEUED runs per branch (in_progress never touched).",
       "guard": "cancelled = intent, never auto-revived; queue governor MAX_QUEUED_RUNS=3, oldest trimmed, in-progress untouched.",
       "escalation": "None (record only)."
     },

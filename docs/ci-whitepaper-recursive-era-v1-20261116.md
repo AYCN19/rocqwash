@@ -90,7 +90,7 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - Mechanism: concurrent sessions share one working tree; landing waves overlap pending lanes.
 - Guard: meal/face selection must read `git status --porcelain` first and exclude dirty faces (collision-free matrix before concurrency); landing waves use 3-way apply onto the current head and preserve pending lanes.
 - Prescription: stash→rebase(resign)→push→pop dance; record both sides in the ledger.
-- Auto-repairable: partial (the union merge is mechanical; adjudication of conflicting intents is not).
+- Auto-repairable: partial (the union merge is mechanical; adjudication of conflicting intents is not). **Churn variant (2026-11-17, run 138)**: with `cancel-in-progress: true`, the cancel fires when ANY run enters the group — an older QUEUED run, the moment it started, cancelled the NEWER in-flight tip run (the guard murdered the fresh verdict it was meant to protect). Root cure: cancel-in-progress OFF (in-flight protected) + the self-heal `ci_queue_governor` retires stale QUEUED runs per head branch (keep newest, cancel older queued, in_progress never touched) in the reconcile and automerge-only passes.
 
 
 ### R11 — shallow runner checkout × frozen git-anchor (DRIFT false-flag; 2026-11-16 live case)
