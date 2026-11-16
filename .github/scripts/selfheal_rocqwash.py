@@ -647,7 +647,8 @@ def branch_census(token, repo):
     rows = branches if isinstance(branches, list) else (
         branches.get("branches") or [])
     names = [b.get("name", "") for b in rows
-             if b.get("name") and b["name"] != "main"]
+             if b.get("name") and b["name"] != "main"
+             and not b["name"].startswith("_bridge")]
     if not names:
         return ["clean (single-branch repo: main only)"]
     for name in names:
