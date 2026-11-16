@@ -8,7 +8,11 @@
     {
       "id": "R1",
       "title": "recursive-artifact drift (lane registered, artifact absent)",
-      "markers": ["can't open file", "No such file or directory", "rc=2"],
+      "markers": [
+        "can't open file",
+        "No such file or directory",
+        "rc=2"
+      ],
       "precedence": 1,
       "family": "content-red",
       "auto_repairable": true,
@@ -19,7 +23,13 @@
     {
       "id": "R2",
       "title": "mechanical-wash overreach (frozen/self-referential faces)",
-      "markers": ["TEST-SCAN-STATION", "TEST-PRECEDENT-STATION", "t_frozen8", "frozen-face drift", "delisted"],
+      "markers": [
+        "TEST-SCAN-STATION",
+        "TEST-PRECEDENT-STATION",
+        "t_frozen8",
+        "frozen-face drift",
+        "delisted"
+      ],
       "precedence": 2,
       "family": "content-red",
       "auto_repairable": "partial",
@@ -30,7 +40,11 @@
     {
       "id": "R3",
       "title": "stale repair target (superseded head)",
-      "markers": ["skipped(superseded", "not our ref", "head moved"],
+      "markers": [
+        "skipped(superseded",
+        "not our ref",
+        "head moved"
+      ],
       "precedence": 3,
       "family": "content-red",
       "auto_repairable": "partial",
@@ -41,7 +55,12 @@
     {
       "id": "R4",
       "title": "intent & queue (cancelled resurrected / queue fission)",
-      "markers": ["skipped(intent-cancelled)", "cancelled=intent", "queue-trimmed", "skipped(furnace-busy)"],
+      "markers": [
+        "skipped(intent-cancelled)",
+        "cancelled=intent",
+        "queue-trimmed",
+        "skipped(furnace-busy)"
+      ],
       "precedence": 4,
       "family": "watch-only-guard-correct",
       "auto_repairable": false,
@@ -52,7 +71,11 @@
     {
       "id": "R5",
       "title": "fitness absence (verify gate validates the validator)",
-      "markers": ["verify_rc", "norm_lint --selftest", "DEFAULT_VERIFY_CMD"],
+      "markers": [
+        "verify_rc",
+        "norm_lint --selftest",
+        "DEFAULT_VERIFY_CMD"
+      ],
       "precedence": 5,
       "family": "structural",
       "auto_repairable": false,
@@ -63,7 +86,13 @@
     {
       "id": "R6",
       "title": "watchdog reflexivity (skip≠red, runner self-death, dependency-tree currency)",
-      "markers": ["conclusion=skipped", "not our ref", "runner heartbeat", "self-heal", "skipped(mirror-sync"],
+      "markers": [
+        "conclusion=skipped",
+        "not our ref",
+        "runner heartbeat",
+        "self-heal",
+        "skipped(mirror-sync"
+      ],
       "precedence": 6,
       "family": "watch-only-guard-correct",
       "auto_repairable": false,
@@ -74,7 +103,12 @@
     {
       "id": "R7",
       "title": "environment-branch fix with an unexercised branch",
-      "markers": ["NameError", "UnicodeEncodeError", "charmap", "Did you mean"],
+      "markers": [
+        "NameError",
+        "UnicodeEncodeError",
+        "charmap",
+        "Did you mean"
+      ],
       "precedence": 7,
       "family": "content-red",
       "auto_repairable": true,
@@ -85,7 +119,13 @@
     {
       "id": "R8",
       "title": "service-face coupling (repo updates break local services)",
-      "markers": ["self-hosted", "LIVE-ROCQWASH", "tools/list", "mcp", "sentinel"],
+      "markers": [
+        "self-hosted",
+        "LIVE-ROCQWASH",
+        "tools/list",
+        "mcp",
+        "sentinel"
+      ],
       "precedence": 8,
       "family": "content-red",
       "auto_repairable": false,
@@ -96,7 +136,12 @@
     {
       "id": "R9",
       "title": "platform evolution (runtime deprecations)",
-      "markers": ["deprecated", "Node 20", "Node 24", "deprecation"],
+      "markers": [
+        "deprecated",
+        "Node 20",
+        "Node 24",
+        "deprecation"
+      ],
       "precedence": 9,
       "family": "content-red",
       "auto_repairable": true,
@@ -107,13 +152,32 @@
     {
       "id": "R10",
       "title": "multi-session collision (same tree, same machine)",
-      "markers": ["does not match index", "stash", "CONFLICT", "dirty-tree"],
+      "markers": [
+        "does not match index",
+        "stash",
+        "CONFLICT",
+        "dirty-tree"
+      ],
       "precedence": 10,
       "family": "content-red",
       "auto_repairable": "partial",
       "prescription": "Union merges via git merge-file / apply --3way onto the current head; stash-rebase(resign)-push-pop dance for pending-lane overlaps; record both sides in the ledger.",
       "guard": "Face/meal selection reads git status --porcelain first and excludes dirty faces (collision-free matrix before concurrency).",
       "escalation": "Conflicting intents between lanes are adjudicated by the desk."
+    },
+    {
+      "id": "R11",
+      "title": "shallow runner checkout x frozen git-anchor (DRIFT false-flag)",
+      "markers": [
+        "DRIFT git",
+        "non-freeze_commit",
+        "descendant"
+      ],
+      "precedence": 11,
+      "family": "content-red",
+      "auto_repairable": false,
+      "prescription": "The runner workspace .git is shallow (.git/shallow present): merge-base cannot see the freeze-commit ancestry and false-flags DRIFT. Desk one-time fix: git fetch --unshallow from the local dev tree (file:// transport, zero-network) in the runner workspace. Durable fix: frozen8 check detects the shallow state first and downgrades the git-anchor ring (desk-gated, frozen face).",
+      "guard": "ci.yml self-hosted checkout carries fetch-depth: 0; the runner workspace keeps full history after one unshallow."
     }
   ]
 }

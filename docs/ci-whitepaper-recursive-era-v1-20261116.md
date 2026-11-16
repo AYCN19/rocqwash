@@ -92,6 +92,15 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - Prescription: stash→rebase(resign)→push→pop dance; record both sides in the ledger.
 - Auto-repairable: partial (the union merge is mechanical; adjudication of conflicting intents is not).
 
+
+### R11 — shallow runner checkout × frozen git-anchor (DRIFT false-flag; 2026-11-16 live case)
+
+- **Symptom**: `DRIFT git锚 HEAD <sha> 非 freeze_commit <sha> 后代` on the local self-hosted face while hosted faces pass; the workspace `.git/shallow` file present; the ancestry verdict fires even though the main lineage is linear and desk-approved.
+- **Mechanism**: the runner workspace was a depth-1 shallow clone; `git merge-base --is-ancestor freeze_commit HEAD` evaluates over the visible (single-commit) history and reports not-ancestor (rc=1) - the check's DOWNGRADE branch (rc>=128, objects missing) never fires because rc=1 is a *verdict*, not an error. `ci.yml fetch-depth: 0` alone did not unshallow the cached workspace (the unshallow fetch must actually complete - a NETRED-window abort leaves the shallow file in place).
+- **Guard**: the self-hosted checkout carries `fetch-depth: 0`; after one desk unshallow (git fetch --unshallow from the local dev tree via file:// transport, zero-network) the workspace keeps full history.
+- **Prescription**: desk one-time unshallow of the runner workspace; durable fix = frozen8 check detects the shallow state and downgrades the git-anchor ring (desk-gated, frozen face).
+- **Auto-repairable**: no (frozen face; desk-gated).
+
 ## 3. Judgment matrix
 
 | Surface | Role |
