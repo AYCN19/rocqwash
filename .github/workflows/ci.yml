@@ -7,11 +7,14 @@ name: rocqwash CI
 #                   platform-sensitive roster (ROCWASH_TESTS_EXCLUDE, a
 #                   run_tests.sh selection mechanism). macOS keeps the full
 #                   canonical sweep.
-#   flaky-watch   - advisory (continue-on-error). Runs exactly the
-#                   platform-sensitive roster (ROCWASH_TESTS_ONLY) on Linux
-#                   and Windows so those cases stay observed; a red here is
-#                   recorded as a warning and does not fail the run
-#                   (failure-rate target < 5%).
+#   flaky-watch   - advisory (continue-on-error). Differential watch over
+#                   the platform-sensitive roster on Linux and Windows:
+#                   green candidates run blocking-for-the-lane, known-red
+#                   items run in their own observation lane (expected red
+#                   on Windows-hosted, run #100 scoreboard). The lane goes
+#                   red only on a green-candidate regression; a known-red
+#                   item turning green is the two-green evidence for
+#                   roster removal (failure-rate target < 5%).
 # Roster provenance (space-separated case names, kept in one place per
 # matrix entry). Base: the Windows red union recorded in README_EN.md
 # ("Windows (Git Bash)" paragraph, anchor 090be654), then corrected by the
@@ -128,10 +131,18 @@ jobs:
             label: Linux
             py: python3
             platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+            known_red: ""
           - os: windows-latest
             label: Windows
             py: python
-            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+            # Differential watch (run #100 scoreboard at 3cfd1ea, 2026-11-16):
+            # 6 green / 5 known-red / 1 skip on the hosted Windows image.
+            # The five known-red items are the documented platform faces:
+            # checkout mtime granularity (t_verify_vo, t_verify_fresh),
+            # runs-json indirect leg (t_push_gate), absent rocq/ocamlc
+            # toolchain (t_extract_magic), probe verdict text (t_probe_engine).
+            platform_roster: "t_retrofit_dryrun t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+            known_red: "t_verify_vo t_push_gate t_verify_fresh t_extract_magic t_probe_engine"
     env:
       ROCWASH_PY: ${{ matrix.py }}
       ROCWASH_TESTS_ONLY: ${{ matrix.platform_roster }}
@@ -144,14 +155,32 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Run platform-sensitive roster (advisory; red does not fail the run)
+      - name: Run green candidates (regressions here fail the lane)
+        id: candidates
+        run: bash tests/run_tests.sh
+
+      # Known-red observation lane: platform-inherent faces documented in
+      # the roster provenance above. Red here is the expected steady state
+      # and is recorded, not judged; a PASS is noteworthy (two-green
+      # evidence for roster removal).
+      - name: Observe known-red face
+        id: knownred
+        if: matrix.known_red != ''
+        continue-on-error: true
+        env:
+          ROCWASH_TESTS_ONLY: ${{ matrix.known_red }}
         run: bash tests/run_tests.sh
 
       - name: Watch verdict
         if: always()
         run: |
-          if [ "${{ job.status }}" = "success" ]; then
-            echo "PLATFORM-SENSITIVE ROSTER GREEN on ${{ matrix.label }} (candidate for roster removal with two-green evidence)"
-          else
-            echo "::warning::platform-sensitive roster red on ${{ matrix.label }} (advisory record, non-blocking; tracked against the <5% failure-rate target)"
+          c="${{ steps.candidates.outcome }}"
+          k="${{ steps.knownred.outcome }}"
+          echo "green-candidates lane: $c"
+          echo "known-red observation lane: $k"
+          if [ "$c" != "success" ]; then
+            echo "::warning::green-candidate regression on ${{ matrix.label }} (blocking for this watch lane)"
+          fi
+          if [ "$k" = "success" ]; then
+            echo "NOTE: known-red item(s) went GREEN on ${{ matrix.label }} — two-green evidence, roster-removal candidate"
           fi
