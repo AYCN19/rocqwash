@@ -214,6 +214,17 @@
 #         cw_sentinel --watch-repo ORG/REPO form refusal · 20261115 roster
 #         hookup; the form check fires before any fetch, zero network,
 #         tmpdir fixtures, zero repository writes)
+#       repair-guard hookups (E2 repair classes; each guard imports the
+#         shared exclusion table tools/repair_scope.py and appends
+#         rocqwash-repair ledger rows; tmp fixtures only, dry-run faces in
+#         the suite, zero real-repo writes, zero network)
+#       roster count drift guard hookup (tools/roster_resync.py, E2 repair
+#         class 2, tests/test_roster_resync.py four checks: --selftest
+#         rc=0 with the ROSTER-RESYNC-SELFTEST PASS frozen marker (the
+#         guard's own vectors attest the real doc_lint consistent flip as
+#         the green criterion, the one-way CASES roster discipline, the
+#         budget cap, and the shared repair_scope gate), --help rc=0, and
+#         exit-code spot checks 2/9; 20261116 roster hookup)
 #
 # 用法：
 #   bash tests/run_tests.sh
@@ -382,11 +393,42 @@ t_dual_scan \
  t_engines_body \
  t_engines_seeds \
  t_evolve_flag_contract \
- t_watch_repo_form"
+ t_watch_repo_form \
+ t_flaky_guard \
+ t_roster_resync"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
   NCASES=$((NCASES + 1))
+fi
+
+# ---------- advisory roster: flaky quarantine (repair class E2-3) ----------
+#   tools/flaky_guard.py --move writes an order-dependent case into
+#   tests/advisory_roster.txt (repair-ledger row class/target/outcome;
+#   budget <= 2 per class per branch; scope-checked against the shared
+#   tools/repair_scope.py exclusion table).  The default suite then drops
+#   the case here (main roster shrinks, one loud ADVISORY-OUT line each)
+#   and the CI flaky-watch lane keeps running quarantined cases in its
+#   own observation step.  ROCWASH_TESTS_ONLY wins over the quarantine (a
+#   watch lane can name a quarantined case explicitly); unknown advisory
+#   names print one loud note and are ignored (rosters evolve, same
+#   contract as EXCLUDE).  Restore is the guard's --restore face with
+#   green-round evidence (ledger row outcome=restored).
+ADVISORY_ROSTER=${ROCWASH_ADVISORY_ROSTER:-"$REPO/tests/advisory_roster.txt"}
+_advisory=""
+if [ -f "$ADVISORY_ROSTER" ]; then
+  for _n in $(grep -v '^[[:space:]]*#' "$ADVISORY_ROSTER" | tr '\n\r' '  '); do
+    [ -z "$_n" ] && continue
+    _hit=0
+    for _c in $CASES; do
+      [ "$_c" = "$_n" ] && _hit=1 && break
+    done
+    if [ "$_hit" = "1" ]; then
+      _advisory="$_advisory $_n"
+    else
+      echo "ADVISORY-NOTE: advisory-roster name is not in the roster (ignored): $_n"
+    fi
+  done
 fi
 
 # ---------- roster selection: platform-sensitive / flaky separation ----------
@@ -402,7 +444,7 @@ fi
 #   not exist); unknown EXCLUDE names print one loud note and are ignored
 #   (rosters evolve). The exit contract (0 all green / 1 any red) is
 #   unchanged; selection never turns a red into a pass.
-if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ]; then
+if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ] || [ -n "$_advisory" ]; then
   _sel_all="$CASES"
   if [ -n "${ROCWASH_TESTS_ONLY:-}" ]; then
     for _want in $ROCWASH_TESTS_ONLY; do
@@ -425,10 +467,16 @@ if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ]; then
         [ "$_c" = "$_want" ] && _drop=0 && break
       done
     else
-      for _ex in $ROCWASH_TESTS_EXCLUDE; do
+      for _ex in ${ROCWASH_TESTS_EXCLUDE:-}; do
         if [ "$_c" = "$_ex" ]; then
           _drop=1
           printf 'SELECTED-OUT %-26s (platform-sensitive roster; advisory watch job covers it)\n' "$_c"
+        fi
+      done
+      for _ax in $_advisory; do
+        if [ "$_c" = "$_ax" ]; then
+          _drop=1
+          printf 'ADVISORY-OUT %-26s (flaky quarantine; the advisory watch lane covers it)\n' "$_c"
         fi
       done
     fi
@@ -1118,8 +1166,34 @@ t_watch_repo_form() {
   # checks: a local-directory form and a bare token are both refused with
   # rc=2 and the ORG/REPO message, and the REPO_RE match gate stays
   # anchored in tools/cw_sentinel.py; the form check fires before any
-  # fetch, so zero network is reached).
+  # fetch, zero network reached).
   "$PY" -B "$REPO/tests/test_watch_repo_form.py"
+}
+
+t_flaky_guard() {
+  # 20261116 repair-class E2-3 hookup: flaky quarantine guard
+  # (tools/flaky_guard.py; tests/test_flaky_guard.py four checks: the
+  # tool's 32-vector sandbox --selftest (order-dependent vs content-red
+  # verdicts / dry-run zero-write / apply with ledger row / idempotent
+  # re-apply / three green rounds with ADVISORY-OUT / budget and
+  # frozen-target refusals / restore both ways / scope invariant / CLI
+  # codes) plus --help plus exit-code spots plus one read-only --status
+  # against the standing repo; zero writes outside mkdtemp, zero network,
+  # zero compile).
+  "$PY" -B "$REPO/tests/test_flaky_guard.py"
+}
+
+t_roster_resync() {
+  # 20261116 repair-class E2-2 hookup: roster count drift guard
+  # (tools/roster_resync.py; tests/test_roster_resync.py four checks:
+  # --selftest rc=0 with the ROSTER-RESYNC-SELFTEST PASS frozen marker,
+  # --help rc=0, --bogus=2, a missing --repo directory=9; the guard's own
+  # tmp-fixture selftest attests the real doc_lint consistent flip as the
+  # green criterion, the one-way CASES roster derivation (the roster file
+  # is never written), the per-class per-branch budget cap at 2, and the
+  # shared repair_scope exclusion gate; zero writes outside mkdtemp, zero
+  # network, zero compile).
+  "$PY" -B "$REPO/tests/test_roster_resync.py"
 }
 
 # ---------- 汇总执行 ----------

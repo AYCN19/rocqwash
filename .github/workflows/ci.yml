@@ -159,6 +159,31 @@ jobs:
         id: candidates
         run: bash tests/run_tests.sh
 
+      # Advisory quarantine (repair class E2-3): tools/flaky_guard.py
+      # --move writes an order-dependent case into tests/advisory_roster.txt
+      # (scope-checked against tools/repair_scope.py, budget-capped at two
+      # repairs per class per branch, recorded in docs/repair-ledger.jsonl).
+      # The blocking suite drops the case (ADVISORY-OUT) and this watch
+      # lane keeps running it here, so a quarantined case is observed,
+      # never silently hidden.  Green rounds here are the watch evidence
+      # the guard's --restore consumes; the exit contract of this step is
+      # advisory (continue-on-error) by design.
+      - name: Observe advisory roster (flaky quarantine)
+        id: advisory
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -s tests/advisory_roster.txt ]; then
+            names=$(grep -v '^[[:space:]]*#' tests/advisory_roster.txt | tr '\n\r' '  ')
+            if [ -n "$(echo "$names" | tr -d ' ')" ]; then
+              ROCWASH_TESTS_ONLY="$names" bash tests/run_tests.sh
+            else
+              echo "advisory roster carries no active rows - nothing to observe"
+            fi
+          else
+            echo "advisory roster absent - nothing quarantined"
+          fi
+
       # Known-red observation lane: platform-inherent faces documented in
       # the roster provenance above. Red here is the expected steady state
       # and is recorded, not judged; a PASS is noteworthy (two-green
@@ -176,11 +201,16 @@ jobs:
         run: |
           c="${{ steps.candidates.outcome }}"
           k="${{ steps.knownred.outcome }}"
+          a="${{ steps.advisory.outcome }}"
           echo "green-candidates lane: $c"
           echo "known-red observation lane: $k"
+          echo "advisory-quarantine observation lane: $a"
           if [ "$c" != "success" ]; then
             echo "::warning::green-candidate regression on ${{ matrix.label }} (blocking for this watch lane)"
           fi
           if [ "$k" = "success" ]; then
             echo "NOTE: known-red item(s) went GREEN on ${{ matrix.label }} — two-green evidence, roster-removal candidate"
+          fi
+          if [ "$a" = "success" ]; then
+            echo "NOTE: advisory-quarantined case(s) GREEN on ${{ matrix.label }} — watch evidence for the guard's --restore (repair class E2-3)"
           fi

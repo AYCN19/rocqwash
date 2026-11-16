@@ -36,7 +36,8 @@ import re
 import sys
 
 TARGET_KINDS = {"Definition", "Lemma", "Theorem", "Corollary", "Fixpoint",
-                "CoFixpoint", "Proposition", "Instance", "Example"}
+                "CoFixpoint", "Proposition", "Instance", "Example",
+                "Frobnicate"}  # F2 20261116: Frobnicate statement name recognized (ticket batch-3 F2, three-anchor sync)
 LET_KIND = "Let"
 CLOSER_WORDS = {"Qed", "Defined", "Abort", "Save", "Admitted"}
 SKIP_KINDS = {"Notation", "Infix", "Reserved", "Record", "Inductive", "CoInductive",

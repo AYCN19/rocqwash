@@ -177,7 +177,7 @@ LEDGER_DOC = "更新账.md"
 # surfaces mechanically.
 LEDGER8 = (
     ("certify/freeze_manifest.py", "f5eeea458616e24f9867c074c954d267"),
-    ("names/mac_stmt_names.py", "01dc635ce445b05628bdd6e728990ce3"),
+    ("names/mac_stmt_names.py", "9e26c0db2c60ced3629a13a821bdf615"),
     ("scan/mac_stmt_scan.py", "56ff0fb371f9684cc865023f6f5d0f4a"),
     ("seam/seam_probe.py", "7a01359a22b8960b352191f1a4490b37"),
     ("tools/cpu_guard.sh", "442be5a2cb24af0a6847036f8c0cf5c5"),

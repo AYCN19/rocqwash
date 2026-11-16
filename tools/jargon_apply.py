@@ -12,7 +12,8 @@ Purpose.  Reads seeds/jargon/jargon-map.json (62 entries) read-only and
   context guard, and rows with context-keyed slash alternatives, are
   guarded (default reject-and-report; --guarded-interactive emits the
   query file); carve-outs ride the exempt mechanism; backticks are masked.
-  The map's own source table (--a2-table) is never a wash target.
+  The map's own source table and the tools/repair_scope.py frozen roster
+  are never wash targets; tree rows mark excluded(frozen), --file rejects.
 
 Interface.  Pure functions load_map, project_table, plan_rewrites,
   apply_rewrites; CLI --file | --tree with --plan (default zero writes) |
@@ -26,7 +27,7 @@ Dependencies.  Python 3 standard library only; tools/norm_lint.py is the
 Evidence.  --selftest: seed contract; classification; derive_after
   vectors; projector byte equality; loader round-trip; A2 row-equality
   diff of the 13 md-provenance rows; apply idempotence; guarded
-  rejection; carve-out silence; backtick masking; scan parity.
+  rejection; carve-out silence; backtick masking; scan parity; frozen faces.
 
 Exit-codes.  0 clean or residue zero after apply; 1 hits, residue, or a failed vector; 2 usage; 9 missing input."""
 
@@ -48,6 +49,7 @@ WINDOW = 40
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NL_PATH = os.path.join(REPO_ROOT, "tools", "norm_lint.py")
+SCOPE_PATH = os.path.join(REPO_ROOT, "tools", "repair_scope.py")
 DEFAULT_MAP_PATH = os.path.join(REPO_ROOT, "seeds", "jargon", "jargon-map.json")
 DEFAULT_A2_PATH = os.path.join(REPO_ROOT, "docs", "jargon-to-standard-mapping-v1.md")
 AUTONOMY_PATH = os.path.join(REPO_ROOT, "autonomy.json")
@@ -69,6 +71,21 @@ NOTE_GUARD_MARKERS = ("guarded row", "per-row handling", "sense split",
 NOTE_EXEMPT_ROUTING = "exempt regex carries"
 
 _NL = None
+_RS = None
+
+
+def repair_scope_module():
+    """Load tools/repair_scope.py by path (shared exclusion roster)."""
+    global _RS
+    if _RS is None:
+        if not os.path.isfile(SCOPE_PATH):
+            fail("shared exclusion roster missing: " + SCOPE_PATH, 9)
+        spec = importlib.util.spec_from_file_location("rqw_repair_scope",
+                                                      SCOPE_PATH)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _RS = mod
+    return _RS
 
 
 def fail(msg, code):
@@ -468,6 +485,39 @@ def _prose_segments(kind, text, nlm):
     return [(i + 1, line) for i, line in enumerate(text.splitlines())], None
 
 
+def _frozen_sets():
+    """Absolute frozen-face sets from the shared roster (repo-root
+    anchored): (frozen file paths, frozen family dir paths)."""
+    files, families = repair_scope_module().exclusion_roster(REPO_ROOT)
+    fset = set(os.path.normcase(os.path.abspath(
+        os.path.join(REPO_ROOT, rel))) for rel in files)
+    dset = set(os.path.normcase(os.path.abspath(
+        os.path.join(REPO_ROOT, d))) for d in families)
+    return fset, dset
+
+
+def frozen_reason(ap, fset, dset):
+    """Why ap is frozen: "file" (roster face), "dir" (family member), or
+    None.  Foreign trees never match; the roster is repo-root anchored."""
+    nap = os.path.normcase(os.path.abspath(ap))
+    if nap in fset:
+        return "file"
+    for d in dset:
+        if nap.startswith(d + os.sep):
+            return "dir"
+    return None
+
+
+def _frozen_row(rel, ap, kind, fset, dset):
+    """Tree-mode row for one frozen face (excluded marker, zero plan
+    pairs), or None when the face is not frozen."""
+    if frozen_reason(ap, fset, dset) is None:
+        return None
+    return {"path": rel, "kind": kind, "scanned": False,
+            "excluded": "frozen", "would_fix": 0, "human": 0,
+            "rewrites": [], "human_findings": []}
+
+
 def _collect_targets(args, skip_abs):
     if args.file:
         if not os.path.isfile(args.file):
@@ -476,6 +526,8 @@ def _collect_targets(args, skip_abs):
         if ext not in FACES:
             fail("unsupported face (need .py/.sh/.md): " + args.file, 2)
         ap = os.path.abspath(args.file)
+        if frozen_reason(ap, *_frozen_sets()) is not None:
+            fail("frozen face, use three-anchor sync: " + args.file, 1)
         if ap in skip_abs:
             fail("target file is the wash map's own source table; a tool "
                  "never washes its own map: " + args.file, 1)
@@ -561,16 +613,23 @@ def run_plan_or_apply(args):
     # md5 contract.  A tool never washes its own map.
     skip_abs.add(os.path.abspath(args.a2_table or DEFAULT_A2_PATH))
     targets, root_abs = _collect_targets(args, skip_abs)
+    frozen_files, frozen_dirs = _frozen_sets()
     tmpdir = tempfile.mkdtemp(prefix="rqw_jargon_apply_")
     applied_total = 0
     failed_total = 0
     machine_total = 0
     human_total = 0
     parse_errors = 0
+    excluded_total = 0
     query_rows = []
     file_rows = []
     try:
         for scope, rel, ap, kind in targets:
+            frozen = _frozen_row(rel, ap, kind, frozen_files, frozen_dirs)
+            if frozen is not None:
+                file_rows.append(frozen)
+                excluded_total += 1
+                continue
             text, had_bom = _read_text(ap)
             segs, err = _prose_segments(kind, text, nlm)
             row = {"path": rel, "kind": kind, "scanned": True,
@@ -647,6 +706,7 @@ def run_plan_or_apply(args):
         "autonomy": {"mode": autonomy.get("mode"), "source": autonomy_source},
         "files": file_rows,
         "summary": {"files": len(file_rows), "parse_errors": parse_errors,
+                    "excluded_frozen": excluded_total,
                     "would_fix": machine_total, "human": human_total,
                     "applied": applied_total if mode == "apply" else 0,
                     "apply_failed": failed_total if mode == "apply" else 0,
@@ -920,6 +980,54 @@ def run_selftest(args):
              else "mine=%s theirs=%s" % (mine_set, theirs))
     finally:
         shutil.rmtree(fxdir, ignore_errors=True)
+
+    # vector 10: frozen tree exclusion - roster faces plan empty rows
+    fset, dset = _frozen_sets()
+    scope_files, _families = repair_scope_module().exclusion_roster(REPO_ROOT)
+    bad = []
+    for rel in scope_files:
+        ext = os.path.splitext(rel)[1].lstrip(".").lower() or "md"
+        row = _frozen_row(rel, os.path.join(REPO_ROOT, rel), ext,
+                          fset, dset)
+        if row is None:
+            bad.append(rel + ": roster face not excluded")
+        elif row["rewrites"] or row["human_findings"] or row["scanned"] \
+                or row["excluded"] != "frozen":
+            bad.append(rel + ": excluded row carries plan pairs")
+    for rel, kind in (("certify/push_gate.py", "py"),
+                      ("CLA/ICLA.md", "md")):
+        if _frozen_row(rel, os.path.join(REPO_ROOT, rel), kind,
+                       fset, dset) is None:
+            bad.append(rel + ": family member not excluded")
+    if frozen_reason(os.path.abspath(__file__), fset, dset) is not None:
+        bad.append("tools/jargon_apply.py wrongly frozen")
+    _vec(results, "frozen-tree-exclusion", not bad,
+         "roster faces and family members carry empty excluded(frozen) "
+         "rows; this tool itself stays in scope"
+         if not bad else "; ".join(bad[:5]))
+
+    # vector 11: explicit --file on a frozen face is a red reject (rc 1)
+    red_targets = [os.path.join(REPO_ROOT, "certify", "frozen8.py"),
+                   os.path.join(REPO_ROOT,
+                                repair_scope_module().ledger_doc(
+                                    REPO_ROOT)[0])]
+    bad = []
+    for target in red_targets:
+        proc = subprocess.run(
+            [sys.executable, "-I", "-X", "utf8", os.path.abspath(__file__),
+             "--file", target],
+            capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=120)
+        combined = (proc.stderr or "") + (proc.stdout or "")
+        if proc.returncode != 1:
+            bad.append("%s: rc=%d" % (os.path.basename(target),
+                                      proc.returncode))
+        if "frozen face, use three-anchor sync" not in combined:
+            bad.append(os.path.basename(target) + ": no frozen message")
+    _vec(results, "frozen-file-red-reject", not bad,
+         "family member and append-only doc both red-reject rc=1 with "
+         "the three-anchor message"
+         if not bad else "; ".join(bad[:5]))
 
     failed = 0
     for name, ok, detail in results:
