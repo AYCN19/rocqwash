@@ -154,6 +154,12 @@ jobs:
       PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD
+          # must be a descendant of the freeze commit) needs the freeze
+          # commit object; a depth-1 checkout false-flags DRIFT on the
+          # local self-hosted face (20261116 red evidence)
+          fetch-depth: 0
 
       - name: Run green candidates (regressions here fail the lane)
         id: candidates
