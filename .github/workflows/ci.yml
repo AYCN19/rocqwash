@@ -88,11 +88,6 @@ jobs:
     name: Self-test suite (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
-    # main_only faces (the local self-hosted lane) serve main-line evidence
-    # only: a PR or branch-dispatch checkout would fetch refs/pull/* the
-    # bridge (the desk dev tree) does not carry. PR validation is fully
-    # covered by the hosted faces.
-    if: matrix.main_only != true || github.ref == 'refs/heads/main'
     strategy:
       fail-fast: false
       matrix:
@@ -104,17 +99,6 @@ jobs:
           - os: windows-latest
             label: Windows
             py: python
-            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
-          # Local self-hosted lane (runner LIVE-ROCQWASH, D:\actions-runner-rocqwash):
-          # the same stable roster executed on this machine instead of a cloud
-          # runner, so a long suite is not bound by the hosted runner's job
-          # duration wall and a flaky hosted runner cannot block the signal.
-          # Same platform roster as the Windows lane (identical platform
-          # constraints: no pmset, no otool, no rocq toolchain).
-          - os: [self-hosted, Windows, X64]
-            label: Windows (local self-hosted)
-            py: python
-            main_only: true
             platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
     env:
       ROCWASH_PY: ${{ matrix.py }}
@@ -144,6 +128,47 @@ jobs:
             echo "ROCQWASH-CI-ALL-GREEN (stable roster, ${{ matrix.label }}; platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
           else
             echo "::error::self-test suite red on ${{ matrix.label }} — see the failed step log above"
+          fi
+
+  # Local self-hosted lane (runner LIVE-ROCQWASH, D:\actions-runner-rocqwash):
+  # the same stable roster executed on this machine instead of a cloud
+  # runner, so a long suite is not bound by the hosted runner's job
+  # duration wall and a flaky hosted runner cannot block the signal.
+  # Main-line evidence only: a PR or branch-dispatch checkout would fetch
+  # refs the bridge (the desk dev tree) does not carry (R6(c) class), so
+  # this face runs on main refs exclusively - PR validation is fully
+  # covered by the hosted faces above. Kept as its own job (not a matrix
+  # entry) because GitHub job-level `if` does not accept the matrix
+  # context (20261117 run 118: jobs=0 parse death).
+  selftest-local:
+    name: Self-test suite (Windows (local self-hosted))
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main'
+    env:
+      ROCWASH_PY: python
+      ROCWASH_TESTS_EXCLUDE: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD must
+          # be a descendant of the freeze commit) needs the freeze commit
+          # object; the default depth-1 fetch re-shallows the cached runner
+          # workspace every run and false-flags DRIFT (20261116 red chain)
+          fetch-depth: 0
+
+      - name: Run self-test suite (stable roster)
+        run: bash tests/run_tests.sh
+
+      - name: Suite verdict
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "ROCQWASH-CI-ALL-GREEN (stable roster, Windows (local self-hosted); platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
+          else
+            echo "::error::self-test suite red on Windows (local self-hosted) — see the failed step log above"
           fi
 
   flaky-watch:
