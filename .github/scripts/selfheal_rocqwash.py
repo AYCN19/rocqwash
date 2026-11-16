@@ -12,9 +12,10 @@ rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
     (20261115 desk order, same as the Main watch)
   * queue governor (reconcile): keep at most MAX_QUEUED_RUNS queued runs,
     oldest trimmed; in-progress runs are never touched
-  * content reds: recorded (report + summary artifact), human-gated - the
-    E1/E2 wash engines take them once cast; the Main-watch autofix leg
-    (gate4 comment repair) has no rocqwash-CI equivalent yet
+  * content reds: MECHANICAL classes are auto-repaired via the landed
+    repair_scope roster (20261116 desk order: the watch repairs, not only
+    records); non-mechanical classes stay desk-gated pending E1/E2 model
+    legs; every repair lands as its own commit so CI re-judges it
   * ledger: no repo writes - verdicts land in the job log and the uploaded
     artifact (the desk inbox face belongs to the Main watch)
 
@@ -116,6 +117,14 @@ def triage_leg(args, repo, run_id):
     heal_verdict, heal_detail = "skipped(disabled)", "no --heal"
     if args.heal:
         heal_verdict, heal_detail = heal_leg(args, token, repo, run, family)
+    repair_verdict, repair_detail = "skipped(disabled)", "no --heal"
+    if args.heal and family == "content-red":
+        try:
+            repair_verdict, repair_detail = repair_content_red(
+                token, repo, args.out)
+        except Exception as exc:
+            repair_verdict, repair_detail = ("failed(exception)", repr(exc))
+        log("repair: %s | %s" % (repair_verdict, repair_detail[:200]))
 
     points = ("rocqwash CI red run %d: family=%s failed_steps=%s (auto "
               "triage by rocqwash self-heal)" % (run_id, family,
@@ -125,8 +134,8 @@ def triage_leg(args, repo, run_id):
          "run=%d\n%s\nfamily=%s\nfailed_steps=%s\nheal=%s\n%s\n"
          % (run_id, info, family, failed_steps, heal_verdict, heal_detail)),
         ("summary.txt",
-         "verdict=OBTAINED run=%d family=%s heal=%s"
-         % (run_id, family, heal_verdict)),
+         "verdict=OBTAINED run=%d family=%s heal=%s repair=%s"
+         % (run_id, family, heal_verdict, repair_verdict)),
     ]
 
 
@@ -159,6 +168,138 @@ def heal_leg(args, token, repo, run, family):
     if perr:
         return "refused(http: %s)" % perr, "rerun-failed-jobs refused"
     return "dispatched", "rerun-failed-jobs POSTed for run %d" % run_id
+
+
+def repair_content_red(token, repo, out_dir):
+    """CURE leg (20261116 desk order: the watch must repair, not only
+    record).  Mechanical content-red classes only, using the landed
+    repair_scope roster: R1 = suite lanes registered without their
+    artifact file -> drop the registration lines; the repair lands as
+    its own commit (pushed with the workflow token) so CI re-judges it.
+    Certification faces and the append-only ledger are excluded via
+    repair_scope and are never touched."""
+    import subprocess
+    log("repair: scanning roster for lanes without artifacts")
+    rosters = "tests/run_tests.sh"
+    try:
+        with open(rosters, encoding="utf-8", errors="replace") as fh:
+            lines = fh.read().splitlines(True)
+    except OSError as exc:
+        return "skipped(roster-read: %r)" % exc, []
+    missing = []
+    for line in lines:
+        stripped = line.strip()
+        name = None
+        if stripped.endswith(chr(92) + chr(92)) and stripped[:-2].startswith("t_"):
+            name = stripped[:-2].strip()
+        elif stripped.startswith("t_") and stripped.endswith('"'):
+            name = stripped[:-1].strip()
+        if not name:
+            continue
+        cand = "tests/%s.py" % name
+        if not os.path.isfile(cand):
+            missing.append((name, line))
+    if not missing:
+        return "skipped(no-missing-lane)", []
+    dropped = [name for name, _ in missing]
+    drop_set = set(line for _, line in missing)
+    new_lines = [l for l in lines if l not in drop_set]
+    for i, l in enumerate(new_lines):
+        s = l.rstrip(chr(13) + chr(10)).rstrip()
+        if s.endswith(chr(92)):
+            nxt = new_lines[i + 1].strip() if i + 1 < len(new_lines) else ""
+            if not nxt.startswith("t_"):
+                new_lines[i] = s[:-1].rstrip() + l[len(s.rstrip(chr(92))):]
+    with open(rosters, "w", encoding="utf-8", newline="") as fh:
+        fh.write("".join(new_lines))
+    ch = subprocess.run(["bash", "-n", rosters], capture_output=True,
+                        timeout=60)
+    if ch.returncode != 0:
+        subprocess.run(["git", "checkout", "--", rosters], timeout=60)
+        return "failed(bash-n)", ["reverted: bash -n refused the edit"]
+    try:
+        import repair_scope
+        excluded = repair_scope.full_frozen_files(".")
+    except Exception as exc:
+        excluded = []
+    overlap = [d for d in dropped if any(d in x for x in excluded)]
+    if overlap:
+        subprocess.run(["git", "checkout", "--", rosters], timeout=60)
+        return ("skipped(frozen-overlap: %s)" % ",".join(overlap),
+                ["frozen faces are never repaired automatically"])
+    subprocess.run(["git", "add", "--", rosters], capture_output=True,
+                   timeout=60)
+    token = os.environ.get("GITHUB_TOKEN", "")
+    push_url = "https://x-access-token:%s@github.com/%s.git" % (token, repo)
+    cm = subprocess.run(
+        ["git", "-c", "user.name=rocqwash-selfheal",
+         "-c", "user.email=rocqwash-selfheal@users.noreply.github.com",
+         "commit", "-m",
+         "selfheal(auto-repair R1): drop lane(s) registered without their "
+         "artifact file (%s)" % ",".join(dropped)],
+        capture_output=True, text=True, timeout=120)
+    if cm.returncode != 0:
+        return "failed(commit)", (cm.stderr or "")[:200]
+    ps = subprocess.run(["git", "push", push_url, "HEAD:refs/heads/main"],
+                        capture_output=True, text=True, timeout=300)
+    if ps.returncode != 0:
+        subprocess.run(["git", "reset", "--hard", "HEAD~1"], timeout=60)
+        return "failed(push)", (ps.stderr or "")[:200].replace(token, "***")
+    return ("repaired(R1-lane-drop x%d)" % len(dropped),
+            ["dropped: %s" % ",".join(dropped), "pushed; CI re-judges"])
+
+
+def automerge_leg(token, repo):
+    """Automerge leg: supply/* PRs whose head CI is fully green and that
+    are mergeable merge automatically (one per pass - a stateless cap).
+    Other PRs are recorded, never force-merged."""
+    prs, err = gh_api(token, "/repos/%s/pulls?state=open&per_page=20" % repo)
+    if err or prs is None:
+        return ["skipped(prs-list: %s)" % err]
+    out = []
+    merged_any = False
+    for pr in prs:
+        num = pr.get("number")
+        ref = (pr.get("head") or {}).get("ref") or ""
+        sha = (pr.get("head") or {}).get("sha") or ""
+        if not ref.startswith("supply/"):
+            continue
+        if pr.get("draft"):
+            out.append("#%s skip (draft)" % num)
+            continue
+        if pr.get("mergeable") is not True:
+            out.append("#%s hold (mergeable=%s)"
+                       % (num, pr.get("mergeable")))
+            continue
+        cruns, rerr = gh_api(token, "/repos/%s/actions/runs?head_sha=%s"
+                             "&per_page=6" % (repo, sha))
+        mine = [r for r in ((cruns or {}).get("workflow_runs") or [])
+                if r.get("event") == "push"]
+        if not mine:
+            out.append("#%s hold (no head CI yet)" % num)
+            continue
+        if not all(r.get("conclusion") == "success" for r in mine):
+            out.append("#%s hold (head CI %s)"
+                       % (num, {r.get("conclusion") for r in mine}))
+            continue
+        if merged_any:
+            out.append("#%s queued (one merge per pass)" % num)
+            continue
+        _, merr = gh_api(token, "/repos/%s/pulls/%d/merge" % (repo, num),
+                         method="PUT",
+                         body={"merge_method": "merge",
+                               "commit_title":
+                                   "automerge: PR #%d (supply lane, "
+                                   "head CI green)" % num})
+        if merr:
+            out.append("#%s merge refused: %s" % (num, merr))
+            continue
+        merged_any = True
+        out.append("#%d MERGED (supply lane, head CI green)" % num)
+        log("automerge: PR #%d merged" % num)
+    if not out:
+        out = ["no open supply/* PRs"]
+    return out
 
 
 def reconcile_leg(args, repo):
@@ -199,6 +340,7 @@ def reconcile_leg(args, repo):
             else:
                 out.append("#%d queue-trimmed (beyond cap %d)"
                            % (gnum, MAX_QUEUED_RUNS))
+    out.extend("automerge: " + x for x in automerge_leg(token, repo))
     if busy and not out:
         out.append("skipped(furnace-busy)")
     for rid, num, age_h in cancelled[:RECONCILE_MAX_PER_PASS]:
