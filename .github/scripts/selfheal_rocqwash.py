@@ -69,7 +69,14 @@ def gh_api(token, path, method="GET", body=None):
                 raw = resp.read()
             return (json.loads(raw) if raw else None), None
         except urllib.error.HTTPError as exc:
-            return None, "%d %s" % (exc.code, exc.reason)
+            # Fail loud: the status line alone hid the real verdict (20261117
+            # PR #13 case - merge PUT 403 with the body, which carries the
+            # actual message, discarded).
+            try:
+                detail = exc.read(400).decode("utf-8", "replace").strip()
+            except Exception:
+                detail = ""
+            return None, "%d %s %s" % (exc.code, exc.reason, detail)
         except Exception as exc:
             last_err = exc
             if attempt + 1 < attempts:
