@@ -145,6 +145,10 @@
 #               cw.sh repair-scope --check PATH... | --classes | --selftest
 #   roster-resync  roster count drift guard, repair class E2-2 (the run_tests.sh CASES roster is the only count authority; the doc_lint count lines of tests/README.md + README.md are re-derived one-way from it and the drifted digits are synced in place; the roster file is never written; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, every repaired line ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py
 #               cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest
+#   scheduler-lite  TODO-SEAT threshold trigger planner for the jargon tier-B auto gear (gap feed ledger + vacgen reports through tools/gap_cluster.py plus the round cadence of docs/round-ledger.jsonl; verdict quiet | due | blocked; ignition gated on the EF all-green marker; dry-run by design: zero apply, zero commit, zero network) -> tools/scheduler_lite.py
+#               cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest
+#   auto-merge  X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; the five-sample calibration set S-1..S-5 pinned; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger + the post-merge red revert arc; zero network, dry run by default) -> tools/auto_merge.py
+#               cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -362,6 +366,10 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh repair-scope --check PATH... | --classes | --selftest
   roster-resync  roster count drift guard, repair class E2-2 (the run_tests.sh CASES roster is the only count authority; the doc_lint count lines of tests/README.md + README.md are re-derived one-way from it and the drifted digits are synced in place; the roster file is never written; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, every repaired line ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py
                  cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest
+  scheduler-lite  TODO-SEAT threshold trigger planner for the jargon tier-B auto gear (gap feed ledger + vacgen reports through tools/gap_cluster.py plus the round cadence of docs/round-ledger.jsonl; verdict quiet | due | blocked; ignition gated on the EF all-green marker; dry-run by design: zero apply, zero commit, zero network) -> tools/scheduler_lite.py
+                 cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest
+  auto-merge  X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; the five-sample calibration set S-1..S-5 pinned; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger + the post-merge red revert arc; zero network, dry run by default) -> tools/auto_merge.py
+              cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -430,6 +438,8 @@ hint_for() {  # $1=tool
     flaky-guard) echo "cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest   # flaky quarantine guard, repair class E2-3 (isolation probe verdicts order-dependent vs content-red; --move quarantines into tests/advisory_roster.txt, the default suite drops it with ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence; findings and refusals are data, rc 0/1/2/9) -> tools/flaky_guard.py" ;;
     repair-scope) echo "cw.sh repair-scope --check PATH... | --classes | --selftest   # shared repair-scope exclusion table for the E2 guard family (runtime LEDGER8/CHECKERS read from certify/frozen8.py + the append-only ledger document + the frozen directory families; per-class writable faces and budget registry; --check exits 1 when any path is excluded, a refusal verdict is data) -> tools/repair_scope.py" ;;
     roster-resync) echo "cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest   # roster count drift guard, repair class E2-2 (one-way recount from the run_tests.sh CASES roster into the doc_lint count lines of tests/README.md + README.md; the roster file is never written; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py" ;;
+    scheduler-lite) echo "cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest   # TODO-SEAT threshold trigger planner for the jargon tier-B auto gear (verdict quiet | due | blocked; ignition gated on the EF all-green marker; dry-run by design: zero apply, zero commit, zero network) -> tools/scheduler_lite.py" ;;
+    auto-merge) echo "cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest   # X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; verdicts and rail outcomes are data rc 0, rail refusals rc 1; the five-sample calibration set S-1..S-5 pinned in --selftest; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger rows rocqwash-automerge/1 + the post-merge red revert arc: content prescribes git revert -m 1, transient a rerun window, unrecognized an escalation; zero network, dry run by default, --apply only appends ledger rows) -> tools/auto_merge.py" ;;
     *) return 1 ;;
   esac
 }
@@ -505,6 +515,8 @@ case "${1:-}" in
   flaky-guard) shift; run_tool flaky-guard "tools/flaky_guard.py" "$@" ;;
   repair-scope) shift; run_tool repair-scope "tools/repair_scope.py" "$@" ;;
   roster-resync) shift; run_tool roster-resync "tools/roster_resync.py" "$@" ;;
+  scheduler-lite) shift; run_tool scheduler-lite "tools/scheduler_lite.py" "$@" ;;
+  auto-merge) shift; run_tool auto-merge "tools/auto_merge.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
