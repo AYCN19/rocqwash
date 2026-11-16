@@ -163,7 +163,7 @@ the certification-face family (certify/, verify/, wrapper/, scan/), the frozen
 eight roster, and the repo-root update ledger are outside every write this
 loop can propose (work order constraint block, section 4); the jargon map's
 own source table and the frozen roster are never wash targets
-(tools/jargon_apply.py:4-13).
+(tools/jargon_apply.py:15-16).
 
 ### 2.1 The ignite pipeline (manual execution only)
 
