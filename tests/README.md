@@ -9,10 +9,10 @@ bash tests/run_tests.sh          # 全绿 EXIT 0；任一红 EXIT 1；幂等可�
 套件自检（验证「任一红 EXIT 1」契约，注入一恒红例）：
 
 ```bash
-ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 81 过 / 1 红 / EXIT 1
+ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 83 过 / 1 红 / EXIT 1
 ```
 
-## 覆盖面（81 例）——现役数以 tests/run_tests.sh CASES 名册为准（加测后同步）
+## 覆盖面（83 例）——现役数以 tests/run_tests.sh CASES 名册为准（加测后同步）
 
 | # | 用例 | 被测 | 判据 |
 |---|------|------|------|
@@ -259,3 +259,5 @@ ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 预期 81 过 / 1 红 / 
 | 79 | `t_engines_seeds` | five-engine seed assertions E1..E5（segments transplanted from `seeds/<engine>/test_snippet.py` per the RQW12 merge contract） | `tests/t_engines_seeds.py` five segments / 40 checks with EXPECTED_SEGMENTS accounting; seeds located relative to the file; off-machine anchors report SKIP with a reason, never a silent pass; zero network, zero writes |
 | 80 | `t_evolve_flag_contract` | `tools/evolve.py` user-facing flag-face contract pin | `tests/test_evolve_flag_contract.py` four checks: the six cycle-3 ask flags verbatim in --help, the --sentinel-events/--sentinel-state pair accepted without --watch-repo, a no-signal-source round exits 2 fail-loud, the registry pair against a book-less repository exits 9 fail-loud; tmpdir fixtures, zero network, zero repository writes |
 | 81 | `t_watch_repo_form` | `tools/cw_sentinel.py` --watch-repo ORG/REPO form contract（negative vectors） | `tests/test_watch_repo_form.py` three checks: a local-directory form and a bare token are both refused with rc=2 and the ORG/REPO message, and the REPO_RE match gate stays anchored in tools/cw_sentinel.py; the form check fires before any fetch, zero network reached |
+| 82 | `t_flaky_guard` | `tools/flaky_guard.py`（E2 修复类③·flaky 检出移告警名册守卫：隔离探针判定 order-dependent vs content-red／dry-run 缺省／--apply 落 `tests/advisory_roster.txt`＋`docs/repair-ledger.jsonl` repair 行／同类每支预算 ≤2／frozen 目标经 `tools/repair_scope.py` 单源红拒／--restore 三轮绿证据） | `tests/test_flaky_guard.py` four checks: the tool's 32-vector sandbox `--selftest`（baseline red／both verdicts／apply＋ledger row／idempotent re-apply／three consecutive green rounds with ADVISORY-OUT／budget refusal／frozen-target refusals／content-red refusal／restore refusal and restore／status／scope invariant／CLI codes）＋`--help`＋exit-code spots（bogus=2·no --log=2·absent log=9）＋one read-only `--status`（roster and ledger byte-identical）; tmp fixtures, zero writes outside mkdtemp, zero network, zero compile |
+| 83 | `t_roster_resync` | `tools/roster_resync.py`（E2 修复类②·名册计数漂移守卫·单向派生：run_tests.sh CASES 名册为唯一计数正本，tests/README.md 与 README.md 的四计数形状经 doc_lint 导入零形变，漂移数字就地重算同步；名册件永不落笔；干跑缺省；`--apply` 逐行落 `docs/repair-ledger.jsonl` repair 行（rocqwash-repair/1）；每靶过 `tools/repair_scope.py` 单源排除闸；同类每支预算 ≤2，超帽升格 `escalated(budget-cap)`；缺形状面升格 `escalated(shape-missing)` 不机械补） | `tests/test_roster_resync.py` four checks: --selftest rc=0 且含 `ROSTER-RESYNC-SELFTEST PASS` 冻结标记（守卫自证向量：净例零写＋`--json` 双跑字节恒同；红例干跑计划零写盘→`--apply` 修复至**真 doc_lint 子进程 verdict 翻 consistent**（绿判据原面）；四形状一漂一遍修净＋doc_lint.check_counts 零残漂；同类每支第 3 次 apply 升格 budget-cap 零触靶面；escalation 行不占预算；名册件 md5 前后恒同；repair_scope 排除闸与 CLI/fail-loud 向量）＋`--help` rc=0＋退出码抽验（--bogus=2·缺 --repo=9）；tmp fixtures, zero writes outside mkdtemp, zero network, zero compile |

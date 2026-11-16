@@ -375,7 +375,8 @@ def selftest():
     """内嵌冻结向量组（临时目录驱动·假 rocq/ocamlc 桩全链·零真编译零触真仓）：
     解析正/注释诱饵负／计数 grep-c 口径／上下文形／fallback 主定义收集／driver 稿
     词面／E2E 红绿双判（假桩）／提取红 fail-loud／ocamlc 双判／CLI 四码／Class
-    盲区补全（首战判例形 census 不误判·未知 vernacular 仍红 9）。"""
+    盲区补全（首战判例形 census 不误判·Frobnicate 认名 F2 回归·未知 vernacular
+    仍红 9）。"""
     import shutil
     tmp = tempfile.mkdtemp(prefix="rocqwash_emc_self_")
     try:
@@ -425,22 +426,60 @@ def selftest():
         with io.open(mlc, "w", encoding="utf-8") as fh:
             fh.write("let p_one = Obj.magic (Obj.magic 1)\nlet p_two = Obj.magic 2\n")
         frocq = os.path.join(tmp, "fake_rocq.sh")
-        with io.open(frocq, "w", encoding="utf-8") as fh:
-            fh.write("#!/bin/bash\n"
-                     "for last; do :; done\n"
-                     "# 真 rocq 形仿：.ml 以被提取模块命名（driver 稿取 Require Import 名；\n"
-                     "# inline 稿即本件名）——承 gate7 提取产物 <Mod>.ml 口径\n"
-                     "if [ -f \"$last\" ]; then\n"
-                     "  mod=\"$(grep -m1 '^Require Import' \"$last\" | sed 's/^Require Import //; s/\\.$//')\"\n"
-                     "fi\n"
-                     "[ -n \"${mod:-}\" ] || mod=\"$(basename \"$last\" .v)\"\n"
-                     "[ -n \"${EMC_FAKE_ML:-}\" ] && cp \"$EMC_FAKE_ML\" \"$mod.ml\"\n"
-                     "exit \"${EMC_FAKE_RC:-0}\"\n")
         foc = os.path.join(tmp, "fake_oc.sh")
-        with io.open(foc, "w", encoding="utf-8") as fh:
-            fh.write("#!/bin/bash\nexit \"${EMC_OC_RC:-0}\"\n")
-        os.chmod(frocq, 0o755)
-        os.chmod(foc, 0o755)
+        if os.name == "nt":
+            # Windows 桩面（ci.yml known_red 判例「rocq rc=-8 observed here」：
+            # CreateProcess 不能直执 shebang 脚本）——同逻辑桩改 .cmd 壳＋py 桩形
+            # （last 参遍历／Require Import 剥名／缺省 basename／EMC_FAKE_ML 复制／
+            # EMC_FAKE_RC 退码逐条对齐 bash 桩），判词不变；POSIX 分支字节不动。
+            frocq_py = os.path.join(tmp, "fake_rocq.py")
+            with io.open(frocq_py, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(
+                    "import os, shutil, sys\n"
+                    "last = None\n"
+                    "for a in sys.argv[1:]:\n"
+                    "    last = a\n"
+                    "mod = ''\n"
+                    "if last and os.path.isfile(last):\n"
+                    "    with open(last, encoding='utf-8', errors='replace') as fh:\n"
+                    "        for ln in fh:\n"
+                    "            if ln.startswith('Require Import'):\n"
+                    "                mod = ln[len('Require Import '):].strip()\n"
+                    "                break\n"
+                    "    if mod.endswith('.'):\n"
+                    "        mod = mod[:-1]\n"
+                    "if not mod:\n"
+                    "    mod = os.path.splitext(os.path.basename(last or ''))[0]\n"
+                    "mlsrc = os.environ.get('EMC_FAKE_ML')\n"
+                    "if mlsrc:\n"
+                    "    shutil.copyfile(mlsrc, mod + '.ml')\n"
+                    "sys.exit(int(os.environ.get('EMC_FAKE_RC', '0')))\n")
+            with io.open(os.path.join(tmp, "fake_rocq.cmd"), "w",
+                         encoding="ascii", newline="\r\n") as fh:
+                fh.write('@py -B "%~dp0fake_rocq.py" %*\r\n')
+            with io.open(os.path.join(tmp, "fake_oc.cmd"), "w",
+                         encoding="ascii", newline="\r\n") as fh:
+                fh.write("@echo off\r\n"
+                         "if not defined EMC_OC_RC set \"EMC_OC_RC=0\"\r\n"
+                         "exit /b %EMC_OC_RC%\r\n")
+            frocq = os.path.join(tmp, "fake_rocq.cmd")
+            foc = os.path.join(tmp, "fake_oc.cmd")
+        else:
+            with io.open(frocq, "w", encoding="utf-8") as fh:
+                fh.write("#!/bin/bash\n"
+                         "for last; do :; done\n"
+                         "# 真 rocq 形仿：.ml 以被提取模块命名（driver 稿取 Require Import 名；\n"
+                         "# inline 稿即本件名）——承 gate7 提取产物 <Mod>.ml 口径\n"
+                         "if [ -f \"$last\" ]; then\n"
+                         "  mod=\"$(grep -m1 '^Require Import' \"$last\" | sed 's/^Require Import //; s/\\.$//')\"\n"
+                         "fi\n"
+                         "[ -n \"${mod:-}\" ] || mod=\"$(basename \"$last\" .v)\"\n"
+                         "[ -n \"${EMC_FAKE_ML:-}\" ] && cp \"$EMC_FAKE_ML\" \"$mod.ml\"\n"
+                         "exit \"${EMC_FAKE_RC:-0}\"\n")
+            with io.open(foc, "w", encoding="utf-8") as fh:
+                fh.write("#!/bin/bash\nexit \"${EMC_OC_RC:-0}\"\n")
+            os.chmod(frocq, 0o755)
+            os.chmod(foc, 0o755)
         os.environ["EMC_FAKE_ML"] = mlc
         wd = os.path.join(tmp, "wd")
         # 红判：魔数 2 > max 1 → rc 1 fail-loud
@@ -485,7 +524,9 @@ def selftest():
         assert run_args(["--v", v3, "--world", w2, "--rocq", frocq]) == 9, \
             "world 未编译 .vo 缺失应 rc=9"
         # 12 v15 盲区补全（首战判例形）：Class 声明＋命令面 vernacular census 不再
-        #    误判异常——声明/命令不入目标·唯真主定义入账；未知 vernacular 仍红 9
+        #    误判异常——声明/命令不入目标·唯真主定义入账；Frobnicate 认名 F2 回归
+        #    （20261116 三锚同改·冻结件 TARGET_KINDS 在册 md5 9e26c0db…）；未知
+        #    vernacular 仍红 9
         v4 = os.path.join(tmp, "cls.v")
         with io.open(v4, "w", encoding="utf-8") as fh:
             fh.write("Declare Scope req_scope.\n"
@@ -501,9 +542,24 @@ def selftest():
         mode4, targets4, extra4 = collect_targets(v4)
         assert mode4 == "driver" and targets4 == ["cls_use"], (mode4, targets4)
         assert extra4["statements"] == ["cls_use"], extra4["statements"]
+        # F2 20261116 三锚同改回归：Frobnicate 已入冻结件 TARGET_KINDS
+        #   （names/mac_stmt_names.py:40·LEDGER8 在册 md5
+        #   9e26c0db2c60ced3629a13a821bdf615）——census 认名入目标（含 Proof
+        #   证明体成臂消费）·零异常；盲区收窄≠静默扩容：未知 vernacular 钉子
+        #   换真未知词 Gadgetize 仍 fail-loud rc=9
+        assert "Frobnicate" in mac_stmt_names.TARGET_KINDS, \
+            "F2 回归: 冻结件应认 Frobnicate 语句名"
+        v6 = os.path.join(tmp, "frob.v")
+        with io.open(v6, "w", encoding="utf-8") as fh:
+            fh.write("Frobnicate frob_one : nat. Proof. exact 1. Qed.\n"
+                     "Definition frob_ok := frob_one.\n")
+        mode6, targets6, extra6 = collect_targets(v6)
+        assert mode6 == "driver" and targets6 == ["frob_one", "frob_ok"], \
+            (mode6, targets6)
+        assert extra6["statements"] == ["frob_one", "frob_ok"], extra6["statements"]
         v5 = os.path.join(tmp, "unk.v")
         with io.open(v5, "w", encoding="utf-8") as fh:
-            fh.write("Frobnicate widget.\nDefinition unk_ok := 1.\n")
+            fh.write("Gadgetize widget.\nDefinition unk_ok := 1.\n")
         try:
             collect_targets(v5)
             raise AssertionError("未知 vernacular 应 fail-loud rc=9")
@@ -511,7 +567,7 @@ def selftest():
             assert e.code == 9, "未知 vernacular 应 rc=9 实测 %r" % (e.code,)
         print("EXTRACT-MAGIC-SELFTEST PASS: 解析正负/注释诱饵/计数grep-c口径/上下文形/"
               "fallback收集/driver稿词面/E2E红绿/提取红/ocamlc双判/CLI四码/"
-              "Class盲区补全 十二判全过")
+              "Class盲区补全/Frobnicate认名F2回归 十二判全过")
         return 0
     finally:
         os.environ.pop("EMC_FAKE_ML", None)

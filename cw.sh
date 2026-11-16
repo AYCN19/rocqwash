@@ -139,6 +139,12 @@
 #               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
 #   axiom-guard repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; env-gated, rc 111 honest skip; zero repository writes) -> tools/axiom_guard.py
 #               cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]
+#   flaky-guard flaky quarantine guard, repair class E2-3 (detect classifies each red case by an isolation probe: suite-red + alone-green = order-dependent, red in both contexts = content red that stays visible; --move quarantines into tests/advisory_roster.txt so the default suite drops it with a loud ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence) -> tools/flaky_guard.py
+#               cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest
+#   repair-scope shared repair-scope exclusion table for the E2 guard family (frozen LEDGER8/CHECKERS rows read at runtime from certify/frozen8.py, the append-only ledger document, the frozen directory families; per-class writable faces + budget registry; the single source every repair guard imports) -> tools/repair_scope.py
+#               cw.sh repair-scope --check PATH... | --classes | --selftest
+#   roster-resync  roster count drift guard, repair class E2-2 (the run_tests.sh CASES roster is the only count authority; the doc_lint count lines of tests/README.md + README.md are re-derived one-way from it and the drifted digits are synced in place; the roster file is never written; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, every repaired line ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py
+#               cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -350,6 +356,12 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
   axiom-guard repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; env-gated, rc 111 honest skip; zero repository writes) -> tools/axiom_guard.py
               cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]
+  flaky-guard flaky quarantine guard, repair class E2-3 (detect classifies each red case by an isolation probe: suite-red + alone-green = order-dependent, red in both contexts = content red that stays visible; --move quarantines into tests/advisory_roster.txt so the default suite drops it with a loud ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence) -> tools/flaky_guard.py
+              cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest
+  repair-scope shared repair-scope exclusion table for the E2 guard family (frozen LEDGER8/CHECKERS rows read at runtime from certify/frozen8.py, the append-only ledger document, the frozen directory families; per-class writable faces + budget registry; the single source every repair guard imports) -> tools/repair_scope.py
+              cw.sh repair-scope --check PATH... | --classes | --selftest
+  roster-resync  roster count drift guard, repair class E2-2 (the run_tests.sh CASES roster is the only count authority; the doc_lint count lines of tests/README.md + README.md are re-derived one-way from it and the drifted digits are synced in place; the roster file is never written; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, every repaired line ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py
+                 cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -415,6 +427,9 @@ hint_for() {  # $1=tool
     evolution-dashboard) echo "cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]   # self-evolution dashboard over the three standing accounts (experience ledger rocqwash-exp/1 + round ledger rocqwash-round/1 + vacgen v2 TODO-SEAT report faces -> coverageLowerPct curve with per-run TODO-SEAT delta and rise flag, rounds conversion greenPct/classConversionPct, per-run gap count thermometer; absent default-path inputs are data with present=false, explicitly flagged absent paths exit 9; writes only caller-named --json-out/--md-out files; zero network) -> tools/evolution_dashboard.py" ;;
     bus-feeder)  echo "cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest   # gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py" ;;
     axiom-guard) echo "cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]   # repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; write faces: the caller-named --out report and the private temp workdir only; rc 0=PASS 1=red 2=usage 9=fail-loud missing binary 111=honest skip unconfigured toolchain; ROCWASH_ROCQ/ROCWASH_COQCHK env gating; zero repository writes) -> tools/axiom_guard.py" ;;
+    flaky-guard) echo "cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest   # flaky quarantine guard, repair class E2-3 (isolation probe verdicts order-dependent vs content-red; --move quarantines into tests/advisory_roster.txt, the default suite drops it with ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence; findings and refusals are data, rc 0/1/2/9) -> tools/flaky_guard.py" ;;
+    repair-scope) echo "cw.sh repair-scope --check PATH... | --classes | --selftest   # shared repair-scope exclusion table for the E2 guard family (runtime LEDGER8/CHECKERS read from certify/frozen8.py + the append-only ledger document + the frozen directory families; per-class writable faces and budget registry; --check exits 1 when any path is excluded, a refusal verdict is data) -> tools/repair_scope.py" ;;
+    roster-resync) echo "cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest   # roster count drift guard, repair class E2-2 (one-way recount from the run_tests.sh CASES roster into the doc_lint count lines of tests/README.md + README.md; the roster file is never written; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py" ;;
     *) return 1 ;;
   esac
 }
@@ -487,6 +502,9 @@ case "${1:-}" in
   evolution-dashboard) shift; run_tool evolution-dashboard "tools/evolution_dashboard.py" "$@" ;;
   bus-feeder)  shift; run_tool bus-feeder "tools/bus_feeder.py" "$@" ;;
   axiom-guard) shift; run_tool axiom-guard "tools/axiom_guard.py" "$@" ;;
+  flaky-guard) shift; run_tool flaky-guard "tools/flaky_guard.py" "$@" ;;
+  repair-scope) shift; run_tool repair-scope "tools/repair_scope.py" "$@" ;;
+  roster-resync) shift; run_tool roster-resync "tools/roster_resync.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

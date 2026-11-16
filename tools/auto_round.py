@@ -93,13 +93,16 @@ Exit-codes.  0 = the face completed or answered (a nothing-to-do skip is
 #                          oscillation_count.
 #   verify_cmd             gate command as an argv list (extension key
 #                          beyond the four gear keys); default runs
-#                          tools/norm_lint.py --selftest from the repo root.
+#                          tools/norm_lint.py --selftest from the repo
+#                          root; the ledger records which gate produced
+#                          verify_rc as the verify_kind key.
 #
 # Ledger row (docs/round-ledger.jsonl, append-only JSONL, schema
-# rocqwash-round/1): exactly the ten keys of the interface contract, no
-# more and no less:
+# rocqwash-round/1): the ten contract keys plus the additive verify_kind
+# key on rows written since the verify-swap face (old ten-key rows stay
+# valid and are never rewritten):
 #   round_id, mode, base_sha, head_sha, classes_applied, admissions, files,
-#   verify_rc, oscillation_count, timestamp_utc
+#   verify_rc, oscillation_count, timestamp_utc, verify_kind
 # admissions rows: {class, decision, confidence, threshold, basis}; only
 # classes admitted by this round appear here (out-of-band approvals live
 # in the state file).  The ledger and the state file are working-tree
@@ -147,7 +150,10 @@ DEFAULT_VERIFY_CMD = [sys.executable, "-I", "-X", "utf8", "tools/norm_lint.py", 
 
 ROW_KEYS = ("round_id", "mode", "base_sha", "head_sha", "classes_applied",
             "admissions", "files", "verify_rc", "oscillation_count",
-            "timestamp_utc")
+            "timestamp_utc", "verify_kind")
+# rows written before the verify-swap face carry exactly these ten keys
+# and stay valid forever (additive key; old rows are never rewritten)
+ROW_KEYS_LEGACY = ROW_KEYS[:-1]
 STATE_KEYS = ("schema", "anchor", "admitted_classes", "line_hits")
 ANCHOR_KEYS = ("sha", "round_id")
 ADMIT_KEYS = ("class", "confidence", "basis", "coq_comment_safe",
@@ -380,9 +386,10 @@ def validate_row(row, path, lineno):
     where = "round ledger %s line %s" % (path, lineno)
     if not isinstance(row, dict):
         raise FailLoud(9, "%s is not a JSON object" % where)
-    if set(row) != set(ROW_KEYS):
-        raise FailLoud(9, "%s keys must be exactly the ten contract keys, "
-                          "got %s" % (where, sorted(row)))
+    if set(row) not in (set(ROW_KEYS), set(ROW_KEYS_LEGACY)):
+        raise FailLoud(9, "%s keys must be the ten contract keys, or the "
+                          "ten plus the additive verify_kind key, got %s"
+                          % (where, sorted(row)))
     rid = row["round_id"]
     if isinstance(rid, bool) or not isinstance(rid, int) or rid < 1:
         raise FailLoud(9, "%s round_id must be an int >= 1" % where)
@@ -404,6 +411,10 @@ def validate_row(row, path, lineno):
         val = row[key]
         if isinstance(val, bool) or not isinstance(val, int) or val < 0:
             raise FailLoud(9, "%s %s must be an int >= 0" % (where, key))
+    if "verify_kind" in row and (not isinstance(row["verify_kind"], str)
+                                 or not row["verify_kind"]):
+        raise FailLoud(9, "%s verify_kind must be a non-empty string"
+                          % where)
 
 
 def load_rounds(path):
@@ -447,8 +458,9 @@ def append_row(path, row):
 
 
 def build_row(number, mode, base_sha, head_sha, classes, admissions, files,
-              verify_rc, oscillation_count, stamp):
-    """Round row in contract key order."""
+              verify_rc, oscillation_count, stamp, verify_cmd=None):
+    """Round row in contract key order; verify_kind rides the additive
+    key and names the gate that produced verify_rc."""
     return {
         "round_id": number,
         "mode": mode,
@@ -460,6 +472,7 @@ def build_row(number, mode, base_sha, head_sha, classes, admissions, files,
         "verify_rc": int(verify_rc),
         "oscillation_count": int(oscillation_count),
         "timestamp_utc": stamp,
+        "verify_kind": verify_kind_of(verify_cmd),
     }
 
 
@@ -558,6 +571,24 @@ def changed_files(repo, files):
 
 
 # ------------------------------------------------------------------ gate --
+def verify_kind_of(cmd):
+    """Ledger verify_kind token for a gate argv: the stem of the first
+    gate script element (the argv element ending .py; interpreter and
+    flag elements never match, the element after -c/-m is skipped), else
+    "custom".  Deterministic; the default gate maps to norm_lint."""
+    skip = False
+    for part in cmd or []:
+        if skip:
+            skip = False
+            continue
+        if part in ("-c", "-m"):
+            skip = True
+            continue
+        if isinstance(part, str) and part.endswith(".py"):
+            return os.path.splitext(os.path.basename(part))[0]
+    return "custom"
+
+
 def run_verify(repo, cmd):
     """Run the mechanical verification gate from the repo root."""
     if cmd == DEFAULT_VERIFY_CMD \
@@ -803,7 +834,7 @@ def cmd_commit(args):
     save_state(state_path, state)
     append_row(ledger, build_row(number, cfg["mode"], base, head, classes,
                                  admissions, changed, verify_rc, osc_count,
-                                 stamp))
+                                 stamp, verify_cmd=cfg["verify_cmd"]))
     sys.stdout.write("round=%d mode=%s head=%s files=%d classes=%s\n"
                      % (number, cfg["mode"], head[:12], len(changed),
                         ",".join(classes)))
@@ -942,7 +973,8 @@ def cmd_rollback(args):
     head = git_commit(repo, message)
     git_out(repo, ["update-ref", round_ref, head], "round ref move")
     append_row(ledger, build_row(number, "rollback", pre_head, head, [], [],
-                                 sorted(files), verify_rc, 0, _utc_ts()))
+                                 sorted(files), verify_rc, 0, _utc_ts(),
+                                 verify_cmd=cfg["verify_cmd"]))
     sys.stdout.write("rollback round=%d drift-ref=%s head=%s files=%d\n"
                      % (number, drift_ref, head[:12], len(files)))
     return 0
@@ -1231,7 +1263,8 @@ def cmd_merge_salvage(args):
     head = git_commit(repo, message)
     git_out(repo, ["update-ref", round_ref, head], "round ref move")
     append_row(ledger, build_row(number, "salvage", base, head, classes, [],
-                                 sorted(touched), verify_rc, 0, _utc_ts()))
+                                 sorted(touched), verify_rc, 0, _utc_ts(),
+                                 verify_cmd=cfg["verify_cmd"]))
     sys.stdout.write("salvage-merged round=%d ref=%s rows=%d head=%s\n"
                      % (number, refname, len(order), head[:12]))
     return 0
@@ -1413,6 +1446,15 @@ def selftest():
         except FailLoud as exc:
             check("V01 bad gear", exc.code == 9, "code=%d" % exc.code)
 
+        # V01b verify_kind derivation: the default gate maps to norm_lint,
+        # the axiom swap maps to axiom_guard, inline gates stay custom.
+        check("V01b kinds", verify_kind_of(DEFAULT_VERIFY_CMD) == "norm_lint"
+              and verify_kind_of(["py", "-I", "-X", "utf8",
+                                  "tools/axiom_guard.py", "--repo", "."])
+              == "axiom_guard"
+              and verify_kind_of(_good_gate()) == "custom"
+              and verify_kind_of([]) == "custom", "derivation drifted")
+
         # V02 admission truth table: one code path, gear picks adjudicator.
         d1, b1 = admission_decision("auto", "new", 0.85, 0.8, set())
         check("V02 auto above", (d1, "threshold" in b1) == ("admitted", True),
@@ -1445,6 +1487,40 @@ def selftest():
             check("V03 bad json", exc.code == 9, "code=%d" % exc.code)
         check("V03 absent ledger", load_rounds(
             os.path.join(tmp, "none.jsonl")) is None, "absent not None")
+
+        # V03 additive verify_kind: legacy ten-key rows stay valid, a bad
+        # token fails loud, and the eleven-key shape loads.
+        legacy_row = {"round_id": 1, "mode": "auto", "base_sha": "b",
+                      "head_sha": "h", "classes_applied": [],
+                      "admissions": [], "files": ["f.py"], "verify_rc": 0,
+                      "oscillation_count": 0,
+                      "timestamp_utc": "2026-01-01T00:00:00Z"}
+        legacy = os.path.join(tmp, "legacy.jsonl")
+        with open(legacy, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(legacy_row, sort_keys=True) + "\n")
+        old_rows = load_rounds(legacy)
+        check("V03 legacy ten keys", old_rows is not None
+              and len(old_rows) == 1 and "verify_kind" not in old_rows[0]
+              and set(old_rows[0]) == set(ROW_KEYS_LEGACY),
+              "legacy row rejected")
+        badkind = os.path.join(tmp, "badkind.jsonl")
+        with open(badkind, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(dict(legacy_row, verify_kind=""),
+                                    sort_keys=True) + "\n")
+        try:
+            load_rounds(badkind)
+            check("V03 bad verify_kind", False, "empty token accepted")
+        except FailLoud as exc:
+            check("V03 bad verify_kind", exc.code == 9, "code=%d" % exc.code)
+        eleven = os.path.join(tmp, "eleven.jsonl")
+        with open(eleven, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(dict(legacy_row,
+                                         verify_kind="axiom_guard"),
+                                    sort_keys=True) + "\n")
+        new_rows = load_rounds(eleven)
+        check("V03 eleven-key row", new_rows is not None
+              and new_rows[0]["verify_kind"] == "axiom_guard",
+              "eleven-key row rejected")
 
         if not shutil.which("git"):
             skips.append("git executable not found; repo vectors not run")
@@ -1498,7 +1574,9 @@ def selftest_repo_vectors(tmp, check):
     rows = rows_of(root)
     check("V04 one row", len(rows) == 1, str(len(rows)))
     row = rows[0]
-    check("V04 ten keys", set(row) == set(ROW_KEYS), str(sorted(row)))
+    check("V04 row keys", set(row) == set(ROW_KEYS), str(sorted(row)))
+    check("V04 verify kind", row.get("verify_kind") == "custom",
+          str(row.get("verify_kind")))
     check("V04 fields", row["mode"] == "auto" and row["verify_rc"] == 0
           and row["files"] == ["probe.py"]
           and row["classes_applied"] == ["date-strip"]

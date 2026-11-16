@@ -1,4 +1,4 @@
-# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 42 routes over 40 tools)
+# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 55 routes over 53 tools)
 
 > **Language versions:** this file is the English-first version of the quick
 > reference. The original Chinese full text is preserved verbatim in

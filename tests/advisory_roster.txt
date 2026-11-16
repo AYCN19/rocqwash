@@ -1,0 +1,7 @@
+# advisory roster - flaky quarantine (repair class E2-3).
+# One rostered case per line; lines starting with '#' are comments.
+# Written only by tools/flaky_guard.py --move --apply (scope-checked
+# against tools/repair_scope.py, budget-capped, ledgered).  The default
+# suite drops these cases with a loud ADVISORY-OUT line and the CI
+# flaky-watch lane keeps observing them; --restore returns a case
+# after green-round evidence.

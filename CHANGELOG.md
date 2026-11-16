@@ -428,3 +428,45 @@ defects rather than environment noise, and are closed here.
 [Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
 下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
 对齐＋push_gate 双门归一评估·见更新账 v39 段待办）。
+
+### v66 — flaky quarantine guard: order-dependence repair class E2-3 (2026-11-16)
+
+**Added**
+
+- `tools/flaky_guard.py`: the class-③ guard of the E2 repair family.
+  `--detect` classifies every red case in a suite log by an isolation
+  probe (`ROCWASH_TESTS_ONLY=<case>`): suite-red plus alone-green is
+  order-dependent quarantine material; red in both contexts is content
+  red that stays visible (recorded, never hidden).  `--move --apply`
+  writes the case into `tests/advisory_roster.txt` (the default suite
+  then drops it with a loud `ADVISORY-OUT` line and the CI flaky-watch
+  job keeps running it in a new advisory observation step), appends a
+  `rocqwash-repair-ledger/1` repair row (class/target/outcome), and is
+  budget-capped at two repairs per class per branch.  `--restore`
+  returns a quarantined case only with green-round evidence (default
+  three rounds; the CI-level cross-platform rule stays with the watch
+  lane).  Dry run is the default; both write faces are scope-checked
+  against `tools/repair_scope.py` and a frozen or out-of-scope target is
+  refused loudly.  The sandbox `--selftest` carries 32 vectors over a
+  tmp mini-suite; zero real-repo writes.
+
+- `tools/repair_scope.py`: the shared exclusion single source for the E2
+  guard family (the lane-extract seat cast the core: runtime
+  LEDGER8/CHECKERS rows via an AST read of `certify/frozen8.py`, the
+  append-only ledger document, the frozen directory families); the
+  flaky-quarantine class appends its provider scope in the marked seat
+  append zone (read-merge-write, idempotent).
+
+- `tests/run_tests.sh`: the advisory-roster hookup in the selection
+  block.  Rostered cases are dropped from the default selection with a
+  loud `ADVISORY-OUT` line; `ROCWASH_TESTS_ONLY` wins over the
+  quarantine (a watch lane can name a quarantined case explicitly);
+  unknown advisory names print one loud note and are ignored.  With an
+  empty roster the default run is byte-identical to before.  Case count
+  81 -> 82 (`t_flaky_guard` shell hookup; counts synced in
+  `tests/README.md` and `README.md`).
+
+- `.github/workflows/ci.yml`: the flaky-watch job gained an advisory
+  "Observe advisory roster (flaky quarantine)" step (continue-on-error)
+  plus a verdict line, so a quarantined case is watched, never silently
+  hidden.
