@@ -408,6 +408,22 @@ def automerge_leg(token, repo):
                 seen.add(r.get("id"))
                 mine.append(r)
         if not mine:
+            # The PR head branch may be deleted while the PR stays open
+            # (20261117 PR #10 case) - a dispatch has no ref to target.
+            # Restore the head ref from the PR head commit first (the
+            # commit still exists; the deletion is ref-level only).
+            _, berr = gh_api(token, "/repos/%s/branches/%s" % (repo, ref))
+            if berr:
+                _, crerr = gh_api(token, "/repos/%s/git/refs" % repo,
+                                  method="POST",
+                                  body={"ref": "refs/heads/" + ref,
+                                        "sha": sha})
+                if crerr:
+                    out.append("#%s hold (head branch gone; ref-recreate "
+                               "refused: %s)" % (num, crerr))
+                    continue
+                out.append("#%s head branch restored at %s (deleted head)"
+                           % (num, sha[:8]))
             _, derr = gh_api(token,
                              "/repos/%s/actions/workflows/%s/dispatches"
                              % (repo, WF_FILE), method="POST",
