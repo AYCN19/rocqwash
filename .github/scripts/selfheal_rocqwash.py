@@ -655,7 +655,21 @@ def main():
     ap.add_argument("--reconcile", action="store_true",
                     help="reconcile mode: record cancelled (intent) + queue "
                          "governor; triage skipped")
+    ap.add_argument("--automerge-only", action="store_true",
+                    help="automerge-only pass (CI-success trigger): merge "
+                         "green supply/* PRs, nothing else - the */30 cron "
+                         "is GitHub-degraded to hours, so the green CI "
+                         "completion is the fast automerge trigger")
     args = ap.parse_args()
+
+    if args.automerge_only:
+        token = os.environ.get("GITHUB_TOKEN", "")
+        lines = ["automerge-only: " + x
+                 for x in automerge_leg(token, args.repo)]
+        report = "automerge-only pass:\n" + "\n".join(lines) + "\n"
+        write_out(args.out, [("automerge-report.txt", report)])
+        print(report)
+        return 0
 
     if args.reconcile:
         lines = reconcile_leg(args, args.repo)

@@ -46,12 +46,16 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       github.event_name != 'workflow_run' ||
-      github.event.workflow_run.conclusion == 'failure'
+      github.event.workflow_run.conclusion == 'failure' ||
+      github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Guard (red run, dispatch test, or reconcile)
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          if [ "${{ github.event_name }}" = "workflow_run" ] && [ "${{ github.event.workflow_run.conclusion }}" = "success" ]; then
+            echo "watch: CI success - automerge-only pass (the */30 cron is GitHub-degraded to hours; the green CI completion is the fast automerge trigger)"
+            echo "AUTOMERGE=1" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
             echo "watch: rocqwash CI run ${{ github.event.workflow_run.id }} concluded ${{ github.event.workflow_run.conclusion }}"
             echo "RUN_ID=${{ github.event.workflow_run.id }}" >> "$GITHUB_ENV"
           elif [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.run_id }}" ]; then
@@ -67,11 +71,11 @@ jobs:
           fi
 
       - name: Check out driver
-        if: env.RUN_ID != '' || env.RECONCILE == '1'
+        if: env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1'
         uses: actions/checkout@v5
 
-      - name: Self-heal leg (triage + heal, or reconcile)
-        if: env.RUN_ID != '' || env.RECONCILE == '1'
+      - name: Self-heal leg (triage + heal, or reconcile, or automerge-only)
+        if: env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
@@ -83,6 +87,12 @@ jobs:
               --run "$RUN_ID" \
               --out selfheal-out \
               --heal
+          elif [ "${AUTOMERGE:-}" = "1" ]; then
+            python3 .github/scripts/selfheal_rocqwash.py \
+              --repo "${{ github.repository }}" \
+              --run 0 \
+              --out selfheal-out \
+              --automerge-only
           else
             python3 .github/scripts/selfheal_rocqwash.py \
               --repo "${{ github.repository }}" \
@@ -92,7 +102,7 @@ jobs:
           fi
 
       - name: Upload triage artifacts
-        if: always() && (env.RUN_ID != '' || env.RECONCILE == '1')
+        if: always() && (env.RUN_ID != '' || env.RECONCILE == '1' || env.AUTOMERGE == '1')
         uses: actions/upload-artifact@v7
         with:
           name: selfheal-${{ env.RUN_ID || github.run_id }}
