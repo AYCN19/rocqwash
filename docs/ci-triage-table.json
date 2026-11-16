@@ -199,13 +199,14 @@
       "markers": [
         "hold (no head CI yet",
         "automerge: PR #",
-        "dispatched ci.yml@"
+        "dispatched ci.yml@",
+        "PARSE-DEATH:"
       ],
       "precedence": 13,
       "family": "structural",
       "auto_repairable": false,
       "guard": "Every gate requires its signal wired end to end (trigger -> run -> verdict); a gate with no producer is a stall, not a hold; a reconcile line repeating identically for hours is the stall fingerprint.",
-      "prescription": "Extend the trigger (pull_request opened/synchronize/reopened), broaden the match (push/workflow_dispatch/pull_request runs - PR-event head_sha is the merge-ref commit, match the pull_requests link too), self-start the missing signal (dispatch ci.yml at the PR head branch), and gate on the hosted faces via the jobs API (the local self-hosted face is main-only evidence)."
+      "prescription": "Extend the trigger (pull_request opened/synchronize/reopened), broaden the match (push/workflow_dispatch/pull_request runs - PR-event head_sha is the merge-ref commit, match the pull_requests link too), self-start the missing signal (dispatch ci.yml at the PR head branch), and gate on the hosted faces via the jobs API (the local self-hosted face is main-only evidence). Parse-death blindness: a validation-failed file emits no workflow_run event, so the scheduled reconcile carries the read-only parse-death probe (newest main run jobs=0); the blocking-file fix is desk-gated."
     }
   ]
 }

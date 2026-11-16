@@ -491,6 +491,7 @@ def reconcile_leg(args, repo):
                 out.append("#%d queue-trimmed (beyond cap %d)"
                            % (gnum, MAX_QUEUED_RUNS))
     out.extend("automerge: " + x for x in automerge_leg(token, repo))
+    out.extend("parse-probe: " + x for x in parse_death_probe(token, repo))
     if busy and not out:
         out.append("skipped(furnace-busy)")
     for rid, num, age_h in cancelled[:RECONCILE_MAX_PER_PASS]:
@@ -499,6 +500,51 @@ def reconcile_leg(args, repo):
     if not out:
         out = ["clean"]
     return out
+
+
+def parse_death_probe(token, repo):
+    """Workflow parse-death probe (read-only, every reconcile pass): a
+    workflow-level validation failure (bad YAML, unsupported expression)
+    produces a FAILED run with ZERO jobs and NO workflow_run event - the
+    self-heal watch is never triggered by it (20261117 run 118 evidence),
+    so the scheduled reconcile is the only in-system sensor. The probe
+    reads the newest completed push runs on main and flags the jobs=0
+    signature loudly in the reconcile report; the blocking-file fix is
+    desk-gated (the watch never edits the blocking workflow)."""
+    lines = []
+    runs, err = gh_api(token, "/repos/%s/actions/workflows/%s/runs"
+                       "?event=push&branch=main&per_page=5" % (repo, WF_FILE))
+    if err or not runs:
+        return ["skipped(runs-list: %s)" % err]
+    done = [r for r in (runs.get("workflow_runs") or [])
+            if r.get("status") == "completed"]
+    if not done:
+        return ["clean (no completed push runs to probe)"]
+    r = done[0]
+    if r.get("conclusion") != "failure":
+        return ["clean (newest main run #%s = %s)"
+                % (r.get("run_number"), r.get("conclusion"))]
+    jobs, jerr = gh_api(token, "/repos/%s/actions/runs/%s/jobs?per_page=1"
+                        % (repo, r.get("id")))
+    total = (jobs or {}).get("total_count", -1) if not jerr else -1
+    if total == 0:
+        lines.append("PARSE-DEATH: run #%s (sha %s) concluded failure with "
+                     "ZERO jobs - the workflow file fails validation and "
+                     "emits no workflow_run event, so this watch is blind "
+                     "to it; the blocking file needs a desk fix NOW"
+                     % (r.get("run_number"), (r.get("head_sha") or "")[:8]))
+        prev = next((x for x in done[1:]
+                     if x.get("conclusion") == "success"), None)
+        if prev:
+            lines.append("last-known-good: run #%s (sha %s)"
+                         % (prev.get("run_number"),
+                            (prev.get("head_sha") or "")[:8]))
+    elif total > 0:
+        lines.append("clean (run #%s failure has %s jobs - real red, the "
+                     "watch covers it)" % (r.get("run_number"), total))
+    else:
+        lines.append("skipped(jobs-probe: %s)" % jerr)
+    return lines
 
 
 def branch_census(token, repo):
