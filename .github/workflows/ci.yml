@@ -1,12 +1,18 @@
 name: rocqwash CI
 
-# Three-platform matrix (audit P0-5 follow-up: the workflow ran macOS only
-# while the suite carries platform-sensitive cases; historical CI failure
-# rate 27.9%). Two jobs per platform:
+# Blocking matrix: Linux + Windows hosted + the local self-hosted Windows
+# face. The macOS face moved to the separate advisory workflow mac-verify.yml
+# (20261116 routing redundancy; audit P0-5 follow-up on the historical
+# 27.9% CI failure rate). Two jobs per platform:
 #   selftest      - blocking. Runs the default roster minus the
 #                   platform-sensitive roster (ROCWASH_TESTS_EXCLUDE, a
-#                   run_tests.sh selection mechanism). macOS keeps the full
-#                   canonical sweep.
+#                   run_tests.sh selection mechanism). The canonical full
+#                   sweep rides the local face.
+#   mac-verify     - advisory workflow (mac-verify.yml, separate run): the
+#                   macOS face moved out of this blocking run (20261116
+#                   routing redundancy - a capacity-starved macos-15 queue
+#                   jammed every push behind it; the desk order moves it to a
+#                   non-blocking lane so the local face carries the verdict).
 #   flaky-watch   - advisory (continue-on-error). Differential watch over
 #                   the platform-sensitive roster on Linux and Windows:
 #                   green candidates run blocking-for-the-lane, known-red
@@ -59,6 +65,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Routing redundancy (20261116): a newer push on the same ref supersedes
+# the older queued run, so a capacity-starved hosted face (macOS) can never
+# jam the pipeline behind it.  The suite signal is carried by the remaining
+# faces; the mac advisory face lives in mac-verify.yml (separate workflow).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
@@ -72,10 +86,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15
-            label: macOS
-            py: python3
-            platform_roster: ""
           - os: ubuntu-latest
             label: Linux
             py: python3

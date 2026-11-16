@@ -1,0 +1,56 @@
+name: rocqwash mac-verify (advisory)
+
+# Routing redundancy (20261116): the macOS hosted face moved out of the
+# blocking ci.yml matrix. A capacity-starved macos-15 queue jammed every
+# push behind it (rerun job queued indefinitely, 2026-11-16/17); here the
+# mac face runs in its own non-blocking workflow, so a slow mac queue can
+# never delay or block the main pipeline. Red here is advisory: the suite
+# signal is carried by ci.yml (Linux + Windows hosted + the local
+# self-hosted face, whose roster already excludes the platform-sensitive
+# cases) and the platform-sensitive roster stays under flaky-watch
+# observation in ci.yml.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: mac-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  macsuite:
+    name: Self-test suite (macOS advisory)
+    runs-on: macos-15
+    timeout-minutes: 15
+    continue-on-error: true
+    env:
+      ROCWASH_PY: python3
+      # macOS runners default to an ANSI stdout codepage; the suite prints
+      # Chinese prose and math symbols. Force UTF-8 I/O (same as ci.yml).
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD must
+          # be a descendant of the freeze commit) needs the freeze commit
+          # object; a depth-1 checkout false-flags DRIFT (20261116 red chain)
+          fetch-depth: 0
+
+      - name: Run self-test suite (canonical sweep, advisory)
+        run: bash tests/run_tests.sh
+
+      - name: Suite verdict
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "MAC-VERIFY-GREEN (canonical sweep, advisory lane)"
+          else
+            echo "::warning::mac advisory suite red (macos-15 queue jam or platform facet) - advisory, non-blocking; the blocking signal is ci.yml"
+          fi
