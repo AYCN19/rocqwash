@@ -1,0 +1,119 @@
+{
+  "schema": "rocqwash.ci-triage-table/1",
+  "version": "1.0",
+  "updated": "2026-11-16",
+  "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
+  "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
+  "classes": [
+    {
+      "id": "R1",
+      "title": "recursive-artifact drift (lane registered, artifact absent)",
+      "markers": ["can't open file", "No such file or directory", "rc=2"],
+      "precedence": 1,
+      "family": "content-red",
+      "auto_repairable": true,
+      "prescription": "Drop the lane registration from the roster (commit 2748b52 precedent); keep the file lane pending; re-register with an rc=111 skip protocol when the file lands.",
+      "guard": "Roster derivation asserts file existence per lane at roster-build time.",
+      "escalation": "If the missing file belongs to another pending lane, notify that lane's owner in the repair ledger."
+    },
+    {
+      "id": "R2",
+      "title": "mechanical-wash overreach (frozen/self-referential faces)",
+      "markers": ["TEST-SCAN-STATION", "TEST-PRECEDENT-STATION", "t_frozen8", "frozen-face drift", "delisted"],
+      "precedence": 2,
+      "family": "content-red",
+      "auto_repairable": "partial",
+      "prescription": "Surgical revert of touched frozen faces to pre-round content (checkout HEAD^ -- <faces>); keep clean improvements; three-station re-pin; record class in round ledger.",
+      "guard": "Exclusion table as single source (tools/repair_scope.py); self-reference guard (--a2-table precedent); certification faces never in wash scope.",
+      "escalation": "Re-landing the intended improvement on non-frozen faces requires a seat."
+    },
+    {
+      "id": "R3",
+      "title": "stale repair target (superseded head)",
+      "markers": ["skipped(superseded", "not our ref", "head moved"],
+      "precedence": 3,
+      "family": "content-red",
+      "auto_repairable": "partial",
+      "prescription": "Compare-API discrimination (ahead/identical = covered, skip; behind/diverged/error = proceed); re-apply the prepared fix onto the current head with git apply --3way; conflicts escalate to the desk.",
+      "guard": "Freshness check immediately before any repair push (223b618 precedent).",
+      "escalation": "3-way conflicts are adjudicated by a session, not retried."
+    },
+    {
+      "id": "R4",
+      "title": "intent & queue (cancelled resurrected / queue fission)",
+      "markers": ["skipped(intent-cancelled)", "cancelled=intent", "queue-trimmed", "skipped(furnace-busy)"],
+      "precedence": 4,
+      "family": "watch-only-guard-correct",
+      "auto_repairable": false,
+      "prescription": "None - the guard is the repair. Manual rerun remains available to the desk.",
+      "guard": "cancelled = intent, never auto-revived; queue governor MAX_QUEUED_RUNS=3, oldest trimmed, in-progress untouched.",
+      "escalation": "None (record only)."
+    },
+    {
+      "id": "R5",
+      "title": "fitness absence (verify gate validates the validator)",
+      "markers": ["verify_rc", "norm_lint --selftest", "DEFAULT_VERIFY_CMD"],
+      "precedence": 5,
+      "family": "structural",
+      "auto_repairable": false,
+      "prescription": "Rewire autonomy.json verify_cmd to the axiom_guard compile leg (see techdocs contract); repairs and rounds share the gate; ledger verify_kind=axiom_guard.",
+      "guard": "Round and repair commits share the same fitness gate.",
+      "escalation": "Gate cost measurement feeds the round cadence (desk sets parameters)."
+    },
+    {
+      "id": "R6",
+      "title": "watchdog reflexivity (skip≠red, runner self-death, dependency-tree currency)",
+      "markers": ["conclusion=skipped", "not our ref", "runner heartbeat", "self-heal", "skipped(mirror-sync"],
+      "precedence": 6,
+      "family": "watch-only-guard-correct",
+      "auto_repairable": false,
+      "prescription": "Three-way conclusion reading (success/failed/skipped - skipped = guard-correct); sync the out-of-repo dependency tree before landing; escalate watch-death with heartbeat evidence to the desk.",
+      "guard": "Watch-the-watch heartbeat; dependency documented in the service map (techdocs/本机服务面与勿扰清单).",
+      "escalation": "Runner lifecycle and watch death are desk-gated."
+    },
+    {
+      "id": "R7",
+      "title": "environment-branch fix with an unexercised branch",
+      "markers": ["NameError", "UnicodeEncodeError", "charmap", "Did you mean"],
+      "precedence": 7,
+      "family": "content-red",
+      "auto_repairable": true,
+      "prescription": "Add the missing import/requirement on the fallback branch; land; add the face to the platform-sensitive watch until three consecutive greens.",
+      "guard": "Every new host-branch in a fix must be executed at least once before landing (unset the env vars locally and run).",
+      "escalation": "If the branch cannot be exercised locally, gate the fix behind an rc=111 skip protocol."
+    },
+    {
+      "id": "R8",
+      "title": "service-face coupling (repo updates break local services)",
+      "markers": ["self-hosted", "LIVE-ROCQWASH", "tools/list", "mcp", "sentinel"],
+      "precedence": 8,
+      "family": "content-red",
+      "auto_repairable": false,
+      "prescription": "Follow the service map recovery pointers (techdocs/本机服务面与勿扰清单); tool signatures additive-only; matrix labels checked against runner labels; stop-the-line on any service anomaly.",
+      "guard": "Service map read is mandatory before touching mcp_server.py / ci.yml matrix / sentinel CLI.",
+      "escalation": "Service face is out-of-repo; desk-gated."
+    },
+    {
+      "id": "R9",
+      "title": "platform evolution (runtime deprecations)",
+      "markers": ["deprecated", "Node 20", "Node 24", "deprecation"],
+      "precedence": 9,
+      "family": "content-red",
+      "auto_repairable": true,
+      "prescription": "Bump the action to the latest release (fetch-before-use: check the action repo's latest tag); keep the flag face; watch one run.",
+      "guard": "Quarterly uses: audit against each action's latest release (e213276 precedent: upload-artifact v4 to v7.0.2).",
+      "escalation": "If the latest release changes the input schema, escalate before bumping."
+    },
+    {
+      "id": "R10",
+      "title": "multi-session collision (same tree, same machine)",
+      "markers": ["does not match index", "stash", "CONFLICT", "dirty-tree"],
+      "precedence": 10,
+      "family": "content-red",
+      "auto_repairable": "partial",
+      "prescription": "Union merges via git merge-file / apply --3way onto the current head; stash-rebase(resign)-push-pop dance for pending-lane overlaps; record both sides in the ledger.",
+      "guard": "Face/meal selection reads git status --porcelain first and excludes dirty faces (collision-free matrix before concurrency).",
+      "escalation": "Conflicting intents between lanes are adjudicated by the desk."
+    }
+  ]
+}
