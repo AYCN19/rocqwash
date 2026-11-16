@@ -76,7 +76,10 @@ on:
 # jam the pipeline behind it.  The suite signal is carried by the remaining
 # faces; the mac advisory face lives in mac-verify.yml (separate workflow).
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-v2-${{ github.ref }}
+  # v2 (20261117): the previous group was held hostage by a queued
+  # zero-job zombie (cancel 409) - the rename orphans the dead group
+  # and frees every waiting run (the zombie ages out harmlessly).
   # cancel-in-progress is OFF (20261117 root cure): with it ON, an older
   # QUEUED run cancels the newer IN-FLIGHT tip run the moment the queued
   # one starts (run 138 killed mid-suite by run 136). In-flight runs are
