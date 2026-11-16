@@ -473,6 +473,18 @@ def automerge_leg(token, repo):
         merged_any = True
         out.append("#%d MERGED (supply lane, head CI green)" % num)
         log("automerge: PR #%d merged" % num)
+        # Post-merge judge: the merge push carried GITHUB_TOKEN, so GitHub
+        # suppresses the push event and the merge commit gets NO CI
+        # (verified live 20261117, e73a34a: zero runs). workflow_dispatch
+        # is the documented suppression exception - dispatch ci.yml at the
+        # base branch so the merge commit is judged on its own.
+        _, perr = gh_api(token, "/repos/%s/actions/workflows/%s/dispatches"
+                         % (repo, WF_FILE), method="POST",
+                         body={"ref": (pr.get("base") or {}).get("ref")
+                               or "main"})
+        out.append("#%d post-merge CI %s"
+                   % (num, "dispatched@main" if not perr
+                      else "dispatch refused: %s" % perr))
     if not out:
         out = ["no open supply/* PRs"]
     return out
