@@ -11,13 +11,26 @@ import re, os, shutil, subprocess, sys
 
 OCAMLC = shutil.which("ocamlc")
 OCAMLDEP = shutil.which("ocamldep")
-if OCAMLC is None or OCAMLDEP is None:
-    # Clean mode (ROCWASH_CLEAN=1): the OCaml toolchain is a canonical-
-    # environment face; report it explicitly before the standing FATAL
-    # (this file's own exit-1 toolchain contract is kept).
-    if os.environ.get("ROCWASH_CLEAN", "").strip() == "1":
+# Clean mode (ROCWASH_CLEAN=1) is report-not-execute and holds regardless
+# of toolchain presence: on a canonical machine (ocamlc already on PATH)
+# clean mode still reports and refuses instead of compiling (the exit-1
+# report contract is kept; tests/test_clean_mode.py V16).
+if os.environ.get("ROCWASH_CLEAN", "").strip() == "1":
+    if OCAMLC is None or OCAMLDEP is None:
         sys.stderr.write("requires canonical environment: the OCaml "
                          "toolchain (ocamlc/ocamldep on PATH via opam env)\n")
+        sys.stderr.write(
+            "FATAL toolchain: ocamlc/ocamldep not found on PATH "
+            f"(which ocamlc={OCAMLC!r}, which ocamldep={OCAMLDEP!r}). "
+            "Activate the opam env first (e.g. eval \"$(opam env)\" or "
+            "export PATH=<opam-switch-bin>:$PATH); no hardcoded machine-path fallback.\n")
+    else:
+        sys.stderr.write("requires canonical environment: clean mode is "
+                         "report-not-execute; the OCaml toolchain is "
+                         f"present (ocamlc={OCAMLC!r}, ocamldep={OCAMLDEP!r}) "
+                         "and would compile in default mode\n")
+    sys.exit(1)
+if OCAMLC is None or OCAMLDEP is None:
     sys.stderr.write(
         "FATAL toolchain: ocamlc/ocamldep not found on PATH "
         f"(which ocamlc={OCAMLC!r}, which ocamldep={OCAMLDEP!r}). "

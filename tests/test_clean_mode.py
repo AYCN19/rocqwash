@@ -19,6 +19,7 @@ Constructivity. One deterministic vector per face, machine-independent:
 Build.   python3 -B tests/test_clean_mode.py   (suite case t_clean_mode).
 """
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -196,9 +197,19 @@ def main():
     rc, out = run_py(os.path.join("tools", "_abl1_4b_compile.py"),
                      [tmp], BASE_ENV)
     n += 1
-    expect("V%02d _abl1_4b_compile default keeps FATAL rc1, no report" % n,
-           rc == 1 and MARK not in out,
-           "rc=%r out=%r" % (rc, out[-200:]))
+    # Environment-aware default vector: with the OCaml toolchain on PATH the
+    # default mode compiles the (empty) fixture and succeeds rc0; without it
+    # the standing FATAL rc1 contract holds. Either way no clean-report
+    # marker leaks into default mode and the clean vector (V16) keeps its
+    # report-and-refuse contract.
+    if shutil.which("ocamlc") is not None and shutil.which("ocamldep") is not None:
+        expect("V%02d _abl1_4b_compile default compiles empty fixture rc0, no report" % n,
+               rc == 0 and "COMPILED-ALL" in out and MARK not in out,
+               "rc=%r out=%r" % (rc, out[-200:]))
+    else:
+        expect("V%02d _abl1_4b_compile default keeps FATAL rc1, no report" % n,
+               rc == 1 and MARK not in out,
+               "rc=%r out=%r" % (rc, out[-200:]))
 
     # -- suite gate word face ---------------------------------------------
     with open(os.path.join(_HERE, "run_tests.sh"), "r",
