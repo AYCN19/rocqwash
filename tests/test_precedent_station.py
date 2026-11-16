@@ -32,7 +32,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATION = os.path.join(REPO, "wrapper", "precedent_station.py")
 NAMES = os.path.join(REPO, "names", "mac_stmt_names.py")
 GATE4 = os.path.join(REPO, "verify", "gate4_comment_guard.py")
-NAMES_FROZEN_MD5 = "01dc635ce445b05628bdd6e728990ce3"   # 更新账.md §三在册值
+NAMES_FROZEN_MD5 = "9e26c0db2c60ced3629a13a821bdf615"   # 更新账.md §三在册值
 GATE4_FROZEN_MD5 = "d7ab397c5f0243d0c7320f91d0f14481"   # 更新账.md §三在册值
 
 HEADER = """(* precedent_station_fixture.v — 三判例验收站夹具（rocqwash tests/自造·零外部素材）。
