@@ -105,6 +105,12 @@ jobs:
       PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD must
+          # be a descendant of the freeze commit) needs the freeze commit
+          # object; the default depth-1 fetch re-shallows the cached runner
+          # workspace every run and false-flags DRIFT (20261116 red chain)
+          fetch-depth: 0
 
       - name: Run self-test suite (stable roster)
         run: bash tests/run_tests.sh
