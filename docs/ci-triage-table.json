@@ -208,6 +208,20 @@
       "auto_repairable": false,
       "guard": "Every gate requires its signal wired end to end (trigger -> run -> verdict); a gate with no producer is a stall, not a hold; a reconcile line repeating identically for hours is the stall fingerprint.",
       "prescription": "Extend the trigger (pull_request opened/synchronize/reopened), broaden the match (push/workflow_dispatch/pull_request runs - PR-event head_sha is the merge-ref commit, match the pull_requests link too), self-start the missing signal (dispatch ci.yml at the PR head branch), and gate on the hosted faces via the jobs API (the local self-hosted face is main-only evidence). Parse-death blindness: a validation-failed file emits no workflow_run event, so the scheduled reconcile carries the read-only parse-death probe (newest main run jobs=0); the blocking-file fix is desk-gated."
+    },
+    {
+      "id": "R14",
+      "title": "data-shape change -> consumer breakage (seed form migration)",
+      "markers": [
+        "has no active rows",
+        "face absent from whitepaper",
+        "source drifted from the pinned snapshot"
+      ],
+      "precedence": 14,
+      "family": "content-red",
+      "auto_repairable": false,
+      "guard": "A shape migration must land with every consumer of the old shape patched in the same commit; the sync tool runs a post-sync consumer smoke as its exit gate; hosted-green + canonical-red means the red is real.",
+      "prescription": "Reproduce on the canonical machine by calling the check functions directly; patch each consumer to accept BOTH shapes during the transition; re-sign drifted provenance md5 per the sync discipline; move time-dependent assertions when the shape becomes legal. Push only after the canonical three-gate run is green."
     }
   ]
 }

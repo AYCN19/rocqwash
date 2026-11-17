@@ -119,6 +119,15 @@ Each class: **Symptom** (stable log/observable markers) → **Mechanism** → **
 - **Prescription**: extend the trigger (`pull_request` types opened/synchronize/reopened), broaden the match (push / workflow_dispatch / pull_request runs — a PR-event run's head_sha is the MERGE-ref commit, so match via the `pull_requests` link too), and let the gate self-start the missing signal (route ci.yml at the PR head branch when no run exists). Gate on the hosted faces via the jobs API, never the run-level conclusion: the local self-hosted face is main-only evidence (main_only gate) and a branch route from a ref whose ci.yml predates that gate still runs it.
 - **Auto-repairable**: partial (match widening + route-on-demand is mechanical; trigger changes touch the blocking workflow — desk-gated). A blindness sub-face (2026-11-17, run 118): GitHub emits NO workflow_run event for a validation-failed workflow file, so the self-heal watch is structurally blind to parse death — the scheduled reconcile carries a read-only parse-death probe (newest main run jobs=0 = the signature; last-known-good reported alongside) as the in-system sensor; the blocking-file fix stays desk-gated.
 
+
+### R14 — data-shape change → consumer breakage (seed form migration; 2026-11-18 live case)
+
+- **Symptom**: hosted faces green, the canonical face red with THREE stacked failures from one root — `jargon map has no active rows` (a loader reading the new JSON form with an md-table parser), `face absent from whitepaper` ×73 (a single-source transcription check rejecting tool-track faces), `source drifted from the pinned snapshot` (entries re-signed but the provenance md5 not). Every red is real on the canonical machine; every hosted face is green because its canonical-path checks SKIP.
+- **Mechanism**: a sync tool migrated a seed's shape (md table → JSON, 62→159 entries) but did not carry its consumers: the loader stayed md-only, a checker kept a single-source assumption, and the sync's own half-finished step (md5 re-sign) was skipped. Hosted SKIP masked all of it; the canonical face is the only real judge.
+- **Guard**: before a shape migration lands, grep every consumer of the old shape and patch them in the SAME commit (loader + checkers + provenance); the sync tool must run a post-sync consumer smoke (all consumers against the new shape) as its exit gate; treat hosted-green + canonical-red as the highest-priority signal (the red is real).
+- **Prescription**: reproduce on the canonical machine by calling the check functions directly (prints full bad-detail faster than CI logs); patch each consumer to accept BOTH shapes during a transition window; re-sign drifted provenance md5 per the sync discipline; move time-dependent assertions (e.g. "raw X must fail loud") when the shape becomes legal. Local gates: seeds 42/0, body 60/0, selftest PASS before push.
+- **Auto-repairable**: partial (loader/checker compatibility patches are mechanical once diagnosed; the sync discipline completion needs the sync tool's author).
+
 ## 3. Judgment matrix
 
 | Surface | Role |
