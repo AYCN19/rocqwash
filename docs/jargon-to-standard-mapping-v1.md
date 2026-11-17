@@ -24,7 +24,7 @@
 
 | 黑话 (jargon face) | 标准 (standard expression) | 语境注记 (context note) |
 |---|---|---|
-| 席（角色义）／席位／席名 | agent / seat-worker | Role noun; agent is the general term, seat-worker when the one-worker-per-seat topology is meant. Seat numbers/names never enter prose. 106 files (席). |
+| 席（角色义）／席位／席名 | agent | Role noun; agent is the general term, the one-worker-per-seat topology wording (seat-worker) stays on ledger and identifier surfaces. Seat numbers/names never enter prose. 106 files (席). |
 | 盯守 | monitor | Banned face in gate4 extended family (verify/gate4_comment_guard.py:173). Standing-watch context: "monitor the run". 1 file. |
 | 落刀 | apply | Apply the change to the tree. Default-dry-run tools apply only under an explicit `--apply` flag (cw.sh tool table, 27 files). |
 | 上云 | push | 0 repository hits; adjacent-domain face for the push action. The `pushci` tool name is an identifier and stays. |
@@ -166,8 +166,9 @@
 
 | 黑话 (jargon face) | 标准 (standard expression) | 语境注记 (context note) |
 |---|---|---|
-| wave（组织义） | release / work stream | 七工具波 → seven-tool release. |
-| seat | agent / seat-worker | M-wave campaign-organization family; seat numbers never enter prose. |
+| wave（组织义） | work stream | 七工具波 → seven-tool release; the release sense stays on ledger surfaces. |
+| seat | agent | M-wave campaign-organization family; seat numbers never enter prose; the one-worker-per-seat topology wording (seat-worker) stays on ledger and identifier surfaces. |
+| seat-worker | agent | Compound residue of the earlier agent / seat-worker hybrid; prose uses agent. |
 | campaign | effort / work stream | M-wave campaign-organization family; preset name `campaign_set_diamond` (tests/fixtures/header_map_v1.json) is data and stays. |
 | dispatch（叙述义） | route | `red_dispatch.py` identifier stays. |
 | handover | — (delete the narration) | Process narration; state facts instead. |

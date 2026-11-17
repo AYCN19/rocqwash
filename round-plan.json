@@ -9,178 +9,9 @@
    "human_findings": [],
    "kind": "md",
    "path": "CHANGELOG.md",
-   "rewrites": [
-    {
-     "after": "nical pass (收编→并入, 已证结论→已证结论, 缝合→splice",
-     "before": "nical pass (收编→并入, 定谳→已证结论, 缝合→splice",
-     "disposition": "replace",
-     "end": 48,
-     "face_id": "J007",
-     "line": 192,
-     "reason": "replace",
-     "replacement": "已证结论",
-     "start": 46,
-     "term": "定谳"
-    },
-    {
-     "after": "n mechanical pass (并入→并入, 定谳→已证结论, 缝合→sp",
-     "before": "n mechanical pass (收编→并入, 定谳→已证结论, 缝合→sp",
-     "disposition": "replace",
-     "end": 41,
-     "face_id": "J038",
-     "line": 192,
-     "reason": "replace",
-     "replacement": "并入",
-     "start": 39,
-     "term": "收编"
-    },
-    {
-     "after": "s (收编→并入, 定谳→已证结论, splice→splice",
-     "before": "s (收编→并入, 定谳→已证结论, 缝合→splice",
-     "disposition": "replace",
-     "end": 57,
-     "face_id": "J028",
-     "line": 192,
-     "reason": "replace",
-     "replacement": "splice",
-     "start": 55,
-     "term": "缝合"
-    },
-    {
-     "after": "/摘牌/计功/缝合/双杀/环账/卸出/shot down/翻牌)",
-     "before": "/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 52,
-     "face_id": "J043",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "shot down",
-     "start": 50,
-     "term": "击坠"
-    },
-    {
-     "after": "/机判/摘牌/计功/缝合/双杀/环账/unloaded/击坠/翻牌)",
-     "before": "/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 49,
-     "face_id": "J037",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "unloaded",
-     "start": 47,
-     "term": "卸出"
-    },
-    {
-     "after": "(清盘/增薄/机判/摘牌/计功/缝合/double failure/环账/卸出/击坠/翻牌)",
-     "before": "(清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 43,
-     "face_id": "J029",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "double failure",
-     "start": 41,
-     "term": "双杀"
-    },
-    {
-     "after": "table supplies (清盘/thinned/机判/摘牌/计功/缝合/双杀/环账/",
-     "before": "table supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/",
-     "disposition": "replace",
-     "end": 28,
-     "face_id": "J021",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "thinned",
-     "start": 26,
-     "term": "增薄"
-    },
-    {
-     "after": "supplies (清盘/增薄/机判/delisted/计功/缝合/双杀/环账/卸出/击坠/",
-     "before": "supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/",
-     "disposition": "replace",
-     "end": 34,
-     "face_id": "J026",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "delisted",
-     "start": 32,
-     "term": "摘牌"
-    },
-    {
-     "after": "le supplies (清盘/增薄/machine ruling/摘牌/计功/缝合/双杀/环账/卸出/",
-     "before": "le supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/",
-     "disposition": "replace",
-     "end": 31,
-     "face_id": "J022",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "machine ruling",
-     "start": 29,
-     "term": "机判"
-    },
-    {
-     "after": "is table supplies (liquidated/增薄/机判/摘牌/计功/缝合/双杀/",
-     "before": "is table supplies (清盘/增薄/机判/摘牌/计功/缝合/双杀/",
-     "disposition": "replace",
-     "end": 25,
-     "face_id": "J011",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "liquidated",
-     "start": 23,
-     "term": "清盘"
-    },
-    {
-     "after": "/增薄/机判/摘牌/计功/缝合/双杀/cyclic account/卸出/击坠/翻牌)",
-     "before": "/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 46,
-     "face_id": "J035",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "cyclic account",
-     "start": 44,
-     "term": "环账"
-    },
-    {
-     "after": "es (清盘/增薄/机判/摘牌/计功/splice/双杀/环账/卸出/击坠/翻牌)",
-     "before": "es (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 40,
-     "face_id": "J028",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "splice",
-     "start": 38,
-     "term": "缝合"
-    },
-    {
-     "after": "/计功/缝合/双杀/环账/卸出/击坠/overturned)",
-     "before": "/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 55,
-     "face_id": "J045",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "overturned",
-     "start": 53,
-     "term": "翻牌"
-    },
-    {
-     "after": "plies (清盘/增薄/机判/摘牌/credit tally/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "before": "plies (清盘/增薄/机判/摘牌/计功/缝合/双杀/环账/卸出/击坠/翻牌)",
-     "disposition": "replace",
-     "end": 37,
-     "face_id": "J027",
-     "line": 195,
-     "reason": "replace",
-     "replacement": "credit tally",
-     "start": 35,
-     "term": "计功"
-    }
-   ],
+   "rewrites": [],
    "scanned": true,
-   "would_fix": 14
+   "would_fix": 0
   },
   {
    "excluded": "frozen",
@@ -223,21 +54,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "名·冻结解禁后、`certify/` 收口——见",
-     "disposition": "human",
-     "end": 37,
-     "face_id": "J018",
-     "line": 50,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 35,
-     "term": "收口"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "CONTRIBUTING.md",
    "rewrites": [],
@@ -388,6 +206,221 @@
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
+  },
+  {
+   "human": 2,
+   "human_findings": [
+    {
+     "after": null,
+     "before": "gment、run_tests.sh 接线、docs/vacgen_sop.md",
+     "disposition": "human",
+     "end": 119,
+     "face_id": "J003",
+     "line": 4,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 117,
+     "term": "接线"
+    },
+    {
+     "after": null,
+     "before": "py vacgen_generate 接线、tools/taxonomy.jso",
+     "disposition": "human",
+     "end": 202,
+     "face_id": "J003",
+     "line": 4,
+     "reason": "alternation-guard",
+     "replacement": null,
+     "start": 200,
+     "term": "接线"
+    }
+   ],
+   "kind": "md",
+   "path": "docs/audit-vacgen-20261116.md",
+   "rewrites": [
+    {
+     "after": " Surface Inventory（核验 2026-11-16）",
+     "before": " Surface Inventory（实勘 2026-11-16）",
+     "disposition": "replace",
+     "end": 29,
+     "face_id": "J041",
+     "line": 19,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 27,
+     "term": "实勘"
+    },
+    {
+     "after": "ols/taxonomy.json`（核验 2 rows：ineq.real.c",
+     "before": "ols/taxonomy.json`（实勘 2 rows：ineq.real.c",
+     "disposition": "replace",
+     "end": 26,
+     "face_id": "J041",
+     "line": 50,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 24,
+     "term": "实勘"
+    },
+    {
+     "after": "g value` traceback（检验 f），无 `FAIL-LOUD: t",
+     "before": "g value` traceback（探针 f），无 `FAIL-LOUD: t",
+     "disposition": "replace",
+     "end": 186,
+     "face_id": "J010",
+     "line": 72,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 184,
+     "term": "探针"
+    },
+    {
+     "after": "| 检验 | 命令形（节选） | 实测 rc ",
+     "before": "| 探针 | 命令形（节选） | 实测 rc ",
+     "disposition": "replace",
+     "end": 4,
+     "face_id": "J010",
+     "line": 83,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 2,
+     "term": "探针"
+    },
+    {
+     "after": "2615/:2618，未识别面双计）。核验：同一族 zeta 面 cast co",
+     "before": "2615/:2618，未识别面双计）。实勘：同一族 zeta 面 cast co",
+     "disposition": "replace",
+     "end": 138,
+     "face_id": "J041",
+     "line": 105,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 136,
+     "term": "实勘"
+    },
+    {
+     "after": "t coverage=50%（1/2，检验 j），preflight 对 A.l",
+     "before": "t coverage=50%（1/2，探针 j），preflight 对 A.l",
+     "disposition": "replace",
+     "end": 174,
+     "face_id": "J010",
+     "line": 105,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 172,
+     "term": "探针"
+    },
+    {
+     "after": "ght 对 A.lean 报 0/6（检验 k）。difficulty map ",
+     "before": "ght 对 A.lean 报 0/6（探针 k）。difficulty map ",
+     "disposition": "replace",
+     "end": 205,
+     "face_id": "J010",
+     "line": 105,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 203,
+     "term": "探针"
+    },
+    {
+     "after": "181 vs :2615/:2618；检验 j/k | MEDIUM |",
+     "before": "181 vs :2615/:2618；探针 j/k | MEDIUM |",
+     "disposition": "replace",
+     "end": 337,
+     "face_id": "J010",
+     "line": 105,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 335,
+     "term": "探针"
+    },
+    {
+     "after": "acgen.py:2851-2867；检验 e | LOW |",
+     "before": "acgen.py:2851-2867；探针 e | LOW |",
+     "disposition": "replace",
+     "end": 126,
+     "face_id": "J010",
+     "line": 107,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 124,
+     "term": "探针"
+    },
+    {
+     "after": "acgen.py:2851-2871；检验 a/b | LOW |",
+     "before": "acgen.py:2851-2871；探针 a/b | LOW |",
+     "disposition": "replace",
+     "end": 165,
+     "face_id": "J010",
+     "line": 108,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 163,
+     "term": "探针"
+    },
+    {
+     "after": "acgen.py:2779-2783；检验 n | LOW |",
+     "before": "acgen.py:2779-2783；探针 n | LOW |",
+     "disposition": "replace",
+     "end": 138,
+     "face_id": "J010",
+     "line": 109,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 136,
+     "term": "探针"
+    },
+    {
+     "after": "225；docs/mcp.md:55；检验 b | MEDIUM |",
+     "before": "225；docs/mcp.md:55；探针 b | MEDIUM |",
+     "disposition": "replace",
+     "end": 396,
+     "face_id": "J010",
+     "line": 110,
+     "reason": "replace",
+     "replacement": "检验",
+     "start": 394,
+     "term": "探针"
+    },
+    {
+     "after": "op.md:283-293；find 核验 | HIGH |",
+     "before": "op.md:283-293；find 实勘 | HIGH |",
+     "disposition": "replace",
+     "end": 469,
+     "face_id": "J041",
+     "line": 129,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 467,
+     "term": "实勘"
+    },
+    {
+     "after": "c-set-premise row」。核验 tools/taxonomy.jso",
+     "before": "c-set-premise row」。实勘 tools/taxonomy.jso",
+     "disposition": "replace",
+     "end": 171,
+     "face_id": "J041",
+     "line": 130,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 169,
+     "term": "实勘"
+    },
+    {
+     "after": "本卷。行号口径 2026-11-16 核验。*",
+     "before": "本卷。行号口径 2026-11-16 实勘。*",
+     "disposition": "replace",
+     "end": 55,
+     "face_id": "J041",
+     "line": 197,
+     "reason": "replace",
+     "replacement": "核验",
+     "start": 53,
+     "term": "实勘"
+    }
+   ],
+   "scanned": true,
+   "would_fix": 15
   },
   {
    "human": 0,
@@ -541,7 +574,25 @@
    "human": 0,
    "human_findings": [],
    "kind": "md",
+   "path": "docs/evolve-draft-cycle3-20261117.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
    "path": "docs/exp-bus-backlog.md",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "md",
+   "path": "docs/feedback-loop-sop-v1-20261116.md",
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
@@ -1680,6 +1731,15 @@
    "human": 0,
    "human_findings": [],
    "kind": "py",
+   "path": "tests/t_vacgen_envelope_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
    "path": "tests/t_vacgen_expectedred.py",
    "rewrites": [],
    "scanned": true,
@@ -1690,6 +1750,15 @@
    "human_findings": [],
    "kind": "py",
    "path": "tests/t_vacgen_shape.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tests/test_auto_merge.py",
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
@@ -2089,6 +2158,15 @@
    "human": 0,
    "human_findings": [],
    "kind": "py",
+   "path": "tests/test_selfheal_guards.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
    "path": "tests/test_toolchain_dyld_doctor.py",
    "rewrites": [],
    "scanned": true,
@@ -2241,6 +2319,15 @@
    "human_findings": [],
    "kind": "py",
    "path": "tools/ai_flavor_apply.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/auto_merge.py",
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
@@ -2606,6 +2693,15 @@
    "human_findings": [],
    "kind": "py",
    "path": "tools/row_render.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/scheduler_lite.py",
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
@@ -3009,7 +3105,7 @@
  ],
  "map": {
   "entries": 62,
-  "path": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\align-wt\\seeds\\jargon\\jargon-map.json",
+  "path": "/Users/apple/Desktop/rocqwash/seeds/jargon/jargon-map.json",
   "schema": "rocqwash-jargon-map/1"
  },
  "mode": "plan",
@@ -3022,11 +3118,11 @@
   "applied": 0,
   "apply_failed": 0,
   "excluded_frozen": 48,
-  "files": 246,
-  "human": 44,
+  "files": 254,
+  "human": 45,
   "parse_errors": 0,
   "residue_jargon": 0,
-  "would_fix": 16
+  "would_fix": 17
  },
  "target": ".",
  "target_kind": "tree",
