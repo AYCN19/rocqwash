@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """test_unclog.py — tools/unclog.py 自测壳（tests/·20261111 v37 集成席挂接）
 
-疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier 落刀→rescan/
+疏通堵塞闭环引擎（probe 归集→chain_graph 挑根→cure_applier apply→rescan/
 resprobe 复核→verdict 判定·五步闭环·schema rocqwash-unclog/1）挂接件：器自带
 --selftest 十矢量冻结向量组（绿径/诚实墙＋零链根补判/cure-miss/轮尽/缺省关
 实证/JSON 幂等/frozen 在册红拒/--loop 哨态 JSONL/CLI 四码·全 --injector canned

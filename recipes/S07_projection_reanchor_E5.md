@@ -1,6 +1,6 @@
 # 处方件 — S07 投影重锚（E5·magic 六件判例文档化）
 
-> rocqwash recipes/·20261101 席 rqsupport·五课反馈轮打磨件④。
+> rocqwash recipes/·20261101 agent rqsupport·五课反馈轮打磨件④。
 > 判例源（只读已核在盘）：`sandbox/seat_reanchor/账/迁移账-六件重锚.md`（UpReqSampling
 > 件·重锚员 20261031·凭据=该席全部实跑命令与 json/log 在卷）＋`sandbox/seat_magic6/`
 > 台账（CI 探针基线 magic=293·P1 行）＋`seat_reanchor/账/重锚diff-96行.patch`（96 行
@@ -54,7 +54,7 @@
 | 注释行含裸 token（14 行：源行 2/16/20/65/66/77/88/145/146/641/668/696/720/1011） | **零触碰** | 注释不进提取面；触碰即污染 diff 纯度 |
 | `Notation R := Real` 桥 | **保留** | 树内 UpReqAlgebra 判例同款保留 |
 | Class 字段定义本体（S07 正本） | **禁触**（Set 仓只读） | 重锚只动件面，不动库面 |
-| 前提/binder 位 | **零触碰**（红线② lawful keep 同源） | nw6 判例同律：前提/binder 位禁硬修 |
+| 前提/binder 位 | **零触碰**（non-negotiable constraint② lawful keep 同源） | nw6 判例同律：前提/binder 位禁硬修 |
 
 ### 判例验收四证（UpReqSampling 实测·20261031）
 
@@ -62,7 +62,7 @@
 |---|---|---|
 | born 编译 | RC=0＋.vo 魔数 `436f7121 00015ff4`＋.vo 新于 .v | RC=0 一次过（vo md5 `10d393bd3bc3641f1aa7e4fbf91be4e6`·50826B） |
 | gate7 提取探针 | **magic=0（硬验收）** | magic_ml=0／magic_mli=0（51 名·missing=0）；基线 293→0；独立复核 grep Obj.magic .ml/.mli 双 0 |
-| 对表（语句名） | mac_stmt_names 有序全等 | census 51=51、含 Let 67=67·有序全等 PASS（成品 md5 `45ce11a7283926051698a46ebc012a09` vs 源 `4dba5385…`） |
+| cross-check against the reference（语句名） | mac_stmt_names 有序全等 | census 51=51、含 Let 67=67·有序全等 PASS（成品 md5 `45ce11a7283926051698a46ebc012a09` vs 源 `4dba5385…`） |
 | gate4＋CJK＋承认式 | PASS=1 FAIL=0；CJK=0；承认式=0 | 全达标（头注 30 行五字段齐；Admitted/admit/Abort 词界计数 0） |
 
 签名稳定律附记：六件系 M34 新落叶子件、树内零下游消费（seat_magic6 台账 §二.4 口径）
@@ -87,5 +87,5 @@
 
 - 语句面已走具体面、magic 仍非零 → 非 E5 病（查 gate7 探针的 missing/exclusions 面）。
 - 件有树内下游消费 → 迁移账不再是轻账：签名重锚牵连下游适配，须先勘定消费面
-  （`mac_stmt_names` 对表＋Require 面全表 grep）再动刀。
+  （`mac_stmt_names` cross-check against the reference＋Require 面全表 grep）再动刀。
 - Class 字段本体须改 → 越权：S07 正本在 Set 仓只读；升单走编排方，处方件不代行。

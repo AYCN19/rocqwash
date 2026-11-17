@@ -18,7 +18,7 @@
 1. **Prose positions only.** Code identifiers, CLI flags, JSON schema field names, file-format names, and exit-code tokens are never rewritten (interface-stability boundary; Annotation Standard Card §5). When prose must refer to a tool whose name contains a banned-family word, cite the tool name verbatim in backticks — that is an identifier citation, not a jargon hit (§6).
 2. **Word-boundary discipline.** Mechanical scanning must judge whole words/compounds, not substrings (JARGON v1.1 precedent 3: 「入库」 as an independent word is cleaned, 「并入库内」 is not triggered). The context note column states the sense in which each face is banned.
 3. **Replacement is mandatory, not advisory**, on all canonical faces (new files, translated files) covered by the Annotation Standard Card §4. In not-yet-translated legacy Chinese content the hit is still reported at error level by the card's grading; the Chinese-only presence itself is warn-level during the transition window.
-4. **No re-translation into fresh jargon.** The standard column is the target form; do not substitute a different metaphor (JARGON v1.1 precedent 1: narrative 「收口」 maps to concluded, never to a different internal word).
+4. **No re-translation into fresh jargon.** The standard column is the target form; do not substitute a different metaphor (JARGON v1.1 precedent 1: narrative 「收口」 maps to close out, never to a different internal word).
 
 ## 2. Table A — core mappings (named in the issue, sixteen rows)
 
@@ -61,7 +61,7 @@
 | 落盘 | write / persist to disk | JARGON base row (落盘/在盘/入库 family). Highest-density face in this sweep: 61 files. |
 | 在盘 | present in the tree | JARGON base row. 0 repository hits. |
 | 入库 | archived / written into the repository | JARGON base row; whole-word judgment only (§1.2). 0 repository hits. |
-| 收口 | conclude / close | JARGON base row; narrative sense only, never re-lexified into a different internal word (§1.4). 17 files. |
+| 收口 | close out | JARGON base row; verb sense: close out, noun context: close-out. 17 files. |
 | 定谳 | finally established | JARGON base row; in the 65-face consolidated base (gate4_comment_guard.py:72). 10 files. |
 | 总装 | integration | JARGON base row. 2 files. |
 | 挂账 | pending item | In the 65-face consolidated base (gate4_comment_guard.py:71); JARGON base v1.3 row (遗留事项). 0 repository hits. |
@@ -79,7 +79,7 @@
 | 台账 | ledger (data surface) / record list (generic prose) | Ledger is the repo's data-format name (`probe --out ledger.json`, `sync-ledger`); generic prose says record list. 52 files. |
 | 回执 | execution record | In the 65-face consolidated base. 2 files. |
 | 工单 | task instruction | In the 65-face consolidated base and gate4 extended family (gate4_comment_guard.py:173). 16 files. |
-| 哨 / 哨兵 | sentinel / mechanical watch | The tool `cw_sentinel.py` is an identifier; narrative 哨/哨兵 → sentinel tool or mechanical watch. 哨兵 is banned outright on the .v-comment track (65-face base). 38 files. |
+| 哨 / 哨兵 | watcher | The tool `cw_sentinel.py` is an identifier; narrative 哨/哨兵 → watcher (same family). 哨兵 is banned outright on the .v-comment track (65-face base). 38 files. |
 | 探针 | probe (tool citation) / check (generic sense) | The `probe` tool (`wash/probe_engine.py`, cw.sh probe) is an identifier; generic prose sense → check. 探针 banned outright on the .v-comment track. 44 files. |
 | 分诊 | triage | Standard English term — translation mapping, not a purge; `ci_triage.py` identifier stays. 22 files. |
 | 判词 | conclusion | In the 65-face consolidated base; `verdict` is reserved for the JSON schema field name (pushci verdict states). 22 files. |
@@ -95,11 +95,11 @@
 | 候令 | pending execution | Banned face in gate4 extended family. 10 files. |
 | 收官 | wrap-up | 1 file. |
 | 现势 | current state | 21 files. |
-| 旗舰 | main / primary | In the 65-face consolidated base; 旗舰定理 → main theorem. 6 files. |
+| 旗舰 | flagship | In the 65-face consolidated base; 旗舰定理 → flagship theorem. 6 files. |
 | 实勘 | verify | In the 65-face consolidated base. 4 files. |
 | 收割 | close out | In the 65-face consolidated base. 4 files. |
 | 装机 | register | In the 65-face consolidated base; single-character 组装 is not triggered (assembly guard). 1 file. |
-| 派发 | route / distribute | In the 65-face consolidated base; `red_dispatch.py` identifier stays. 4 files. |
+| 派发 | assignment | Narrative sense; the `red_dispatch.py` identifier stays. 4 files. |
 | 喂参 | pass parameters | In the 65-face consolidated base. 1 file. |
 | 直喂 | pass directly | In the 65-face consolidated base. 7 files. |
 | 直配 | direct match | In the 65-face consolidated base. 1 file. |
@@ -117,7 +117,7 @@
 | 洗形 | shape normalization | `wash_shape.py` / `wash-shape` identifier stays; prose → shape normalization. 18 files. |
 | 正典（内部行话义） | canonical | canonical is the standard English term and is kept; the internal-canon sense maps to canonical specification. 45 files. |
 | 缝合 | splice | In the 65-face consolidated base. 2 files. |
-| 上车 | registered together | In the 65-face consolidated base; process word, deleted rather than kept in comments. 1 file. |
+| 上车 | onboard | In the 65-face consolidated base; process word, mapped to onboard in prose. 1 file. |
 | 摘牌 | delisted | In the 65-face consolidated base. 1 file. |
 | 计功 | credit tally | In the 65-face consolidated base. 1 file. |
 | 双杀 | double failure | In the 65-face consolidated base. 1 file. |

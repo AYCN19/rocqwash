@@ -1,59 +1,55 @@
-# 性能剖面报告 v1.0（perf profile·2026-11-11）
+# perf-profile — performance profile report v1.0 (November 11, 2026)
 
-> `tools/unclog.py --audit` probe 剖面的首份在库实录：**v40 audit 真编译实测**
-> ＋**v41 并行层 tmp 夹具机制实测**＋**K=1 vs K=2 真编译墙钟剖面的方法与占位**
-> （如实——可测者录实测·不可测者录方法禁编数字）。采集法正本在
-> [`examples/baselines/perf-README.md`](../examples/baselines/perf-README.md)
-> （probe --jobs K 剖面采集三步·墙钟非确定注记·采样规模≤30 件·记录模板）。
-> 本报告全部数字**逐字照录**自列明数据源（tmp 件易失·照录即在库正本）·零推算
-> 充实测；推导值显式标注「推导」。文中旗标引用经 `tools/doc_lint.py` ③旗标查
-> 对照 `--help` 实出机检。
+> Purpose.  The first on-repository record of the `tools/unclog.py --audit` probe profile: the v40 audit real-compile measurement + the v41 parallel-layer tmp-fixture mechanism measurement + the method and placeholder for the K=1 vs K=2 real-compile wall-clock profile (as it is — measurable values are recorded measured; unmeasurable ones record the method and numbers are never invented).
+> Interface.  Document face only. Collection-method canon: [`examples/baselines/perf-README.md`](../examples/baselines/perf-README.md) (the three-step probe --jobs K profile collection · the wall-clock non-determinism note · the ≤30-piece sample cap · the record template). Flag citations were machine-checked against the emitted `--help` faces by the `tools/doc_lint.py` flag check (check ③). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  The data sources of section 1 (the /tmp audit accounts and fixture scripts, plus the landed examples/baselines/ accounts) and the tool faces `tools/unclog.py`, `wash/probe_engine.py`; no runtime dependency.
+> Evidence.  Every number in this report is transcribed word for word from the named data source (tmp pieces are volatile · transcription is what puts them in the repository) · zero derived values passed off as measured; derived values are explicitly labeled "derived". Every check in section 7 ran wrapped in cpu_guard. Chinese annotations inside recorded output lines are the recorded runs' original wording, translated at the normalization round; the verbatim originals are in the `.zh.md` archive.
+> Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit-code semantics unchanged.
 
-## 一、数据源清单与可测性判定
+## 1. The data-source list and the measurability verdicts
 
-| 源 | 内容 | 性质 | 可测性判定 |
+| source | content | nature | measurability verdict |
 | --- | --- | --- | --- |
-| DS1 | `/tmp/audit_b48_b53_baseline.json`（2026-11-11 07:12 产·配对日志 `/tmp/audit_run3.log`） | v40 audit **真编译**实测（timing 段＋args 溯源） | 已测——§二照录 |
-| DS2 | `/tmp/perf_profile_fixture/`（本席 tmp 夹具·07:27 三跑） | v41 `--probe-parallel` tmp 夹具 **injector canned 计时** | 机制可测已测（§三）——**并行墙钟剖面不可测**（canned 零真编译·K 旁路） |
-| DS3 | `/tmp/probe_jobs_verify.py`·`/tmp/probe_jobs_edge.py`·`/tmp/unclog_pp_verify.py`（并行席夹具·本席逐一实跑） | v41 并行机制实证（stub rocq·overlap 采样） | 已测——§四照录 |
-| DS4 | K=1/2/3 真编译墙钟三跑（同候选面·timing 段差分） | 并行剖面主数据 | **未测→方法＋占位**（§五·真树 audit 活跑归主会话——`tools/unclog.py` docstring 同律） |
+| DS1 | `/tmp/audit_b48_b53_baseline.json` (produced November 11, 2026 07:12 · paired log `/tmp/audit_run3.log`) | the v40 audit **real-compile** measurement (the timing section + args provenance) | measured — §2 transcribes |
+| DS2 | `/tmp/perf_profile_fixture/` (this agent's tmp fixture · three runs 07:27) | the v41 `--probe-parallel` tmp-fixture **injector-canned timing** | the mechanism is measurable and measured (§3) — **the parallel wall-clock profile is not measurable** (canned, zero real compile · K bypassed) |
+| DS3 | `/tmp/probe_jobs_verify.py` · `/tmp/probe_jobs_edge.py` · `/tmp/unclog_pp_verify.py` (the parallel-layer agent's fixtures · each executed by this agent) | the v41 parallel-mechanism proof (stub rocq · overlap sampling) | measured — §4 transcribes |
+| DS4 | the K=1/2/3 real-compile wall-clock three runs (the same candidate face · timing-section differences) | the parallel profile's primary data | **not measured → method + placeholder** (§5 · real-tree audit live runs belong to the main session — `tools/unclog.py` docstring, same law) |
 
-DS1 溯源注记：该路径当日早先曾为 rc=127 快败跑产物（rocq 不在 PATH·零真
-编译）；07:12 由真编译跑重产（`args.rocq_cmd` 已为实 coqc 路径·27 件全
-RC0·red=0）——本报告以 07:12 版为准（已逐字读验）；其 `--src` 源树
-ConstructiveWorld_Live 系真树快照·跑后已清场（现不在盘·running 时点在盘）。
+DS1 provenance note: earlier the same day this path held the product of an rc=127 fast-fail run (rocq not on PATH · zero real
+compilation); at 07:12 it was re-produced by a real-compile run (`args.rocq_cmd` already the real coqc path · all 27 pieces
+RC0 · red=0) — this report uses the 07:12 version (read and verified word by word); its `--src` source tree
+ConstructiveWorld_Live was a real-tree snapshot · cleaned up after the run (not on disk now · on disk at run time).
 
-## 二、v40 audit 基线实测（DS1 照录）
+## 2. The v40 audit baseline measurement (DS1 transcription)
 
-`report["timing"]`（schema `rocqwash-unclog/1`·audit 形·**无 jobs 字段**——
-该跑先于 v41 维度字段·缺位语义＝K=1 串行缺省·与 v41 新账 `jobs:1` 同参数
-直接可比）：
+`report["timing"]` (schema `rocqwash-unclog/1` · audit form · **no jobs field** —
+this run predates the v41 dimension field · the missing-slot semantics = the K=1 serial default · directly
+comparable with the v41 account's `jobs:1` at equal parameters):
 
 ```json
 {"enumerate_s": null, "manifest_s": 1.289, "probe_chain_s": 190.728,
  "total_s": 194.086}
 ```
 
-args 溯源（照录）：`candidates=audit27.tsv`（**27 件**·≤30 件采样规模判例）
-·`src=ConstructiveWorld_Live`·`world=probe_world_v38`·`rocq_cmd` 实 coqc
-（opam93）·`injector=null`·`guard=null`。战况面：`n_records=27`·`red=0`·
-`wall_count=0`·verdict audit·exit 0（红是基线数据非器红·本跑全绿）。
+args provenance (transcribed): `candidates=audit27.tsv` (**27 pieces** · the ≤30-piece sample-size precedent)
+· `src=ConstructiveWorld_Live` · `world=probe_world_v38` · `rocq_cmd` real coqc
+(opam93) · `injector=null` · `guard=null`. Run-state face: `n_records=27` · `red=0` ·
+`wall_count=0` · verdict audit · exit 0 (failings are baseline data, not a tool failure · this run all passing).
 
-推导判读（显式推导·非实测新数据）：
+Derived reading (explicitly derived · not newly measured data):
 
-- probe 段占比＝190.728/194.086≈**98.3%**——剖面主段即 probe_chain_s；
-  manifest/enumerate 是环境噪声段。
-- 串行单件均摊＝190.728/27≈**7.06 s/件**（真编译绿径）——DS4 三跑的量级
-  参照（K=1 一跑即 ~190s 量级·三跑总墙钟分钟级·温控可行）。
+- the probe section's share = 190.728/194.086 ≈ **98.3%** — the profile's main section is probe_chain_s;
+  manifest/enumerate are environmental-noise sections.
+- the serial per-piece average = 190.728/27 ≈ **7.06 s/piece** (the real-compile passing path) — the order-of-magnitude
+  reference for the DS4 three runs (one K=1 run is already ~190s scale · three runs total wall-clock on the order of minutes · thermally feasible).
 
-## 三、tmp 夹具机制实测（DS2 照录）
+## 3. The tmp-fixture mechanism measurement (DS2 transcription)
 
-夹具：`/tmp/perf_profile_fixture/`——src 三件链（C←B←A·极简正文）＋
-`cands.tsv`（3 件）＋`inj/scenario.json`（probe canned 台账一发：A RC0·
-B/C RED-MISSING_LIB·喂真 chain_graph）·**零真编译**（canned 罐装·K 旁路）。
-命令形（三跑仅 K 与出账路径异·一切执行经
-`bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`
-包裹）：
+The fixture: `/tmp/perf_profile_fixture/` — a src three-piece chain (C←B←A · minimal bodies) +
+`cands.tsv` (3 pieces) + `inj/scenario.json` (one canned probe ledger shot: A RC0 ·
+B/C RED-MISSING_LIB · feeds the real chain_graph) · **zero real compilation** (canned · K bypassed).
+Command shape (the three runs differ only in K and the output path · every execution wrapped in
+`bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`):
 
 ```bash
 python3 tools/unclog.py --src /tmp/perf_profile_fixture/src \
@@ -63,131 +59,131 @@ python3 tools/unclog.py --src /tmp/perf_profile_fixture/src \
   [--probe-parallel K] --workdir <wd> --json <out.json>
 ```
 
-三跑 `report["timing"]` 照录（A/B＝同命令 K=1 双跑·C＝`--probe-parallel 2`）：
+The three runs' `report["timing"]` transcribed (A/B = the same command run twice at K=1 · C = `--probe-parallel 2`):
 
-| 跑 | K | jobs | enumerate_s | manifest_s | probe_chain_s | total_s | rc |
+| run | K | jobs | enumerate_s | manifest_s | probe_chain_s | total_s | rc |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| A | 1（缺省） | 1 | null | 0.001 | 0.078 | 0.079 | 0 |
-| B | 1（缺省） | 1 | null | 0.001 | 0.102 | 0.104 | 0 |
+| A | 1 (default) | 1 | null | 0.001 | 0.078 | 0.079 | 0 |
+| B | 1 (default) | 1 | null | 0.001 | 0.102 | 0.104 | 0 |
 | C | 2 | 2 | null | 0.001 | 0.089 | 0.091 | 0 |
 
-机检四判（本席核验脚本 rc=0·照录）：
+The four machine-check verdicts (this agent's verification script rc=0 · transcribed):
 
-1. **jobs 维度入账**：timing 段 `jobs` 值 1/1/2 各录其值＝`--probe-parallel`
-   实参·stdout 响亮行同步出 `timing: jobs=K`——前后跑可比面就绪。
-2. **墙钟非确定**：A/B 同命令双跑 probe_chain_s 0.078→0.102（逐跑必异）·
-   而 **jobs 维度恒同**——剖面差分只认段值趋势不认单跑毫秒。
-3. **A vs B**：除 timing 段外逐键恒同（「同输入重跑字节恒同」对 timing 段
-   之外全成立·本席机检 PASS）。
-4. **A vs C**：除 timing 段＋`args.probe_parallel` 实参（1→2·K 记账在
-   args）外逐键恒同（本席机检 PASS）。
+1. **the jobs dimension is in the account**: the timing section's `jobs` values 1/1/2 each record their value = the
+   `--probe-parallel` argument · the loud stdout line emits `timing: jobs=K` in sync — the before/after comparability face is ready.
+2. **the wall clock is non-deterministic**: A/B, the same command run twice, probe_chain_s 0.078→0.102 (every run differs) ·
+   while **the jobs dimension stays identical** — profile differences read section-value trends, never single-run milliseconds.
+3. **A vs B**: identical key by key except the timing section ("identical inputs rerun byte-identical" holds everywhere
+   outside the timing section · this agent's machine check PASS).
+4. **A vs C**: identical key by key except the timing section + the `args.probe_parallel` argument (1→2 · K is
+   accounted in args) (this agent's machine check PASS).
 
-判读界线：本表 probe_chain_s 差异属 canned 罐装噪声（0.078/0.102/0.089 同
-量级散布）·**不是并行加速证据**——canned probe 零真编译·K 旁路照记。机制
-（字段在账·值随 K 走）已实证；加速面归 DS4。
+Reading boundary: this table's probe_chain_s spread is canned noise (0.078/0.102/0.089 same-order scatter) ·
+**not parallel-speedup evidence** — the canned probe compiles nothing and K is bypassed, recorded as such. The mechanism
+(the field is in the account · the value follows K) is proven; the speedup face belongs to DS4.
 
-## 四、v41 并行机制实证（DS3 照录·本席逐一实跑）
+## 4. The v41 parallel-mechanism proof (DS3 transcription · each run executed by this agent)
 
-并行席 `wash/probe_engine.py --jobs`（ThreadPool 分片·典序收账）＋
-`tools/unclog.py --probe-parallel`（透传）落地后·三份 tmp 夹具脚本本席实跑
-全过（rc=0·stdout 尾行照录）：
+The parallel-layer agent's `wash/probe_engine.py --jobs` (ThreadPool sharding · canonical-order accounting) +
+`tools/unclog.py --probe-parallel` (pass-through) landed, and this agent executed all three tmp fixture scripts, all passing
+(rc=0 · stdout tail lines transcribed):
 
-- `probe_jobs_verify.py` → `PROBE-JOBS-VERIFY PASS`：K=1 串行 overlap=1；
-  K=3 **真并发 overlap=3** 且**台账字节恒同**（完成序不侵入输出序·确定性
-  铁律）；per-件 log 独立＋世界零残留。
-- `probe_jobs_edge.py` → `PROBE-JOBS-EDGE PASS`：K>1 候选重名 fail-loud
-  rc=2；K=4×`--guard` 包裹 rc=7 真取透传；resume SKIP 先行台账恒同。
-- `unclog_pp_verify.py` → `UNCLOG-PP-VERIFY PASS`：闭环 `--probe-parallel 3`
-  透传生效（overlap=3·非仅 argv 静读）；**--audit 同享同参**（K=2 probe 真
-  跑 overlap=2）；`--probe-parallel 0` 用法闸 rc=2。
+- `probe_jobs_verify.py` → `PROBE-JOBS-VERIFY PASS`: K=1 serial overlap=1;
+  K=3 **real concurrency overlap=3** and the **ledger stays byte-identical** (completion order never invades output order · the determinism
+  invariant); per-piece logs independent + zero world residue.
+- `probe_jobs_edge.py` → `PROBE-JOBS-EDGE PASS`: K>1 duplicate candidate names fail loud
+  rc=2; K=4 wrapped in `--guard` rc=7 really taken from the pass-through; resume SKIP leaves the ledger identical.
+- `unclog_pp_verify.py` → `UNCLOG-PP-VERIFY PASS`: the loop's `--probe-parallel 3`
+  pass-through takes effect (overlap=3 · not merely a static argv read); **`--audit` shares the same parameter** (a K=2 probe real
+  run overlap=2); `--probe-parallel 0` usage check rc=2.
 
-即：**机制层 K=1 vs K>1 已实证**（真并发·确定性·audit 同享）；未实证的
-只剩**真编译墙钟剖面**（DS4）。
+That is: **at the mechanism layer, K=1 vs K>1 is proven** (real concurrency · determinism · audit sharing); the only thing left
+unproven is the **real-compile wall-clock profile** (DS4).
 
-## 五、K=1 vs K=2 真编译墙钟剖面——方法＋占位（如实）
+## 5. The K=1 vs K=2 real-compile wall-clock profile — method + placeholder (as it is)
 
-**可测性判定：不可测（本席职权内）**。真树 audit 活跑归主会话
-（`tools/unclog.py` docstring·`examples/baselines/README.md` §3 同律）；
-tmp 真编译夹具（stub/极简件）信号噪声比不足·合成重编译件属另造基准非现势
-剖面——均不采。零编数字：下表只立占位·待真树三跑回填。
+**Measurability verdict: not measurable (within this agent's authority)**. Real-tree audit live runs belong to the main session
+(`tools/unclog.py` docstring · `examples/baselines/README.md` §3 same law);
+tmp real-compile fixtures (stub / minimal pieces) have too low a signal-to-noise ratio · synthetic recompile-heavy pieces would be a fabricated benchmark, not the current-state
+profile — neither is adopted. Zero invented numbers: the table below holds only placeholders, to be backfilled by the real-tree three runs.
 
-方法（采集法正本 `examples/baselines/perf-README.md` §2·摘要）：同候选面
-（≤30 件·DS1 判例 27 件）固定 `--src/--world/--rocq-cmd/--candidates`·
-K=1/2/3 各一跑（`--probe-parallel K`·真编译经 `--guard` 包裹·温控 K≤2
-建议）·各 `--json` 出账·timing 段差分（`probe_chain_s` 主指标·`jobs` 维度
-在账前后可比）。
+The method (collection-method canon `examples/baselines/perf-README.md` §2 · abridged): fix `--src/--world/--rocq-cmd/--candidates` over the same candidate face
+(≤30 pieces · DS1's precedent of 27) ·
+one run each at K=1/2/3 (`--probe-parallel K` · real compilation wrapped in `--guard` · thermally, K≤2
+advised) · each emits its `--json` account · read the timing-section differences (`probe_chain_s` the primary metric · the `jobs` dimension
+in the account makes before/after comparable).
 
-实测（真树 27 件面·三行已回填实数——K=1/K=2 照录 20261111 账·K=3 为
-20261112 实跑回填·回填段详注）：
+Measured (the real-tree 27-piece face · three rows backfilled with real numbers — K=1/K=2 transcribed from the November 11, 2026 account · K=3 backfilled from the
+November 12, 2026 real run · details in the backfill sections):
 
-| 跑 | K | timing.jobs | probe_chain_s | total_s | 备注 |
+| run | K | timing.jobs | probe_chain_s | total_s | note |
 | --- | --- | --- | --- | --- | --- |
-| 1 | 1 | （缺位＝1 语义） | 190.728 | 194.086 | 串行基线——DS1 同面参照 190.728（20261111 账照录） |
-| 2 | 2 | 2 | 101.916 | 105.436 | 温控 K≤2 建议——v43 双跑回填（20261111 08:1x） |
-| 3 | 3 | 3 | 165.202 | 169.684 | 建议与跑 2 错峰——20261112 实跑·负边际（回填段详注） |
+| 1 | 1 | (missing = 1 semantics) | 190.728 | 194.086 | the serial baseline — DS1's same-face reference 190.728 (transcribed from the November 11, 2026 account) |
+| 2 | 2 | 2 | 101.916 | 105.436 | the thermal K≤2 advice — backfilled by the v43 two-run (November 11, 2026 08:1x) |
+| 3 | 3 | 3 | 165.202 | 169.684 | advised to run off-peak with run 2 — a real run of November 12, 2026 · negative margin (details in the backfill section) |
 
-判读参照（定性·禁以参照代实测）：DS2/DS3 已证 K>1 真并发且台账确定性零漂
-——真编译墙钟收益面取决于逐件编译并行度（probe 段近似逐件独立·理想加速
-量级受 guard FRONT 槽位与热钳位约束）·真值以三跑 timing 段差分为准。
+Reading reference (qualitative · a reference never substitutes for measurement): DS2/DS3 proved K>1 real concurrency with zero ledger determinism drift
+— the real-compile wall-clock gain depends on per-piece compile parallelism (the probe section is approximately per-piece independent · the ideal speedup
+magnitude is bounded by the guard FRONT slots and thermal clamping) · the true values are the three runs' timing-section differences.
 
-## 六、结论与后继
+## 6. Conclusions and follow-ups
 
-1. `report["timing"]["jobs"]` 维度字段已入账（v41·本席）——v40 旧账缺位
-   语义 K=1 可比·新账缺省恒带；回归全绿（§七）。
-2. 采集法就绪（perf-README·三步＋模板＋≤30 件温控）。
-3. DS4 真树三跑归主会话：回填 §五占位即成完整并行剖面（下一版 v1.1）。
+1. The `report["timing"]["jobs"]` dimension field is in the account (v41 · this agent) — the v40 old account's missing-slot
+   semantics stay K=1-comparable · the new account always carries it by default; the regression is all passing (§7).
+2. The collection method is ready (perf-README · three steps + template + the ≤30-piece thermal cap).
+3. The DS4 real-tree three runs belong to the main session: backfilling §5's placeholders completes the parallel profile (next version v1.1).
 
-## 七、本报告机检清单（全部本席实跑·经 cpu_guard 包裹）
+## 7. This report's machine-check list (all executed by this agent · wrapped in cpu_guard)
 
-| # | 命令 | rc |
+| # | command | rc |
 | --- | --- | --- |
-| 1 | `python3 -B tools/unclog.py --selftest` | 0（十四矢量全过·含⑬jobs 维度） |
-| 2 | `python3 -B tests/test_unclog.py` | 0（3 过/0 红） |
-| 3 | tmp 夹具三跑（§三命令形 A/B/C） | 0/0/0 |
-| 4 | `python3 -B /tmp/perf_profile_fixture/compare_runs.py` | 0（四判 PASS） |
+| 1 | `python3 -B tools/unclog.py --selftest` | 0 (fourteen vectors passing · including ⑬ the jobs dimension) |
+| 2 | `python3 -B tests/test_unclog.py` | 0 (3 passing / 0 failing) |
+| 3 | the tmp fixture three runs (the §3 command shapes A/B/C) | 0/0/0 |
+| 4 | `python3 -B /tmp/perf_profile_fixture/compare_runs.py` | 0 (four verdicts PASS) |
 | 5 | `python3 -B /tmp/probe_jobs_verify.py` | 0 |
 | 6 | `python3 -B /tmp/probe_jobs_edge.py` | 0 |
 | 7 | `python3 -B /tmp/unclog_pp_verify.py` | 0 |
-| 8 | 全套回归：`tests/run_tests.sh`＝**52 过/0 红/4 略/56 例 rc=0**（t_unclog/t_doclint/t_destructive_matrix/t_baseline_diff/t_probe_engine 全过）；`tests/test_destructive_matrix.py` 单跑＝**17 行过/0 破 rc=0**；`tools/doc_lint.py --repo .`＝**verdict consistent rc=0**（本报告 refs=29·drift=0·oos=0） | 0/0/0 |
+| 8 | the full-suite regression: `tests/run_tests.sh` = **52 passing / 0 failing / 4 skipped / 56 cases rc=0** (t_unclog/t_doclint/t_destructive_matrix/t_baseline_diff/t_probe_engine all passing); `tests/test_destructive_matrix.py` alone = **17 rows passing / 0 broken rc=0**; `tools/doc_lint.py --repo .` = **verdict consistent rc=0** (this report refs=29 · drift=0 · oos=0) | 0/0/0 |
 
-——第 8 项结果以最终回归实跑为准（本席交割时回填账面）；§二~§五数字全部
-来自 §一所列文件逐字照录。
+— item 8's result stands on the final regression run (the account was backfilled when this report was delivered); the numbers of §2-§5 all
+come from the §1 files, transcribed word for word.
 
 
-## 20261111 08:1x 回填：DS4 真树实测（主会话·路线图①收口）
+## DS4 real-tree measurement backfill, November 11, 2026 08:1x (main session · roadmap item ① close out)
 
-| 跑 | K | probe_chain_s | total_s | n_records | n_red | 证据 |
+| run | K | probe_chain_s | total_s | n_records | n_red | evidence |
 |---|---|---|---|---|---|---|
-| DS1（v41 基线） | 1 | 190.728 | 194.086 | 27 | 0 | examples/baselines/audit-ConstructiveWorld_Live-20261111.json |
-| DS4（本轮回填） | 2 | 101.916 | 105.436 | 27 | 0 | examples/baselines/perf-ConstructiveWorld_Live-k2-20261111.json |
-| DS4-k3（20261112 实测席） | 3 | 165.202 | 169.684 | 27 | 0 | examples/baselines/audit-k3-20261112.json |
+| DS1 (the v41 baseline) | 1 | 190.728 | 194.086 | 27 | 0 | examples/baselines/audit-ConstructiveWorld_Live-20261111.json |
+| DS4 (this round's backfill) | 2 | 101.916 | 105.436 | 27 | 0 | examples/baselines/perf-ConstructiveWorld_Live-k2-20261111.json |
+| DS4-k3 (the November 12, 2026 measurement agent) | 3 | 165.202 | 169.684 | 27 | 0 | examples/baselines/audit-k3-20261112.json |
 
-**实测加速比＝1.87×**（probe_chain 口径·27 件同候选面·同世界 /tmp/probe_world_v38·同 rocq-cmd 9.3 coqc 模板·cpu_guard 包裹）。jobs 维度字段（v41 增）双跑实测在账（K=1 缺位语义/K=2 显式 2）。两次 n_red=0 互证＝27 件新落位面在现役世界代际 RC0 稳定复现（非偶然单跑）。
+**Measured speedup = 1.87×** (probe_chain accounting · the same 27-piece candidate face · the same world /tmp/probe_world_v38 · the same rocq-cmd 9.3 coqc template · wrapped in cpu_guard). The jobs dimension field (added in v41) is in the account for both runs (K=1 missing-slot semantics / K=2 explicit 2). Two runs with n_red=0 cross-prove = the 27 newly placed pieces reproduce RC0 stably in the active world generation (not a one-run fluke).
 
-## 20261112 K=3 回填：三账齐·负边际加速如实录（DS4 收口）
+## The K=3 backfill, November 12, 2026: three accounts complete · the negative-margin speedup recorded as it is (DS4 close out)
 
-K=3 真跑（rc=0·cpu_guard FRONT pos=1 waited=0s·`--probe-parallel 3`·同候选面 /tmp/audit27.tsv·同世界 /tmp/probe_world_v38·同 K=1/K=2 字面 rocq-cmd coqc 模板）：
-`timing = {enumerate_s: null, jobs: 3, manifest_s: 2.574, probe_chain_s: 165.202, total_s: 169.684}`·27/27 RC0·red=0·墙=0·probe 台账 md5_match 27/27 全真。
+The K=3 real run (rc=0 · cpu_guard FRONT pos=1 waited=0s · `--probe-parallel 3` · the same candidate face /tmp/audit27.tsv · the same world /tmp/probe_world_v38 · the same verbatim rocq-cmd coqc template as K=1/K=2):
+`timing = {enumerate_s: null, jobs: 3, manifest_s: 2.574, probe_chain_s: 165.202, total_s: 169.684}` · 27/27 RC0 · red=0 · walls=0 · the probe ledger's md5_match 27/27 all true.
 
-**加速比三账对表（probe_chain 口径）：K1/K2/K3＝190.728/101.916/165.202 → K1/K2＝1.87×·K1/K3＝1.15×·K3 较 K2 慢 1.62×（K2/K3＝0.62）＝负边际加速·DS4 纪律如实录·禁编数字禁凑绿**。total 口径同向（194.086/105.436/169.684）。判读（单跑读数·律 1 噪声带未复跑采样＝趋势级）：**并行收益在 K=2 档位现拐点——现机（4 CPU）现职守面 K=3 无收益**。挤压嫌疑注记（如实·不作开脱）：跑时另一席 nice-19 coqchk 17 件后台在飞·guard 热态预检 tlevel=58→launch 60（K=2 跑为 0）·pmset CPU_Speed_Limit=100% 无热钳位；K=3 与 K=2（前日 08:14）错峰合规。
+**The speedup, three accounts side by side (probe_chain accounting): K1/K2/K3 = 190.728/101.916/165.202 → K1/K2 = 1.87× · K1/K3 = 1.15× · K3 is 1.62× slower than K2 (K2/K3 = 0.62) = negative-margin speedup · recorded as it is per the DS4 discipline · no invented numbers, no forced passes**. The total accounting points the same way (194.086/105.436/169.684). Reading (single-run readings · rule 1's noise band not yet resampled = trend-level): **the parallel gain turns at the K=2 step — on this machine (4 CPU) with the current duty face, K=3 has no gain**. Contention-suspect note (as it is · no excuse-making): during the run another agent's nice-19 coqchk over 17 pieces was in flight in the background · the guard's warm-state precheck read tlevel=58 → launch 60 (the K=2 run read 0) · pmset CPU_Speed_Limit=100%, no thermal clamping; K=3 ran off-peak from K=2 (the previous day 08:14), compliant.
 
-口径可比性机检（本席实跑）：恒同面 K=3 vs K=2 除 timing 段＋`args.probe_parallel` 外逐键恒同（0 键差）；`baseline_diff` 双向（K1↔K3·K2↔K3）verdict=stable·候选面四元组 `source=tsv·src=ConstructiveWorld_Live·candidates=audit27.tsv·chain_ledgers=-` 恒同·rc=0。账名按任务书指定 `audit-k3-20261112.json` 落仓（perf-README §2 命名律本名形 `perf-ConstructiveWorld_Live-k3-*.json`·四元组内嵌恒同·diff 实测无误配·如实注记）；rocq-cmd 取 K=1/K=2 同字面 coqc 模板而非 bin/rocq（args 段一致为先决·perf-README §2——模板词「rocq」系 rocq93 套件泛指）。
+The comparability machine check (executed by this agent): the identical-face K=3 vs K=2 comparison is key-by-key identical except the timing section + `args.probe_parallel` (0 key differences); `baseline_diff` in both directions (K1↔K3 · K2↔K3) verdict=stable · the candidate-face quadruple `source=tsv · src=ConstructiveWorld_Live · candidates=audit27.tsv · chain_ledgers=-` identical · rc=0. The account name `audit-k3-20261112.json` landed as the task instruction specified (the perf-README §2 naming law's native form would be `perf-ConstructiveWorld_Live-k3-*.json` · the quadruple is embedded and identical · the diff measured no mispairing · noted as it is); rocq-cmd takes the same verbatim coqc template as K=1/K=2 rather than bin/rocq (args-section identity is the precondition · perf-README §2 — the template word "rocq" is the rocq93 suite's generic name).
 
-## 20261112 K=3 复采样：律 1 噪声带首采（两发区间·实测席 k3-noise）
+## The K=3 resampling, November 12, 2026: rule 1's noise band, first sample (the two-shot interval · the measurement agent's k3-noise)
 
-perf-README §3 律 1「单跑不下结论」的 K=3 复采样一发（与首发错峰·温控纪律同 v48 实测席）——上行回填段「律 1 噪声带未复跑采样＝趋势级」自此段起有带可读。
+A K=3 resampling shot for perf-README §3 rule 1 ("a single run draws no conclusion") (off-peak from the first shot · the thermal discipline matches the v48 measurement agent) — the backfill section above's "rule 1's noise band not yet resampled = trend-level" has a readable band from this section on.
 
-规程（同首发字面·args 段逐键恒同机检 0 键差）：`--probe-parallel 3`·同候选面 /tmp/audit27.tsv·同世界 /tmp/probe_world_v38·同 K=1/K=2/K3 字面 coqc 模板·src=ConstructiveWorld_Live（Set 仓正本·27 件 md5 跑前实测全对）·cpu_guard 包裹（FRONT pos=1 waited=0s·launch tlevel=57·无热钳位）。
+The procedure (the same verbatim as the first shot · the args section machine-checked key-by-key identical, 0 key differences): `--probe-parallel 3` · the same candidate face /tmp/audit27.tsv · the same world /tmp/probe_world_v38 · the same verbatim coqc template as K=1/K=2/K3 · src=ConstructiveWorld_Live (the Set repository canon · all 27 pieces' md5 verified live before the run) · wrapped in cpu_guard (FRONT pos=1 waited=0s · launch tlevel=57 · no thermal clamping).
 
-| 跑 | K | timing.jobs | manifest_s | probe_chain_s | total_s | rc |
+| run | K | timing.jobs | manifest_s | probe_chain_s | total_s | rc |
 | --- | --- | --- | --- | --- | --- | --- |
-| 首发（上行回填段） | 3 | 3 | 2.574 | 165.202 | 169.684 | 0 |
-| 复采样（本席·02:12-02:15） | 3 | 3 | 2.16 | 190.719 | 195.221 | 0 |
+| the first shot (the backfill section above) | 3 | 3 | 2.574 | 165.202 | 169.684 | 0 |
+| the resampling (this agent · 02:12-02:15) | 3 | 3 | 2.16 | 190.719 | 195.221 | 0 |
 
-**噪声带（probe_chain 口径·两发区间）＝[165.202, 190.719]·带宽 25.517s＝首读的 15.4%（中点口径 14.3%）**；total 口径同向（169.684→195.221·+15.1%）。战况面两发恒同：27/27 RC0·red=0·墙=0·台账 md5_match 27/27·args 段与非 timing 段逐键恒同（差异恰在唯一非确定段 timing·律 2 恒同面先验 PASS）。
+**The noise band (probe_chain accounting · the two-shot interval) = [165.202, 190.719] · band width 25.517s = 15.4% of the first reading (14.3% by the midpoint accounting)**; the total accounting points the same way (169.684→195.221 · +15.1%). The run-state face is identical across the two shots: 27/27 RC0 · red=0 · walls=0 · the ledger's md5_match 27/27 · the args section and every non-timing section key-by-key identical (the difference sits exactly in the only non-deterministic section, timing · rule 2's identical-face prior PASS).
 
-负结果如实（禁编数字）：复采样读数 190.719 较首发**慢 15.4%**·且与 K=1 串行基线 190.728 仅差 -0.009s（落在串行线上）·两发区间整体覆盖串行值。上行「K3 较 K2 慢 1.62×＝负边际」的定性结论两发共同支持（两发均远慢于 K2=101.916·带外恒成立）；但 K3 相对 K1 的精确负边际量级属单跑级噪声（一发快于串行 25.5s·一发与串行持平）——**K=3 无收益＝两发可读的稳健结论·负边际精确倍数不可由单跑读出（律 1 正例）**。
+The negative result as it is (no invented numbers): the resampling reading 190.719 is **15.4% slower** than the first shot · and differs from the K=1 serial baseline 190.728 by only -0.009s (it lands on the serial line) · the two-shot interval as a whole covers the serial value. The qualitative conclusion above ("K3 is 1.62× slower than K2 = negative margin") is supported by both shots together (both are far slower than K2=101.916 · holds outside the band); but the precise negative-margin magnitude of K3 relative to K1 is single-run-level noise (one shot 25.5s faster than serial · one shot level with serial) — **K=3 has no gain = the robust conclusion readable from the two shots · the precise negative-margin multiple cannot be read from a single run (rule 1's worked example)**.
 
-温控与挤压注记（如实·不作开脱）：首发与复采样均与另一席 nice-19 后台 coqchk 循环（17 件 base rebuild·-Direct 档）同窗挤压——带值含挤压效应；两发错峰合规（首发 01:40 产账·复采样 02:12 起·无时段重叠）；launch 热态首发 58→60·复采样 57·pmset CPU_Speed_Limit=100% 两发均无热钳位。
+The thermal and contention note (as it is · no excuse-making): the first shot and the resampling both ran in the same window as another agent's nice-19 background coqchk loop (a 17-piece base rebuild · the -Direct step) — the band values include the contention effect; the two shots ran off-peak, compliant (the first shot produced its account at 01:40 · the resampling started 02:12 · no time overlap); launch warm-state 58→60 for the first shot · 57 for the resampling · pmset CPU_Speed_Limit=100%, no thermal clamping in either shot.
 
-comparable 机检（本席实跑·全经 cpu_guard 包裹）：`baseline_diff` 双向（K3→K3b·K3b→K3）verdict=stable rc=0·候选面四元组 `source=tsv·src=ConstructiveWorld_Live·candidates=audit27.tsv·chain_ledgers=-` 恒同；K1↔K3b·K2↔K3b 横核同 stable rc=0。出账名按任务书 `audit-k3b-20261112.json`（偏离 perf 命名律·同首发先例注记保持·四元组内嵌恒同 diff 实测无误配）。
+The comparable machine check (executed by this agent · all wrapped in cpu_guard): `baseline_diff` in both directions (K3→K3b · K3b→K3) verdict=stable rc=0 · the candidate-face quadruple `source=tsv · src=ConstructiveWorld_Live · candidates=audit27.tsv · chain_ledgers=-` identical; K1↔K3b · K2↔K3b cross-checked, also stable rc=0. The output account name `audit-k3b-20261112.json` per the task instruction (a departure from the perf naming law · the same note as the first shot's precedent is kept · the quadruple is embedded and identical, the diff measured no mispairing).

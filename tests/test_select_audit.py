@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_select_audit.py — tools/select_audit.py 自测（tests/·五课反馈轮·席 rqsupport·
+"""test_select_audit.py — tools/select_audit.py 自测（tests/·五课反馈轮·agent rqsupport·
 20261101·v6 判据轮打磨员扩 20261101）
 
 五课负例②【nw6 选件重复】＋负例③【dver2-enbig7 同域撞】＋ v6 判据【nw10/abl6 空账】：
   - nw6：选件勘定员必须实读树 order.txt 全表 grep 剔重·禁凭记忆（候批账-nw6批.md
-    HansonLcm 混入实录）。批内同名重复＝凭记忆之典型误 → DUP-BATCH 红。
+    HansonLcm 混入实录）。批内同名重复＝凭记忆之典型误 → DUP-BATCH failing。
   - enbig7：同件双席并行各带 born 闸必撞世界（collision_enbig7_20261031.md·主会话
-    仲裁 36c35816）。同名出现在两份批选清单＝撞名前兆 → DUP-CROSS 红。
+    仲裁 36c35816）。同名出现在两份批选清单＝撞名前兆 → DUP-CROSS failing。
   - v6 判据（判例日期 20261030）：主会话与 nw10/abl6 两审计席同踩「Require 面审计
     把 Stdlib 件（QArith/Lia/List/Extraction/Lqa/Morphisms 等）误判为树内缺口」坑，
     且 grep 单行解析漏 Require Export/多名行。正确工法三件套直测：
@@ -27,7 +27,7 @@
   9 v6 fail-loud 对象缺失/世界缺失 → MissingPath
  10 v6 CLI 四码 0 全闭／1 缺口（Ghost 不泄账）／2 缺 --world／9 世界缺失
  11 v6 实盘补件 字符串散文 Require 剥（UpReqIndex.v:2821 判例形）＋裸形 Stdlib
-               白名单（Lists.List/PeanoNat/…工具链实证在库）→缺口恰一 LW0QPoly
+               allowlist（Lists.List/PeanoNat/…工具链实证在库）→缺口恰一 LW0QPoly
 
 幂等：临时目录即写即清·零仓库写盘·零网络。
 退出码：0=十一节二十判全过；1=任一红。
@@ -126,7 +126,7 @@ def main():
         check("nw6_DUP-BATCH_负例", p.returncode == 1 and "DUP-BATCH" in p.stdout,
               "rc=%d" % p.returncode)
 
-        # 3【enbig7 负例】双批同名撞（两"席"各报 HansonLcm）
+        # 3【enbig7 负例】双批同名撞（两"agent"各报 HansonLcm）
         b_a = wf(tmp, "batch_a.txt", "S03_QExp.v#R2-abc\n")
         b_b = wf(tmp, "batch_b.txt", "HansonLcm.v\n")
         b_c = wf(tmp, "batch_c.txt", "HansonLcm\nS01_BaseRing.v\n")
@@ -216,7 +216,7 @@ def main():
         check("v6_cli_rc9", p.returncode == 9, "rc=%d" % p.returncode)
 
         # 11 v6 实盘补件面：字符串散文剥（UpReqIndex.v:2821 判例形）＋裸形 Stdlib
-        #    白名单（工具链实证在库）＋真缺口 LW0QPoly 恰一
+        #    allowlist（工具链实证在库）＋真缺口 LW0QPoly 恰一
         parsed2 = mod.parse_requires(REQ_TEXT2)
         names2 = [n for n, _f, _v in parsed2]
         check("v6_实盘_字符串散文剥",

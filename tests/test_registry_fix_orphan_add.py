@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_registry_fix_orphan_add.py - ORPHAN-ADD apply-path tests for
-tools/registry_fix.py (tests/ · 20261114 gap-class seat)
+tools/registry_fix.py (tests/ · 20261114 gap-class agent)
 
 Background: registry_audit --fix-plan emits ORPHAN-ADD prescriptions in two
 directions.

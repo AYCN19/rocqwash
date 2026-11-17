@@ -4,12 +4,12 @@
 
 ## 一 · 语义 · Semantics
 
-**缺省（env 未设或非 `1`）**：行为与历史版本逐字节相同——正本环境自动检测全量保持（探测 9.3 多路器、Set 仓 gate6/gate7 正本脚本、CW Live 工具链、判例机缺省路径），探测到什么用什么，探测不到按既有让席契约让席。
+**缺省（env 未设或非 `1`）**：行为与历史版本逐字节相同——正本环境自动检测全量保持（探测 9.3 多路器、Set repository gate6/gate7 正本脚本、CW Live 工具链、判例机缺省路径），探测到什么用什么，探测不到按既有让席契约让席。
 
 **干净模式（`ROCWASH_CLEAN=1`）**：声明本机不存在正本环境（ConstructiveWorld 判例机面）——
 - 正本环境自动检测一律不执行；显式正本指针（`ROCWASH_ROCQ`／`GATE6_SCRIPT`／`GATE7_PROBE_SCRIPT`／`BORN_WORLD_ROCQ`／`ROCWASH_CANON_*`）不应用。
 - 正本依赖面不探测、不静默失败：打印英文 `requires canonical environment: <缺什么>` 并按各件既有退出码族退出（六件工具 exit 9＝缺输入族；`tools/_abl1_4b_compile.py` 维持自身 exit 1 工具链契约）。
-- 无正本依赖的面（自检/夹具/干跑/纯字面）全部照常可用，第三节四档清单逐面在列。
+- 无正本依赖的面（自检/夹具/dry run/纯字面）全部照常可用，第三节四档清单逐面在列。
 
 Default (env unset or not `1`): byte-identical historical behavior, with canonical-environment auto-detection fully active. Clean mode (`ROCWASH_CLEAN=1`): the canonical ConstructiveWorld environment is declared absent, auto-detection and explicit canonical pointers are not applied, and canonical-dependency faces print `requires canonical environment: <what>` and exit non-zero instead of probing; canonical-free faces (selftests, fixtures, dry runs, word-face tools) stay fully available.
 
@@ -20,7 +20,7 @@ Default (env unset or not `1`): byte-identical historical behavior, with canonic
 | 面 | 判例机路径（缺省值） | 消费者 |
 |---|---|---|
 | CW 主树＋cpu_guard＋Live 工具链 | `/Users/apple/Desktop/ConstructiveWorld` | run_tests.sh 探测、cw_doctor、toolchain_dyld_doctor、contrib_intake |
-| Set 仓 gate6/gate7 正本脚本 | `/Users/apple/Desktop/ConstructiveWorld-Set/scripts/gates/` | run_tests.sh 探测、contrib_intake |
+| Set repository gate6/gate7 正本脚本 | `/Users/apple/Desktop/ConstructiveWorld-Set/scripts/gates/` | run_tests.sh 探测、contrib_intake |
 | Main 树 gate4 | `/Users/apple/Desktop/ConstructiveWorld-Main` | quad8_reconcile audit 域 |
 | 战役工作区（W1 树/逐调账） | `/Users/apple/Desktop/S系Prop清除战役工单` | mac_stmt_scan 基准靶、frozen_call 逐调账缺省 |
 | 四仓副本群 rq 副本 | `/Users/apple/Desktop/rocqwash` | quad8_reconcile 在册 ROOTS |
@@ -36,7 +36,7 @@ Default (env unset or not `1`): byte-identical historical behavior, with canonic
 | tools/：doc_lint、norm_lint、baseline_diff、chain_graph、ledger_sync、netname_normalize、render_events、red_dispatch、registry_audit、registry_fix、registry_union、select_audit、vacgen（零编译面） | 各件 `--selftest` 冻结矢量 |
 | tools/：ci_triage `--selftest` 与 `--offline`、net_probe `--selftest`、cw_sentinel `--selftest`、pushci `--selftest`、evolve `--selftest`、registry_regen `--selftest`、wash_shape `--selftest`、unclog `--selftest`、contrib_intake `--selftest`、cw_doctor `--selftest`、toolchain_dyld_doctor `--selftest` | 罐装注入/临时夹具 |
 | wash/：wash_engine、comment_sweep、cure_applier（干跑面）、probe_engine `--selftest`、world_hook；scan/：mac_stmt_scan `--selftest`／`--file`、scan_v4_token、dual_scan；names/mac_stmt_names `--expect` | 套件逐例 |
-| verify/：verify_vo `--selftest`、gate4_comment_guard `--file`、erasure_classifier、extract_magic_check（桩链）、retrofit_gate7_irr 干跑；seam/、certify/（freeze_manifest、frozen8、push_gate）、watch/、wrapper/（scan_station、verify_born、quad8 `--selftest`／`--registry`、frozen_call `--selftest`、precedent_station） | 套件逐例 |
+| verify/：verify_vo `--selftest`、gate4_comment_guard `--file`、erasure_classifier、extract_magic_check（桩链）、retrofit_gate7_irr dry run；seam/、certify/（freeze_manifest、frozen8、push_gate）、watch/、wrapper/（scan_station、verify_born、quad8 `--selftest`／`--registry`、frozen_call `--selftest`、precedent_station） | 套件逐例 |
 
 ### 3.2 让席 SKIP（套件既有让席契约，干净模式下照常让席不充红）
 

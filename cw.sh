@@ -11,7 +11,7 @@
 #         inspector (contrib-intake) plus the autonomous evolution engine
 #         (evolve) plus the cross-repository experience bus (symbiosis-bus)
 #         plus the external return-package intake gate (uplink)
-#         — twenty-nine tools in total
+#         — thirty-two tools in total
 #         (repository root, bash 3.2 compatible)
 #
 # Usage: bash cw.sh <tool> [args...]
@@ -132,7 +132,7 @@
 #   symbiosis-bus  cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py
 #               cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
 #   uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
-#               cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
+#               cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-agent SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
 #   evolution-dashboard  self-evolution dashboard over the three standing accounts (experience ledger + round ledger + vacgen v2 TODO-SEAT reports -> coverageLowerPct curve + rounds conversion + per-run gap thermometer; JSON + markdown faces; absent standing paths are data) -> tools/evolution_dashboard.py
 #               cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
 #   bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
@@ -149,6 +149,12 @@
 #               cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest
 #   auto-merge  X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; the five-sample calibration set S-1..S-5 pinned; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger + the post-merge red revert arc; zero network, dry run by default) -> tools/auto_merge.py
 #               cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest
+#   jargon-map-sync  jargon map sync, md table to seed JSON (the detector map curated superset absorbed into the apply map; single-form admission: parenthetical annotations stripped, em-dash cells land as rewrite_or_delete, slash alternations and the six note-guard markers rejected; existing entries preserved with their id/exempts/cross_track_note; exact count label; plan zero-write default, --apply writes the map) -> tools/jargon_map_sync.py
+#               cw.sh jargon-map-sync [--md P] [--map P] [--json P] | --apply | --selftest
+#   repair-weekly  repair-outcome ledger weekly distribution face, repair class E6 (aggregates docs/repair-ledger.jsonl into the ISO-week per-red outcome census plus the class/ticket distributions; read-only over the ledger, --out/--json are the only write faces; --record appends one per-red rocqwash-repair-ledger/2 row under the enforced vocabulary, --apply required) -> tools/repair_weekly.py
+#               cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest
+#   selfevolve-round  one deterministic mechanical round, cron face (census jargon_apply --plan, then apply, then verify py_compile/bash -n hard gates plus norm_lint/doc_lint advisory, then auto_round commit, then push, then route the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue nonzero = fail-loud, no commit) -> tools/selfevolve_round.py
+#               cw.sh selfevolve-round [--dry-run]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # 路由契约 Routing contract:
@@ -180,7 +186,7 @@
 #      changed candidate set; red is data, not tool failure; reported loudly
 #      on stdout); 2=usage error / malformed input (schema mismatch / ledger
 #      self-consistency broken); 9=path missing.
-#      dispatch, same shape: 0=processing complete (red is data, not tool
+#      route, same shape: 0=processing complete (red is data, not tool
 #      failure; a dispatched rc!=0 / timeout / dedup skip is recorded without
 #      touching the exit code); 2=usage error (--param guard / --dry-run
 #      tier mismatch / negative --cooldown); 9=missing input (event file
@@ -232,7 +238,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
-cw.sh — unified entry for the rocqwash tool suite (29 tools · bash 3.2 compatible)
+cw.sh — unified entry for the rocqwash tool suite (32 tools · bash 3.2 compatible)
 （中文过渡注 zh transition note: this help is English-first; the full original Chinese quick reference is archived in README-cw.zh.md）
 
 Usage: bash cw.sh <tool> [args...]
@@ -353,7 +359,7 @@ Usage: bash cw.sh <tool> [args...]
   symbiosis-bus  cross-repository experience bus over docs/exp-ledger.jsonl (swap schema rocqwash-symbio/1; import walks the exp_port append face one call per entry; export/status/diff read-only; zero network by design) -> tools/symbiosis_bus.py
               cw.sh symbiosis-bus export --out SWAP.jsonl [--ledger P] [--source-repo NAME] [--anchor HEX] [--dry-run] | import --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | diff --a A --b B
   uplink      external return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members are fail-loud; the intake register row and the caller-named draft are the only writes; zero network by design) -> tools/uplink.py
-              cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-seat SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
+              cw.sh uplink verify --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] | intake --package P.zip --source-agent SEAT --landed-ref REF [--digest HEX|SIDECAR] [--manifest M.md5] [--register F] [--dry-run] | pr-prep --package NAME --out DRAFT.md [--register F] [--signature LINE]
   evolution-dashboard  self-evolution dashboard over the three standing accounts (experience ledger + round ledger + vacgen v2 TODO-SEAT reports -> coverageLowerPct curve + rounds conversion + per-run gap thermometer; JSON + markdown faces; absent standing paths are data) -> tools/evolution_dashboard.py
               cw.sh evolution-dashboard [--repo ROOT] [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P] [--md-out P] [--stdout markdown|json] [--selftest]
   bus-feeder  gap-ledger feeder for symbiosis swap packages (rocqwash-symbio/1 in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; the gap feed ledger is the only write face; zero network by design) -> tools/bus_feeder.py
@@ -370,6 +376,14 @@ Usage: bash cw.sh <tool> [args...]
                  cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest
   auto-merge  X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; the five-sample calibration set S-1..S-5 pinned; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger + the post-merge red revert arc; zero network, dry run by default) -> tools/auto_merge.py
               cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest
+  jargon-map-sync  jargon map sync, md table to seed JSON (the detector map curated superset absorbed into the apply map; single-form admission: parenthetical annotations stripped, em-dash cells land as rewrite_or_delete, slash alternations and the six note-guard markers rejected; existing entries preserved with their id/exempts/cross_track_note; exact count label; plan zero-write default, --apply writes the map) -> tools/jargon_map_sync.py
+              cw.sh jargon-map-sync [--md P] [--map P] [--json P] | --apply | --selftest
+
+  repair-weekly  repair-outcome ledger weekly distribution face, repair class E6 (aggregates docs/repair-ledger.jsonl into the ISO-week per-red outcome census plus the class/ticket distributions; read-only over the ledger, --out/--json are the only write faces; --record appends one per-red rocqwash-repair-ledger/2 row under the enforced vocabulary, --apply required) -> tools/repair_weekly.py
+              cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest
+  selfevolve-round  one deterministic mechanical round, cron face (census jargon_apply --plan, then apply, then verify py_compile/bash -n hard gates plus norm_lint/doc_lint advisory, then auto_round commit, then push, then route the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue nonzero = fail-loud, no commit) -> tools/selfevolve_round.py
+              cw.sh selfevolve-round [--dry-run]
+
   help        this help (help <tool> = the tool's one-line usage hint)
 
 退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
@@ -440,6 +454,9 @@ hint_for() {  # $1=tool
     roster-resync) echo "cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest   # roster count drift guard, repair class E2-2 (one-way recount from the run_tests.sh CASES roster into the doc_lint count lines of tests/README.md + README.md; the roster file is never written; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py" ;;
     scheduler-lite) echo "cw.sh scheduler-lite [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--out F] [--json] | --selftest   # TODO-SEAT threshold trigger planner for the jargon tier-B auto gear (verdict quiet | due | blocked; ignition gated on the EF all-green marker; dry-run by design: zero apply, zero commit, zero network) -> tools/scheduler_lite.py" ;;
     auto-merge) echo "cw.sh auto-merge --facts F [--head-branch BR] [--allow-prefix P] [--daily-cap N] [--ledger P] [--merge-sha SHA] [--post-merge {green,transient,content,unrecognized}] [--apply] [--json OUT] | --selftest   # X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum merge-ok / hold-red / hold-conflict / already-landed / superseded-landed-elsewhere / escalate-unknown over caller-gathered facts; verdicts and rail outcomes are data rc 0, rail refusals rc 1; the five-sample calibration set S-1..S-5 pinned in --selftest; rail = supply/* head-branch whitelist + daily budget cap 3 + append-only merge ledger rows rocqwash-automerge/1 + the post-merge red revert arc: content prescribes git revert -m 1, transient a rerun window, unrecognized an escalation; zero network, dry run by default, --apply only appends ledger rows) -> tools/auto_merge.py" ;;
+    jargon-map-sync) echo "cw.sh jargon-map-sync [--md P] [--map P] [--json P] | --apply | --selftest   # jargon map sync, md table -> seed JSON (detector-map superset absorbed into the apply map; single-form admission: parenthetical annotations stripped, em-dash cells land as rewrite_or_delete, slash alternations rejected, six note-guard markers rejected; existing entries preserved with their id/exempts/cross_track_note; exact count label; plan zero-write default, --apply writes the map) -> tools/jargon_map_sync.py" ;;
+    repair-weekly) echo "cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest   # repair-outcome ledger weekly distribution face, repair class E6 (ISO-week per-red outcome census + class/ticket distributions; read-only over the ledger, --out/--json the only write faces; --record appends one per-red rocqwash-repair-ledger/2 row under the enforced vocabulary, --apply required) -> tools/repair_weekly.py" ;;
+    selfevolve-round) echo "cw.sh selfevolve-round [--dry-run]   # one deterministic mechanical round, cron face (census jargon_apply --plan -> apply -> verify py_compile/bash -n hard gates + norm_lint/doc_lint advisory -> auto_round commit -> push -> dispatch the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue != zero = fail-loud, no commit) -> tools/selfevolve_round.py" ;;
     *) return 1 ;;
   esac
 }
@@ -517,6 +534,9 @@ case "${1:-}" in
   roster-resync) shift; run_tool roster-resync "tools/roster_resync.py" "$@" ;;
   scheduler-lite) shift; run_tool scheduler-lite "tools/scheduler_lite.py" "$@" ;;
   auto-merge) shift; run_tool auto-merge "tools/auto_merge.py" "$@" ;;
+  jargon-map-sync) shift; run_tool jargon-map-sync "tools/jargon_map_sync.py" "$@" ;;
+  repair-weekly) shift; run_tool repair-weekly "tools/repair_weekly.py" "$@" ;;
+  selfevolve-round) shift; run_tool selfevolve-round "tools/selfevolve_round.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

@@ -49,7 +49,7 @@ Vectors:
      monomorphic station faces (E3 shim call; E2 "val unann : nat -> nat"
      on the .mli).  Compile sections are skipped (rc 111) when ROCWASH_ROCQ
      is unset, so external clones pass without a toolchain.
-  8. v1.4 corpus-survey flow (cure39, b48-52 wash-wave citation): the
+  8. v1.4 corpus-survey flow (cure39, b48-52 wash-work stream citation): the
      interface-quantified connective qualification — dry-run station
      count on the T13 miniature (10 = two compat statements x five
      connective stations), apply rc=0 with the qualified faces and the
@@ -463,7 +463,7 @@ finally:
     shutil.rmtree(tmp, ignore_errors=True)
 
 # 8. v1.4 fixture flow: interface-quantified connective qualification
-#    (cure39, b48-52 wash-wave citation commit 9a51c74, UpAblT13
+#    (cure39, b48-52 wash-work stream citation commit 9a51c74, UpAblT13
 #    re-anchor form).  --only run: the miniature also carries the
 #    shadowing Import line the campaign added, which cure11 (full pack)
 #    would delete — the interplay is documented in the fixture header.

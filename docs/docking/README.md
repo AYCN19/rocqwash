@@ -26,9 +26,9 @@ Self-heal (`tools/cw_sentinel.py` + the watch workflows) repairs reds; the autom
    then keep local aligned with origin/main before every construction session
    (`git fetch origin main && git merge --ff-only origin/main`). Alignment is a law, not a
    courtesy: build on a stale tree and every later gate judges the wrong world.
-2. **Pick your wave template** / 选波模板: copy `templates/wf-recursion-wave-template.dwf.ts`,
-   fill the parameter block (REPO tree, OUT dir, BRANCH name, the seat specs for your wave),
-   and run it through your workflow host. The template encodes this repo's proven wave shape:
+2. **Pick your work stream template** / 选波模板: copy `templates/wf-recursion-wave-template.dwf.ts`,
+   fill the parameter block (REPO tree, OUT dir, BRANCH name, the agent specs for your work stream),
+   and run it through your workflow host. The template encodes this repo's proven work stream shape:
    P0 cloud alignment → parallel construction seats → mechanical verification gates →
    branch → fork push → PR → CI judge. See `templates/README-params.md` for the parameter table.
 3. **Build inside the scope guards** / 在射程内施工: the frozen set (`certify/frozen8.py`
@@ -56,7 +56,7 @@ Self-heal (`tools/cw_sentinel.py` + the watch workflows) repairs reds; the autom
 
 ## Post-merge / 落岸后
 
-- The stable-roster CI runs on main; if your landing moves HEAD past `freeze_commit`
+- The stable-roster CI runs on main; if your integration moves HEAD past `freeze_commit`
   (squash landings always do), re-sign the frozen manifest with the canonical face:
   `python -B certify/frozen8.py freeze --repo . --out certify/frozen8_manifest.json --tier2
   certify/frozen8_tier2.md5` (registered structural gap: squash × freeze-commit; candidates
@@ -73,6 +73,6 @@ Self-heal (`tools/cw_sentinel.py` + the watch workflows) repairs reds; the autom
 | `recursive-evolution-paradigm.md` | the paradigm: axioms S1–S5, Φ/Φ\*, theorems, laws |
 | `component-map.md` | every callable component with its CLI one-liner |
 | `alignment-and-pr-protocol.md` | the alignment law, PR protocol, known structural gaps |
-| `../templates/wf-recursion-wave-template.dwf.ts` | the wave workflow template (parameterized) |
+| `../templates/wf-recursion-wave-template.dwf.ts` | the work stream workflow template (parameterized) |
 | `../templates/ci-green-watch.sh` | the CI-green sentinel (alignment trigger) |
 | `../templates/pr-body-template.md` | the PR preamble template (dual-role header + disclosure + ICLA) |

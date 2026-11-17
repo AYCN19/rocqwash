@@ -2,7 +2,7 @@
 
 > rocqwash v37 嵌段正典样例三件之二。把 `README-cw.md:124-126`「pushci 嵌段」
 > 展开为可整段复制执行的命令块＋真实输出样例＋verdict 分支表＋dynamic-workflow
-> 嵌段伪码。器实况正本：`tools/pushci.py` docstring（v36 旗舰·五段管线
+> 嵌段伪码。器实况正本：`tools/pushci.py` docstring（v36 flagship·五段管线
 > preflight→push→watch→heal→verdict±merge·pushci.py:5）与 `--help`。
 > schema `rocqwash-pushci/1`·verdict 七态
 > `success|fix-content|toolchain|unstable|heal-exhausted|gate4-block|dry-run`
@@ -13,7 +13,7 @@
 >   （零 git 零 API 零工具子进程）`（tools/pushci.py:87）：真发前人审计划，
 >   计划不对不开闸。
 > - **verdict 是封册**——七态与退出码 0/1/2/9 一一封册（tools/pushci.py:91-93）；
->   分流动作见 §3 表。红是数据非器红：fix-content 是**内容红**数据，器面照常出账。
+>   分流动作见 §3 表。a failing result is data, not a tool failure：fix-content 是**内容红**数据，器面照常出账。
 > - **离线演练须成对**——`--injector DIR` 与 `--git-caller FILE` 必须成对给出，
 >   单边给出＝用法错 exit 2（injector 无 canned git＝真 push 危险，tools/pushci.py
 >   docstring「--git-caller」条）。
@@ -95,7 +95,7 @@ verdict 与退出码封册正本：tools/pushci.py:91-93（README-cw.md:33、69 
 | 1 | `unstable` | net-probe 稳窗不过（push 或 heal 阶段双探不稳）→禁发射 | 网络修复后重跑；读 report.stages |
 | 1 | `toolchain` | doctor verdict≠healthy（环境件） | 按器附带的 doctor 重跑建议处置环境 |
 | 1 | `heal-exhausted` | 观测红·B/E 族重跑 `--max-heal`（默认 3）轮未绿 | 读 `stages.heal.last_triage`（family/action/evidence 全量在册）人工定夺 |
-| 2 | `fix-content` | 判类 A 内容红（heal 分派停·**禁代修**——修复是席/人职责）或 merge 409 冲突（内容活） | 交修复席/人；family 原值响亮在册 |
+| 2 | `fix-content` | classification A 内容红（heal 分派停·**禁代修**——修复是席/人职责）或 merge 409 冲突（内容活） | 交修复席/人；family 原值响亮在册 |
 | 2 | `gate4-block` | `--pre-scan-gate4` 预扫 FAIL≠0 | 读 report.stages.preflight.gate4.fail_files 逐件修头注 |
 | 2 | （无 verdict） | argparse 用法错（段依赖 watch⇒push·heal⇒watch·--merge⇒watch 等） | 修命令行；对照 `bash cw.sh help pushci` |
 | 9 | （无 verdict） | 目标缺失 fail-loud（repo/remote/分支/PR/工具链件缺失·netrc 缺·API 不可达·API 4xx/5xx 硬错·watch 轮帽达） | 人工补目标/凭据后重跑 |

@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """jargon_apply.py - apply the jargon-to-standard map to prose faces.
 
-Purpose.  Reads seeds/jargon/jargon-map.json (62 entries) read-only and
+Purpose.  Reads seeds/jargon/jargon-map.json (159 entries: the 62-entry
+  seed prefix plus the md-table superset the P1 sync absorbed) read-only and
   drives the E2 application face: plan every machine-applicable occurrence
   of a banned face on .py/.sh/.md prose faces; behind --apply only, splice
   the mapped standard in and rescan via tools/norm_lint.py with the
@@ -50,6 +51,7 @@ WINDOW = 40
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NL_PATH = os.path.join(REPO_ROOT, "tools", "norm_lint.py")
 SCOPE_PATH = os.path.join(REPO_ROOT, "tools", "repair_scope.py")
+SYNC_PATH = os.path.join(REPO_ROOT, "tools", "jargon_map_sync.py")
 DEFAULT_MAP_PATH = os.path.join(REPO_ROOT, "seeds", "jargon", "jargon-map.json")
 DEFAULT_A2_PATH = os.path.join(REPO_ROOT, "docs", "jargon-to-standard-mapping-v1.md")
 AUTONOMY_PATH = os.path.join(REPO_ROOT, "autonomy.json")
@@ -72,6 +74,7 @@ NOTE_EXEMPT_ROUTING = "exempt regex carries"
 
 _NL = None
 _RS = None
+_SYNC = None
 
 
 def repair_scope_module():
@@ -222,9 +225,13 @@ def build_records(m):
 
     Regex objects and compiled exempts come from norm_lint.JargonTerm so the
     matcher is the same source as the detector; claiming every planned span
-    (not only the first hit per face) is a deliberate strengthening that
-    cannot diverge on this map because all 62 faces are CJK words and the
-    whole-word adjacency rule already blocks cross-face overlaps.
+    (not only the first hit per face) is a deliberate strengthening: the
+    planner is a per-line superset of the detector's one-finding-per-face
+    record, which reaches every machine span the residue-zero gate needs.
+    The seed's 62 CJK faces cannot cross-face-overlap under the whole-word
+    adjacency rule; the md-sync superset adds English slang faces (whole-word
+    \\b forms), and the scan-parity vector keeps the planner checked against
+    the detector findings on the fixture map.
     """
     nlm = norm_lint_module()
     recs = []
@@ -390,7 +397,13 @@ def project_table(m):
 
 
 def parse_md_rows(path):
-    """Loader-grammar rows of an md pipe table: (lineno, face, standard)."""
+    """Loader-grammar rows of an md pipe table: (lineno, face, standard).
+
+    Face grammar mirrors tools/norm_lint.py:load_jargon_map: the face cell
+    is fullwidth-parenthetical-stripped first, then split on "/" and "／" —
+    the same grammar the tools/jargon_map_sync.py admission uses, so the
+    A2 index keys equal the map's md-sourced faces."""
+    nlm = norm_lint_module()
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
             rows = fh.read().splitlines()
@@ -407,22 +420,44 @@ def parse_md_rows(path):
             continue
         if len(cells) < 3:
             continue
-        for part in re.split(r"\uFF0F|/", first):
+        face_cell = nlm.RE_FW_PAREN.sub("", first).strip()
+        for part in re.split(r"\uFF0F|/", face_cell):
             name = part.strip()
             if name:
                 out.append((lineno, name, cells[1]))
     return out
 
 
+def sync_module():
+    """Load tools/jargon_map_sync.py by path - the single derivation source
+    for the md standard cells (parenthetical-annotation stripping, the
+    em-dash rewrite-or-delete convention, the alternation guard).  The A2
+    equality duty compares the map's md-provenance standards against the
+    same derivation the sync wrote them from."""
+    global _SYNC
+    if _SYNC is None:
+        if not os.path.isfile(SYNC_PATH):
+            fail("sync module missing (single derivation source): "
+                 + SYNC_PATH, 9)
+        spec = importlib.util.spec_from_file_location("rqw_jargon_map_sync",
+                                                      SYNC_PATH)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _SYNC = mod
+    return _SYNC
+
+
 def a2_diff(m, md_path):
     """A2 row-equality duty, mechanically scoped by map provenance.
 
-    The map transcribes exactly two source faces: the annotation whitepaper
-    (not in this repository) and the in-repo md table.  The equality duty
-    binds the md-provenance rows: for each of them the md row must exist
-    exactly once and the standard cell must equal the transcribed cell,
-    byte for byte.  Returns (diffs, checked, md_rows).
+    The map's md-provenance rows must mirror the in-repo md table: for each
+    of them the md row must exist exactly once and the map's standard cell
+    must equal the md row's DERIVED standard cell - the same derivation the
+    sync wrote it from (parenthetical annotations stripped, em-dash cells
+    carried as rewrite_or_delete with no standard).  Returns (diffs,
+    checked, md_rows).
     """
+    sync = sync_module()
     rows = parse_md_rows(md_path)
     index = {}
     for lineno, face, standard in rows:
@@ -439,7 +474,8 @@ def a2_diff(m, md_path):
             diffs.append(e["id"] + ": md rows for the face: "
                          + str(len(found)) + " (need exactly 1)")
             continue
-        if found[0][1] != e["standard"]:
+        _disp, derived, reason = sync.derive_standard(found[0][1])
+        if reason is not None or derived != e["standard"]:
             diffs.append(e["id"] + ": standard cell differs from md line "
                          + str(found[0][0]))
     return diffs, checked, len(rows)
@@ -478,7 +514,14 @@ def _prose_segments(kind, text, nlm):
         segs, _first_doc, err = nlm.py_docface(text)
         if err:
             return None, err
-        return segs, None
+        # comment tokens carry only the comment text (the tokenizer starts
+        # the token at the hash sign and drops the leading code and indent),
+        # while docstring rows are already full lines; re-anchor every
+        # segment to its true file line so the recorded spans match the
+        # content apply_rewrites verifies and splices against
+        lines = text.splitlines()
+        return [(ln, lines[ln - 1]) for ln, _seg in segs
+                if 1 <= ln <= len(lines)], None
     if kind == "sh":
         segs, _ = nlm.sh_docface(text)
         return segs, None
@@ -690,6 +733,20 @@ def run_plan_or_apply(args):
                 fh.write(project_table(machine_map))
             target_abs = root_abs if root_abs else os.path.abspath(args.file)
             rescan = _rescan(args, target_abs, root_abs, table_path, tmpdir)
+            # residue scope = the faces the machine pass owns: the rows it
+            # scanned (non-frozen, non-map-source).  Frozen rows and the
+            # map's own source table carry excluded/skip rows with zero
+            # plan pairs -- the apply never touches them, so counting their
+            # findings as residue would make exit zero unreachable (the
+            # same rule as the guarded/rewrite_or_delete note above)
+            scanned_paths = set(row["path"] for row in file_rows
+                                if row.get("scanned"))
+            rescan["scope"] = ("apply-scanned faces; frozen and map-source "
+                               "rows carry zero plan pairs and stay out")
+            rescan["jargon_findings"] = sum(
+                rescan["per_file"].get(p, 0) for p in scanned_paths)
+            rescan["per_file"] = dict((p, rescan["per_file"].get(p, 0))
+                                      for p in scanned_paths)
             for row in file_rows:
                 if row.get("scanned"):
                     row["residue_jargon"] = rescan["per_file"].get(row["path"], 0)
@@ -794,16 +851,20 @@ def run_selftest(args):
     a2_path = args.a2_table or DEFAULT_A2_PATH
     m_real = load_map(seed_path) if have_seed else None
 
-    # vector 1: seed data contract and the mandated 62-entry count
+    # vector 1: seed data contract - the count label is exact, the map grew
+    # by the P1 md sync (62-entry seed prefix preserved as J001..J062)
     if m_real is None:
         _vec(results, "seed-contract", None, "SKIP: seed map not found")
     else:
         ents = m_real["entries"]
+        seed_ids = set("J%03d" % i for i in range(1, 63))
         ok = (m_real.get("schema") == "rocqwash-jargon-map/1"
-              and len(ents) == 62 and m_real.get("count") == 62
-              and len(set(e["face"] for e in ents)) == 62)
+              and len(ents) == 159 and m_real.get("count") == 159
+              and len(set(e["face"] for e in ents)) == 159
+              and seed_ids <= set(e["id"] for e in ents))
         _vec(results, "seed-contract", ok,
-             "62 entries, unique faces, schema pinned" if ok
+             "159 entries (62-entry seed prefix preserved), unique faces, "
+             "count label exact, schema pinned" if ok
              else "seed shape drifted: entries=%d count=%r"
                   % (len(ents), m_real.get("count")))
 
@@ -817,14 +878,16 @@ def run_selftest(args):
         alternation = sorted(r["face_id"] for r in recs
                              if r["reason"] == "alternation-guard")
         rod = sorted(r["face_id"] for r in recs if r["reason"] == "rewrite_or_delete")
-        want_note = ["J012", "J013", "J018", "J046", "J047"]
-        want_alt = ["J001", "J003", "J004", "J016", "J023", "J024", "J048",
-                    "J049", "J050", "J056", "J057", "J061"]
-        want_rod = ["J032", "J033", "J034"]
-        ok = (len(machine) == 42 and note_guard == want_note
+        want_note = ["J013", "J047"]
+        want_alt = ["J001", "J003", "J004", "J023", "J024", "J048", "J049",
+                    "J050", "J056", "J057"]
+        want_rod = ["J032", "J033", "J034", "J149", "J152", "J153", "J154",
+                    "J155", "J156", "J157", "J158", "J159"]
+        ok = (len(machine) == 135 and note_guard == want_note
               and alternation == want_alt and rod == want_rod)
         _vec(results, "classification", ok,
-             "machine=42 note-guard=5 alternation-guard=12 rewrite_or_delete=3"
+             "machine=135 note-guard=2 alternation-guard=10"
+             " rewrite_or_delete=12 (post-sync P1 map)"
              if ok else
              "machine=%d note=%s alt=%s rod=%s" % (len(machine), note_guard,
                                                    alternation, rod))
@@ -834,21 +897,23 @@ def run_selftest(args):
         _vec(results, "derive-after", None, "SKIP: seed map not found")
     else:
         by_id = dict((e["id"], e) for e in m_real["entries"])
-        want = {"J005": "\u88c5\u914d", "J006": "\u5c01\u88c5",
-                "J042": "\u6ce8\u518c", "J054": "\u63d0\u4f9b",
+        want = {"J005": "\u0069ntegration", "J006": "\u5c01\u88c5",
+                "J042": "register", "J054": "\u63d0\u4f9b",
                 "J058": "\u4f59\u91cf\u6d88\u9664\u8bba\u8bc1",
                 "J062": "\u63a5\u53e3\u53c2\u6570",
-                "J009": "\u4f7f\u7528", "J022": "machine ruling"}
+                "J009": "\u4f7f\u7528", "J022": "machine ruling",
+                "J012": "flagship", "J016": "assignment",
+                "J018": "close out", "J046": "onboard",
+                "J061": "watcher"}
         bad = [k for k, v in want.items() if derive_after(by_id[k]) != v]
-        bad += [k for k in ("J001", "J003", "J004", "J016", "J018", "J023",
-                            "J024", "J048", "J049", "J050", "J056", "J057",
-                            "J061")
+        bad += [k for k in ("J001", "J003", "J004", "J023", "J024", "J048",
+                            "J049", "J050", "J056", "J057")
                 if derive_after(by_id[k]) is not None]
-        bad += [k for k in ("J012", "J013", "J046", "J047")
+        bad += [k for k in ("J013", "J047")
                 if derive_after(by_id[k]) is None]
         _vec(results, "derive-after", not bad,
-             "8 arrow/plain cells derive; 13 alternation cells derive none; "
-             "4 note-guard cells derive a plain form (note guards them)"
+             "13 arrow/plain cells derive; 10 alternation cells derive none; "
+             "2 note-guard cells derive a plain form (note guards them)"
              if not bad else "wrong derivation for: " + ", ".join(bad))
 
     # vector 4: projector form equals the seed test projector byte for byte
@@ -890,7 +955,7 @@ def run_selftest(args):
             want = sorted(e["face"] for e in m_real["entries"])
             by_face = dict((e["face"], e) for e in m_real["entries"])
             bad = []
-            if got != want or len(terms) != 62:
+            if got != want or len(terms) != 159:
                 bad.append("active face set mismatch")
             for t in terms:
                 e = by_face[t.term]
@@ -899,7 +964,7 @@ def run_selftest(args):
                 if t.suggest != want_suggest:
                     bad.append(t.term + ": suggest mismatch")
             _vec(results, "loader-roundtrip", not bad,
-                 "62 active faces with transcribed suggestions" if not bad
+                 "159 active faces with transcribed suggestions" if not bad
                  else "; ".join(bad[:5]))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -912,11 +977,12 @@ def run_selftest(args):
              "SKIP: in-repo md table not found at " + a2_path)
     else:
         diffs, checked, md_rows = a2_diff(m_real, a2_path)
-        ok = not diffs and checked == 13
+        ok = not diffs and checked == 126
         _vec(results, "a2-row-equality", ok,
-             "13/13 md-provenance rows equal; md table parsed faces=%d; "
-             "scope note: 46 annotation-track and 3 rewrite_or_delete rows "
-             "come from the whitepaper, outside this repository" % md_rows
+             "126/126 md-provenance rows equal to the derived md cells"
+             " (post-sync P1 map); md table parsed faces=%d; scope note: the"
+             " annotation-track rows come from the whitepaper, outside this"
+             " repository" % md_rows
              if ok else "diffs: " + "; ".join(diffs[:5]))
 
     # vectors 7 to 9: functional vectors on the embedded fixture map

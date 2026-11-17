@@ -14,7 +14,7 @@
 | `tools/row_render.py` | W2 emit/ingest/check/tenpoint | `py -I tools/row_render.py --gaps <w2.json> --ingest <backfill.jsonl> --draft-out <draft.json>` |
 | `tools/auto_round.py` | approve / commit / anchor / rollback | `ROCWASH_PY=py bash tests/run_tests.sh` first; then `py -B tools/auto_round.py approve --class <name> --note <basis>`; `py -B tools/auto_round.py commit --classes <c> --files <f,...> --message <m>` |
 | `tools/bus_feeder.py` | symbiosis swap → gap ledger | `py -I tools/bus_feeder.py feed --swap docs/symbiosis-swap-round1.jsonl` (idempotent; re-run shows zero-feed) |
-| `tools/scheduler_lite.py` | round trigger — **X wave in flight, not yet on main; consult after its PR lands** | (face documented in-repo after landing) |
+| `tools/scheduler_lite.py` | round trigger — **X work stream in flight, not yet on main; consult after its PR lands** | (face documented in-repo after integration) |
 
 ## Verification / verification faces / 验证面
 
@@ -31,7 +31,7 @@
 
 | Component | Face | One-liner |
 |---|---|---|
-| `tools/auto_merge.py` | merge door judge (six verdicts + rails) — **X wave in flight, not yet on main** | (face documented in-repo after landing; calibration selftest carries the six-verdict vectors) |
+| `tools/auto_merge.py` | merge door judge (six verdicts + rails) — **X work stream in flight, not yet on main** | (face documented in-repo after integration; calibration selftest carries the six-verdict vectors) |
 | `tools/uplink.py` | external return-package intake | `py -B tools/uplink.py verify <pkg>` → `intake` |
 | `tools/cw_sentinel.py` | watch daemon | `py -B tools/cw_sentinel.py --loop --interval 60` |
 | `tools/evolution_dashboard.py` | KPI/self-observation | `py -B tools/evolution_dashboard.py --json <out.json>` |
@@ -39,7 +39,7 @@
 
 ## Workflow templates / 工作流模板
 
-- `templates/wf-recursion-wave-template.dwf.ts` — one construction wave: P0 cloud
+- `templates/wf-recursion-wave-template.dwf.ts` — one construction work stream: P0 cloud
   alignment → parallel seats → mechanical gates → branch → fork push → PR → CI judge.
   Fill the parameter block; keep the discipline strings byte-stable.
 - `templates/ci-green-watch.sh` — CI-green sentinel for the alignment law (green →

@@ -4,7 +4,7 @@
 综合体检器挂接·集成席）
 
 综合体检器挂接件：体检器自带 --selftest 冻结向量组（①四域全绿 100 分／②环境
-红降 60.0／③注册缺册 skip 归一 86.67＋CW_SET 缺册如实 skip／④堵账 TOP 注入
+红降 60.0／③注册缺册 skip normalize 86.67＋CW_SET 缺册如实 skip／④堵账 TOP 注入
 88.75／⑤advice 生成／⑥JSON 幂等字节恒同／⑦CLI 四码＋罐装全覆盖／⑧注册审计
 单元——全 --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译·
 chain_graph/注册审计真跑纯 stdlib）已由铸席自证，本壳只把它接进套件总入口并

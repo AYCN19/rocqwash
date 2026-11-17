@@ -3,14 +3,14 @@
 """test_pushci.py — tools/pushci.py 七场景铸例壳（tests/·pushci 一键流水线测试席·
 20261111·v48 勘形小改②扩 Main 形 dry-run 一件）
 
-pushci 一键流水线（preflight 发射闸→push→watch→NETRED 自愈 rerun→verdict→可选
+pushci single-command pipeline（preflight 发射闸→push→watch→NETRED automatic recovery rerun→verdict→可选
 merge）的场景测试：七场景 fixture（tests/fixtures/pushci_scenarios/*.json·GitHub
 API 真形 canned 响应按轮次序列）经实现原生 flat 注入形（夹具原件 verbatim→
 DIR/scenario.json·「canned 键即认」）驱动 tools/pushci.py 全离线全注入跑通，逐场景
 判 exit 码／report.final／heal 轮数／关键 stage 字段／调用流水实证：
 
   1 工具自证    pushci --selftest 冻结矢量（rc 0·PUSHCI-SELFTEST PASS）
-  2 helper 自证 tmp-git 仓 fixture：真 git 仅 init/add/commit/remote 层（repo_path
+  2 helper 自证 tmp-git repository fixture：真 git 仅 init/add/commit/remote 层（repo_path
                 由 fixture 建仓·push 永不真跑——场景层 git 全走 --git-caller canned）
   3 S1 绿径     preflight 双闸（flat 形缺省绿·响亮注记在册）→push 注入（get-url/
                 rev-parse/push/ls-remote 四调·远端为准）→watch 2 轮 run success→
@@ -20,7 +20,7 @@ DIR/scenario.json·「canned 键即认」）驱动 tools/pushci.py 全离线全�
                 verdict success exit 0·heal_rounds==1
   5 S3 内容红   failure A-content-red→verdict fix-content exit 2·零 rerun 实证
                 ＝report.heal.rounds 空（契约原言）＋fired_total==0＋api_calls 零
-                POST；判类 outcome 在册 heal.last_triage
+                POST；classification outcome 在册 heal.last_triage
   6 S4 heal 耗尽  NETRED×3（--max-heal 2·canned.jobs 三 entry 逐判类消耗·两轮
                 probe STABLE→rerun 201 仍 NETRED）→verdict heal-exhausted exit 1
   7 S5 merge 流  run success→PUT merge 200（--pr 42·flat 形 pulls GET 须显传）→
@@ -36,7 +36,7 @@ DIR/scenario.json·「canned 键即认」）驱动 tools/pushci.py 全离线全�
   11 CLI 五码   --help 0／未知形参 2／缺必给 2／repo 缺失 9／injector-git-caller
                 单边 2
 
-零副作用律：全部场景 tmp 仓 fixture（每跑 HEAD sha 与 status --porcelain 前后逐
+零副作用律：全部场景 tmp repository fixture（每跑 HEAD sha 与 status --porcelain 前后逐
 字节不变）；远端 URL 恒指不可达假域 pushci.invalid（结构性零真网络）＋push 层必经
 --git-caller canned 注入（调用流水 calls.json 逐调实证·真 git 子进程零发射）；
 --sleep-scale 0 恒传＋--netrc 恒指不存在路径（凭据惰性读证）；api_calls.json 与
@@ -86,7 +86,7 @@ SCENARIOS = ["s1_green_path", "s2_netred_heal", "s3_content_red",
 WALLCLOCK_KEY_RX = re.compile(
     r"(^|_)(at|time|timestamp|generated|wallclock|now|iso|date)(_t)?$|_at$", re.I)
 
-INJ_TIMEOUT_SEC = 60   # 单场景子进程墙钟帽（超时=红·防 canned 失配死旋）
+INJ_TIMEOUT_SEC = 60   # 单场景子进程墙钟帽（超时=failing·防 canned 失配死旋）
 
 
 # ---- 通用小件 ---------------------------------------------------------------
@@ -129,7 +129,7 @@ def base_env():
     return env
 
 
-# ---- tmp-git 仓 fixture（真 git 仅 init/add/commit/remote 层）----------------
+# ---- tmp-git repository fixture（真 git 仅 init/add/commit/remote 层）----------------
 
 def make_tmp_repo(root, name, branch, remote_url):
     """git init -b <branch>＋add＋commit＋remote add origin。push/ls-remote/fetch

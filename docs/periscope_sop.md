@@ -71,7 +71,7 @@ Schema `rocqwash-periscope-config/1` 顶层键：`schema` / `sentinel` / `defaul
 ### 坑 c · 源④端点＝Main issue#3＋comments 子面（可配置）
 
 - **判例 Precedent**: 首轮源④按五源表钉到 `rocqwash/issues/3` 吃 404 定谳负发现；根因＝派单协调台实在 `ConstructiveWorld-Main` issue#3（GET 200 · 87 comments 实证）——端点定装必须先经存在性 GET 验明。
-- **烧入 Burn-in**: 缺省 config 的 `issues` 源 URL 钉 Main 仓 issue#3，`comments.enabled=true`＋`per_page=30` 子面在同源帽内随单点后取（发间 ≥2s、逐发入 NETRED）；单点 404 时子面不起飞（负发现四要素先行）。端点退役件（rocqwash 仓 issue 面单点）不入缺省表。
+- **烧入 Burn-in**: 缺省 config 的 `issues` 源 URL 钉 Main repository issue#3，`comments.enabled=true`＋`per_page=30` 子面在同源帽内随单点后取（发间 ≥2s、逐发入 NETRED）；单点 404 时子面不起飞（负发现四要素先行）。端点退役件（rocqwash repository issue 面单点）不入缺省表。
 - **验证 Verification**: selftest V4——缺省 issues 端点==Main issue#3 且不含 rocqwash/issues；罐装两发（单点 200→comments 200）断言子面 URL 形、两发皆入账、comments count 解析在卷。
 
 ## 四、窗口协议 Window Protocol（帽 8·取到即停·sleep60 改参重试）

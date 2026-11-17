@@ -5,7 +5,7 @@
   的归一可行性（v36 登记的双门并立现状）；本轮一律只出文档·改造候令。
 - **盘面实况**：rocqwash HEAD **8e124b3**（v45 render_events.py 路由入册）·工作树
   净（`git status --porcelain` 实跑 0 行）。任务书头注「v37 41e74b0」已过时——
-  仓库当日在途推进 v37→v45；本文全部行号锚现势工作树（=HEAD 现势），与评估
+  仓库当日在途推进 v37→v45；本文全部行号锚现势工作树（=HEAD current state），与评估
   结论无涉（评估对象代码即现盘正本）。
 - **先例旁证**：docs/ 同日已有 `push-gate-dual-door-assessment-v1.0-20261111.md`
   （先席独立成文·其案 A/B/C 对应本文乙/甲/丙·裁决同为「保持并立」）。两席
@@ -22,7 +22,7 @@ gate4_comment_guard.py / verify_vo.py / wash_engine.py。
 本席实跑 `python3 -B certify/frozen8.py --ledger`（经 cpu_guard 包裹）rc=0，
 出账恰八行——**certify/push_gate.py 不在冻结八件在册**（机械证据：ledger 全册
 无此名）。故处置上限＝nonfrozen-mutable（可建议小改造）；但任务书明令
-**本轮一律只出文档**，甲/丙等改造形态一律以「候令」登记，本席零改码。
+**本轮一律只出文档**，甲/丙等改造形态一律以「pending execution」登记，本席零改码。
 
 ---
 
@@ -58,7 +58,7 @@ gate4_comment_guard.py / verify_vo.py / wash_engine.py。
 
 - 过闸后段 2-5：push（git 恒 4 调 get-url→rev-parse→push×3 发×45s→ghproxy
   换路×2 发→ls-remote 远端 tip 复核：`:17-24, 847-908`）→ watch（head_branch+
-  head_sha 咬合·status-only：`:912-971`）→ heal（ci_triage 判类·B/E 有界
+  head_sha 咬合·status-only：`:912-971`）→ heal（ci_triage classification·B/E 有界
   rerun·A 禁代修·`:973-1023`）→ verdict±merge。
 - 关键性质：`--timeout` 缺省 120s 全部真子进程防挂（超时杀＋fail-loud 9）：
   `pushci.py:197-207, 2026-2028`；「纯 preflight 模式零 git 调」`:1166-1167`；
@@ -73,7 +73,7 @@ gate4_comment_guard.py / verify_vo.py / wash_engine.py。
 | 判据面 | push_gate window | pushci preflight | 覆盖关系 |
 |---|---|---|---|
 | CI 在飞=0（c1） | ✅ `:109-151` | ❌ 推前不查在飞（watch 段只看推后新 run `:930-956`） | **push_gate 独有** |
-| behind=0（c2） | ✅ `:154-165` 事前判 | ❌ 无预扫；等价后果由 push 时 git 非快进拒绝**事后**兜底（rc≠0→5 发徒劳→unstable `:863-880`） | **push_gate 独有**（pushci 仅事后兜底） |
+| behind=0（c2） | ✅ `:154-165` 事前判 | ❌ 无预扫；等价后果由 push 时 git 非快进拒绝**事后**fallback（rc≠0→5 发徒劳→unstable `:863-880`） | **push_gate 独有**（pushci 仅事后兜底） |
 | 窗内无人动云端（c3） | ✅ `:168-187` | ❌（push 后 ls-remote `:885-899` 是远端 tip 取证，非判窗） | **push_gate 独有** |
 | 本地认证绿（c4） | ✅ `:190-212` | ❌ 本地不跑套件；绿由远端 CI watch+heal 判 `:912-1023` | **push_gate 独有**（哲学异：本地先绿 vs 远端后判） |
 | 工具链健康（doctor） | ❌ | ✅ `:710-737` | **pushci 独有** |
@@ -194,7 +194,7 @@ push_gate md5 变更牵动其自证矢量组（`:401-567`）与 wrapper 注入�
 **禁改声明**：本评估零代码变更——push_gate.py / pushci.py / frozen8.py /
 wrapper / cw.sh / tests / README 全部未动；冻结八件（frozen8.py LEDGER8 在册
 八件）与 quad8 域/更新账.md 遵禁触令**未读未动**（更新账相关结论以任务书
-＋pushci.py:3「v36 旗舰·20261111 入账」＋README-cw.md:188 为证）。
+＋pushci.py:3「v36 flagship·20261111 入账」＋README-cw.md:188 为证）。
 
 **本席实跑证据**（2026-11-11·全部经 `bash /Users/apple/Desktop/ConstructiveWorld/
 cpu_guard.sh -MaxWaitSec 120` 包裹·FRONT 档实跑）：
@@ -215,7 +215,7 @@ certify/frozen8.py 全文 408 行；docs/push-gate-dual-door-assessment-v1.0-
 
 **未实跑项（如实声明）**：①push_gate window 对真远端的线上判窗（需真网络
 凭据·本席纪律零真网络；行为已由自证矢量本地 bare 远端覆盖）；②c4 对本仓
-套件的实跑基线（本席未复跑；先例文档同日实测 52 过/0 红/4 略 rc=0 可资参考，
+套件的实跑基线（本席未复跑；先例文档同日实测 52 过/0 failing/4 略 rc=0 可资参考，
 本席不背书其数）；③更新账.md 依禁触令未读——「v36 登记」以任务书与在盘
 docstring 为证。以上三项均不影响判据对照与方案裁决（全部锚在盘代码与
 自证矢量）。

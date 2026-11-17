@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """watch.py — watch 模块首件：CI 监控＋钉 IP 推送＋ls-remote 确证
-（rocqwash watch/·20261031 席 rqwash2·承台账第 4 项「CI 监控＋pin-IP 推送＋温控」）
+（rocqwash watch/·20261031 agent rqwash2·承台账第 4 项「CI 监控＋pin-IP 推送＋温控」）
 
-watch 模块三职责，全机械、只读远端、结构性零 dispatch（无 rerun/cancel/
+watch 模块三职责，全机械、只读远端、结构性零 route（无 rerun/cancel/
 workflow_dispatch 任何代码路径——停手律由结构保证，非口头承诺）：
 
 [一] `ci` — CI 监控（runs 在飞账）：

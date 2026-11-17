@@ -6,7 +6,7 @@
 红事件路由器（哨红事件→动作预设路由·三档 preset report-only/suggest/auto·
 缺省零执行·auto 显式才代跑 60s 帽 rc≠0 入账不改退出码·防重 state＋cooldown·
 路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·schema
-rocqwash-red-dispatch/1）挂接件：器自带 --selftest tmp 假仓根十二矢量组
+rocqwash-red-route/1）挂接件：器自带 --selftest tmp 假仓根十二矢量组
 （①路由表全族覆盖/②占位替换/③auto 执行实证/④state 防重/⑤cooldown/
 ⑥report-only 缺省零执行/⑦JSONL stdin 多事件/⑧fail-loud 面/⑨rc≠0 不改
 退出码/⑩A 族 fix 清单＋C 族定令/⑪确定性/⑫整体单对象兜底——red_dispatch.py
@@ -15,7 +15,7 @@ rocqwash-red-dispatch/1）挂接件：器自带 --selftest tmp 假仓根十二�
   1 --selftest rc=0 且 stdout 含 "RED-DISPATCH-SELFTEST PASS" 冻结标记
   2 --help rc=0（argparse 用法面在位）
   3 退出码口径抽验：--bogus rc=2／--dry-run 缺 auto 档 rc=2／事件文件缺
-    rc=9（器口径 0=处理完成·红是数据非器红·派发 rc≠0/超时/跳过皆入账
+    rc=9（器口径 0=处理完成·a failing result is data, not a tool failure·assignment rc≠0/超时/跳过皆入账
     不改退出码；2=用法错；9=输入缺失）
 
 用法：

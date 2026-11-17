@@ -27,14 +27,14 @@ References.
     (helpers inherited verbatim where marked).  Architecture spec:
     D:/ComplexAnalysis/attn/_vacgenv2_20261113/staging/arch-spec-v2.md
     (contracts C2.x/C3.x/C4.x/C5.x/C6.x/C7.x).  Master work order:
-    工单-vacgenV2-20261113.md.  Discipline: artifact-verifier-design-law
+    task instruction-vacgenV2-20261113.md.  Discipline: artifact-verifier-design-law
     (monotone bounds on live counters), negative-finding-boundary-law (four
     elements on every coverage claim), taxonomy-as-data, TODO-SEAT honest
     degradation, dry-run self-certification.
 
 Constructivity.
     The tool casts skeletons and never asserts mathematics - every
-    artifact-facing proof obligation is a declared TODO-SEAT seat.  Coverage
+    artifact-facing proof obligation is a declared TODO-SEAT agent.  Coverage
     scores are word-face (regex + bracket-balanced surgery) lower bounds;
     elaboration-time semantics are invisible (declared honest boundary).
     Counters in reports are closed-window snapshots with dates; cross-run
@@ -607,7 +607,7 @@ def decompose_head(src):
     # the L2 classifier - negative-sample piece D showed a def-only face whose
     # builtin-shaped premise fired `recognized` HIGH (false positive).  The
     # gate front-rejects via ParseError -> cast fail-loud rc=1 (C2.4 lane,
-    # same honest landing as pieces A/D2: no skeleton cast, audit seat must
+    # same honest integration as pieces A/D2: no skeleton cast, audit agent must
     # transcribe the statement face by hand), marker `non-theorem-declaration`.
     if head["kw"] not in THEOREM_HEAD_KWS:
         raise ParseError(
@@ -884,7 +884,7 @@ def flags_int(flags):
 
 
 def load_table(rows):
-    """Deterministic dispatch order: priority desc, pattern length desc
+    """Deterministic route order: priority desc, pattern length desc
     (specificity), familyId asc.  The engine never branches on familyId."""
     out = []
     for row in rows:
@@ -1180,7 +1180,7 @@ def sanitize_ident(stem):
 
 def census_candidates(head_name, namespace):
     """Mechanical candidates for the vacancy census chain (camel/snake/qualified
-    families).  Derived by token surgery only; the audit seat must review the
+    families).  Derived by token surgery only; the audit agent must review the
     anchors before firing any census shot."""
     first_tok = head_name.split("_")[0]
     snake = re.sub(r"(?<!^)(?=[A-Z])", "_", first_tok).lower()
@@ -1779,11 +1779,11 @@ def emit_boundary_shape(cast):
     numeric-constant boundary, so the boundary account degrades to a shape
     registration plus closed-term machine checks (hand-cast precedent: trial
     item1 hand/boundary.lean).  Zero target-irrelevant zeta-band vocabulary;
-    every seat is TODO-SEAT counted (C4.1)."""
+    every agent is TODO-SEAT counted (C4.1)."""
     p = cast.p
     stmt = cast.artifact["stmt"]
     n_premises = len(stmt["S2_assumps"])
-    n_shape_seats = 1 + n_premises  # registration seat + per-premise seats
+    n_shape_seats = 1 + n_premises  # registration agent + per-premise seats
 
     semantics = [
         "SHAPE-REGISTRATION BOUNDARY (expected-green face).  No matched",
@@ -1851,7 +1851,7 @@ def emit_boundary_shape(cast):
 
 
 def emit_boundary(cast):
-    """C4.6 dispatch: numeric-constant rows drive the v1 zeta-band block; every
+    """C4.6 route: numeric-constant rows drive the v1 zeta-band block; every
     other face degrades to shape registration (all seats TODO-SEAT counted)."""
     if cast.artifact["premise_ineq"] is not None:
         return emit_boundary_numeric(cast)

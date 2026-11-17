@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_recipe_s07.py — recipes/S07_projection_reanchor_E5.md 处方件自测
-（tests/·五课反馈轮·席 rqsupport·20261101）
+（tests/·五课反馈轮·agent rqsupport·20261101）
 
 五课夹具⑤【三判例剧本·S07 投影重锚 E5】：Class 字段投影承载语句面 → 提取
 Obj.magic（判例基线 293）；处方＝语句面重锚具体面 req→real_eq／lt→real_lt／

@@ -124,9 +124,58 @@
    "human_findings": [],
    "kind": "sh",
    "path": "cw.sh",
-   "rewrites": [],
+   "rewrites": [
+    {
+     "after": "#   route    red-event ro",
+     "before": "#   dispatch    red-event ro",
+     "disposition": "replace",
+     "end": 12,
+     "face_id": "J148",
+     "line": 73,
+     "reason": "replace",
+     "replacement": "route",
+     "start": 4,
+     "term": "dispatch"
+    },
+    {
+     "after": "          cw.sh route --event-file <j",
+     "before": "          cw.sh dispatch --event-file <j",
+     "disposition": "replace",
+     "end": 30,
+     "face_id": "J148",
+     "line": 75,
+     "reason": "replace",
+     "replacement": "route",
+     "start": 22,
+     "term": "dispatch"
+    },
+    {
+     "after": "  route    red-event ro",
+     "before": "  dispatch    red-event ro",
+     "disposition": "replace",
+     "end": 10,
+     "face_id": "J148",
+     "line": 300,
+     "reason": "replace",
+     "replacement": "route",
+     "start": 2,
+     "term": "dispatch"
+    },
+    {
+     "after": "          cw.sh route --event-file <j",
+     "before": "          cw.sh dispatch --event-file <j",
+     "disposition": "replace",
+     "end": 28,
+     "face_id": "J148",
+     "line": 302,
+     "reason": "replace",
+     "replacement": "route",
+     "start": 20,
+     "term": "dispatch"
+    }
+   ],
    "scanned": true,
-   "would_fix": 0
+   "would_fix": 4
   },
   {
    "human": 0,
@@ -138,67 +187,115 @@
    "would_fix": 0
   },
   {
-   "human": 5,
+   "human": 9,
    "human_findings": [
     {
      "after": null,
-     "before": "次, 批次, 战役, 收官, 派单, 派发, 工单, 挂单, 交棒, 停写令, ",
+     "before": "m-free born, born-in-place.",
      "disposition": "human",
-     "end": 62,
-     "face_id": "J016",
-     "line": 80,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 60,
-     "term": "派发"
-    },
-    {
-     "after": null,
-     "before": "d, cyclic account, 上车, born-clean, born-",
-     "disposition": "human",
-     "end": 372,
-     "face_id": "J046",
+     "end": 808,
+     "face_id": "J159",
      "line": 81,
-     "reason": "note-guard",
+     "reason": "rewrite_or_delete",
      "replacement": null,
-     "start": 370,
-     "term": "上车"
+     "start": 795,
+     "term": "born-in-place"
     },
     {
      "after": null,
-     "before": " 直接匹配, 重述, 声明, 结论, 收口, 自愈, 钦名, 对拍, 普查, 断",
+     "before": "us（夸饰义）, hack, workaround, FIXME, XXX, H",
      "disposition": "human",
-     "end": 85,
-     "face_id": "J018",
-     "line": 81,
-     "reason": "note-guard",
+     "end": 131,
+     "face_id": "J155",
+     "line": 89,
+     "reason": "rewrite_or_delete",
      "replacement": null,
-     "start": 83,
-     "term": "收口"
+     "start": 121,
+     "term": "workaround"
     },
     {
      "after": null,
-     "before": "or family: 金标, 现势, 旗舰, 核验, 收束, 注册, 传参, 直",
+     "before": "义）, route（叙述义）, handover, integration, a",
      "disposition": "human",
-     "end": 41,
-     "face_id": "J012",
-     "line": 81,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 39,
-     "term": "旗舰"
-    },
-    {
-     "after": null,
-     "before": ", 炉, 闸（工程义）, 堵, 哨, 哨兵（叙述义）, 检验（叙述义）, 分诊,",
-     "disposition": "human",
-     "end": 54,
-     "face_id": "J061",
-     "line": 85,
-     "reason": "alternation-guard",
+     "end": 60,
+     "face_id": "J149",
+     "line": 89,
+     "reason": "rewrite_or_delete",
      "replacement": null,
      "start": 52,
-     "term": "哨兵"
+     "term": "handover"
+    },
+    {
+     "after": null,
+     "before": ", trivial（夸饰义）, obvious（夸饰义）, hack, wor",
+     "disposition": "human",
+     "end": 108,
+     "face_id": "J153",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 101,
+     "term": "obvious"
+    },
+    {
+     "after": null,
+     "before": "on, adaptation, trivial（夸饰义）, obvious（夸",
+     "disposition": "human",
+     "end": 94,
+     "face_id": "J152",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 87,
+     "term": "trivial"
+    },
+    {
+     "after": null,
+     "before": "ack, workaround, FIXME, XXX, HACK. Data",
+     "disposition": "human",
+     "end": 138,
+     "face_id": "J156",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 133,
+     "term": "FIXME"
+    },
+    {
+     "after": null,
+     "before": "ound, FIXME, XXX, HACK. Data/preset/pres",
+     "disposition": "human",
+     "end": 149,
+     "face_id": "J158",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 145,
+     "term": "HACK"
+    },
+    {
+     "after": null,
+     "before": "义）, obvious（夸饰义）, hack, workaround, FIXM",
+     "disposition": "human",
+     "end": 119,
+     "face_id": "J154",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 115,
+     "term": "hack"
+    },
+    {
+     "after": null,
+     "before": "orkaround, FIXME, XXX, HACK. Data/prese",
+     "disposition": "human",
+     "end": 143,
+     "face_id": "J157",
+     "line": 89,
+     "reason": "rewrite_or_delete",
+     "replacement": null,
+     "start": 140,
+     "term": "XXX"
     }
    ],
    "kind": "md",
@@ -237,190 +334,9 @@
    ],
    "kind": "md",
    "path": "docs/audit-vacgen-20261116.md",
-   "rewrites": [
-    {
-     "after": " Surface Inventory（核验 2026-11-16）",
-     "before": " Surface Inventory（实勘 2026-11-16）",
-     "disposition": "replace",
-     "end": 29,
-     "face_id": "J041",
-     "line": 19,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 27,
-     "term": "实勘"
-    },
-    {
-     "after": "ols/taxonomy.json`（核验 2 rows：ineq.real.c",
-     "before": "ols/taxonomy.json`（实勘 2 rows：ineq.real.c",
-     "disposition": "replace",
-     "end": 26,
-     "face_id": "J041",
-     "line": 50,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 24,
-     "term": "实勘"
-    },
-    {
-     "after": "g value` traceback（检验 f），无 `FAIL-LOUD: t",
-     "before": "g value` traceback（探针 f），无 `FAIL-LOUD: t",
-     "disposition": "replace",
-     "end": 186,
-     "face_id": "J010",
-     "line": 72,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 184,
-     "term": "探针"
-    },
-    {
-     "after": "| 检验 | 命令形（节选） | 实测 rc ",
-     "before": "| 探针 | 命令形（节选） | 实测 rc ",
-     "disposition": "replace",
-     "end": 4,
-     "face_id": "J010",
-     "line": 83,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 2,
-     "term": "探针"
-    },
-    {
-     "after": "2615/:2618，未识别面双计）。核验：同一族 zeta 面 cast co",
-     "before": "2615/:2618，未识别面双计）。实勘：同一族 zeta 面 cast co",
-     "disposition": "replace",
-     "end": 138,
-     "face_id": "J041",
-     "line": 105,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 136,
-     "term": "实勘"
-    },
-    {
-     "after": "t coverage=50%（1/2，检验 j），preflight 对 A.l",
-     "before": "t coverage=50%（1/2，探针 j），preflight 对 A.l",
-     "disposition": "replace",
-     "end": 174,
-     "face_id": "J010",
-     "line": 105,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 172,
-     "term": "探针"
-    },
-    {
-     "after": "ght 对 A.lean 报 0/6（检验 k）。difficulty map ",
-     "before": "ght 对 A.lean 报 0/6（探针 k）。difficulty map ",
-     "disposition": "replace",
-     "end": 205,
-     "face_id": "J010",
-     "line": 105,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 203,
-     "term": "探针"
-    },
-    {
-     "after": "181 vs :2615/:2618；检验 j/k | MEDIUM |",
-     "before": "181 vs :2615/:2618；探针 j/k | MEDIUM |",
-     "disposition": "replace",
-     "end": 337,
-     "face_id": "J010",
-     "line": 105,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 335,
-     "term": "探针"
-    },
-    {
-     "after": "acgen.py:2851-2867；检验 e | LOW |",
-     "before": "acgen.py:2851-2867；探针 e | LOW |",
-     "disposition": "replace",
-     "end": 126,
-     "face_id": "J010",
-     "line": 107,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 124,
-     "term": "探针"
-    },
-    {
-     "after": "acgen.py:2851-2871；检验 a/b | LOW |",
-     "before": "acgen.py:2851-2871；探针 a/b | LOW |",
-     "disposition": "replace",
-     "end": 165,
-     "face_id": "J010",
-     "line": 108,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 163,
-     "term": "探针"
-    },
-    {
-     "after": "acgen.py:2779-2783；检验 n | LOW |",
-     "before": "acgen.py:2779-2783；探针 n | LOW |",
-     "disposition": "replace",
-     "end": 138,
-     "face_id": "J010",
-     "line": 109,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 136,
-     "term": "探针"
-    },
-    {
-     "after": "225；docs/mcp.md:55；检验 b | MEDIUM |",
-     "before": "225；docs/mcp.md:55；探针 b | MEDIUM |",
-     "disposition": "replace",
-     "end": 396,
-     "face_id": "J010",
-     "line": 110,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 394,
-     "term": "探针"
-    },
-    {
-     "after": "op.md:283-293；find 核验 | HIGH |",
-     "before": "op.md:283-293；find 实勘 | HIGH |",
-     "disposition": "replace",
-     "end": 469,
-     "face_id": "J041",
-     "line": 129,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 467,
-     "term": "实勘"
-    },
-    {
-     "after": "c-set-premise row」。核验 tools/taxonomy.jso",
-     "before": "c-set-premise row」。实勘 tools/taxonomy.jso",
-     "disposition": "replace",
-     "end": 171,
-     "face_id": "J041",
-     "line": 130,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 169,
-     "term": "实勘"
-    },
-    {
-     "after": "本卷。行号口径 2026-11-16 核验。*",
-     "before": "本卷。行号口径 2026-11-16 实勘。*",
-     "disposition": "replace",
-     "end": 55,
-     "face_id": "J041",
-     "line": 197,
-     "reason": "replace",
-     "replacement": "核验",
-     "start": 53,
-     "term": "实勘"
-    }
-   ],
+   "rewrites": [],
    "scanned": true,
-   "would_fix": 15
+   "would_fix": 0
   },
   {
    "human": 0,
@@ -634,21 +550,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "| 墙账 | `wall.<root>.rea",
-     "disposition": "human",
-     "end": 4,
-     "face_id": "J024",
-     "line": 225,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 2,
-     "term": "墙账"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/ops-realtime-service-v1.0-20261111.md",
    "rewrites": [],
@@ -660,38 +563,26 @@
    "human_findings": [],
    "kind": "md",
    "path": "docs/ops-sentinel-长驻手册-v1.0-20261112.md",
-   "rewrites": [],
-   "scanned": true,
-   "would_fix": 0
-  },
-  {
-   "human": 2,
-   "human_findings": [
+   "rewrites": [
     {
-     "after": null,
-     "before": "填：DS4 真树实测（主会话·路线图①收口）",
-     "disposition": "human",
-     "end": 40,
-     "face_id": "J018",
-     "line": 157,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 38,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "填：三账齐·负边际加速如实录（DS4 收口）",
-     "disposition": "human",
-     "end": 38,
-     "face_id": "J018",
-     "line": 167,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 36,
-     "term": "收口"
+     "after": "bash cw.sh route --event-file ev",
+     "before": "bash cw.sh dispatch --event-file ev",
+     "disposition": "replace",
+     "end": 19,
+     "face_id": "J148",
+     "line": 225,
+     "reason": "replace",
+     "replacement": "route",
+     "start": 11,
+     "term": "dispatch"
     }
    ],
+   "scanned": true,
+   "would_fix": 1
+  },
+  {
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/perf-profile-v1.0-20261111.md",
    "rewrites": [],
@@ -744,21 +635,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "t.py` | 服务层（v39） | 收口（四职能外） | v39 | 文档←→",
-     "disposition": "human",
-     "end": 55,
-     "face_id": "J018",
-     "line": 151,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 53,
-     "term": "收口"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/rocqwash-service-campaign-total-v1.0-20261111.md",
    "rewrites": [],
@@ -766,93 +644,8 @@
    "would_fix": 0
   },
   {
-   "human": 7,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "t.py` | 服务层（v39） | 收口（四职能外） | v39 | 文档←→",
-     "disposition": "human",
-     "end": 55,
-     "face_id": "J018",
-     "line": 194,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 53,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": " commit·零码改纯运行·路线图②收口）",
-     "disposition": "human",
-     "end": 41,
-     "face_id": "J018",
-     "line": 337,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 39,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "  收口·⑤⑥⑦候令（更新账.md:3853）",
-     "disposition": "human",
-     "end": 4,
-     "face_id": "J018",
-     "line": 374,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 2,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": " 9.1 编译器依赖面 | v43 ④收口（9.3 直替·:3800）＋v47 ",
-     "disposition": "human",
-     "end": 26,
-     "face_id": "J018",
-     "line": 506,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 24,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "s.py` | 服务层（v45） | 收口（台账渲染） | v45 | 哨事件 ",
-     "disposition": "human",
-     "end": 65,
-     "face_id": "J018",
-     "line": 535,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 63,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "双维速读增补（接 §2）：**收口**面添 render-events（",
-     "disposition": "human",
-     "end": 17,
-     "face_id": "J018",
-     "line": 540,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 15,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "绿·非 9.1 复绿**——v43 ④收口/v47 ⑧关闭同口径",
-     "disposition": "human",
-     "end": 37,
-     "face_id": "J018",
-     "line": 583,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 35,
-     "term": "收口"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/rocqwash-service-campaign-total-v2.0-20261112.md",
    "rewrites": [],
@@ -860,189 +653,8 @@
    "would_fix": 0
   },
   {
-   "human": 15,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "│  收口＝doc-lint 文档←→实现一致性",
-     "disposition": "human",
-     "end": 5,
-     "face_id": "J018",
-     "line": 29,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 3,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": " 诊断层 v35 ＋ v29-v32 底座 ──────────────────",
-     "disposition": "human",
-     "end": 39,
-     "face_id": "J048",
-     "line": 35,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 37,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "│  底座：scan4 普查·probe 检验·",
-     "disposition": "human",
-     "end": 5,
-     "face_id": "J048",
-     "line": 38,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 3,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "用 v35 诊断层与 v29-v32 底座）。",
-     "disposition": "human",
-     "end": 50,
-     "face_id": "J048",
-     "line": 45,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 48,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "union 四新器（＋v29-v32 底座 scan4/cure/probe/c",
-     "disposition": "human",
-     "end": 68,
-     "face_id": "J048",
-     "line": 60,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 66,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "can_v4_token.py` | 底座 | token 级限定名普查 |",
-     "disposition": "human",
-     "end": 40,
-     "face_id": "J048",
-     "line": 71,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 38,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "cure_applier.py` | 底座·清洗 | 消费位治愈正典包（缺省干跑",
-     "disposition": "human",
-     "end": 38,
-     "face_id": "J048",
-     "line": 72,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 36,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "probe_engine.py` | 底座 | 批量闭包相容探针 |",
-     "disposition": "human",
-     "end": 39,
-     "face_id": "J048",
-     "line": 73,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 37,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "/chain_graph.py` | 底座·疏通 | 多账合并链根图 |",
-     "disposition": "human",
-     "end": 39,
-     "face_id": "J048",
-     "line": 74,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 37,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "/ledger_sync.py` | 底座 | probe 台账×状态台账合并同",
-     "disposition": "human",
-     "end": 45,
-     "face_id": "J048",
-     "line": 75,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 43,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "e_classifier.py` | 底座 | 擦除位分类顾问 |",
-     "disposition": "human",
-     "end": 49,
-     "face_id": "J048",
-     "line": 76,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 47,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "an/dual_scan.py` | 底座 | 双器对拍驱动 |",
-     "disposition": "human",
-     "end": 40,
-     "face_id": "J048",
-     "line": 77,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 38,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "/doc_lint.py` | 服务·收口 | 文档←→实现一致性三查 |",
-     "disposition": "human",
-     "end": 42,
-     "face_id": "J018",
-     "line": 87,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 40,
-     "term": "收口"
-    },
-    {
-     "after": null,
-     "before": "me_normalize.py` | 底座（v39 入口补齐） | .v.v 双",
-     "disposition": "human",
-     "end": 57,
-     "face_id": "J048",
-     "line": 88,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 55,
-     "term": "底座"
-    },
-    {
-     "after": null,
-     "before": "select_audit.py` | 底座（v39 入口补齐） | 批选审计器（",
-     "disposition": "human",
-     "end": 47,
-     "face_id": "J048",
-     "line": 89,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 45,
-     "term": "底座"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/service-layer-overview-v1.0-20261111.md",
    "rewrites": [],
@@ -1068,33 +680,8 @@
    "would_fix": 0
   },
   {
-   "human": 2,
-   "human_findings": [
-    {
-     "after": null,
-     "before": " COMPILE-MUST-FAIL 哨兵：编译绿即警报，红保持即健康。",
-     "disposition": "human",
-     "end": 55,
-     "face_id": "J061",
-     "line": 65,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 53,
-     "term": "哨兵"
-    },
-    {
-     "after": null,
-     "before": "编译、全役 md5 manifest 收口，分别属铸造席/自检席/汇编席职权面，",
-     "disposition": "human",
-     "end": 102,
-     "face_id": "J018",
-     "line": 456,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 100,
-     "term": "收口"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/vacgen_sop.md",
    "rewrites": [],
@@ -1174,21 +761,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "＋pushci.py:3「v36 旗舰·20261111 入账」＋READM",
-     "disposition": "human",
-     "end": 19,
-     "face_id": "J012",
-     "line": 197,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 17,
-     "term": "旗舰"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "docs/评估-push_gate推窗四判据与pushci归一-20261111.md",
    "rewrites": [],
@@ -1285,21 +859,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": ".py` docstring（v37 旗舰·",
-     "disposition": "human",
-     "end": 64,
-     "face_id": "J012",
-     "line": 5,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 62,
-     "term": "旗舰"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "examples/workflows/loop-unclog.md",
    "rewrites": [],
@@ -1307,21 +868,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": ".py` docstring（v36 旗舰·五段管线",
-     "disposition": "human",
-     "end": 47,
-     "face_id": "J012",
-     "line": 5,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 45,
-     "term": "旗舰"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "examples/workflows/step-pushci.md",
    "rewrites": [],
@@ -1339,21 +887,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "rn（全 rc=0），成品 born 收口 | 24 链件按 order.txt",
-     "disposition": "human",
-     "end": 82,
-     "face_id": "J018",
-     "line": 41,
-     "reason": "note-guard",
-     "replacement": null,
-     "start": 80,
-     "term": "收口"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "md",
    "path": "recipes/ENBIG7_same_domain_collision_PW1.md",
    "rewrites": [],
@@ -1947,6 +1482,15 @@
    "human": 0,
    "human_findings": [],
    "kind": "py",
+   "path": "tests/test_jargon_map_sync.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
    "path": "tests/test_ledger_sync.py",
    "rewrites": [],
    "scanned": true,
@@ -2025,21 +1569,8 @@
    "would_fix": 0
   },
   {
-   "human": 1,
-   "human_findings": [
-    {
-     "after": null,
-     "before": "器口径 0=处理完成·红是数据非器红·派发 rc≠0/超时/跳过皆入账",
-     "disposition": "human",
-     "end": 30,
-     "face_id": "J016",
-     "line": 18,
-     "reason": "alternation-guard",
-     "replacement": null,
-     "start": 28,
-     "term": "派发"
-    }
-   ],
+   "human": 0,
+   "human_findings": [],
    "kind": "py",
    "path": "tests/test_red_dispatch.py",
    "rewrites": [],
@@ -2195,34 +1726,9 @@
    "human_findings": [],
    "kind": "py",
    "path": "tests/test_verify_fresh.py",
-   "rewrites": [
-    {
-     "after": "~1ms·检验 40 轮 26 轮同刻）→「vo 严",
-     "before": "~1ms·探针 40 轮 26 轮同刻）→「vo 严",
-     "disposition": "replace",
-     "end": 7,
-     "face_id": "J010",
-     "line": 19,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 5,
-     "term": "探针"
-    },
-    {
-     "after": "粒度（~1ms）→ 同刻概率 65%（检验 40 轮 26 轮），第 2 节正判",
-     "before": "粒度（~1ms）→ 同刻概率 65%（探针 40 轮 26 轮），第 2 节正判",
-     "disposition": "replace",
-     "end": 23,
-     "face_id": "J010",
-     "line": 60,
-     "reason": "replace",
-     "replacement": "检验",
-     "start": 21,
-     "term": "探针"
-    }
-   ],
+   "rewrites": [],
    "scanned": true,
-   "would_fix": 2
+   "would_fix": 0
   },
   {
    "human": 0,
@@ -2518,6 +2024,15 @@
    "human_findings": [],
    "kind": "py",
    "path": "tools/jargon_apply.py",
+   "rewrites": [],
+   "scanned": true,
+   "would_fix": 0
+  },
+  {
+   "human": 0,
+   "human_findings": [],
+   "kind": "py",
+   "path": "tools/jargon_map_sync.py",
    "rewrites": [],
    "scanned": true,
    "would_fix": 0
@@ -3104,7 +2619,7 @@
   }
  ],
  "map": {
-  "entries": 62,
+  "entries": 159,
   "path": "/Users/apple/Desktop/rocqwash/seeds/jargon/jargon-map.json",
   "schema": "rocqwash-jargon-map/1"
  },
@@ -3118,11 +2633,11 @@
   "applied": 0,
   "apply_failed": 0,
   "excluded_frozen": 48,
-  "files": 254,
-  "human": 45,
+  "files": 256,
+  "human": 16,
   "parse_errors": 0,
   "residue_jargon": 0,
-  "would_fix": 17
+  "would_fix": 5
  },
  "target": ".",
  "target_kind": "tree",

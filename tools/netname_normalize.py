@@ -12,10 +12,10 @@
   `X.v.v`——一层一归一，重跑再剥·如实出账不静默迭代。）
 
 两态制（--dry-run 默认）：
-  - **干跑（默认）**：只出映射表与发现，零字节落盘（唯一写面＝显式 --map/--json
+  - **dry run（默认）**：只出映射表与发现，零字节落盘（唯一写面＝显式 --map/--json
     出账路径）；
   - **--apply**：逐件 os.rename 落盘改名，**改名前后 md5 一致性校验**（改名不改
-    字节·冻结律机械化）——前后 md5 不等即 MD5-MISMATCH 红。
+    字节·冻结律机械化）——前后 md5 不等即 MD5-MISMATCH failing。
 
 判据（发现即红·exit 1）：
   PENDING      干跑面发现待归一 `.v.v` 件（世界净名面未闭）
@@ -55,7 +55,7 @@ def md5_of(path):
 
 
 def normalize_entry(rel):
-    """相对路径（/ 归一）→ (netname, src_rel, dst_rel) 或 None（非 .v.v 件）。
+    """相对路径（/ normalize）→ (netname, src_rel, dst_rel) 或 None（非 .v.v 件）。
 
     `X.v.v` → netname=X·dst=X.v；`sub/X.v.v` → netname=sub/X·dst=sub/X.v。
     """
@@ -67,7 +67,7 @@ def normalize_entry(rel):
 
 
 def scan_world(world_dir):
-    """world_dir 全索引 → 有序 [(netname, src_rel, dst_rel)]（os.walk·/ 归一·排序稳定）。"""
+    """world_dir 全索引 → 有序 [(netname, src_rel, dst_rel)]（os.walk·/ normalize·排序稳定）。"""
     out = []
     for dirpath, _dirs, fnames in os.walk(world_dir):
         for fn in fnames:
@@ -133,7 +133,7 @@ def run_args(argv):
 
 
 def selftest():
-    """内嵌冻结向量组（临时目录驱动）：干跑零落盘双判／apply 归一＋md5 验讫／
+    """内嵌冻结向量组（临时目录驱动）：干跑零落盘双判／apply normalize＋md5 验讫／
     COLLIDE 拒覆写／DEGENERATE／净世界 CLEAN／CLI 四码（--help 0·未知形参 2·
     缺 dir 9）／--map --json 出账。零触真仓。"""
     import shutil

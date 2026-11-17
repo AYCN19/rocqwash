@@ -7,7 +7,7 @@ cw_sentinel.py:17/22/28）与 chain_graph.py 渲染判例（计数降序 top_md�
 sort_keys 落盘 chain_graph.py:298）·20261111 入账）
 
 输入二形（互斥——--events 与 --dir 双给/双缺均 2）：
-  ① --events FILE：单份 JSONL 事件流（逐行一事件·行序即流序——哨 --emit
+  ① --events FILE：单份 JSONL 事件流（逐行一事件·行序即流序——watcher --emit
     append 产出序·seq 事件流内单调跨进程续号·消费端不重排如实照映）；
   ② --dir DIR：目录下全部 *.jsonl（文件名典序读入）合并＝一条事件流，按
     (seq, ts, 来源序, 行序) 排序恢复全局序（seq 主键 ts 次键——轮转代/
@@ -32,7 +32,7 @@ sort_keys 落盘 chain_graph.py:298）·20261111 入账）
   {schema, events_total, bad_lines, verdict(ok|empty), counts{kind,family,
    action}, span{first_ts,last_ts|null}, sources[实读文件·读入序/典序]}
   span＝流内全部非空 ts 的 min/max（字典序=ISO 8601 UTC 时序；全流无 ts
-  ——哨 --sleep-scale 0 关钟流→双双 null·--selftest 确定性同源）。
+  ——watcher --sleep-scale 0 关钟流→双双 null·--selftest 确定性同源）。
   counts 恒全量（--top 截断只是 md family 表面·summary 不截）。
 verdict 口径：events_total>0→ok；=0（空文件/全坏行/空目录流）→empty。
   空与红都是数据·如实渲染不装红（exit 0 如实——任务书④）。
@@ -41,7 +41,7 @@ verdict 口径：events_total>0→ok；=0（空文件/全坏行/空目录流）�
   缺省 0＝全量；N<0→2。
 
 退出码（0/1/2/9 四码）：0=渲染完成零坏行（verdict ok 或 empty 皆 0——
-  红是数据非器红·空也如实 0）；1=渲染完成但 bad_lines>0（出账照常不中断
+  a failing result is data, not a tool failure·空也如实 0）；1=渲染完成但 bad_lines>0（出账照常不中断
   ·数据残缺响亮——baseline_diff.py:50 degraded/ledger_sync.py:56
   SYNC-FINDINGS 同律）；2=用法错（--events/--dir 双给或双缺/--top 负/
   argparse 形错）；9=输入不可达（--events 文件缺·--dir 目录缺·目录无任何
@@ -101,7 +101,7 @@ def seq_key(ev):
 
 
 def ts_of(ev):
-    """事件 ts（非空串才有效——哨 --sleep-scale 0 关钟流无 ts）。"""
+    """事件 ts（非空串才有效——watcher --sleep-scale 0 关钟流无 ts）。"""
     t = ev.get("ts")
     return t if isinstance(t, str) and t else ""
 

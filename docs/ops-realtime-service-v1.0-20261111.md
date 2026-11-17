@@ -1,41 +1,36 @@
-# ops-realtime-service — 实时动态服务运行手册 v1.0（2026-11-11）
+# ops-realtime-service — real-time service operations manual v1.0 (November 11, 2026)
 
-> 正本声明：本手册全部命令与字段取自器实况（`tools/cw_sentinel.py`/`tools/unclog.py`/
-> `tools/pushci.py`/`tools/cw_doctor.py` 的 `--help` 与 docstring·rocqwash v38 c205ea0），
-> 标注行号一律锚 c205ea0 提交态（并席并发开发中·工作树行号会漂）；全部「实测样例」为
-> 2026-11-11 工装席 tmp 注入演练**实跑原文**（fixture 数据·零真网络零真编译），三判级
-> 证据在 `tests/test_relay_e2e.py`（事件触发／unclog 干跑 rc=0 零写盘／JSONL 同盘
-> unclog report 路径——三判全过·幂等两跑 rc=0）。器实况与本文冲突时以器 `--help` 为准。
->
-> 纪律红线（全节通用）：
-> - **红是数据非器红**——CI 红/堵塞/墙都是事件与报告数据；退出码只表器面。
-> - **零动作是缺省**——哨缺省 report-only；落刀只经人审后显式 `--apply`（自动接驳
->   缺省干跑是铁律，tools/cw_sentinel.py:48-49、tools/unclog.py:41-44）。
-> - **离线演练钉**——`--injector`＋`--sleep-scale 0` 是演练形；生产形不带（样例中
->   `"note": "ts=off…"` 即演练注记·生产事件行带真 `ts`，tools/cw_sentinel.py:34-35）。
-> - **真编译必经 cpu_guard**——凡 `--world` 真探/真落刀活跑，`--guard` 必给
->   （probe_engine.py:10 判例·温控铁律）；纯逻辑编排（判类/链根/cure 干跑）零编译
->   不需 guard。
+> Purpose.  Operations manual for the live service layer: the resident watcher's standard command line and JSONL consumption, the three on-red preset forms compared, the real-tree live-run procedure (`--audit` baseline → human review → `--apply` allowlist), and the background-task cooperation model.
+> Interface.  Document face only. Every command and field is taken from the tools' live state (`tools/cw_sentinel.py` / `tools/unclog.py` / `tools/pushci.py` / `tools/cw_doctor.py` `--help` and docstrings · rocqwash v38 `c205ea0`); line-number anchors bind to the `c205ea0` commit state (concurrent multi-agent development · working-tree line numbers drift). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  The four tool faces named above plus `tests/test_relay_e2e.py` for the relay evidence; no runtime dependency.
+> Evidence.  All "measured sample" blocks are real-run records of the November 11, 2026 tooling-agent tmp injection drill (fixture data · zero real network, zero real compilation); the three-verdict evidence in `tests/test_relay_e2e.py` passes (event trigger / unclog dry run rc=0 zero writes / JSONL same-disk unclog report path — three verdicts all passing · idempotent two-run rc=0). Where the tools and this manual conflict, the tools' `--help` wins. Chinese annotations inside recorded output strings are the recorded runs' original wording, translated at the normalization round; the verbatim originals are in the `.zh.md` archive.
+> Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit-code semantics unchanged.
 
-## §1 后台哨标准命令与 JSONL 使用
+> Discipline constraints (apply to every section):
+> - **a failing result is data, not a tool failure** — CI failings / blockages / walls are all event and report data; exit codes only state the tool face.
+> - **zero action is the default** — the watcher is report-only by default; apply happens only after human review via an explicit `--apply` (auto-hookup defaulting to a dry run is an invariant, tools/cw_sentinel.py:48-49, tools/unclog.py:41-44).
+> - **offline drill pin** — `--injector` + `--sleep-scale 0` is the drill form; the production form omits it (the `"note": "ts=off…"` in the samples is the drill annotation · production event lines carry a real `ts`, tools/cw_sentinel.py:34-35).
+> - **real compilation always goes through cpu_guard** — every `--world` real-probe / real-apply live run must pass `--guard` (probe_engine.py:10 precedent · thermal invariant); pure logic orchestration (classification / chain roots / cure dry run) compiles nothing and needs no guard.
 
-### 1.1 标准命令（后台长驻·整段复制执行）
+## §1 Background watcher: standard command and JSONL usage
+
+### 1.1 Standard command (background resident · copy the whole block to execute)
 
 ```bash
-# ── §1.1 后台哨标准块（在 rocqwash 仓根执行·cw.sh 按 cx 1:1 透传）──────
-LEDGERS_DIR=ledgers/            # 路②：probe 台账 JSON 目录（可省此路）
-BUILDLOG=build.log              # 路③：编译日志文件（可省此路）
-WORK=.                          # 哨产物落点（events/report/state 全在此）
-SENTINEL_INTERVAL=60            # 轮间隔秒
+# ── §1.1 background watcher standard block (run at the rocqwash repository root · cw.sh passes through 1:1) ──────
+LEDGERS_DIR=ledgers/            # source ②: probe ledger JSON directory (this source optional)
+BUILDLOG=build.log              # source ③: build log file (this source optional)
+WORK=.                          # watcher output directory (events/report/state all here)
+SENTINEL_INTERVAL=60            # round interval in seconds
 
-# 目录先立（台账目录缺＝哨 rc 9 fail-loud·buildlog 缺档反可＝零事件非红）
+# create the directory first (a missing ledger directory = watcher rc 9 fail-loud · a missing buildlog file instead means zero events, not a failure)
 mkdir -p "$LEDGERS_DIR"
-# 前置用法预检：--once 单轮跑通（exit 0）才放行后台长驻——把 2 档用法错挡在 spawn 前
+# pre-flight usage probe: --once passes one round (exit 0) before the resident form is released — catches usage-class 2 errors before spawn
 bash cw.sh sentinel --once --watch-ledgers "$LEDGERS_DIR" \
   --state-file "$WORK/.sentinel-probe-state.json" \
   --json "$WORK/sentinel-probe-report.json"
 
-# 长驻哨：三路信号源（CI runs／本地台账链根／buildlog 词面）可任意组合
+# resident watcher: the three signal sources (CI runs / local ledger chain roots / buildlog word faces) combine freely
 nohup bash cw.sh sentinel --loop --interval "$SENTINEL_INTERVAL" \
   --watch-repo ORG/REPO --branch main \
   --watch-ledgers "$LEDGERS_DIR" --watch-buildlog "$BUILDLOG" \
@@ -45,28 +40,28 @@ nohup bash cw.sh sentinel --loop --interval "$SENTINEL_INTERVAL" \
 echo "SENTINEL_PID=$!"
 ```
 
-要点（器实况锚）：`--loop` 须配 `--state-file`（seen 幂等持久层
-rocqwash-sentinel-state/1·tools/cw_sentinel.py:98-101）；`--emit` 是 JSONL append
-＋逐行 flush+fsync（tools/cw_sentinel.py:31）；`--json` 每轮覆盖写 report
-（rocqwash-sentinel/1·sort_keys·tools/cw_sentinel.py:81-86）；stdout 与事件流逐字
-节同源，`>/dev/null` 不丢证据；给 `--max-rounds N` 哨自停，手动收哨才
-`kill "$SENTINEL_PID"`（POSIX TERM·哨无 trap 特殊化）。
+Key points (tool-grounded anchors): `--loop` requires `--state-file` (the seen idempotence persistence layer
+rocqwash-sentinel-state/1 · tools/cw_sentinel.py:98-101); `--emit` is JSONL append
+with per-line flush+fsync (tools/cw_sentinel.py:31); `--json` overwrites the report each round
+(rocqwash-sentinel/1 · sort_keys · tools/cw_sentinel.py:81-86); stdout and the event stream are
+byte-identical sources, so `>/dev/null` loses no evidence; give `--max-rounds N` and the watcher stops itself; only a manual stop uses
+`kill "$SENTINEL_PID"` (POSIX TERM · the watcher has no trap special-casing).
 
-### 1.2 JSONL 消费端
+### 1.2 The JSONL consumer
 
-事件行 `json.dumps(..., sort_keys=True)`（tools/cw_sentinel.py:386）——键恒字典序，
-`"kind": "ci-red"` 是字节级稳定 grep 靶形；`seq` 以文件现有行数为基**跨进程续号**
-（tools/cw_sentinel.py:32-33），消费方按 seq 排序即恢复全局序。
+Event lines are `json.dumps(..., sort_keys=True)` (tools/cw_sentinel.py:386) — keys are always lexicographic,
+`"kind": "ci-red"` is a byte-stable grep target; `seq` continues across processes
+from the file's existing line count (tools/cw_sentinel.py:32-33), so a consumer that sorts by seq restores the global order.
 
 ```bash
-# grep 形（零依赖·粗筛）
-grep -c '"kind": "ci-red"' "$WORK/events.jsonl"      # CI 红事件计数
-grep '"kind": "blocking"'    "$WORK/events.jsonl"    # 台账堵塞链根事件
-grep '"kind": "build-signal"' "$WORK/events.jsonl"   # 编译日志词面命中事件
+# grep forms (zero dependencies · coarse filter)
+grep -c '"kind": "ci-red"' "$WORK/events.jsonl"      # CI failing-event count
+grep '"kind": "blocking"'    "$WORK/events.jsonl"    # ledger blockage chain-root events
+grep '"kind": "build-signal"' "$WORK/events.jsonl"   # build-log word-face hit events
 ```
 
 ```bash
-# python3 纯 stdlib 形（结构化取字段＋读当轮 report 的 on-red 执行账）
+# python3 pure-stdlib form (structured field pickup + reading the current round's on-red execution account from the report)
 python3 - "$WORK/events.jsonl" "$WORK/sentinel-report.json" <<'PY'
 import json, sys
 for ln in sorted(open(sys.argv[1]), key=lambda l: json.loads(l).get("seq", 0)):
@@ -77,266 +72,263 @@ for ln in sorted(open(sys.argv[1]), key=lambda l: json.loads(l).get("seq", 0)):
         print("BLOCKING top_root=%s dependents=%s" % (ev["top_root"], ev["dependents"]))
     elif ev["kind"] == "build-signal":
         print("BUILD-SIGNAL hits=%d" % ev["hits_total"])
-rep = json.load(open(sys.argv[2]))   # on-red 执行账在 report 不在事件流（§2.3 口径）
+rep = json.load(open(sys.argv[2]))   # the on-red execution account lives in the report, not the event stream (§2.3 accounting)
 for act in rep.get("actions", []):
     print("ON-RED rc=%s cmd=%s" % (act.get("rc"), act.get("cmd")))
 PY
 ```
 
-### 1.3 真实输出样例（2026-11-11 工装席实跑原文·tmp 注入演练）
+### 1.3 Real output samples (November 11, 2026 tooling-agent real-run verbatim · tmp injection drill)
 
-ci-red 事件行（`--once --watch-repo org/repo --branch main --injector … --emit …
---sleep-scale 0` 实测 rc 0）：
-
-```json
-{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["红件 1/1：ids=[501]", "在册族：A-content-red（判类序取先）"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off（--sleep-scale 0·确定性输出）｜判类=rocqwash-ci-triage/1（ci_triage 子进程 --offline）", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
-```
-
-**生产形（不带 `--sleep-scale 0`）事件行带真 `ts`**——§1.1 块形状活跑实测
-（2026-11-11 工装席·ledger+buildlog 双路·`--loop --max-rounds 2` 自停 rc 0）：
+The ci-red event line (`--once --watch-repo org/repo --branch main --injector … --emit …
+--sleep-scale 0`, measured rc 0):
 
 ```json
-{"dependents": ["B1"], "kind": "blocking", "ledger": "ledgerA.json", "n": 1, "note": "TOP 链根=chain_graph rocqwash-chain-graph/1 top_order 首名（self 字段判链根可洗性·chain_graph.py:88 判例）", "schema": "rocqwash-sentinel-event/1", "self": {"probed": true, "rc": 0, "verdict": null, "washable": true}, "seq": 1, "top_root": "LibX", "ts": "2026-11-10T21:43:53Z"}
-{"hits": ["BUILD-FAIL at step 2"], "hits_total": 1, "kind": "build-signal", "log": "…/build.log", "note": "词面 BUILD-FAIL/EXIT=134/Error:（判类谱 A/C token·ci_triage.py:95-118 同源）", "offset_after": 29, "offset_before": 0, "schema": "rocqwash-sentinel-event/1", "seq": 2, "truncated": false, "ts": "2026-11-10T21:43:53Z"}
+{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["failing piece 1/1: ids=[501]", "on-register family: A-content-red (classification order takes the first)"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off (--sleep-scale 0 · deterministic output) | classification=rocqwash-ci-triage/1 (ci_triage subprocess --offline)", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
 ```
 
-同跑 report/state 落账实证：`report: mode=loop round=2`·state 记
-`ledgers=1 buildlogs=1`（seen 幂等在位·§1.1 块逐行可整段复制执行）。
+**Production form (without `--sleep-scale 0`): event lines carry a real `ts`** — measured live run of the §1.1 block shape
+(November 11, 2026 tooling agent · ledger+buildlog two sources · `--loop --max-rounds 2` self-stop rc 0):
 
-### 1.4 退出码分支表（哨面）
+```json
+{"dependents": ["B1"], "kind": "blocking", "ledger": "ledgerA.json", "n": 1, "note": "TOP chain root = the first name of chain_graph rocqwash-chain-graph/1 top_order (the self field decides the root's washability · chain_graph.py:88 precedent)", "schema": "rocqwash-sentinel-event/1", "self": {"probed": true, "rc": 0, "verdict": null, "washable": true}, "seq": 1, "top_root": "LibX", "ts": "2026-11-10T21:43:53Z"}
+{"hits": ["BUILD-FAIL at step 2"], "hits_total": 1, "kind": "build-signal", "log": "…/build.log", "note": "word faces BUILD-FAIL/EXIT=134/Error: (classification-spectrum A/C tokens · ci_triage.py:95-118 same source)", "offset_after": 29, "offset_before": 0, "schema": "rocqwash-sentinel-event/1", "seq": 2, "truncated": false, "ts": "2026-11-10T21:43:53Z"}
+```
 
-| 码 | 含义（cw_sentinel --help／docstring 口径·tools/cw_sentinel.py:72-78） | 运维动作 |
+Same-run report/state account evidence: `report: mode=loop round=2` · the state records
+`ledgers=1 buildlogs=1` (seen idempotence in place · the §1.1 block is copy-executable line by line).
+
+### 1.4 Exit-code branch table (watcher face)
+
+| code | meaning (cw_sentinel --help / docstring accounting · tools/cw_sentinel.py:72-78) | operations action |
 |---|---|---|
-| 0 | 巡检完成（红已作为事件出账·非器红） | 让路继续；红事件交人审分诊（§4） |
-| 1 | —（哨无 1 档：红走事件流不走退出码） | 不应出现；出现按 9 处置复查 |
-| 2 | 用法错（缺模式/双模同给/三源全缺/--branch 先于 --watch-repo/repo 形坏/once 带 loop 专属参/on-red 预设用法错） | spawn 前被 §1.1 预检挡住；修参重启 |
-| 9 | 信号源不可达（CI HTTP 4xx/5xx·netrc 缺·token 空·runs/jobs 形坏·预设器件缺·injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·子进程 rc≠0/超时） | fail-loud 即停（不带病运行）·人工修源后重启哨 |
+| 0 | patrol round complete (failings already emitted as events · not a tool failure) | step aside and continue; failing events go to human-review triage (§4) |
+| 1 | — (the watcher has no 1 state: failings go through the event stream, not the exit code) | should not occur; if it does, handle as 9 and re-check |
+| 2 | usage error (missing mode / both modes given / all three sources missing / --branch before --watch-repo / repo shape malformed / --once given loop-only flags / on-red preset misuse) | caught before spawn by the §1.1 probe; fix the arguments and restart |
+| 9 | signal source unreachable (CI HTTP 4xx/5xx · netrc missing · token empty · runs/jobs shape malformed · preset parts missing · injector missing/malformed/canned not covered · ledgers directory missing · state malformed · subprocess rc≠0/timeout) | fail-loud and stop (never run while sick) · fix the source manually and restart the watcher |
 
-## §2 on-red 预设三式对照表（report-only／unclog 干跑／pushci dry-run）
+## §2 The on-red preset comparison: three forms (report-only / unclog dry run / pushci dry-run)
 
-### 2.1 对照表
+### 2.1 The comparison table
 
-| 项 | report-only（缺省） | `--on-red-preset unclog` | `--on-red-preset pushci` |
+| item | report-only (default) | `--on-red-preset unclog` | `--on-red-preset pushci` |
 |---|---|---|---|
-| 性质 | 零动作是缺省（tools/cw_sentinel.py:39-40） | 预设即模板 sugar·与 `--on-red` 同一执行器（py:42-44） | 同左 |
-| 展开命令（实文·py:150-155） | 无 | `python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json` | `python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch} --json {emit_dir}/pushci_{run}.json --dry-run` |
-| 必传 `--on-red-arg` | —（给了即孤儿→2） | `src=<源树根>` | `repo_path=<仓目录>`＋`branch=<分支>` |
-| 缺省安全态 | — | **`--apply` 缺省不加＝疏通只干跑**（py:48-49 铁律） | **`--dry-run` 缺省＝只打计划零副作用 exit 0**（tools/pushci.py:89） |
-| 触发事件 | —（report-only 也出事件） | ci-red/blocking/build-signal 三类红事件逐件代跑（py:713-716） | 同左 |
-| 占位替换 | — | 静态 `{src}`/`{emit_dir}` 展开期实替（emit_dir=`--emit` 所在目录·py:53-55）；动态 `{run}`/`{family}`/`{repo}` 事件直替（py:666-674） | 同左 |
-| 执行帽 | — | 60s（`ON_RED_TIMEOUT`·py:168）超时记 `rc=None` | 同左 |
-| 退出码影响 | — | **旁路动作非器面：rc≠0/超时只入 actions 账＋stdout 注记，哨退出码不变**（py:37-39、682-688） | 同左 |
-| v38 实测（tmp 演练） | 哨 exit 0·`actions: []` | 代跑 unclog rc=9 入账（§2.3）·哨 exit 0 | 干跑 rc=0 零副作用（实测·§2.3 末）·哨 exit 0 |
+| nature | zero action is the default (tools/cw_sentinel.py:39-40) | the preset is template sugar over the same executor as `--on-red` (py:42-44) | same as the previous column |
+| expanded command (verbatim · py:150-155) | none | `python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json` | `python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch} --json {emit_dir}/pushci_{run}.json --dry-run` |
+| required `--on-red-arg` | — (given anyway = orphan → 2) | `src=<source tree root>` | `repo_path=<repository directory>` + `branch=<branch>` |
+| default safe state | — | **`--apply` not added by default = unclog dry runs only** (py:48-49 invariant) | **`--dry-run` by default = plan only, zero side effects, exit 0** (tools/pushci.py:89) |
+| triggering events | — (report-only also emits events) | ci-red/blocking/build-signal failing events run one by one on the caller's behalf (py:713-716) | same as the previous column |
+| placeholder substitution | — | static `{src}`/`{emit_dir}` substituted at expansion time (emit_dir = the directory holding `--emit` · py:53-55); dynamic `{run}`/`{family}`/`{repo}` substituted from the event (py:666-674) | same as the previous column |
+| execution cap | — | 60s (`ON_RED_TIMEOUT` · py:168); a timeout records `rc=None` | same as the previous column |
+| exit-code effect | — | **a side action, not a tool face: rc≠0/timeout only enters the actions account + a stdout annotation; the watcher exit code is unchanged** (py:37-39, 682-688) | same as the previous column |
+| v38 measured (tmp drill) | watcher exit 0 · `actions: []` | the unclog proxy run rc=9 entered in the account (§2.3) · watcher exit 0 | dry run rc=0 zero side effects (measured · §2.3 end) · watcher exit 0 |
 
-### 2.2 用法负例（全 rc=2 fail-loud·selftest 实证 py:1266-1281）
+### 2.2 Usage negative examples (all rc=2 fail-loud · proven by selftest py:1266-1281)
 
-| 负例 | 码 |
+| negative example | code |
 |---|---|
-| `--on-red` 与 `--on-red-preset` 同给（preset 即占动作槽·禁静默择一 py:44-46） | 2 |
-| preset 名不识别 | 2 |
-| 必传参数缺（unclog 缺 `src=`／pushci 缺任一） | 2 |
-| 参数重键／无 `=`／空 K·V／未知键（unclog 给 `world=` 不属其参面） | 2 |
-| preset 在场而 `--emit` 缺（`{emit_dir}` 取事件流所在目录·py:53-55） | 2 |
-| `--on-red-arg` 孤儿（无 preset 在场·py:808-809） | 2 |
-| 预设器件缺失（unclog.py/pushci.py 文件缺） | 9（py:656-657） |
+| `--on-red` and `--on-red-preset` given together (the preset occupies the action slot · no silent pick py:44-46) | 2 |
+| unrecognized preset name | 2 |
+| required argument missing (unclog missing `src=` / pushci missing any) | 2 |
+| duplicate key / no `=` / empty K·V / unknown key (unclog given `world=`, which is not in its argument face) | 2 |
+| preset present but `--emit` missing (`{emit_dir}` takes the event-stream directory · py:53-55) | 2 |
+| `--on-red-arg` orphan (no preset present · py:808-809) | 2 |
+| preset part missing (unclog.py/pushci.py files missing) | 9 (py:656-657) |
 
-### 2.3 实况要点：代跑 unclog 的 rc=9（v38 如实口径）
+### 2.3 Live detail: the unclog proxy run's rc=9 (v38 as-is accounting)
 
-**实测原文**（tmp 演练·同 `tests/test_relay_e2e.py` 判1／哨 selftest ⑨ 判例
-tools/cw_sentinel.py:1240-1265「代跑 unclog（fixture 无 --world）应 rc=9 入账」）：
+**Measured verbatim** (tmp drill · same as tests/test_relay_e2e.py verdict 1 / the watcher selftest ⑨ precedent
+tools/cw_sentinel.py:1240-1265 "the unclog proxy run (fixture without --world) must enter the account with rc=9"):
 
 ```text
 on-red note: cmd rc=9 (side action; does not change the sentinel's exit code)
 ```
 
-actions 账（`--json` report·非事件流）所记：
+What the actions account (the `--json` report · not the event stream) records:
 
 ```json
 {"cmd": "python3 -B …/tools/unclog.py --src /tmp/…/src --json /tmp/…/unclog_178.json",
- "output": "FAIL-LOUD: --world 必给（probe 真探针；离线请 --injector）\nworkdir -> …\n候选面: --src 全树枚举 2 件 -> …\nfrozen 在册: 8 件（certify/frozen8.py --ledger 实取·预检红拒）",
+ "output": "FAIL-LOUD: --world is required (the probe is a real probe; offline needs --injector)\nworkdir -> …\ncandidate face: --src full-tree enumeration, 2 pieces -> …\nfrozen on the roster: 8 pieces (certify/frozen8.py --ledger live-read · refused failing at precheck)",
  "rc": 9, "seq": 1, "kind": "ci-red"}
 ```
 
-运维含义（照实读）：预设模板只透传 `--src`（py:151），而 unclog 的 probe 真探针
-须 `--world`（tools/unclog.py:295-296）、离线须 `--injector`——两参预设均不带。
-故 **哨侧代跑＝「见红即触发」**（事件＋执行账＋报告路径钦定），**「即疏通」本体**
-按 §3 规程由人启动（--audit 基线→人审→--apply 白名单）。这正是 v38 缺省干跑
-铁律的落点：哨代跑永零落刀，疏通权在人。
+Operations reading (as it is): the preset template passes only `--src` (py:151), while unclog's real probe
+requires `--world` (tools/unclog.py:295-296) and offline requires `--injector` — the preset carries neither.
+So **the watcher-side proxy run = trigger on seeing a failing event** (event + execution account + report path designated), while **the unclog itself**
+is started by a human per §3 (`--audit` baseline → human review → `--apply` allowlist). This is exactly where the v38 dry-run-by-default
+invariant lands: the watcher's proxy run never applies anything; the unclog decision stays with the human.
 
-pushci 预设干跑面**实测一枪**（2026-11-11 工装席·`pushci.py --repo-path <tmp> --branch
-main --dry-run`·rc=0·零副作用）：
+The pushci preset dry-run face, one measured shot (November 11, 2026 tooling agent · `pushci.py --repo-path <tmp> --branch
+main --dry-run` · rc=0 · zero side effects):
 
 ```text
 === FINAL VERDICT: dry-run (exit 0) ===
 json -> …/pushci_probe.json
 ```
 
-## §3 真实树活跑规程（unclog --audit 基线→人审→--apply 白名单）
+## §3 The real-tree live-run procedure (unclog --audit baseline → human review → --apply allowlist)
 
-> unclog.py:63 明文「**真树 audit 活跑归主会话**（本器只证 fixture 级）」——本节是
-> 主会话执行该活跑的标准作业书；下述命令块为规程模板（真树活跑前先在 tmp fixture
-> 形演练，样例见 §3.1 实测）。
+> `unclog.py:63` states verbatim: "a real-tree audit live run belongs to the main session (this tool proves the fixture level only)" — this section is the standard procedure for the main session to execute that live run; the command blocks below are procedure templates (before a real-tree live run, drill first in tmp fixture form; samples in §3.1).
 
-### 3.0 第 0 步：体检预检（可选·推荐）
+### 3.0 Step 0: the health-check preflight (optional · recommended)
 
 ```bash
-# 四域聚合体检（环境/网络/注册/堵账·只诊断零修切·schema rocqwash-cwdoctor/1）
-# --src --sample N 开堵账域抽样；真探世界按 wash/world_hook.py 认证代纪律播种
+# four-domain aggregated health check (environment/network/registry/blockage · diagnosis only, zero fixing · schema rocqwash-cwdoctor/1)
+# --src --sample N opens the blockage-domain sample; the real-probe world is seeded per the wash/world_hook.py certified-donor discipline
 bash cw.sh cw-doctor --json doctor.json --src src/ --sample 8 \
   --world world/ --guard /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh
 ```
 
-### 3.1 第 1 步：--audit 堵账基线（零写盘·rc 恒 0）
+### 3.1 Step 1: the --audit blockage baseline (zero writes · rc always 0)
 
 ```bash
-# 只读审计：单遍 probe 归集→chain_graph→堵账基线报告（final=audit·cures 恒 0）
-# --guard 必给（真编译温控）·--json 出基线账·workdir 收逐轮工件
+# read-only audit: a single-pass probe collect → chain_graph → blockage baseline report (final=audit · cures always 0)
+# --guard required (real-compile thermal control) · --json emits the baseline account · workdir collects the per-round artifacts
 bash cw.sh unclog --src src/ --world world/ --audit \
   --guard /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh \
   --workdir audit-wd/ --json audit-baseline.json
-echo "AUDIT_RC=$?"    # 恒 0：红是基线数据非器红（unclog.py:54·110）
+echo "AUDIT_RC=$?"    # always 0: failings are baseline data, not a tool failure (unclog.py:54 · 110)
 ```
 
-零写盘是**器内硬保证**：`--src` 全文件 md5 清单跑前跑后自证恒同，清单违同即
-fail-loud 9 拒出账（unclog.py:57-59）；耗时各段入 `report["timing"]`（audit 唯一
-非确定段·unclog.py:60-61）。互斥：`--audit` 与 `--apply`/`--loop` 同给 rc=2
-（unclog.py:55-56·selftest 矢量⑩d）。
+Zero writes is a **hard in-tool guarantee**: the `--src` whole-file md5 manifest self-verifies identical before and after the run; any manifest mismatch
+fails loud with 9 and refuses to emit (unclog.py:57-59); the per-stage durations enter `report["timing"]` (audit's only
+non-deterministic section · unclog.py:60-61). Mutual exclusion: `--audit` together with `--apply`/`--loop` is rc=2
+(unclog.py:55-56 · selftest vector ⑩d).
 
-**fixture 级实测样例**（2026-11-11 工装席实跑原文·tmp 树 A/B 两件·canned 红账
-B 缺 A）：
+**Fixture-level measured sample** (November 11, 2026 tooling-agent real-run verbatim · a tmp tree with two pieces A/B · canned failing account B missing A):
 
 ```text
-=== AUDIT 只读基线（单遍 probe 归集→chain_graph·零落刀零写树）===
-[audit] 归集: probe 红账 1: B
+=== AUDIT read-only baseline (single-pass probe collect → chain_graph · zero applies, zero tree writes) ===
+[audit] collect: probe failing 1: B
 chain_top: A(n=1,washable=True)
 [audit] root=- cures=0 (audit baseline·red=1)
 [audit] timing: enumerate=0.0 manifest=0s probe+chain=0.064s total=0.065s
-AUDIT: 红账 1·墙 0——基线报告零落刀零写树（exit 0）
+AUDIT: 1 failing, 0 walls — the baseline report applies nothing and writes nothing to the tree (exit 0)
 report -> /tmp/…/unclog_178.json
 VERDICT: audit (exit 0)
 ```
 
-### 3.2 第 2 步：人审（读基线账什么）
+### 3.2 Step 2: human review (what to read from the baseline account)
 
-| 读什么 | 字段（rocqwash-unclog/1） | 判读 |
+| what to read | fields (rocqwash-unclog/1) | reading |
 |---|---|---|
-| 红账 | `rounds[0].probe_summary.red_files`／`final.red_files` | 本轮堵面全名单 |
-| 可洗链根榜 | `rounds[0].chain_top[].lib`＋`.self.washable` | `washable=true` 者入白名单候选 |
-| 墙账 | `wall.<root>.reason` | `self-unwashable`/`cure-miss`/`frozen-in-service`/`root-file-missing`/`exclusive-group-conflict`/`no-chain-root`（unclog.py:35-39·696-703）——禁硬凑·人审定夺 |
-| 链根件 | `rounds[0].root_file`（`<src>/<根>.v`） | 落刀对象只此形（pick 之外无 cure 调用路径·unclog.py:43-44） |
+| failing account | `rounds[0].probe_summary.red_files` / `final.red_files` | the full failing-surface list for this round |
+| washable chain-root list | `rounds[0].chain_top[].lib` + `.self.washable` | entries with `washable=true` become allowlist candidates |
+| wall account | `wall.<root>.reason` | `self-unwashable`/`cure-miss`/`frozen-in-service`/`root-file-missing`/`exclusive-group-conflict`/`no-chain-root` (unclog.py:35-39 · 696-703) — no forced fixes · human review decides |
+| chain-root file | `rounds[0].root_file` (`<src>/<root>.v`) | the only apply-target shape (outside pick there is no cure call path · unclog.py:43-44) |
 
-### 3.3 第 3 步：--apply 白名单活跑（人审放行后）
+### 3.3 Step 3: the --apply allowlist live run (after human review releases it)
 
-白名单机制＝`--candidates TSV`（源①·probe_engine 同款表头「件名\tmd5」）：候选面
-收窄到人审放行件，链根只从白名单账出、落刀只对白名单链根件。
+The allowlist mechanism = `--candidates TSV` (source ① · probe_engine's same table header `件名\tmd5`): the candidate face
+narrows to the human-released pieces; chain roots come only from the allowlist account, and apply touches only allowlisted chain-root files.
 
 ```bash
-# 白名单 TSV：只列人审放行的链根件（md5 与基线时点一致·probe_engine 同款表头）
-printf '件名\tmd5\nA\t<audit 时点 md5>\n' > cands-whitelist.tsv
-# 活跑：--apply 单开关（缺省关）·--rounds 帽防自旋·洗后复核自动在环内
+# allowlist TSV: list only the chain-root files released by human review (md5 matching the audit-time value · probe_engine's same table header)
+printf '件名\tmd5\nA\t<audit-time md5>\n' > cands-whitelist.tsv
+# live run: --apply the single switch (off by default) · the --rounds cap prevents spinning · the post-wash re-check runs inside the loop automatically
 bash cw.sh unclog --src src/ --world world/ \
   --candidates cands-whitelist.tsv --apply --rounds 5 \
   --guard /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh \
   --workdir apply-wd/ --json apply-report.json --events apply-events.jsonl
-echo "APPLY_RC=$?"    # 0=unclogged·1=wall/rounds-exhausted（读账定夺·红是数据）
+echo "APPLY_RC=$?"    # 0=unclogged · 1=wall/rounds-exhausted (read the account and decide · failings are data)
 ```
 
-器内结构保证（无需人盯）：落刀只对链根件（unclog.py:43-44）；只正典包
-cure_pack v1.3 禁 freeform（unclog.py:42-43）；frozen 在册（certify/frozen8.py
---ledger 实取）预检红拒 fail-closed（unclog.py:45-47）；落刀幂等断言败即拒写
-（`idempotence-fail`·unclog.py:614-617）。
+In-tool structural guarantees (no human watching needed): apply touches chain-root files only (unclog.py:43-44); only the canon pack
+cure_pack v1.3, freeform forbidden (unclog.py:42-43); frozen-roster entries (live-read from certify/frozen8.py
+--ledger) fail the precheck closed (unclog.py:45-47); a failed apply-idempotence assertion refuses the write
+(`idempotence-fail` · unclog.py:614-617).
 
-### 3.4 第 4 步：复核与终判
+### 3.4 Step 4: re-check and final verdict
 
-环内自动复核：受治件 rescan（cured token 残差应零）＋resprobe（rc 应 0·世界换代
-后）——`rounds[k].rescan.residual_zero`／`resprobe.rc_ok` 如实出账不粉饰
-（unclog.py:16-17、632-649）。终判三态：`unclogged` exit 0／`wall` exit 1（诚实
-墙·逐根列不可洗因）／`rounds-exhausted` exit 1（`--rounds` 帽尽·附各轮账）。
-世界换代口径：本器零写 `--world`，洗后复探红是否清账取决于世界 .vo 基座换代
-（unclog.py:115-116）——复探未达即如实入账，禁硬凑。
+The in-loop automatic re-check: rescan of the cured pieces (the cured token residual should be zero) + resprobe (rc should be 0 · after the world generation changes) —
+`rounds[k].rescan.residual_zero` / `resprobe.rc_ok` are reported as they are, no cosmeticizing
+(unclog.py:16-17, 632-649). Final verdict, three states: `unclogged` exit 0 / `wall` exit 1 (honest
+walls · per-root unwashable reasons listed) / `rounds-exhausted` exit 1 (the `--rounds` cap exhausted · per-round accounts attached).
+World-generation accounting: this tool never writes `--world`; whether the post-wash re-probe clears the failing set depends on the world's `.vo` base generation changing
+(unclog.py:115-116) — if the re-probe has not cleared, it is recorded as it is; no forced fixes.
 
-## §4 与主会话让路配合（后台 bash 任务＋通知驱动）
+## §4 Cooperation with the main session (background bash task + notification-driven)
 
-### 4.1 让路模型
+### 4.1 The step-aside model
 
-哨不推通知——**事件流即通知面**（`--emit` append＋逐行 fsync·seq 跨进程续号·
-tools/cw_sentinel.py:31-33）。配合形＝主会话把哨 spawn 成后台 bash 任务后**让路
-继续干自己的活**，只在检查点回头消费事件流与当轮 report；红是数据非器红，哨
-exit 0 即让路合法（README-cw.md「工作流配合接口」⑤·backend-sentinel.md §5 同形）。
+The watcher pushes no notifications — **the event stream IS the notification face** (`--emit` append with per-line fsync ·
+seq continues across processes · tools/cw_sentinel.py:31-33). The cooperation shape = the main session spawns the watcher as a background bash task, then **steps
+aside and continues its own work**, and only at checkpoints comes back to consume the event stream and the current report; a failing result is data, not a tool failure, and a watcher
+exit of 0 makes the step-aside legitimate (README-cw.md workflow-integration-interface ⑤ · backend-sentinel.md §5 same shape).
 
-产物三件套（全在 `--emit` 同盘）：
+The three output pieces (all on the same disk as `--emit`):
 
-| 产物 | 写形 | 消费口径 |
+| output | write form | consumption |
 |---|---|---|
-| `events.jsonl` | append＋fsync·事件面 | 检查点 grep/按 seq 排序读（§1.2） |
-| `sentinel-report.json` | 每轮覆盖写·**actions 执行账在此**（§2.3 口径） | 检查点读当轮 `actions[]` |
-| `unclog_{run}.json`／`pushci_{run}.json` | 预设代跑出账·路径由预设钦定（{emit_dir} 同盘·py:53-55） | 存在性＋verdict 读 |
+| `events.jsonl` | append + fsync · the event face | checkpoint grep / read sorted by seq (§1.2) |
+| `sentinel-report.json` | overwritten each round · **the actions execution account lives here** (§2.3 accounting) | a checkpoint reads the current round's `actions[]` |
+| `unclog_{run}.json` / `pushci_{run}.json` | preset proxy-run output · the path is designated by the preset ({emit_dir} same disk · py:53-55) | existence + verdict read |
 
-### 4.2 通知驱动检查点协议
+### 4.2 The notification-driven checkpoint protocol
 
 ```bash
-# 检查点消费（主会话每次让路归来执行·零依赖两查）
+# checkpoint consumption (executed by the main session at every step-aside return · the zero-dependency two checks)
 WORK=.
-grep -c '"kind": "ci-red"' "$WORK/events.jsonl"          # ①事件面：红事件计数
+grep -c '"kind": "ci-red"' "$WORK/events.jsonl"          # ① the event face: failing-event count
 python3 -c "import json,sys; r=json.load(open('$WORK/sentinel-report.json')); print('round=%s actions=%d' % (r['round'], len(r['actions'])))"
-                                                          # ②执行面：代跑账笔数
-# 分流：0 红 0 账→继续让路；有红有账→红件交人审分诊（§3 规程启动）
+                                                          # ② the execution face: the proxy-run account count
+# routing: 0 failing and 0 account → keep stepping aside; failings with account → the failing pieces go to human-review triage (the §3 procedure starts)
 ```
 
-收哨：`--max-rounds N` 自停为正途；手动才 `kill "$SENTINEL_PID"`（§1.1）。
+Stopping the watcher: `--max-rounds N` self-stop is the proper path; only a manual stop uses `kill "$SENTINEL_PID"` (§1.1).
 
-### 4.3 dynamic-workflow 嵌段伪码（spawn＋检查点·on-red 预设形）
+### 4.3 The dynamic-workflow embedded-block pseudocode (spawn + checkpoint · the on-red preset form)
 
 ```text
-// 嵌段：后台哨＋on-red 预设 unclog＋让路检查点（形承 backend-sentinel.md §5）
+// embedded block: background watcher + on-red preset unclog + step-aside checkpoint (shape from backend-sentinel.md §5)
 phase "spawn-sentinel" {
-  // 前置 --once 用法预检（把 2 档用法错挡在 spawn 前）
+  // the pre-flight --once usage probe (catches usage-class 2 errors before spawn)
   const probe = await world.run("bash", ["cw.sh", "sentinel", "--once",
       "--watch-ledgers", "ledgers/", "--state-file", ".sentinel-probe-state.json",
       "--json", ".sentinel-probe-report.json"]);
   if (probe.exitCode !== 0) return { verdict: "sentinel-unusable", rc: probe.exitCode };
-  // 长驻哨：旁路动作用预设 unclog（缺省干跑铁律·代跑账入 report.actions）
+  // resident watcher: the side action uses the unclog preset (the dry-run-by-default invariant · the proxy-run account enters report.actions)
   await world.run("bash", ["-c",
     "nohup bash cw.sh sentinel --loop --interval 60 " +
     "--watch-repo ORG/REPO --branch main --watch-ledgers ledgers/ " +
     "--state-file .sentinel-state.json --emit events.jsonl " +
     "--json sentinel-report.json --on-red-preset unclog " +
     "--on-red-arg src=src/ >/dev/null 2>&1 & echo $!"]);
-  // 主会话让路：后续 phase 干自己的活
+  // the main session steps aside: the following phases do their own work
 }
 phase "consume-checkpoint" {
   const reds = await world.run("grep", ["-c", '"kind": "ci-red"', "events.jsonl"]);
   if (reds.exitCode === 0 && Number(reds.stdout.trim()) > 0) {
-    // 红件交人审：疏通本体按 §3 规程（--audit 基线→人审→--apply 白名单）
+    // failing pieces go to human review: the unclog itself follows the §3 procedure (audit baseline → human review → --apply allowlist)
     const triage = await agent({ role: "triage",
-      ask: "读 events.jsonl 与 sentinel-report.json 的 actions 账，按 §3 启动疏通" });
+      ask: "read the actions account of events.jsonl and sentinel-report.json, start the unclog per §3" });
     return { verdict: "red-forwarded", triage };
   }
   return { verdict: "no-red-events" };
 }
 ```
 
-### 4.4 接驳全链实测（tmp 演练·三站·`tests/test_relay_e2e.py` 三判所证）
+### 4.4 The full hookup measured chain (tmp drill · three stations · proven by the three verdicts of tests/test_relay_e2e.py)
 
 ```text
-站①哨腿（canned CI 红炉 run 178→on-red preset 代跑）：哨 exit 0·events.jsonl 落
-   ci-red 1 行（seq 1）·actions 账 cmd=preset 展开（含 unclog_178.json 路径）·
-   代跑 rc=9 如实入账（§2.3）
-站②unclog 干跑腿（同一 tmp 树 --audit --injector canned 红账）：rc=0·verdict=
-   audit·见红 red_files=[B]·出可洗链根 A(washable=true)·cures 恒 0·src md5
-   清单前后恒同（零写盘）
-站③同盘对拍：actions[0].cmd 钦定路径 {emit_dir}/unclog_178.json ≡ 实落 report
-   （schema rocqwash-unclog/1·verdict audit）
+station ① the watcher leg (canned CI failing build run 178 → on-red preset proxy run): watcher exit 0 · events.jsonl carries
+   1 ci-red line (seq 1) · the actions account cmd=preset expansion (with the unclog_178.json path) ·
+   the proxy run rc=9 recorded as it is (§2.3)
+station ② the unclog dry-run leg (the same tmp tree --audit --injector canned failing account): rc=0 · verdict=
+   audit · failing red_files=[B] · the washable chain root A(washable=true) emitted · cures always 0 · the src md5
+   manifest identical before and after (zero writes)
+station ③ the same-disk differential check: the actions[0].cmd designated path {emit_dir}/unclog_178.json ≡ the landed report
+   (schema rocqwash-unclog/1 · verdict audit)
 ```
 
-三判回归：`python3 -B tests/test_relay_e2e.py`（0=三判全过·1=任一红响亮列红）。
+The three-verdict regression: `python3 -B tests/test_relay_e2e.py` (0 = all three verdicts pass · 1 = any failing verdict listed loudly).
 
-## 附：样例与证据索引
+## Appendix: the sample and evidence index
 
-| 证据 | 处 |
+| evidence | location |
 |---|---|
-| §1.3/§2.3/§3.1/§4.4 实测样例 | 2026-11-11 工装席 tmp 注入演练实跑原文（fixture 数据·org/repo、run 178、md5 均非真仓信号） |
-| 三判级回归 | `tests/test_relay_e2e.py`（判1 事件触发／判2 unclog 干跑 rc=0 零写盘／判3 JSONL 同盘 unclog report 路径） |
-| 嵌段正典三件 | `examples/workflows/backend-sentinel.md`／`step-pushci.md`／`loop-unclog.md` |
-| 接口纪律正本 | `README-cw.md`「工作流配合接口」①-⑥ |
-| 器实况正本 | 各器 `--help`＋docstring（行号锚 c205ea0·冲突以器为准） |
+| the §1.3/§2.3/§3.1/§4.4 measured samples | November 11, 2026 tooling-agent tmp injection drill, real-run verbatim (fixture data · org/repo, run 178 and the md5 values are all non-real-repository signals) |
+| the three-verdict regression | `tests/test_relay_e2e.py` (verdict 1 event trigger / verdict 2 unclog dry run rc=0 zero writes / verdict 3 JSONL same-disk unclog report path) |
+| the three canonical embedded blocks | `examples/workflows/backend-sentinel.md` / `step-pushci.md` / `loop-unclog.md` |
+| the interface-discipline canon | `README-cw.md` workflow-integration-interface ①-⑥ |
+| the tool-grounded canon | each tool's `--help` + docstring (line anchors at c205ea0 · conflicts resolve to the tool) |

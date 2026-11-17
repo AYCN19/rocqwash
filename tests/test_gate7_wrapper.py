@@ -21,7 +21,7 @@
                           --tree/--coqc 透传面；order 文件装配在 workdir 内
                           （临时目录·即写即清）
 
-幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 seat 域。
+幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 agent 域。
 退出码：0=十三判全过；1=任一红。
 """
 import os

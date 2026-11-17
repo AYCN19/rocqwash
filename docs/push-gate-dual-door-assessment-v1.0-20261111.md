@@ -98,7 +98,7 @@
    （NOT-RUN 语义·`push_gate.py:141-151`）——推窗是「旁证齐了才开」的
    判定，发射闸是「探针现跑现判」的判定。
 3. **成本结构不同**：门 A 三闸秒级；门 B 的 c4 直跑全套 `tests/run_tests.sh`
-   （本席本轮实测 52 过/0 红/4 略·rc=0——分钟级体量）＋可选冻结件对账。
+   （本席本轮实测 52 过/0 failing/4 略·rc=0——分钟级体量）＋可选冻结件对账。
    成本不对称是结构性的，不是实现偷懒。
 4. **网络姿态不同**：门 B 的 c3 必须触真远端（fetch/ls-remote·只读）；门 A
    的 preflight 本段零 git 零远端调（doctor 本地·net_probe 打探针端点）。
@@ -231,7 +231,7 @@ pushci 单跑即发射，窗纪律靠文档与嵌段约束。此系「环候窗�
 | 门 B 自证 | `python3 -B certify/push_gate.py --selftest` | rc=0·UNION 六判＋window c1 双源/c2 behind/c4 红套件/零证据 NOT-RUN 四判全过 |
 | 门 A 自证 | `python3 -B tools/pushci.py --selftest` | rc=0·八矢量＋flat 咬合＋韧性层＋CLI 四码全过（零真网络零真 push 零编译） |
 | 冻结册核对 | `python3 -B certify/frozen8.py --ledger` 输出 grep `certify/push_gate` | 计数=0（push_gate 不在冻结八件） |
-| 套件现状基线 | `bash tests/run_tests.sh`（本席同轮护栏修复回归一并实证） | 52 过/0 红/4 略·rc=0（56 例·四略系正本环境缺·真本机全跑） |
+| 套件现状基线 | `bash tests/run_tests.sh`（本席同轮护栏修复回归一并实证） | 52 过/0 failing/4 略·rc=0（56 例·四略系正本环境缺·真本机全跑） |
 
 **码面精读**：`certify/push_gate.py` 全文 632 行（window 四判据实作 :109-258
 ＋UNION v2 ＋自证）；`tools/pushci.py` docstring 与管线关键段（:1-120 头注

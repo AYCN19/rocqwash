@@ -62,7 +62,7 @@ def main():
     tmp = tempfile.mkdtemp(prefix="rocqwash_clean_mode_self_")
     n = 0
 
-    # -- scan_station --baseline dispatch (canonical S09 target; the frozen
+    # -- scan_station --baseline route (canonical S09 target; the frozen
     #    scanner itself is gated at the station layer) --------------------
     rc, out = run_py(os.path.join("wrapper", "scan_station.py"),
                      ["--baseline"], CLEAN_ENV)

@@ -306,7 +306,7 @@ confirmed by real data feeding back (`更新账.md:3829`):
 
 ### Work stream 10 · v45 the render_events ledger renderer (8e124b3)
 
-- **`tools/render_events.py`** (547 lines · the `git show --stat` of 8e124b3, run by this agent = 3
+- **`tools/render_events.py`** (547 lines · the `git show` stat line of 8e124b3, run by this agent = 3
   files +601/-3): the watcher-event JSONL → markdown ledger renderer — the `--events`/`--dir`
   merge (sorted by seq+ts) → the kind/family/action three-dimension distribution + the 9-column per-event table (bad-line tolerance
   rc1 · unknown kinds filed as other · pipe escaping) + the `--json` summary

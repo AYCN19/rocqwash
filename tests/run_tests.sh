@@ -4,15 +4,15 @@
 # 形制：
 #   - 逐例 PASS/FAIL 汇总；全绿 EXIT 0；任一红 EXIT 1。
 #   - 幂等：不向仓库写任何字节（python3 -B 禁 __pycache__；临时日志 mktemp+trap 清理；
-#     wash/retrofit 测试只在临时目录/内存驱动，硬编码席位路径永不被触碰）。重复运行结果恒同。
+#     wash/adaptation 测试只在临时目录/内存驱动，硬编码席位路径永不被触碰）。重复运行结果恒同。
 #   - 覆盖面（每例正/负两判优先）：
 #       scan/mac_stmt_scan.py   --selftest（E364 冻结向量组）
 #       names/mac_stmt_names.py --expect 形（fixture 正判/含-Let/负判 exit 2）
 #       verify/gate4_comment_guard.py --file（净样例 PASS=0 / 脏样例 FAIL=1 两判）
-#       verify/retrofit_gate7_irr.py 干跑（tests/test_retrofit_dryrun.py·零落盘）
+#       verify/retrofit_gate7_irr.py dry run（tests/test_retrofit_dryrun.py·零落盘）
 #       wash/_abl1_wash.py exact-string+count（tests/test_wash_fixture.py·正/幂等/负三判）
 #       wash/wash_engine.py 通用逐件引擎（tests/test_wash_engine.py·六判 subprocess）
-#       verify/verify_vo.py 绿判四件套（--selftest 九判）
+#       verify/verify_vo.py four-point pass criterion（--selftest 九判）
 #       seam/seam_probe.py W13 四机制（--selftest 四正例＋掩蔽负例）
 #       certify/freeze_manifest.py 两层冻结（--selftest 四判）
 #       certify/push_gate.py 推窗四判据＋UNION v2（--selftest UNION 六判＋window 四判）
@@ -46,7 +46,7 @@
 #         W15 实战判例工具化①：混合行遮蔽夹具三站复现＋旧法盲区机械实证＋binder 追踪
 #         零误报；真树抽查经 ROCWASH_TREE_SAMPLES 环境门控·缺省跳过不充红）
 #       wash/cure_pack.json＋cure_applier.py 消费位治愈正典包五式（tests/test_cure_pack.py·
-#         十一判·W15 工具化②：五式触发/幂等/门控自检＋fixture 干跑-apply-二次零变更＋
+#         十一判·W15 工具化②：五式触发/幂等/门控自检＋fixture dry run-apply-二次零变更＋
 #         cure_examples.v 编译 rc=0（ROCWASH_ROCQ 门控·cpu_guard 包裹·v47 ⑧A 案
 #         总开关缺省探测自动跑）＋不透明 reflexivity 负证 rc!=0）
 #       verify/erasure_classifier.py 擦除位分类器六簇（tests/test_erasure_classifier.py·
@@ -71,8 +71,8 @@
 #         v32 工具化：scan_v4_token＋mac_stmt_scan 双扫×逐件差异报告
 #         only_v4/only_stmt/common·确定字节恒同·CLI 四码·零触真仓）
 #       wash/cure_pack v1.2 S07 适配式（tests/test_cure_pack.py 扩节·
-#         cure32 壳除/记号重绑/投影桥/谓词面收敛/binder 站型·干跑-apply-
-#         手术-全零复跑＋conflict --json rc4 回归＋门控 S07 编译弧红→绿→提取 0/0）
+#         cure32 壳除/记号重绑/投影桥/谓词面收敛/binder 站型·dry run-apply-
+#         operation-全零复跑＋conflict --json rc4 回归＋门控 S07 编译弧红→passing→提取 0/0）
 #       cw.sh v29-v32 工具波统一入口（tests/test_cw_entry.sh·v33 工具化·
 #         四节：帮助/路由冒烟＋七工具 --help 透传＋功能透传（scan4/dual-scan/
 #         chain/sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）
@@ -93,10 +93,10 @@
 #       tools/net_probe.py 网络窗探针（tests/test_net_probe.py·最小自测壳两判：
 #         --selftest 冻结标记 NET-PROBE-SELFTEST PASS＋--help 冒烟·零网络零写盘）
 #       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
-#         九节：selftest/coq 夹具组/陷阱组同名不同形/重锚 md5 冻结向量/干跑-
+#         九节：selftest/coq 夹具组/陷阱组同名不同形/重锚 md5 冻结向量/dry run-
 #         apply-幂等/json 确定性/CLI 四码＋git 三 ref 直读·零触真仓零网络零编译）
 #       tools/pushci.py 推送 CI 一键流水线编排器（tests/test_pushci.py·
-#         六场景壳十节：selftest 冻结矢量/tmp 仓 helper/S1 绿径/S2 NETRED 愈合/
+#         六场景壳十节：selftest 冻结矢量/tmp repository helper/S1 绿径/S2 NETRED 愈合/
 #         S3 内容红零 rerun/S4 heal 耗尽/S5 merge/S6 dry-run/幂等字节恒同/
 #         CLI 五码·全离线全注入零真网络零真 push 零编译·v41 波器面零新矢量
 #         ——本波 pushci 相关新产出＝双门归一评估 docs/push-gate-dual-door-
@@ -108,7 +108,7 @@
 #         （--net-retries 退避 5s/15s/45s）＋loop 逐源 skip 宁跳轮不崩驻/
 #         ⑮监督壳部署形冒烟 examples/sentinel_supervisor.sh bash -n＋关键行
 #         静态断言零执行零网络）
-#       tools/wash_shape.py 洗形器·正典形五洗流水（tests/test_wash_shape.py·
+#       tools/wash_shape.py shape-normalizing tool·正典形五洗流水（tests/test_wash_shape.py·
 #         最小自测壳三判：--selftest 冻结标记 WASH-SHAPE-SELFTEST PASS
 #         十六判向量（plan/apply/幂等/锚/冻结红拒/CLI/--loop/确定性＋preset
 #         链：模板库装载·preset/--header-map 胜 env·占位渲染→apply 端到端·
@@ -123,9 +123,9 @@
 #         --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译）＋
 #         --help 冒烟·20261111 v38 集成席挂接）
 #       tests/test_relay_e2e.py 接驳实战核 e2e（v39 工装席铸件·集成席挂接·
-#         cw_sentinel --on-red-preset unclog 全链三判：①哨 --once＋injector
+#         cw_sentinel --on-red-preset unclog 全链三判：①watcher --once＋injector
 #         canned CI 红炉→ci-red 事件→preset 代跑 unclog rc=9 如实入账·哨退
-#         出码仍 0 ②unclog --audit 干跑 rc=0·--src 全文件 md5 清单跑前跑后
+#         出码仍 0 ②unclog --audit dry run rc=0·--src 全文件 md5 清单跑前跑后
 #         自证零写盘 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍·
 #         全 canned 罐装零真网络零真编译）
 #       tools/doc_lint.py 文档←→实现一致性三查器（tests/test_doc_lint.py·
@@ -160,11 +160,11 @@
 #         CLI 四码由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验
 #         2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补挂接）
 #       tools/registry_fix.py 注册册处方执行器（tools/registry_fix.py --selftest
-#         直挂八矢量：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋干跑 report 重跑
+#         直挂八矢量：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋dry run report 重跑
 #         字节恒同②--apply 12 重复块→0＋断言三过＋md5 账对盘③77c2b9a8 锚刷
 #         md5 冻结向量＋同输同出④注入炸点回滚⑤自然炸点 A-fix-2 回滚⑥staging
 #         炸零写盘⑦CLI 四码⑧落刀确定性——registry_audit --fix-plan 处方逐条
-#         落刀·缺省干跑·20261112 v47 集成席直挂）
+#         apply·dry run by default·20261112 v47 集成席直挂）
 #       tools/norm_lint.py 注释面规范化检查器·report-only 首形（tests/
 #         test_norm_lint.py 最小自测壳三判：--selftest 六矢量 map-load/
 #         jargon-hit/fields-missing/substring-exemption/whitelist-exemption/
@@ -246,7 +246,7 @@
 #
 # 退出码口径承 CONTRIBUTING §4：0=全绿（SKIP 不计红）；1=任一红。
 # 例级 exit 111=SKIP：正本环境缺卷（CI runner 无本机正本）时，依赖正本的
-# 对账/包装例让席不充红不假绿；正本在卷（真本机）恒全量真扫。
+# reconcile/包装例让席不充红不假绿；正本在卷（真本机）恒全量真扫。
 set -u
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -263,7 +263,7 @@ export PYTHONUTF8=1
 
 # ---------- 正本环境探针（CI 准入）----------
 # 四例（t_gate7_wrapper/t_quad8_check/t_gate6_born_wrapper/t_verify_gate6）的
-# 在跑判据依赖本机正本：Set 仓 gates 正本脚本＋CW rocq 工具链＋四仓副本群。
+# 在跑判据依赖本机正本：Set repository gates 正本脚本＋CW rocq 工具链＋四仓副本群。
 # 正本缺卷 → 诸例 exit 2=SKIP；路径可用 ROCWASH_CANON_* 覆写（CI 演练用）。
 CANON_SET=${ROCWASH_CANON_SET:-/Users/apple/Desktop/ConstructiveWorld-Set}
 CANON_CW=${ROCWASH_CANON_CW:-/Users/apple/Desktop/ConstructiveWorld}
@@ -291,8 +291,8 @@ fi
 # ——诸闸位判据语义不变（在即跑·缺才 SKIP），只翻缺省面：
 #   ROCWASH_ROCQ        t_cure_pack 编译 check 段＋t_probe_engine 真 rocq 节
 #                       （探测 9.3 多路器·v43 第三发 27/27 同源实证 更新账.md:3753）
-#   GATE7_PROBE_SCRIPT  t_gate7_wrapper（Set 仓 gate7 正本·judge13 缺省解析同路径）
-#   GATE6_SCRIPT        t_verify_gate6＋t_gate6_born_wrapper census 段（Set 仓 gate6 正本）
+#   GATE7_PROBE_SCRIPT  t_gate7_wrapper（Set repository gate7 正本·judge13 缺省解析同路径）
+#   GATE6_SCRIPT        t_verify_gate6＋t_gate6_born_wrapper census 段（Set repository gate6 正本）
 #   BORN_WORLD_ROCQ     t_gate6_born_wrapper born 段（born_world.sh:114 存在性闸·
 #                       该测试零编译不触代差语义；CW Live rocq 缺卷→9.3 代役）
 GATE93_ROCQ=/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/rocq
@@ -411,7 +411,8 @@ t_dual_scan \
  t_flaky_guard \
  t_roster_resync \
  t_auto_merge \
- t_selfheal_guards"
+ t_selfheal_guards \
+ t_jargon_map_sync"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -590,7 +591,7 @@ t_scan_station() {
 }
 
 t_gate7_wrapper() {
-  # judge11/13 依赖 Set 仓 gate7 正本；缺卷让席（正判/GATE7_PROBE_SCRIPT 覆写在卷则照跑）
+  # judge11/13 依赖 Set repository gate7 正本；缺卷让席（正判/GATE7_PROBE_SCRIPT 覆写在卷则照跑）
   [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 正本不在卷（$CANON_SET/scripts/gates/gate7_extract_run.py）"; return 111; }
   "$PY" -B "$REPO/tests/test_gate7_wrapper.py"
 }
@@ -611,7 +612,7 @@ t_frozen8_check() {
 }
 
 t_quad8() {
-  # 四仓同 md5 副本群对账器夹具八判（零触真仓·20261031 席 rqadapt）
+  # 四仓同 md5 副本群对账器夹具八判（零触真仓·20261031 agent rqadapt）
   "$PY" -B "$REPO/wrapper/quad8_reconcile.py" --selftest
 }
 
@@ -631,7 +632,7 @@ t_frozen_call() {
 
 t_gate6_born_wrapper() {
   # wrapper 层 gate6 普查闸启动层＋born 世界基正形十六判（零编译零写盘）
-  # census 判据依赖 Set 仓 gate6 正本；born 判据依赖 CW rocq 工具链；缺卷让席
+  # census 判据依赖 Set repository gate6 正本；born 判据依赖 CW rocq 工具链；缺卷让席
   [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 正本/rocq 工具链不在卷（$CANON_SET/scripts/gates/＋$CANON_CW/Live/toolchain）"; return 111; }
   "$PY" -B "$REPO/tests/test_gate6_born_wrapper.py"
 }
@@ -649,7 +650,7 @@ t_select_audit() {
 
 t_verify_gate6() {
   # 五课反馈轮·夹具④gate6 ch1：eum 判例正判/滞治负例/正本真扫（正本只读·-B 禁 pycache）
-  # 「正本真扫」子判依赖 Set 仓 gate6 正本；缺卷让席（自检夹具两子判无依赖恒跑）
+  # 「正本真扫」子判依赖 Set repository gate6 正本；缺卷让席（自检夹具两子判无依赖恒跑）
   [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 正本不在卷（$CANON_SET/scripts/gates/gate6_statement_census.py）"; return 111; }
   "$PY" -B "$REPO/tests/test_verify_gate6.py"
 }
@@ -667,7 +668,7 @@ t_recipe_pw1() {
 
 t_precedent_station() {
   # 五课打磨轮·课件⑤三判例剧本 toolify：三判例验收站十判自检＋轻链正负判
-  # （names 对表/gate4/REVIEW 升格/gate7 形制/刀面记名·零编译零写盘·gate7 实跑不入套件）
+  # （names cross-check against the reference/gate4/REVIEW 升格/gate7 形制/刀面记名·零编译零写盘·gate7 实跑不入套件）
   "$PY" -B "$REPO/tests/test_precedent_station.py"
 }
 
@@ -708,7 +709,7 @@ t_scan_v4_token() {
 }
 
 t_cure_pack() {
-  # W15 工具化②：消费位治愈正典包五式（applier 自检＋pack 完整性＋干跑/apply/
+  # W15 工具化②：消费位治愈正典包五式（applier 自检＋pack 完整性＋dry run/apply/
   # 幂等；编译验证 ROCWASH_ROCQ 门控且经 tools/cpu_guard.sh 包裹·套件缺省探测
   # 自动跑（v47 ⑧A 案·run_tests.sh 总开关）·env 缺且 9.3 缺卷仍 SKIP）
   "$PY" -B "$REPO/tests/test_cure_pack.py"
@@ -767,7 +768,7 @@ t_cw_entry() {
 t_registry_union() {
   # 20261110 实战手术工具化：注册册 union 手术器（tools/registry_union.py·
   # tests/test_registry_union.py 九节：selftest 八判/coq 夹具组/陷阱组同名不同形
-  # 对 merge-base 必过滤/重锚 md5 冻结向量 1414cddb/A2·A3 负判零写盘/干跑-apply-
+  # 对 merge-base 必过滤/重锚 md5 冻结向量 1414cddb/A2·A3 负判零写盘/dry run-apply-
   # 幂等/json 确定性/CLI 四码＋用法对偶/git 三 ref 直读·夹具只读输出全落 mktemp·
   # 零触真仓零网络零编译）
   "$PY" -B "$REPO/tests/test_registry_union.py"
@@ -797,7 +798,7 @@ t_net_probe() {
 t_pushci() {
   # 20261111 集成席挂接：推送 CI 一键流水线编排器（tools/pushci.py·五段管线
   # preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排
-  # 零新引擎·tests/test_pushci.py 六场景壳十节：selftest 冻结矢量＋tmp 仓
+  # 零新引擎·tests/test_pushci.py 六场景壳十节：selftest 冻结矢量＋tmp repository
   # helper＋S1 绿径＋S2 NETRED 愈合＋S3 内容红零 rerun＋S4 heal 耗尽＋S5
   # merge＋S6 dry-run＋六场景幂等字节恒同＋CLI 五码——全离线全注入零真网络
   # 零真 push 零编译零写盘）
@@ -824,7 +825,7 @@ t_cw_sentinel() {
 }
 
 t_wash_shape() {
-  # 20261111 v37 洗形席挂接·v39 扩容·v40 稳态席再扩：洗形器·正典形五洗流水
+  # 20261111 v37 洗形席挂接·v39 扩容·v40 稳态席再扩：shape-normalizing tool·正典形五洗流水
   # （tools/wash_shape.py·gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/
   # 行尾归一/registry_union 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·
   # schema rocqwash-shape/1·tests/test_wash_shape.py 最小自测壳三判：--selftest
@@ -839,7 +840,7 @@ t_wash_shape() {
 t_unclog() {
   # 20261111 v37 集成席挂接·v40 稳态席扩容·v41 性能波扩容：疏通堵塞闭环引擎
   # （tools/unclog.py·手工五步闭环 probe 归集→chain_graph 挑根→cure_applier
-  # 落刀→rescan/resprobe 复核→verdict 判定·schema rocqwash-unclog/1·
+  # apply→rescan/resprobe 复核→verdict 判定·schema rocqwash-unclog/1·
   # tests/test_unclog.py 最小自测壳三判：--selftest 冻结标记 UNCLOG-SELFTEST
   # PASS（十四矢量全 --injector canned 罐装·v40 轮增⑪--state-file 同形哨态
   # seen 差分（red-new 事件 only-new·损坏 state 红拒 9 禁静默重建）⑫--rounds/
@@ -862,9 +863,9 @@ t_cw_doctor() {
 
 t_relay_e2e() {
   # 20261111 v39 工装席铸件·集成席挂接：接驳实战核 e2e（tests/test_relay_e2e.py·
-  # cw_sentinel --on-red-preset unclog 全链三判：①哨 --once＋injector canned
+  # cw_sentinel --on-red-preset unclog 全链三判：①watcher --once＋injector canned
   # CI 红炉→ci_triage 真判类 A-content-red→ci-red 事件→preset 代跑 unclog
-  # rc=9 如实入账·旁路动作非器面·哨退出码仍 0 ②unclog --audit 干跑 rc=0·
+  # rc=9 如实入账·旁路动作非器面·哨退出码仍 0 ②unclog --audit dry run rc=0·
   # --src 全文件 md5 清单跑前跑后自证零写盘·见红 red_files=["B"]·出可洗链根·
   # 墙空 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍 schema/verdict
   # 咬合——全 canned 罐装零真网络零真编译零触真仓）
@@ -915,7 +916,7 @@ t_red_dispatch() {
   # red_dispatch.py·哨红事件→动作预设路由·三档 preset report-only/suggest/
   # auto·缺省零执行·auto 显式代跑 60s 帽 rc≠0 入账不改退出码·防重 state
   # ＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·
-  # schema rocqwash-red-dispatch/1·tests/test_red_dispatch.py 最小自测壳
+  # schema rocqwash-red-route/1·tests/test_red_dispatch.py 最小自测壳
   # 三判：--selftest 冻结标记 RED-DISPATCH-SELFTEST PASS（十二矢量由铸席
   # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/dry-run
   # 误档=2·事件文件缺=9·本集成席实跑验证）·零网络零编译零触真仓）
@@ -937,7 +938,7 @@ t_registry_audit() {
 t_registry_fix() {
   # 20261112 v47 集成席直挂：注册册处方执行器（tools/registry_fix.py·
   # registry_audit --fix-plan 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD
-  # skip·缺省干跑·--apply 落刀后断言含 dup 零残留/锚撞零增/孤儿不增/被治锚
+  # skip·dry run by default·--apply 落刀后断言含 dup 零残留/锚撞零增/孤儿不增/被治锚
   # 键锚残量零（A-fix-6·--orphan-add 时另加孤儿两判）任一炸即回滚·
   # staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema
   # rocqwash-registry-fix/1——器 --selftest 八矢量全 canned tmp fixture·
@@ -946,7 +947,7 @@ t_registry_fix() {
 }
 
 t_registry_fix_dedup() {
-  # RQW09 duplicates-family executor seat (20261114): DEDUP contract unit
+  # RQW09 duplicates-family executor agent (20261114): DEDUP contract unit
   # tests for tools/registry_fix.py — keep-first fix_plan direction pinned
   # from the registry_audit --fix-plan producer semantics, dry-run
   # zero-write, apply keep-first with exact per-item diff and post
@@ -1234,7 +1235,7 @@ t_auto_merge() {
 }
 
 t_selfheal_guards() {
-  # 20261116 X6-seat hookup: the three self-heal guardrail reinforcement
+  # 20261116 X6-agent hookup: the three self-heal guardrail reinforcement
   # points as frozen vectors (.github/scripts/selfheal_rocqwash.py;
   # tests/test_selfheal_guards.py five vector groups 20 checks: the
   # attempt cap skipped(attempt-cap) at-most-once budget, the
@@ -1246,6 +1247,24 @@ t_selfheal_guards() {
   # POSTs).  The script module loads by path with gh_api/time stubbed
   # in-process: zero network, zero real sleep, zero repository writes.
   "$PY" -B "$REPO/tests/test_selfheal_guards.py"
+}
+
+t_jargon_map_sync() {
+  # 20261117 P1 cast-agent hookup (normwave59 work stream): the jargon map sync
+  # tool (tools/jargon_map_sync.py; tests/test_jargon_map_sync.py six
+  # checks: --selftest rc=0 with the SYNC-SELFTEST PASS frozen marker (the
+  # tool's own tmp-fixture vectors attest the single-form derivation with
+  # the parenthetical-annotation stripping, the slash and fullwidth-slash
+  # alternation rejects, the six note-guard rejects, the em-dash
+  # rewrite-or-delete bucket, the upsert preserve rules for
+  # id/exempts/cross_track_note, the exact count label, rerun
+  # determinism, the duplicate-face refusal and the CLI faces), --help
+  # rc=0, --bogus=2, a missing --map=9, the live plan face read-only
+  # IN-SYNC over the standing map (zero bytes, exact count label), and a
+  # tmp end-to-end arc (plan pending rc=1 zero-write, apply writes once,
+  # second apply byte-identical); zero network, zero writes outside
+  # mkdtemp, zero repository writes.
+  "$PY" -B "$REPO/tests/test_jargon_map_sync.py"
 }
 
 # ---------- 汇总执行 ----------

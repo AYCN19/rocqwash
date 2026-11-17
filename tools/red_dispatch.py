@@ -10,8 +10,8 @@
       requested (60s cap per event; a non-zero rc is recorded loudly, exit unchanged).
     Interface.  `--event-file PATH` | stdin JSONL (one event per line; if every line
       fails, one whole-text JSON object is the fallback); `--preset
-      report-only|suggest|auto`; `--json OUT` (rocqwash-red-dispatch/1, sort_keys);
-      `--state-file PATH` (rocqwash-red-dispatch-state/1; re-dispatch guard,
+      report-only|suggest|auto`; `--json OUT` (rocqwash-red-route/1, sort_keys);
+      `--state-file PATH` (rocqwash-red-route-state/1; re-route guard,
       `--cooldown S` default 600); `--repo-path DIR`; `--param K=V` / `--on-args K=V`
       (aliases; PARAM_KEYS); `--dry-run` (auto tier only); `--selftest`. Required fields
       per kind in REQUIRED_FIELDS; a missing field exits 9, listed per event and field
@@ -184,7 +184,7 @@ def collect_field_problems(ev, where):
 
 
 def state_key(ev):
-    """re-dispatch guard key = kind+repo+run+family (missing slots become empty strings;
+    """re-route guard key = kind+repo+run+family (missing slots become empty strings;
     blocking/build-signal lack these four fields, so the key degrades to kind granularity;
     the limitation is noted loudly in the module docstring)."""
     parts = []
@@ -349,7 +349,7 @@ def build_route(ev, kind, params, repo_path):
     return route, problems
 
 
-# ---- state (re-dispatch guard persistence; shape corruption fails loudly, never
+# ---- state (re-route guard persistence; shape corruption fails loudly, never
 # ---- rebuilt) --------------------------------------------------------------------
 
 def load_state(path):
@@ -671,7 +671,7 @@ def selftest():
     old_rc = os.environ.get("RED_DISPATCH_RC")
     live = os.path.join(tmp, "ConstructiveWorld_Live")
     try:
-        # fake repo root: the fake cw.sh proves dispatch via a marker file
+        # fake repo root: the fake cw.sh proves route via a marker file
         # (RED_DISPATCH_LOG / RED_DISPATCH_RC environment parameters)
         _write_tmp(os.path.join(tmp, "cw.sh"),
                    '#!/bin/bash\nprintf \'%s\\n\' "$*" >> "$RED_DISPATCH_LOG"\n'

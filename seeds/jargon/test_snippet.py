@@ -3,11 +3,12 @@
 """test_snippet.py — E2 jargon seed checks (seeds/jargon suite section).
 
 Purpose.  Asserts the seed data contract and the detection round-trip for
-  seeds/jargon/jargon-map.json (SPEC.md is the contract text): schema shape
-  and the mandated 62-entry coverage with unique ids and faces; per-entry
+  seeds/jargon/jargon-map.json (SPEC.md is the contract text): schema shape,
+  the exact count label with the mandated 62-entry seed prefix (J001..J062)
+  preserved under the md-table sync growth, unique ids and faces; per-entry
   verbatim transcription against the pinned sources; snapshot md5 pinning;
   the projection onto the norm_lint jargon-map loader and per-face detection
-  of all 62 faces with transcribed suggestions; the preserve carve-out
+  of every mapped face with transcribed suggestions; the preserve carve-out
   exemption; clean-fixture silence; fail-loud raw-JSON loader behavior; the
   wash_shape absence probe behind SPEC section 3.
 
@@ -108,9 +109,16 @@ def check_json_contract(seed, res):
         ok = False
         det.append("schema mismatch: %r" % seed.get("schema"))
     ents = seed.get("entries", [])
-    if seed.get("count") != 62 or len(ents) != 62:
+    # the P1 md sync grew the map; the count label must stay exact and the
+    # 62-entry seed prefix (J001..J062) must survive every sync
+    seed_ids = set("J%03d" % i for i in range(1, 63))
+    if seed.get("count") != len(ents) or len(ents) != 159:
         ok = False
-        det.append("count/entries not 62: %r/%d" % (seed.get("count"), len(ents)))
+        det.append("count label %r != %d entries or map size != 159"
+                   % (seed.get("count"), len(ents)))
+    if not seed_ids <= set(e.get("id") for e in ents):
+        ok = False
+        det.append("the 62-entry seed prefix (J001..J062) is not preserved")
     ids = [e.get("id") for e in ents]
     faces = [e.get("face") for e in ents]
     if len(set(ids)) != len(ids) or len(set(faces)) != len(faces):
@@ -133,7 +141,9 @@ def check_json_contract(seed, res):
     if len(srcs) != 3 or any(not s.get("md5") or not s.get("path") for s in srcs):
         ok = False
         det.append("provenance sources incomplete: %d" % len(srcs))
-    res.append(("json-contract", ok, "; ".join(det) or "62 entries, unique ids/faces, disposition rules hold, provenance pinned"))
+    res.append(("json-contract", ok, "; ".join(det) or "159 entries with the"
+                " 62-entry seed prefix preserved, unique ids/faces, exact"
+                " count label, disposition rules hold, provenance pinned"))
 
 
 def check_transcription(seed, sroot, res):
@@ -173,7 +183,7 @@ def check_transcription(seed, sroot, res):
             if not mv_text or e["standard"] not in mv_text:
                 bad.append("%s standard not verbatim in tool-track table" % e["id"])
     res.append(("transcription", not bad,
-                "all 62 faces verbatim in the whitepaper; standards verbatim in their pinned sources"
+                "every face verbatim in the whitepaper; standards verbatim in their pinned sources"
                 if not bad else "; ".join(bad)))
 
 
@@ -209,9 +219,10 @@ def check_projection_roundtrip(seed, root, res):
         names = sorted(t.term for t in terms)
         want = sorted(e["face"] for e in seed["entries"])
         ok, det = True, []
-        if len(terms) != 62 or names != want:
+        if len(terms) != len(seed["entries"]) or names != want:
             ok = False
-            det.append("loader active faces %d != 62 or set mismatch" % len(terms))
+            det.append("loader active faces %d != %d entries or set mismatch"
+                       % (len(terms), len(seed["entries"])))
         by_face = dict((e["face"], e) for e in seed["entries"])
         for t in terms:
             e = by_face[t.term]
@@ -233,7 +244,9 @@ def check_projection_roundtrip(seed, root, res):
             ok = False
             det.append("raw JSON did not fail loud with exit 1 (got %r)" % raised)
         res.append(("projection-roundtrip", ok,
-                    "; ".join(det) or "62 active faces load with transcribed suggestions and exempts; raw JSON fails loud (exit 1)"))
+                    "; ".join(det) or "%d active faces load with transcribed"
+                    " suggestions and exempts; raw JSON fails loud (exit 1)"
+                    % len(seed["entries"])))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -285,8 +298,8 @@ def check_detection_coverage(seed, root, res):
             det.append("wrong line: %s" % ", ".join(wrong_line))
         if bad_suggest:
             det.append("suggestion mismatch: %s" % ", ".join(bad_suggest))
-        res.append(("detection-62-face-coverage", ok,
-                    "; ".join(det) or "each of the 62 faces fires exactly once on its own fixture line, with its transcribed suggestion"))
+        res.append(("detection-full-face-coverage", ok,
+                    "; ".join(det) or "each mapped face fires exactly once on its own fixture line, with its transcribed suggestion"))
         # carve-out exemption: the preserved compound never triggers its face
         fx2 = os.path.join(tmp, "fixture_exempt.py")
         carve = [e for e in seed["entries"] if e.get("exempts")]
@@ -357,7 +370,7 @@ def _norm_lint(root, res):
 
 
 CHECKS = ("json-contract", "transcription", "snapshot-md5", "projection-roundtrip",
-          "detection-62-face-coverage", "carveout-exemption", "clean-fixture",
+          "detection-full-face-coverage", "carveout-exemption", "clean-fixture",
           "washshape-gap-probe")
 
 

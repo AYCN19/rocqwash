@@ -237,7 +237,7 @@ def sec8_cli_and_idempotent(tmp):
 
 
 def sec9_items_shell_and_meta(tmp):
-    # 9a: seat freeze-ledger shell (items subkey) consumed directly;
+    # 9a: agent freeze-ledger shell (items subkey) consumed directly;
     # shell keys (schema/queue/world) never become phantom probe names
     tsv = wf(os.path.join(tmp, "t9.tsv"),
              "件名\t行数\tmd5\tRED\t状态\t备注\n"

@@ -15,7 +15,7 @@
                 如实列跳过·exit 0
   5 A2 负判     双方各增同名（键不在 base 在 main）→exit 2 列键·零写盘
   6 A3 负判     新增行锚文本与 main 行相撞（键异锚同）→exit 2 列文本·零写盘
-  7 干跑/apply  干跑零写盘→--apply 落盘→幂等重跑字节恒同＋--json schema
+  7 dry run/apply  干跑零写盘→--apply 落盘→幂等重跑字节恒同＋--json schema
                 rocqwash-registry-union/1＋确定性重跑恒同
   8 CLI/用法面  help0／未知形参2／无输入2／缺件9／--apply 无 --out 2／
                 --reanchor 无 --anchor-src 2／--git 与三文件混给 2／

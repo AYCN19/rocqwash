@@ -13,7 +13,7 @@ gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·run97/98 �
   5 driver 形   无命令 → 本仓自带极简样例件 fixtures/names_sample.v 兜底收全部
                 主定义（census 口径 7 名·含 Unicode 名道）→ driver 稿词面在盘
   6 提取红      假 rocq rc=1 → rc 1 fail-loud·rocq_tail 随账
-  7 ml 未产出   假 rocq rc=0 而无 .ml → rc 1（不可计数≠绿）
+  7 ml 未产出   假 rocq rc=0 而无 .ml → rc 1（不可计数≠passing）
   8 ocamlc 面   在卷实跑红 → rc 1·status=fail 随账；缺卷 → NOT-RUN 让席不计红
                 （魔数面独立判）
   9 CLI 四码    --help 0／未知形参 2／缺 --world 2／缺件 9×2（--v 缺／world .vo
@@ -107,7 +107,7 @@ def main():
         rc, out = run(["--selftest"])
         check("selftest", rc == 0 and "PASS" in out, "rc=%d %s" % (rc, out[-300:]))
 
-        # 2+3+4 E2E 三态：红／绿＋json 咬合／inline 形（假桩全链·零真编译）
+        # 2+3+4 E2E 三态：failing／passing＋json 咬合／inline 形（假桩全链·零真编译）
         stage, world, v_path, canned, frocq, foc = make_stage(
             tmp, "s1", "Definition p_one := 1.\nDefinition p_two := 2.\n")
         wd = os.path.join(stage, "wd")
@@ -181,7 +181,7 @@ def main():
         check("提取红", rc == 1 and "提取面红" in out
               and r_j["rocq_rc"] == 1 and r_j["rocq_tail"], "rc=%d" % rc)
 
-        # 7 ml 未产出：假 rocq rc=0 而无 .ml → rc 1（不可计数≠绿）
+        # 7 ml 未产出：假 rocq rc=0 而无 .ml → rc 1（不可计数≠passing）
         rc, out = run(["--v", v_path, "--world", world, "--rocq", frocq,
                        "--ocamlc", foc], env={"EMC_FAKE_ML": ""})
         check("ml未产出红", rc == 1 and "未产出" in out, "rc=%d" % rc)

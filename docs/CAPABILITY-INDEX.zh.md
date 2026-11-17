@@ -1,7 +1,7 @@
 # rocqwash CAPABILITY-INDEX（工具能力契约面 · Tool Capability Contract Surface）
 
 版本锚 Version anchor：`d6d0ec75747edee957e334d1ff9391707cb39f21`（引擎本体批落岸提交·施工基座注记；2026-11-15 本地 `git rev-parse HEAD` 于工作树实测。词面普查未重跑：§1/§2 逐行照录面仍以普查铸时锚 `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` 的词面事实为准；census 重扫候下波）。
-Version anchor: `d6d0ec75747edee957e334d1ff9391707cb39f21`, the engine-body batch integration commit, recorded here as the construction-base annotation; measured locally on 2026-11-15 (`git rev-parse HEAD` on the working tree). The census was not re-run: the §1/§2 transcribed lines remain the census-time word-face facts cast at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`; the census re-scan awaits the next wave.
+Version anchor: `d6d0ec75747edee957e334d1ff9391707cb39f21`, the engine-body batch integration commit, recorded here as the construction-base annotation; measured locally on 2026-11-15 (`git rev-parse HEAD` on the working tree). The census was not re-run: the §1/§2 transcribed lines remain the census-time word-face facts cast at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`; the census re-scan awaits the next work stream.
 
 ## 0. 定位与读法 · Positioning and How to Read
 
@@ -34,18 +34,21 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | ai_flavor.py | 20,687 | 481 | Y | Y | 0/5 | zero | none | arg |
 | ai_flavor_apply.py | 54,124 | 1,299 | Y | Y | 0/7 | urllib.request | env | arg |
 | auto_round.py | 84,108 | 1,898 | Y | Y | 2/22 | zero | none | arg |
+| axiom_guard.py | 22,281 | 504 | Y | Y | 0/7 | zero | env (ROCWASH_ROCQ, ROCWASH_COQCHK) | arg |
 | i18n_pipeline.py | 80,939 | 1,939 | Y | Y | 0/4 | zero | env | arg |
 | i18n_translate.py | 45,371 | 1,301 | Y | Y | 0/13 | urllib.request | env | arg |
 | i18n_verify.py | 47,407 | 1,030 | Y | Y | 0/13 | zero | none | arg |
 | jargon_apply.py | 41,610 | 967 | Y | Y | 0/10 | zero | none | arg |
 | termbase.py | 22,477 | 520 | Y | Y | 0/5 | zero | none | arg |
 | baseline_diff.py | 41,200 | 800 | Y | Y | 2/2 | zero | none | arg |
+| bus_feeder.py | 33,027 | 749 | Y | Y | 1/4 | zero | none | arg |
 | chain_graph.py | 14,854 | 335 | Y | Y | 1/3 | zero | none | arg |
 | ci_triage.py | 121,218 | 2,194 | Y | Y | 0/11 | urllib.request | coq(109), win(4), runner(2) | arg |
 | contrib_intake.py | 62,133 | 1,365 | Y | Y | 0/11 | git: clone | coq(23) | arg |
 | cw_doctor.py | 58,988 | 1,176 | Y | Y | 0/15 | zero | env, coq(5), dyld(31), thermal(5) | arg |
 | cw_sentinel.py | 119,753 | 2,168 | Y | Y | 0/23 | http.client, socket, urllib.request | coq(1), thermal(3) | arg |
 | doc_lint.py | 61,486 | 1,291 | Y | Y | 0/3 | zero | none | arg |
+| evolution_dashboard.py | 38,249 | 811 | Y | Y | 0/8 | zero | none | arg |
 | evolve.py | 90,890 | 1,819 | Y | Y | 0/19 | zero | coq(7) | arg |
 | ledger_sync.py | 26,938 | 549 | Y | Y | 0/5 | zero | none | arg |
 | net_probe.py | 19,076 | 412 | Y | Y | 0/7 | socket, urllib.request | none (network is its subject) | arg |
@@ -59,8 +62,10 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | registry_union.py | 42,872 | 931 | Y | Y | 0/14 | zero | coq(4) | arg |
 | render_events.py | 26,635 | 547 | Y | Y | 0/5 | zero | none | arg |
 | select_audit.py | 32,930 | 654 | Y | Y | 0/6 | zero | ocaml/opam token(2) | arg |
+| symbiosis_bus.py | 39,500 | 878 | Y | Y | 1/9 | zero | none | arg |
 | toolchain_dyld_doctor.py | 23,777 | 492 | Y | Y | 0/6 | zero | env, coq(32), dyld(39), thermal(5) | arg |
 | unclog.py | 103,325 | 1,943 | Y | Y | 0/30 | zero | coq(5), thermal(2) | arg |
+| uplink.py | 59,383 | 1,392 | Y | Y | 1/15 | zero | none | arg |
 | vacgen.py | 122,111 | 2,625 | Y | Y | 0/20 | zero | lean(64), thermal(3) | arg |
 | wash_shape.py | 110,172 | 2,285 | Y | Y | 0/16 | zero | env, coq(6) | arg |
 
@@ -75,6 +80,21 @@ Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt =
 
 落岸注记 Integration note（引擎本体票·落岸日）：引擎本体批七件按字典序插入本节（ai_flavor／ai_flavor_apply／i18n_pipeline／i18n_translate／i18n_verify／jargon_apply／termbase），条目转录自 `docs/engine-body-capabilities.md`（道8 稿）并经合流环节逐件 `--selftest` 活跑复验；「状态 Status」行为本批增行（增行单列声明律）；§1 总表七行的 Bytes/Lines/Pos-Opt 为合流树活测；下方汇总观察保留 census 时点词面事实不改写。
 Integration note (the engine-body ticket, at integration): the seven engine-body entries are inserted in filename order, transcribed from docs/engine-body-capabilities.md (the lane-8 draft) and re-verified live by the integration agent per file (--selftest); the 状态 Status line is this batch's added line (declared single-line addition); the section 1 rows carry live measurements on the integration tree; the aggregates below stay the census-time word-face facts.
+
+合流注记 Integration note（共生总线票·集成合流）：本节 symbiosis_bus 条目按文件名字典序插入，用途/调用形/示例行转录自本树 `python tools/symbiosis_bus.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为合流树活测；「状态 Status」行为本批增行（增行单列声明律）；`tests/t_mcp_face.py` 的 `symbiosis_status` MCP face（25 capability 名册）即挂本条目契约面。`tools/uplink.py` 在盘未追踪（uplink 票交付件），其 census 级条目候其自身合流增量，本注记不代写。
+Integration note (the symbiosis ticket, at integration): the symbiosis_bus entry below is inserted in filename order; the purpose, invocation, and example lines are transcribed from this tree's live `python tools/symbiosis_bus.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on the integration tree; the 状态 Status line is this batch's added line (declared single-line addition). The `symbiosis_status` MCP face in `tests/t_mcp_face.py` (the 25-capability roster) hangs its contract on this entry. `tools/uplink.py` sits on disk untracked (the uplink ticket's deliverable); its census-grade entry awaits that lane's own integration increment and is deliberately not hand-written here.
+
+合流注记 Integration note（uplink 票·集成合流）：本节 uplink 条目按文件名字典序插入，用途/调用形/示例行转录自本树 `python tools/uplink.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为合流树活测；「状态 Status」行为本批增行（增行单列声明律）；`cw.sh uplink` 路由（头表/usage/hint_for/case 四处）随本批增量落位，`grep -c uplink cw.sh` 实测见合流注记附随证据；登记面 `docs/uplink-intake.jsonl`（schema `rocqwash-uplink/1`·首行注释形·零真实条目）与 `tests/t_uplink_shape.py`（直跑形·不入 run_tests 名册；名册计数与 README 计数行耦合，改动权在持授权的工单流）挂本条目契约面。`docs/uplink_sop.md` 为其操作规程。
+Integration note (the uplink ticket, at integration): the uplink entry below is inserted in filename order; the purpose, invocation, and example lines are transcribed from this tree's live `python tools/uplink.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on the integration tree; the 状态 Status line is this batch's added line (declared single-line addition). The `cw.sh uplink` route (header table / usage / hint_for / case, all four places) lands with this increment; the measured `grep -c uplink cw.sh` count rides with this note as its evidence. The register file `docs/uplink-intake.jsonl` (schema `rocqwash-uplink/1`, comment-header form, zero real rows) and `tests/t_uplink_shape.py` (run directly, deliberately not rostered in tests/run_tests.sh: the roster count is coupled to the README count lines, whose rewrite belongs to the work stream holding that authorization) hang their contracts on this entry. `docs/uplink_sop.md` is the operation manual.
+
+合流注记 Integration note（自演进仪表盘票·集成落位）：本节 evolution_dashboard 条目按文件名字典序插入，用途/调用形/示例行转录自本树 `python -I tools/evolution_dashboard.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为本树活测；「状态 Status」行为本批增行（增行单列声明律）；`cw.sh evolution-dashboard` 路由（头表/usage/hint_for/case 四处）随本批增量落位，`DEFAULT_HELP_CAP` 47→48 同 registered-tool precedent；`tests/t_evolution_dashboard_shape.py`（直跑形·不入 run_tests 名册；名册计数与 README 计数行耦合，改动权在持授权的工单流）挂本条目契约面。本树现势：`docs/round-ledger.jsonl` 与 `docs/vacgen-reports/` 缺席＝工具契约内的数据态（present=false 如实出账），首份轮次账行与首份 vacgen report 落岸后曲线即活。
+Integration note (the evolution-dashboard ticket, at integration): the evolution_dashboard entry below is inserted in filename order; the purpose, invocation, and example lines are transcribed from this tree's live `python -I tools/evolution_dashboard.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on this tree; the 状态 Status line is this batch's added line (declared single-line addition). The `cw.sh evolution-dashboard` route (header table / usage / hint_for / case, all four places) lands with this increment, together with the `DEFAULT_HELP_CAP` bump 47 to 48 under the same registered-tool precedent. `tests/t_evolution_dashboard_shape.py` (run directly, deliberately not rostered in tests/run_tests.sh: the roster count is coupled to the README count lines, whose rewrite belongs to the work stream holding that authorization) hangs its contract on this entry. Current-tree state: `docs/round-ledger.jsonl` and `docs/vacgen-reports/` are absent, which is a data state inside the tool's contract (reported as present=false); the curve goes live once the first round row and the first vacgen report land.
+
+合流注记 Integration note（缺口账喂送工单·集成落位）：本节 bus_feeder 条目按文件名字典序插入（baseline_diff 与 chain_graph 之间），用途/调用形/示例行转录自本树 `py -I -B tools/bus_feeder.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为本树活测；「状态 Status」行为本批增行（增行单列声明律）；`cw.sh bus-feeder` 路由（头表/usage/hint_for/case 四处）随本批增量落位，`DEFAULT_HELP_CAP` 48→49 同 registered-tool precedent（并发写手下 47→48 系 evolution-dashboard 流先行落位）；`tests/t_bus_feeder_shape.py`（直跑形·不入 run_tests 名册；名册计数与 README 计数行耦合，改动权在持授权的工单流）与 `docs/symbiosis_sop.md` §六（喂送面契约增量）挂本条目契约面。识别集 divergence 在册：`tools/gap_cluster.py` 类别 token 逃逸 `\u5748`（U+5748）与其出品方实发 token（U+5751，`tools/vacgen.py` 2470 行）不同码位且只读 `category` 键拼法，故喂送器自钉 U+5751 并读双键拼法（divergence 详见该器扩展契约注释与 SOP §六边界行）；gap_cluster 本体不在本工单改动面。
+Integration note (the bus-feeder ticket, at integration): the bus_feeder entry below is inserted in filename order (between baseline_diff and chain_graph); the purpose, invocation, and example lines are transcribed from this tree's live `py -I -B tools/bus_feeder.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on this tree; the 状态 Status line is this batch's added line (declared single-line addition). The `cw.sh bus-feeder` route (header table / usage / hint_for / case, all four places) lands with this increment, together with the `DEFAULT_HELP_CAP` bump 48 to 49 under the same registered-tool precedent (under concurrent writers, the 47 to 48 bump was landed first by the evolution-dashboard lane). `tests/t_bus_feeder_shape.py` (run directly, deliberately not rostered in tests/run_tests.sh: the roster count is coupled to the README count lines, whose rewrite belongs to the work stream holding that authorization) and `docs/symbiosis_sop.md` section 六 (the feed-face contract increment) hang their contracts on this entry. The recognition-set divergence is on record: the `tools/gap_cluster.py` category token escape `\u5748` (U+5748) differs in code point from the token its own producer emits (U+5751, `tools/vacgen.py` line 2470) and reads only the `category` key spelling, so the feeder pins U+5751 itself and reads both key spellings (the divergence is documented in that tool's extended contract comment and in the SOP section boundary line); the gap_cluster body is outside this ticket's write face.
+
+合流注记 Integration note（基座诚信洗链编译与公理守卫工单·集成落位）：本节 axiom_guard 条目按文件名字典序插入（auto_round 与 i18n_pipeline 之间），用途/调用形/示例行转录自本树 `py -B tools/axiom_guard.py --help` 实词面与模块 docstring（非 census 出品·本条目按实词面转录），§1 总表行为本树活测；「状态 Status」行为本批增行（增行单列声明律）；`cw.sh axiom-guard` 路由（头表/usage/hint_for/case 四处）随本批增量落位，`DEFAULT_HELP_CAP` 49→50 同 registered-tool precedent。该件为本包公理守卫（审计报告 §3.2 所指最严重缺位的正主）：编译三分类（compile-ok／compile-broken 登记债／skip-无工具链）＋ compile-ok 件两级检测（轻面=逐定理 Print Assumptions survey·重面=coqchk -o 内核复检权威判定·token 检疫面不采〔gate5 判例：只可检疫不可判定〕）；`ROCWASH_ROCQ`/`ROCWASH_COQCHK` env 门控（未配置=rc 111 诚实 skip）；写面=调用方点名的 `--out` 报告卷＋私有临时工作目录（.vo 输出面 temp-only·仓树零字节）；双跑字节恒同实测在案。破坏面矩阵两行（本件编译腿写面一行＋cure_applier 编译腿写面一行）挂 `tests/test_destructive_matrix.py` 本批增行。
+Integration note (the substrate compile-loop and axiom-guard ticket, at integration): the axiom_guard entry below is inserted in filename order (between auto_round and i18n_pipeline); the purpose, invocation, and example lines are transcribed from this tree's live `py -B tools/axiom_guard.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on this tree; the 状态 Status line is this batch's added line (declared single-line addition). The `cw.sh axiom-guard` route (header table / usage / hint_for / case, all four places) lands with this increment, together with the `DEFAULT_HELP_CAP` bump 49 to 50 under the same registered-tool precedent. This tool is the package's axiom guard (the owner of the repo's most serious misalignment named in audit report section 3.2): compile tri-classification (compile-ok / compile-broken debt register / skip-no-toolchain) plus two-level detection on compile-ok files (light face = per-theorem Print Assumptions census; heavy face = coqchk -o kernel recheck as the authority; the token-quarantine face is not adopted per the gate5 precedent: quarantine only, never a verdict). `ROCWASH_ROCQ` / `ROCWASH_COQCHK` environment gating (unconfigured = rc 111 honest skip). Write faces: the caller-named `--out` report volume plus a private temp workdir (the .vo output face is temp-only; the repository tree gains zero bytes); the byte-identical double run is measured and on record. Two destructive-matrix rows (this tool's compile-leg write face and the cure_applier compile-leg write face) hang on this entry as `tests/test_destructive_matrix.py` additions of the same batch.
 
 ### tools/_abl1_4b_compile.py
 - 用途 Purpose：内部辅助件：对提取目录中的 OCaml 模块做 mli 先行、依赖不动点轮的增量编译，可选链接并运行 driver；`ocamlc`/`ocamldep` 不在 PATH 即 fail-loud 退出（`_abl1_4b_compile.py:12-20`）。Internal helper: incremental OCaml compilation of an extracted module directory in dependency fixpoint order (interface files first), optionally linking and running a driver; exits loudly if `ocamlc`/`ocamldep` are absent from PATH (`_abl1_4b_compile.py:12-20`).
@@ -126,6 +146,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 网络 Network face：zero
 - SKIP 面：无特殊环境词面标记
 
+### tools/bus_feeder.py
+- 状态 Status：[live]（缺口账喂送工单交付·集成落位·本批增行）
+- 用途 Purpose：共生交换包到 TODO-SEAT 缺口账的喂送器：`feed` 读一只离线交换包（schema `rocqwash-symbio/1`，`tools/symbiosis_bus.py` export 面出品），按三规则识别集（出品方实发坑类别 token U+5751 于顶层 `category` 或 source 字典 `category`/中文键两拼法；points/evidence 内 `TODO-SEAT` 字面；evidence 内 `status=todo_seat` 字面）选出 gap 类条目，每条落恰一行缺口行到缺口喂送账（缺省 `docs/gap-feed-ledger.jsonl`，`--ledger` 可改指）：行内条目逐字保真（schema `rocqwash-exp/1`·指纹域不动）加三枚指纹域外 schema 增量（`correlationId`=`feed:<sourceRepo>@<anchor>`·`shapeKey` 沿 `tools/gap_cluster.py` 族形状键链·`recognition`=命中规则名）；重复 id／指纹响亮跳过零写入（幂等，同包重放字节恒同）；`status` 出行数、路由、shape→rows 映射与逐包 present/new 读数。时间点与 id 一律取自条目内容禁运行时注入；写面仅缺口喂送账一件；零网络设计。Gap-ledger feeder for symbiosis swap packages: `feed` reads one offline swap package (schema `rocqwash-symbio/1`, the export face of `tools/symbiosis_bus.py`), selects gap-class entries by the three-rule recognition set (the producer's real pitfall category token U+5751 under the top-level `category` key or the source dict's `category` / zh key spellings; the literal `TODO-SEAT` token in points or evidence; the literal `status=todo_seat` token in evidence), and lands exactly one gap row per selected entry in the gap feed ledger (default `docs/gap-feed-ledger.jsonl`, `--ledger` overrides): the row keeps the entry verbatim (schema `rocqwash-exp/1`, the fingerprint domain untouched) plus three schema increments outside the fingerprint domain (`correlationId` = `feed:<sourceRepo>@<anchor>`, `shapeKey` from the `tools/gap_cluster.py` family-shape key chain, `recognition` = the rule name); repeated ids and fingerprints skip loudly with zero writes (idempotent, byte-identical replay); `status` reports row counts, routes, the shape-to-rows mapping, and per-package present/new readings. Ids and time points ride entry content, never a clock; the gap feed ledger is the only write face; zero network by design.
+- 调用形 Invocation：`python tools/bus_feeder.py [--selftest] {feed,status} --swap SWAP.jsonl [--ledger P] [--dry-run]`（`--swap` feed 面恰一·status 面可重复）
+- 示例 Example：`python tools/bus_feeder.py feed --swap docs/symbiosis-swap-round1.jsonl --ledger docs/gap-feed-ledger.jsonl --dry-run`
+- 依赖 Imports：argparse, json, os, sys ＋ 仓内 `tools/symbiosis_bus.py`（同目录；交换包读取·envelope 校验·共享退出码异常·canonical 行形）＋ 仓内 `tools/gap_cluster.py`（族形状键链与形状抽象）
+- 网络 Network face：zero（三通道零命中；no network by design）
+- SKIP 面：exit 0=读数是数据（skip 行／零命中／零缺口行均如实出账）；1=selftest 矢量组红；2=用法或 IO；9=缺件或损坏输入（交换包/账行坏 JSON·envelope 漂移·指纹失真）零写入；识别集 divergence（gap_cluster 类别 token 码位 U+5748 vs 出品方 U+5751）在该器扩展契约注释与 `docs/symbiosis_sop.md` §六边界行在册；真实样本干跑读数 `would-feed=1 nonGap=26 total=27`
+
 ### tools/chain_graph.py
 - 用途 Purpose：把多份探针台账合并为链根图与排序清单。Merges multiple probe ledgers into a chain-root graph and a ranked list.
 - 调用形 Invocation：`python tools/chain_graph.py <ledgers> [--json] [--md] [--top]`
@@ -174,6 +203,16 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 网络 Network face：zero
 - SKIP 面：无特殊环境词面标记
 
+### tools/evolution_dashboard.py
+- 状态 Status：[live]（自演进仪表盘工单交付·集成落位·本批增行）
+- 定位 Positioning：the dashboard is the standing **a KPI aggregation read-out** face over the three ledgers; the rocqos rename candidate awaiting adjudication（更名候选在册未应用·rename is a candidate, not an applied change）
+- 用途 Purpose：自演进仪表盘：聚合三本在库账面（经验账 `docs/exp-ledger.jsonl` schema `rocqwash-exp/1`＋轮次账 `docs/round-ledger.jsonl` schema `rocqwash-round/1`＋vacgen v2 report JSON 文件族）出一份仪表盘——coverageLowerPct 曲线（逐 report run 一点·按内容时点排序·携逐点 TODO-SEAT 增量与上升旗标）、轮次转化面（greenPct＝verify_rc 0 轮占比·classConversionPct＝admissions 对 classes_applied）、逐 run 缺口数体温计读数（最新曲线点）。缺席的缺省路径账面＝数据态（present=false 如实出账）；显式指认路径缺席 exit 9。写面仅调用方点名的 `--json-out`/`--md-out` 两件；零网络设计。Self-evolution dashboard: aggregates the three standing accounts (the experience ledger schema `rocqwash-exp/1`, the round ledger schema `rocqwash-round/1`, and vacgen v2 report JSON files) into one dashboard: the coverageLowerPct curve (one point per report run, ordered by content-borne time point, with a per-point TODO-SEAT delta and rise flag), the rounds conversion face (greenPct and classConversionPct), and the thermometer reading (the latest curve point). An absent default-path account is a data state (present=false); an explicitly flagged absent path exits 9. The only writes are the caller-named `--json-out` / `--md-out` files; zero network by design.
+- 调用形 Invocation：`python -I tools/evolution_dashboard.py [--repo <root>] [--exp-ledger <p>] [--rounds <p>] [--reports <p>]... [--json-out <p>] [--md-out <p>] [--stdout markdown|json] [--selftest]`
+- 示例 Example：`python -I tools/evolution_dashboard.py --json-out docs/dashboard.json --md-out docs/dashboard.md`
+- 依赖 Imports：argparse, json, os, shutil, sys, tempfile（全标准库）
+- 网络 Network face：zero（无 socket 面；no network by design）
+- SKIP 面：exit 0=读数是数据（缺席账面／零条目／零轮次／零 report run 均如实标记）；1=selftest failing；2=用法错（含坏 `--stdout` 取值）；9=显式指认路径缺席／账行或 report 非 JSON／无 vacgen 面／输出写失败（零写入）；时间点一律取自输入内容禁运行时注入；`--reports` 目录展开为 *.json 排序序
+
 ### tools/evolve.py
 - 用途 Purpose：自演化引擎 v1：从 watcher 事件与台账面生成演化草案并登记（sentinel/suite/registry 系旗标面在卷）。Self-evolution engine v1: drafts evolution proposals from watcher events and ledger faces (sentinel, suite, and registry flag families present).
 - 调用形 Invocation：`python tools/evolve.py [--draft-out] [--json] [--repo-root] [--top] [--baseline] [--jargon-map] [--watch-repo] [--sentinel-state] [--sentinel-state-seed] [--sentinel-branch] [--sentinel-events] [--sentinel-injector] [--suite-ledger] [--suite-now] [--registry-git] [--registry-ref] [--git-path-order] [--git-path-project] [--registry-baseline]`
@@ -190,6 +229,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 依赖 Imports：argparse, datetime, json, os, shutil, subprocess, sys, tempfile（全标准库）
 - 网络 Network face：zero（V18 反网络自检自扫描·socket/urllib/ftplib/smtplib/http.client 词面系负扫描 token，非调用面）
 - SKIP 面：git 提交面经 subprocess（git 在场才活）；一切变更面先验证后写；轮次账 append-only（禁回写历史行）
+
+### tools/axiom_guard.py
+- 状态 Status：[live]（基座诚信洗链编译与公理守卫工单交付·集成落位·本批增行）
+- 用途 Purpose：仓级公理守卫：对仓内全部 .v 件（23 件全量·除 .git）编译三分类（compile-ok／compile-broken 登记债·错误尾随账／skip-无工具链），compile-ok 件走两级检测——轻面=逐定理 Print Assumptions survey（注释/字符串掩蔽状态机提名·批编译按序归属·标记数不齐逐定理回退）；重面=coqchk -o 内核复检（CONTEXT SUMMARY 的 Axioms 节为唯一判据·stdlib 索引松弛节不判）＝权威判定；本仓标准=Closed 零公理·白名单缺省空（`--allow-axiom` 可重复指认）；轻面报公理即红（预筛面）·heavy 报公理或不可判即红（不可判≠passing）；compile-broken 件登记为债非红。编译走私有临时目录（.vo 输出面 temp-only·仓树零字节·源目录 -Q 映射只读解析同籍世界）；报告卷=调用方 `--out` 下 `axiom-guard-report.json`（排序输入·零墙钟·双跑字节恒同）。Repo-wide axiom guard: compiles and tri-classifies every .v file under the repo (23 files at the reference HEAD, .git excluded) — compile-ok / compile-broken into the debt register with error tails / skip-no-toolchain — and judges every compile-ok file at two levels: the light face, a per-theorem Print Assumptions census (statement names extracted through a comment/string masking scanner, one batched census compile attributed in order, per-statement fallback when the marker count mismatches), and the heavy face, a coqchk -o kernel recheck whose CONTEXT SUMMARY Axioms section is the only judged section (stdlib index-relaxation sections are never judged) as the authoritative verdict. The repo standard is Closed zero axioms with an empty default whitelist (`--allow-axiom` repeats); a light-face axiom fails the file (pre-screen), a heavy-face axiom or an unjudgeable heavy face fails the file (unjudgeable is not green); compile-broken files are debt, not red. Compiles run in a private temp workdir (the .vo output face is temp-only; the repository tree gains zero bytes; the source directory is mapped -Q read-only so built sibling worlds resolve); the report volume is `axiom-guard-report.json` under the caller-named `--out` (sorted inputs, no wall clock, byte-identical double run).
+- 调用形 Invocation：`python3 tools/axiom_guard.py --repo <dir> [--out <dir>] [--rocq <bin>] [--coqchk <bin>] [--allow-axiom <name>]... [--timeout <sec>] [--keep]`
+- 示例 Example：`ROCWASH_ROCQ=/path/rocq ROCWASH_COQCHK=/path/coqchk python3 tools/axiom_guard.py --repo . --out evid/t0-2`
+- 依赖 Imports：argparse, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile（全标准库）＋ 外部二进制 rocq／coqchk（flag 或 env 提供·缺一即 skip·绝不模拟）
+- 网络 Network face：zero（子进程仅本地 rocq/coqchk 编译与内核复检；no network by design）
+- SKIP 面：exit 0=PASS（compile-broken 件在债册·非红）；1=failing（白名单外公理或 heavy 面不可判）；2=用法错；9=fail-loud（已配置的二进制路径不存在／`--repo` 缺失）；111=rocq 或 coqchk 未配置（flag 与 env 皆无）诚实 skip·判空不模拟（承 verify/ rc 111 口径）；`ROCWASH_ROCQ`/`ROCWASH_COQCHK` env 门控；token 检疫面不采（gate5 判例：只可检疫不可判定）；真跑须 `tools/cpu_guard.sh` 包裹（承 extract_magic_check 契约形）
 
 ### tools/i18n_pipeline.py
 - 状态 Status：[live]（引擎本体票 道4 交付·合流落岸·E4 编排本体 P0/P1/P3/P6）
@@ -261,7 +309,7 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - SKIP 面：无特殊环境词面标记
 
 ### tools/pushci.py
-- 用途 Purpose：推岸后 CI 一条龙编排器：push、ls-remote 确证、CI 盯守、判读与愈合轮（步骤/愈合上限/盯守节律均参数化）。One-shot push-then-CI orchestrator: push, ls-remote confirmation, CI watching, verdict reading, and heal rounds (steps, heal cap, and watch cadence parameterized).
+- 用途 Purpose：推岸后 CI 一条龙编排器：push、ls-remote 确证、CI monitor、判读与愈合轮（步骤/愈合上限/盯守节律均参数化）。One-shot push-then-CI orchestrator: push, ls-remote confirmation, CI watching, verdict reading, and heal rounds (steps, heal cap, and watch cadence parameterized).
 - 调用形 Invocation：`python tools/pushci.py [--repo-path] [--branch] [--base-ref] [--remote] [--pre-scan-gate4] [--pr] [--merge] [--merge-method] [--max-heal] [--watch-interval] [--probe-interval] [--watch-max-rounds] [--timeout] [--retry-max] [--steps] [--injector] [--git-caller] [--sleep-scale] [--netrc] [--json] [--dry-run]`
 - 示例 Example：`python tools/pushci.py --repo-path <value> --pre-scan-gate4`
 - 依赖 Imports：argparse, io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.error, urllib.request ＋ 仓内 `tools/_http_backoff.py`
@@ -324,6 +372,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 网络 Network face：zero
 - SKIP 面：opam 词面（2，待轻探判语义）
 
+### tools/symbiosis_bus.py
+- 状态 Status：[live]（共生总线票 道1-3 交付·集成合流·规格 §1.1 四 face 本体）
+- 用途 Purpose：跨仓共生经验总线：export 把本仓 `docs/exp-ledger.jsonl`（schema `rocqwash-exp/1`）导出为离线交换包（schema `rocqwash-symbio/1`·首行 envelope 携 `sourceRepo`/`anchor`/`entryCount`·随后每行一条原样条目）；import 逐条经 `tools/exp_port.py` append 单口落账（重复 id/fingerprint 幂等跳过·correlationId 携 `symbio:<sourceRepo>@<anchor>` 路由标记）；status 双向计数（入向 bus 行计数＋对给定交换包的 present/new 计数·时点取自条目内容）；diff 出两本账的条目 id 差集清单。零网络设计（交换走离线文件·NETRED 登记面写明 no network by design）。Cross-repository experience bus: export renders the local ledger as an offline swap package (schema `rocqwash-symbio/1`, one envelope line carrying `sourceRepo`/`anchor`/`entryCount`, then one verbatim entry line per entry); import lands each entry through the `tools/exp_port.py` append face (duplicate ids and fingerprints skip idempotently; a `symbio:<sourceRepo>@<anchor>` correlationId marks the route); status counts both directions from entry content; diff lists the entry-id difference of two ledgers. No network face by design (exchange walks offline files; the NETRED register row states no network by design).
+- 调用形 Invocation：`python tools/symbiosis_bus.py [--selftest] {export,import,status,diff} [--out SWAP.jsonl] [--swap SWAP.jsonl] [--ledger P] [--source-repo NAME] [--anchor HEX] [--a LEDGER_A] [--b LEDGER_B] [--dry-run]`（`--swap` import 面恰一·status 面可重复；export 真跑需 `--out`）
+- 示例 Example：`python tools/symbiosis_bus.py export --ledger docs/exp-ledger.jsonl --out swap-round1.jsonl --source-repo rocqwash`
+- 依赖 Imports：argparse, json, os, sys ＋ 仓内 `tools/exp_port.py`（同目录；import 腿经其 append 契约与 ledger 解析）
+- 网络 Network face：zero（三通道零命中；no network by design）
+- SKIP 面：exit 0=读数是数据（duplicate-skip／零差集／零计数）；1=selftest 矢量组报错退出；2=用法或 IO；9=缺件或损坏输入零写入；时间戳取自条目内容禁运行时注入；写面=export 的 `--out` 一件＋import 经 append 口的账本
+
 ### tools/termbase.py
 - 状态 Status：[live]（引擎本体票 道6 交付·合流落岸·E3 离线查词薄层）
 - 用途 Purpose：术语库只读薄层：`seeds/termbase/termbase.json` 只读（stdlib json，schema 校验 fail-loud）加 `lookup(term) -> entries` 精确面查词（剥强调与全角括号、按分隔符拆面）加 `--selftest`。Read-only terminology thin layer over the E3 seed: schema validation fails loud, exact-face lookup, zero network; the E3 net interface and DIY channel stay candidates of their own seed SPECs.
@@ -348,6 +405,15 @@ Integration note (the engine-body ticket, at integration): the seven engine-body
 - 依赖 Imports：argparse, hashlib, io, json, os, shutil, subprocess, sys, tempfile, time
 - 网络 Network face：zero
 - SKIP 面：coq 系词面（5）、cpu_guard 词面（2）；清理对象面向 Coq/Rocq 编译环境
+
+### tools/uplink.py
+- 状态 Status：[live]（uplink 票 交付三件·集成合流·规格 §1.2 三 face 本体）
+- 用途 Purpose：外产回传包标准上行门：`verify` 把包 zip 与 md5 旁证（32 位十六进制串或旁证文件）及 md5sum 行格式逐文件 manifest 做机器比对，stdout 出逐件证据清单（ok／mismatch／missing／unlisted／declared-surface／dir／info＋汇总行），任一失配或缺件即 fail-loud 终态 rc=1；`intake` 先内置复验同一比对面（红即拒绝、零落笔），green 才向登记面 append 恰一行（schema `rocqwash-uplink/1`·六字段 `package`/`source-seat`/`md5`/`verified`/`landed-ref`/`exit`·同参重跑 duplicate-skip 幂等·`--dry-run` 只报 would-append 行）；`pr-prep` 从登记行渲染 PR 描述草稿文件（只收 verified=true 行·零 git 调用·绝不开 PR）。zip 读取自足（中央目录解析＋RFC 1951 inflate·stored 与 deflate·CRC-32 校验；零第三方依赖）；ZIP64、加密件、未知压缩法、多盘、超预算（2 GiB）为结构化拒跑 rc=9。确定性：同输入同字节输出，时间戳不进逻辑（登记 schema 无时间字段）。零网络设计（全部交换走离线文件·NETRED 登记面写明 no network by design）。Standard intake gate for external return packages: `verify` compares the package zip against its md5 sidecar and md5sum-style manifest member by member with a per-file evidence list (any mismatch or missing declared member is fail-loud rc=1); `intake` re-runs the same comparison and, only on green, appends exactly one register row (schema `rocqwash-uplink/1`, six fields, duplicate-skip idempotent, `--dry-run` reports the would-append line and writes nothing); `pr-prep` renders the pull-request description draft of one register row (verified rows only, zero git calls, never opens a pull request). The zip reader is self-contained (central directory plus RFC 1951 inflate, stored and deflate members, CRC-32 checked); ZIP64, encrypted, unknown-method, multi-disk, and over-budget (2 GiB) archives are structured refusals rc=9. Deterministic byte-identical output; no clock in the logic (the register schema carries no timestamp). No network face by design (all exchange rides offline files; the NETRED register row states no network by design).
+- 调用形 Invocation：`python tools/uplink.py [--selftest] {verify,intake,pr-prep} --package P.zip [--digest HEX|SIDECAR] [--manifest M.md5] --source-seat SEAT --landed-ref REF [--register PATH] [--dry-run] --out DRAFT.md [--signature LINE]`（`--register` 与 `--registry` 同槽双拼；verify 面需 `--digest` 或 `--manifest` 至少其一；intake 面另需 `--source-seat` 与 `--landed-ref`；pr-prep 面需 `--out`）
+- 示例 Example：`python tools/uplink.py verify --package return.zip --manifest MANIFEST.md5`
+- 依赖 Imports：argparse, hashlib, json, os, re, sys（全标准库）
+- 网络 Network face：zero（三通道零命中；no network by design）
+- SKIP 面：exit 0=green 终态（appended／duplicate-skip／dry-run／draft written）；1=fail-loud（失配/缺件/未验证行/selftest 矢量报错，零静默跳过）；2=用法、IO 或输入内容非法（非 zip 包、manifest 行格式坏、寄存行损坏前的拒读不属此列）；9=缺件或结构化拒跑（包/旁证/manifest 缺席、寄存行坏 JSON、ZIP64、加密、未知压缩法、多盘、超预算）；写面=intake 的登记面一件（缺省 `docs/uplink-intake.jsonl`）＋pr-prep 的 `--out` 一件，仓树其余零字节（shape 测试以全树 checksum 断言）；`--selftest` 19 矢量冻结组跑临时夹具（夹具外零写入）
 
 ### tools/vacgen.py
 - 用途 Purpose：Lean vacuity 探针骨架生成器：四层形状识别（前提分解、taxonomy 查表、置信评分、分层回归），含零编译覆盖 preflight 与难度地图（`--preflight-all`）；本普查时点在岸，为 tools/ 新增件（newly added item），文件头自述 v2。Lean vacuity probe skeleton generator with a four-layer shape-recognition engine (premise decomposition, taxonomy lookup, confidence scoring, tiered harness), including a zero-compile coverage preflight and a difficulty map (`--preflight-all`); present on disk at census time and newly added to tools/, self-described as v2 in its docstring.
@@ -427,13 +493,13 @@ Each item below is a negative finding of that scan, not an absolute claim (trans
 
 **Per-item face (network reading of the 27 tools)**: the 22 zero-network readings are negative findings of the three-channel word-face scan, not absolute runtime claims; the four elements are in §3.1 item 5.2. For the five tools with a non-zero network face (ci_triage, cw_sentinel, net_probe, pushci, contrib_intake), callers must assess the network window and remote access rights against each SKIP face before invoking. The re-check conditions of §3.1 item 5.2 and the light-probe ledger (§4) apply together; re-scan after tool versions advance.
 
-### 3.3 vacgen 段（落岸注记） · vacgen Section (landing note)
+### 3.3 vacgen 段（落岸注记） · vacgen Section (integration note)
 
 - **落岸事实（第一手实测）**：`tools/vacgen.py` 系 2026-11-13 经 graft commit `5829f6d` 入岸（本文件版本锚即该 commit）。`git show --stat` 实测四文件：`tools/vacgen.py` 2,625 行、`docs/vacgen_sop.md` 384 行、`tests/t_vacgen_shape.py` 51 行、`更新账.md` +1 行。落岸单注记：RQW02。
 - **Landing facts (first-hand measured)**: `tools/vacgen.py` landed on 2026-11-13 via graft commit `5829f6d` (the version anchor of this file). `git show --stat` measured four files: `tools/vacgen.py` 2,625 lines, `docs/vacgen_sop.md` 384 lines, `tests/t_vacgen_shape.py` 51 lines, `更新账.md` +1 line. Landing-package note: RQW02.
 - **双面形态**：零编译面（骨架铸形无 Lean 环境可跑）＋编译验证腿（需 Lean 工具链，设计 SKIP 面）；三通道词面（lean/lake/mathlib/elan 64 处）与 SKIP 面照录于第 2 节 vacgen 条目。详规程 = `docs/vacgen_sop.md`；形状回归自检 = `tests/t_vacgen_shape.py`。
 - **Two faces**: a zero-compile face (skeleton casting runs without a Lean environment) plus a compile-verification leg (needs a Lean toolchain, a design SKIP face); the three-channel word faces (lean/lake/mathlib/elan, 64 hits) and the SKIP face are transcribed in the §2 vacgen entry. Detailed procedure = `docs/vacgen_sop.md`; shape regression selftest = `tests/t_vacgen_shape.py`.
-- **路由面（2026-11-14 复测·现势）**：cw.sh vacgen 分支已落（commit `8e04cc6` 四处齐备：头表/usage/hint_for/case；`grep -c vacgen cw.sh` = 6 实测）；CLI 调用形 `bash cw.sh vacgen ...` 与直调 `python tools/vacgen.py ...` 两形并行有效。
+- **路由面（2026-11-14 复测·current state）**：cw.sh vacgen 分支已落（commit `8e04cc6` 四处齐备：头表/usage/hint_for/case；`grep -c vacgen cw.sh` = 6 实测）；CLI 调用形 `bash cw.sh vacgen ...` 与直调 `python tools/vacgen.py ...` 两形并行有效。
 - **Route face (re-measured 2026-11-14, current)**: the cw.sh vacgen branch has landed (commit `8e04cc6`, all four places present: header table / usage / hint_for / case; `grep -c vacgen cw.sh` = 6 measured); both `bash cw.sh vacgen ...` and the direct `python tools/vacgen.py ...` invocation forms are valid.
 - **CI 锚**：本 head 之炉 #43421710372 conclusion=success（对账回执 N3 实测，2026-11-13；同 head 前三炉连续 success）。
 - **CI anchor**: the run at this head, #43421710372, concluded success (reconciliation receipt channel N3, measured 2026-11-13; the three prior runs at earlier heads were all success).
@@ -471,7 +537,7 @@ Probe-side details (measured `--help` face, absent from the census word face): `
 
 SKIP（本席不探，候后续核验步骤）：网络面五件 ci_triage / cw_sentinel / net_probe / pushci / contrib_intake（运行需网络窗或远端访问）；特殊环境/重活件 _abl1_4b_compile（usage 面，裸调触发编译行为面）、_gen_fin_mac、cw_doctor、evolve、red_dispatch、registry_audit、registry_fix、registry_regen、registry_union、select_audit、toolchain_dyld_doctor、unclog、vacgen、wash_shape。`net_probe` 的 `--selftest` 分歧（§2 备注）亦候该步骤一并核验。
 
-SKIP (not probed by this seat, awaiting the later verification pass): the five network-face tools ci_triage / cw_sentinel / net_probe / pushci / contrib_intake (their runs need a network window or remote access); special-environment/heavy tools _abl1_4b_compile (usage face; a bare call triggers the compile face), _gen_fin_mac, cw_doctor, evolve, red_dispatch, registry_audit, registry_fix, registry_regen, registry_union, select_audit, toolchain_dyld_doctor, unclog, vacgen, wash_shape. The `net_probe` `--selftest` divergence (§2 note) also awaits that step.
+SKIP (not probed by this agent, awaiting the later verification pass): the five network-face tools ci_triage / cw_sentinel / net_probe / pushci / contrib_intake (their runs need a network window or remote access); special-environment/heavy tools _abl1_4b_compile (usage face; a bare call triggers the compile face), _gen_fin_mac, cw_doctor, evolve, red_dispatch, registry_audit, registry_fix, registry_regen, registry_union, select_audit, toolchain_dyld_doctor, unclog, vacgen, wash_shape. The `net_probe` `--selftest` divergence (§2 note) also awaits that step.
 
 ### 4.1 Follow-up probes · 补充探活（后续核验步骤产出）
 
@@ -508,7 +574,7 @@ VERDICT CLEAN (36 faces = 0; em-dash = 0)
 
 ## 6. 锚滞后登记 · Anchor-lag register (growth cycle 3)
 
-Register note (2026-11-15, wave-2 annotation closeout): the version anchor at the top advanced to `d6d0ec7` (the engine-body batch integration commit) as a construction-base annotation. The census cast stays pinned at `5829f6d`; no census re-scan ran (the census re-scan awaits the next wave). The cycle-3 entry below is kept as written for its own time.
+Register note (2026-11-15, work stream-2 annotation closeout): the version anchor at the top advanced to `d6d0ec7` (the engine-body batch integration commit) as a construction-base annotation. The census cast stays pinned at `5829f6d`; no census re-scan ran (the census re-scan awaits the next work stream). The cycle-3 entry below is kept as written for its own time.
 
 Cycle-3 entry, kept as written: the version anchor then at the top (5829f6d) lagged the working-tree HEAD (8e04cc6) by seven commits. Facts measured on the lagged state, per the caller duty in section 0:
 

@@ -1,9 +1,9 @@
-# loop-unclog.md — 工作流嵌段③：堵账疏通闭环（干跑→人审→--apply→复核·诚实墙分支）
+# loop-unclog.md — 工作流嵌段③：堵账疏通闭环（dry run→人审→--apply→复核·诚实墙分支）
 
 > rocqwash v37 嵌段正典样例三件之三。把 `README-cw.md:128-130`「unclog 嵌段」
 > 展开为可整段复制执行的命令块＋真实输出样例＋退出码分支表（诚实墙分支）＋
-> dynamic-workflow 嵌段伪码。器实况正本：`tools/unclog.py` docstring（v37 旗舰·
-> 手工五步闭成自旋：probe 归集→chain_graph 链根→cure_applier 落刀→rescan/resprobe
+> dynamic-workflow 嵌段伪码。器实况正本：`tools/unclog.py` docstring（v37 flagship·
+> 手工五步闭成自旋：probe 归集→chain_graph 链根→cure_applier apply→rescan/resprobe
 > 复核→判定；schema `rocqwash-unclog/1`·verdict 三态
 > `unclogged|wall|rounds-exhausted`，unclog.py:76）与 `--help`。
 >
@@ -14,16 +14,16 @@
 >   编辑）。
 > - **诚实墙禁硬凑**——TOP 榜全 `self.washable=false` 或可洗根全部碰壁→
 >   `verdict=wall exit 1`，墙账逐根列不可洗因，零落刀零硬凑（unclog.py:35-38）。
-> - **红是数据非器红**——probe rc1 候选是产出数据；退出码只表器面与终局
+> - **a failing result is data, not a tool failure**——probe rc1 候选是产出数据；退出码只表器面与终局
 >   （0=unclogged·1=wall/rounds-exhausted·2=用法/场景形错·9=fail-loud）。
 > - **世界换代口径**——本器零写 `--world`；洗后复探红是否清账取决于世界 .vo
 >   基座换代（调用方按 wash/world_hook.py 认证代纪律播种），器只如实出账
 >   （unclog.py docstring「世界纪律」）。
 
-## 1. 第一步：干跑（缺省零写盘·出方案账）
+## 1. 第一步：dry run（缺省零写盘·出方案账）
 
 ```bash
-# ── loop-unclog 嵌段·第 1 步：干跑（在 rocqwash 仓根执行）────────────
+# ── loop-unclog 嵌段·第 1 步：dry run（在 rocqwash 仓根执行）────────────
 SRC=src/                          # 源树根（根件 <根>.v 取自此）
 WORLD=world/                      # 世界目录（probe 检验 cwd·.vo 基座调用方播种）
 CANDS=cands.tsv                   # 候选清单 TSV（表头「件名\tmd5」·probe_engine 同款）
@@ -93,10 +93,10 @@ VERDICT: unclogged (exit 0)
 | `rounds[].cure.patterns` | 正典包将落的 pattern 名与计数（如 `cure13_natle_premise_lift: 1`）——方案不对→不开 --apply |
 | `rounds[].cure.stage` | `dry-run`=未落刀；此值在 --apply 后才变 `applied` |
 
-## 3. 第三步：--apply 落刀＋第四步复核（同一命令出齐账）
+## 3. 第三步：--apply apply＋第四步复核（同一命令出齐账）
 
 ```bash
-# ── loop-unclog 嵌段·第 3-4 步：落刀＋复核（人审过才走这步）──────────
+# ── loop-unclog 嵌段·第 3-4 步：apply＋复核（人审过才走这步）──────────
 bash cw.sh unclog --src "$SRC" --world "$WORLD" --candidates "$CANDS" \
   --apply --json unclog-apply.json --events unclog-apply-events.jsonl
 echo "UNCLOG_APPLY_RC=$?"
@@ -121,7 +121,7 @@ VERDICT: unclogged (exit 0)
   残差应零——样例实测 `station_count: 0`）；
 - `rounds[].resprobe.rc_ok == true`（probe_engine 复探受治件·rc 应 0——样例实测
   `rc: 0`）；
-- `final.red_files == []` 且 `final.cures_applied_total == 1`（红账空＝疏通）。
+- `final.red_files == []` 且 `final.cures_applied_total == 1`（红账空＝clear blockages）。
 
 **复核不过的诚实形**：`resprobe.rc_ok=false` 时 stdout 响亮缀
 `resprobe-rc=…（应 0 未达·如实入账）`（unclog.py:620-621）——器不把「落刀了」
@@ -131,7 +131,7 @@ VERDICT: unclogged (exit 0)
 
 | 退出码 | verdict | 含义（unclog --help/docstring 口径） | 工作流动作 |
 |---|---|---|---|
-| 0 | `unclogged` | 红账空（疏通·或本就无红） | 收尾；读 final.cures_*_total 入账 |
+| 0 | `unclogged` | 红账空（clear blockages·或本就无红） | 收尾；读 final.cures_*_total 入账 |
 | 1 | `wall` | **诚实墙**：TOP 榜全不可洗或可洗根全部碰壁→零落刀零硬凑·墙账逐根列因（wall 字段） | 人审 wall 账分派：见下行墙因表 |
 | 1 | `rounds-exhausted` | `--rounds`（默认 5）轮尽红未清·各轮账＋终判探在册 | 读 rounds[] 逐轮账·人定加轮/换世界/人工修 |
 | 2 | （无 verdict） | 用法错／注入场景形错（如 canned 序列耗尽/缺列/形坏——按序严格消费 fail-loud） | 修命令行或补 canned 场景 |
@@ -219,18 +219,18 @@ canned 消费序实测注记（2026-11-11 tmp 实跑教训·如实记）：candi
 ```text
 // 嵌段③堵账疏通：干跑门→人审→--apply→复核四判·诚实墙分流（器：cw.sh unclog）
 phase "unclog-loop" {
-  // 1) 干跑（缺省零写盘·结构保证）——退出码即终局预演
+  // 1) dry run（缺省零写盘·结构保证）——退出码即终局预演
   const dry = await world.run("bash", ["cw.sh", "unclog", "--src", "src/",
       "--world", "world/", "--candidates", "cands.tsv",
       "--json", "unclog-dry.json"]);
   if (dry.exitCode === 0) return { verdict: "already-unclogged" };
 
-  // 2) 人审方案：子代理只读 dry 账（washable/patterns/stage），答 落刀|不落刀
+  // 2) 人审方案：子代理只读 dry 账（washable/patterns/stage），答 apply|不落刀
   const review = await agent({ role: "cure-reviewer",
-    ask: "读 unclog-dry.json rounds[].cure.patterns 与 wall 账，答 落刀|不落刀+理由" });
-  if (review.answer !== "落刀") return { verdict: "held", why: review.reason };
+    ask: "读 unclog-dry.json rounds[].cure.patterns 与 wall 账，答 apply|不落刀+理由" });
+  if (review.answer !== "apply") return { verdict: "held", why: review.reason };
 
-  // 3) 落刀＋复核（同一命令出齐账·--apply 是唯一写开关）
+  // 3) apply＋复核（同一命令出齐账·--apply 是唯一写开关）
   const apply = await world.run("bash", ["cw.sh", "unclog", "--src", "src/",
       "--world", "world/", "--candidates", "cands.tsv", "--apply",
       "--json", "unclog-apply.json"]);
@@ -250,7 +250,7 @@ phase "unclog-loop" {
 ## 7. 诚实注记
 
 - 本文全部输出样例为 2026-11-11 铸席在本仓 `tools/unclog.py`（v37 41e74b0）tmp
-  注入演练**实跑**所产（干跑 rc 0／--apply rc 0／墙 rc 1·夹具 A.v/B.v 与 canned
+  注入演练**实跑**所产（dry run rc 0／--apply rc 0／墙 rc 1·夹具 A.v/B.v 与 canned
   台账均 tmp 造），非手写；样例路径仅出基名（report 确定性纪律·unclog.py
   docstring「输出」节）。
 - `cure13_natle_premise_lift` 是正典包真实 pattern 名（wash/cure_pack.json v1.3·

@@ -2,21 +2,40 @@
 
 > Chinese main page: [README.md](README.md)
 
+Purpose.  English-language project page for rocqwash (formal name rocqos, the
+  Rocq operations suite): what the toolchain is, why its checks are mechanical,
+  the three-chain architecture, installation, quickstart, the tool map, testing
+  environment limits, and the honest-boundaries register.
+Interface.  Documentation face; it links the Chinese main page `README.md`, the
+  per-tool contract surface `docs/CAPABILITY-INDEX.md`, the architecture
+  document `docs/en/architecture.md`, and the workflow-integration interface
+  `README-cw.md`.
+Dependencies.  Statements describe the modules under `scan/`, `names/`, `wash/`,
+  `verify/`, `seam/`, `certify/`, `watch/`, `tools/`, `wrapper/`, and
+  `cli/rocqwash`; commands assume `python3` >= 3.9 and, for the compile
+  verification pieces, a Rocq/Coq toolchain on `PATH`.
+Evidence.  Quickstart measurements quote rc values and hit lists as taken on a
+  clone of this repository; suite and environment claims cite the recorded
+  closes in `README.md`'s snapshot entries, with `tests/README.md` as the live
+  authority for the case table.
+Exit-codes.  None of its own; the exit codes it describes are those of the
+  cited tools, described exactly as implemented.
+
 **rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. Diagnoses are type-theoretic structural checks, fixes are idempotent and replayable, and verdicts come from exit codes, byte-level artifacts, and kernel-level census rather than from self-reported statements.
 
 > **Core principle**: What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models. (The motto appears in Chinese on the [main page](README.md).)
 
-Status snapshot: 2026-11-15, public repository, release tag `rw-v0.1.0-20261114` (GPG-signed, GitHub-verified). Formal name **rocqos**, the Rocq operations suite; the repository link name stays `rocqwash` (one repo, two names). Main advances continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
+Status snapshot: November 15, 2026, public repository, release tag `rw-v0.1.0-20261114` (GPG-signed, GitHub-verified). Formal name **rocqos**, the Rocq operations suite; the repository link name stays `rocqwash` (one repo, two names). Main advances continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
 
 ## What it is
 
 - **scan/**: statement-face Prop-leakage scanner (`scan/mac_stmt_scan.py`; this document's "...-face" terms denote the region of a `.v` file a tool operates on: statement-face = statement lines, annotation-face = comment/header text, as opposed to proof bodies; five frozen families P1-P5 plus three negative-capture families, full channel definitions in [`docs/en/architecture.md`](docs/en/architecture.md) §4, with four-way RED/WHITELIST/EXEMPT/CAPTURE classification), token-level qualified-identifier census (`scan/scan_v4_token.py`), and a dual-scanner cross-check driver (`scan/dual_scan.py`) that reports per-file scanner disagreement as data.
 - **names/**: statement-name ordinal extractor with an ordered-equality assertion (`names/mac_stmt_names.py`): N names in, N names asserted, exit 2 on mismatch.
 - **wash/**: canonical ledger wash engine (`wash/wash_engine.py`, exact-string plus count assertion, idempotent replay), closure-compatibility probe engine (`wash/probe_engine.py`), consumer-cure pack (`wash/cure_pack.json` + `wash/cure_applier.py`, 24 deterministic rewrite patterns), and a comment-domain sweep sidecar (`wash/comment_sweep.py`).
-- **verify/**: green-verdict four-pack checker (`verify/verify_vo.py`: exit code, log, `.vo` magic bytes, `.vo` freshness), gate4 comment guard (`verify/gate4_comment_guard.py`), gate6 census wrapper (`verify/verify_gate6.py`), gate7 English retrofit (`verify/retrofit_gate7_irr.py`).
+- **verify/**: green-verdict four-pack checker (`verify/verify_vo.py`: exit code, log, `.vo` magic bytes, `.vo` freshness), gate4 comment guard (`verify/gate4_comment_guard.py`), gate6 census wrapper (`verify/verify_gate6.py`), gate7 English adaptation (`verify/retrofit_gate7_irr.py`).
 - **seam/**: four-mechanism generation-gap fingerprint probe (`seam/seam_probe.py`), producing candidate lists with prescription mappings.
 - **certify/**: two-tier freeze manifest (`certify/freeze_manifest.py`), push-window four-criteria gate (`certify/push_gate.py`, judges the window and never pushes), UNION v2 multi-world manifests, and the frozen-eight registry check (`certify/frozen8.py`, which reconciles the eight frozen in-service pieces against their md5 manifest).
-- **watch/**: CI in-flight monitoring, pin-IP push wrapper (dry-run by default), and ls-remote double-read confirmation (`watch/watch.py`, zero-dispatch by construction).
+- **watch/**: CI in-flight monitoring, pin-IP push wrapper (dry-run by default), and ls-remote double-read confirmation (`watch/watch.py`, zero-route by construction).
 - **tools/**: operational tools, from the resident watcher (`cw_sentinel.py`) through CI triage, one-shot push-CI orchestration, health rollup, blockage clearing, registry hygiene, and documentation linting; see the [Tool map](#tool-map) below.
 - **wrapper/**: adapter layers for frozen or out-of-repo originals (`wrapper/coqc_shim.sh`, `wrapper/gate7_probe.sh`, `wrapper/guard.sh`, `wrapper/scan_station.py`); criteria stay solely with the original tools.
 - **cli/rocqwash**: unified entry that routes scan/names/wash/verify/seam/certify/watch with 1:1 argv and exit-code passthrough.
@@ -50,7 +69,7 @@ Logic Chain (criteria + gates + calibration standards)
 Derivation Chain (input -> wash -> verify -> land -> certify -> push)
 ```
 
-Every compile is wrapped by the thermal guard `tools/cpu_guard.sh` (a ladder queue with a macOS pmset thermal gate and exit-code passthrough, so that long compile runs cannot overheat the host machine). The canonical wash sequence has seven steps (sandbox copy, three-state triage, canonical face-mapping wash, compile verification, three-source extraction audit, gate7 English retrofit, N=N name-table assertion plus freeze md5); each step must pass before the next, and any failure is recorded as work-in-progress rather than re-labeled.
+Every compile is wrapped by the thermal guard `tools/cpu_guard.sh` (a ladder queue with a macOS pmset thermal gate and exit-code passthrough, so that long compile runs cannot overheat the host machine). The canonical wash sequence has seven steps (sandbox copy, three-state triage, canonical face-mapping wash, compile verification, three-source extraction audit, gate7 English adaptation, N=N name-table assertion plus freeze md5); each step must pass before the next, and any failure is recorded as work-in-progress rather than re-labeled.
 
 `cli/rocqwash` routes a module directory by its generic per-file entry (argparse interface): exactly one generic `.py` (a file whose name does not start with `_`) is auto-routed, `_`-prefixed internal tools are never auto-run, and exit codes pass through unchanged. Component-level details, per-file status, and the exit-code table are in [`docs/en/architecture.md`](docs/en/architecture.md); the workflow-integration interface (sentinel presets, push-CI orchestration, offline injectors) is in [`README-cw.md`](README-cw.md), and an MCP stdio server is documented in [`docs/mcp.md`](docs/mcp.md).
 
@@ -85,14 +104,14 @@ With the variable unset, tools keep automatic environment detection, and behavio
 
 ## Quickstart
 
-First run: scan the bundled demo source for statement-face Prop leakage (measured on this clone, 2026-11-14, rc=0):
+First run: scan the bundled demo source for statement-face Prop leakage (measured on this clone, November 14, 2026, rc=0):
 
 ```bash
 python3 scan/mac_stmt_scan.py --file examples/demo_prop_leak.v
 # RED stations: ['demo_eq_self', 'demo_eq_sym', 'demo_le_eq', 'demo_le_self', 'demo_mixed']
 ```
 
-First verification: the comment-hygiene gate on the bundled clean sample (measured on this clone, 2026-11-14, rc=0, PASS=1 FAIL=0):
+First verification: the comment-hygiene gate on the bundled clean sample (measured on this clone, November 14, 2026, rc=0, PASS=1 FAIL=0):
 
 ```bash
 python3 verify/gate4_comment_guard.py --file tests/fixtures/gate4_clean_sample.v
@@ -206,8 +225,8 @@ Idempotence and zero repository writes are documented suite properties in [`docs
 Environment limits, stated as recorded rather than as aspirations:
 
 - Scale: the case roster grows with the tree (67 cases at tag `rw-v0.1.0`); [`tests/README.md`](tests/README.md) is the live authority for the case table. Red-set discipline: post-change reds must be a subset of the pre-change roster (zero-new-red; see CONTRIBUTING.md section 4).
-- Canonical macOS environment: at the closes recorded in `README.md`'s per-version snapshot entries (v55 through v57, 2026-11-13), the suite measured 62 pass, 0 red, 1 by-design skip (`t_quad8_check`, which needs canonical world copies). Suite-green claims in this document apply to that environment.
-- Compile-dependent cases are gated by environment variables (`ROCWASH_ROCQ`, `GATE7_PROBE_SCRIPT`, `GATE6_SCRIPT`, `BORN_WORLD_ROCQ`, per the `README.md` snapshot entry v47, 2026-11-12) and record a SKIP when the gated piece is absent; a SKIP is recorded, never counted as green.
+- Canonical macOS environment: at the closes recorded in `README.md`'s per-version snapshot entries (v55 through v57, November 13, 2026), the suite measured 62 pass, 0 red, 1 by-design skip (`t_quad8_check`, which needs canonical world copies). Suite-green claims in this document apply to that environment.
+- Compile-dependent cases are gated by environment variables (`ROCWASH_ROCQ`, `GATE7_PROBE_SCRIPT`, `GATE6_SCRIPT`, `BORN_WORLD_ROCQ`, per the `README.md` snapshot entry v47, November 12, 2026) and record a SKIP when the gated piece is absent; a SKIP is recorded, never counted as green.
 - Windows (Git Bash): on this project's Windows development machine at anchor `090be654`, a full run with a real CPython on `PATH` recorded 44 pass, 15 red, 4 skip, and a same-day repeat run recorded 45 pass, 14 red, 4 skip (one case flipped green between the two runs); the union of both red rosters is these 15 case names: `t_verify_vo`, `t_cpu_guard_direct_smoke`, `t_cpu_guard_direct_rc`, `t_frozen_call`, `t_verify_fresh`, `t_extract_magic`, `t_probe_engine`, `t_toolchain_dyld_doctor`, `t_cw_sentinel`, `t_wash_shape`, `t_unclog`, `t_relay_e2e`, `t_destructive_matrix`, `t_red_dispatch`, `t_registry_audit`. The 4 skips (`t_gate7_wrapper`, `t_quad8_check`, `t_gate6_born_wrapper`, `t_verify_gate6`) need out-of-repo canonical references. No green claim is made for this environment.
 - Windows PATH caveat: the suite driver invokes `python3` from `PATH`; on a stock Windows box that name can resolve to the Microsoft Store alias, which exits 49 without running anything and turns cases red without any real output. Put a real CPython on `PATH` first.
 - CI: the repository's workflow runs the suite on a single macOS leg; a CI green mark is a suite-level signal on one platform, not a substitute for the environment-specific statements above.

@@ -18,11 +18,11 @@
                 反斜杠是转义符·会把命令词折叠成 127·回归向量）
  10 TIMEOUT 树收割 超时须收割整棵进程树（编译器是孙进程·仍握管道写端·
                 只杀直接子进程会把 2s 超时拖到 30s·回归向量）
- 11 真 rocq 门控节（ROCWASH_ROCQ 环境门控·缺省 SKIP 不充红）：仓 fixtures
-     probe_pass_sample.v（绿）＋probe_red_sample.v（缺库红）全链——guard 包裹
+ 11 真 rocq 门控节（ROCWASH_ROCQ 环境门控·缺省 SKIP 不充红）：repository fixtures
+     probe_pass_sample.v（passing）＋probe_red_sample.v（缺库红）全链——guard 包裹
      ＋世界纯度（探针后五件产物移出·世界零残留）＋logdir 留证
 
-零触律：全部夹具在临时目录自造（桩脚本＋迷你源树/世界）＋仓 fixtures 只读复制；
+零触律：全部夹具在临时目录自造（桩脚本＋迷你源树/世界）＋repository fixtures 只读复制；
 stub 节零真编译零网络；真 rocq 节仅在 ROCWASH_ROCZ...ROCWASH_ROCQ 在卷时跑且
 一切编译经 tools/cpu_guard.sh 包裹（温控铁律）。幂等：python3 -B 禁 __pycache__·
 临时目录即写即清。退出码：0=十一节全过；1=任一红。

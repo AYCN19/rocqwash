@@ -32,7 +32,7 @@ Upload progress stalled）→ rerun 发射前须「双探稳窗」：连续两�
   https://github.com
 
 --rounds N（默认 1·须≥1）·--interval S（默认 60·轮间 sleep·末轮不 sleep·须≥0）。
---stable-window：须 --rounds ≥2（否则用法错 2——双探稳窗·单探禁发射）；每轮每
+--stable-window：须 --rounds ≥2（否则用法错 2——双探稳窗·a single-probe round must not initiate）；每轮每
 端点全可达 → STABLE（exit 0），任一轮任一端点掉 → UNSTABLE（exit 1·每轮每端点
 码如实报）。无 --stable-window：probe 完成即 exit 0（exit 0 仅＝probe 完成·
 可达性看 verdict 字段），verdict 报三档 all-up|partial|all-down（跨轮汇总）。

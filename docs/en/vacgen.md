@@ -18,7 +18,7 @@ later audit pass.
 | 3. boundary | `boundary.lean` | expected-green-after-fill | closed-form separation machine checks over the relevant regions |
 | 4. gap anchors | `gap_anchors.txt` | census record | name-family census chain, a negative-finding block with its four boundary elements, and the per-file ledger |
 
-Each cast prints the per-file ledger (byte/line/sorry/seat counts), a
+Each cast prints the per-file ledger (byte/line/sorry/agent counts), a
 word-face coverage lower bound with its date, a fixed set of bound-form
 checks, and a final verdict line (`ok=true` / `ok=false`). Verdicts over
 coverage are lower bounds at the cast window, never exact-equality

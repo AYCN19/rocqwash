@@ -49,7 +49,7 @@ real**: `washed/demo_ledger.json` (16 exact-string patches) drives
 `washed/demo_prop_leak_washed.v` (cmp-asserted; drift fails the demo). The compile
 segment of verify SKIPs (no rocq/coqc here — on a rocq-equipped machine `make demo`
 compiles the specimen under `tools/cpu_guard.sh` automatically); the R4 segment
-SKIPs (`verify/` uses explicit sub-verb dispatch `gate4|verify_vo|verify_gate6|retrofit` —
+SKIPs (`verify/` uses explicit sub-verb route `gate4|verify_vo|verify_gate6|retrofit` —
 a bare `verify` lists the four generic entries, cli exit 4; the R4 per-file entry is
 still TODO; call `cli/rocqwash verify verify_vo --v … --vo …` directly). Re-measured
 2026-11-01 (rqsup4 round-6 inspection): all values identical, `make demo` exit 0,
@@ -67,7 +67,7 @@ authoring machine); proofs use prelude-only tactics.
 state 续接注记／定时收兵钩位留空·路径全参数化零硬编码绝对路径·自身退出码 0/1/2/9）。
 判例源＝v50 崩溃判例（哨长驻 round10 IncompleteRead 传输层断流崩·**state 零损失续接**：
 崩后重启 seen 幂等账咬合零重报）——部署正本＝`docs/ops-sentinel-长驻手册-v1.0-20261112.md`
-§1.6「监督壳部署形」（判例源／泛化点对照表／rc 分诊／部署命令形全表）。部署形冒烟
+§1.6「监督壳部署形」（判例源／泛化点对照表／rc triage／部署命令形全表）。部署形冒烟
 （`bash -n`＋关键行 grep 断言·**非真跑**零执行零网络）入 `cw_sentinel --selftest`
 部署形矢。
 

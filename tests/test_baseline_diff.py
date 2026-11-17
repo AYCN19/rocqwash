@@ -6,7 +6,7 @@
 堵账基线对比器（schema rocqwash-baseline-diff/1·两份 unclog --audit 基线
 argv 序=旧→新→new_blocks/resolved_blocks/persistent 三清单＋score_delta·
 verdict improved/degraded/stable/incomparable·账面自洽预检拒手编·候选面四元组
-比对·timing 段不入对比·红是数据非器红）挂接件：器自带 --selftest tmp 合成基线
+比对·timing 段不入对比·a failing result is data, not a tool failure）挂接件：器自带 --selftest tmp 合成基线
 冻结矢量组（①improved 红减/②degraded 红增＋墙因变/③stable＋timing 不入对比
 ＋json/md 幂等字节恒同＋零写输入/④incomparable 候选集异＋非 audit 形/⑤md 输出/
 ⑥CLI 四码＋形坏拒判零出账——baseline_diff.py --selftest 矢量表自述）已由铸席
@@ -14,7 +14,7 @@ verdict improved/degraded/stable/incomparable·账面自洽预检拒手编·候�
   1 --selftest rc=0 且 stdout 含 "BASELINE-DIFF-SELFTEST PASS" 冻结标记
   2 --help rc=0（argparse 用法面在位）
   3 --bogus rc=2／缺两账 rc=2／缺账文件 rc=9（退出码口径抽验——器口径
-    0=improved/stable·1=degraded/incomparable（红是数据非器红）·2=用法错/
+    0=improved/stable·1=degraded/incomparable（a failing result is data, not a tool failure）·2=用法错/
     输入形坏（schema 不对/账面自洽破）·9=路径缺失）
 
 用法：

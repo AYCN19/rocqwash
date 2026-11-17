@@ -13,7 +13,7 @@
   8 --json 出账       正本逐件账 JSON 落临时目录·verdict=PASS
   9 伪断言败拒        --expect-md5 <伪> → rc=2 且卡出 FAIL（不带病判绿）
 
-幂等：正本/仓/seat 域零写盘——全部工件（.v/.vo/born.rc/log/json）落 tempfile
+幂等：正本/repository/agent 域零写盘——全部工件（.v/.vo/born.rc/log/json）落 tempfile
 mkdtemp，finally 兜底清理。退出码：0=九判全过；1=任一红。
 """
 import io

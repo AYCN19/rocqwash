@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """select_audit.py — 选件审计器：批选清单对树 order.txt 全表 grep 剔重（rocqwash tools/·
-20261101 席 rqsupport·v6 判据轮打磨员 20261101 入账）
+20261101 agent rqsupport·v6 判据轮打磨员 20261101 入账）
 
 五课反馈轮打磨件②（nw6 课＋dver2-enbig7 课工具化）：
   - **nw6 课**：选件勘定员必须**实读树 order.txt 全表 grep 剔重·禁凭记忆**。
-    判例源：`sandbox/seat_nw6/账/候批账-nw6批.md`（HansonLcm 混入实录在卷——同 seat 域
+    判例源：`sandbox/seat_nw6/账/候批账-nw6批.md`（HansonLcm 混入实录在卷——同 agent 域
     他席在飞件 `work/HansonLcm.v`（15:33:04）与本席批作业同域并行，靠冻结时点全表
     实扫才勘明零互覆；凭记忆报批即有混入他席件之险）。本器把「全表实读」机械化：
     每个候选名都对 order.txt **逐行**归一化比对，不做任何记忆/缓存捷径。
@@ -17,11 +17,11 @@
 v6 判据轮（打磨员·判例日期 20261030·账 v6 节载入）：
   - **nw10/abl6 空账判例**：主会话与两审计席同踩「Require 面审计把 Stdlib 件
     （QArith/Lia/List/Extraction/Lqa/Morphisms 等）误判为树内缺口」坑，且 grep
-    单行解析漏 Require Export／多名行。侧证（本席只读实勘）：ConstructiveWorld 仓
+    单行解析漏 Require Export／多名行。侧证（本席只读实勘）：ConstructiveWorld repository
     `.zcode/workflow-drafts/nw10九件勘定审计席.dwf.ts:9` 与 `abl6六件审计验证席.dwf.ts:10`
     两席工单原文均为「①逐件 grep Require/From 面」＋「③闭包判定：Requires ⊆ 树
     197 ∪ 批内先序」——单行 grep 解析＋无白名单闭包式，即两坑源（空账回执本体不
-    在盘·如实记）。本器固化正确工法三件套：
+    present in the tree·如实记）。本器固化正确工法三件套：
       ① Python 正则**语句级全 Require 形式解析**（From X Require Import/Export
         多名·多行·注释剥除）——parse_requires；
       ② **Stdlib 白名单豁免**（STDLIB_ROOTS 首段命中即豁免，不入树内缺口判定）；
@@ -162,7 +162,7 @@ def grep_rows(order_lines, name):
 # ---------------------------------------------------------------------------
 # v6 判据·Require 面审计（nw10/abl6 空账判例工具化·20261030 判例日期）
 #
-# 坑源（判例侧证·本席只读实勘 ConstructiveWorld 仓）：
+# 坑源（判例侧证·本席只读实勘 ConstructiveWorld repository）：
 #   `.zcode/workflow-drafts/nw10九件勘定审计席.dwf.ts:9` ＋
 #   `.zcode/workflow-drafts/abl6六件审计验证席.dwf.ts:10` 两席工单原文均为
 #   「①逐件 grep Require/From 面」＋「③闭包判定：Requires ⊆ 树 197 ∪ 批内先序」

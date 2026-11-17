@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_verify_gate6.py — verify/verify_gate6.py 自测（tests/·五课反馈轮·席 rqsupport·
+"""test_verify_gate6.py — verify/verify_gate6.py 自测（tests/·五课反馈轮·agent rqsupport·
 20261101）
 
 五课夹具④【gate6 ch1】：语句面裸 Prop 量词 census（EntropyUnsatMark 判例）。

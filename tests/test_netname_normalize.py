@@ -58,7 +58,7 @@ def main():
         p = run(["--selftest"])
         check("selftest", p.returncode == 0 and "PASS" in p.stdout, p.stdout[-400:])
 
-        # 2+3+4+9 干跑默认零落盘 → apply 归一 md5 验讫 → 字节恒等（根＋子目录两件）
+        # 2+3+4+9 干跑默认零落盘 → apply normalize md5 验讫 → 字节恒等（根＋子目录两件）
         w = os.path.join(tmp, "world")
         os.makedirs(os.path.join(w, "sub"))
         wf(w, "A.v.v", BODY_A)

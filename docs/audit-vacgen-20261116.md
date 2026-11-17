@@ -1,8 +1,8 @@
-# 审计卷 · tools/vacgen.py 专项审计（批次 3 · 补审席 G4）/ Audit Scroll: vacgen.py Specialized Audit (Batch 3)
+# 审计卷 · tools/vacgen.py 专项审计（batch 3 · 补审席 G4）/ Audit Scroll: vacgen.py Specialized Audit (Batch 3)
 
 > **审计单号 Audit ID**: audit-vacgen-20261116
 > **审计对象 Subject**: `tools/vacgen.py`（2877 行·本仓最大单件·TOOL_VERSION 2.1.0）及配套面（两 selftest、refinery segment、run_tests.sh 接线、docs/vacgen_sop.md、tools/vacgen_env_note.md、tools/mcp_server.py vacgen_generate 接线、tools/taxonomy.json）
-> **审计席位 Seat**: 批次 3 补审席 G4（只读审计·零改动：本卷是本次作业唯一落盘面）
+> **审计席位 Seat**: batch 3 补审席 G4（只读审计·零改动：本卷是本次作业唯一落盘面）
 > **方法 Method**: 逐行通读（vacgen.py 全文 2877 行）＋ 配套面全读 ＋ 实跑探针 14 组（selftest 三件、t_refinery 聚合、CLI rc/互斥/幂等/force/损坏 taxonomy/def 头门/voided 行/anchor drift/preflight 端到端/census 面闸/--report/--exp-draft）＋ grep 引用面扫描
 > **判读语义 Verdict semantics**: 本卷全部发现系只读登记（candidate repair·候修），未对仓做任何修复；行号以 2026-11-16 实勘时点为准；severity 分级＝HIGH（守卫承诺落空/契约断裂）/ MEDIUM（检查面空转、口径分裂、fail-loud 形破损）/ LOW（死代码、措辞、指针漂移）。
 
@@ -16,7 +16,7 @@
 
 ---
 
-## 一、面清单 Surface Inventory（实勘 2026-11-16）
+## 一、面清单 Surface Inventory（verify 2026-11-16）
 
 ### 1.1 CLI 面（main，vacgen.py:2790-2873）
 
@@ -47,7 +47,7 @@ v2 九 flags（--taxonomy/--preflight-all/--census/--root/--cluster-table/--repo
 
 ### 1.4 数据面与消费面
 
-- `tools/taxonomy.json`（实勘 2 rows：ineq.real.const-lt-field-re / concl.real.const-lt-field-re-exists；anchorVerifiedAt 键缺省）。
+- `tools/taxonomy.json`（verify 2 rows：ineq.real.const-lt-field-re / concl.real.const-lt-field-re-exists；anchorVerifiedAt 键缺省）。
 - `tools/mcp_server.py:207-247` vacgen_generate（arg_map 11 参，见 M4）。
 - `tests/run_tests.sh`：名册 :383-384（t_vacgen_shape / t_vacgen_expectedred）＋ t_refinery；函数 :1023-1045（含悬空的 t_vacgen_envelope_shape，见 H1）。
 - `tests/refinery_segments/vacgen.py`（402 行·refinery 测试段·同名非副本·动态加载 tools/vacgen.py；14 checks）。
@@ -69,7 +69,7 @@ v2 九 flags（--taxonomy/--preflight-all/--census/--root/--cluster-table/--repo
 
 | # | 位点 | 行为实勘 | 分级 |
 |---|---|---|---|
-| M1 | `load_taxonomy` vacgen.py:926-927 | `json.load(fh)` 与文件 open 不在 TaxonomyError 封装内。实跑：`--taxonomy <损坏 JSON>` → rc=1 但是裸 `json.decoder.JSONDecodeError: Expecting value` traceback（探针 f），无 `FAIL-LOUD: taxonomy:` 标记行；main:2860-2864 与 do_cast:2103-2107 的 except 只接 TaxonomyError。同族 OSError（权限/占用）同裸逃。违反自declare契约「row admission fail-loud (rc=1, section 6.2)」的可 grep 标记形 | MEDIUM |
+| M1 | `load_taxonomy` vacgen.py:926-927 | `json.load(fh)` 与文件 open 不在 TaxonomyError 封装内。实跑：`--taxonomy <损坏 JSON>` → rc=1 但是裸 `json.decoder.JSONDecodeError: Expecting value` traceback（检验 f），无 `FAIL-LOUD: taxonomy:` 标记行；main:2860-2864 与 do_cast:2103-2107 的 except 只接 TaxonomyError。同族 OSError（权限/占用）同裸逃。违反自declare契约「row admission fail-loud (rc=1, section 6.2)」的可 grep 标记形 | MEDIUM |
 | L9 | `do_cast` vacgen.py:2087-2091 | `os.path.isfile` 检查后 open 的 TOCTOU 竞态窗：isfile 过、open 前被删则 OSError 裸逃（UnicodeDecodeError 已封装 :2093-2097）。概率极低，登记即可 | LOW |
 | L8 | `classify_record` vacgen.py:995-998 | `except re.error: hit = False`：entry["rx"] 在 load_table:892 已 compile 成功，search 阶段 re.error 不可达，属防御死分支（若真发生则吞错静默 miss）。无害，登记 | LOW |
 | — | 其余异常面 | 实跑核验健康：UnicodeDecodeError（fail-loud 行）、preflight per-file OSError/UnicodeDecodeError（计 UNPARSED 不中止，:2571-2577/:2652-2656）、cluster table（OSError/ValueError/re.error，:2546-2550）、do_verify_anchors OSError（:2766-2767）、refinery segment check 外科（:157-166 fail loud 列示） | — |
@@ -80,7 +80,7 @@ v2 九 flags（--taxonomy/--preflight-all/--census/--root/--cluster-table/--repo
 
 ### 4.1 实跑探针台账（全部本次亲跑）
 
-| 探针 | 命令形（节选） | 实测 rc | 实测输出 | 判读 |
+| 检验 | 命令形（节选） | 实测 rc | 实测输出 | 判读 |
 |---|---|---|---|---|
 | a 无参 | `py -B tools/vacgen.py` | 2 | `FAIL-LOUD: --in is required in cast mode` | 符合（usage=2） |
 | b preflight 缺参 | `--preflight-all` | 1 | `FAIL-LOUD: --preflight-all requires --census ... (usage error, rc=1)` | 符合但自称 usage 却 rc=1（L2） |
@@ -102,12 +102,12 @@ v2 九 flags（--taxonomy/--preflight-all/--census/--root/--cluster-table/--repo
 
 | # | 发现 | 证据 | 分级 |
 |---|---|---|---|
-| M3 | **L3 覆盖分母跨模式口径分裂**：cast 分母＝records+conclusion+附加 degraded（:2181，单计）；preflight 分母＝file_total+file_todo＝r+2u+e（:2615/:2618，未识别面双计）。实勘：同一族 zeta 面 cast coverage=50%（1/2，探针 j），preflight 对 A.lean 报 0/6（探针 k）。difficulty map 的 coverageLowerPct/tier 与 cast 报告同面不同值，「lower bound」自称在 preflight 侧只是口径差而非更保守界 | vacgen.py:2181 vs :2615/:2618；探针 j/k | MEDIUM |
+| M3 | **L3 覆盖分母跨模式口径分裂**：cast 分母＝records+conclusion+附加 degraded（:2181，单计）；preflight 分母＝file_total+file_todo＝r+2u+e（:2615/:2618，未识别面双计）。verify：同一族 zeta 面 cast coverage=50%（1/2，检验 j），preflight 对 A.lean 报 0/6（检验 k）。difficulty map 的 coverageLowerPct/tier 与 cast 报告同面不同值，「lower bound」自称在 preflight 侧只是口径差而非更保守界 | vacgen.py:2181 vs :2615/:2618；检验 j/k | MEDIUM |
 | M2 | **scanned_vs_declared_upper_bound 恒绿（检查面空转）**：fill_ledger 的 declared_sorry 与 scanned_sorry 是同一表达式两次求值（:2269-2270），run_checks:1988-1990 的 `scanned > declared` 恒 False，v1 十一检之一永远 PASS，真实「扫描面 sorry 超声明」缺陷不可检 | vacgen.py:2269-2270/:1988-1990 | MEDIUM |
-| L1 | `--verify-anchors`＋`--preflight-all` 同给：preflight 分支（:2851-2865）先行 return，verify-anchors 被静默吞没 | vacgen.py:2851-2867；探针 e | LOW |
-| L2 | usage 错误 rc 语义不一致：缺 `--in` → rc=2（:2868-2871）；缺 `--census/--root` → rc=1 且自称 "usage error, rc=1"（:2856-2858）。同族 sweep 段契约习惯 usage=rc2 | vacgen.py:2851-2871；探针 a/b | LOW |
-| L3 | do_verify_anchors 输出「affected rows are voided per C3.3」但实现只打印报告，无任何 void 落盘动作（表静态，后续 cast 仍全量加载 drifted 行） | vacgen.py:2779-2783；探针 n | LOW |
-| M4 | **MCP vacgen_generate 参数面缺 v2 九面**：arg_map 仅 11 参（mcp_server.py:213-225），无 --census/--root/--taxonomy/--cluster-table/--report/--exp-draft/--verify-anchors/--mathlib。实勘探针 b 坐实 `--preflight-all` 无 census/root 必 rc=1，故 MCP 侧 preflight_all=true 无任何传参途径，必败。docs/mcp.md:55 参数表与接线一致地缺（文档-接线一致但双双断）。候修须 additive（补 arg_map＋同步 docs/mcp.md），禁动现有签名（勿扰清单规则 1） | mcp_server.py:213-225；docs/mcp.md:55；探针 b | MEDIUM |
+| L1 | `--verify-anchors`＋`--preflight-all` 同给：preflight 分支（:2851-2865）先行 return，verify-anchors 被静默吞没 | vacgen.py:2851-2867；检验 e | LOW |
+| L2 | usage 错误 rc 语义不一致：缺 `--in` → rc=2（:2868-2871）；缺 `--census/--root` → rc=1 且自称 "usage error, rc=1"（:2856-2858）。同族 sweep 段契约习惯 usage=rc2 | vacgen.py:2851-2871；检验 a/b | LOW |
+| L3 | do_verify_anchors 输出「affected rows are voided per C3.3」但实现只打印报告，无任何 void 落盘动作（表静态，后续 cast 仍全量加载 drifted 行） | vacgen.py:2779-2783；检验 n | LOW |
+| M4 | **MCP vacgen_generate 参数面缺 v2 九面**：arg_map 仅 11 参（mcp_server.py:213-225），无 --census/--root/--taxonomy/--cluster-table/--report/--exp-draft/--verify-anchors/--mathlib。实勘探针 b 坐实 `--preflight-all` 无 census/root 必 rc=1，故 MCP 侧 preflight_all=true 无任何传参途径，必败。docs/mcp.md:55 参数表与接线一致地缺（文档-接线一致但双双断）。候修须 additive（补 arg_map＋同步 docs/mcp.md），禁动现有签名（勿扰清单规则 1） | mcp_server.py:213-225；docs/mcp.md:55；检验 b | MEDIUM |
 
 ---
 
@@ -126,8 +126,8 @@ v2 九 flags（--taxonomy/--preflight-all/--census/--root/--cluster-table/--repo
 
 | # | 发现 | 证据 | 分级 |
 |---|---|---|---|
-| H1 | **t_vacgen_envelope_shape 三重缺口（known-debt 唯一机检守卫落空）**：(a) 文件 `tests/t_vacgen_envelope_shape.py` 不在盘（`find` 全仓 `*envelope*` 零命中）；(b) run_tests.sh:1039-1045 有函数体执行该路径，名册 CASES（:383-384）未挂，函数为悬空死代码；(c) docs/vacgen_sop.md:283-293（§2.5 勘误）声称该测试 landed 并为「登记引擎债的唯一机检守卫」（run_tests.sh:1041-1043 注释同）。后果：隐式 binder envelope 引擎债（SOP §2.5 在册未修）现处零机检状态；fixture B 的 known-debt 钉（`∧ Set (` 签名）缺位，若未来引擎修复将无红信号提示更新钉 | run_tests.sh:1039-1045/:383-384；vacgen_sop.md:283-293；find 实勘 | HIGH |
-| M5 | **SOP §2.5 声称的 taxonomy geo 行不在盘**：勘误第 1 条（vacgen_sop.md:275-283）称 `tools/taxonomy.json` 已落「builtin starter row carried verbatim + geo.symmetric-set-premise row」。实勘 tools/taxonomy.json rows=2：`ineq.real.const-lt-field-re`＋`concl.real.const-lt-field-re-exists`（后者 SOP 未提，前者与 builtin 同 id 非「carried verbatim 之外新增」的表述形）。geo 行无、Mahler 族 L3 提升（0/5 → 1/5）路径现盘不可复现，SOP 勘误面与盘面失配且无日期勘误块 | vacgen_sop.md:275-283；taxonomy.json 实勘输出 | MEDIUM |
+| H1 | **t_vacgen_envelope_shape 三重缺口（known-debt 唯一机检守卫落空）**：(a) 文件 `tests/t_vacgen_envelope_shape.py` 不在盘（`find` 全仓 `*envelope*` 零命中）；(b) run_tests.sh:1039-1045 有函数体执行该路径，名册 CASES（:383-384）未挂，函数为悬空死代码；(c) docs/vacgen_sop.md:283-293（§2.5 勘误）声称该测试 landed 并为「登记引擎债的唯一机检守卫」（run_tests.sh:1041-1043 注释同）。后果：隐式 binder envelope 引擎债（SOP §2.5 在册未修）现处零机检状态；fixture B 的 known-debt 钉（`∧ Set (` 签名）缺位，若未来引擎修复将无红信号提示更新钉 | run_tests.sh:1039-1045/:383-384；vacgen_sop.md:283-293；find verify | HIGH |
+| M5 | **SOP §2.5 声称的 taxonomy geo 行不在盘**：勘误第 1 条（vacgen_sop.md:275-283）称 `tools/taxonomy.json` 已落「builtin starter row carried verbatim + geo.symmetric-set-premise row」。verify tools/taxonomy.json rows=2：`ineq.real.const-lt-field-re`＋`concl.real.const-lt-field-re-exists`（后者 SOP 未提，前者与 builtin 同 id 非「carried verbatim 之外新增」的表述形）。geo 行无、Mahler 族 L3 提升（0/5 → 1/5）路径现盘不可复现，SOP 勘误面与盘面失配且无日期勘误块 | vacgen_sop.md:275-283；taxonomy.json 实勘输出 | MEDIUM |
 
 ### 5.3 覆盖缺口清单（零测试面·候修排序参考）
 
@@ -194,4 +194,4 @@ grep -n "PREMISE_INEQ_RE|CONST_ALT" tools/vacgen.py        -> 定义 2 行+注�
 grep -n "envelope_prefix_segments" ...                     -> 工具内 0 消费位 (L5)
 ```
 
-*本卷零改动声明：以上全部为只读实勘与临时目录探针；仓内唯一落盘面即本卷。行号口径 2026-11-16 实勘。*
+*本卷零改动声明：以上全部为只读实勘与临时目录探针；仓内唯一落盘面即本卷。行号口径 2026-11-16 verify。*

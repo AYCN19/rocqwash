@@ -75,7 +75,7 @@ tmp 夹具实证：probe_chain_s 0.078→0.102（`docs/perf-profile-v1.0-2026111
 ## probe 剖面记录（<域>·<yyyymmdd>）
 
 - 面：--candidates <面>.tsv（N 件≤30）·src=<源树基名>·world=<世界基名>
-- rocq_cmd：<模板原样>·guard=<档位>·产账人=<席/主会话>
+- rocq_cmd：<模板原样>·guard=<档位>·产账人=<agent/主会话>
 
 | 跑 | K | timing.jobs | enumerate_s | manifest_s | probe_chain_s | total_s | rc |
 | --- | --- | --- | --- | --- | --- | --- | --- |

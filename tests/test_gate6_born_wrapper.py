@@ -31,7 +31,7 @@
                         且零编译零产物（world 无 .vo）
   21 manifest 只认 .v 源行：仅 .vo 行账 → rc=9「无 A.v 源断言行」
 
-幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 seat 域；
+幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 agent 域；
      不真正调 rocq/guard（全部 fail-loud 路径先于任何编译行为拦截）。
 退出码：0=二十一判全过；1=任一红。
 """

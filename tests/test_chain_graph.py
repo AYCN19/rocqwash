@@ -9,7 +9,7 @@
   3 合并语义    并集/后批覆盖/batches 累积全历史/标签重名缀序号
   4 链根三分    根件 washable=true（rc0）／false（rc1 链中环）／UNPROBED（不在
                 候选集）三形态逐字段咬合
-  5 missing 双源 probe_engine missing 字段直用／red 原文 regex 兜底（双 regex 形：
+  5 missing 双源 probe_engine missing 字段直用／red 原文 regex fallback（双 regex 形：
                 Unable to locate＋Cannot find library·含「 | 」续行拼接形）
   6 TOP 榜      md 表头/排序（n 降序·同数典序）/--top 截断/json stats 咬合＋
                 重跑字节级恒同（确定性）
@@ -119,7 +119,7 @@ def sec4_self_washability(tmp):
 
 
 def sec5_missing_dual_source(tmp):
-    """missing 字段直用 vs red regex 兜底（含「 | 」拼接形与「|」无空格形）。"""
+    """missing 字段直用 vs red regex fallback（含「 | 」拼接形与「|」无空格形）。"""
     a = dump(os.path.join(tmp, "d1.json"),
              {"FieldCand": rec("FieldCand", 1, "Error: AnyLib boom",
                                missing="FieldLib"),

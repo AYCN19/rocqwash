@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""world_hook.py — wash_engine 世界基校验钩子（rocqwash wash/·20261101 席 rqsupport）
+"""world_hook.py — wash_engine 世界基校验钩子（rocqwash wash/·20261101 agent rqsupport）
 
 五课反馈轮打磨件①（nw5 课工具化）：**born 世界必须=RUNTREE 认证代 cp·禁自带旧代**。
 判例源：`sandbox/seat_nw5ver/账/world_md5_assert*.txt`（树世界 md5 对源断言 manifest·

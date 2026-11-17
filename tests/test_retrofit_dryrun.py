@@ -8,8 +8,8 @@
 写通道——写请求被截获到内存，**任何字节都不落盘**（dry-run 不落盘的机械化证明）。
 
 判据（全过 exit 0，任一失锐非零）：
-  R1 fixture 与模块锚表 mod.M 机械同源（内存重建 md5 == 在盘 fixture md5）；
-  R2 干跑 main() 全断言通过（含 token 流恒等、行数算术、输出 ASCII——main 内建）；
+  R1 fixture 与模块锚表 mod.M 机械同源（内存重建 md5 == present in the tree fixture md5）；
+  R2 dry run main() 全断言通过（含 token 流恒等、行数算术、输出 ASCII——main 内建）；
   R3 全程写模式 open 恰好 1 次、目标恰为补丁后的 OUT、该路径干跑后不存在（不落盘）；
   R4 干跑产物 CJK→0、非 ASCII→0、五字段齐备；
   R5 源样例件干跑前后 md5 不变（只读）。
@@ -119,7 +119,7 @@ def main(argv):
     n_cjk_lines = sum(1 for l in expected_text.split("\n") if CJK_RE.search(l))
     assert n_cjk_lines >= 50, "中文注释样例应含 ≥50 行中文（实测 %d）" % n_cjk_lines
 
-    # 常量补丁：源=在盘 fixture；OUT=从不存在的哨兵路径（干跑后必须仍不存在）
+    # 常量补丁：源=present in the tree fixture；OUT=从不存在的哨兵路径（干跑后必须仍不存在）
     mod.SRC = FIXTURE
     mod.FROZEN_MD5 = fixture_md5_before
     sentinel_out = os.path.join(HERE, ".dryrun_sentinel_never_written.v")
@@ -154,7 +154,7 @@ def main(argv):
 
     mod.io = types.SimpleNamespace(open=guarded_open)
 
-    # R2: 干跑 main()——任一内建 fail-loud 断言（md5/行形/锚/coverage/ASCII/token 恒等）
+    # R2: dry run main()——任一内建 fail-loud 断言（md5/行形/锚/coverage/ASCII/token 恒等）
     #     失败即抛 AssertionError → 本测非零退出。
     mod.main()
 

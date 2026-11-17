@@ -65,7 +65,7 @@ python3 tools/baseline_diff.py \
   候选面四元组＝`mode.source`＋`args.src`＋`args.candidates`＋
   `args.chain_ledgers`（basename 面）；非 audit 形报告混入同判 incomparable。
 - verdict 只认红账 n_red 增减；墙账增减入三清单不驱动 verdict。
-- 退出码：0=improved/stable·1=degraded/incomparable（红是数据非器红·响亮
+- 退出码：0=improved/stable·1=degraded/incomparable（a failing result is data, not a tool failure·响亮
   stdout）·2=输入形坏·9=路径缺失。
 
 ## 6. 纪律（红线路）

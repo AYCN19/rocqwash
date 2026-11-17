@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_world_hook.py — wash/world_hook.py 自测（tests/·五课反馈轮·席 rqsupport·20261101）
+"""test_world_hook.py — wash/world_hook.py 自测（tests/·五课反馈轮·agent rqsupport·20261101）
 
 五课负例①【nw5 世界偏斜】：born 世界必须=RUNTREE 认证代 cp·禁自带旧代。
 判例源：seat_nw5ver/账/world_md5_assert_npw.txt ASSERT4（自带 world 副本 WDIFF×14/
@@ -14,7 +14,7 @@ WMISS×2 实录）。本件在套件层独立复现该雷的机检负例（与�
   5 冻结旁证   wash/wash_engine.py md5 == 在册冻结值 664446bc…（钩子只读复用·
                零字节触伴——在役八组件冻结禁改的机检旁证）
 
-幂等：临时目录即写即清·不触两仓正本/各 seat 域·零编译零网络。
+幂等：临时目录即写即清·不触两仓正本/各 agent 域·零编译零网络。
 退出码：0=五判全过；1=任一红。
 """
 import hashlib

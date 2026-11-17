@@ -35,7 +35,7 @@ exit 2 并列清单、零写盘：
 行尾保全：探 main 正本首 3KB 计 `\r` 定 CRLF/LF，输出随 main；末行换行有无
 亦随 main。三面对读时行内容一律剥终止符比对（CRLF main × LF branch 不误判）。
 
-两态制（缺省干跑）：干跑零写盘打统计（main N＋unique M＝union K·重锚清单·
+两态制（dry run by default）：干跑零写盘打统计（main N＋unique M＝union K·重锚清单·
 断言三过）＋逐行 diff 摘要（仅新增 `+`／改锚 `~` 行）；--out 落盘须 --apply。
 --json 出 report（schema rocqwash-registry-union/1，sort_keys 确定性）。
 
@@ -710,7 +710,7 @@ def selftest():
         print("  [7/8] CLI 四码 OK（help0/bogus2/无输入2/缺件9）＋coqproject"
               " 键形＋json 确定性")
 
-        # ---- ⑧ git 三 ref 直读（tmp 仓·缺 git 让席 SKIP） ----
+        # ---- ⑧ git 三 ref 直读（tmp repository·缺 git 让席 SKIP） ----
         if shutil.which("git") is None:
             print("  [8/8] git 直读 SKIP（git 不在卷·让席不充红）")
         else:

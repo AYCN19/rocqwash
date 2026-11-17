@@ -314,7 +314,7 @@ class ApiClient(object):
     """The single _api(method, path, body) function. canned = steps-shape
     scenario (consumed strictly in order per at_round); flat = flat-shape
     canned (runs consumed per poll, rerun per POST, merge single-shot; the
-    parallel seat-worker contract shape); both None means real urllib (token read
+    parallel agent contract shape); both None means real urllib (token read
     lazily from netrc; HTTP 4xx/5xx return (code, body) for semantic
     adjudication; connection failure fails loudly with 9). Resilience layer:
     the real-urllib path retries 403/429/5xx with exponential backoff
@@ -545,7 +545,7 @@ class Pipeline(object):
             summary/argv/expect are ignored);
         (b) DIR/scenario.json without "canned" = steps shape (steps[].at_round);
         (c) no scenario.json but a flat runs/ directory = flat shape (the
-            parallel seat-worker placeholder layout: runs/NNNN.json +
+            parallel agent placeholder layout: runs/NNNN.json +
             jobs/NNNN.json
             + rerun/NNNN.json + probe/NNNN.json + merge.json; filename sort
             order = consumption order)."""
@@ -1433,7 +1433,7 @@ def selftest():
                     "api_calls": os.path.join(inj, "api_calls.json")}
 
         def setup_flat(name, fixture, git_resps):
-            """Flat-shape injection dir: the parallel seat-worker fixture
+            """Flat-shape injection dir: the parallel agent fixture
             original verbatim becomes scenario.json."""
             d = os.path.join(tmp, name)
             repo = os.path.join(d, "repo")
@@ -1676,7 +1676,7 @@ def selftest():
         assert jload(s["api_calls"]) == [], \
             "gate4-block should make zero API calls"
 
-        # vector 9: flat injection shape green path (parallel seat-worker
+        # vector 9: flat injection shape green path (parallel agent
         # fixture s1_green_path.json original verbatim; pushci.invalid
         # fake-domain derivation; both gates default green; canned.runs two
         # polls)

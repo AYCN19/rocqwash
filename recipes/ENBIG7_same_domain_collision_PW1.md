@@ -1,6 +1,6 @@
 # 处方件 — 同域双席撞·私占世界重建（PW1·dver2-enbig7 判例文档化）
 
-> rocqwash recipes/·20261101 席 rqsup4（巡检打磨轮·五课件③）。
+> rocqwash recipes/·20261101 agent rqsup4（巡检打磨轮·五课件③）。
 > 判例源（只读已核在盘）：`sandbox/seat_dver2/账/collision_enbig7_20261031.md`
 > （同域双席撞录当日实录·主会话仲裁 `36c35816`）＋`world_md5_assert.txt`／
 > `world_md5_assert_close.txt`（pre-born／收窗两拍对源断言 manifest）＋
@@ -38,7 +38,7 @@
 | 1 | **仲裁与域收敛**：主会话裁权（归属裁定＋入侵者收敛回自域）；处方不代行仲裁 | 仲裁 `36c35816`：seat_dver2 归本席·enbig7 收敛 seat_enbig7 |
 | 2 | **待静**：入侵停止前不动刀；入侵期产物一律不采（logs/候选/work 部署全部弃用） | 「未采任何入侵期产物」在卷 |
 | 3 | **全量重审计**：对源 md5 断言——世界 .v 件对源（Live 现文/账钉代）＋链件对冻结账 md5，逐件出断言行；非目标闭包成员剔除留档 | `world_md5_assert.txt`：25/25 OK（20 Live .v 对源＋4 链件对 digcure 冻结账·BL/PI/PEI/truncfam 四源同值实录） |
-| 4 | **私占世界全量重播**：自建私有世界目录（`work/<私有>/`），按 order.txt 链序逐件 born（全 rc=0），成品 born 收口 | 24 链件按 order.txt 链序 born 全 rc=0（14:00:09–14:34:46）·成品 born rc=0（14:35） |
+| 4 | **私占世界全量重播**：自建私有世界目录（`work/<私有>/`），按 order.txt 链序逐件 born（全 rc=0），成品 born close out | 24 链件按 order.txt 链序 born 全 rc=0（14:00:09–14:34:46）·成品 born rc=0（14:35） |
 | 5 | **三度全量 md5 复断**：pre-born／gates 后／freeze 前三拍逐件 md5 断言，零篡改方收口 | 入侵期间三度复断 world_dig 均 0 篡改（manifest 三拍在卷） |
 
 ## 三、rocqwash 工装接线（本仓六件各就各位）

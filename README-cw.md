@@ -1,10 +1,26 @@
-# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 57 routes over 55 tools)
+# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 60 routes over 58 tools)
 
 > **Language versions:** this file is the English-first version of the quick
 > reference. The original Chinese full text is preserved verbatim in
 > [README-cw.zh.md](README-cw.zh.md) (bilingual transition archive);
 > the two versions cross-reference each other. Tool names, flags, paths and
 > exit-code semantics are identical in both.
+
+Purpose.  Quick-reference contract for `cw.sh`, the repository's one-command
+  entry: the per-tool routing table, repair pipelines, the exit-code
+  passthrough contract, and the v37 trio's workflow-integration interface.
+Interface.  Documents `bash cw.sh <tool> [args...]`; arguments and exit codes
+  pass through 1:1 via `exec`; the entry is a read-only routing layer.
+Dependencies.  Requires only `bash` 3.2 and `python3` >= 3.9; paths resolve
+  relative to the repository root; complements `cli/rocqwash`.
+Evidence.  The table condenses each tool's documented invocation face; routing
+  behavior is covered by `bash tests/test_cw_entry.sh` (also in
+  `bash tests/run_tests.sh`).
+Exit-codes.  0 pass; 2 unknown tool or passthrough usage error; 9 target script
+  missing or passthrough missing-target condition; other codes pass
+  through 1:1 per each tool's convention.
+
+## Overview
 
 `cw.sh` is the **one-command entry** for the twenty-five tools of the rocqwash
 suite — the seven tools of the v29-v32 releases, the five tools of the
@@ -53,7 +69,7 @@ bash cw.sh <tool> [args...]
 | `sentinel` | `tools/cw_sentinel.py` | real-time watch sentinel (three signal sources — CI runs / ledger chain-roots / buildlog tokens — → JSONL event stream; once/loop dual mode; classification delegated to ci_triage; **no action by default**; `--on-red-preset` five presets, repeatable = chained in the given order with one failure continuing the chain — unclog/pushci/wash-shape/triage/cw-doctor, each honoring its tool's dry-run-by-default discipline; mutually exclusive with `--on-red`; side-effect actions require `--emit`, both channels share the same guard, rc=2) | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --on-red-preset unclog --on-red-arg src=src/ --emit events.jsonl --json r.json` |
 | `wash-shape` | `tools/wash_shape.py` | canonical five-pass shaping pipeline (lexical / token / header / EOL / anchor; plan is zero-write by default; `--apply` applies, then re-runs all five passes for verification; ③ header-pass template source probed three ways: `--header-map` per-file data > `--header-map-preset` named template library `tests/fixtures/header_map_v1.json` (effort-canon distillation, schema `rocqwash-header-map/1`) > env; same-slot explicit flags mutually exclusive, rc=2) | `bash cw.sh wash-shape --file demo.v --header-map-preset campaign_set_diamond --json plan.json` |
 | `unclog` | `tools/unclog.py` | blockage-unclogging closed loop (probe collection → chain_graph chain-root pick → cure_applier application → re-check → verdict `unclogged\|wall\|rounds-exhausted\|audit`; dry-run by default; frozen-listed files refused loudly; `--audit` read-only clog baseline with a zero-write self-proof; mutually exclusive with `--apply`/`--loop`; `--probe-parallel K` threads probe parallelism through probe_engine `--jobs`, recorded in the timing section so runs over the same candidate set with different K remain comparable) | `bash cw.sh unclog --src src/ --world world/ --audit --probe-parallel 2 --json r.json` |
-| `cw-doctor` | `tools/cw_doctor.py` | aggregate health check across four domains (dyld environment / net_probe network / registry anchor audit / clog probe_engine＋chain_graph — per-domain subprocess orchestration of the existing tools → aggregate 0-100 health score + verdict `healthy\|degraded` + advice list; **diagnosis only, never executes**; red is data, not tool failure; schema `rocqwash-cwdoctor/1`; `--injector`-offline-testable) | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
+| `cw-doctor` | `tools/cw_doctor.py` | aggregate health check across four domains (dyld environment / net_probe network / registry anchor audit / clog probe_engine + chain_graph — per-domain subprocess orchestration of the existing tools → aggregate 0-100 health score + verdict `healthy\|degraded` + advice list; **diagnosis only, never executes**; red is data, not tool failure; schema `rocqwash-cwdoctor/1`; `--injector`-offline-testable) | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
 | `doc-lint` | `tools/doc_lint.py` | docs↔implementation consistency linter, three checks (① the tool table cross-checked across cw.sh's four places (header/usage/hint/case) + tools/ generic-entry reconciliation; ② CASES vs tests/README.md vs README.md count three-way check; ③ doc flag references vs each tool's real `--help` output, item by item; verdict `consistent\|drift`; red is data, not tool failure; schema `rocqwash-doclint/1`; `--repo` is the audited repo root, defaults to this repo) | `bash cw.sh doc-lint --repo . --json doclint.json` |
 | `baseline-diff` | `tools/baseline_diff.py` | clog-baseline differ (two `unclog --audit` baselines in argv order old→new → `new_blocks`/`resolved_blocks`/`persistent` three lists + `score_delta`; four-state verdict `improved\|degraded\|stable\|incomparable`; a self-consistency precheck rejects hand-edited ledgers; timing excluded from comparison; red is data, not tool failure; schema `rocqwash-baseline-diff/1`; intake protocol in [examples/baselines/README.md](examples/baselines/README.md)) | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
 | `dispatch` | `tools/red_dispatch.py` | red-event router (sentinel red events → action presets; three presets `report-only\|suggest\|auto`; **report-only, zero execution by default**; suggest prints a copy-paste command block; auto executes only when explicit, under a 60s cap, rc≠0 recorded loudly without touching the exit code; dedup state + cooldown; all routes wired onto cw.sh's existing routes, zero new engines; family-A content-red is never auto-fixed — it emits a fix list; schema `rocqwash-red-dispatch/1`) | `bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json` |
@@ -323,11 +339,11 @@ sentinel red events → action-preset routing)**:
 # whole event stream to the router; the suggest tier executes nothing and prints a copy block)
 bash cw.sh sentinel --once --watch-ledgers ledgers/ --emit events.jsonl \
   --on-red 'python3 tools/red_dispatch.py --event-file <json> --preset suggest'
-
-# Single-step direct call (without the sentinel; adds one routing pass over an existing event stream;
-# report-only, zero execution by default)
-bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json
 ```
+
+Single-step direct call (without the sentinel; adds one routing pass over an existing
+event stream; report-only, zero execution by default):
+`bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json`
 
 > routes rather than executes: the five routes (B/E families →
 > pushci rerun · family A → manual-fix-note, never auto-fixed, emits a
@@ -353,5 +369,5 @@ auto-router's ambiguity guard declines to guess, so this entry routes them by
 explicit tool name. Self-test: `bash tests/test_cw_entry.sh` (also part of
 `bash tests/run_tests.sh`).
 
-> **中文速查全文**（原版留档 · bilingual transition archive）：
-> [README-cw.zh.md](README-cw.zh.md)。
+> **Chinese quick reference, full text** (original archive · bilingual transition
+> archive): [README-cw.zh.md](README-cw.zh.md).

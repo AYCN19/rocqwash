@@ -1,195 +1,296 @@
-# Changelog
+# Changelog（对外可见器面变更总账 · public tool-face change ledger）
 
-rocqwash 对外可见器面变更总账（Keep a Changelog 简式·`[Unreleased]` 段蒸馏
-v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段与各器 docstring／
-`--help` 为正本，本文件只作蒸馏索引；与器不一致视为 bug（CONTRIBUTING §1.5
-同律）。版本号沿用仓库「vNN work stream / wave-number (deleted from prose)」口径，commit 哈希随附。
+> **CHANGELOG.md**: the distilled, reader-facing change ledger of the rocqwash
+> tool faces, Keep-a-Changelog style; the `[Unreleased]` section distills the
+> key points of the v35-v39 work streams.
+>
+> Purpose.  Index the repository's user-visible changes on one public surface.
+>   Per-round detail lives in `更新账.md` and in each tool's docstring /
+>   `--help`, which remain the authoritative records; this file is a
+>   distillation index only, and a disagreement with a tool is a bug (same
+>   rule as CONTRIBUTING §1.5).
+>
+> Interface.  Markdown prose face, read by repository readers and graded by
+>   `tools/norm_lint.py` under `docs/annotation-standard-v1.0-20261113.md`.
+>   Section headings carry the version, the date and the commit hash; version
+>   numbers follow the repository's vNN work-stream convention.
+>   `[Unreleased]` is the standing section.
+>
+> Dependencies.  Plain Markdown only; no execution surface. The
+>   pre-translation Chinese original is preserved in the sibling archive
+>   `CHANGELOG.md.zh.md`.
+>
+> Evidence.  Every entry names the tool paths, schema names, suite counts and
+>   commit hashes of the round it describes, so each claim can be checked
+>   against the cited tool face or the cited test roster.
+>
+> Exit-codes.  Not applicable: this face carries no execution surface; the
+>   tools it indexes keep their own 0/1/2/9 exit-code contracts.
 
 ## [Unreleased]
 
-### v35 — CI 诊断工具链波（2026-11-11·acf9fe6）
+### v35 — CI diagnostics toolchain work stream (2026-11-11 · acf9fe6)
 
 **Added**
 
-- `tools/toolchain_dyld_doctor.py` — dyld 工具链broken linkage诊断器：otool -L 解析
-  rocqworker 外部硬引用→逐条 exists/missing 判定→missing 件按 donor 根溯源→
-  restore 建议只打印禁代执行；`--smoke` 可选冒烟（SMOKERC＋.vo 魔数报数）；
-  schema `rocqwash-dyld-doctor/1`·退出码 0 healthy/1 missing-libs/2 用法/9
-  worker·otool 缺。
-- `tools/net_probe.py` — 上传端点网络窗probe (tool citation) / check (generic sense)：缺省四端点裸 GET（HTTPError
-  500/400＝可达即健康·URLError/timeout＝不可达）；双探稳窗律（连续两轮全过
-  才 STABLE·a single-probe round must not initiate）。
-- `tools/ci_triage.py` — CI failing-build triage器：五族classification谱（A 内容红／B NETRED／
-  C 工具链broken linkage／D 排队资源墙／E coqchk-skipped）＋绿炉 watch-only·
-  UNRECOGNIZED 不充谱；classification序 UNRECOGNIZED>C>A>E>B>D；`--logs` 十三族关键行；
-  a failing result is data, not a tool failure。
-- `tools/registry_union.py` — 注册册 union operation器：main 为底＋对 merge-base
-  真独有行尾插·A1/A2/A3 断言 fail-loud·`--reanchor` md5-8 正典形·CRLF 保全·
-  dry run by default `--apply` 才写盘。
+- `tools/toolchain_dyld_doctor.py` — diagnostic tool for dyld toolchain
+  linkage failures: parses the `otool -L` external hard references of
+  `rocqworker`, judges each entry exists/missing, traces a missing item back
+  to its donor root, and only prints restore suggestions — never executes
+  them; optional `--smoke` smoke check (SMOKERC plus the `.vo` magic-number
+  report); schema `rocqwash-dyld-doctor/1`; exit codes 0 healthy / 1
+  missing-libs / 2 usage / 9 the worker or `otool` missing.
+- `tools/net_probe.py` — network-window probe of the upload endpoints: plain
+  GET requests to the four default endpoints (an `HTTPError` 500/400 means
+  the stack is up, so reachable equals healthy; `URLError` or a timeout means
+  unreachable); the two-probe stability-window rule (STABLE only after two
+  consecutive all-passing rounds; a single-probe round must not initiate).
+- `tools/ci_triage.py` — CI failing-build triage tool: the five-family
+  classification spectrum (A content-red / B NETRED / C toolchain break /
+  D queue-resource wall / E coqchk-skipped) plus the watch-only action for
+  all-passing runs; UNRECOGNIZED is never forced into a family;
+  classification order UNRECOGNIZED > C > A > E > B > D; `--logs` prints the
+  thirteen key-line families; a failing result is data, not a tool failure.
+- `tools/registry_union.py` — registry union-operation tool: main is the
+  base and rows unique against the merge-base are appended at the end;
+  A1/A2/A3 fail-loud assertions; `--reanchor` md5-8 canonical form; CRLF
+  preservation; dry run by default, writes only under `--apply`.
 
 **Changed**
 
-- `cw.sh` 增 doctor/net-probe/triage/union 四路由（十一工具）·透传契约未动；
-  本地映射 cw_paths v1.0→v1.1（八根新段＋移根监察表）。
-- 自测套件 47 例（43 过／0 红／4 SKIP·EXIT 0）。
+- `cw.sh` gains the doctor/net-probe/triage/union routes (eleven tools); the
+  passthrough contract is untouched; the local mapping cw_paths goes
+  v1.0→v1.1 (eight new root sections plus a moved-root watch list).
+- Self-test suite 47 cases (43 pass / 0 failing / 4 SKIP · EXIT 0).
 
-### v36 — 编排层：pushci single-command pipeline（2026-11-11·4026051）
+### v36 — orchestration layer: the pushci single-command pipeline (2026-11-11 · 4026051)
 
 **Added**
 
-- `tools/pushci.py` — 修复后推送 CI single-command pipeline（五段：preflight
-  doctor＋net_probe 双闸＋可选 gate4 头注预扫→push HTTP/1.1 三发＋ghproxy
-  换路→resolve+watch（head_branch+head_sha 咬合）→heal（ci_triage classification分派·
-  有界 rerun 帽 3）→verdict±merge（409 重拉 tip 重试 ≤3））。v35 四器
-  subprocess 编排零新引擎；verdict 七态封册（success/dry-run=0·
-  heal-exhausted/unstable/toolchain=1·fix-content/gate4-block=2·9=目标缺失）。
-- `tests/test_pushci.py` ＋ 六场景 canned 夹具（绿径／NETRED 愈合／内容红零
-  rerun／heal 耗尽／merge 200／dry-run 零副作用）·15 过 0 红；离线可测硬要求：
-  `--injector` 双形＋`--git-caller` 成对·`--sleep-scale 0`·api_calls/git-caller
-  调用流水逐位differential comparison。
+- `tools/pushci.py` — post-fix push-and-CI single-command pipeline (five
+  stages: preflight doctor + net_probe checks + optional gate4 header-comment
+  prescan → push over HTTP/1.1 with up to three attempts plus ghproxy
+  reroute → resolve + watch (keyed on head_branch + head_sha) → heal
+  (ci_triage classification routing, rerun capped at 3) → verdict ± merge
+  (409 re-pulls the tip, retried ≤3)). The v35 tools are orchestrated through
+  subprocess with zero new engines; the verdict set has seven states
+  (success/dry-run=0 · heal-exhausted/unstable/toolchain=1 ·
+  fix-content/gate4-block=2 · 9=target missing).
+- `tests/test_pushci.py` + six-scenario canned fixtures (the passing path /
+  NETRED healing / content-red with zero reruns / heal exhausted / merge 200
+  / dry-run zero side effects) · 15 pass / 0 failing; the offline-testability
+  hard requirement: `--injector` in both forms paired with `--git-caller`,
+  `--sleep-scale 0`, and a bit-for-bit differential comparison of the
+  api_calls/git-caller call streams.
 
 **Changed**
 
-- `cw.sh` 十二工具；README-cw.md 主流水线升级 doctor→net-probe→pushci→triage
-  （诚实旁注：推窗四判据仍归 `certify/push_gate.py`·双门并立）。
-- 自测套件 48 例（44 过／0 红／4 SKIP）。
+- `cw.sh` twelve tools; the README-cw.md main pipeline upgrades to
+  doctor→net-probe→pushci→triage (honest side note: the four push-window
+  criteria still belong to `certify/push_gate.py`; the two doors stand side
+  by side).
+- Self-test suite 48 cases (44 pass / 0 failing / 4 SKIP).
 
-### v37 — 服务层：实时动态三器（2026-11-11·41e74b0）
+### v37 — service layer: three realtime-status tools (2026-11-11 · 41e74b0)
 
 **Added**
 
-- `tools/unclog.py` — clear blockages堵塞闭环引擎：probe 归集→chain_graph 链根（self
-  washable 判·frozen8 红拒 fail-closed）→cure_applier 只正典包apply→scan_v4
-  复扫＋probe 复探（md5 咬合）→verdict unclogged／诚实墙 wall（逐根列因禁
-  硬凑）／rounds-exhausted；dry run by default；`--injector` canned probe (tool citation) / check (generic sense)下 chain/cure/
-  scan/frozen8 照旧真跑（真编排非傀儡）。
-- `tools/wash_shape.py` — shape-normalizing tool·正典形五洗流水（词面洗/token 洗/头注形洗/
-  行尾洗/锚形洗）：plan/apply 两段·plan 缺省零写盘·apply 后复跑五洗复核→
-  shaped/partial 如实；冻结名册自动排除＋显式指认红拒。
-- `tools/cw_sentinel.py` — 实时动态哨：三路信号源（CI 新红炉→ci_triage classification／
-  本地新堵账→chain_graph TOP／构建日志增量词面）→JSONL 事件流（append＋
-  fsync＋stdout 镜像）·`--state-file` seen 幂等·缺省 report-only 零动作。
-- 接口五纪律三器贯通：schema designated（rocqwash-unclog/1·rocqwash-shape/1·
-  rocqwash-sentinel/1）·退出码 0/1/2/9（a failing result is data, not a tool failure）·`--once/--loop` 双模·
-  `--injector`/`--sleep-scale` 离线可测·编排零新引擎（全 subprocess）。
+- `tools/unclog.py` — closed-loop engine for clearing blockages: probes are
+  collected → chain_graph locates the chain roots (self-washable judgment; a
+  frozen8 refusal is fail-closed) → cure_applier applies the canonical pack
+  only → scan_v4 rescans and the probe re-probes (md5-keyed) → verdict
+  unclogged / wall (the honest wall verdict: each root lists its causes and a
+  forced fit is forbidden) / rounds-exhausted; dry run by default; under
+  `--injector` canned probes the chain/cure/scan/frozen8 stages still really
+  run (a real orchestration, no stand-ins).
+- `tools/wash_shape.py` — shape-normalizing tool · the canonical five-wash
+  pipeline (lexical / token / header-shape / line-ending / anchor washes):
+  plan and apply as two stages; plan writes nothing by default; after apply
+  all five washes re-run for verification → shaped / partial as measured;
+  the frozen roster is excluded automatically and an explicitly named frozen
+  target is refused.
+- `tools/cw_sentinel.py` — the realtime-status watcher: three signal sources
+  (a new failing CI build → ci_triage classification / new local blockage
+  records → chain_graph TOP / incremental build-log token surface) → a JSONL
+  event stream (append + fsync + stdout mirror); `--state-file` makes the
+  seen state idempotent; report-only by default with zero actions.
+- The five interface disciplines run through all three tools: schemas
+  designated (`rocqwash-unclog/1` · `rocqwash-shape/1` ·
+  `rocqwash-sentinel/1`) · exit codes 0/1/2/9 (a failing result is data, not
+  a tool failure) · `--once/--loop` dual mode · `--injector`/`--sleep-scale`
+  offline testability · orchestration with zero new engines (all subprocess).
 
 **Changed**
 
-- `cw.sh` 十五工具；README-cw.md 新增「工作流配合接口」节（五纪律速查＋
-  三典型后台哨命令行＋pushci/unclog/wash_shape 三典型工作流嵌段）。
-- 自测套件 51 例（47 过／0 红／4 SKIP）。
+- `cw.sh` fifteen tools; README-cw.md gains a "workflow cooperation
+  interface" section (the five disciplines at a glance + three typical
+  background-watcher command lines + three typical workflow embedding blocks
+  for pushci/unclog/wash_shape).
+- Self-test suite 51 cases (47 pass / 0 failing / 4 SKIP).
 
-### v38 — 接驳与体检层（2026-11-11·c205ea0）
+### v38 — docking and health-check layer (2026-11-11 · c205ea0)
 
 **Added**
 
-- `tools/cw_doctor.py` — 综合体检器四域聚合：环境（dyld doctor）40／网络
-  （net_probe）20／注册（order.txt 锚正典形审计）25／堵账（probe 抽样→
-  chain_graph TOP）15→综合健康分 0-100＋verdict healthy/degraded＋advice 逐
-  非绿域指向对应器；只诊断禁代执行；`--injector` 离线可测（缺键 9 绝不静默
-  走真）。
-- `tools/_http_backoff.py` — 韧性层公共件：403/429/5xx 指数退避（Retry-After
-  秒数头尊重·4xx 语义面不重试）·ci_triage/cw_sentinel/pushci 三器共享；
-  injector canned 路径一律零重试零真网络。
-- `examples/workflows/` 三正典嵌段（backend-sentinel／step-pushci／
-  loop-unclog·样例为 tmp 注入演练实跑所产非手写）＋
+- `tools/cw_doctor.py` — composite health-check tool aggregating four
+  domains: environment (dyld doctor) 40 / network (net_probe) 20 / register
+  (order.txt anchor canonical-form audit) 25 / blockages (probe sampling →
+  chain_graph TOP) 15 → a composite health score 0-100 plus verdict
+  healthy/degraded and advice pointing each non-passing domain to its tool;
+  diagnosis only, never execution on the tool's behalf; `--injector` makes
+  it offline-testable (a missing key exits 9 and never silently runs for
+  real).
+- `tools/_http_backoff.py` — resilience-layer shared module: exponential
+  backoff on 403/429/5xx (honors the Retry-After seconds header; 4xx
+  semantics are not retried) shared by ci_triage / cw_sentinel / pushci;
+  injector canned paths never retry and never touch the real network.
+- Three canonical embedding blocks under `examples/workflows/`
+  (backend-sentinel / step-pushci / loop-unclog — the samples were produced
+  by real tmp-injection drills, not hand-written) +
   [`docs/workflow-integration-whitepaper-v1.0-20261111.md`](docs/workflow-integration-whitepaper-v1.0-20261111.md)
-  （五纪律／三嵌段／后台任务与主会话让路五机制／push_gate 推窗四判据×pushci
-  initiate / emit闸双门并立）。
+  (the five disciplines / the three embedding blocks / the five mechanisms
+  for background tasks yielding to the interactive session / push_gate's
+  four push-window criteria × the pushci preflight check — the dual-door
+  arrangement).
 
 **Changed**
 
-- cw_sentinel 增 `--on-red-preset`（预设 unclog＝dry runclear blockages／pushci＝dry-run·
-  与 `--on-red` 同一执行器零新路径·两者互斥 rc=2·`--on-red-arg K=V` 透传）。
-- unclog 增 `--audit` 只读堵账基线（零写盘硬保证＝`--src` 全文件 md5 跑前跑后
-  自证恒同·与 `--apply`/`--loop` 互斥 rc=2·timing 段为唯一非确定段）。
-- 防挂帽：pushci `--timeout`·cw_sentinel `--subproc-timeout`（缺省 120s·超时
-  杀＋fail-loud 报调用名）；net_probe 增 `--jitter/--seed`（抖散重试风暴·
-  固定 seed 确定性）。
-- `cw.sh` 十六工具；自测套件 52 例（48 过／0 红／4 SKIP·基线回归改前改后同绿）。
+- cw_sentinel gains `--on-red-preset` (preset unclog = dry-run
+  clear-blockages / pushci = dry-run · the same executor as `--on-red`, zero
+  new paths · the two are mutually exclusive rc=2 · `--on-red-arg K=V`
+  passthrough).
+- unclog gains `--audit`, the read-only blockage-record baseline (zero-write
+  hard guarantee = the `--src` whole-file md5 proves itself identical before
+  and after the run · mutually exclusive with `--apply`/`--loop`, rc=2 · the
+  timing section is the only non-deterministic section).
+- Hang-prevention caps: pushci `--timeout` · cw_sentinel `--subproc-timeout`
+  (default 120s · on timeout, kill + fail-loud with the callee named);
+  net_probe gains `--jitter/--seed` (spreads out retry storms · a fixed seed
+  is deterministic).
+- `cw.sh` sixteen tools; self-test suite 52 cases (48 pass / 0 failing /
+  4 SKIP · the baseline regression is equally passing before and after the
+  change).
 
-### v39 — 语料滚扩波·文档conclude / close（2026-11-11·caa3a28）
+### v39 — corpus rolling-expansion work stream · document close-out (2026-11-11 · caa3a28)
 
 **Added**
 
-- `tests/fixtures/header_map_v1.json` — 头注模板库 v1（preset
-  effort / work stream_set_diamond·Set 仓 20261110 正典五字段形蒸馏·占位 6 枚全带引据·
-  身内容绝不合成·缺 evidence 拒载——「evidence required before issuance」由代码执行；
-  schema `rocqwash-header-map/1`）。
-- `tools/doc_lint.py` — 文档←→实现一致性三查器：①cw.sh 四处工具表互检＋
-  tools/ 通用入口reconcile ②CASES vs tests/README.md vs README.md 计数三处reconcile
-  ③doc 引用旗标逐枚对照各器 `--help` 实出；schema `rocqwash-doclint/1`·
-  verdict consistent|drift（a failing result is data, not a tool failure·响亮 stdout）。
-- `tests/test_relay_e2e.py` — cw_sentinel `--on-red-preset unclog` 端到端三判
-  （事件触发／unclog dry run rc=0 零写盘／JSONL 同盘 report 路径）＋
+- `tests/fixtures/header_map_v1.json` — header template library v1 (preset
+  `campaign_set_diamond` · distilled from the Set repository's 20261110
+  canonical five-field form · six placeholders, each carrying its citation ·
+  body content is never synthesized; a missing evidence entry refuses the
+  load — "evidence required before issuance" is enforced by the code;
+  schema `rocqwash-header-map/1`).
+- `tools/doc_lint.py` — the doc-vs-implementation consistency checker with
+  three checks: (1) the four cw.sh tool tables cross-checked and reconciled
+  against the tools/ generic entry points; (2) the CASES vs tests/README.md
+  vs README.md counts reconciled at all three sites; (3) every doc-cited
+  flag checked one by one against each tool's real `--help` output; schema
+  `rocqwash-doclint/1` · verdict consistent|drift (a failing result is data,
+  not a tool failure · loud stdout).
+- `tests/test_relay_e2e.py` — the cw_sentinel `--on-red-preset unclog`
+  end-to-end three-check (event trigger / unclog dry run rc=0 zero writes /
+  JSONL same-disk report path) +
   [`docs/ops-realtime-service-v1.0-20261111.md`](docs/ops-realtime-service-v1.0-20261111.md)
-  运行手册（后台哨标准命令与 JSONL 使用／on-red 预设三式对照／真实树活跑
-  规程 audit 基线→人审→apply allowlist／主会话让路配合）。
+  runbook (standard background-watcher commands and JSONL usage / the three
+  on-red preset forms side by side / the live-tree run procedure: audit
+  baseline → human review → apply allowlist / interactive-session-yield
+  coordination).
 
 **Changed**
 
-- `wash/cure_pack.json` v1.3→v1.4（24→25 式）：evidence-gated 扩容——三源
-  勘察得候选 11 条，收 1 式（cure39_ifq_connective_qualify·引据 Set 仓洗波锚
-  commit 9a51c74 diff 逐字 25 站）·拒 10 条逐条因（宁缺毋滥代码化）。
-- wash_shape 增 `--header-map-preset NAME` designated模板接线（与 `--header-map`
-  同槽互斥 rc=2·模板源探测次序 `--header-map` > preset > env）。
-- `cw.sh` 十七→十九工具：doc-lint 路由＋netname-normalize/select-audit 两路由
-  补齐（doc_lint 真仓初跑 drift=3 的主会话裁决＝补而非另册·六处同步）；
-  doc_lint 复跑 consistent drift=0。
-- 自测套件 54 例（50 过／0 红／4 SKIP）。
+- `wash/cure_pack.json` v1.3→v1.4 (24→25 forms): evidence-gated expansion —
+  a three-source survey produced 11 candidates and 1 form was accepted
+  (cure39_ifq_connective_qualify · citing the Set-repository wash pass
+  anchor commit `9a51c74`, the diff checked verbatim across 25 stations) ·
+  10 rejected with a per-item reason (prefer no cure over a weak cure,
+  enforced in code).
+- wash_shape gains `--header-map-preset NAME` designated-template wiring
+  (the same slot as `--header-map`, mutually exclusive rc=2 · template
+  source probing order `--header-map` > preset > env).
+- `cw.sh` seventeen → nineteen tools: the doc-lint route plus the
+  netname-normalize and select-audit routes complete the roster (doc_lint's
+  first real-repository run reported drift=3; the decision was to fill the
+  gaps rather than keep a separate register · six sync sites); doc_lint's
+  re-run is consistent with drift=0.
+- Self-test suite 54 cases (50 pass / 0 failing / 4 SKIP).
 
-### v53 — 注释面规范化波：规范卡＋norm_lint＋入口面/四器英文化（2026-11-13·工作树未发版）
+> [Unreleased] note: the five v35-v39 work streams all landed on 2026-11-11
+> and shipped with the repository's mainline evolution without a separate
+> release; the next work stream v40 (canonicalization consolidation) is
+> scheduled (long-run vectors + frozen-face recheck + full INDEX/README
+> table alignment + the push_gate dual-door normalize assessment — see the
+> v39 pending items in `更新账.md`).
+
+### v53 — comment-face normalization work stream: annotation card + norm_lint + entry-face / four-tool anglicization (2026-11-13 · unreleased, working tree only)
 
 **Added**
 
-- `docs/annotation-standard-v1.0-20261113.md` — 注释规范卡 v1.0：两段式头注
-  （banner＋五字段 Purpose./Interface./Dependencies./Evidence./Exit-codes.
-  逐字）＋禁词面四族＋双语过渡规则（翻译替换为正·原中文入 `.zh.md` 留档
-  而非删除·代码标识符/CLI 旗标/JSON schema 字段/退出码语义零改动）＋
-  error/warn 分级与检查器退出码口径（0/1/2/9）。
-- `docs/jargon-to-standard-mapping-v1.md` — 黑话→标准表述对照表 v1（规范卡
-  Appendix A·142 活跃词面＝核心 16 行＋JARGON v0.9/v1.1 基座承袭＋工具仓
-  sweep 扩充＋短语级＋英语口语族·语境注记逐行·标识符豁免登记）。
-- `tools/norm_lint.py` — 注释面规范化检查器 report-only 首形：`--tree`/`--file`
-  扫 .py/.sh/.md 散文面·五查（头注形/黑话词面/CJK 残留/禁类/头注行数帽）·
-  schema `rocqwash-norm-lint/1`·findings 是数据退出码不升级（0/1/2/9）·
-  `--selftest` 六矢量·`*.zh.md` 与 `docs/zh/` 归档面免扫。
-- `docs/zh/ci_triage-docstring.zh.md` 等 — 核心四器中文 docstring 原档留档
-  （cw_sentinel/pushci/unclog/ci_triage·程序化逐字提取）＋`README-cw.zh.md`／
-  `cli/rocqwash.zh.md` 双语过渡留档。
+- `docs/annotation-standard-v1.0-20261113.md` — the annotation standard card
+  v1.0: the two-part header (banner + the five fields
+  Purpose./Interface./Dependencies./Evidence./Exit-codes. verbatim) + the
+  four forbidden-word families + the bilingual transition rules
+  (translation-replacement is canonical; the original Chinese goes into a
+  `.zh.md` archive instead of being deleted; code identifiers / CLI flags /
+  JSON schema fields / exit-code semantics are never changed) + the
+  error/warn grading and the checker's exit-code contract (0/1/2/9).
+- `docs/jargon-to-standard-mapping-v1.md` — the jargon-to-standard mapping
+  table v1 (the card's Appendix A · 142 active faces = the core 16 rows +
+  the JARGON v0.9/v1.1 base carry-over + the tool-repository sweep expansion
+  + the phrase-level rows + the English colloquial family · per-row context
+  notes · the identifier-exemption register).
+- `tools/norm_lint.py` — the annotation-face normalization checker,
+  report-only first form: `--tree`/`--file` scans .py/.sh/.md prose faces ·
+  five checks (header shape / jargon faces / CJK residue / forbidden classes
+  / header line budget) · schema `rocqwash-norm-lint/1` · findings are data
+  and the exit code never escalates on them (0/1/2/9) · `--selftest` six
+  vectors · `*.zh.md` and `docs/zh/` archive faces are exempt from scanning.
+- `docs/zh/ci_triage-docstring.zh.md` and siblings — the Chinese docstring
+  originals of the four core tools archived (cw_sentinel / pushci / unclog /
+  ci_triage · extracted programmatically, verbatim) plus the
+  `README-cw.zh.md` / `cli/rocqwash.zh.md` bilingual-transition archives.
 
 **Changed**
 
-- 入口面英文化（翻译替换·接口零改动）：`cw.sh`／`cli/rocqwash`／`README-cw.md`
-  头注/帮助面英文重写·标识符/旗标/退出码逐字未动；`tools/ci_triage.py`／
-  `tools/pushci.py`／`tools/unclog.py`／`tools/cw_sentinel.py` 模块 docstring
-  英文化（行内注释残留如实登记，为递归消减基线）。
-- `cw.sh` 二十五工具：norm-lint 路由入册（六处同步）；README-cw.md 工具表
-  增 norm-lint 行。
-- `tools/doc_lint.py`：DEFAULT_HELP_CAP 24→25（norm_lint 入册后 25 器·帽溢出
-  probe_engine 按 v38/v46 同 precedent 换代）；doc 面收集免扫 `*.zh.md` 与
-  `docs/zh/` 归档面（规范卡 §5.2 归档件非正本面）。
-- tests/：t_norm_lint 挂接（`tests/test_norm_lint.py` 最小自测壳三判）·
-  自测套件 59→60 例；README.md/tests/README.md 计数行同步。
+- Entry faces anglicized (translation-replacement, zero interface change):
+  the header/help faces of `cw.sh` / `cli/rocqwash` / `README-cw.md`
+  rewritten in English with identifiers / flags / exit codes byte-identical;
+  the module docstrings of `tools/ci_triage.py` / `tools/pushci.py` /
+  `tools/unclog.py` / `tools/cw_sentinel.py` anglicized (the inline-comment
+  residue is registered as-is and forms the recursive-reduction baseline).
+- `cw.sh` twenty-five tools: the norm-lint route is registered (six sync
+  sites); the README-cw.md tool table gains the norm-lint row.
+- `tools/doc_lint.py`: DEFAULT_HELP_CAP 24→25 (after norm_lint registered,
+  25 tools; the cap overflow, probe_engine, rotates per the same precedent
+  as v38/v46); doc-face collection exempts the `*.zh.md` and `docs/zh/`
+  archive faces from scanning (archive files are not canonical faces,
+  annotation card §5.2).
+- tests/: the t_norm_lint hookup (`tests/test_norm_lint.py`, a minimal
+  selftest shell with three checks) · self-test suite 59→60 cases; the
+  README.md / tests/README.md count lines synced.
 
 **Verification**
 
-- norm_lint 全仓基线账（`--tree` 全仓·无allowlist·现状如实）：files=140·
-  error=2441·warn=1036·cjk_ratio=0.248597·同输入重跑字节恒同
-  （`docs/norm-lint-baseline-20261113.{json,md}`）。
-- doc_lint consistent（help_run=25/25·drift=0）；总套两遍绿（60 例 59 过
-  0 红 1 略×2）；bash -n 全 sh 过；黑话终扫在册＝入口面叙述类词面清偿约
-  26 处（wave/effort / work stream/agent / seat-worker 叙述·日期戳·席名·叙述义 dispatch 改写），余量
-  如实登记＝标识符引形类（cw.sh `dispatch` 路由名×5·README-cw.md 例命令/
-  文档链接文件名日期×6·cli/rocqwash `retrofit` 子动词名×4）＋四器行内注释
-  残留（jargon 2-14·cjk_ratio 0.11-0.19）。
+- The repo-wide norm_lint baseline ledger (`--tree` over the whole
+  repository · no allowlist · the state as measured): files=140 · error=2441
+  · warn=1036 · cjk_ratio=0.248597 · byte-identical on an identical-input
+  rerun (`docs/norm-lint-baseline-20261113.{json,md}`).
+- doc_lint consistent (help_run=25/25 · drift=0); the full suite green twice
+  (60 cases: 59 pass / 0 failing / 1 skip ×2); `bash -n` passes on all .sh;
+  the final jargon scan's registered remainder: about 26 narrative entry-face
+  wordings cleared (work stream / effort / agent narratives · date stamps ·
+  `seat` names · narrative-sense `dispatch` rewrites), the remainder registered
+  honestly = the identifier-citation class (the cw.sh `dispatch` route name
+  ×5 · README-cw.md example commands / doc-link filename dates ×6 · the
+  cli/rocqwash `retrofit` sub-verb name ×4) + the four tools' inline-comment
+  residue (jargon 2-14 · cjk_ratio 0.11-0.19).
 
-### v58 — self-evolution guardrail wave: wash-map self-reference guard (2026-11-16)
+### v58 — self-evolution guardrail work stream: wash-map self-reference guard (2026-11-16)
 
 **Fixed**
 
 - `docs/jargon-to-standard-mapping-v1.md`: restored the 27 rows rewritten by the
-  `e04f2f6` E2 jargon mechanical pass (absorb→并入, finally established→已证结论, splice→splice
+  `e04f2f6` E2 jargon mechanical pass (`absorb`→`并入`, `finally established`→`已证结论`, `splice`→`splice`
   and 24 more). That pass rewrote the banned faces *themselves* inside the
   mapping table, which (a) dropped 11 of the 13 faces the seed contract says
   this table supplies (liquidated/thinned/machine ruling/delisted/credit tally/splice/double failure/cyclic account/unloaded/shot down/overturned)
@@ -226,7 +327,7 @@ v35-v39 五波要点）。逐轮细账以 [`更新账.md`](更新账.md) 各段�
   red on the `jargon/snapshot-md5` drift).
 - Destructive-surface matrix 23/23 green (new row J1 PASS).
 
-### v59 — platform-reproducible CI wave: three independent red causes (2026-11-16)
+### v59 — platform-reproducible CI work stream: three independent red causes (2026-11-16)
 
 CI was red on all three hosted platforms (runs #89/#90/#91) for three
 independent reasons, none of them caused by the v58 wash-map fix.
@@ -271,11 +372,11 @@ independent reasons, none of them caused by the v58 wash-map fix.
   local suite went from 60 pass / 17 red / 4 skip to 70 pass / 7 red / 4 skip.
   Six of the seven remaining reds are platform-dependent and already sit in
   the CI Linux/Windows platform roster; the seventh (`t_frozen8_check`) was
-  caused by this wave's own edit to `certify/frozen8.py` and was closed by
+  caused by this work stream's own edit to `certify/frozen8.py` and was closed by
   re-issuing the frozen roster through the tool's own `freeze` face
   (idempotent replay byte-identical, `frozen8 check` OK, 0 changed).
 
-### v60 — Windows stdout-codepage wave: UTF-8 I/O forced on every lane (2026-11-16)
+### v60 — Windows stdout-codepage work stream: UTF-8 I/O forced on every lane (2026-11-16)
 
 After v59 the macOS and Linux lanes were green, but both Windows lanes were
 still red — the hosted one across 34 cases, the local self-hosted one across
@@ -296,7 +397,7 @@ still red — the hosted one across 34 cases, the local self-hosted one across
   hardcoded POSIX path `/tmp/erasure_selftest_<pid>.mli`, which does not
   exist on a Windows runner. It now uses `tempfile.gettempdir()`.
 
-### v61 — Windows lane closure wave: quoting, autocrlf and encoding (2026-11-16)
+### v61 — Windows lane closure work stream: quoting, autocrlf and encoding (2026-11-16)
 
 After v60 the macOS and Linux lanes were green and the hosted Windows lane
 had dropped from 34 red cases to 2, with one more red on the local
@@ -325,7 +426,7 @@ self-hosted lane.
   every child it spawns, so a child that prints Chinese prose or math symbols
   cannot die with `UnicodeEncodeError` on an ANSI-codepage host.
 
-### v62 — isolated-mode encoding wave: `-X utf8` reaches every child (2026-11-16)
+### v62 — isolated-mode encoding work stream: `-X utf8` reaches every child (2026-11-16)
 
 **Fixed**
 
@@ -354,7 +455,7 @@ self-hosted lane.
   exactly the cases the blocking roster excludes, and the job carries
   `continue-on-error: true`).
 
-### v63 — platform-sensitive roster wave: guard exit-code passthrough (2026-11-16)
+### v63 — platform-sensitive roster work stream: guard exit-code passthrough (2026-11-16)
 
 The two platform-sensitive roster watch jobs stay red by design (they run
 exactly the cases the blocking roster excludes). Two of their reds were real
@@ -425,10 +526,6 @@ defects rather than environment noise, and are closed here.
   means: the tool's own write face. The rows that guard git-object writes
   assert on the object store explicitly.
 
-[Unreleased] 注：v35-v39 五波均落 2026-11-11·随仓库主线演进未单独发版；
-下一波 v40（正典化巩固波）已排程（长跑矢量＋冻结面复核＋INDEX/README 全表
-对齐＋push_gate 双门normalize评估·见更新账 v39 段待办）。
-
 ### v66 — flaky quarantine guard: order-dependence repair class E2-3 (2026-11-16)
 
 **Added**
@@ -451,11 +548,11 @@ defects rather than environment noise, and are closed here.
   tmp mini-suite; zero real-repo writes.
 
 - `tools/repair_scope.py`: the shared exclusion single source for the E2
-  guard family (the lane-extract agent / seat-worker cast the core: runtime
+  guard family (the lane-extract work stream cast the core: runtime
   LEDGER8/CHECKERS rows via an AST read of `certify/frozen8.py`, the
   append-only ledger document, the frozen directory families); the
-  flaky-quarantine class appends its provider scope in the marked agent / seat-worker
-  append zone (read-merge-write, idempotent).
+  flaky-quarantine class appends its provider scope in the marked append
+  zone (read-merge-write, idempotent).
 
 - `tests/run_tests.sh`: the advisory-roster hookup in the selection
   block.  Rostered cases are dropped from the default selection with a

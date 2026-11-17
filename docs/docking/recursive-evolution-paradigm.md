@@ -5,7 +5,7 @@
 > single-source discipline (see `docs/license-protocol-v1.0-20261114.md` §7 for the
 > disclosure analogue).
 
-## Axioms (constitutional · not amendable by any seat) / 公理（宪法层）
+## Axioms (constitutional · not amendable by any agent) / 公理（宪法层）
 
 | # | Axiom | Meaning |
 |---|---|---|
@@ -37,12 +37,12 @@ round N+1 makes better predictions than round N.
 - **E (domain boundary)**: recursion currently spans the Lean/Python world; the Coq-side
   survey defines the D-stage expansion quote.
 
-## Laws this repo enforces on every wave / 全波强制法
+## Laws this repo enforces on every work stream / 全波强制法
 
 1. **Alignment law**: align with origin/main before construction, again immediately
-   before PR assembly, and after CI goes green on your landing (squash landings move main
+   before PR assembly, and after CI goes green on your integration (squash landings move main
    constantly; stale anchors produce noise). See `alignment-and-pr-protocol.md`.
-2. **Fitness law**: every repair/landing passes the real fitness gate —
+2. **Fitness law**: every repair/integration passes the real fitness gate —
    `tools/axiom_guard.py` (compile leg + kernel re-check, zero axioms, `Admitted`/`Axiom`/
    `Hypothesis` forbidden, no Prop leakage) plus the suite with zero new reds against the
    anchor roster. A linter self-test is not a fitness gate.
@@ -56,11 +56,11 @@ round N+1 makes better predictions than round N.
 
 ## Known structural gaps (registered · under ruling) / 已登记结构间隙
 
-- **Squash × freeze-commit**: every squash landing moves HEAD past `freeze_commit` and
+- **Squash × freeze-commit**: every squash integration moves HEAD past `freeze_commit` and
   re-triggers the git-anchor check until a re-sign lands (re-sign = canonical
   `frozen8.py freeze` face; criterion upgrade under ruling).
 - **No pull_request CI trigger**: `ci.yml` runs on main pushes only, so fork PRs have no
   pre-merge CI face; the automerge door's head-CI criterion needs either a
   pull_request trigger (additive) or a post-merge-only semantics.
 - **Trigger ignition**: the scheduler lite is cast and dry-run only; real ignition waits
-  for the EF wave all-green signal and the first-week human review of every round.
+  for the EF work stream all-green signal and the first-week human review of every round.

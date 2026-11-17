@@ -1,7 +1,7 @@
 # SOP · vacuity 探针工具化与判读分档规程 / SOP: Vacuity Probe Tooling and Verdict Grading (vacgen)
 
 > **Header note (English)**
-> **Job ID**: vacgen-20261112 · work-order phase 1 · spec-seat deliverable · zero-compile (this scroll regulates; it fires no build itself).
+> **Job ID**: vacgen-20261112 · work-order phase 1 · spec-agent deliverable · zero-compile (this scroll regulates; it fires no build itself).
 > **Statement face**: this scroll turns the five generalization crafts measured effective in the vacmain v2 four-fold-convergence audit (source receipt §四) into executable steps, each with a machine-checkable verdict surface; it fixes the five-grade verdict law for probe results and the limited-form, three-bounds statement template; it drafts the independent-repo candidate README skeleton.
 > **Verdict semantics**: strong red = statement-face break, form registration only; weak red = nonempty evidence; refutation green = vacuity alert (highest level); boundary green = positive machine check; absence = pending (a formalization-gap record, not an alert).
 > **Command lines**: every verdict surface below cites an exact command shape; the wording self-check of §五 was executed in the casting session with first-hand output recorded in the scroll (36 registered faces = 0; em-dash count = 0).
@@ -47,7 +47,7 @@
 |---|---|---|---|
 | G1 | 工具链恰等 toolchain equality | `cat lean-toolchain` ＋ `lake env lean --version` | 输出与 pin 逐字恰等 |
 | G2 | 靶件指纹 target fingerprint | `sha256sum <artifact>`（随包副本与正本两点各一发） | 双点同值 |
-| G3 | 形状正本在盘 shape originals on disk | `md5sum <八件>` 对表 §四 manifest | 逐件同值 |
+| G3 | 形状正本在盘 shape originals on disk | `md5sum <八件>` cross-check against the reference §四 manifest | 逐件同值 |
 | G4 | python 可用 python availability | `python -I -c "print('ok')"` | exit 0·生成器与扫描器均 python -I 纯 stdlib |
 
 ### 0.3 总判定语义 Top-Level Verdict Semantics
@@ -62,12 +62,12 @@
 
 ### 1.1 工艺一：哨兵语义（预期红制）Craft 1: Sentinel Semantics (Expected-Red Discipline)
 
-**工艺一句话**: 每个探针件在开炮前必须已声明预期判定；否证面是 COMPILE-MUST-FAIL 哨兵：编译绿即警报，红保持即健康。
+**工艺一句话**: 每个探针件在开炮前必须已声明预期判定；否证面是 COMPILE-MUST-FAIL watcher：编译绿即警报，红保持即健康。
 
 **步骤 Steps**:
 
 - **S1-1 预期判定前置声明**: 每个探针件头注在开炮前写明预期判定。否证面标 `EXPECTED-FAIL`（含预期落点：written-form 收尾读点或残余目标）；witness/边界/骨架面标预期绿。占位 sorry 以 `EXPECTED-FAIL`/`TODO-SEAT` 注释显式声明并计数。
-- **S1-2 骨架验证炮先行**: 先发骨架验证件（与五否证面共享 module 头、import 面、探针点引理、bites 与 `#print axioms` 命令·但不含任何必败定理），要求 rc=0 绿。骨架未先证健全前，任何否证红不可读作证据（红可能系骨架缺陷而非判定）。源审计例：`_vacsmoke.lean` rc=0 先行，五形态红方为预期判定（源回执 §一·重2）。
+- **S1-2 骨架验证炮先行**: 先发骨架验证件（与五否证面共享 module 头、import 面、探针点引理、bites 与 `#print axioms` 命令·但不含任何必败定理），要求 rc=0 passing。骨架未先证健全前，任何否证红不可读作证据（红可能系骨架缺陷而非判定）。源审计例：`_vacsmoke.lean` rc=0 先行，五形态红方为预期判定（源回执 §一·重2）。
 - **S1-3 否证面开炮与落点登记**: 逐否证面发射，逐面记 rc 与判读落点（编译器报错 `file:line`）。落点必须落在声明的收尾读点；落点漂移＝勘形事件，如实登记。
 - **S1-4 警报规则**: 任一 `EXPECTED-FAIL` 面 rc=0 ＝空真警报：冻结一切后续炮、升格上报、`ok = false`。警报判定以本面编译日志为唯一凭据。
 
@@ -86,7 +86,7 @@
 
 **步骤 Steps**:
 
-- **S2-1（a）英文头注**: 探针件头部注释块全英文，最低四字段：审计单号（audit ID）、语句面（statement face：转录自哪个靶件哪段前提界面）、判定语义（verdict semantics：预期判定＋绿/红各自含义）、编译命令行（build command line：含温控包裹全形）；另附纪律行（no sorry / no admit / no native_decide / no new axioms）。参照形：`sbx_v2/` 八件头注。
+- **S2-1（a）英文头注**: 探针件头部注释块全英文，最低四字段：审计单号（audit ID）、语句面（statement face：转录自哪个靶件哪段前提界面）、判定语义（verdict semantics：预期判定＋passing/红各自含义）、编译命令行（build command line：含温控包裹全形）；另附纪律行（no sorry / no admit / no native_decide / no new axioms）。参照形：`sbx_v2/` 八件头注。
 - **S2-2（b）逐字转录机检**: 被审计前提界面逐字转录进探针假设位；转录文本与靶件原文作机械比对（字符串/token 级等值），比对输出留痕。**靶件本体永不入 import 面**（其 sorry 证明件会污染公理审计）；探针以重声明方式承载界面（源回执 §一·重2「转录逐字机检」行）。
 - **S2-3（c）machine bites**: 在具体探针点实例化界面词汇的小定理组，故意编译绿，证明转录界面相对靶件声明的同一 import 面可类型化。bites 全绿是否证红可读作证据的前置条件（界面咬合验证）。
 - **S2-4（d）PA 逐定理报数**: 文件尾对每个可编译声明逐一发 `#print axioms`；预期谱＝`[propext, Classical.choice, Quot.sound]` 子集；命中 `sorryAx` 即红；新增 axiom 声明即红。
@@ -99,7 +99,7 @@
 | 转录等值机检 | `python -I` 比对脚本（转录文本 × 靶件原文） | 输出 PASS 留痕 | 任一不等值 |
 | 靶件零导入 | `command grep -n "<artifact-module>" <probe.lean>` 扫 import 面 | 0 命中 | ≥1（污染源在） |
 | bites 全绿 | 编译日志逐 bite 定理查 rc 与 PA 行 | 全部 rc=0＋PA 三标准 | 任一红＝界面咬合失败·禁读否证红为证据 |
-| PA 三标准 | `command grep -c "sorryAx" <log>` | 0 | ≥1（红·UPGRADE） |
+| PA 三标准 | `command grep -c "sorryAx" <log>` | 0 | ≥1（failing·UPGRADE） |
 
 ### 1.3 工艺三：防波堤扫描器 Craft 3: Token Breakwater Scanner
 
@@ -174,7 +174,7 @@
 |---|---|---|---|
 | **强红 strong red** | 语句面断裂：探针自身语句相对界面不成立（转录位 Unknown identifier / 构造不可用 / Cannot find witness 形） | **只作形态登记（form registration only）·无证据效力**（探针未咬合界面·既不证空也不证非空） | 登记形态；修探针；重发炮 |
 | **弱红 weak red** | 机械红非语句面断裂·落点在声明读点（automation exhausted / unsolved goals 形） | **非空证据**：该前提界面在此谱面强度下抗拒了本次否证尝试 | 逐面登记 rc＋落点；入收敛账 |
-| **绿（否证面）refutation green** | `EXPECTED-FAIL` 面编译 rc=0 | **空真警报（vacuity alert）＝最高级**：前提合取不可满足·被审语句平凡为真 | 冻结＋升格上报＋`ok = false` |
+| **passing（否证面）refutation green** | `EXPECTED-FAIL` 面编译 rc=0 | **空真警报（vacuity alert）＝最高级**：前提合取不可满足·被审语句平凡为真 | 冻结＋升格上报＋`ok = false` |
 | **边界绿 boundary green** | 边界机检面（预期绿）编译 rc=0 | **正面机检**：闭式分离计算成立 | 登记·限定式陈述（只对该闭式事实下判） |
 | **缺位 absence** | §1.4 四股合取在钉定快照内成立 | **挂起（pending）**：形式化缺口记录·非警报·非判空·非判可证 | 按 §2.4 四要素登记；复审条件＝上游形式化落地 |
 
@@ -263,15 +263,15 @@ budget, rc=0, PA 3-standard, `sorryAx` 0). Anchor set measured first-hand
 scratch citations carried abbreviated paths; this section carries the measured
 locations.
 
-**Open engine debt (honestly registered, not repaired by this wave)**: the
+**Open engine debt (honestly registered, not repaired by this work stream)**: the
 engine-side repair (L1 splitter classification, `envelope_statement` splicing,
 bound-form checker extension) lies outside the auto-apply surface of the
-healing wave (this erratum + the shape-table row + test assertions only).
-Re-audit condition: after the engine repair wave lands, re-cast every artifact
+healing work stream (this erratum + the shape-table row + test assertions only).
+Re-audit condition: after the engine repair work stream lands, re-cast every artifact
 cast under this erratum and re-run `tests/t_vacgen_envelope_shape.py`; until
 then every implicit-binder artifact requires the hand-cast repair above.
 
-**Registered self-healing surfaces (this wave, all verified)**:
+**Registered self-healing surfaces (this work stream, all verified)**:
 1. **Shape-table row**: `tools/taxonomy.json` landed 2026-11-14 (builtin
    starter row carried verbatim + `geo.symmetric-set-premise` row matching the
    `∀ v ∈ S, -v ∈ S` premise face). Measured effect on the Mahler-family
@@ -287,7 +287,7 @@ then every implicit-binder artifact requires the hand-cast repair above.
    pin must be updated with the engine repair registration). The two existing
    vacgen tests (`tests/t_vacgen_shape.py`, `tests/t_vacgen_expectedred.py`)
    were **unwired** in `tests/run_tests.sh` (zero mentions found by grep
-   2026-11-14) and are wired by this wave; `tests/t_vacgen_shape.py`'s
+   2026-11-14) and are wired by this work stream; `tests/t_vacgen_shape.py`'s
    subprocess read face additionally lacked `encoding="utf-8"` (GBK-locale
    reader-thread decode failure on cast reports with math symbols) and was
    aligned with the `t_vacgen_expectedred.py` read face.
@@ -375,7 +375,7 @@ finding), and an md5 manifest of every probe and log.
 
 ## 四、形状正本 manifest 与对表 Shape-Original Manifest and Cross-Check
 
-**口径**: 下表 md5 系本席本会话 `md5sum` 第一手实测（2026-11-13 00:0x local）；对表正本＝源回执 §五 manifest；十件加四卷全数同值＝同一实体（对表律：判定正本一律 md5/sha 对表，不凭文件名或尺寸直觉）。
+**口径**: 下表 md5 系本席本会话 `md5sum` 第一手实测（2026-11-13 00:0x local）；对表正本＝源回执 §五 manifest；十件加四卷全数同值＝同一实体（对表律：判定正本一律 md5/sha cross-check against the reference，不凭文件名或尺寸直觉）。
 
 **探针件与工具 Probes and tools（10 件）**:
 
@@ -453,6 +453,6 @@ VERDICT CLEAN (36 faces = 0; em-dash = 0)
 | ④ | AI 味词面自查 grep=0 断言随卷 | §五：登记册＋仪器＋第一手实测输出（36 faces=0·em-dash=0·exit 0）＋时效条款 | DONE |
 | ⑤ | 双语标题＋表头英文化 | 全卷 `#`/`##`/`###` 标题双语；全部表格表头列名均英文（铸卷时逐表枚举复核） | DONE |
 
-**边界如实（本卷未做之事 What this scroll does not cover）**: vacgen 生成器实体、双工件端到端自检、OAI 边界件填充编译、全役 md5 manifest 收口，分别属铸造席/自检席/汇编席职权面，本卷只供其规程与判读律；本卷零编译零发炮（SOP 系文书件·零编译纪律适用）。
+**边界如实（本卷未做之事 What this scroll does not cover）**: vacgen 生成器实体、双工件端到端自检、OAI 边界件填充编译、全役 md5 manifest close out，分别属铸造席/自检席/汇编席职权面，本卷只供其规程与判读律；本卷零编译零发炮（SOP 系文书件·零编译纪律适用）。
 
 *本卷不写自身 md5（自引悖论防波·同源回执例），收卷方 md5sum 对表即可。*

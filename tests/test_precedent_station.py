@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_precedent_station.py — wrapper/precedent_station.py 三判例验收站自测
-（tests/·巡检打磨轮·席 rqsup4·20261101）
+（tests/·巡检打磨轮·agent rqsup4·20261101）
 
 五课件⑤【三判例剧本 toolify】：E7 载体中继／R23 记号重载／E5 投影重锚三判例共用
-验收链（①names 对表→②gate4→③gate7 可选）一站化。本测试只打**轻链①②**与站级
+验收链（①names cross-check against the reference→②gate4→③gate7 可选）一站化。本测试只打**轻链①②**与站级
 形制面（③gate7 为真编译重步·其 launcher 形制归 t_gate7_wrapper 判例——本件不重跑）。
 
   1 站自检      --station-selftest 十判 rc=0

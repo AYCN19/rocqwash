@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_recipe_enbig7_pw1.py — recipes/ENBIG7_same_domain_collision_PW1.md 处方件自测
-（tests/·巡检打磨轮·席 rqsup4·20261101）
+（tests/·巡检打磨轮·agent rqsup4·20261101）
 
 五课件③【dver2-enbig7 同域撞·私占世界重建 PW1】：越界席写穿他席独占写域→世界面
 置换/污染；处方＝仲裁收敛→待静（入侵期产物不采）→全量重审计→私占世界按 order.txt
@@ -12,14 +12,14 @@
                 （PW1／collision_enbig7_20261031／36c35816／待静／全量重审计／
                  私占世界／order.txt 链序／三度／未采／锚必随代换）
   2 前兆负例    【判例 enbig7 形】同一模块名出现在 ≥2 份批选清单 → select_audit
-                DUP-CROSS 红 rc 1（撞名前兆机检·tools/select_audit.py）
+                DUP-CROSS failing rc 1（撞名前兆机检·tools/select_audit.py）
   3 世界偏斜负例【入侵置换形】fixture 世界 .vo 被置换（≠认证代锚）→ world_hook
                 WDIFF→rc 9·洗引擎未跑零落盘（wash/world_hook.py·-- 透传形）
   4 愈面正判    【私占重建后形】fixture 世界按现拍认证代锚全等 → WORLD-BASE-OK
                 rc 0·透传形引擎真跑落盘（锚=现拍 md5·锚必随代换的机械同构）
   5 冻结旁证    wash/wash_engine.py md5 == 在册冻结值 664446bc…（只读 import 面零触）
 
-幂等：临时目录即写即清·零仓库写盘·零编译零网络（世界基断言为纯 md5 对拍）。
+幂等：临时目录即写即清·零仓库写盘·零编译零网络（世界基断言为纯 md5 differential comparison）。
 退出码：0=五判全过；1=任一红。
 """
 import hashlib
@@ -80,7 +80,7 @@ def main():
             missing = ["<处方件整缺>"]
         check("处方件锚词面", ok1, "缺锚=%s" % missing)
 
-        # 2【前兆负例·enbig7 判例形】同件双认领 → DUP-CROSS 红 rc 1
+        # 2【前兆负例·enbig7 判例形】同件双认领 → DUP-CROSS failing rc 1
         order = os.path.join(tmp, "order.txt")
         with io.open(order, "w", encoding="utf-8") as fh:
             fh.write("S03_QExp.v#R0-d66910\nDver2_Target.v#R28-f09c39\n")

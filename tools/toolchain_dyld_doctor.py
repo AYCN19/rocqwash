@@ -237,7 +237,7 @@ def selftest():
     V1 otool -L 样例解析（/usr/lib//System 剔除·外部保留·保序去重）
     V2 exists 判定（tmp 真件/假件）＋restore 路径计算（相对段同位/同名兜底/无命中）
     V3 verdict 汇总三分
-    V4 CLI 全管线（canned otool stub）：healthy→0／missing-libs→1（红·restore
+    V4 CLI 全管线（canned otool stub）：healthy→0／missing-libs→1（failing·restore
        建议只打印不执行实证）／--json 同输入两跑字节恒同
     V5 CLI 用法与目标码：--bogus→2·--smoke 缺 --coqc→2·--coqc 缺失→9·
        --donor 缺失→9·worker 缺失→9·otool 缺失（PATH 剥空）→9

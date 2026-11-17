@@ -1,15 +1,15 @@
-# 勘形档：路线图⑦ 多仓扩展——rocqwash 服务 Main 仓 CI 的适配面（只读·零动码）20261112
+# 勘形档：路线图⑦ 多仓扩展——rocqwash 服务 Main repository CI 的适配面（只读·零动码）20261112
 
 > **性质**：勘形评估档·路线图⑦候选（`docs/roadmap-v43-plus-20261111.md:84-92`）的
-> 「Main 仓 CI 形制勘察」前置面。**只读·零动码**——本席零代码改动、rocqwash 工作树
+> 「Main repository CI 形制勘察」前置面。**只读·零动码**——本席零代码改动、rocqwash 工作树
 > 只增本档一文件；禁触冻结八件/quad8/更新账.md（本席对更新账只读引据）。
-> **口径**：Main 仓 CI 结构**实取为准**（api.github.com netrc 只读 GET·token 零回显·
+> **口径**：Main repository CI 结构**实取为准**（api.github.com netrc 只读 GET·token 零回显·
 > 全程 cpu_guard 包裹）；任务书给形与实取不符处逐条如实登记（§一·2）。
 > **分级**：即用（零改可用）／小改（fixtures/规程/词面级）／中改（结构性盲面/数据面工程）。
 
 ---
 
-## 一、Main 仓 CI 形制实取（20261112·api.github.com netrc GET）
+## 一、Main repository CI 形制实取（20261112·api.github.com netrc GET）
 
 ### 1.1 实取通道与 meta
 
@@ -22,7 +22,7 @@
 - **workflows（实取 GET /actions/workflows）**：total_count=2——
   | workflow | id | path | state |
   |---|---|---|---|
-  | Coq CI（9.1 炉） | 352580515 | .github/workflows/coq.yml | **disabled_manually**（休眠） |
+  | Coq CI（9.1 build） | 352580515 | .github/workflows/coq.yml | **disabled_manually**（休眠） |
   | **Main CI 9.3** | 407286573 | .github/workflows/coq93.yml | **active（现役唯一）** |
 
   两文件全文已实取落 /tmp（coq93.yml=606 行·coq.yml=457 行）；本节引据行号以
@@ -48,30 +48,30 @@
 
 1. 任务书给形「Windows 单道/cold build/**mac observation 两 job**」——实取＝Windows
    **单 job**（mac observation omit·`coq93.yml:32-33` 明文）；build＝指纹 skip 14 道并行
-   非 cold build（cold build 形现役在 **Set 仓** coq.yml:21/:30）。「两 job」形系 Set 仓
+   非 cold build（cold build 形现役在 **Set repository** coq.yml:21/:30）。「两 job」形系 Set repository
    现役形（Set coq.yml:19-735 双 job）。疑为两仓形混写·按实取为准。
 2. 任务书给形「**API tarball checkout**」——实取 Main coq93.yml＝actions/checkout@v5
    （`coq93.yml:89-91`）；API tarball checkout（Ref quiescence supersede gate＋tarball
-   fetch·20261109 dual-store lesson）系 **Set 仓** coq.yml:39-88 形。
+   fetch·20261109 dual-store lesson）系 **Set repository** coq.yml:39-88 形。
 
 ### 1.4 树面实取（/tmp/fetch_main_tree.py·rc=0）
 
 - root：`ConstructiveWorld_Live/`＋`ConstructiveWorld_vo/` 双树＋root `_CoqProject`
-  （3743B）＋`build.sh`＋root `cpu_guard.ps1`（旧 shim·Set 仓同款注记指 infra 正典）。
+  （3743B）＋`build.sh`＋root `cpu_guard.ps1`（旧 shim·Set 仓同款注记指 infra canonical）。
 - 双册 PATH-PROBE（HTTP 码实取）：Live/order.txt **200**（35384B）·Live/_CoqProject **200**
   （19862B）·vo/order.txt **200**（33752B）·vo/_CoqProject **200**（18788B）·
   **root/order.txt 404**·root/_CoqProject 200。
 - Live 顶层 entries=**1000**（contents API 单页帽截断·如实）·单页内 .v=**995**（下界；
   coq93.yml:101 注「Live 679/vo 700」系 20260925 gate1 落树时点·不同时点不同口径·两数并录不互斥）。
-- **本地无 Main 仓 checkout**（实取 `ls -d /Users/apple/Desktop/*Main*` 空）——§3.3 正本面依据。
+- **本地无 Main repository checkout**（实取 `ls -d /Users/apple/Desktop/*Main*` 空）——§3.3 正本面依据。
 
 ---
 
-## 二、Set 仓 coq.yml 现役形（对照·实读 /Users/apple/Desktop/ConstructiveWorld-Set/.github/workflows/coq.yml）
+## 二、Set repository coq.yml 现役形（对照·实读 /Users/apple/Desktop/ConstructiveWorld-Set/.github/workflows/coq.yml）
 
 | 面 | Set 现役（实读） | Main coq93.yml（实取） | 差异级 |
 |---|---|---|---|
-| 触发 | push[main]＋pull_request＋dispatch（macos_only） | 同 | 同形 |
+| 触发 | push[main]＋pull_request＋route（macos_only） | 同 | 同形 |
 | 并发 | **per-ref 池 `cw-main-ci-${{ github.ref }}`＋cancel-in-progress: false**（:15-17·PR 认证与 main push 分池排队） | 单组 cw-main-ci-93＋cancel-in-progress:true | **异** |
 | job | 双 job：coq-build（Windows 认证）＋coq-build-macos（macOS observation·:439-735） | 单 job（mac omit） | **异** |
 | checkout | API tarball＋ref quiescence supersede gate（:39-88） | actions/checkout@v5 | **异** |
@@ -90,7 +90,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 
 ### 3.1 ci_triage 五族判类 × Main 步名（兼容表·判类谱 `tools/ci_triage.py:25-29`）
 
-| Main 红步（实取步名） | 步名 regex 命中（:136-139） | 判类 | 级 |
+| Main 红步（实取步名） | 步名 regex 命中（:136-139） | classification | 级 |
 |---|---|---|---|
 | Build full tree (…)（:247） | build→CONTENT | **A-content-red** | 兼容 |
 | coqchk full-tree certification (…)（:479） | coqchk→CONTENT/COQCHK_STEP | A／E 族对件 | 兼容 |
@@ -98,8 +98,8 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 | gate5 vo-binary quarantine (pre-coqchk…)（:411） | **含 coqchk 子串→CONTENT** | A（归内容红·语义上属内容红·可接受） | 兼容（词面搭便） |
 | attest reconcile (…miss -> coqchk…)（:455） | **含 coqchk 子串→CONTENT** | A | 兼容（词面搭便） |
 | Seed trust cache from local vo tree（:171） | cache→NET | B（若红·多为环境/路径面·B 兜底可接受） | 兼容 |
-| **gate1 poison-token guard**（:102） | **零命中** | **UNRECOGNIZED 兜底**（无 log 时） | 兜底·不误断 |
-| **gate3 cross-tree require-face diff**（:151） | **零命中** | **UNRECOGNIZED 兜底** | 兜底·不误断 |
+| **gate1 poison-token guard**（:102） | **零命中** | **UNRECOGNIZED fallback**（无 log 时） | fallback·不误断 |
+| **gate3 cross-tree require-face diff**（:151） | **零命中** | **UNRECOGNIZED fallback** | fallback·不误断 |
 | **gate4 comment guard (…artifact-only)**（:127） | **artifact→NET 先判**（判类序 步名 B 先于 步名 A·:473-478） | 红时**误归 B-netred** | **词面暗礁**（Set :120 同名同礁·非 Main 新增） |
 
 - 日志词面（--logs·KEY_LOG_PATTERNS :109-123）：GATE-BANNER-ABSENT/公理总数/COQCHK_EXIT
@@ -120,14 +120,14 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
   `https://github.com/` 前缀（`ghproxy_url` :287-292）→ Main 形合规即用；③netrc token
   对 Main **push_perm=True 实取**（§1.1）。
 - **结构性缺口（最大缺口·中改）——PR 路线 mirror-blind 双重失配**：
-  1. push 白名单 **[main]**（`coq93.yml:41-42`）→ pushci push topic-branch **零触发＝
+  1. push allowlist **[main]**（`coq93.yml:41-42`）→ pushci push topic-branch **零触发＝
      结构性无 run 可 watch**（非镜像问题·触发面就无）。
   2. PR 触发 run 的 head_sha＝merge commit（refs/pull/N/merge 生成面）≠pushed tip→
      watch 双咬合 head_branch＋head_sha（:942-944）**必失配**；refs/pull/* 不入 git
      镜像/推送面，`ls-remote refs/heads/<branch>`（:885-886）亦不可见——
      **任务书「refs/pull/* 不入镜像判例」实取面成立且叠加 merge-sha 失配**。
   3. pushci 无 workflow_dispatch 调用面（API 面＝runs GET/rerun POST/pulls GET/merge PUT
-     四形 :1009-1011/:1071-1112）→ dispatch 路线也不通。
+     四形 :1009-1011/:1071-1112）→ route 路线也不通。
   → **pushci 兼容 Main 的唯一路线＝直推 refs/heads/main**（push 事件·head_sha=tip
   咬合成立）；PR 路线要么动 watch 匹配语义（器改·中改）要么立规程「PR 路线禁走
   pushci」（零码·建议后者先行）。
@@ -136,8 +136,8 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
   步骤零红步=B 连坐→rerun→再被取消…至 --max-heal 耗尽 exit 1）。驯服面零器改：
   `--watch-max-rounds` 安全阀（:2024-2025·超帽 fail-loud 9）＋规程对表注记。
 - **咬合窗注记（非现患）**：RUNS_QUERY per_page=30 单页（:152/:698-699 无分页续拉；
-  ci_triage jobs 面有分页 :316-338 而 pushci runs 面无）——Main 炉 2880min 墙低频轮换
-  现势 30 窗量级够用；busy 面扩窗＝小改候选·如实注记。
+  ci_triage jobs 面有分页 :316-338 而 pushci runs 面无）——Main build 2880min 墙低频轮换
+  current state 30 窗量级够用；busy 面扩窗＝小改候选·如实注记。
 - 干跑先行铁律承 v36：真发首跑 `--dry-run` 先行（:1116-1157 计划面零副作用·v36 S6
   判据 HEAD/porcelain 前后恒同·`更新账.md:3608`）；Main 分支保护面本席未探（API 未
   探 protection·如实记未验）。
@@ -149,7 +149,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
   K=1/2 同参双跑实证在账（`docs/perf-profile-v1.0-20261111.md:156-163` 1.87×·
   `更新账.md:3801` v43 双跑互证）。
 - **正本面（现势不可用→中改前置·数据面工程）**：
-  1. 本地无 Main 仓 checkout（§1.4 实取 ls 空）——--src 无正本可指。
+  1. 本地无 Main repository checkout（§1.4 实取 ls 空）——--src 无正本可指。
   2. **世界（--world）无 CI 产线**：Main 认证面=vo 树（coq93.yml:247/:479·产出
      vo-trust-cache-windows-93 artifact 是 **vo 树 .vo** :538-545）——Live 树 .vo 世界
      无任何 CI 产线（对照本地 CW Live 世界 probe_world_v38 系 /tmp APFS clone 易失
@@ -175,7 +175,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
   （认证注册面·coq93.yml:305）或 `ConstructiveWorld_Live/order.txt`（Live 面）——
   **选哪一册＝跨仓语义对表项**（Set 认证面=Live 单树册·Main 认证面=vo 册·同名树
   下参数形一致但语义选册不同·非器缺）。
-- 红线：registry 写面（--apply 落盘）在 Main 仓＝**跨仓越权面**（roadmap⑦ 风险列
+- non-negotiable constraint：registry 写面（--apply 落盘）在 Main repository＝**跨仓越权面**（roadmap⑦ 风险列
   「适配器禁代仓越权写盘」·:90）——审计面（只读四账·registry_audit.py）即用；
   手术面（union --apply）候 Main 仓纪律对表后另议·本档不启。
 
@@ -192,7 +192,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 | 5 | pushci_scenarios canned 场景扩 Main 仓形 | **小改** | 路线图⑦验证方式明令「canned 场景扩仓形全过」（:92）——六场景×Main 步谱 fixtures |
 | 6 | heal × Main concurrency 行为对表 | **小改** | 单组 cancel-in-progress:true 连坐循环面→--watch-max-rounds 安全阀＋规程注记·零器改可驯（§3.2） |
 | 7 | ci_triage Main 红词面可选扩 | **小改** | GATE2-AXIOMS-RED/GATE5-RED/ATT-RECON-FAIL 等（＋gate4 artifact 暗礁词面裁量）入 KEY_LOG_PATTERNS 或 canned 覆盖（§3.1） |
-| 8 | pushci PR 路线 watch 咬合 | **中改** | **最大缺口**——PR run head_sha=merge commit 必失配＋refs/pull/* 不入镜像＋push 白名单 [main] topic 零触发（§3.2·器改 watch 语义或立规程双轨） |
+| 8 | pushci PR 路线 watch 咬合 | **中改** | **最大缺口**——PR run head_sha=merge commit 必失配＋refs/pull/* 不入镜像＋push allowlist [main] topic 零触发（§3.2·器改 watch 语义或立规程双轨） |
 | 9 | unclog Main Live 正本可用性 | **中改** | 无本地 checkout＋Live 世界无 CI 产线＋候选面新采样＋基线域同名冲突断代（§3.3·纯数据面工程） |
 
 **verdict＝即用 4／小改 3／中改 2。**
@@ -210,7 +210,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 3. **零码**：真仓 `--dry-run` 计划面零副作用（HEAD/porcelain 恒同·v36 S6 判据）——
    注意先物化 Main 本地 checkout（--repo-path 需真仓目录·即中改#9 的前置件之一）。
 4. **真发首战**：**push 事件路线（refs/heads/main）**＋`--watch-max-rounds` 安全阀＋
-   heal 分派 Main 对表——**避 PR mirror-blind 面**（中改#8 不阻首战）。
+   heal 分派 Main cross-check against the reference——**避 PR mirror-blind 面**（中改#8 不阻首战）。
 5. **unclog Main 正本（中改·独立排程）**：API tarball 物化→世界构建→候选面采样≤30→
    audit 首跑入账（**域断代换名**防同名域误比）→baseline_diff 同域轴。
 6. **约束面**：凭据（netrc push 权）已实证在位；「积分静默窗」真发段错峰候令
@@ -237,7 +237,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 | 1 | `python3 -B /tmp/fetch_main_ci.py`（netrc GET meta/workflows/contents 两 workflow 全文） | rc=0·REPO-META/workflows/FETCHED 六行响亮（§1.1） |
 | 2 | `python3 -B /tmp/fetch_main_tree.py`（root 清单＋双册 PATH-PROBE＋Live 顶层） | rc=0·200/404 全列（§1.4） |
 | 3 | `python3 -B tools/ci_triage.py --selftest` | rc=0·CI-TRIAGE-SELFTEST PASS |
-| 4 | Set 仓 coq.yml 全文实读（735 行）＋双册 ls | 实读毕·root order.txt No such file |
+| 4 | Set repository coq.yml 全文实读（735 行）＋双册 ls | 实读毕·root order.txt No such file |
 | 5 | 本档写入后 `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | 见当轮账（drift 须=0 方合三闸基准·若幻引即修档重跑） |
 
 ---
@@ -263,7 +263,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
     logs）·绿样张全步 success。
   - `tools/ci_triage.py` --selftest 增〔九〕Main 形判读矢：fixture 16 步名
     逐枚咬合＋确定性字节恒同＋**兼容表 15 行机检**（真形单红步形·无日志·
-    判类序步名 B 先于步名 A）＋E 族 Main 形两件齐形（Upload coqchk logs 红＋
+    判类序步名 B 先于步名 A）＋E 族 Main 形两件齐形（Upload coqchk logs failing＋
     coqchk 步 skipped→E-coqchk-skipped·§3.1 E 行「两件齐→E 可发」实证）。
   - **机检钉判读（勘形 §3.1 兼容表的机械实证·向量已冻结）**：Build full
     tree／coqchk full-tree certification／gate5 vo-binary quarantine／attest
@@ -271,9 +271,9 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
     Seed trust cache／Upload tree-stats／Upload vo trust cache／Upload coqchk
     logs→**B**；gate4 comment guard→**B**（artifact 子串→步名 B 先判·§3.1
     词面暗礁行实证·Set :120 同款非 Main 新增）；gate3／gate2／RAM guard／
-    Generate tree-stats→**UNRECOGNIZED 兜底**不误断。
+    Generate tree-stats→**UNRECOGNIZED fallback**不误断。
   - **一处勘形散文勘误如实登记（机检 vs §3.1 散文）**：§3.1 gate1 行记
-    「零命中→UNRECOGNIZED 兜底」——机械实测 gate1 步名「pre-build fail-fast」
+    「零命中→UNRECOGNIZED fallback」——机械实测 gate1 步名「pre-build fail-fast」
     含 build 子串→CONTENT 搭便归 **A-content-red**（fix-content·poison-token
     红语义上属内容红·可接受同 gate5/attest 搭便）。「五族骨架即用」判据不受
     影响（不漏红·不误断·兜底行四枚非 §3.1 所记两枚）。
@@ -285,7 +285,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
     git-caller 空表＋injector flat verbatim·report.plan 三闸行
     [1] preflight.toolchain／[1] preflight.net／[1] preflight.gate4（未启形
     ＝直推 main 路线 base...branch 差集退化的正确缺省）＋[2] push 计划行
-    （HTTP/1.1＋main）逐行断言；零 API 零 git 调用流水实证；tmp 仓
+    （HTTP/1.1＋main）逐行断言；零 API 零 git 调用流水实证；tmp repository
     before/after 恒同零副作用；幂等两跑字节恒同）。真仓 dry-run 未跑——
     前置件缺（§3.3/§五.3：Main 本地 checkout 须先物化）。
 - **步 4 真发候令（§五.4·未执行·一行）**：
@@ -306,7 +306,7 @@ ci_triage.py:114）——ci_triage 的 E 族确证词面跨仓在位。
 | # | 命令 | rc |
 |---|---|---|
 | 1 | `python3 -B tools/ci_triage.py --selftest` | 0（CI-TRIAGE-SELFTEST PASS·含〔九〕Main 形判读矢：coq93 真形 16 步咬合＋兼容表 15 行＋E 两件齐） |
-| 2 | `python3 -B tests/test_pushci.py` | 0（17 过/0 红·S7 场景＋S7 幂等两跑字节恒同） |
-| 3 | `bash tests/run_tests.sh`（全套·含全部器 selftest 例） | 0（58 过/0 红/1 略〔t_quad8_check 四仓副本群既有 SKIP〕/共 59 例） |
+| 2 | `python3 -B tests/test_pushci.py` | 0（17 过/0 failing·S7 场景＋S7 幂等两跑字节恒同） |
+| 3 | `bash tests/run_tests.sh`（全套·含全部器 selftest 例） | 0（58 过/0 failing/1 略〔t_quad8_check 四仓副本群既有 SKIP〕/共 59 例） |
 | 4 | `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | 0（VERDICT consistent·drift=0·本档 refs=46 unresolved=6 oos=0·本段写入后当轮实跑） |
 | 5 | 禁触对账 | 冻结八件（certify/frozen8.py LEDGER8 在册八件）/quad8/更新账.md 零触碰 ✓；`tools/pushci.py` 零改动（步 3 纯测试面）✓；git 零写操作（未 commit）✓ |

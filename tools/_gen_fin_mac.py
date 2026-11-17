@@ -6,7 +6,7 @@
 对表器）——SortAlive __-census 检验：语句名清单→具名透明别名→**单命令多名一轮全提**
 Separate Extraction（§1·E 律 1 单命令多名全提律：逐命令重置输出 last-write-wins，多目标
 必须单命令全提）→解析 `(** val alive_N : ... **)` 型注与 let 体——RED iff "__"（提取擦除
-语义·词表无关内核级判定，红线②第六关）。
+语义·词表无关内核级判定，non-negotiable constraint②第六关）。
 
 Mac 适配三件：
   ①本生成器——模块名/世界路径/依赖链全参数化（FIN1640 模板系 S10 专用死形，本器改活形）；
@@ -20,7 +20,7 @@ Mac 适配三件：
       --world <worldT_dir> --world-name <W> --outdir <dir> [--requires S01_BaseRing,...]
   # 缺省 --requires＝梯世界链 S01_BaseRing..S09_EntropyReal（至 --module 为止）
 
-干跑验证（S10.vo 未绿·禁实跑 S10——用 worldT_mac S09 干跑，census 100/100 已证为期望底）：
+干跑验证（S10.vo 未绿·禁实跑 S10——用 worldT_mac S09 dry run，census 100/100 已证为期望底）：
   cd <outdir> && bash _fire_fin_<W>.sh && python3 _parse_fin_mac.py \
       SortAlive_Probe_<W>.ml --manifest manifest_<W>.json \
       --vo SortAlive_Probe_<W>.vo --source-v <source.v> --transcript _fin_<W>_build.log

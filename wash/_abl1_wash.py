@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""_abl1_wash.py — 席 abl1 批洗工装（exact-string + count 断言 + 幂等·20261027）
+"""_abl1_wash.py — agent abl1 批洗工装（exact-string + count 断言 + 幂等·20261027）
 
 工装形制（cw-tail-supply §12.4）：嵌套括号感知（站文逐字采集）·断言必开（count 断言
 fail-loud）·幂等（new 已在盘=skip）·编辑恒前台。逐站 old/new 见账/station_ledger.md。

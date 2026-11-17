@@ -60,7 +60,7 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SERVER = os.path.join(REPO, "tools", "mcp_server.py")
 
 EXPECTED_TOOLS = [
-    # RQW08 legacy 8 (landing order)
+    # RQW08 legacy 8 (integration order)
     "sentinel_status", "net_probe", "baselinediff", "ci_triage",
     "vacgen_generate", "exp_append", "pushci_status", "capability_index",
     # RQW13 batch-1 zero-network 13 (expansion-ticket order)

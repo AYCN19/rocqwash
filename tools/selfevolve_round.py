@@ -5,7 +5,7 @@
 Pipeline: census (jargon_apply --plan) -> apply -> verify (py_compile /
 bash -n hard gates, norm_lint/doc_lint advisory) -> auto_round commit
 (ledger + anchor, jargon class admitted at confidence 1.0 >= 0.80) ->
-push -> dispatch the CI judge (the push carries GITHUB_TOKEN, so GitHub
+push -> route the CI judge (the push carries GITHUB_TOKEN, so GitHub
 suppresses its push event - R13 sub-face 4; workflow_dispatch is the
 documented exception).
 

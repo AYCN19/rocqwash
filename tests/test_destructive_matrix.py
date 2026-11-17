@@ -9,14 +9,14 @@
   ① tools/unclog.py（落刀器·写面＝链根件 <src>/<根>.v）
      U1 缺 --apply 零写盘：tmp 源树 md5 恒同·无落刀账·cures_applied=0
         锚 tools/unclog.py:42（安全律 --apply 缺省关＝全干跑零写盘）＋:583/:607
-        （cure 干跑/落刀唯一两调用口·:607 if a.apply 总闸）
+        （cure dry run/落刀唯一两调用口·:607 if a.apply 总闸）
      U2 --audit 零写盘＋与 --apply 互斥：audit 只读基线（--src 全文件 md5 前后
         自证·:762）＋同给 rc=2（:827）
      U3 frozen 红拒：根名/根件撞 frozen8 在册→wall frozen-in-service·零落刀
         锚 tools/unclog.py:506（pick_root frozen_hit 预检）
      U4 非链根件零被动：--apply 落刀后受治根件已正典化而其余件 md5 恒同——
         落刀对象恒为链根件（:43-44「pick 之外无 cure 调用路径」结构性保证）
-  ② tools/wash_shape.py（洗形器·写面＝--file/--dir 收件面）
+  ② tools/wash_shape.py（shape-normalizing tool·写面＝--file/--dir 收件面）
      W1 plan 缺省零写盘：真实脏件（CRLF＋禁词）plan 出 would-fix 而树 md5 恒同
         锚 tools/wash_shape.py:1254（one_pass if self.args.apply 落刀总闸）
      W2 --apply 后 rescan partial 不谎报 shaped：apply「成功」而复扫仍有
@@ -834,7 +834,7 @@ def row_c1(tmp):
 
 
 def row_c2(tmp):
-    """cure_applier --apply 才落刀＋幂等断言拒写：正典包 --apply 落刀（件正典
+    """cure_applier --apply 才落刀＋幂等断言拒写：正典包 --apply apply（件正典
     化·md5 变·二遍幂等 rc=0）；自定义非幂等包 --apply → IDEMPOTENCE-FAIL
     rc=1 且件零字节动（拒写）。"""
     d = os.path.join(tmp, "c2")
@@ -909,7 +909,7 @@ def row_g1(tmp):
     Face 2: configured-but-missing binaries -> rc 9 fail-loud before any
     work (no compile can launch), the tree still gains zero bytes.  Face 3
     re-checks the --out non-creation explicitly with --out passed.  The
-    real-compile coverage of the temp-only .vo face lives in the seat's
+    real-compile coverage of the temp-only .vo face lives in the agent's
     live evidence run, outside the offline matrix (zero-real-compile
     discipline)."""
     d = os.path.join(tmp, "g1")
@@ -955,7 +955,7 @@ def row_c4(tmp):
     Face 3: a no-change second pass -> the leg records skipped-no-change
     without launching any compile.  The green->red interception and the
     temp-only .vo face of a live compile live in tests/test_cure_pack.py's
-    env-gated section and the seat's evidence run, outside the offline
+    env-gated section and the agent's evidence run, outside the offline
     matrix."""
     d = os.path.join(tmp, "c4")
     os.makedirs(d)

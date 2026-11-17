@@ -43,7 +43,7 @@
 
 | 价值 | 依赖 | 成本 | 风险 |
 |---|---|---|---|
-| 「哨红→unclog 干跑→人审 `--apply`」现有人工缝隙的守门设计成档——服务化安全自动化的裁决素材；双门评估档方法论（案 A 并立四理由·`docs/push-gate-dual-door-assessment-v1.0:128/:192`）的产品化复用 | ②首战真实事件语料（评估需真实触发样本）；既约口径不可单方面放宽：`--apply` 缺省关＋白名单人审（ops 手册 §3 规程 `:174`/`:228`「零动作是缺省」`:12`） | 低（评估档·**零动码为缺省**——若结论要动码另排波） | 全自动 apply 诱惑＝本候选最大风险（金标/冻结面）——守门设计必须保持干跑自动、落刀人审；评估若建议放宽即违既约裁决（v38 互斥裁决＋v40 真缺口修复后的护栏面） |
+| 「哨红→unclog dry run→人审 `--apply`」现有人工缝隙的守门设计成档——服务化安全自动化的裁决素材；双门评估档方法论（案 A 并立四理由·`docs/push-gate-dual-door-assessment-v1.0:128/:192`）的产品化复用 | ②首战真实事件语料（评估需真实触发样本）；既约口径不可单方面放宽：`--apply` 缺省关＋白名单人审（ops 手册 §3 规程 `:174`/`:228`「零动作是缺省」`:12`） | 低（评估档·**零动码为缺省**——若结论要动码另排波） | 全自动 apply 诱惑＝本候选最大风险（gold-standard/冻结面）——守门设计必须保持干跑自动、落刀人审；评估若建议放宽即违既约裁决（v38 互斥裁决＋v40 真缺口修复后的护栏面） |
 
 **验证方式**：评估档落 docs/（现状→案选项→建议案＋理由＋残余风险如实·案 A 体例）；纯评估案＝doc_lint drift=0 保持＋档内命令块 bash -n 全过；若含动码建议＝destructive matrix 增判＋relay e2e 扩矢量＋三闸不动红。
 
@@ -55,7 +55,7 @@
 
 | 价值 | 依赖 | 成本 | 风险 |
 |---|---|---|---|
-| **门控编译弧总开关**：四处闸位翻绿——`tests/test_cure_pack.py:492`（compile check 段·`:718` SKIP 行）＋`tests/test_probe_engine.py:259-261`（真 rocq 节）＋`tests/run_tests.sh:438/:451` 两总套例；cure 新式真树活跑（`更新账.md:3699`）与⑥的验证基建 | 二选一路径已可考：A＝指 9.3（`mac93_install_work/opam93/rocq93/bin/rocq`·v41 第三发同源已实证 9.3 模板可跑绿）或 B＝复原捐体（toolchain_dyld_doctor `--donor` 溯源规程在库·**禁代执行只出建议**）；cw_paths 移根监察表在册（`更新账.md:3580`） | 低（A＝一次决断＋惯例路径落档口径；B＝中·真拷贝复原动作） | 9.3 与 9.1 代差语义——翻绿是「现役世界代际」绿·非 9.1 复绿（`更新账.md:3753` 同口径·诚实记界）；复原捐体若再 MISSING→doctor 诊断规程兜底；勿与正本缺卷 SKIP 族混淆（run_tests.sh:320/:347/:361/:379 系 CANON 门·另族） |
+| **门控编译弧总开关**：四处闸位翻绿——`tests/test_cure_pack.py:492`（compile check 段·`:718` SKIP 行）＋`tests/test_probe_engine.py:259-261`（真 rocq 节）＋`tests/run_tests.sh:438/:451` 两总套例；cure 新式真树活跑（`更新账.md:3699`）与⑥的验证基建 | 二选一路径已可考：A＝指 9.3（`mac93_install_work/opam93/rocq93/bin/rocq`·v41 第三发同源已实证 9.3 模板可跑绿）或 B＝复原捐体（toolchain_dyld_doctor `--donor` 溯源规程在库·**禁代执行只出建议**）；cw_paths 移根监察表在册（`更新账.md:3580`） | 低（A＝一次决断＋惯例路径落档口径；B＝中·真拷贝复原动作） | 9.3 与 9.1 代差语义——翻绿是「现役世界代际」passing·非 9.1 复绿（`更新账.md:3753` 同口径·诚实记界）；复原捐体若再 MISSING→doctor 诊断规程兜底；勿与正本缺卷 SKIP 族混淆（run_tests.sh:320/:347/:361/:379 系 CANON 门·另族） |
 
 **验证方式**：决断落档后——`ROCWASH_ROCQ=<决断路径>` 下 `python3 -B tests/test_cure_pack.py` 与 `python3 -B tests/test_probe_engine.py` 实跑 rc=0 且输出**无「SKIP（ROCWASH_ROCQ unset）」段**（四处闸位编译弧全跑）＋全套 56/52/0 红基线不动红＋决断路径与勘误口径合（多路器形）。
 
@@ -77,17 +77,17 @@
 
 | 价值 | 依赖 | 成本 | 风险 |
 |---|---|---|---|
-| 25 式→26+ 式 evidence-gated 扩容；记号重绑族第二件复现转正——金标「宁缺毋滥」正面兑现；v39 待办 2（cure39 真树活跑）可同窗补 | 真实战役第二件复现实例（引据＝真实 diff 逐字·禁合成）；**④门控编译弧**（cure 新式的编译验证）；战役窗口 | 中（工单定谳→face-regex 新式→fixtures→门控弧——v34/v39 先例流程齐） | 语料不到则零扩容（**如实·非失败**——v39 单式扩容已立先例）；第二件复现是本候选成立前提，缺件即候勘不硬凑 |
+| 25 式→26+ 式 evidence-gated 扩容；记号重绑族第二件复现转正——gold-standard「宁缺毋滥」正面兑现；v39 待办 2（cure39 真树活跑）可同窗补 | 真实战役第二件复现实例（引据＝真实 diff 逐字·禁合成）；**④门控编译弧**（cure 新式的编译验证）；战役窗口 | 中（工单定谳→face-regex 新式→fixtures→门控弧——v34/v39 先例流程齐） | 语料不到则零扩容（**如实·非失败**——v39 单式扩容已立先例）；第二件复现是本候选成立前提，缺件即候勘不硬凑 |
 
-**验证方式**：cure_applier `--selftest` 增矢量＋whole-pack 幂等 rc=0；门控编译弧 pre-fix 绿→cure→cured 绿→消费单元 magic 计数对账（依赖④）；拒录路径逐条因在册（若第二件终不复现）。
+**验证方式**：cure_applier `--selftest` 增矢量＋whole-pack 幂等 rc=0；门控编译弧 pre-fix passing→cure→cured passing→消费单元 magic 计数对账（依赖④）；拒录路径逐条因在册（若第二件终不复现）。
 
-### ⑦ 多仓扩展（rocqwash 服务 Main 仓 CI 的适配面）
+### ⑦ 多仓扩展（rocqwash 服务 Main repository CI 的适配面）
 
 **溯源**：更新账**无直接待办条**——由 v36 pushci 编排面（`tools/pushci.py:26` remote URL 推导·host 须 github.com）＋registry_union 三面输入（`tools/registry_union.py:781-790` `--main`/`--branch`/`--git`）外推·任务书钦定入池（溯源性质如实记）。
 
 | 价值 | 依赖 | 成本 | 风险 |
 |---|---|---|---|
-| rocqwash 从「自仓 CI 自服务」扩「服务 Main 仓 CI」——pushci/triage/doctor 三器适配面；服务层白皮书五纪律的跨仓检验 | 真远端凭据（**用户面**——v36 已记「真发段需真远端凭据·用户面」`更新账.md:3608`）；Main 仓 CI 形制勘察（runner/签名闸差异）；积分静默窗约束最紧的一条 | 中-高（形制勘察→canned 场景扩→真仓 `--dry-run`→真发；跨仓差异逐项对表） | 跨仓红线（Main 仓纪律与 rocqwash 纪律不一致面——适配器禁代仓越权写盘）；NETRED/凭据面；CI 形制不可预知（canned 覆盖有限→首跑 `--dry-run` 先行铁律·`更新账.md:3608`） |
+| rocqwash 从「自仓 CI 自服务」扩「服务 Main repository CI」——pushci/triage/doctor 三器适配面；服务层白皮书五纪律的跨仓检验 | 真远端凭据（**用户面**——v36 已记「真发段需真远端凭据·用户面」`更新账.md:3608`）；Main repository CI 形制勘察（runner/签名闸差异）；积分静默窗约束最紧的一条 | 中-高（形制勘察→canned 场景扩→真仓 `--dry-run`→真发；跨仓差异逐项对表） | 跨仓红线（Main 仓纪律与 rocqwash 纪律不一致面——适配器禁代仓越权写盘）；NETRED/凭据面；CI 形制不可预知（canned 覆盖有限→首跑 `--dry-run` 先行铁律·`更新账.md:3608`） |
 
 **验证方式**：Main 仓形制勘察档→pushci_scenarios canned 场景扩仓形全过→真仓 `--dry-run` 计划面零副作用（HEAD/porcelain 前后恒同·v36 S6 判据）→真发首战 head_branch＋head_sha 咬合取得 run→ci_triage 判类对表。
 
@@ -150,4 +150,4 @@
 
 Annotation only: no candidate rows added, removed, or reordered; the pool above is unchanged.
 
-The five-engine seeds (E1 ai-flavor word map, E2 jargon map, E3 termbase, E4 i18n pipeline spec, E5 engines index; per the five-engine growth design volume 20261114) are landed on main at commit `9fa2bff` (RQW12, 2026-11-14): data + SPEC faces under `seeds/` (ai_flavor, jargon, termbase, i18n, engines) plus the seed selftest `tests/t_engines_seeds.py`; zero executable engine body, since the engines themselves grow on their own wash_shape / norm_lint / evolve faces in later waves. The seeds directory is the evolve candidate input face: the next growth cycle (RQW10 form) consumes `seeds/` as its feed. Selftest face: `python -I tests/t_engines_seeds.py` reports 5 segments / 42 checks, green, re-run first-hand in the repo layout on 2026-11-14. Honest boundary: `tests/run_tests.sh` does not wire the seeds selftest yet, so CI run 43555890998 (green at `9fa2bff`) did not execute it; suite wiring remains a follow-up candidate for the integration seat.
+The five-engine seeds (E1 ai-flavor word map, E2 jargon map, E3 termbase, E4 i18n pipeline spec, E5 engines index; per the five-engine growth design volume 20261114) are landed on main at commit `9fa2bff` (RQW12, 2026-11-14): data + SPEC faces under `seeds/` (ai_flavor, jargon, termbase, i18n, engines) plus the seed selftest `tests/t_engines_seeds.py`; zero executable engine body, since the engines themselves grow on their own wash_shape / norm_lint / evolve faces in later waves. The seeds directory is the evolve candidate input face: the next growth cycle (RQW10 form) consumes `seeds/` as its feed. Selftest face: `python -I tests/t_engines_seeds.py` reports 5 segments / 42 checks, green, re-run first-hand in the repo layout on 2026-11-14. Honest boundary: `tests/run_tests.sh` does not wire the seeds selftest yet, so CI run 43555890998 (green at `9fa2bff`) did not execute it; suite wiring remains a follow-up candidate for the integration agent.

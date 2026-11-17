@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""selfheal_rocqwash.py - rocqwash self-heal CI driver (v1, 20261115).
+"""selfheal_rocqwash.py - rocqwash self-heal CI driver.
 
 Mirror of the Main repo watch (.github/workflows/rocqwash-triage.yml +
 rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
@@ -9,21 +9,49 @@ rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
     guarantees at-most-once without persistent state (hosted runners keep
     no state between runs)
   * cancel-intent: conclusion==cancelled runs are NEVER revived
-    (20261115 desk order, same as the Main watch)
+    (same policy as the Main watch)
   * queue governor (reconcile): keep at most MAX_QUEUED_RUNS queued runs,
     oldest trimmed; in-progress runs are never touched
   * branch census (reconcile, weekly): a stateless run-number gate
     (BRANCH_CENSUS_EPOCH) runs a READ-ONLY branch census - merged-stale
     stubs are reported to the desk as deletion CANDIDATES, never deleted
-    in-run (20261117 desk order)
+    in-run
   * content reds: MECHANICAL classes are auto-repaired via the landed
-    repair_scope roster (20261116 desk order: the watch repairs, not only
-    records); non-mechanical classes stay desk-gated pending E1/E2 model
-    legs; every repair lands as its own commit so CI re-judges it
+    repair_scope roster (the watch repairs, not only records);
+    non-mechanical classes stay desk-gated pending E1/E2 model legs;
+    every repair lands as its own commit so CI re-judges it
   * ledger: no repo writes - verdicts land in the job log and the uploaded
     artifact (the desk inbox face belongs to the Main watch)
 
-Exit codes: 0 = triage/verdict obtained (a red verdict is data, not a tool
+Purpose.  Triage a red CI run into the transient-infra / content-red
+  families, heal transient-infra failures under three guards
+  (cancel-intent, attempt==1, live re-check), auto-repair mechanical
+  content-red classes through the repair_scope roster, govern the queued
+  run count, automerge green supply/* pull requests, and run a weekly
+  read-only branch census. Stateless by design: no persistent state, no
+  repository writes outside the single repair commit face.
+
+Interface.  Invoked by `.github/workflows/selfheal.yml` in three forms:
+  triage+heal `--repo OWNER/REPO --run RUN_ID --out DIR --heal`;
+  reconcile `--repo OWNER/REPO --run 0 --out DIR --reconcile`;
+  automerge-only `--repo OWNER/REPO --run 0 --out DIR --automerge-only`.
+  Reports land as files under `--out` (triage-report.txt, summary.txt,
+  reconcile-report.txt, automerge-report.txt, branch-census.txt) and are
+  uploaded as workflow artifacts. The API credential comes from the
+  `GITHUB_TOKEN` environment variable.
+
+Dependencies.  Python 3 standard library only; GitHub REST API v3 over
+  urllib; `tests/run_tests.sh` read as the repair roster;
+  `tools/repair_scope.py` imported by path for the frozen-face exclusion;
+  `docs/ci-triage-table.json` (schema rocqwash.ci-triage-table/1) as the
+  failure-class table when present.
+
+Evidence.  Exercised live by `.github/workflows/selfheal.yml` (three
+  invocation forms); the repair leg lands exactly one commit per repair so
+  CI re-judges it; the branch census and the parse-death probe are
+  read-only and report candidates, never deletions.
+
+Exit-codes.  0 = triage/verdict obtained (a red verdict is data, not a tool
 failure); 2 = wiring/usage failure; 3 = internal error.
 """
 import argparse
@@ -52,7 +80,7 @@ def log(msg):
 
 def gh_api(token, path, method="GET", body=None):
     """One REST call.  GET retries twice on transient transport failures
-    (truncated reads / resets in the NETRED window - 20261115 judgment)."""
+    (truncated reads / resets in the NETRED window)."""
     attempts = 2 if method == "GET" else 1
     last_err = None
     for attempt in range(attempts):
@@ -69,9 +97,9 @@ def gh_api(token, path, method="GET", body=None):
                 raw = resp.read()
             return (json.loads(raw) if raw else None), None
         except urllib.error.HTTPError as exc:
-            # Fail loud: the status line alone hid the real verdict (20261117
-            # PR #13 case - merge PUT 403 with the body, which carries the
-            # actual message, discarded).
+            # Fail loud: the status line alone hid the real verdict (merge
+            # PUT 403: the body carries the actual message and was
+            # discarded).
             try:
                 detail = exc.read(400).decode("utf-8", "replace").strip()
             except Exception:
@@ -282,8 +310,8 @@ def heal_leg(args, token, repo, run, family):
 
 
 def repair_content_red(token, repo, out_dir):
-    """CURE leg (20261116 desk order: the watch must repair, not only
-    record).  Mechanical content-red classes only, using the landed
+    """CURE leg (the watch must repair, not only record).  Mechanical
+    content-red classes only, using the landed
     repair_scope roster: R1 = suite lanes registered without their
     artifact file -> drop the registration lines; the repair lands as
     its own commit (pushed with the workflow token) so CI re-judges it.
@@ -415,8 +443,8 @@ def automerge_leg(token, repo):
                 seen.add(r.get("id"))
                 mine.append(r)
         if not mine:
-            # The PR head branch may be deleted while the PR stays open
-            # (20261117 PR #10 case) - a dispatch has no ref to target.
+            # The PR head branch may be deleted while the PR stays open -
+            # a dispatch has no ref to target.
             # Restore the head ref from the PR head commit first (the
             # commit still exists; the deletion is ref-level only).
             _, berr = gh_api(token, "/repos/%s/branches/%s" % (repo, ref))
@@ -482,7 +510,7 @@ def automerge_leg(token, repo):
         log("automerge: PR #%d merged" % num)
         # Post-merge judge: the merge push carried GITHUB_TOKEN, so GitHub
         # suppresses the push event and the merge commit gets NO CI
-        # (verified live 20261117, e73a34a: zero runs). workflow_dispatch
+        # (verified live, e73a34a: zero runs). workflow_dispatch
         # is the documented suppression exception - dispatch ci.yml at the
         # base branch so the merge commit is judged on its own.
         _, perr = gh_api(token, "/repos/%s/actions/workflows/%s/dispatches"
@@ -552,7 +580,7 @@ CI_QUEUE_WORKFLOWS = ("ci.yml", "mac-verify.yml")
 
 
 def ci_queue_governor(token, repo):
-    """Stale-queued trimmer for the suite workflows (20261117 root cure):
+    """Stale-queued trimmer for the suite workflows (root cure):
     with concurrency cancel-in-progress OFF, an older QUEUED run would
     otherwise start later and its entry would have cancelled the newer
     in-flight tip run (run 136 killed run 138 mid-suite). The governor
@@ -589,10 +617,10 @@ def ci_queue_governor(token, repo):
 
 
 def label_health_probe(token, repo):
-    """Label-queue health probe (read-only, 20261117 root cure follow-up):
+    """Label-queue health probe (read-only, root-cure follow-up):
     a zombie self-hosted runner that is 'online' but not picking up jobs
     jams every queue routed to its label (the macos-15 advisory face jammed
-    5+ hours twice on 2026-11-17/18 while a hosted runner was available).
+    5+ hours twice while a hosted runner was available).
     For every job QUEUED >= 30 minutes, check whether any ONLINE runner
     carries the job's labels: no match = LABEL-GAP alarm (remove the dead
     runner's claim on that label); match = GitHub-side queue, monitor only.
@@ -654,7 +682,7 @@ def parse_death_probe(token, repo):
     """Workflow parse-death probe (read-only, every reconcile pass): a
     workflow-level validation failure (bad YAML, unsupported expression)
     produces a FAILED run with ZERO jobs and NO workflow_run event - the
-    self-heal watch is never triggered by it (20261117 run 118 evidence),
+    self-heal watch is never triggered by it (run 118 evidence),
     so the scheduled reconcile is the only in-system sensor. The probe
     reads the newest completed push runs on main and flags the jobs=0
     signature loudly in the reconcile report; the blocking-file fix is
@@ -696,7 +724,7 @@ def parse_death_probe(token, repo):
 
 
 def branch_census(token, repo):
-    """Weekly branch census (READ-ONLY, 20261117 desk order): every
+    """Weekly branch census (READ-ONLY, standing desk order): every
     non-main branch is judged against main via the compare API plus its PR
     history; merged-stale stubs are reported to the desk as deletion
     CANDIDATES. The census never deletes - the deletion itself is an

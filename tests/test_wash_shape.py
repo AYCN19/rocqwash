@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """test_wash_shape.py — tools/wash_shape.py 自测壳（tests/·20261111 v37 洗形席挂接）
 
-洗形器（正典形五洗流水·schema rocqwash-shape/1）挂接件：器自带 --selftest 十六判
+shape-normalizing tool（正典形五洗流水·schema rocqwash-shape/1）挂接件：器自带 --selftest 十六判
 冻结向量组（plan 五洗逐判/正件对照/plan 零写盘/--apply 缺省关/plan-miss 如实/
 apply→rescan clean→shaped/幂等二跑全 clean/锚缺实体/冻结名排除（罐装＋真在册
 红拒）/gate4 罐装判面/CLI 四码/--loop 哨态事件流/确定性字节恒同/preset 链（装载

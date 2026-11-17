@@ -9,7 +9,7 @@
 > - **零动作是缺省**——哨缺省 report-only，只出事件流与报告，不动任何东西；
 >   `--on-red 'CMD'` 是显式旁路动作（超时帽 60s·rc≠0 不改哨退出码）
 >   （tools/cw_sentinel.py:31-32 docstring「缺省无＝report-only·**零动作是缺省**」）。
-> - **红是数据非器红**——CI 红/堵塞是事件数据，哨巡检照常 exit 0；
+> - **a failing result is data, not a tool failure**——CI failing/堵塞是事件数据，哨巡检照常 exit 0；
 >   退出码只表器面（0 完成／2 用法错／9 信号源不可达）。
 > - **loop 须给 `--state-file`**——seen 幂等持久层（rocqwash-sentinel-state/1）；
 >   缺省 None＝内存态，once 单轮可用、loop 跨轮会重复出事件。
@@ -51,7 +51,7 @@ echo "SENTINEL_PID=$!"
 | `--state-file …` | loop 必配：seen 幂等（新 run／新台账 mtime+名字／buildlog 字节 offset 全记） |
 | `--emit events.jsonl` | JSONL 事件流（消费端见 §2）；stdout 镜像被 `>/dev/null` 丢弃，证据面全在 --emit/--json |
 | `--json sentinel-report.json` | 每轮覆盖写 report（rocqwash-sentinel/1） |
-| `>/dev/null 2>&1 &` | 哨 stdout 与 --emit 逐字节同源（emit_event 先 stdout 镜像再 append，tools/cw_sentinel.py:310-321），丢弃 stdout 不丢证据 |
+| `>/dev/null 2>&1 &` | watcher stdout 与 --emit 逐字节同源（emit_event 先 stdout 镜像再 append，tools/cw_sentinel.py:310-321），丢弃 stdout 不丢证据 |
 
 **收哨**（轮帽自停或手动）：
 
@@ -125,15 +125,15 @@ PY
 ```
 
 **后台哨整块实测**（2026-11-11·tmp 演练形：`--loop --interval 1 --max-rounds 2
---sleep-scale 0 --injector …`）：哨 2 轮自停·events.jsonl 落 2 行（seq 1,2）·
+--sleep-scale 0 --injector …`）：watcher 2 轮自停·events.jsonl 落 2 行（seq 1,2）·
 `grep -c '"kind": "ci-red"'` → `1`（rc 0）·进程归零。**生产形不带 `--injector`/
 `--sleep-scale`**（那两枚是离线演练钉：见 README-cw.md:88-92 纪律③）。
 
-## 4. 退出码分支表（哨面·红是数据非器红）
+## 4. 退出码分支表（哨面·a failing result is data, not a tool failure）
 
 | 退出码 | 含义（cw_sentinel --help／docstring 口径） | 工作流动作 |
 |---|---|---|
-| 0 | 巡检完成（CI 红/堵塞已作为**事件**出账·非器红） | 后台哨此码即进程收尾·主流程读 events.jsonl 断后续 |
+| 0 | 巡检完成（CI failing/堵塞已作为**事件**出账·非器红） | 后台哨此码即进程收尾·主流程读 events.jsonl 断后续 |
 | 1 | —（哨无 1 档：红走事件流·不走退出码） | 不会出现；出现即cw.sh 路由异常，按 9 处置复查 |
 | 2 | 用法错（缺模式/双模同给/三源全缺/`--branch` 先于 `--watch-repo`/repo 形坏/负参/once 带 loop 专属参） | 后台哨启动前应被挡住——嵌段伪码 §5 把它放前置 `--once` 预检 |
 | 9 | 信号源不可达（CI HTTP 4xx/5xx·netrc 缺·token 空·runs/jobs 形坏·injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·子进程 rc≠0） | fail-loud 即停（不带病运行·tools/cw_sentinel.py:727 源硬错注记）·人工修源后重启哨 |

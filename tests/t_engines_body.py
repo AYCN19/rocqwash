@@ -843,9 +843,9 @@ def run_segment_e2_apply():
     def _thunk_load_map():
         loaded = mod.load_map(JARGON_MAP_PATH)
         entries = loaded.get("entries") if isinstance(loaded, dict) else None
-        assert_true(entries is not None and len(entries) == 62,
-                    "load_map did not return the 62-entry map")
-        return "load_map returns the 62-entry map"
+        assert_true(entries is not None and len(entries) == 159,
+                    "load_map did not return the 159-entry map")
+        return "load_map returns the 159-entry map"
 
     def _thunk_project_table():
         import_norm = _load_norm_lint()
@@ -857,8 +857,8 @@ def run_segment_e2_apply():
             with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
                 fh.write(table)
             terms = import_norm.load_jargon_map(path)
-            assert_true(len(terms) == 62,
-                        "projector fed the loader %d faces, expected 62"
+            assert_true(len(terms) == 159,
+                        "projector fed the loader %d faces, expected 159"
                         % len(terms))
             by_face = dict((e["face"], e) for e in jm["entries"])
             for term in terms:
@@ -871,7 +871,8 @@ def run_segment_e2_apply():
                 assert_true(len(term.exempts) == len(entry.get("exempts") or []),
                             "face %r exempt count drifted" % term.term)
             state["table_terms"] = sorted(t.term for t in terms)
-            return ("project_table output feeds the norm_lint loader: 62 faces, "
+            return ("project_table output feeds the norm_lint loader: 159 "
+                    "faces, "
                     "suggestions and exempts row-for-row faithful")
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
@@ -1008,7 +1009,7 @@ def run_segment_e2_apply():
         return "bare invocation exits 2"
 
     for name, thunk in (
-        ("pure-load-map-62", _thunk_load_map),
+        ("pure-load-map-159", _thunk_load_map),
         ("pure-project-table-roundtrip", _thunk_project_table),
         ("pure-plan-hard-rule-matrix", _thunk_plan_matrix),
         ("pure-apply-residue-idempotent", _thunk_apply_and_idempotence),

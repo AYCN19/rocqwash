@@ -1,7 +1,7 @@
 # 工作流配合白皮书 v1.0（workflow-integration whitepaper·2026-11-11）
 
 > rocqwash v37（41e74b0）·配合外部工作流引擎（dynamic workflow 等）实时动态提供
-> 清洗、洗形、排障、疏通堵塞的**接口正本**。内容全部取自各器 docstring 与
+> 清洗、shape normalization、排障、疏通堵塞的**接口正本**。内容全部取自各器 docstring 与
 > `--help` 实况（2026-11-11 逐器实取·先读后写·零凭空 API）；与
 > `README-cw.md`「工作流配合接口」节（README-cw.md:71-140）同源互补——速查在彼，
 > 机理在此。三正典嵌段的逐命令展开在 `examples/workflows/` 三件：
@@ -21,9 +21,9 @@
 
 纪律正本：`README-cw.md:71-140`（速查）＋各器 docstring（机理）。逐条机理如下。
 
-### 纪律①　JSON-in/JSON-out·schema 钦名·确定性
+### 纪律①　JSON-in/JSON-out·schema designated·确定性
 
-- 出账一律 `--json OUT`，schema 钦名：`rocqwash-sentinel/1`（每轮覆盖写）、
+- 出账一律 `--json OUT`，schema designated：`rocqwash-sentinel/1`（每轮覆盖写）、
   `rocqwash-shape/1`、`rocqwash-unclog/1`、`rocqwash-pushci/1`；
   loop 态事件流 `--events FILE` 逐行 JSONL（sentinel 行 schema
   `rocqwash-sentinel-event/1`·键含 `seq` 事件流内单调，消费方按 seq 排序即恢复
@@ -37,11 +37,11 @@
   （io.open(…, "w")·unclog.py:733，一次闭环一份流）；wash-shape `--events` 为
   loop 追加账（`--help`：「stdout 恒流·此参另落盘」）。
 
-### 纪律②　退出码 0/1/2/9 口径（红是数据非器红·响亮 stdout）
+### 纪律②　退出码 0/1/2/9 口径（a failing result is data, not a tool failure·响亮 stdout）
 
 | 码 | sentinel | wash-shape | unclog | pushci（v36 同型） |
 |----|----------|------------|--------|--------------------|
-| 0 | 巡检完成（CI 红/堵塞是事件数据） | clean/shaped | unclogged | success/dry-run |
+| 0 | 巡检完成（CI failing/堵塞是事件数据） | clean/shaped | unclogged | success/dry-run |
 | 1 | —（红走事件流） | partial/plan-miss（洗未尽·响亮出账） | wall/rounds-exhausted（诚实墙·禁硬凑） | heal-exhausted/unstable/toolchain |
 | 2 | 用法错（缺模式/三源全缺/repo 形坏） | 用法错/冻结件红拒/引擎形外退出 | 用法错/注入场景形错 | fix-content/gate4-block/用法错 |
 | 9 | 信号源不可达（HTTP 4xx·injector 未覆盖·子进程 rc≠0） | 路径缺失 | fail-loud（路径缺失/器红/frozen 不可得） | 目标缺失（repo/remote/分支/PR/netrc/API 不可达·watch 轮帽达） |
@@ -95,7 +95,7 @@ pushci 编排 v35 四器（doctor/net_probe/ci_triage/gate4 守卫·pushci.py:5-
 ### 补：python3 纯 stdlib＋fail-loud＋零硬编码路径
 
 三器纯标准库零第三方依赖（CONTRIBUTING §2 同律）；fail-loud 禁静默降级（源
-不可达 9·injector 未覆盖 9·子进程 rc≠0 9——哨「不带病运行」，
+不可达 9·injector 未覆盖 9·子进程 rc≠0 9——watcher「不带病运行」，
 cw_sentinel.py:727 源硬错注记）；全路径参数化零硬编码绝对路径（器件路径由本件
 所在仓派生·pushci TOOLS_DIR 判例）。`cw.sh` 是 1:1 透传入口（exec·不改写参数与
 退出码·README-cw.md:9-11）——工作流里 `bash cw.sh <tool>` 与直调
@@ -114,11 +114,11 @@ cw_sentinel.py:727 源硬错注记）；全路径参数化零硬编码绝对路�
 |---|---|---|---|---|
 | ①后台哨 | `examples/workflows/backend-sentinel.md` | `cw.sh sentinel`（tools/cw_sentinel.py） | nohup 长驻三路信号源→JSONL 事件流＋消费端 grep/python3 样例 | ③loop 后台形·①事件流·②0/2/9 表 |
 | ②单步推 CI | `examples/workflows/step-pushci.md` | `cw.sh pushci`（tools/pushci.py） | `--dry-run` 先行人审→真发→verdict 七态分流 | ②0/1/2/9 封册·④injector+git-caller 成对 |
-| ③堵账疏通闭环 | `examples/workflows/loop-unclog.md` | `cw.sh unclog`（tools/unclog.py） | 干跑（零写盘）→人审方案→`--apply`→复核三判据·诚实墙七因分派 | ②三态封册·③/④注入形·⑤编排 |
+| ③堵账疏通闭环 | `examples/workflows/loop-unclog.md` | `cw.sh unclog`（tools/unclog.py） | dry run（零写盘）→人审方案→`--apply`→复核三判据·诚实墙七因分派 | ②三态封册·③/④注入形·⑤编排 |
 
 wash-shape（`cw.sh wash_shape`→tools/wash_shape.py·正典形五洗流水）未设专嵌段：
 其两段制（plan 缺省零写盘→人审→`--apply` 落刀复跑复核）与嵌段③同构——读
-`README-cw.md:132-134` 三行嵌段与该器 docstring「两段制」节即可照③的人审-落刀
+`README-cw.md:132-134` 三行嵌段与该器 docstring「两段制」节即可照③的人审-apply
 骨架自拼；其 loop 哨态命令行正本在 README-cw.md:112-114。
 
 ---
@@ -192,7 +192,7 @@ bash cw.sh pushci --repo-path . --branch feature/x \
    操作·push_gate.py docstring「写域声明」），push 动作在调用方——所以两门
    天然可串：门 B 出 OPEN、门 A 出 success，各自的账各自留档。
 3. **老链仍在册**：手动老链（四判据＋裸 `git push`·README-cw.md:57）合法但
-   不在工作流嵌段册——工作流一律走 pushci 形（verdict 封册可分流·heal 自愈
+   不在工作流嵌段册——工作流一律走 pushci 形（verdict 封册可分流·heal automatic recovery
    有界）。
 
 ---
@@ -204,9 +204,9 @@ bash cw.sh pushci --repo-path . --branch feature/x \
 | 三器 --help 权威旗标 | `python3 tools/cw_sentinel.py --help`／`tools/unclog.py --help`／`tools/wash_shape.py --help`／`tools/pushci.py --help` | 全 rc 0·旗标逐条入账 |
 | 哨三路实跑 | `cw_sentinel.py --once --watch-repo org/repo --branch main --injector … --emit … --json … --sleep-scale 0`（ci-red）＋`--once --watch-ledgers … --watch-buildlog … --sleep-scale 0`（blocking＋build-signal） | rc 0·事件行/report 三样例入嵌段① |
 | 后台哨整块 | `nohup bash cw.sh sentinel --loop … --max-rounds 2 --sleep-scale 0 --injector … &`（tmp 演练形） | 2 轮自停·events 2 行·`grep -c '"kind": "ci-red"'`→1（rc 0） |
-| pushci 干跑 | `pushci.py --repo-path . --branch main --dry-run --json …` | rc 0·计划文本＋report 样例入嵌段② |
-| unclog 干跑 | `unclog.py --src … --world … --candidates … --injector … --json …`（tmp 夹具） | rc 0·cure.stage=dry-run·根件 md5 恒同（零写盘实证） |
-| unclog 落刀 | 同上＋`--apply` | rc 0·stage=applied·rescan.residual_zero=true·resprobe.rc_ok=true·verdict unclogged |
+| pushci dry run | `pushci.py --repo-path . --branch main --dry-run --json …` | rc 0·计划文本＋report 样例入嵌段② |
+| unclog dry run | `unclog.py --src … --world … --candidates … --injector … --json …`（tmp 夹具） | rc 0·cure.stage=dry-run·根件 md5 恒同（零写盘实证） |
+| unclog apply | 同上＋`--apply` | rc 0·stage=applied·rescan.residual_zero=true·resprobe.rc_ok=true·verdict unclogged |
 | unclog 诚实墙 | `unclog.py --src … --chain-ledgers base.json --json …`（Y self-unwashable） | rc 1·wall 账样例入嵌段③ |
 | 旗标对账 | 每嵌段引用旗标 grep 对照各器 `--help` 输出 | 见交付说明（全部存在·零凭空） |
 

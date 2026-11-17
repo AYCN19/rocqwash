@@ -35,7 +35,7 @@ Security face:
        ci_triage, pushci_status and sentinel_status return a failed tool
        result naming ROCQWASH_MCP_ALLOW_NET=1 as the explicit opt-in until
        that environment variable is set to 1. sentinel_status is gated
-       beyond the three the landing ticket names because
+       beyond the three the integration ticket names because
        tools/cw_sentinel.py carries a non-zero network face in
        CAPABILITY-INDEX (registration note in docs/mcp.md section 5).
     2. Credential zero contact: this server reads no credential store, no

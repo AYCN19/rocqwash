@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """test_registry_fix_dedup.py — DEDUP-family unit tests for tools/registry_fix.py
-(tests/ · RQW09 duplicates-family executor seat · 20261114)
+(tests/ · RQW09 duplicates-family executor agent · 20261114)
 
 The DUP-family apply path already exists in tools/registry_fix.py
 (stage_dedup + --apply + assertion A-fix-1 + injectable blast hook); this

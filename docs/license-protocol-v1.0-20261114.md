@@ -50,7 +50,7 @@ alters them.
 rocqwash is a repository-hygiene and continuous-integration toolset. Its
 faces read repositories and CI state, emit verdicts and reports, and — only
 where the operator has enabled it — act: push with watching
-(`pushci_status`), re-dispatch failed jobs within budget caps
+(`pushci_status`), re-route failed jobs within budget caps
 (self-heal legs), and apply mechanical, comment-surface-only repairs
 (autofix legs) whose edit classes are desk-approved tables. Every acting
 face is budget-capped and every outcome is appended to the in-repo
@@ -140,7 +140,7 @@ Chinese mirror (for bilingual descriptions):
 > authorship）作出。
 
 Rules: (a) the human principal is named with their project role —
-internal seat, wave, or line labels are not part of the public
+internal agent, work stream, or line labels are not part of the public
 disclosure; (b) the responsibility sentence is effective only while the
 contributor's ICLA (§5.2 included) is on file — file the ICLA before or
 with the first merged contribution; (c) this section is the single
