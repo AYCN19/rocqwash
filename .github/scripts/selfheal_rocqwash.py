@@ -588,6 +588,68 @@ def ci_queue_governor(token, repo):
     return out
 
 
+def label_health_probe(token, repo):
+    """Label-queue health probe (read-only, 20261117 root cure follow-up):
+    a zombie self-hosted runner that is 'online' but not picking up jobs
+    jams every queue routed to its label (the macos-15 advisory face jammed
+    5+ hours twice on 2026-11-17/18 while a hosted runner was available).
+    For every job QUEUED >= 30 minutes, check whether any ONLINE runner
+    carries the job's labels: no match = LABEL-GAP alarm (remove the dead
+    runner's claim on that label); match = GitHub-side queue, monitor only.
+    The probe NEVER removes labels - label surgery stays desk-gated."""
+    import datetime
+    now = datetime.datetime.now(datetime.timezone.utc)
+    runners, rerr = gh_api(token, "/repos/%s/actions/runners?per_page=20"
+                           % repo)
+    if rerr or not runners:
+        return ["skipped(runners-list: %s)" % rerr]
+    online = []
+    for r in (runners.get("runners") or []):
+        if r.get("status") == "online":
+            online.append(set(l.get("name") for l in (r.get("labels") or [])))
+    out = []
+    checked = 0
+    for wf in ("mac-verify.yml", "ci.yml"):
+        runs, err = gh_api(token, "/repos/%s/actions/workflows/%s/runs"
+                           "?per_page=12" % (repo, wf))
+        if err or not runs:
+            continue
+        for r in (runs.get("workflow_runs") or []):
+            if r.get("status") != "queued":
+                continue
+            jobs, jerr = gh_api(token, "/repos/%s/actions/runs/%d/jobs"
+                                "?per_page=20" % (repo, r.get("id") or 0))
+            for jb in ((jobs or {}).get("jobs") or []):
+                if jb.get("status") != "queued":
+                    continue
+                checked += 1
+                started = (jb.get("started_at") or "").replace("Z", "+00:00")
+                try:
+                    qmin = (now - datetime.datetime.fromisoformat(started)
+                            ).total_seconds() / 60.0
+                except ValueError:
+                    continue
+                if qmin < 30:
+                    continue
+                labels = set(l for l in (jb.get("labels") or []))
+                matched = [i for i, ls in enumerate(online) if labels <= ls]
+                if matched:
+                    out.append("%s/%s queued %.0fmin but pool healthy "
+                               "(an online runner carries the labels) - "
+                               "GitHub-side queue, monitor"
+                               % (wf, (jb.get("name") or "")[:24], qmin))
+                else:
+                    out.append("LABEL-GAP: %s/%s queued %.0fmin, labels %s "
+                               "carried by NO online runner - remove the "
+                               "dead runner's claim on the label (desk or "
+                               "follow-up), then rerun"
+                               % (wf, (jb.get("name") or "")[:24], qmin,
+                                  sorted(labels)))
+    if checked == 0:
+        out.append("clean (no queued jobs to probe)")
+    return out
+
+
 def parse_death_probe(token, repo):
     """Workflow parse-death probe (read-only, every reconcile pass): a
     workflow-level validation failure (bad YAML, unsupported expression)
@@ -716,6 +778,8 @@ def main():
         lines = ["automerge-only: " + x
                  for x in automerge_leg(token, args.repo)]
         lines += ["ci-queue: " + x for x in ci_queue_governor(token, args.repo)]
+        lines += ["label-health: " + x
+                  for x in label_health_probe(token, args.repo)]
         report = "automerge-only pass:\n" + "\n".join(lines) + "\n"
         write_out(args.out, [("automerge-report.txt", report)])
         print(report)
