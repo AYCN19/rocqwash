@@ -1,617 +1,557 @@
-# rocqwash 服务战役总报告 v2.0（service campaign total·2026-11-12）
+# `rocqwash-service-campaign-total-v2.0-20261112.md` — the rocqwash service effort total report, v2.0 (compiled November 12, 2026).
 
-> **版本**：v2.0＝**v1.0 基座全保留**（docs/rocqwash-service-campaign-total-
-> v1.0-20261111.md·v35-v42 累账·2026-11-11）＋**「六波增补（20261112）」章**
-> ——v43 机动实测→v44 哨长驻首演→v45 台账渲染→v46 红事件路由与注册册审计→
-> v47 门控弧关闭与哨真仓首战→v48 多仓勘形与 DS4 三账收口。本件属 v1.0 §5
-> 「v42 收口总档波剩余」的 v2.0 续档·任务书钦名。
->
-> **素材与事实纪律（v2.0 增补面·一切数字自在盘材料转录·零凭记忆）**：①更新账.md
-> v43-v48 段（更新账.md:3794-3944·只读蒸馏未触原文）；②docs/勘形-multi-repo-
-> Main仓适配-20261112.md（v48 ⑦勘形档·分级与小改面）；③docs/perf-profile-
-> v1.0-20261111.md §五回填两段＋examples/baselines/perf-README.md §3 判读三律；
-> ④docs/ops-sentinel-长驻手册-v1.0-20261112.md（v48 哨手册）；⑤examples/
-> baselines/ 三账实读（K1=audit-ConstructiveWorld_Live-20261111.json·K2=perf-
-> ConstructiveWorld_Live-k2-20261111.json·K3=audit-k3-20261112.json——本席本
-> ask 实读 K3 账 args.probe_parallel=3/timing.probe_chain_s=165.202/
-> n_records=27/n_red=0 逐项相符）；⑥git log c5df4d4..HEAD 与 git show --stat
-> 六 commit 实测（本席本 ask 实跑·哈希逐波录入 §6）；⑦v48 哨长驻产物三件套
-> 实读（CW 侧 _log/sentinel_v48/·本席本 ask 实测）。
->
-> **任务书给形与实取不符登记**：任务书「23→24→25 器演进」末位与实取不符——
-> 实取 23（v46）→24（v47）→**24（v48 零新器）**（git show --stat 325b4dc 六
-> 文件无 cw.sh·cw.sh:247-270 case 分派实数二十四路由·本席实跑）——按实取为准
-> 如实登记（docs/勘形-multi-repo-Main仓适配-20261112.md §1.3「任务书给形与
-> 实取不符·实取为准·如实登记」同律·v35-① 口径勘误判例同款·详见 §7.1）。
->
-> **本席纪律**：只读与写作·零码改；冻结八件／quad8／更新账.md 禁触未犯
-> （更新账仅只读）；rocqwash 工作树零 git commit（v48 325b4dc·工作树净口径
-> 保持）；cw.sh／tests 总套／README 系列归集成席零触碰。三闸收口基准
-> （doc_lint --repo drift=0／tests/test_destructive_matrix.py 17 判全过／
-> tests/run_tests.sh 全套零红）归集成席终跑——本席不代跑总套，仅对本文交稿
-> 后复跑 doc_lint 验本文零漂（卷末交稿自证）。
+> Purpose.  The consolidated total report of the rocqwash service effort: v2.0 keeps the complete v1.0 base (`docs/rocqwash-service-campaign-total-v1.0-20261111.md` · the accumulated ledger of work streams v35-v42, November 11, 2026) and adds the "six-work-stream addendum (November 12, 2026)" chapter — v43 the ad-hoc real-run measurement → v44 the resident watcher's first rehearsal → v45 the ledger renderer → v46 red-event routing and the registry audit → v47 the gated-compile arc closed and the watcher's first real-repository field run → v48 the multi-repository assessment and the DS4 three-account close-out. This face is the v2.0 continuation archive of the v1.0 §5 "v42 close-out total-archive work stream remainder", designated by the task instruction. Documentation-only face: read-only and writing, zero code changes; the frozen eight families, quad8 and the ledger `更新账.md` were never touched (the ledger read-only); the rocqwash working tree carried zero git commits at authoring time (v48 `325b4dc` · the clean-tree wording preserved); `cw.sh`, the full test suite and the README family belonged to the integration agent and were not touched.
+> Interface.  Document face only; no runtime interface. Every fact is cited from a named source: the ledger `更新账.md` v43-v48 sections (`更新账.md:3794-3944` · read-only distillation, the original untouched); `docs/勘形-multi-repo-Main仓适配-20261112.md` (the v48 ⑦ assessment document); `docs/perf-profile-v1.0-20261111.md` §5's two backfill sections + `examples/baselines/perf-README.md` §3's three judgment rules; `docs/ops-sentinel-长驻手册-v1.0-20261112.md` (the v48 watcher manual); the three baseline accounts in `examples/baselines/` (K1=`audit-ConstructiveWorld_Live-20261111.json` · K2=`perf-ConstructiveWorld_Live-k2-20261111.json` · K3=`audit-k3-20261112.json`); the `git log c5df4d4..HEAD` and `git show --stat` measurement of the six commits; the three v48 resident-watcher artifacts under the CW-side `_log/sentinel_v48/`. The original Chinese text of this face is preserved in the sibling `.zh.md` archive.
+> Dependencies.  Read-only distillation of the frozen ledger `更新账.md` and of the in-tree documents listed under Interface; no runtime dependency; no code face is modified by this document.
+> Evidence.  Every number is transcribed from the named on-disk materials · zero values from memory. This agent read the K3 account in this ask and it matches item by item (`args.probe_parallel=3` / `timing.probe_chain_s=165.202` / `n_records=27` / `n_red=0`); the `git log c5df4d4..HEAD` and `git show --stat` runs of the six commits were executed by this agent in this ask, hashes recorded work stream by work stream in §6; the v48 watcher artifacts (`ls` / `wc -l` / python3) were measured by this agent in this ask. The task instruction's "23→24→25 tool-count evolution" disagrees with the measurement — measured 23 (v46) → 24 (v47) → **24 (v48, zero new tools)**; recorded as measured, per the same rule as the assessment document §1.3 and the v35-① criterion-correction precedent (§7.1). The three-gate close-out baseline (`doc_lint --repo` drift=0 / `tests/test_destructive_matrix.py` 17 verdicts all passing / `tests/run_tests.sh` the full suite zero failing) belongs to the integration agent's final run — this agent did not rerun the full suite; after this document's submission only the doc_lint check is rerun to verify this document's zero drift (the end-of-document submission self-attestation).
+> Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit-code semantics unchanged.
 
 ---
 
-## §0 v1.0 基座全文（2026-11-11 原样保留·零改一字）
+## §0 The v1.0 base full text (November 11, 2026, preserved verbatim · zero changes)
 
-> **基座声明**：以下为 docs/rocqwash-service-campaign-total-v1.0-20261111.md
-> 全文原样保留（v42 收口时点口径）——时点性陈述（「现役」「二十工具」「56 例」
-> 「入列」等）均系 20261111 基座口径·现势以 §7 计数总表与 §6 各波为准；其
-> §5 候令九条的六波收口对账见 §6.x；v1.0 卷末交稿自证行系其当时实测记录·
-> 本件不代跑不代改。
+> **Base statement**: the following is the full text of `docs/rocqwash-service-campaign-total-v1.0-20261111.md` preserved verbatim (the v42 close-out point-in-time wording) — point-in-time statements ("active", "twenty tools", "56 cases", "onboarded" and similar) all carry the November 11, 2026 base wording · for the current state consult the §7 count master table and the §6 per-work-stream accounts; the six-work-stream close-out reconciliation of its §5 nine pending-execution items is at §6.x; the v1.0 end-of-document submission self-attestation line is that round's own measured record · this face neither reran nor altered it.
 
-**rocqwash 服务战役总报告 v1.0（service campaign total·2026-11-11）**
+**rocqwash service effort total report v1.0 (service effort total · November 11, 2026)**
 
-> **v35-v41 七波累账总报告**——诊断层→编排层→服务层→接驳体检层→语料滚扩→
-> 正典化巩固→并行与护栏，2026-11-11 单日七波（七 commit）全役蒸馏。本件属
-> v41 账排程「收口总档波（v42）」的交付件（更新账.md:3760 原文作「五波累账
-> 总报告」·本件按任务书承 v35-v41 全役七波）。
+> **The v35-v41 seven-work-stream accumulated-ledger total report** — diagnosis layer → orchestration layer → service layer → hookup health-check layer → corpus expansion → canonical consolidation → parallelism and guardrails; seven work streams (seven commits) within the single day of November 11, 2026, distilled across the whole effort. This face is the deliverable of the v41 ledger-scheduled "close-out total-archive work stream (v42)" (the `更新账.md:3760` original reads "five-work-stream accumulated-ledger total report" · this face carries the whole effort's seven work streams v35-v41 per the task instruction).
 >
-> **素材与事实纪律**：①更新账.md v35-v41 各段（更新账.md:3552-3760·只读蒸馏
-> 未触原文）；②docs/ 已有四件——workflow-integration-whitepaper／
-> perf-profile／push-gate-dual-door-assessment／ops-realtime-service（同属
-> v40 收口波的在库件 service-layer-overview 一并参照，用于 §2 双维归类）；③
-> git log v35..HEAD 与 git show --stat 七 commit 实测（本席本 ask 实跑·哈希
-> 逐波录入 §1）；④cw.sh 二十工具册实测（cw.sh:99、cw.sh:104-153）。一切数字
-> 与 commit 号自上述在盘材料转录·零凭记忆。
+> **The materials and fact discipline** (every number transcribed from the on-disk materials below · zero from memory): ① the `更新账.md` v35-v41 sections (`更新账.md:3552-3760` · read-only distillation, the original untouched); ② the four existing docs/ faces — workflow-integration-whitepaper / perf-profile / push-gate-dual-door-assessment / ops-realtime-service (plus the in-tree service-layer-overview of the same v40 close-out work stream, consulted for the §2 two-dimension classification); ③ the `git log v35..HEAD` and `git show --stat` measurement of the seven commits (run by this agent in its ask · the hashes recorded work stream by work stream in §1); ④ the cw.sh twenty-tool roster measured (`cw.sh:99`, `cw.sh:104-153`).
 >
-> **本席纪律**：只读与写作·零码改；冻结八件／quad8／更新账.md 禁触未犯
-> （更新账仅只读）；cw.sh／tests 总套／README 系列归集成席零触碰。三闸收口
-> 基准（doc_lint --repo drift=0／tests/test_destructive_matrix.py 17 判全过／
-> tests/run_tests.sh 全套零红）归集成席终跑——本席不代跑，仅对本文交稿后
-> 复跑 doc_lint 验本文零漂（§5 末）。
+> **This agent's discipline**: read-only and writing · zero code changes; the frozen eight / quad8 / `更新账.md` untouched, verified (the ledger read-only); `cw.sh` / the full test suite / the README family belonged to the integration agent, untouched. The three-gate close-out baseline (`doc_lint --repo` drift=0 / `tests/test_destructive_matrix.py` 17 verdicts all passing / `tests/run_tests.sh` the full suite zero failing) belongs to the integration agent's final run — this agent did not rerun it, and only reran the doc_lint check for this document after drafting (§5, end).
 
-### §1 七波演进脉络（v35→v41·每波要点＋commit 号）
+### §1 The seven-work-stream evolution line (v35→v41 · per-work-stream key points + commit ids)
 
-git log v35..HEAD 实测恰七 commit（本席实跑 `git log --oneline`，老→新）：
-acf9fe6（v35）→4026051（v36）→41e74b0（v37）→c205ea0（v38）→caa3a28（v39）
-→496ebdf（v40）→c5df4d4（v41·HEAD）。
+The `git log v35..HEAD` measurement shows exactly seven commits (run by this agent: `git log --oneline`, oldest → newest):
+acf9fe6 (v35) → 4026051 (v36) → 41e74b0 (v37) → c205ea0 (v38) → caa3a28 (v39)
+→ 496ebdf (v40) → c5df4d4 (v41 · HEAD).
 
-#### 波一·v35 诊断层（acf9fe6）
+#### Work stream 1 · v35 diagnosis layer (acf9fe6)
 
-20261110 mac-runner CI 诊断六幕实战的工具化（更新账.md:3554）。四器落刀：
-`tools/toolchain_dyld_doctor.py`（dyld 断链诊断·otool -L 解析硬引用→missing
-件 donor 根溯源→只出建议禁代执行·`--smoke` 冒烟）、`tools/net_probe.py`
-（上传端点网络窗探针·**双探稳窗律**连续两轮全过才 STABLE·单探禁发射）、
-`tools/ci_triage.py`（CI 红炉分诊·五族判类谱 A 内容红/B NETRED/C 工具链断链
-/D 排队资源墙/E coqchk-skipped＋绿炉·判类序 UNRECOGNIZED>C>A>E>B>D·
-`--baseline-seconds` 倍数对表）、`tools/registry_union.py`（注册册 union 手术
-·main 为底＋对 base 提取真独有行·A1/A2/A3 断言 fail-loud·`--reanchor`
-md5-8 正典形·缺省干跑）。本地映射半边同步：CW 侧 cw_paths v1.0→v1.1
-（更新账.md:3580）。集成面 cw.sh 十一工具；总套 47 例/43 过/0 红/4 SKIP
-（更新账.md:3562）。git show --stat：26 files·+3610/-16。
+The tooling of the six-act November 10, 2026 mac-runner CI diagnosis drill (`更新账.md:3554`). Four tools applied:
+`tools/toolchain_dyld_doctor.py` (dyld linkage-failure diagnosis · `otool -L` parsing of hard references → missing pieces traced to their donor roots → recommendations only, never executed on the user's behalf · `--smoke` smoke check), `tools/net_probe.py`
+(the upload-endpoint network-window probe · the **two-probe stability-window rule** — two consecutive fully passing rounds before STABLE · a single-probe round must not initiate),
+`tools/ci_triage.py` (CI failing-build triage · the five-family classification spectrum A content-failing / B NETRED / C toolchain linkage failure / D queueing resource saturation / E coqchk-skipped, plus passing builds ·
+the classification order UNRECOGNIZED > C > A > E > B > D ·
+the `--baseline-seconds` multiple lookup table), `tools/registry_union.py` (the registry union operation
+· main as the base + extraction of the rows truly unique to base · the A1/A2/A3 assertions fail loud · `--reanchor`
+the md5-8 canonical form · dry run by default). The local mapping half synchronized: the CW-side cw_paths v1.0→v1.1
+(`更新账.md:3580`). Integration face: eleven `cw.sh` tools; the full suite 47 cases / 43 passing / 0 failing / 4 SKIP
+(`更新账.md:3562`). `git show --stat`: 26 files · +3610/-16.
 
-#### 波二·v36 编排层（4026051）
+#### Work stream 2 · v36 orchestration layer (4026051)
 
-一键流水线把 v35 四器编排成链（更新账.md:3591）：`tools/pushci.py`（1918 行）
-五段管线——preflight（doctor 环境闸＋net_probe 稳窗闸＋可选 `--pre-scan-gate4`
-头注预扫）→push（HTTP/1.1 三发×45s→ghproxy 换路两发·github.com 形才换）→
-resolve+watch（head_branch+head_sha 咬合·status-only 口径）→heal（ci_triage
-判类分派·B/E 双探稳窗后 rerun〔403 幂等〕帽 `--max-heal 3`·A/C 停禁代修·
-表外族禁自动 rerun）→verdict±merge（409 重拉 tip 歇 60s 重试 ≤3）·verdict
-七态封册。**编排零新引擎**（全 subprocess v35 引擎）；六场景 15 判 canned
-（S1-S6·--injector 双形＋--git-caller 成对·离线零真网络）。cw.sh 十二工具；
-总套 48/44/0 红/4 SKIP。跨席协作判例：测试席 escalate「实现缺席」→编排席令
-「先铸实现无关件＋有界轮询」→实现落盘逐版对齐——三层各一席零撞车
-（更新账.md:3598）。git show --stat：14 files·+3916/-22。
+The single-command pipeline chains the four v35 tools (`更新账.md:3591`): `tools/pushci.py` (1918 lines)
+the five-stage pipeline — preflight (the doctor environment check + the net_probe stability-window check + the optional `--pre-scan-gate4` header pre-scan) → push (HTTP/1.1, three shots × 45 s → the ghproxy reroute, two shots · reroute only for the github.com form) →
+resolve+watch (the head_branch + head_sha interlock · the status-only reading) → heal (the ci_triage
+classification routing · B/E rerun only after the two-probe stability window [403 idempotent] capped at `--max-heal 3` · A/C stops and never repairs on the user's behalf ·
+out-of-spectrum families never auto-rerun) → verdict±merge (409 re-pulls the tip, rests 60 s, retries ≤ 3) · the verdict's
+seven-state register. **The orchestration added zero new engines** (all subprocess over the v35 engines); six scenarios, 15 verdicts, canned
+(S1-S6 · the `--injector` two forms + `--git-caller` paired · offline, zero real network). Twelve `cw.sh` tools;
+the full suite 48/44/0 failing/4 SKIP. The cross-agent collaboration precedent: the test agent escalated "implementation absent" → the orchestration agent instructed
+"cast the implementation-independent pieces first + bounded polling" → the implementation landed, aligned version by version — three layers, one agent each, zero collisions
+(`更新账.md:3598`). `git show --stat`: 14 files · +3916/-22.
 
-#### 波三·v37 服务层（41e74b0）
+#### Work stream 3 · v37 service layer (41e74b0)
 
-批处理工具→实时动态服务层（更新账.md:3615）。三器落刀：`tools/unclog.py`
-（1161 行·疏通闭环 probe 归集→chain_graph 链根→cure_applier 只正典包落刀→
-scan_v4+probe 复核→verdict；诚实墙逐根列因禁硬凑；缺省干跑）、
-`tools/wash_shape.py`（洗形五洗流水：词面/token/头注/行尾/锚·plan/apply 两段
-·plan 零写盘·冻结名册红拒）、`tools/cw_sentinel.py`（1079 行·实时哨三路信号
-源 CI 红炉/本地堵账/构建日志→JSONL 事件流·**report-only 缺省零动作**）。
-接口五件套三器贯通：JSON-in/out schema 钦名、退出码 0/1/2/9（红是数据非器
-红）、--once/--loop、--injector/--sleep-scale 离线可测、编排零新引擎
-（更新账.md:3627）。cw.sh 十五工具；总套 51/47/0 红/4 SKIP；README-cw 新增
-「工作流配合接口」节。git show --stat：11 files·+4011/-13。
+Batch tools → a real-time dynamic service layer (`更新账.md:3615`). Three tools applied: `tools/unclog.py`
+(1161 lines · the clear-blockages closed loop: probe collection → chain_graph chain roots → cure_applier applies only canonical packages →
+scan_v4 + probe re-check → verdict; the honesty wall lists the reason for every root and never force-fits; dry run by default),
+`tools/wash_shape.py` (the shape-normalization five-wash pipeline: word faces / tokens / headers / line endings / anchors · the plan/apply two stages
+· plan writes zero to disk · frozen-roster entries refused), `tools/cw_sentinel.py` (1079 lines · the real-time watcher with three signal sources —
+CI failing builds / local blockage records / build logs → the JSONL event stream · **report-only by default, zero actions**).
+The five-discipline interface set runs through all three tools: JSON-in/out schema designated, exit codes 0/1/2/9 (a failing result is data, not a tool
+failure), `--once`/`--loop`, `--injector`/`--sleep-scale` offline-testable, orchestration with zero new engines
+(`更新账.md:3627`). Fifteen `cw.sh` tools; the full suite 51/47/0 failing/4 SKIP; README-cw gains the
+"workflow cooperation interface" section. `git show --stat`: 11 files · +4011/-13.
 
-#### 波四·v38 接驳体检层（c205ea0）
+#### Work stream 4 · v38 hookup health-check layer (c205ea0)
 
-接驳与体检（更新账.md:3645）：`tools/cw_doctor.py`（1082 行·四域聚合体检
-环境 40/网络 20/注册 25/堵账 15→健康分 0-100＋advice 逐非绿域指向对应器·
-真机全真跑 91.67 healthy rc=0）；cw_sentinel `--on-red-preset` 接驳预设
-（unclog/pushci·干跑缺省铁律·与 `--on-red` 互斥 rc=2）；unclog `--audit`
-真树只读审计（零写盘硬保证＝全文件 md5 跑前跑后自证恒同·与 --apply/--loop
-互斥）；韧性层 `tools/_http_backoff.py`（403/429/5xx 指数退避·injector 路零
-重试）＋子进程防挂（`--timeout`/`--subproc-timeout` 缺省 120s）＋net_probe
-`--jitter`/`--seed`。examples/workflows 三正典嵌段＋docs/workflow-integration-
-whitepaper v1.0（11 bash 围栏块 bash -n 两轮 0 败·134 枚旗标逐枚 grep 对账
-0 缺失）。cw.sh 十六工具；总套 52/48/0 红/4 SKIP。git show --stat：
-18 files·+3364/-171。
+Hookup and health checking (`更新账.md:3645`): `tools/cw_doctor.py` (1082 lines · the four-domain aggregated health check —
+environment 40 / network 20 / registry 25 / blockages 15 → health score 0-100 + advice pointing each non-passing domain at its tool ·
+the real-machine full run 91.67 healthy rc=0); the cw_sentinel `--on-red-preset` hookup presets
+(unclog/pushci · the dry-run-by-default invariant · mutually exclusive with `--on-red` at rc=2); the unclog `--audit`
+real-tree read-only audit (the zero-write hard guarantee = all-file md5 self-verified identical before and after the run · mutually exclusive with `--apply`/`--loop`);
+the resilience layer `tools/_http_backoff.py` (403/429/5xx exponential backoff · the injector path retries zero)
++ subprocess hang protection (`--timeout`/`--subproc-timeout` default 120 s) + net_probe
+`--jitter`/`--seed`. Three canonical embedded blocks in examples/workflows + `docs/workflow-integration-whitepaper` v1.0 (11 bash fenced blocks, `bash -n` two rounds, 0 failures · 134 flags reconciled one by one by grep,
+0 missing). Sixteen `cw.sh` tools; the full suite 52/48/0 failing/4 SKIP. `git show --stat`:
+18 files · +3364/-171.
 
-#### 波五·v39 语料滚扩（caa3a28）
+#### Work stream 5 · v39 corpus expansion (caa3a28)
 
-金标纪律执行的语料滚扩（更新账.md:3676）：`wash/cure_pack.json` v1.3→v1.4
-（24→25 式）——三源勘察得候选 11 条，**收 1 式** `cure39_ifq_connective_
-qualify`（引据＝Set 仓锚 commit 9a51c74 diff 逐字 25 站·face-regex 复用零新
-引擎），**拒 10 条逐条因**；`tests/fixtures/header_map_v1.json` 头注模板库
-v1（preset=campaign_set_diamond·占位 6 枚全带引据·**缺 evidence 拒载由代码
-执行**）；`tools/doc_lint.py` 文档←→实现一致性三查器（工具表/计数/旗标三查
-·初跑 drift=3→主会话补 netname-normalize/select-audit/doc-lint 三路由后
-consistent drift=0）；tests/test_relay_e2e.py 接驳端到端＋docs/ops-realtime-
-service 运行手册。cw.sh 十七→十九工具；总套 54/50/0 红/4 SKIP；doc_lint
-refs=87 drift=0。git show --stat：18 files·+2962/-73。
+The corpus expansion under gold-standard discipline (`更新账.md:3676`): `wash/cure_pack.json` v1.3→v1.4
+(24→25 forms) — the three-source survey produced 11 candidates, **1 form accepted**
+`cure39_ifq_connective_qualify` (the citation = the Set repository anchor commit `9a51c74`, the diff word-for-word across 25 stations · face-regex reuse, zero new
+engines), **10 rejected with per-item reasons**; `tests/fixtures/header_map_v1.json` the header template library
+v1 (preset=`campaign_set_diamond` · all 6 placeholders carry citations · **refusing to load without evidence, enforced in code**); `tools/doc_lint.py` the document ↔ implementation consistency three-check tool (tool table / counts / flags, three checks
+· the first run drift=3 → after the main session added the netname-normalize / select-audit / doc-lint three routes,
+consistent drift=0); `tests/test_relay_e2e.py` the hookup end-to-end + the docs/ops-realtime-
+service runbook. Seventeen → nineteen `cw.sh` tools; the full suite 54/50/0 failing/4 SKIP; doc_lint
+refs=87 drift=0. `git show --stat`: 18 files · +2962/-73.
 
-#### 波六·v40 正典化巩固（496ebdf）
+#### Work stream 6 · v40 canonical consolidation (496ebdf)
 
-稳态巩固（更新账.md:3706）：cw_sentinel state 崩溃恢复（损坏 fail-loud 9 红拒
-·`--rebuild-state` 唯一合法重建路）＋JSONL 轮转（`--emit-max-bytes` 保留 2 代
-·seq 跨代续号）；unclog --loop seen 差分事件；wash_shape plan-cache 失效；
-`tools/baseline_diff.py`（545 行·两份 audit 基线对比→new/resolved/persistent
-按链根逐因对齐·**candidates 集不同=incomparable 如实拒判**）；**破坏面复核
-矩阵** tests/test_destructive_matrix.py 17 行拒写判据（负例注入自证·逮住 1 处
-真护栏缺口——cw_sentinel plain `--on-red` 无 `--emit` 被 rc=0 接受·修复排
-v41）；文档收口（CONTRIBUTING 接口五纪律节＋CHANGELOG＋docs/service-layer-
-overview 四职能×三层全貌＋examples/baselines/README 规程）。cw.sh 二十工具；
-总套 56/52/0 红/4 SKIP。git show --stat：16 files·+2953/-99。
+Steady-state consolidation (`更新账.md:3706`): the cw_sentinel state crash recovery (corrupt state fails loud at 9 and refuses
+· `--rebuild-state` the only legitimate rebuild path) + JSONL rotation (`--emit-max-bytes` keeps 2 generations
+· seq numbering continues across generations); the unclog `--loop` seen-difference events; the wash_shape plan-cache invalidation;
+`tools/baseline_diff.py` (545 lines · two audit baselines compared → new/resolved/persistent
+aligned by chain root, reason by reason · **a different candidates set = incomparable, refused as recorded**); the **destructive-face review
+matrix** `tests/test_destructive_matrix.py`, 17 rows of refuse-to-write criteria (negative-example injection self-attestation · caught 1
+real guardrail gap — cw_sentinel plain `--on-red` without `--emit` accepted at rc=0 · the fix scheduled for
+v41); the documentation close-out (the CONTRIBUTING five interface disciplines section + CHANGELOG + the docs/service-layer-
+overview four-function × three-layer full map + the examples/baselines/README procedure). Twenty `cw.sh` tools;
+the full suite 56/52/0 failing/4 SKIP. `git show --stat`: 16 files · +2953/-99.
 
-#### 波七·v41 并行与护栏（c5df4d4）
+#### Work stream 7 · v41 parallelism and guardrails (c5df4d4)
 
-并行与护栏缺口修复（更新账.md:3735）：sentinel 护栏缺口修复——plain
-`--on-red` 缺 `--emit` → rc=2（cw_sentinel.py:883-886·旁路动作必伴随事件流
-落盘），矩阵 S2 扩 plain+preset 双向（v40 登记→v41 转正）；双门归一评估报告
-docs/push-gate-dual-door-assessment（**建议案 A 并立各判各的**·零动码）；
-probe_engine `--jobs K` 并行池（缺省 1 串行零漂移·**台账序恒按候选典序**·
-温控 K≤2 建议·候选重名 fail-loud）＋unclog `--probe-parallel` 透传＋report
-timing 增 jobs 维度（矢量十三→十四）；sentinel preset 注册表扩展（wash-shape
-/triage 动态键/cw-doctor 三新预设＋PRESET_REQUIRED_ARGS 声明化＋链式
-`--on-red-preset` 一败续行）；perf 规程与 docs/perf-profile（四源如实·DS4
-K 真编译三跑不可测录方法占位零编数字）。真树 audit 基线 27/27 RC0 red=0 入
-examples/baselines/（§4）。总套 56/52/0 红/4 SKIP＋矩阵 17 判全过＋doc_lint
-consistent。git show --stat：14 files·+1239/-154。
+The parallelism and guardrail gap fixes (`更新账.md:3735`): the sentinel guardrail gap fixed — plain
+`--on-red` without `--emit` → rc=2 (`cw_sentinel.py:883-886` · bypass actions must always be accompanied by the event stream persisting to disk), the matrix S2 extended to the plain+preset pair, both ways (registered in v40 → made standing in v41); the dual-door unified assessment report
+docs/push-gate-dual-door-assessment (**proposal A: the two doors stand side by side, each judging its own** ·
+zero code touched);
+the probe_engine `--jobs K` parallel pool (default 1, serial, zero drift · **the ledger order always by candidate canonical order** ·
+the thermal guard advises K≤2 · duplicate candidate names fail loud) + the unclog `--probe-parallel` pass-through + the report
+timing section gains the jobs dimension (vector thirteen → fourteen); the sentinel preset registry extended (wash-shape
+/triage dynamic keys / cw-doctor — three new presets + PRESET_REQUIRED_ARGS declared + the chained
+`--on-red-preset` continues after one failure); the perf procedure and docs/perf-profile (four sources as measured · the DS4
+K real-compile three-run profile unmeasurable → the method and a placeholder recorded, zero invented numbers). The real-tree audit baseline 27/27 RC0 red=0 entered
+`examples/baselines/` (§4). The full suite 56/52/0 failing/4 SKIP + the matrix 17 verdicts all passing + doc_lint
+consistent. `git show --stat`: 14 files · +1239/-154.
 
-### §2 现役能力全表（cw.sh 二十工具·四职能×三层双维归类）
+### §2 The active capability master table (the twenty `cw.sh` tools · the four functions × three layers, two-dimension classification)
 
-统一入口 `bash cw.sh <tool> [args...]`（repo 根·参数与退出码 1:1 透传·
-bash 3.2 兼容·cw.sh:65-82 路由契约）。二十工具册实测自 cw.sh:104-153 与
-cw.sh:207-226 路由段；三层归属与职能槽沿用 docs/service-layer-overview
-§四表（v39 现势）＋各波账，baseline-diff（v40 新入册）系本席按 cw.sh:60-62
-描述定位（该账未给职能槽·如实注）。「役前底座」＝v29-v32 既有件（战役复用
-的引擎面）；四职能＝清洗/洗形/排障/疏通。
+The unified entry `bash cw.sh <tool> [args...]` (repository root · arguments and exit codes passed 1:1 ·
+bash 3.2 compatible · the `cw.sh:65-82` route contract). The twenty-tool roster was measured from `cw.sh:104-153` and the
+`cw.sh:207-226` route section; the three-layer assignment and the function slots follow the docs/service-layer-overview
+§4 table (the v39 current state) + the per-work-stream accounts; baseline-diff (newly onboarded in v40) was positioned by this agent from the `cw.sh:60-62`
+description (that account gave no function slot · noted as such). The "pre-effort foundation" = the existing v29-v32 faces (the engine surface
+the effort reuses); the four functions = sanitize / shape normalization / failure diagnosis / clear blockages.
 
-| # | 路由 | 目标脚本 | 三层 | 职能 | 入列 | 一行职责（缺省安全态） |
+| # | route | target script | layer | function | onboarded | one-line duty (default safe state) |
 |---|---|---|---|---|---|---|
-| 1 | `scan4` | `scan/scan_v4_token.py` | 役前底座 | 普查面 | v29-v32 | token 级限定名普查 |
-| 2 | `cure` | `wash/cure_applier.py` | 役前底座 | 清洗（刀） | v29-v32 | 消费位治愈正典包（缺省干跑·v39 扩 v1.4 共 25 式） |
-| 3 | `probe` | `wash/probe_engine.py` | 役前底座 | 探针面 | v29-v32 | 批量闭包相容探针（v41 增 `--jobs K` 并行·典序确定性） |
-| 4 | `chain` | `tools/chain_graph.py` | 役前底座 | 疏通（挑根） | v29-v32 | 多账合并链根图 |
-| 5 | `sync-ledger` | `tools/ledger_sync.py` | 役前底座 | 台账面 | v29-v32 | probe 台账×状态台账合并同步 |
-| 6 | `erasure` | `verify/erasure_classifier.py` | 役前底座 | 分类面 | v29-v32 | 擦除位分类顾问 |
-| 7 | `dual-scan` | `scan/dual_scan.py` | 役前底座 | 对拍面 | v29-v32 | 双器对拍驱动 |
-| 8 | `doctor` | `tools/toolchain_dyld_doctor.py` | 诊断层（v35） | 排障 | v35 | dyld 工具链断链诊断（只诊断＋restore 建议·禁代执行） |
-| 9 | `net-probe` | `tools/net_probe.py` | 诊断层（v35） | 排障 | v35 | 网络窗探针（双探稳窗·单探禁发射；v38 增 `--jitter`/`--seed`） |
-| 10 | `triage` | `tools/ci_triage.py` | 诊断层（v35） | 排障 | v35 | CI 红炉分诊（五族＋绿炉判类谱·`--logs`/`--baseline-seconds`） |
-| 11 | `union` | `tools/registry_union.py` | 诊断层（v35） | 手术器 | v35 | 注册册 union 手术（缺省干跑·`--reanchor` md5-8 正典形） |
-| 12 | `pushci` | `tools/pushci.py` | 编排层（v36） | 一键流水线 | v36 | 修复后推送 CI 一键流水线（发射闸→push→watch→heal→verdict±merge·七态封册·`--dry-run` 零副作用） |
-| 13 | `sentinel` | `tools/cw_sentinel.py` | 服务层（v37） | 排障（实时哨） | v37 | 实时动态哨·三路信号源→JSONL 事件流（report-only 缺省·`--on-red-preset` 五预设可链式·v40 稳态化·v41 护栏双守卫） |
-| 14 | `wash-shape` | `tools/wash_shape.py` | 服务层（v37） | 清洗/洗形 | v37 | 正典形五洗流水（词面/token/头注/行尾/锚·plan 缺省零写盘·`--header-map-preset` 模板库） |
-| 15 | `unclog` | `tools/unclog.py` | 服务层（v37） | 疏通 | v37 | 疏通堵塞闭环引擎（缺省干跑·`--audit` 只读基线·诚实墙禁硬凑·v41 `--probe-parallel`） |
-| 16 | `cw-doctor` | `tools/cw_doctor.py` | 服务层（v38） | 排障（聚合） | v38 | 综合体检四域聚合→健康分 0-100＋advice（只诊断禁代执行） |
-| 17 | `doc-lint` | `tools/doc_lint.py` | 服务层（v39） | 收口（四职能外） | v39 | 文档←→实现一致性三查（工具表/计数/旗标·verdict consistent/drift） |
-| 18 | `netname-normalize` | `tools/netname_normalize.py` | 役前底座（v39 入口补齐） | 净名面 | v39 | .v.v 双后缀净名归一（映射表＋`--apply` 改名 md5 验讫） |
-| 19 | `select-audit` | `tools/select_audit.py` | 役前底座（v39 入口补齐） | 审计面 | v39 | 批选审计器（对 order.txt 全表 grep 剔重＋Require 面审计 v6） |
-| 20 | `baseline-diff` | `tools/baseline_diff.py` | 服务层（v40） | 疏通（堵账对比收口） | v40 | 堵账基线对比（new/resolved/persistent＋verdict 四态·incomparable 如实拒判·timing 不入对比） |
+| 1 | `scan4` | `scan/scan_v4_token.py` | pre-effort foundation | survey face | v29-v32 | token-level qualified-name survey |
+| 2 | `cure` | `wash/cure_applier.py` | pre-effort foundation | sanitize (applier) | v29-v32 | consumer-position cure canonical package (dry run by default · v39 extends to v1.4, 25 forms total) |
+| 3 | `probe` | `wash/probe_engine.py` | pre-effort foundation | probe face | v29-v32 | the batch closure-compatibility probe (v41 adds `--jobs K` parallelism · canonical-order determinism) |
+| 4 | `chain` | `tools/chain_graph.py` | pre-effort foundation | clear blockages (root picking) | v29-v32 | the merged chain-root graph across accounts |
+| 5 | `sync-ledger` | `tools/ledger_sync.py` | pre-effort foundation | ledger face | v29-v32 | probe ledger × state ledger merged synchronization |
+| 6 | `erasure` | `verify/erasure_classifier.py` | pre-effort foundation | classification face | v29-v32 | the erasure-position classification advisor |
+| 7 | `dual-scan` | `scan/dual_scan.py` | pre-effort foundation | differential-comparison face | v29-v32 | the two-scanner differential-run driver |
+| 8 | `doctor` | `tools/toolchain_dyld_doctor.py` | diagnosis layer (v35) | failure diagnosis | v35 | dyld toolchain linkage-failure diagnosis (diagnosis + restore advice only · never executes) |
+| 9 | `net-probe` | `tools/net_probe.py` | diagnosis layer (v35) | failure diagnosis | v35 | the network-window probe (the two-probe stability window · a single-probe round must not initiate; v38 adds `--jitter`/`--seed`) |
+| 10 | `triage` | `tools/ci_triage.py` | diagnosis layer (v35) | failure diagnosis | v35 | CI failing-build triage (the five-family + passing-build classification spectrum · `--logs`/`--baseline-seconds`) |
+| 11 | `union` | `tools/registry_union.py` | diagnosis layer (v35) | operation tool | v35 | the registry union operation (dry run by default · `--reanchor` the md5-8 canonical form) |
+| 12 | `pushci` | `tools/pushci.py` | orchestration layer (v36) | single-command pipeline | v36 | the post-repair push-CI single-command pipeline (preflight check → push → watch → heal → verdict±merge · the seven-state register · `--dry-run` zero side effects) |
+| 13 | `sentinel` | `tools/cw_sentinel.py` | service layer (v37) | failure diagnosis (real-time watcher) | v37 | the real-time dynamic watcher · three signal sources → JSONL event stream (report-only default · `--on-red-preset` five presets, chainable · v40 steady-state hardening · v41 dual guardrails) |
+| 14 | `wash-shape` | `tools/wash_shape.py` | service layer (v37) | sanitize / shape normalization | v37 | the canonical-form five-wash pipeline (word faces / tokens / headers / line endings / anchors · plan defaults to zero writes · the `--header-map-preset` template library) |
+| 15 | `unclog` | `tools/unclog.py` | service layer (v37) | clear blockages | v37 | the clear-blockages closed-loop engine (dry run by default · `--audit` the read-only baseline · the honesty wall never force-fits · v41 `--probe-parallel`) |
+| 16 | `cw-doctor` | `tools/cw_doctor.py` | service layer (v38) | failure diagnosis (aggregated) | v38 | the comprehensive health check · four domains aggregated → health score 0-100 + advice (diagnosis only, never executes) |
+| 17 | `doc-lint` | `tools/doc_lint.py` | service layer (v39) | close out (outside the four functions) | v39 | the document ↔ implementation consistency three-check (tool table / counts / flags · verdict consistent/drift) |
+| 18 | `netname-normalize` | `tools/netname_normalize.py` | pre-effort foundation (the v39 entry completion) | name-normalization face | v39 | the .v.v dual-suffix name normalization (the mapping table + `--apply` rename with md5 verification) |
+| 19 | `select-audit` | `tools/select_audit.py` | pre-effort foundation (the v39 entry completion) | audit face | v39 | the batch-selection auditor (the order.txt full-table grep dedup + the Require-face audit v6) |
+| 20 | `baseline-diff` | `tools/baseline_diff.py` | service layer (v40) | clear blockages (blockage-record comparison close-out) | v40 | the blockage-baseline comparison (new/resolved/persistent + the four-state verdict · incomparable refused as recorded · timing excluded from the comparison) |
 
-双维速读：**排障**＝doctor/net-probe/triage/sentinel/cw-doctor 五器（诊断层
-三器＋服务层哨与聚合体检）；**清洗/洗形**＝cure/wash-shape 两器（cure 为刀·
-wash_shape 编排落刀面）；**疏通**＝chain/unclog/baseline-diff 三器（挑根/
-闭环/对比收口）；收口面 doc-lint 在四职能外；其余为役前底座与编排层
-（pushci 横跨诊断编排消费面）。入口演化 11→12→15→16→19→20 与 §1 各波
-集成面行逐一吻合。
+The two-dimension quick reading: **failure diagnosis** = doctor/net-probe/triage/sentinel/cw-doctor, five tools (the three diagnosis-layer
+tools + the service-layer watcher and the aggregated health check); **sanitize / shape normalization** = cure/wash-shape, two tools (cure is the applier ·
+wash_shape orchestrates the application face); **clear blockages** = chain/unclog/baseline-diff, three tools (root picking /
+closed loop / comparison close-out); the close-out face doc-lint sits outside the four functions; the rest are the pre-effort foundation and the orchestration layer
+(pushci spans the diagnosis, orchestration and consumer faces). The entry evolution 11→12→15→16→19→20 matches the §1 integration rows
+work stream by work stream.
 
-### §3 判例总表（v35-v41 各账「判例/口径登记」节蒸馏·编号沿用）
+### §3 The precedent master table (distilled from the "precedent / wording registration" sections of the v35-v41 accounts · numbering carried over)
 
-各账登记节原文编号照录（登记节无编号者按出现序补序号·来源锚随行）。
+Each account's registration-section original numbering is carried verbatim (unnumbered registrations receive sequence numbers by order of appearance · the source anchor rides the row).
 
-| 编号 | 来源锚 | 判例/口径 | 蒸馏 | 后续落点 |
+| # | source anchor | precedent / wording | distillation | later placement |
 |---|---|---|---|---|
-| v35-① | 更新账.md:3574（§三） | 口径勘误 | v34 账记 t_quad8_check「红」——本环境实为 SKIP（rc=111·正本四仓副本群不在卷）；非器红非本轮引入·两环境语境差如实并记 | 套件口径「SKIP 不计红」沿用至今 |
-| v36-① | 更新账.md:3607（§四.1 契约偏离登记①） | --injector 双形 | pushci `--injector` 双形（steps 严格按轮＋flat 夹具 verbatim）——语义未放宽 | v36 六场景 15 判离线可测的正本形态 |
-| v36-② | 更新账.md:3607（②） | README 计数面 | README.md 无工具计数（改同步例数行 43→48） | 例数行同步律沿用 |
-| v36-③ | 更新账.md:3607（③） | README 快照面 | README.md 无 v35 快照行（v35 波未入主 README·本轮只补 v36 行内点名） | — |
-| v36-④ | 更新账.md:3607（④） | 不代改史 | tests/README.md「在册 47 例」系当时现势陈述·遵不代前轮改史原样保留 | — |
-| v37-① | 更新账.md:3632（§三） | 跨席计数漂移 | 哨席 cw.sh 头注计数十三与 usage 十二不一致→集成席统一十五（跨席计数漂移·集成收口职·判例） | 计数漂移归集成收口职的成文先例 |
-| v37-② | 更新账.md:3633（§三） | injector 哲学 | unclog `--injector`＝「canned 检验·真编排」——chain/cure/scan/frozen8 注入下照旧真跑（非傀儡测试）·离线可测与真实编排并存 | 白皮书 §1 纪律④机理节同源 |
-| v38-① | 更新账.md:3663（§三裁决登记） | 同槽互斥 | `--on-red-preset` 与 `--on-red` 同给＝互斥 rc=2（任务书「preset 优先」vs selftest「互斥」张力→按库同槽互斥纪律裁决·docstring 记界） | ops 手册 §2.2 负例表在册 |
-| v38-② | 更新账.md:3664（§三） | 双钟不并铃 | cw_sentinel `--timeout`（HTTP 单请求）与 `--subproc-timeout`（子进程帽）两物分立（v37 既约口径不动） | v40 §三延续登记 |
-| v39-① | 更新账.md:3693（§三） | 扩容诚实 | cure_pack v1.4 单式扩容＝勘察诚实结论（三源无第二件复现的形态按律候勘·非扩容不足） | 「宁缺毋滥」代码化（header_map 缺 evidence 拒载） |
-| v39-② | 更新账.md:3694（§三） | 判据打磨 | doc_lint 幻引/悬引判据的实证修正（dup≠多余·README.md:232 union-freeze --world 合法多值） | doc_lint 判据定型 |
-| v40-① | 更新账.md:3718（§二矩阵战果） | 真护栏缺口 | 破坏面矩阵逮住 cw_sentinel plain `--on-red` 无 `--emit` 被 rc=0 接受（护栏真身在 preset 路径·探针实跑证实动作执行）——负例注入自证＋真缺口逮住双证 | **v41 修复转正**（cw_sentinel.py:883-886 守卫·矩阵 S2 扩双向） |
-| v40-② | 更新账.md:3722（§三） | 旗名分立 | `--loop-max` 与 `--max-rounds` 旗名分属 unclog/sentinel 两器·未造别名（任务书笔误如实纠正·docstring 记界） | — |
-| v40-③ | 更新账.md:3723（§三） | 双钟延续 | cw_sentinel 双钟分立延续（on-red 60s 旁路帽 v37 既约不动） | — |
-| v41-① | 更新账.md:3747（§二跨席协作） | 同文件串行化 | 并行席与 perf 席同改 unclog.py（并行层＋timing 维度）＝共享基座增量补维（perf 席开工前首读已见并行层·改补不覆）——零冲突实况 | 同文件双席协作法样本 |
-| v41-② | 更新账.md:3748（§二） | 代际演替 | 器产账面代际演替如实记录：audit 基线 JSON 被 07:12 真编译跑重产（早先 rc=127 快败账被覆盖） | perf-profile §一 DS1 以 07:12 版为准逐字读验 |
+| v35-① | `更新账.md:3574` (§3) | criterion correction | the v34 account recorded t_quad8_check as "failing" — in this environment it is actually SKIP (rc=111 · the canonical four-repository copy group is not on this volume); a data failing, not introduced by this round · the two-environment difference recorded as such | the suite wording "SKIP does not count as failing", carried to this day |
+| v36-① | `更新账.md:3607` (§4.1 contract-deviation registration ①) | the `--injector` two forms | the pushci `--injector` two forms (steps strict per round + the flat fixture verbatim) — the semantics not relaxed | the canonical form of the v36 six-scenario 15-verdict offline testability |
+| v36-② | `更新账.md:3607` (②) | the README count face | README.md carried no tool count (the sync example-count line 43→48) | the example-count line sync rule, carried forward |
+| v36-③ | `更新账.md:3607` (③) | the README snapshot face | README.md had no v35 snapshot line (the v35 work stream did not enter the main README · this round only added the in-line v36 mention) | — |
+| v36-④ | `更新账.md:3607` (④) | never rewrite history | tests/README.md "47 cases registered" was the then-current statement · kept verbatim under the no-history-rewrite rule | — |
+| v37-① | `更新账.md:3632` (§3) | cross-agent count drift | the watcher agent's cw.sh header count said thirteen while its usage said twelve → the integration agent unified to fifteen (cross-agent count drift · the integration close-out duty · precedent) | the written precedent that count drift belongs to the integration close-out duty |
+| v37-② | `更新账.md:3633` (§3) | the injector philosophy | unclog `--injector` = "canned verification · real orchestration" — chain/cure/scan/frozen8 still really run under injection (not puppet tests) · offline testability and real orchestration coexist | the whitepaper §1 discipline ④ mechanism section, same source |
+| v38-① | `更新账.md:3663` (§3 ruling registration) | same-slot mutual exclusion | `--on-red-preset` and `--on-red` together = mutually exclusive at rc=2 (the task instruction's "preset wins" vs the selftest's "mutually exclusive" tension → ruled by the repository's same-slot mutual-exclusion invariant · the boundary recorded in the docstring) | the ops manual §2.2 negative-example table, registered |
+| v38-② | `更新账.md:3664` (§3) | the two clocks stay separate | the cw_sentinel `--timeout` (per-HTTP-request) and `--subproc-timeout` (the subprocess cap) are two separate things (the v37 agreed wording unchanged) | the v40 §3 continued registration |
+| v39-① | `更新账.md:3693` (§3) | expansion honesty | the cure_pack v1.4 single-form expansion is the honest survey conclusion (forms without a second independent reproduction are held for survey · not an expansion shortfall) | "prefer scarcity over dilution" made code (header_map refuses to load without evidence) |
+| v39-② | `更新账.md:3694` (§3) | criterion polish | the empirical correction of the doc_lint phantom / dangling citation criteria (dup ≠ superfluous · README.md:232 union-freeze --world is a legitimate multi-value) | the doc_lint criteria finalized |
+| v40-① | `更新账.md:3718` (§2 matrix results) | a real guardrail gap | the destructive matrix caught cw_sentinel plain `--on-red` without `--emit` accepted at rc=0 (the real guardrail lives on the preset path · the probe run confirmed the action executes) — the negative-example injection self-attestation + a real gap caught, two proofs | **the v41 fix made standing** (the cw_sentinel.py:883-886 guard · the matrix S2 extended both ways) |
+| v40-② | `更新账.md:3722` (§3) | flag-name separation | `--loop-max` and `--max-rounds` belong to unclog / sentinel respectively · no alias created (the task instruction's typo corrected as recorded · the boundary in the docstring) | — |
+| v40-③ | `更新账.md:3723` (§3) | the two clocks continue | the cw_sentinel two-clock separation continues (the on-red 60 s bypass cap, the v37 agreement unchanged) | — |
+| v41-① | `更新账.md:3747` (§2 cross-agent collaboration) | same-file serialization | the parallelism agent and the perf agent both edited unclog.py (the parallel layer + the timing dimension) = an incremental dimension addition on a shared base (the perf agent read the parallel layer before starting · appended without overwriting) — the zero-conflict record | a sample of the same-file two-agent collaboration method |
+| v41-② | `更新账.md:3748` (§2) | generational succession | the tool-produced account's generational succession recorded as it happened: the audit baseline JSON was re-produced by the 07:12 real-compile run (the earlier rc=127 fast-fail record was overwritten) | perf-profile §1 DS1 reads the 07:12 version word for word |
 
-### §4 真实树战报（audit 基线 27/27 RC0·三发史·诚实墙拒判实录）
+### §4 The real-tree results report (the audit baseline 27/27 RC0 · the three-run history · the honesty wall's recorded refusals)
 
-- **对象与候选面**：Set 仓 ConstructiveWorld_Live 真树·27 件＝20261110 两批
-  新落位（b48-52 十三＋b53-57 十四·md5 实测回填 TSV）·世界＝runner 工作区
-  Live APFS clone（537 vo·现役代际·零触碰 runner 正本）（更新账.md:3698、
-  3727；examples/baselines/audit-ConstructiveWorld_Live-20261111.note.md）。
-- **三发史**（更新账.md:3752-3753·note 侧车「对照史」节）：第一/二发 rc=127
-  器因红（编译器缺位——「裸 coqc 不存在」铁则又一证）·**诚实墙正确拒判**
-  （「代差型/器因红·禁硬凑」）；第三发带 `--rocq-cmd` 9.3 coqc 模板成产。
-- **成产战报**：**27/27 RC0·red=0·墙=0**·cures_planned=0（audit 只读）·
-  verdict audit exit 0。timing 段：manifest 1.289s／probe_chain 190.728s／
-  total 194.086s（唯一非确定段·不入基线对比）。本席实读在库正本
-  examples/baselines/audit-ConstructiveWorld_Live-20261111.json 与上述数字
-  逐项相符（args.rocq_cmd＝opam93 coqc `-native-compiler no -q -Q . "" {name}.v`
-  ·src=ConstructiveWorld_Live·world=probe_world_v38·injector=null）。
-  实证意义：20261110 两批新落位面在现役世界代际**全部闭包相容**实锤
-  （更新账.md:3753）。
-- **入仓**：基线 JSON＋产账说明侧车 md 落 examples/baselines/·随 v41 commit
-  c5df4d4 入库（更新账.md:3754；git show --stat c5df4d4 列 audit-…json 71 行
-  ＋note 7 行）。对比器就位：baseline_diff.py 对两份 audit 基线出增减三清单
-  ·账面自洽校验拦手编账（v40 §一②）。
-- **代际演替如实记**：/tmp/audit_b48_b53_baseline.json 早先曾为 rc=127 快败
-  跑产物·07:12 由真编译跑重产覆盖——perf-profile DS1 以 07:12 版为准逐字
-  读验（docs/perf-profile §一 DS1 溯源注记·v41-②判例）。
-- **诚实墙机制在册**（本战报的拒判实录即其首次实战）：unclog 诚实墙六因
-  self-unwashable/cure-miss/frozen-in-service/root-file-missing/exclusive-
-  group-conflict/no-chain-root 逐根列因禁硬凑（docs/ops-realtime-service
-  §3.2）；审计零写盘＝全文件 md5 跑前跑后自证恒同违则 fail-loud 9
-  （docs/ops-realtime-service §3.1）。
+- **Subject and candidate face**: the Set repository ConstructiveWorld_Live real tree · 27 pieces = the two placement batches of November 10, 2026
+  (b48-52, thirteen + b53-57, fourteen · md5 measured and backfilled into the TSV) · world = the runner workspace's
+  Live APFS clone (537 vo · the active generation · the runner canonical copy untouched) (`更新账.md:3698`,
+  `3727`; `examples/baselines/audit-ConstructiveWorld_Live-20261111.note.md`).
+- **The three-run history** (`更新账.md:3752-3753` · the note sidecar's "comparison history" section): the first/second runs rc=127,
+  tool-cause failing (the compiler absent — one more proof of the "bare coqc does not exist" invariant) · **the honesty wall refused to judge, correctly**
+  ("generation-mismatch / tool-cause failing · never force-fit"); the third run, with the `--rocq-cmd` 9.3 coqc template, produced.
+- **The production results**: **27/27 RC0 · red=0 · wall=0** · cures_planned=0 (the audit is read-only) ·
+  verdict audit, exit 0. The timing section: manifest 1.289 s / probe_chain 190.728 s /
+  total 194.086 s (the only non-deterministic section · excluded from baseline comparison). This agent read the in-tree canonical copy
+  `examples/baselines/audit-ConstructiveWorld_Live-20261111.json` and it matches the numbers above item by item (args.rocq_cmd = opam93 coqc `-native-compiler no -q -Q . "" {name}.v`
+  · src=ConstructiveWorld_Live · world=probe_world_v38 · injector=null).
+  Evidential meaning: the two placement batches of November 10, 2026 are confirmed **all closure-compatible** in the active world generation
+  (`更新账.md:3753`).
+- **Archived**: the baseline JSON + the run-account note sidecar md placed in `examples/baselines/` · entered the repository with the v41 commit
+  c5df4d4 (`更新账.md:3754`; the `git show --stat` of c5df4d4 lists audit-…json at 71 lines
+  + the note at 7 lines). The comparator in place: baseline_diff.py produces the three delta lists from two audit baselines
+  · the account self-consistency check blocks hand-written accounts (the v40 §1 ②).
+- **The generational succession, recorded as it happened**: /tmp/audit_b48_b53_baseline.json had earlier been the product of an rc=127 fast-fail
+  run · re-produced and overwritten by the real-compile run at 07:12 — perf-profile DS1 reads the 07:12 version, word for word
+  (the `docs/perf-profile` §1 DS1 provenance note · the v41-② precedent).
+- **The honesty-wall mechanism registered** (this report's recorded refusals are its first field use): the unclog honesty wall's six reasons
+  self-unwashable / cure-miss / frozen-in-service / root-file-missing / exclusive-
+  group-conflict / no-chain-root list the reason for every root and never force-fit (docs/ops-realtime-service
+  §3.2); the audit's zero writes = all-file md5 self-verified identical before and after the run, violations fail loud at 9
+  (docs/ops-realtime-service §3.1).
 
-### §5 待办与 v43+ 路线图（各账「边界与待办」节汇总·去重）
+### §5 To-dos and the v43+ route map (summarized from each account's "boundaries and to-dos" section · deduplicated)
 
-**役内已闭（待办→落点）**：pushci 一键流水线（v35 边界.1→v36 落地）；
-sentinel `--on-red` 接驳预设（v37 边界.3→v38 落地）；真树 audit 活跑与基线
-入仓（v38 边界.1/v39 边界.1/v40 边界.1→v41 三发成产入库）；sentinel plain
-`--on-red` 守卫修复＋矩阵判据转正（v40 边界.2→v41 落地）；push_gate 双门
-归一评估（v36 边界.3/v40 排程→v41 docs/push-gate-dual-door-assessment 建议案
-A 并立·零动码·v41 边界.2 闭合）；本总报告（v41 边界.3 v42 排程→本件）。
+**Closed within the effort (to-do → placement)**: the pushci single-command pipeline (the v35 boundary.1 → landed in v36);
+the sentinel `--on-red` hookup presets (the v37 boundary.3 → landed in v38); the real-tree audit live run and the baseline
+archived (the v38 boundary.1 / v39 boundary.1 / v40 boundary.1 → the v41 three-run production and archive); the sentinel plain
+`--on-red` guard fix + the matrix criterion made standing (the v40 boundary.2 → landed in v41); the push_gate dual-door
+unified assessment (the v36 boundary.3 / v40 scheduling → v41 docs/push-gate-dual-door-assessment, proposal
+A side by side · zero code touched · the v41 boundary.2 closed); this total report (the v41 boundary.3, the v42 scheduling → this face).
 
-**候令/未竟（v43+ 候选·逐条注来源）**：
+**Pending execution (the v43+ candidates · each with its source)**:
 
-1. probe `--jobs`>1 真树实测（温控窗候令·canned 机制实证已毕）——v41
-   边界.1；DS4 真编译 K=1/2/3 三跑占位待回填 docs/perf-profile §五（回填即
-   perf-profile v1.1·docs/perf-profile §六.3）。
-2. pushci 真实 CI 端到端活跑（真 push→真炉→heal·首跑建议 `--dry-run` 先行
-   再真发）——v36 边界.2、v38 边界.2、whitepaper 附录 A 未实跑项同。
-3. unclog `--apply`／wash_shape `--apply` 真实树活跑（fixture 级全验·首跑
-   建议 `--src` 小子集先行·白名单形规程 docs/ops-realtime-service §3.3）——
-   v37 边界.1。
-4. sentinel `--loop` 长驻真实消费场景（工作流后台 bash 任务挂 JSONL 流·配合
-   下波战役即验证）——v37 边界.2。
-5. cure39 新式（cure39_ifq_connective_qualify）真实树活跑（fixture 级全验）
-   ——v39 边界.2。
-6. 9.1 编译器依赖面候决（`ROCWASH_ROCQ` 惯指路径 MISSING·指 9.3 CW_MAC93
-   或复原捐体·CW 侧 cw_paths v1.1 移根监察表在册）——v35 边界.2。
-7. ci_triage `--watch` 长盯态（pushci watch 内嵌版外的独立长盯）——v36
-   边界.3。
-8. wash_shape `--header-map` 模板库随战役语料滚动扩容——v37 边界.3（v39
-   header_map_v1 已立首库）。
-9. 双门案 A 残余风险在册：无机械闸强制工作流先判门 B（pushci 单跑即发射·
-   窗纪律靠文档与嵌段约束）；若日后要机械强制·案 B 是唯一不改判据正本的
-   路径·但须先解 c4 全套成本与 c1 新枝首推死锁再议——docs/push-gate-dual-
-   door-assessment §5 残余风险。
+1. the probe `--jobs`>1 real-tree measurement (a thermal-window pending-execution item · the canned mechanism is empirically settled) — the v41
+   boundary.1; the DS4 real-compile K=1/2/3 three-run placeholders await backfill into docs/perf-profile §5 (the backfill =
+   perf-profile v1.1 · docs/perf-profile §6.3).
+2. the pushci real CI end-to-end live run (a real push → a real build → heal · for the first run, `--dry-run` first,
+   then the real shot) — the v36 boundary.2, the v38 boundary.2, the whitepaper appendix A unrun items likewise.
+3. the unclog `--apply` / wash_shape `--apply` real-tree live run (fixture-level full verification · for the first run, a small `--src` subset first · the allowlist-form
+   procedure docs/ops-realtime-service §3.3) —
+   the v37 boundary.1.
+4. the sentinel `--loop` long-resident real consumption (a workflow background bash task hanging on the JSONL stream ·
+   verified with the next effort's work stream) — the v37 boundary.2.
+5. the cure39 new form (cure39_ifq_connective_qualify) real-tree live run (fixture-level full verification)
+   — the v39 boundary.2.
+6. the 9.1 compiler dependency face, pending decision (`ROCWASH_ROCQ` habitual path MISSING · points to 9.3 CW_MAC93
+   or a restored donor · the CW-side cw_paths v1.1 root-move watch table registered) — the v35 boundary.2.
+7. the ci_triage `--watch` long-watch state (independent of the pushci watch embedded version) — the v36
+   boundary.3.
+8. the wash_shape `--header-map` template library expanding with the effort corpus — the v37 boundary.3 (the v39
+   header_map_v1 founded the first library).
+9. the dual-door proposal A residual risk, registered: no mechanical check forces the workflow to judge door B first (a pushci single run launches ·
+   the window discipline rests on documentation and embedded-block constraints); if mechanical enforcement is ever wanted · proposal B is the only path that leaves the canonical criteria unchanged
+   · but the c4 full-suite cost and the c1 new-branch first-push deadlock must be solved first — docs/push-gate-dual-
+   door-assessment §5 residual risk.
 
-**v42 收口总档波剩余（v41 边界.3 排程）**：三闸终跑（doc_lint --repo
-drift=0／tests/test_destructive_matrix.py 17 判全过／tests/run_tests.sh 全套
-零红）＝集成席终跑口径（本席不代跑·见卷首）；真机演练汇编；v43+ 路线图
-（本节即其草案底稿）。
+**The v42 close-out total-archive work stream remainder (the v41 boundary.3 schedule)**: the three-gate final runs (`doc_lint --repo`
+drift=0 / `tests/test_destructive_matrix.py` 17 verdicts all passing / `tests/run_tests.sh` the full suite
+zero failing) = the integration agent's final-run wording (not rerun by this agent · see the header); the real-machine drill compilation; the v43+ route map
+(this section is its draft base).
 
-——本席交稿自证：本文件写成后经 `bash /Users/apple/Desktop/ConstructiveWorld/
-cpu_guard.sh -MaxWaitSec 120` 包裹复跑 `python3 tools/doc_lint.py --repo .`
-·verdict consistent drift=0（含本文旗标引用零漂）——实测记录见交割 notes。
+—— Submission self-attestation of that round: after the v1.0 file was written, `python3 tools/doc_lint.py --repo .` was rerun wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`
+· verdict consistent drift=0 (including zero drift in that document's flag citations) — the measurement record is in the delivery notes.
 
 ---
 
-## §6 六波增补（20261112·v43→v48）
+## §6 The six-work-stream addendum (November 12, 2026 · v43→v48)
 
-**commit 面（本席本 ask 实跑 `git log --oneline c5df4d4..HEAD`·老→新恰六
-commit）**：ffb8c82（v42 收口总档波＝v1.0 基座波·本件 §0 即其交付件）→
-459a77d（v43）→8e124b3（v45）→a9720ab（v46）→6217808（v47）→325b4dc
-（v48·HEAD）。**v44 零码改·无独立 commit**——纯运行波·其账由 v45 commit
-8e124b3 携带的更新账 v44 段在库（更新账.md:3814-3834）。六波素材全部引更新账
-v43-v48 段（更新账.md:3794-3944·只读蒸馏未触原文）＋上列在库件；各波 git
-show 统计均本席实跑。
+**The commit face** (run by this agent in this ask: `git log --oneline c5df4d4..HEAD` · oldest → newest, exactly six
+commits): ffb8c82 (the v42 close-out total-archive work stream = the v1.0 base work stream · this face's §0 is its deliverable) →
+459a77d (v43) → 8e124b3 (v45) → a9720ab (v46) → 6217808 (v47) → 325b4dc
+(v48 · HEAD). **v44 changed zero code · no separate commit** — a pure run work stream · its account is in the repository via the `更新账.md` v44 section carried by the v45 commit
+8e124b3 (`更新账.md:3814-3834`). All six work streams' material is cited from the `更新账.md`
+v43-v48 sections (`更新账.md:3794-3944` · read-only distillation, the original untouched) + the in-tree faces listed above; every work stream's `git show` statistics were run by this agent.
 
-### 波八·v43 机动实测（459a77d·零码改纯验证·路线图④+①双收口）
+### Work stream 8 · v43 the ad-hoc real-run measurement (459a77d · zero code changes, pure verification · route-map ④+① double close-out)
 
-主会话机械执行两件（更新账.md:3794-3810·git show 统计 459a77d＝3 files
-+103/-0）：
+The main session mechanically executed two items (`更新账.md:3794-3810` · the `git show --stat` of 459a77d = 3 files
++103/-0):
 
-- **④门控编译弧总开关收口**：`ROCWASH_ROCQ` 指 9.3 多路器
-  （mac93_install_work/opam93/rocq93/bin/rocq 实测在卷）→tests/test_cure_pack.py
-  门控弧 **TEST-CURE-PACK: PASS rc=0**（E2 consumer-unit magic 0/0·world
-  accessor debt pinned=1·E2/E3 夹具 9.3 编译全链通）——9.1 工具链 MISSING
-  不再阻门控弧·9.3 直替可行实证（更新账.md:3800）。诚实记界：翻绿是「现役
-  世界代际」绿·**非 9.1 复绿**（§9 边界 3 同源）。
-- **①probe --jobs 真树 DS4 回填收口**：27 件同候选面（/tmp/audit27.tsv·
-  ≤30 件采样规模判例）K=2 audit——`tools/unclog.py --audit
-  --probe-parallel 2` probe_chain **101.916s vs K=1 190.728s＝1.87×**·
-  n_records=27 n_red=0（与 K=1 互证）·timing.jobs=2 维度字段实测在账
-  （更新账.md:3801）。同候选面·同世界（/tmp/probe_world_v38 APFS clone
-  537 vo）·同 rocq-cmd 模板（9.3 coqc）·cpu_guard 包裹——除 K 外全维恒同
-  ＝baseline_diff 口径可比（更新账.md:3805）。K=2 基线入仓 examples/baselines/
-  perf-ConstructiveWorld_Live-k2-20261111.json（更新账.md:3806·perf-profile
-  §五回填段 :157-165 同数·本席实读该账 args.probe_parallel=2 逐项相符）。
-- 集成面不变：cw.sh 二十工具·测试 56 例 52 过 0 红·三闸收口全绿
-  （更新账.md:3810）。
+- **④ the gated-compile arc master switch closed out**: `ROCWASH_ROCQ` points at the 9.3 multiplexer
+  (`mac93_install_work/opam93/rocq93/bin/rocq` measured present) → the `tests/test_cure_pack.py`
+  gated arc **TEST-CURE-PACK: PASS rc=0** (the E2 consumer-unit magic 0/0 · the world accessor debt pinned=1 · the E2/E3 fixtures compile through the whole chain on 9.3) — the missing 9.1 toolchain
+  no longer blocks the gated arc · the 9.3 direct substitution is empirically viable (`更新账.md:3800`). The honest boundary: the turned-passing state is the "active
+  world generation" passing · **not a 9.1 restoration** (§9 boundary 3, same source).
+- **① the probe --jobs real-tree DS4 backfill closed out**: the same 27-piece candidate face (`/tmp/audit27.tsv` ·
+  the ≤30-piece sample-size precedent) K=2 audit — `tools/unclog.py --audit --probe-parallel 2` probe_chain **101.916 s vs K=1 190.728 s = 1.87×** ·
+  n_records=27 n_red=0 (mutually corroborating with K=1) · the timing.jobs=2 dimension field measured in the account
+  (`更新账.md:3801`). Same candidate face · same world (the /tmp/probe_world_v38 APFS clone
+  537 vo) · same rocq-cmd template (9.3 coqc) · wrapped in cpu_guard — every dimension identical except K =
+  comparable under the baseline_diff wording (`更新账.md:3805`). The K=2 baseline archived at `examples/baselines/perf-ConstructiveWorld_Live-k2-20261111.json` (`更新账.md:3806` · the perf-profile
+  §5 backfill section :157-165, same numbers · read by this agent, args.probe_parallel=2 matches item by item).
+- The integration face unchanged: twenty `cw.sh` tools · the tests 56 cases, 52 passing, 0 failing · the three close-out gates all passing
+  (`更新账.md:3810`).
 
-### 波九·v44 哨长驻首演（无独立 commit·零码改纯运行·路线图②收口）
+### Work stream 9 · v44 the resident watcher's first rehearsal (no separate commit · zero code changes, pure run · route-map ② close out)
 
-「实时动态配合工作流」目标的**首场实战验证**（更新账.md:3814-3834）——
-哨在真仓真历史上完整跑通「发现→判类→事件流」三段·v37-v39 三波服务层设计
-被真实数据回灌确认（更新账.md:3829）：
+The **first field verification** of the "real-time dynamic cooperation with workflows" goal (`更新账.md:3814-3834`) —
+the watcher ran the full "discovery → classification → event stream" three stages over the real repository's real history · the v37-v39 three-work-stream service-layer design
+confirmed by real data feeding back (`更新账.md:3829`):
 
-- **命令**：`python3 tools/cw_sentinel.py --loop --interval 45 --max-rounds 15
-  --watch-repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set --state-file
-  /tmp/sentinel_v44_state.json --emit /tmp/sentinel_v44_events.jsonl`
-  （report-only 缺省零动作·更新账.md:3820）。
-- **行为**：15 轮×45s 全程跑毕（12 分钟窗）——**首轮 retro-triage 全战役史**：
-  fresh state 下把 Set 仓 30 条历史 run 拉出经 ci_triage 判类逐条归族
-  （更新账.md:3821）。
-- **14 事件**：family 分布 A-content-red×9／B-netred×1／C-toolchain-break×1／
-  E-coqchk-skipped×1／UNRECOGNIZED×2；action fix-content×9／
-  rerun-after-stable-window×2／restore-toolchain×1／watch-only×2
-  （更新账.md:3822）。
-- **判类吻合度（核心验证）**：#280→A（陈旧基座 uab_ssUnit 时代）✓·#283→C
-  （dyld 断链日）✓·#289→E（上传 DNS 窗）✓·#286 cancelled→B-netred 连坐＋
-  UNRECOGNIZED 并列不充谱 ✓——判类与 20261110 六幕实战实况逐条吻合
-  （更新账.md:3823）。
-- **幂等**：第 2-15 轮零重复事件（state seen 生效）＝长驻稳态实证
-  （更新账.md:3824）。
+- **The command**: `python3 tools/cw_sentinel.py --loop --interval 45 --max-rounds 15 --watch-repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set --state-file /tmp/sentinel_v44_state.json --emit /tmp/sentinel_v44_events.jsonl`
+  (report-only default, zero actions · `更新账.md:3820`).
+- **The behavior**: 15 rounds × 45 s run to completion (a 12-minute window) — **the first round triaged the whole effort history retroactively**:
+  from fresh state, the Set repository's 30 historical runs were pulled and classified family by family by ci_triage
+  (`更新账.md:3821`).
+- **14 events**: the family distribution A-content-red ×9 / B-netred ×1 / C-toolchain-break ×1 /
+  E-coqchk-skipped ×1 / UNRECOGNIZED ×2; the actions fix-content ×9 /
+  rerun-after-stable-window ×2 / restore-toolchain ×1 / watch-only ×2
+  (`更新账.md:3822`).
+- **The classification agreement (the core verification)**: #280 → A (the stale foundation of the uab_ssUnit era) ✓ · #283 → C
+  (the dyld linkage-failure day) ✓ · #289 → E (the upload DNS window) ✓ · #286 cancelled → B-netred by the group-cancel coupling +
+  UNRECOGNIZED side by side, no forced spectrum fit ✓ — the classifications match the six-act drill of November 10, 2026 item by item
+  (`更新账.md:3823`).
+- **Idempotence**: rounds 2-15 produced zero duplicate events (the state seen in effect) = the long-resident steady-state proof
+  (`更新账.md:3824`).
 
-### 波十·v45 render_events 台账渲染器（8e124b3）
+### Work stream 10 · v45 the render_events ledger renderer (8e124b3)
 
-- **`tools/render_events.py`**（547 行·git show 统计 8e124b3 本席实跑＝3
-  files +601/-3）：哨事件 JSONL→markdown 台账渲染器——`--events`/`--dir`
-  合并（seq+ts 排序）→kind/family/action 三维分布＋逐事件 9 列表（坏行容错
-  rc1·未知 kind 归 other·竖线转义）＋`--json` summary
-  （rocqwash-render-events/1）＋`--top` 截断（更新账.md:3844）。自证：
-  selftest 七矢量 rc=0＋**真实哨产出渲染断言**（v44 14 事件·family
-  A=9/B=1/C=1/E=1/UNREC=2 独立重算全对·两跑字节恒同——更新账.md:3844）。
-- **集成**：cw.sh 二十一路由（render-events 挂接六处同步·锚两败教训＝v40
-  baseline-diff 插位改序·按实文重锚三发收口）；doc_lint VERDICT consistent
-  drift=0（refs=87）（更新账.md:3845）。
-- 八波总收兵（v35-v45）：九 commit 全 ls-remote 对账·路线图②③④①⑧已
-  收口·⑤⑥⑦候令（更新账.md:3853）。
+- **`tools/render_events.py`** (547 lines · the `git show --stat` of 8e124b3, run by this agent = 3
+  files +601/-3): the watcher-event JSONL → markdown ledger renderer — the `--events`/`--dir`
+  merge (sorted by seq+ts) → the kind/family/action three-dimension distribution + the 9-column per-event table (bad-line tolerance
+  rc1 · unknown kinds filed as other · pipe escaping) + the `--json` summary
+  (rocqwash-render-events/1) + the `--top` truncation (`更新账.md:3844`). Self-attestation:
+  the selftest seven vectors rc=0 + **a real watcher-output render assertion** (the v44 14 events · the family
+  A=9/B=1/C=1/E=1/UNREC=2 recomputed independently, all correct · the two runs byte-identical — `更新账.md:3844`).
+- **The integration**: twenty-one `cw.sh` routes (the render-events hookup synced in six places · anchored on the two earlier failures = the v40
+  baseline-diff insertion reorder · re-anchored on the actual text, closed out in three shots); the doc_lint VERDICT consistent
+  drift=0 (refs=87) (`更新账.md:3845`).
+- The eight-work-stream overall wrap-up (v35-v45): nine commits all reconciled by ls-remote · route-map ②③④①⑧
+  closed out · ⑤⑥⑦ pending execution (`更新账.md:3853`).
 
-### 波十一·v46 red_dispatch＋registry_audit＋push_gate 归一评估（a9720ab·路线图③实质关闭）
+### Work stream 11 · v46 red_dispatch + registry_audit + the push_gate unified evaluation (a9720ab · route-map ③ substantively closed)
 
-三席并铸＋集成席收口（更新账.md:3857-3884·git show 统计 a9720ab 本席实跑
-＝12 files +2522/-15）。代际注：本波任务书铸于 v37 基线·落刀时实况已 v45
-8e124b3——集成席实勘后**按现势落 v46 口径**（23 工具/58 例·更新账.md:3859）；
-两新器恰为 v45 路线图候令面实质推进：red_dispatch＝候令③接驳守门的产品化·
-registry_audit＝真仓活跑安全前置（更新账.md:3859/:3877）。
+Three agents cast together + the integration agent closed out (`更新账.md:3857-3884` · the `git show --stat` of a9720ab, run by this agent
+= 12 files +2522/-15). The generation note: this work stream's task instruction was cast on the v37 baseline · at application time the actual state was already v45
+8e124b3 — the integration agent surveyed and **applied the v46 current-state wording** (23 tools / 58 cases · `更新账.md:3859`);
+the two new tools are exactly the substantive advance of the v45 route-map pending-execution face: red_dispatch = the productization of the pending-execution ③ hookup gatekeeping ·
+registry_audit = the safety precondition for real-repository live runs (`更新账.md:3859`/`:3877`).
 
-- **`tools/red_dispatch.py`（约 760 行）红事件路由器**（更新账.md:3865）：
-  sentinel 事件 JSONL→五族路由（B/E→pushci 重派／A→manual-fix-note 禁代修
-  出 fix 清单／C→doctor／blocking→unclog 落刀仅显式人审／build-signal→
-  wash-shape）＋D/UNRECOGNIZED→watch-only；三档 `--preset`（report-only
-  缺省／suggest／auto 显式）·validate-all-then-execute 全批零半派·
-  `--state-file` 防重＋`--cooldown` 600·参数三级解算·shell 元字符守卫防注入。
-  自证：`--selftest` rc=0 36 判 12 矢量＋live smoke（auto 标记文件实证·二跑
-  cooldown skipped=1）。
-- **`tools/registry_audit.py` 注册册卫生审计器**（只读铁律·零写盘·落刀面
-  另由 registry-fix 承担·更新账.md:3866）：四账＝重复行/锚（撞文本·顺序号形
-  ·形怪·缺锚·正典 #R<序>-<md5-8>）/孤儿双向/拓扑引用（`--live-src` 实件
-  对账）；`--fix-plan` 只出确定性处方（DEDUP 保首/锚刷直用 registry_union
-  引擎/ORPHAN-ADD 模板/撞锚列 unresolvable）。自证：`--selftest` rc=0 五判
-  （v35 真账形态样张 19 病灶精确盘点·md5 冻结向量 77c2b9a8 实嵌·只读 md5
-  恒同）＋**真仓只读 demo**：Set Live 权威对 duplicates=12（_CoqProject 尾区
-  L492-515 逐字重复块·#40 直并族实证）anchors=523（撞锚 6 恰 v35 判例原文）。
-- **docs/评估-push_gate推窗四判据与pushci归一-20261111.md**（更新账.md:3867）：
-  推窗四判据（c1 ci-idle/c2 behind=0/c3 fetch-clean/c4 cert-green·判序
-  c3→c1→c2→c4·只判窗不开推）vs pushci preflight 三闸逐项对照——**7 判据面
-  零交·双门零互连**（grep 实证）；三案：甲 preflight 增第 4 闸（c1 证据死锁
-  ＋c4>120s 两座山→不推荐）·**乙保持双门＋文档分工（推荐）**·丙判据下沉库
-  函数（改 certify 深件→否决）；push_gate 非冻结（frozen8.py:74-83 实取八件
-  无它·nonfrozen-mutable）。与 v41 先席档（push-gate-dual-door-assessment
-  v1.0 案 A/B/C）同判旁证·两档并存不合并留档（更新账.md:3884）。
-- **集成面＋帽值换代**（更新账.md:3868）：cw.sh 二十三工具（dispatch/audit
-  两路由）·run_tests.sh 58 例·**doc_lint DEFAULT_HELP_CAP 20→24**（集成席
-  登记帽溢出 cure_applier/probe_engine→主会话裁决换代·v38 波时点已预注）；
-  自证：run_tests.sh 58 例/54 过/0 红/4 SKIP 两遍实跑 EXIT 0·doc_lint
-  --help-cap 24 VERDICT consistent drift=0。
+- **`tools/red_dispatch.py` (~760 lines), the red-event router** (`更新账.md:3865`):
+  the sentinel event JSONL → five-family routing (B/E → pushci re-route / A → manual-fix-note, never repaired on the user's behalf, produces the fix list / C → doctor / blocking → unclog application only with explicit human review / build-signal →
+  wash-shape) + D/UNRECOGNIZED → watch-only; the three `--preset` tiers (report-only
+  default / suggest / auto, explicit) · validate-all-then-execute, zero half-executed batches ·
+  `--state-file` dedup + `--cooldown` 600 · three-tier parameter resolution · a shell metacharacter guard against injection.
+  Self-attestation: `--selftest` rc=0, 36 verdicts over 12 vectors + a live smoke (the auto-marked file verified · the second run
+  cooldown skipped=1).
+- **`tools/registry_audit.py`, the registry hygiene auditor** (the read-only invariant · zero writes · the application face
+  is carried by registry-fix — `更新账.md:3866`): the four audit checks = duplicate rows/anchors (text collisions · sequence-number shapes
+  · odd shapes · missing anchors · the canonical #R<seq>-<md5-8>) / two-way orphans / topology references (the `--live-src` real-piece
+  reconcile); `--fix-plan` emits only deterministic prescriptions (DEDUP keeps the first / the anchor refresh goes straight through the registry_union
+  engine / ORPHAN-ADD templates / colliding anchors listed unresolvable). Self-attestation: `--selftest` rc=0, five verdicts
+  (a v35 real-account specimen, 19 defects inventoried exactly · the md5 frozen vector 77c2b9a8 embedded · the read-only md5
+  identical) + **a real-repository read-only demo**: the Set Live authority pair duplicates=12 (the `_CoqProject` tail region
+  L492-515 word-for-word duplicate block · the #40 direct-merge family verified) anchors=523 (6 anchor collisions, exactly the v35 precedent's originals).
+- **`docs/评估-push_gate推窗四判据与pushcinormalize-20261111.md`** (`更新账.md:3867`):
+  the push-window four criteria (c1 ci-idle / c2 behind=0 / c3 fetch-clean / c4 cert-green · the judgment order
+  c3→c1→c2→c4 · judges the window only, never opens the push) versus the pushci preflight three checks, item by item — **zero overlap across the 7 criterion faces
+  · the two doors zero interconnection** (grep-verified); three proposals: the first adds a fourth preflight check (the c1 evidence deadlock
+  + the c4>120 s two mountains → not recommended) · **the second keeps the two doors + divides the documentation (recommended)** · the third sinks the criteria into library
+  functions (touches deep certify pieces → rejected); push_gate is not frozen (frozen8.py:74-83 measured eight pieces
+  without it · nonfrozen-mutable). Side by side with the v41 earlier-agent document (the push-gate-dual-door-assessment
+  v1.0 proposals A/B/C), same-verdict corroboration · the two documents coexist unmerged, both on file (`更新账.md:3884`).
+- **The integration face + the cap-value generation change** (`更新账.md:3868`): twenty-three `cw.sh` tools (the route/audit
+  two routes) · run_tests.sh 58 cases · **doc_lint DEFAULT_HELP_CAP 20→24** (the integration agent
+  registered the cap overflow for cure_applier/probe_engine → the main session ruled the generation change · pre-registered at the v38 work stream's point in time);
+  self-attestation: run_tests.sh 58 cases / 54 passing / 0 failing / 4 SKIP, two runs EXIT 0 · doc_lint
+  --help-cap 24 VERDICT consistent drift=0.
 
-### 波十二·v47 ⑧关闭＋哨真仓首战＋registry_fix 执行器（6217808·路线图⑧正式关闭）
+### Work stream 12 · v47 ⑧ closed + the watcher's first real-repository field run + the registry_fix executor (6217808 · route-map ⑧ formally closed)
 
-三席并铸＋集成席收口（更新账.md:3888-3915·git show 统计 6217808 本席实跑
-＝7 files +1325/-16）：
+Three agents cast together + the integration agent closed out (`更新账.md:3888-3915` · the `git show --stat` of 6217808, run by this agent
+= 7 files +1325/-16):
 
-- **⑧A 案执行完毕＝门控编译弧总开关翻绿**（更新账.md:3894）：tests/
-  run_tests.sh 总开关段缺省探测四路径（`ROCWASH_ROCQ` env 已设则尊→9.3 多路
-  器存在即 export·另三路径指认 Set 仓 gate7/gate6 正本与 BORN 世界 rocq）——
-  门控弧四位翻绿（t_cure_pack 编译 check 段/t_probe_engine 真 rocq 节/
-  run_tests 两套例·**判据语义零改动·经缺省面翻**）＋**CANON 三例超任务书
-  翻绿**（t_gate7_wrapper 13/13·t_verify_gate6 五判·t_gate6_born_wrapper
-  21/21·绿证在先方落缺省）·cure pack 编译弧全链 PASS（v43 27/27 同源先例
-  复现）。**SKIP 4→1**·唯余 t_quad8_check＝CANON_W1 四仓副本群缺卷族·与
-  门控无关如实留账（更新账.md:3897/:3914·§8 条 4 同源）。
-- **哨真仓首战 33 事件**（更新账.md:3895）：cw_sentinel 双仓 `--once`
-  （Set 30 runs/15 红·Main 30/18）→**33 事件**（A19/UNREC8/E3/B2/C1——
-  B-netred×2 恰 Set#269/Main#22 已知 NETRED 红炉族咬合＝判类真值对账）·
-  绿 25 runs 静默记 seen＝绿也是真观测·二跑幂等零新事件（哨长盯旗名词面
-  勘误一处→真旗标 `--max-rounds` 如实录）；JSONL 33 行逐行合法·schema
-  rocqwash-sentinel-event/1·seq 递增·state seen 30/30 咬合。UNREC8 待人工
-  复核＝判类谱「不充谱」设计内诚实（§9 边界 2）。
-- **`tools/registry_fix.py`（1161 行）审计处方式执行器**（v46 待办 2 兑现·
-  卫生环闭合 audit→fix 四步·更新账.md:3896）：DEDUP 保首（audit 原行号系
-  验尸）／锚刷（registry_union.apply_reanchor 同款·缺实件 skip·MD5-DRIFT
-  炸）／ORPHAN/缺锚/unresolvable→skip 如实（禁机械造锚）；断言三判（被治键
-  duplicates=0／锚撞零新增 A3 引擎／孤儿不增）·任一炸=exit2＋**逐字节回滚**
-  ·缺省干跑零写盘（work-dir 亦不建）。自证：`--selftest` 8/8 rc=0（
-  `--apply` 12 重复块→0＋77c2b9a8 同输同出逐字节＝registry_union CLI 同参
-  产物·人工炸点回滚·自然炸点 A3·落刀确定性）。
-- **集成面**（更新账.md:3897）：cw.sh 二十四工具（registry-fix 六处同步）·
-  run_tests.sh +57/-6（总开关段＋t_registry_fix 挂例）·**59 例/58 过/0 红/
-  1 SKIP** 两遍·doc_lint consistent·cw.sh 二十四工具齐。
-- registry_fix 真树落刀候令：Set Live 双册 12 重复块＋锚刷处方已在案——真树
-  落刀涉多写者仓（曾栢源线/值守席活跃）·候用户令或协调台对表
-  （更新账.md:3908·§8 条 1 同源）。
+- **⑧ proposal A executed to completion = the gated-compile arc master switch turned passing** (`更新账.md:3894`): the tests/
+  run_tests.sh master-switch section probes four paths by default (if the `ROCWASH_ROCQ` env is set it is honored → the 9.3 multiplex-
+  er existing is exported · the other three paths point at the Set repository gate7/gate6 canonical copies and the BORN world rocq) —
+  the gated arc's four positions turned passing (the t_cure_pack compile check section / the t_probe_engine real rocq node /
+  the two run_tests case sets · **criterion semantics changed zero · flipped through the default face**) + **the three CANON cases turned passing beyond the task instruction**
+  (t_gate7_wrapper 13/13 · t_verify_gate6 five verdicts · t_gate6_born_wrapper
+  21/21 · the passing proof landed before the default) · the cure-pack compile arc PASS through the whole chain (the v43 27/27 same-source precedent
+  reproduced). **SKIP 4→1** · only t_quad8_check remains = the CANON_W1 four-repository copy group's missing-volume family · unrelated to
+  the gate, recorded as such (`更新账.md:3897`/`:3914` · §8 item 4, same source).
+- **The watcher's first real-repository field run, 33 events** (`更新账.md:3895`): the cw_sentinel dual-repository `--once`
+  (Set 30 runs / 15 failing · Main 30/18) → **33 events** (A19/UNREC8/E3/B2/C1 —
+  the two B-netred ×2 exactly interlock with the known NETRED failing builds Set#269/Main#22 = the classification ground-truth reconciliation) ·
+  the 25 passing runs silently recorded as seen = passing is also a real observation · the second run idempotent, zero new events (one
+  watcher long-watch flag-name face corrected → the real flag `--max-rounds` recorded as it is); the JSONL 33 lines, all legal line by line · the schema
+  rocqwash-sentinel-event/1 · seq increasing · the state seen 30/30 interlocked. The UNREC8 await human
+  review = the classification spectrum's "no forced fit" honesty by design (§9 boundary 2).
+- **`tools/registry_fix.py` (1161 lines), the audit-prescription executor** (the v46 to-do item 2 fulfilled ·
+  the hygiene loop closes audit→fix in four steps · `更新账.md:3896`): DEDUP keeps the first (the audit's original line numbers are for the
+  post-mortem) / the anchor refresh (the registry_union.apply_reanchor same form · missing real pieces skip · MD5-DRIFT
+  fails loud) / ORPHAN / missing-anchor / unresolvable → skip as recorded (anchors never fabricated mechanically); the three assertions (the treated keys'
+  duplicates=0 / anchor collisions zero new, the A3 engine / orphans not increased) · any failure = exit 2 + **a byte-for-byte rollback**
+  · dry run by default, zero writes (not even the work dir is created). Self-attestation: `--selftest` 8/8 rc=0 (
+  the `--apply` 12 duplicate blocks → 0 + 77c2b9a8 same input, same output byte-for-byte = the registry_union CLI same-argument
+  product · the artificial failure point rollback · the natural failure point A3 · application determinism).
+- **The integration face** (`更新账.md:3897`): twenty-four `cw.sh` tools (registry-fix synced in six places) ·
+  run_tests.sh +57/-6 (the master-switch section + the t_registry_fix case) · **59 cases / 58 passing / 0 failing/
+  1 SKIP**, twice · doc_lint consistent · all twenty-four `cw.sh` tools present.
+- The registry_fix real-tree application pending-execution item: the Set Live dual-ledger 12 duplicate blocks + the anchor-refresh prescription are already on file — the real-tree
+  application touches a multi-writer repository (the `曾栢源` work line / on-duty agents active) · awaiting a user instruction or a coordinator cross-check
+  (`更新账.md:3908` · §8 item 1, same source).
 
-### 波十三·v48 ⑦勘形分级＋DS4 三账收口＋哨手册＋哨长驻真部署（325b4dc·路线图八候选全数关闭）
+### Work stream 13 · v48 the ⑦ assessment grading + the DS4 three-account close-out + the watcher manual + the watcher's resident real deployment (325b4dc · all eight route-map candidates closed)
 
-三席＋集成席＋主会话（更新账.md:3918-3944·git show 统计 325b4dc 本席实跑
-＝6 files +749/-5·**无 cw.sh＝零新器**）：
+Three agents + the integration agent + the main session (`更新账.md:3918-3944` · the `git show --stat` of 325b4dc, run by this agent
+= 6 files +749/-5 · **no cw.sh = zero new tools**):
 
-- **⑦多仓适配勘形** docs/勘形-multi-repo-Main仓适配-20261112.md（只读零动码·
-  更新账.md:3924）：Main CI 实取三要点（现役唯 coq93.yml 9.3 单 Windows job·
-  mac observation omit〔coq93.yml:32-33〕·checkout=v5 非 API tarball·
-  concurrency 单组 cancel-in-progress〔heal rerun 连坐取消面〕·push 白名单
-  [main]）→**分级 verdict＝即用 4／小改 3／中改 2**（勘形档 §四/:184-198）：
-  最大缺口＝pushci PR 路 mirror-blind 双重失配（PR run head_sha=merge commit
-  ≠pushed tip·coq93.yml:41-42 vs tools/pushci.py:942-944）＋unclog Main Live
-  正本不可用（两中改）；五步建议路径（retro-triage 零码→fixtures 小改→
-  `--dry-run`→push-main 真发→unclog 正本独立排程·勘形档 §五/:202-217）。
-  api 实取 coq93.yml 606 行全文·selftest 实跑 rc=0（勘形档 §七/:233-241）。
-- **①DS4 K=3 真跑收口**（更新账.md:3925）：examples/baselines/audit-k3-
-  20261112.json 真树堵账基线落仓——27/27 RC0·probe_chain_s=165.202·三账
-  对表 **K1=190.728/K2=101.916（1.87×）/K3=165.202＝K3 较 K2 慢 1.62×＝
-  负边际加速如实录**（现机 4 CPU·K=2 档位即拐点·DS4 纪律禁编数字禁凑绿）
-  ·温控全账（FRONT·tlevel 58→60·无热钳位·挤压注记：跑时另一席 nice-19
-  coqchk 17 件在飞）·baseline_diff 双向 verdict=stable 四元组恒同＝
-  comparable。本席实读该账 timing.jobs=3/probe_chain_s=165.202/total_s=
-  169.684/n_records=27/n_red=0 逐项相符；perf-profile §五回填段三行实数
-  （:120-127/:167-174）。**路线图①DS4 三账齐正式收口——roadmap 总序八候选
-  全数关闭**（②③④①⑧已收＋⑤⑥金标跳＋⑦勘形落地分级·更新账.md:3936）。
-- **哨长驻运维手册** docs/ops-sentinel-长驻手册-v1.0-20261112.md（更新账.md:
-  3926）：四节——部署〔仓外 CW 侧 _log 落位·nohup/后台两形〕／使用〔event
-  schema＋render_events＋red_dispatch 配对＋--once 嵌段三用形〕／轮转恢复
-  〔cw_sentinel.py:136 崩溃恢复判例＋2 代轮转＋seen 宁重复不丢件〕／实证账
-  〔v44 14 事件＋v47 首战 33 事件＋v48 落位实况〕。file:line 直引 81 处·
-  8 引锚 sed 逐行对表咬合·doc_lint refs=114 drift=0。
-- **哨长驻真部署**（主会话·更新账.md:3942）：后台 exec_1b6e50d4·双仓
-  10 分钟巡检·CW 侧 _log/sentinel_v48/ 三件套落位——本波手册即其运维正本。
-  **本席本 ask 实读活体**（`ls`/`wc -l`/python3 实测）：三件套实存——
-  events.jsonl 33 行·report.json（mode loop·interval 600.0s·round 5·双仓
-  ci 源 runs_seen=30/30·round 5 零新事件＝部署后幂等在账）·state.json。
-  事件直方图 A18/B2/C1/E4/UNREC8＝33——与 v47 首战账（A19/UNREC8/E3/B2/C1）
-  两时点漂移如实并记（§9 边界 7）。
-- **集成面**（更新账.md:3927）：README.md v48 快照＋docs 清单登记＋DS4 三账
-  baseline_diff 双向复跑 rc=0（集成席实跑）；run_tests 59/58/0 红/1 SKIP
-  钦令两遍·doc_lint consistent（帽 24 无溢出）。
-- 边界如实承：K=3 单跑读数＝趋势级（§9 边界 1）·账名 audit-k3-20261112.json
-  偏离 perf 命名律（四元组内嵌恒同·实测席已注记保持·更新账.md:3944·§9
-  边界 6）；⑦执行路径现势＝步 1-3（retro-triage 零码/fixtures 小改/
-  --dry-run）＝v49 面·步 4 真发候令·步 5 独立排程（更新账.md:3937·§8
-  条 2 同源）。
+- **⑦ the multi-repository adaptation assessment** `docs/勘形-multi-repo-Main仓适配-20261112.md` (read-only, zero code changes ·
+  `更新账.md:3924`): the Main CI measured three key points (the active workflow is only coq93.yml, a 9.3 single Windows job ·
+  the mac observation job omitted [`coq93.yml:32-33`] · checkout=v5, not the API tarball ·
+  concurrency single group cancel-in-progress [the heal-rerun group-cancel face] · the push allowlist
+  [main]) → **the graded verdict = use as-is 4 / minor changes 3 / medium changes 2** (the assessment document §4/:184-198):
+  the largest gap = the pushci PR-path mirror-blind double mismatch (the PR run head_sha=merge commit
+  ≠ the pushed tip · `coq93.yml:41-42` vs `tools/pushci.py:942-944`) + the unclog Main Live
+  canonical copy unusable (the two medium changes); the five-step recommended path (retro-triage zero code → fixtures minor changes →
+  `--dry-run` → the push-main real shot → the unclog canonical copy independently scheduled · the assessment document §5/:202-217).
+  The API-measured coq93.yml 606-line full text · the selftest run rc=0 (the assessment document §7/:233-241).
+- **① the DS4 K=3 real-run close-out** (`更新账.md:3925`): `examples/baselines/audit-k3-20261112.json` the real-tree blockage baseline archived — 27/27 RC0 · probe_chain_s=165.202 · the three accounts
+  cross-checked against the reference **K1=190.728/K2=101.916 (1.87×)/K3=165.202 = K3 slower than K2 by 1.62× = the
+  negative marginal speedup recorded as measured** (the current machine has 4 CPUs · the K=2 tier is the inflection point · the DS4 discipline forbids inventing numbers and forbids force-fitting passing)
+  · the full thermal account (FRONT · tlevel 58→60 · no thermal clamping · the contention note: during the run another agent's
+  nice-19 coqchk over 17 pieces was in flight) · the baseline_diff two-way verdict=stable, the quadruple identical =
+  comparable. This agent read the account: timing.jobs=3/probe_chain_s=165.202/total_s=
+  169.684/n_records=27/n_red=0 match item by item; the perf-profile §5 backfill section's three real-number
+  rows (:120-127/:167-174). **Route-map ① the DS4 three accounts complete, formally closed out — the roadmap's eight candidates
+  all closed** (②③④①⑧ closed + ⑤⑥ the gold-standard skip + ⑦ the assessment landed with grading · `更新账.md:3936`).
+- **The resident-watcher operations manual** `docs/ops-sentinel-长驻手册-v1.0-20261112.md` (`更新账.md:3926`): four sections — deployment [placed outside the repository on the CW side `_log` · the nohup/background two forms] / usage [the event
+  schema + render_events + the red_dispatch pairing + the `--once` embedded-block three use forms] / rotation and recovery
+  [the `cw_sentinel.py:136` crash-recovery precedent + the 2-generation rotation + seen prefers duplication over loss] / the measurement account
+  [the v44 14 events + the v47 first field run's 33 events + the v48 placement state]. 81 direct file:line citations ·
+  8 citation anchors reconciled line by line by sed · doc_lint refs=114 drift=0.
+- **The resident watcher really deployed** (the main session · `更新账.md:3942`): the background exec_1b6e50d4 · dual repositories ·
+  a 10-minute inspection interval · the CW-side `_log/sentinel_v48/` three-file set placed — this work stream's manual is its operations canonical copy.
+  **This agent read the live state in this ask** (`ls`/`wc -l`/python3 measured): the three-file set exists —
+  events.jsonl 33 lines · report.json (mode loop · interval 600.0 s · round 5 · the dual-repository
+  ci source runs_seen=30/30 · round 5 zero new events = the post-deployment idempotence on record) · state.json.
+  The event histogram A18/B2/C1/E4/UNREC8 = 33 — a two-point drift against the v47 first-run account (A19/UNREC8/E3/B2/C1), recorded as such
+  (§9 boundary 7).
+- **The integration face** (`更新账.md:3927`): the README.md v48 snapshot + the docs list registration + the DS4 three-account
+  baseline_diff two-way rerun rc=0 (run by the integration agent); run_tests 59/58/0 failing/1 SKIP
+  run twice as instructed · doc_lint consistent (cap 24, no overflow).
+- The boundaries carried honestly: the K=3 single-run reading is trend-level (§9 boundary 1) · the account name `audit-k3-20261112.json`
+  departs from the perf naming rule (the quadruple embedded identical · the measuring agent's note kept · `更新账.md:3944` · §9
+  boundary 6); the ⑦ execution path's current state = steps 1-3 (retro-triage zero code / fixtures minor changes /
+  `--dry-run`) = the v49 face · step 4, the real shot, awaits instruction · step 5 independently scheduled (`更新账.md:3937` · §8
+  item 2, same source).
 
-### 6.x v1.0 §5 候令九条→六波收口对账（逐条注来源）
+### 6.x The v1.0 §5 nine pending-execution items → the six-work-stream close-out reconciliation (each with its source)
 
-| # | v1.0 §5 候令 | 六波落点 | 状态 |
+| # | v1.0 §5 pending execution | the six-work-stream placement | state |
 |---|---|---|---|
-| 1 | probe `--jobs`>1 真树实测 | v43 K=2 1.87×（更新账.md:3801）＋v48 K=3 三账齐（:3925） | **已闭** |
-| 2 | pushci 真实 CI 端到端活跑 | ⑦勘形五步路径立·步 1-3＝v49 面·步 4 真发候令（勘形档 §五/:202-217·更新账.md:3937） | 候令（§8 条 2） |
-| 3 | unclog/wash_shape 真树 `--apply` 活跑 | 未跑（fixture 级全验维持）——任务书候令面四条外·如实留 §9 边界 5 | 未竟 |
-| 4 | sentinel `--loop` 长驻真实消费 | v44 首演＋v47 首战＋v48 真部署（更新账.md:3820/:3895/:3942） | **已闭** |
-| 5 | cure39 新式真树活跑 | 未跑·⑤⑥语料触发族同窗打包（§8 条 3） | 候令 |
-| 6 | 9.1 编译器依赖面 | v43 ④收口（9.3 直替·:3800）＋v47 ⑧关闭（缺省探测·:3894） | **已闭** |
-| 7 | ci_triage 独立长盯态 | 未做（pushci watch 内嵌版外仍无）·§9 边界 5 | 未竟 |
-| 8 | header-map 模板库滚扩 | ⑤语料触发候令（roadmap-v43-plus:62·§8 条 3） | 候令 |
-| 9 | 双门案 A 残余风险 | v46 评估档案乙同判旁证（保持双门＋文档分工·更新账.md:3867/:3884）——机械强制仍无·案 B 前置山未动 | 同判旁证·未闭 |
+| 1 | the probe `--jobs`>1 real-tree measurement | the v43 K=2 1.87× (`更新账.md:3801`) + the v48 K=3 three accounts complete (`:3925`) | **closed** |
+| 2 | the pushci real CI end-to-end live run | the ⑦ assessment's five-step path stands · steps 1-3 = the v49 face · step 4, the real shot, awaits instruction (the assessment document §5/:202-217 · `更新账.md:3937`) | pending execution (§8 item 2) |
+| 3 | the unclog/wash_shape real-tree `--apply` live run | not run (fixture-level full verification maintained) — outside the task instruction's four pending-execution items · recorded honestly in §9 boundary 5 | unmet |
+| 4 | the sentinel `--loop` long-resident real consumption | the v44 first rehearsal + the v47 first field run + the v48 real deployment (`更新账.md:3820`/`:3895`/`:3942`) | **closed** |
+| 5 | the cure39 new form real-tree live run | not run · the ⑤⑥ corpus-trigger family bundled in the same window (§8 item 3) | pending execution |
+| 6 | the 9.1 compiler dependency face | the v43 ④ close-out (the 9.3 direct substitution · `:3800`) + the v47 ⑧ closure (default probing · `:3894`) | **closed** |
+| 7 | the ci_triage independent long-watch state | not done (still absent beyond the pushci watch embedded version) · §9 boundary 5 | unmet |
+| 8 | the header-map template library expansion | the ⑤ corpus trigger awaits instruction (roadmap-v43-plus:62 · §8 item 3) | pending execution |
+| 9 | the dual-door proposal A residual risk | the v46 evaluation document's second-proposal same-verdict corroboration (keep the two doors + divide the documentation · `更新账.md:3867`/`:3884`) — mechanical enforcement still absent · proposal B's precondition mountains unmoved | same-verdict corroboration · not closed |
 
-## §7 计数总表与现役能力全表增补
+## §7 The count master table and the active-capability master table addendum
 
-### 7.1 计数总表（三行·v42 基座→v48 现势·全部照录更新账各段与本席复核）
+### 7.1 The count master table (three rows · the v42 base → the v48 current state · all transcribed from the ledger sections and re-checked by this agent)
 
-| 计数面 | v42 基座（v1.0 时点） | v43/v44（零码改） | v45 | v46 | v47 | v48 现势 |
+| count face | v42 base (the v1.0 point in time) | v43/v44 (zero code changes) | v45 | v46 | v47 | v48 current state |
 |---|---|---|---|---|---|---|
-| cw.sh 入口工具 | 20 | 20 | 21 | 23 | 24 | **24** |
-| run_tests.sh 例 | 56 | 56 | 56 | 58 | 59 | **59** |
-| 过／红／SKIP | 52/0/4 | 52/0/4 | 52/0/4 | 54/0/4 | 58/0/1 | **58/0/1** |
+| cw.sh entry tools | 20 | 20 | 21 | 23 | 24 | **24** |
+| run_tests.sh cases | 56 | 56 | 56 | 58 | 59 | **59** |
+| passing / failing / SKIP | 52/0/4 | 52/0/4 | 52/0/4 | 54/0/4 | 58/0/1 | **58/0/1** |
 
-来源锚：v42/v43 基座二十工具与 56 例（更新账.md:3810）·v45 二十一路由
-（:3845/:3853）·v46 二十三工具与 58/54/0/4（:3868）·v47 二十四工具与
-59/58/0/1（:3897）·v48 现势 59/58/0/1 钦令两遍（:3927）。器数现势本席复核
-＝cw.sh:247-270 case 分派实数二十四路由＋git show 统计 325b4dc 六文件无
-cw.sh（v48 零新器·本席实跑）。
+The source anchors: the v42/v43 base twenty tools and 56 cases (`更新账.md:3810`) · the v45 twenty-one routes
+(`:3845`/`:3853`) · the v46 twenty-three tools and 58/54/0/4 (`:3868`) · the v47 twenty-four tools and
+59/58/0/1 (`:3897`) · the v48 current state 59/58/0/1 run twice as instructed (`:3927`). The tool-count current state, re-checked by this agent
+= the `cw.sh:247-270` case routing counts exactly twenty-four routes + the `git show --stat` of 325b4dc, six files without
+cw.sh (v48 zero new tools · run by this agent).
 
-**任务书给形勘误登记**：任务书「23→24→25 器演进」末位与实取不符——实取
-23（v46）→24（v47）→**24（v48 零新器）**；按实取为准如实登记（勘形档
-§1.3 同律·v35-① 口径勘误判例同款）；「25」无在库锚点·不造账。
+**The task-instruction given-shape correction registration**: the task instruction's "23→24→25 tool-count evolution" end disagrees with the measurement — measured
+23 (v46) → 24 (v47) → **24 (v48, zero new tools)**; recorded as measured (the assessment document
+§1.3, same rule · the v35-① criterion-correction precedent, same kind); "25" has no in-tree anchor · no account invented.
 
-### 7.2 现役能力全表增补（第 21-24 器·接 §2 表 20 行后·三层/职能双维沿用 §2）
+### 7.2 The active-capability master table addendum (tools 21-24 · continuing the §2 table after row 20 · the layer/function two dimensions carried over from §2)
 
-| # | 路由 | 目标脚本 | 三层 | 职能 | 入列 | 一行职责（缺省安全态） |
+| # | route | target script | layer | function | onboarded | one-line duty (default safe state) |
 |---|---|---|---|---|---|---|
-| 21 | `render-events` | `tools/render_events.py` | 服务层（v45） | 收口（台账渲染） | v45 | 哨事件 JSONL→markdown 台账（`--events`/`--dir` 合并三维分布＋9 列表·坏行容错·`--json` summary·`--top` 截断） |
-| 22 | `dispatch` | `tools/red_dispatch.py` | 服务层（v46） | 排障（红事件路由） | v46 | 红事件→动作预设路由（`--preset` 三档 report-only 缺省·`--state-file` 防重＋`--cooldown`·元字符守卫·全批零半派） |
-| 23 | `audit` | `tools/registry_audit.py` | 服务层（v46） | 手术器（只读审计） | v46 | 注册册卫生审计四账（只读零写盘·`--fix-plan` 确定性处方·`--live-src` 拓扑对账） |
-| 24 | `registry-fix` | `tools/registry_fix.py` | 服务层（v47） | 手术器（处方执行） | v47 | audit fix-plan 逐条落刀（缺省干跑·`--apply` 后断言三判·任一炸逐字节回滚） |
+| 21 | `render-events` | `tools/render_events.py` | service layer (v45) | close out (ledger rendering) | v45 | the watcher-event JSONL → markdown ledger (the `--events`/`--dir` merge, the three-dimension distribution + the 9-column table · bad-line tolerance · the `--json` summary · the `--top` truncation) |
+| 22 | `dispatch` | `tools/red_dispatch.py` | service layer (v46) | failure diagnosis (red-event routing) | v46 | the red-event → action-preset routing (the `--preset` three tiers, report-only default · `--state-file` dedup + `--cooldown` · the metacharacter guard · zero half-executed batches) |
+| 23 | `audit` | `tools/registry_audit.py` | service layer (v46) | operation tool (read-only audit) | v46 | the registry hygiene audit, four checks (read-only, zero writes · the `--fix-plan` deterministic prescriptions · the `--live-src` topology reconciliation) |
+| 24 | `registry-fix` | `tools/registry_fix.py` | service layer (v47) | operation tool (prescription execution) | v47 | applies the audit fix-plan item by item (dry run by default · the three assertions after `--apply` · any failure rolls back byte-for-byte) |
 
-双维速读增补（接 §2）：**收口**面添 render-events（台账渲染·接 doc-lint
-收口槽）；**排障**面添 dispatch（哨红→动作路由·接 sentinel 消费面）；
-**手术器**链成三段＝union（v35 写手术·缺省干跑）→audit（v46 只读诊断）→
-registry-fix（v47 处方执行）——「诊断→处方→落刀」闭环·落刀面缺省干跑＋
-人审显式放行铁律三器同守。入口演化 20→21→23→24 与 §6 各波集成面行逐一
-吻合（v48 零新器·现势即 24）。
+The two-dimension quick reading addendum (continuing §2): the **close out** face gains render-events (ledger rendering · joining the doc-lint
+close-out slot); the **failure diagnosis** face gains route (watcher red → action routing · joining the sentinel consumer face);
+the **operation tool** chain becomes three stages = union (the v35 write operation · dry run by default) → audit (the v46 read-only diagnosis) →
+registry-fix (the v47 prescription execution) — the "diagnosis → prescription → apply" closed loop · the application face dry run by default +
+explicit human-review release, one invariant guarded by all three tools. The entry evolution 20→21→23→24 matches the §6 integration rows work stream by work stream
+(v48 zero new tools · the current state is 24).
 
-## §8 候令面清单（v49+·四条·逐条注来源）
+## §8 The pending-execution face list (v49+ · four items · each with its source)
 
-1. **registry_fix 真树 `--apply`**——`tools/registry_fix.py` 对 Set Live 双册
-   12 重复块＋锚刷处方落刀（v46 真仓只读 demo 定病灶·更新账.md:3866；v47
-   执行器 selftest 8/8 含逐字节回滚·:3896）；真树落刀涉多写者仓（曾栢源线/
-   值守席活跃）·候用户令或协调台对表（更新账.md:3908/:3941）。首跑建议承
-   §5 律：小面先行·断言三判＋回滚护栏在器。
-2. **⑦步 4 真发（pushci push 事件路线）**——`tools/pushci.py` push 事件路线
-   （refs/heads/main）＋`--watch-max-rounds` 安全阀＋heal 分派 Main 对表·
-   避 PR mirror-blind 面（勘形档 §五.4/:212-213·更新账.md:3937「步 4 真发
-   候令」）；前置＝步 1-3（Main retro-triage 零码／pushci_scenarios 六场景
-   Main 仓形 fixtures 小改／真仓 `--dry-run` 计划面零副作用）＝v49 面·且须
-   先物化 Main 本地 checkout（勘形档 §五.3/:210-211）；凭据面已实证（netrc
-   push_perm=True·勘形档 §1.1/:20）·Main 分支保护面真发前补探
-   （勘形档 §五.6/:217）。
-3. **⑤⑥语料触发**——⑤ wash_shape header-map 模板库滚扩＋⑥ cure_pack v1.5
-   （记号重绑第二件复现转正）＋v1.0 §5 条 5 cure39 真树活跑同窗：金标禁强凑·
-   「没语料就不做」是设计而非搁置（docs/roadmap-v43-plus-20261111.md:62/:72/
-   :117/:131·更新账.md:3878/:3907/:3936）——窗口随②哨长驻真部署现役态
-   （§6 波十三）。
-4. **t_quad8 四仓回卷**——t_quad8_check 恢复条件＝四仓副本群（CANON_W1
-   S系Prop清除战役工单目录）回卷·候桌面整理审删裁决（更新账.md:3914）；
-   SKIP 1 例系缺卷族非器红·与门控无关如实留账（更新账.md:3897）。
+1. **the registry_fix real-tree `--apply`** — `tools/registry_fix.py` applies the Set Live dual-ledger
+   12 duplicate blocks + the anchor-refresh prescription (the v46 real-repository read-only demo located the defects · `更新账.md:3866`; the v47
+   executor selftest 8/8 including the byte-for-byte rollback · `:3896`); the real-tree application touches a multi-writer repository (the `曾栢源` work line /
+   on-duty agents active) · awaiting a user instruction or a coordinator cross-check (`更新账.md:3908`/`:3941`). The first run carries the
+   §5 rule: a small face first · the three assertions + the rollback guardrail are in the tool.
+2. **⑦ step 4, the real shot (the pushci push-event route)** — `tools/pushci.py` the push-event route
+   (refs/heads/main) + the `--watch-max-rounds` safety valve + the heal routed Main cross-check against the reference ·
+   avoiding the PR mirror-blind face (the assessment document §5.4/:212-213 · `更新账.md:3937` "step 4, the real shot,
+   pending execution"); the precondition = steps 1-3 (the Main retro-triage zero code / the pushci_scenarios six-scenario
+   Main-repository-form fixture minor changes / the real-repository `--dry-run` plan face with zero side effects) = the v49 face · and the
+   Main local checkout must be materialized first (the assessment document §5.3/:210-211); the credential face is verified (netrc
+   push_perm=True · the assessment document §1.1/:20) · the Main branch-protection face to be probed before the real shot
+   (the assessment document §5.6/:217).
+3. **the ⑤⑥ corpus triggers** — the ⑤ wash_shape header-map template library expansion + the ⑥ cure_pack v1.5
+   (the notation-rebinding second independent reproduction promoted) + the v1.0 §5 item 5 cure39 real-tree live run in the same window: the gold standard forbids force-fitting ·
+   "no corpus, no work" is a design decision, not a deferral (`docs/roadmap-v43-plus-20261111.md:62`/`:72`/
+   `:117`/`:131` · `更新账.md:3878`/`:3907`/`:3936`) — the window rides the ② resident-watcher real-deployment active state
+   (§6 work stream 13).
+4. **the t_quad8 four-repository re-scan** — the t_quad8_check recovery condition = the four-repository copy group (the CANON_W1
+   S-line Prop-clearance effort instruction directory) re-scanned · awaiting a desktop-tidying review-and-delete ruling (`更新账.md:3914`);
+   the 1 SKIP case is a missing-volume family, not a tool failing · unrelated to the gate, recorded as such (`更新账.md:3897`).
 
-## §9 诚实边界（逐条注来源·v2.0 新增）
+## §9 The honest boundaries (each with its source · new in v2.0)
 
-1. **K3 单跑读数＝趋势级**——K=3 真跑未复跑采样·噪声带未发（examples/
-   baselines/perf-README.md §3 判读律 1「单跑不下结论」:54）·负边际判读
-   （K3 较 K2 慢 1.62×·K=2 档位即拐点）系单跑趋势级结论非定谳
-   （更新账.md:3943·docs/perf-profile-v1.0-20261111.md:172「单跑读数·律 1
-   噪声带未复跑采样＝趋势级」）。
-2. **哨事件判类 UNRECOGNIZED 8 事件待人工复核**——v47 真仓首战 33 事件中
-   UNREC8（更新账.md:3895）·判类谱「不充谱」设计内诚实：Main 步名零命中面
-   （gate1/gate3 形）归 UNRECOGNIZED 兜底·响亮不误断·人工指认优先
-   （tools/ci_triage.py:22-23 判类谱注记·勘形档 §3.1/:101-102/:108-109）；
-   v44 首演 UNREC×2 同律（更新账.md:3822）。
-3. **翻绿是「现役世界代际」绿·非 9.1 复绿**——v43 ④收口/v47 ⑧关闭同口径
-   诚实记界（更新账.md:3800/:3894·roadmap-v43-plus:58）；9.1 复绿候捐体
-   复原（`tools/toolchain_dyld_doctor.py` `--donor` 溯源规程在库·禁代执行
-   只出建议）。
-4. **pushci PR 路线 mirror-blind＝中改最大缺口**——PR run head_sha=merge
-   commit 必失配＋refs/pull/* 不入镜像＋push 白名单 [main] topic 零触发
-   （勘形档 §3.2/:122-133·§四表#8/:195）；器改 watch 语义或立规程双轨·
-   均未做（如实）。unclog Main Live 正本不可用＝另一中改（无本地 checkout＋
-   Live 世界无 CI 产线＋候选面须新采样＋基线域同名冲突断代·勘形档
-   §3.3/:151-164）。
-5. **v1.0 §5 候令 3/7 未竟**——unclog/wash_shape 真树落刀活跑与 ci_triage
-   独立长盯态六波未触（§6.x 对账表）·任务书候令面四条外·如实留账不冒闭。
-6. **账名偏离注记**——examples/baselines/audit-k3-20261112.json 偏离
-   perf-README §2 命名律本名形（perf-<域>-k3-*.json）·四元组内嵌恒同·
-   baseline_diff 双向实测无误配·实测席注记保持（更新账.md:3944·
-   perf-profile:174）。
-7. **判类直方图两时点漂移**——v47 首战账（更新账.md:3895）A19/UNREC8/E3/
-   B2/C1 vs v48 部署活体（本席本 ask 实读 _log/sentinel_v48/events.jsonl）
-   A18/B2/C1/E4/UNREC8：总红 33 恒定·A/E 各漂 1 件＝CI 历史窗滚动自然漂移
-   （上传红＋coqchk skipped 的 E 族签名随窗形成）·两观测均真值·如实并记
-   不作修账。
-8. **勘形未探面**——Main 分支保护面／API rate-limit 现值／scripts/
-   parallel_chk.sh 内容／pushci runs 面分页现患（低频轮换下非现患）均未探
-   （勘形档 §六.2/:226-227）；「积分静默窗」库内在册锚点零命中如实承
-   （roadmap-v43-plus:13）。
-9. **v46 评估文档双份并存**——先席案 ABC（push-gate-dual-door-assessment-
-   v1.0）＋v46 对照表（评估-push_gate推窗四判据与pushci归一）同判旁证·
-   不合并留档（更新账.md:3884）。
+1. **The K3 single-run reading is trend-level** — the K=3 real run was not resampled · the noise band not yet produced (`examples/baselines/perf-README.md` §3 judgment rule 1 "a single run draws no conclusion" :54) · the negative-margin reading
+   (K3 slower than K2 by 1.62× · the K=2 tier is the inflection point) is a single-run trend-level conclusion, not a final ruling
+   (`更新账.md:3943` · `docs/perf-profile-v1.0-20261111.md:172` "a single-run reading · rule 1 ·
+   the noise band without resampling = trend level").
+2. **The watcher's 8 UNRECOGNIZED events await human review** — of the v47 real-repository first field run's 33 events,
+   UNREC8 (`更新账.md:3895`) · the classification spectrum's "no forced fit" honesty by design: the Main step names' zero-hit faces
+   (the gate1/gate3 forms) fall to the UNRECOGNIZED fallback · loud but never misjudging · human designation takes precedence
+   (the `tools/ci_triage.py:22-23` classification-spectrum note · the assessment document §3.1/:101-102/:108-109);
+   the v44 first rehearsal's UNREC ×2, same rule (`更新账.md:3822`).
+3. **The turned-passing state is the "active world generation" passing · not a 9.1 restoration** — the v43 ④ close-out / the v47 ⑧ closure, same wording,
+   honestly bounded (`更新账.md:3800`/`:3894` · roadmap-v43-plus:58); the 9.1 restoration awaits a donor
+   restoration (`tools/toolchain_dyld_doctor.py` the `--donor` tracing procedure in tree · never executes,
+   recommendations only).
+4. **The pushci PR-path mirror-blind = the largest medium-change gap** — the PR run head_sha=merge
+   commit must mismatch + refs/pull/* not mirrored + the push allowlist [main] zero topic triggers
+   (the assessment document §3.2/:122-133 · §4 table #8/:195); changing the tool's watch semantics or standing a procedure, two tracks ·
+   neither done (as recorded). The unclog Main Live canonical copy unusable = the other medium change (no local checkout +
+   the Live world has no CI production line + the candidate face needs new sampling + the baseline domain same-name conflict breaks the generation · the assessment document
+   §3.3/:151-164).
+5. **The v1.0 §5 pending-execution items 3/7 unmet** — the unclog/wash_shape real-tree application live runs and the ci_triage
+   independent long-watch state untouched through the six work streams (the §6.x reconciliation table) · outside the task instruction's four pending-execution items · recorded honestly, never claimed closed.
+6. **The account-name departure note** — `examples/baselines/audit-k3-20261112.json` departs from
+   the perf-README §2 naming rule's native form (perf-<domain>-k3-*.json) · the quadruple embedded identical ·
+   the baseline_diff two-way measurement mispaired nothing · the measuring agent's note kept (`更新账.md:3944` ·
+   perf-profile:174).
+7. **The classification histogram drifts between the two observation points** — the v47 first-run account (`更新账.md:3895`) A19/UNREC8/E3/
+   B2/C1 vs the v48 deployment live state (read by this agent in this ask: `_log/sentinel_v48/events.jsonl`)
+   A18/B2/C1/E4/UNREC8: the total red 33 constant · A and E each drifted 1 event = the CI history window's natural rolling drift
+   (the E-family signature of upload failings + coqchk skipped forms as the window moves) · both observations are true values · recorded side by side as such,
+   no account rewritten.
+8. **The assessment's unexplored faces** — the Main branch-protection face / the API rate-limit current value / scripts/
+   parallel_chk.sh contents / the pushci runs pagination condition (not a condition under low-frequency rotation) all unexplored
+   (the assessment document §6.2/:226-227); the "score quiet window" zero in-tree anchor hits, carried honestly
+   (roadmap-v43-plus:13).
+9. **The v46 evaluation documents coexist as two copies** — the earlier agent's proposals ABC (push-gate-dual-door-assessment-
+   v1.0) + the v46 comparison table (`评估-push_gate推窗四判据与pushcinormalize`) same-verdict corroboration ·
+   unmerged, both on file (`更新账.md:3884`).
 
 ---
 
-——本席交稿自证：本文件写成后经 `bash /Users/apple/Desktop/ConstructiveWorld/
-cpu_guard.sh -MaxWaitSec 120` 包裹复跑 `python3 tools/doc_lint.py --repo
-/Users/apple/Desktop/rocqwash`·verdict consistent rc=0（含本文旗标引用零漂）
-——实测记录见交割 notes。
+—— Submission self-attestation of this face: after this file was rewritten, `python3 tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` was rerun wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`
+· FAIL-LOUD rc=9 — `tools/selfevolve_round.py --help` timed out (> 60 s), an in-flight edit by concurrent work in the shared tree (git status: modified; a direct probe of that face's `--help` hangs independent of doc_lint), not caused by this documentation-only edit; the checks that completed before the fail-loud (tool_table 4 checks, unrouted none; count CASES=86, 5 checks) reported no drift; the flag check did not complete, so this document's zero-drift verification is carried as not completed this round, never as passing.
