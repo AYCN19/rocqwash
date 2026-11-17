@@ -405,7 +405,12 @@ def check_transcription(seed, sroot, res):
             mv_text = ""
     bad = []
     for e in seed["entries"]:
-        if e["face"] not in wp_text:
+        # Dual-source presence (20261118 wave59 fix): the seed legitimately
+        # draws faces from BOTH pinned tracks — an annotation-whitepaper face
+        # or a tool-track mapping-table face both count as transcribed.
+        # Requiring the whitepaper alone broke on the 62->159 tool-track
+        # expansion (73 faces live only in the mapping table).
+        if e["face"] not in wp_text and e["face"] not in mv_text:
             bad.append("%s face absent from whitepaper" % e["id"])
             continue
         if e["disposition"] != "replace":
@@ -468,18 +473,34 @@ def check_projection_roundtrip(seed, root, res):
             if len(t.exempts) != len(want_ex):
                 ok = False
                 det.append("%s exempt count mismatch" % e["id"])
-        # fail-loud: raw JSON is not loader-readable (SPEC section 2 gap)
+        # JSON seed form is loader-native since the wave59 sync (20261118):
+        # the loader must read the raw JSON directly (159 terms), and the
+        # fail-loud contract moves to malformed JSON (SPEC section 2 gap).
+        native = None
+        try:
+            native = nl.load_jargon_map(SEED_JSON)
+        except SystemExit as exc:
+            native = ("exit", exc)
+        if not isinstance(native, list) or len(native) != len(seed["entries"]):
+            ok = False
+            det.append("raw JSON not loader-native (%r faces loaded)"
+                       % (len(native) if isinstance(native, list) else native))
+        broken = os.path.join(tmp, "broken-map.json")
+        with io.open(broken, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("{ broken json")
         raised = None
         try:
-            nl.load_jargon_map(SEED_JSON)
+            nl.load_jargon_map(broken)
         except SystemExit as exc:
             raised = exc
         if raised is None or getattr(raised, "code", None) != 1:
             ok = False
-            det.append("raw JSON did not fail loud with exit 1 (got %r)" % raised)
+            det.append("malformed JSON did not fail loud with exit 1 (got %r)"
+                       % raised)
         res.append(("projection-roundtrip", ok,
                     "; ".join(det) or "%d active faces load with transcribed"
-                    " suggestions and exempts; raw JSON fails loud (exit 1)"
+                    " suggestions and exempts; JSON seed loads natively and"
+                    " malformed JSON fails loud (exit 1)"
                     % len(seed["entries"])))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

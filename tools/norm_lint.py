@@ -163,9 +163,35 @@ class JargonTerm(object):
 def load_jargon_map(path):
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
-            rows = fh.read().splitlines()
+            raw = fh.read()
     except OSError as exc:
         fail("jargon map unreadable: " + path + " (" + str(exc) + ")", 9)
+    # JSON seed form (schema rocqwash-jargon-map/1): entries[] carrying
+    # face/standard/exempts — the sync tool's cast shape (20261118 wave59).
+    # The md-table parser below stays for the docs/ detection-table form.
+    if raw.lstrip().startswith("{"):
+        try:
+            data = json.loads(raw)
+        except ValueError as exc:
+            fail("jargon map JSON malformed: " + path + " (" + str(exc) + ")", 1)
+        terms = []
+        seen = set()
+        for e in data.get("entries") or []:
+            face = (e.get("face") or "").strip()
+            std = (e.get("standard") or "").strip()
+            if not face:
+                continue
+            if face in seen:
+                fail("duplicate jargon face %r in %s" % (face, path), 1)
+            seen.add(face)
+            exempts = [x.strip() for x in (e.get("exempts") or [])
+                       if x.strip()]
+            terms.append(JargonTerm(face, std, exempts))
+        if not terms:
+            fail("jargon map has no active rows: " + path, 1)
+        terms.sort(key=lambda t: (-len(t.term), t.term))
+        return terms
+    rows = raw.splitlines()
     terms = []
     seen = set()
     for lineno, raw in enumerate(rows, 1):
