@@ -171,7 +171,7 @@ PROG = "frozen8"
 SCHEMA = "rocqwash-frozen8-manifest/2"
 LEDGER_DOC = "更新账.md"
 
-# In-service eight components (更新账.md §三, two rounds on record, values
+# In-service eight components (ledger doc §3, two rounds on record, values
 # identical; relpath order equals the v1 tier1 order). In-service frozen: any
 # value change requires a ledger-document generation change, which judgment 1
 # surfaces mechanically.
@@ -943,8 +943,9 @@ def selftest():
                               "--list", lst, "--tier2", side_bad])
         assert rc == 1 and "tier2 侧册咬合: FAIL" in so, \
             "判④ 侧册篡改应现形\n%s%s" % (rc, so, se)
-        print("判④ 对账闭环·篡改现形 PASS: 零漂移 rc=0；名单 md5 篡改→tier2+口径 "
-              "FAIL rc=1；侧册篡改→咬合 FAIL rc=1")
+        print("Judgment 4 reconciliation closure + tamper surfacing PASS: "
+              "zero-drift check rc=0; manifest md5 tamper -> tier2 + ledger "
+              "mismatch FAIL rc=1; side-roster tamper -> interlock FAIL rc=1")
 
         # Judgment 5 disk-tamper visibility (audit P0-1 regression): scratch
         # skeleton, flip one byte of verify/verify_vo.py → ring 4 must drive
@@ -1040,9 +1041,11 @@ def selftest():
         print("判⑨ 改史现形 PASS: amend 换史→HEAD 非 freeze_commit 后代→"
               "环⑤ rc=1（防改史洗白）")
 
-        print("FROZEN8-SELFTEST PASS: 九判绿（账载≡文档/盘≡账/名单≡账·检查器族·"
-              "锚≡HEAD·幂等/对账闭环/盘面篡改现形 P0-1 回归/降档可见/坏回执 "
-              "fail-closed/锚字段必载/改史现形）")
+        print("FROZEN8-SELFTEST PASS: nine judgments green (ledger==doc/"
+              "disk==ledger/manifest==ledger plus checker family, anchor==HEAD, "
+              "idempotence, reconciliation closure, disk-tamper surfacing "
+              "P0-1 regression, downgrade visibility, bad-receipt fail-closed, "
+              "anchor-field required, history-rewrite surfacing)")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)

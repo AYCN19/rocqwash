@@ -10,8 +10,8 @@ Purpose.  The law-three harvest→derive→draft pipeline: turn live repository
   suite last state (captured ledger or a live run), registry-audit accounts
   with increment, and maintained UNRECOGNIZED sentinel events. Derive applies
   fixed scoring rules plus genetic standing candidates; draft renders the
-  human-gated brief (three-law preamble auto-carried) to --draft-out; evolve
-  never executes a candidate or writes the repository.
+  human-gated brief to --draft-out; draft-only: selection is not implemented
+  in this code, no candidate is executed, the repository is never written.
 
 Interface.  python3 tools/evolve.py --draft-out PATH [--json PATH] [--top N]
   [--baseline PATH] [--watch-repo ORG/REPO]... [--sentinel-state PATH]
