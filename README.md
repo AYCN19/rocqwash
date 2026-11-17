@@ -140,7 +140,7 @@ rocqwash/
 > (cure34_E3_use_station_spec: abstract-carrier application stations rewritten to a specialized shim call + cure34_E3_spec_shim
 > line-insert generating the concrete-carrier intermediate Definition after the last Import; the shim body keeps the specialized abstract
 > application, face_exclude protects the body against second-pass self-entanglement) + E2 record polymorphic field (cure34_E2_field_annot
-> the un-annotated consumption face restated as an explicit-type-annotated intermediate Definition + cure_E2_use_arity downstream arity
+> the un-annotated consumption face restated as an explicit-type-annotated intermediate Definition + cure34_E2_use_arity downstream arity
 > station alongside + cure34_E2_station_unannot report-only clearing station) — five patterns all reuse the v32 engine,
 > zero new engines; gated E2/E3 compile arc first-hand: pre-fix compile passing (the defect family appears at extraction), post-fix passing,
 > the E2 consumption face `'a1 -> 'a1`→`nat -> nat`, the consuming unit magic 0/0, the world accessor debt=1
