@@ -1,221 +1,134 @@
-# 评估：push_gate 推窗四判据 × pushci preflight 归一可行性（v36 双门并立现状）
+# `评估-push_gate推窗四判据与pushci归一-20261111.md` — assessment of normalization feasibility between the four push-window criteria of `certify/push_gate.py` and the `tools/pushci.py` preflight checks, under the v36 two-door coexistence status (standalone, read-only assessment, zero code changed), measured November 11, 2026.
 
-- **版本**：v1.0 · 2026-11-11（评估席·push-gate 单独成文·只读评估零改码）
-- **任务书**：评估 `certify/push_gate.py` 推窗四判据 vs `tools/pushci.py` preflight
-  的归一可行性（v36 登记的双门并立现状）；本轮一律只出文档·改造候令。
-- **盘面实况**：rocqwash HEAD **8e124b3**（v45 render_events.py 路由入册）·工作树
-  净（`git status --porcelain` 实跑 0 行）。任务书头注「v37 41e74b0」已过时——
-  仓库当日在途推进 v37→v45；本文全部行号锚现势工作树（=HEAD current state），与评估
-  结论无涉（评估对象代码即现盘正本）。
-- **先例旁证**：docs/ 同日已有 `push-gate-dual-door-assessment-v1.0-20261111.md`
-  （先席独立成文·其案 A/B/C 对应本文乙/甲/丙·裁决同为「保持并立」）。两席
-  独立同判＝旁证强化；本文判据清单/冲突面/成本锚全部为本席独立实取，不承袭。
-
----
-
-## 0 处置上限：冻结名单核对（先查名单定权限）
-
-`certify/frozen8.py:74-83` `LEDGER8` 账载八件：freeze_manifest.py /
-mac_stmt_names.py / mac_stmt_scan.py / seam_probe.py / cpu_guard.sh /
-gate4_comment_guard.py / verify_vo.py / wash_engine.py。
-
-本席实跑 `python3 -B certify/frozen8.py --ledger`（经 cpu_guard 包裹）rc=0，
-出账恰八行——**certify/push_gate.py 不在冻结八件在册**（机械证据：ledger 全册
-无此名）。故处置上限＝nonfrozen-mutable（可建议小改造）；但任务书明令
-**本轮一律只出文档**，甲/丙等改造形态一律以「pending execution」登记，本席零改码。
+> Purpose.  Assess whether the two coexisting doors — the push-window decision in `certify/push_gate.py window` (criteria c1 ci-idle, c2 local>=remote, c3 fetch-clean, c4 cert-green) and the preflight checks in `tools/pushci.py` (toolchain, net, gate4 pre-scan) — can be normalized into one mechanism. Deliverable: this document only; every change form (embedding the window check into the preflight, or sinking the criteria into a shared library) is registered as pending execution, never applied. Scope: the criterion inventories of both doors, the coverage matrix, the conflict surfaces, three normalization options with per-item cost anchors, and a recommendation.
+>
+> Interface.  Document face only; no runtime interface, and this assessment changed no code face. Every live check listed in §6 was wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120` (FRONT tier). The original Chinese text is preserved in the sibling `.zh.md` archive. Line anchors cite the working tree at measurement time and are informational, not a stability contract.
+>
+> Dependencies.  Read in full at measurement time: `certify/push_gate.py` (633 lines), `tools/pushci.py` (2086 lines), `certify/frozen8.py` (408 lines), and the same-day precedent document `docs/push-gate-dual-door-assessment-v1.0-20261111.md`. The live checks depend on the `cpu_guard.sh` wrapper and the repository's own git history; no network face is involved (the self-tests run against local bare remotes), and this document has no runtime dependency on any code face.
+>
+> Evidence.  Repository state at measurement: HEAD `8e124b3` (v45, the render_events.py routing registered), working tree clean (`git status --porcelain` ran, 0 lines). The task instruction's header note "v37 41e74b0" was stale — the repository advanced v37 to v45 in flight that day — so every line anchor in this document reflects the current tree state and does not affect the conclusions (the assessed code is the tree's canonical copy). The §6 table records each live check with its command and measured outcome (all rc=0); `grep push_gate tools/pushci.py` returned zero hits. An independent same-day assessment of the same question exists under `docs/`, written by an earlier agent, and reaches the same conclusion (its options A/B/C correspond to this document's B/A/C); the two rulings corroborate each other, while this document's criterion inventory, conflict surfaces and cost anchors were all measured here and inherit nothing.
+>
+> Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit-code semantics unchanged: `push_gate.py` window decides OPEN (exit 0) / CLOSED (exit 1) under the register 0/1/2/9 (`push_gate.py:65-67`), and `pushci.py` keeps its fail-loud 9 and its seven-state verdict register (`pushci.py:157-165`).
 
 ---
 
-## 1 四判据实取清单（certify/push_gate.py·全文 633 行本席精读）
+## 0. The disposition ceiling: consult the frozen list first (the list sets the permission)
 
-| 判据 | 判什么 | 证据源 | 代码锚 |
+`certify/frozen8.py:74-83` records the eight-item `LEDGER8`: freeze_manifest.py / mac_stmt_names.py / mac_stmt_scan.py / seam_probe.py / cpu_guard.sh / gate4_comment_guard.py / verify_vo.py / wash_engine.py.
+
+This agent ran `python3 -B certify/frozen8.py --ledger` (wrapped by cpu_guard), rc=0, output exactly eight lines: **`certify/push_gate.py` is not among the frozen eight** (mechanical evidence: the name is absent from the full ledger). The disposition ceiling is therefore nonfrozen-mutable (small changes may be proposed); but the task instruction orders document-only output this round, so the change forms (options A and C below) are registered as pending execution, and this agent changed zero code.
+
+## 1. The four criteria as measured (`certify/push_gate.py`, all 633 lines read in full)
+
+| criterion | what it decides | evidence source | code anchor |
 |---|---|---|---|
-| c1 ci-idle | CI 在飞 run=0。status≠`completed` 一律保守计在飞（fail-closed） | `--runs-json`（预取 Actions runs JSON·本器自身零网络只判读）或 `--ci-capped-min N`（reflog 最近 `update by push` 距今 ≥N 分钟＋CI 时长封顶⇒在飞不可能）；**无证据=NOT-RUN=关窗** | `push_gate.py:109-151`（双源互斥校验 :219-222·零证据 NOT-RUN :151） |
-| c2 local≥remote | fetch 后 `rev-list --count HEAD..<remote>/<branch>`（behind）==0；ahead 不设上限（本地领先正是待推态） | git 机械计数 | `push_gate.py:154-165` |
-| c3 fetch-clean | ls-remote **前后双读同 sha**＋fetch rc=0＋远端 sha 是本地 HEAD 祖先（merge-base --is-ancestor）——窗内无人动云端 | 真远端只读操作（fetch/ls-remote）；fetch 失败（含网络死窗）=FAIL 窗如实关 | `push_gate.py:168-187` |
-| c4 cert-green | 本仓认证绿机械复核：`bash tests/run_tests.sh` rc==0（`--suite` 可指认）；可另加 `--freeze-manifest` → freeze_manifest.py check 零漂移亦须 rc==0 | 退出码 | `push_gate.py:190-212` |
+| c1 ci-idle | CI runs in flight = 0; any status != `completed` is conservatively counted as in flight (fail-closed) | `--runs-json` (a pre-fetched Actions runs JSON; the tool itself makes zero network calls, it only interprets) or `--ci-capped-min N` (the reflog's most recent `update by push` is at least N minutes old, plus a CI duration cap, so in flight is impossible); **no evidence = NOT-RUN = window closed** | `push_gate.py:109-151` (two-source mutual-exclusion check `:219-222`, zero-evidence NOT-RUN `:151`) |
+| c2 local>=remote | after fetch, `rev-list --count HEAD..<remote>/<branch>` (behind) == 0; ahead is uncapped (a locally leading tree is exactly the state waiting to push) | git mechanical count | `push_gate.py:154-165` |
+| c3 fetch-clean | ls-remote read twice, before and after, with the same sha + fetch rc=0 + the remote sha is an ancestor of local HEAD (`merge-base --is-ancestor`): nobody moved the remote side inside the window | genuine read-only remote operations (fetch/ls-remote); a fetch failure (including a dead-network window) = FAIL, the window honestly closed | `push_gate.py:168-187` |
+| c4 cert-green | this repository's certification-passing state re-checked mechanically: `bash tests/run_tests.sh` rc==0 (`--suite` may name the script); optionally `--freeze-manifest` adds a freeze_manifest.py check whose zero-drift result must also return rc==0 | exit codes | `push_gate.py:190-212` |
 
-- 判序 **c3 先行**（fetch 落定 remote-tracking ref，c1 时间线/c2 计数方有据）
-  → c1 → c2 → c4：`push_gate.py:235-239`。
-- 结论面：四判据全 PASS ⇒ `push-window: OPEN` exit 0；否则 CLOSED exit 1
-  （NOT-RUN=关窗·缺席旁证不计绿）：`push_gate.py:245-258`；退出码册 0/1/2/9
-  （`:65-67`）。
-- **只判窗不开推**：push 动作在调用方（`:30`）；window 全程只读（写域声明
-  `:49-50`）。CLI 形参册实取（`:584-596`）：`--repo/--branch/--remote/
-  --runs-json/--ci-capped-min/--freeze-manifest/--suite/--json`——**无
-  `--check` 旗标**；只读态＝`window` 子命令本身（本席自证矢量 rc=0 实证其
-  本地 bare 远端零网络全程可跑）。
-- 同件另有 union-freeze/union-check（UNION v2 多世界清单 :263-396）与本评估
-  无涉，不展开。
+- Order: **c3 first** (fetch settles the remote-tracking ref; only then do the c1 timeline and the c2 count have a basis), then c1, c2, c4: `push_gate.py:235-239`.
+- Conclusion face: all four criteria PASS => `push-window: OPEN`, exit 0; otherwise CLOSED, exit 1 (NOT-RUN closes the window; absent corroboration never counts as passing): `push_gate.py:245-258`; exit-code register 0/1/2/9 (`:65-67`).
+- **It decides the window only and never pushes**: the push action belongs to the caller (`:30`); window is read-only throughout (write-domain declaration `:49-50`). The CLI parameter register as measured (`:584-596`): `--repo/--branch/--remote/--runs-json/--ci-capped-min/--freeze-manifest/--suite/--json` — **there is no `--check` flag**; the read-only mode is the `window` subcommand itself (this agent's own self-test vector rc=0 demonstrated that it runs end to end against a local bare remote with zero network).
+- The same file also carries union-freeze/union-check (the UNION v2 multi-world register, `:263-396`); unrelated to this assessment and not expanded.
 
-## 2 preflight 三闸实取清单（tools/pushci.py·全文 2086 行本席精读）
+## 2. The preflight checks as measured (`tools/pushci.py`, all 2086 lines read in full)
 
-| 闸 | 判什么 | 不过即停 | 代码锚 |
+| check | what it decides | stop on failure | code anchor |
 |---|---|---|---|
-| ① toolchain | subprocess `tools/toolchain_dyld_doctor.py --json`（--worker 缺省探测）→ verdict≠healthy（dyld 断链面） | `StopVerdict("toolchain", 1)` | `pushci.py:710-737` |
-| ② net | subprocess `tools/net_probe.py --rounds 2 --interval S --stable-window`（双探稳窗）→ UNSTABLE | `StopVerdict("unstable", 1)` | `pushci.py:739-744, 750-800`（真模式 :787-795） |
-| ③ gate4 预扫（可选 `--pre-scan-gate4`） | `git diff --name-only <base>...<branch>` 取 .v 变更件 → `verify/gate4_comment_guard.py --file` 逐件（rc 0=PASS/1=FAIL/2=复核）→ FAIL=0 才放行（REVIEW 响亮入账不拦） | `StopVerdict("gate4-block", 2)` | `pushci.py:746-748, 802-843` |
+| (1) toolchain | subprocess `tools/toolchain_dyld_doctor.py --json` (`--worker` auto-detected by default) => verdict != healthy (the dyld linkage-failure surface) | `StopVerdict("toolchain", 1)` | `pushci.py:710-737` |
+| (2) net | subprocess `tools/net_probe.py --rounds 2 --interval S --stable-window` (two probes with a stability window) => UNSTABLE | `StopVerdict("unstable", 1)` | `pushci.py:739-744, 750-800` (real mode `:787-795`) |
+| (3) gate4 pre-scan (optional `--pre-scan-gate4`) | `git diff --name-only <base>...<branch>` collects the changed .v files, then `verify/gate4_comment_guard.py --file` runs per file (rc 0=PASS / 1=FAIL / 2=review); released only when FAIL=0 (REVIEW is loudly recorded but does not block) | `StopVerdict("gate4-block", 2)` | `pushci.py:746-748, 802-843` |
 
-- 过闸后段 2-5：push（git 恒 4 调 get-url→rev-parse→push×3 发×45s→ghproxy
-  换路×2 发→ls-remote 远端 tip 复核：`:17-24, 847-908`）→ watch（head_branch+
-  head_sha 咬合·status-only：`:912-971`）→ heal（ci_triage classification·B/E 有界
-  rerun·A 禁代修·`:973-1023`）→ verdict±merge。
-- 关键性质：`--timeout` 缺省 120s 全部真子进程防挂（超时杀＋fail-loud 9）：
-  `pushci.py:197-207, 2026-2028`；「纯 preflight 模式零 git 调」`:1166-1167`；
-  verdict 封册七态 `:157-165`；preflight 零 API（runs 查询在 watch 段 :930）。
-- 本席实跑 `--dry-run` rc=0：计划恰三闸（toolchain/net/gate4-未启）·无窗闸·
-  零 git 零 API 零工具子进程——三闸结构的机器实证。
+- After the checks, stages 2-5: push (git always makes exactly 4 calls — get-url, rev-parse, push 3 attempts x 45s, ghproxy reroute 2 attempts, then an ls-remote remote-tip recheck: `:17-24, 847-908`), watch (head_branch + head_sha binding, status-only: `:912-971`), heal (ci_triage classification; bounded rerun for classes B/E; class A is never fixed in place: `:973-1023`), then verdict ± merge.
+- Key properties: `--timeout` defaults to 120s on all real subprocesses as a hang guard (kill on timeout + fail-loud 9): `pushci.py:197-207, 2026-2028`; "the pure preflight mode makes zero git calls" `:1166-1167`; the verdict register's seven states `:157-165`; preflight makes zero API calls (the runs query lives in the watch stage, `:930`).
+- This agent ran `--dry-run`, rc=0: the plan is exactly the three checks (toolchain/net/gate4 not enabled), no window check, zero git calls, zero API calls, zero tool subprocesses — machine evidence of the three-check structure.
 
-## 3 对照矩阵：谁覆盖谁 / 谁独有 / 冲突面
+## 3. The comparison matrix: who covers whom, who is unique, where they conflict
 
-### 3.1 判据覆盖矩阵（7 个判据面·**无一重合**）
+### 3.1 Criterion coverage matrix (7 criterion surfaces, none overlapping)
 
-| 判据面 | push_gate window | pushci preflight | 覆盖关系 |
+| criterion surface | push_gate window | pushci preflight | coverage relation |
 |---|---|---|---|
-| CI 在飞=0（c1） | ✅ `:109-151` | ❌ 推前不查在飞（watch 段只看推后新 run `:930-956`） | **push_gate 独有** |
-| behind=0（c2） | ✅ `:154-165` 事前判 | ❌ 无预扫；等价后果由 push 时 git 非快进拒绝**事后**fallback（rc≠0→5 发徒劳→unstable `:863-880`） | **push_gate 独有**（pushci 仅事后兜底） |
-| 窗内无人动云端（c3） | ✅ `:168-187` | ❌（push 后 ls-remote `:885-899` 是远端 tip 取证，非判窗） | **push_gate 独有** |
-| 本地认证绿（c4） | ✅ `:190-212` | ❌ 本地不跑套件；绿由远端 CI watch+heal 判 `:912-1023` | **push_gate 独有**（哲学异：本地先绿 vs 远端后判） |
-| 工具链健康（doctor） | ❌ | ✅ `:710-737` | **pushci 独有** |
-| 网络稳窗（net_probe 双探 --stable-window） | ❌（c3 只证连通＋干净·无时序稳窗） | ✅ `:739-744, 787-795` | **pushci 独有** |
-| .v 头注守卫预扫（gate4） | ❌ | ✅ `:746-748, 802-843`（可选） | **pushci 独有** |
+| CI in flight = 0 (c1) | ✅ `:109-151` | ❌ no in-flight check before the push (the watch stage only sees runs created after the push, `:930-956`) | **push_gate only** |
+| behind = 0 (c2) | ✅ `:154-165`, decided in advance | ❌ no pre-scan; the equivalent outcome is git's non-fast-forward rejection at push time, after the fact (rc != 0, 5 wasted attempts, unstable `:863-880`) | **push_gate only** (pushci has only the after-the-fact fallback) |
+| nobody moved the remote inside the window (c3) | ✅ `:168-187` | ❌ (the post-push ls-remote `:885-899` collects the remote tip as evidence; it decides no window) | **push_gate only** |
+| local certification passing (c4) | ✅ `:190-212` | ❌ the suite does not run locally; passing is judged remotely by watch + heal `:912-1023` | **push_gate only** (different philosophies: passing first locally vs judged remotely afterwards) |
+| toolchain health (doctor) | ❌ | ✅ `:710-737` | **pushci only** |
+| network stability window (net_probe, two probes, `--stable-window`) | ❌ (c3 proves connectivity + cleanliness only, no timing stability window) | ✅ `:739-744, 787-795` | **pushci only** |
+| .v header-comment guard pre-scan (gate4) | ❌ | ✅ `:746-748, 802-843` (optional) | **pushci only** |
 
-任务书提示双侧代码证实：**pushci 无 behind=0 检查**（stage_push 仅 rev-parse
-在位性 `:852-859`）；**push_gate 无网络稳窗**（c1-c4 无 net_probe 调用）。
-互连现状：`grep push_gate tools/pushci.py` **零命中**（本席实跑）——双门零
-互连，纯并立。
+Both sides of the task instruction's hints are confirmed in code: **pushci has no behind=0 check** (stage_push runs only a rev-parse existence check, `:852-859`); **push_gate has no network stability window** (c1-c4 make no net_probe call). Interconnection status: `grep push_gate tools/pushci.py` returns **zero hits** (this agent ran it) — the two doors have zero interconnection, pure coexistence.
 
-### 3.2 冲突面（同一物理条件·两门处置异）
+### 3.2 Conflict surfaces (the same physical condition, treated differently by the two doors)
 
-1. **behind>0**：push_gate=事前 CLOSED exit 1（c2 计数＋c3 祖先链双证）；
-   pushci=事中 push rc≠0→重试 5 发（3×45s＋ghproxy 2 发≈3 分钟徒劳）→
-   verdict=**unstable**（语义归「网络不稳」而非「时机未到」）exit 1
-   （自证矢量〔十二〕实锚 `:1746-1769`）。同一条件：时点/verdict 名/成本
-   三重不同。
-2. **网络死窗**：push_gate c3 fetch 失败=FAIL 关窗（`:174-176`）；pushci
-   net UNSTABLE=禁发射 unstable。都禁动·但账面册不同（OPEN/CLOSED vs 七态
-   verdict）·且 push_gate 无稳窗概念、pushci 无窗内干净概念——互补非重复。
-3. **子进程时限**：pushci `--timeout` 缺省 120s 超时杀 fail-loud 9
-   （`:197-207`）；push_gate c4 直跑全套件无时限（`run_out :94-100` 无
-   timeout 形参）。方案甲下套件>120s 必被杀报 9——两器时限语义硬冲突。
-4. **git 调用序契约**：pushci 恒 4 调（docstring `:24`；selftest 断言恰 4 调
-   `:1497-1502`）；push_gate window 引入 ls-remote×2＋fetch＋rev-list×2＋
-   merge-base＋reflog ≈7 调。方案甲破坏 4 调恒序＝全套 canned 矢量翻新。
-5. **preflight 性质**：现 preflight 零 git 零 API（`:1166-1167`）；方案甲第
-   4 闸（c3）必触真远端 fetch——性质改变须文档/矢量/夹具全套联动。
+1. **behind > 0**: push_gate decides in advance: CLOSED, exit 1 (the c2 count plus the c3 ancestry chain, two proofs). pushci discovers it mid-run: push rc != 0, then 5 retry attempts (3 x 45s + 2 ghproxy attempts, about 3 minutes wasted), ending in verdict = **unstable** (semantically filed under "network instability" rather than "wrong timing"), exit 1 (self-test vector 12 anchors this at `:1746-1769`). One condition: timing, verdict name and cost differ threefold.
+2. **Dead-network window**: push_gate c3 treats a fetch failure as FAIL and closes the window (`:174-176`); pushci's net UNSTABLE forbids initiation and reports unstable. Both forbid action, but the registers differ (OPEN/CLOSED vs the seven-state verdict); push_gate has no stability-window concept and pushci has no within-window cleanliness concept — complementary, not duplicated.
+3. **Subprocess time limits**: pushci's `--timeout` defaults to 120s with kill on timeout and fail-loud 9 (`:197-207`); push_gate c4 runs the full suite directly with no time limit (`run_out`, `:94-100`, no timeout parameter). Under option A a suite longer than 120s is always killed reporting 9 — the two tools' timeout semantics hard-conflict.
+4. **The git call-sequence contract**: pushci always makes exactly 4 git calls (docstring `:24`; the self-test asserts exactly 4 calls, `:1497-1502`); push_gate window adds ls-remote x2 + fetch + rev-list x2 + merge-base + reflog, about 7 calls. Option A breaks the 4-call constant sequence = a full refresh of every canned vector.
+5. **The preflight's nature**: the current preflight makes zero git calls and zero API calls (`:1166-1167`); option A's fourth check (c3) necessarily touches a genuine remote fetch — the nature changes, and the documentation/vectors/fixtures must all follow in a coordinated update.
 
-## 4 归一方案建议书（三案·迁移成本逐条锚码）
+## 4. Normalization options proposed (three options, migration cost anchored line by line)
 
-### 案甲 — pushci preflight 增第 4 闸（subprocess 调 push_gate 只读态）
+### Option A: the pushci preflight gains a fourth check (a subprocess call to push_gate's read-only mode)
 
-**只读前提裁决**：push_gate CLI **无 `--check` 旗标**（形参册实取 `:584-596`）；
-只读态＝`window` 子命令本身（全程只读 `:49-50`·push 在调用方 `:30`·本席
-selftest rc=0 实证）。故「若其 CLI 支持只读」答案为**支持·但形为 window 子
-命令非 --check**——方案甲的调用形应为 `python3 -B certify/push_gate.py window
---repo <repo_path> --branch <branch> …`。
+**Read-only premise ruling**: push_gate's CLI has **no `--check` flag** (parameter register as measured, `:584-596`); the read-only mode is the `window` subcommand itself (read-only throughout, `:49-50`; the push action belongs to the caller, `:30`; this agent's selftest rc=0 demonstrated it). The answer to "does its CLI support a read-only invocation" is therefore **yes, but the form is the `window` subcommand, not `--check`** — option A's call form would be `python3 -B certify/push_gate.py window --repo <repo_path> --branch <branch> ...`.
 
-**技术可行性**：push_gate.py 自身可零改动（判据正本不动·编排调用合
-pushci「编排零新引擎」字面 `:5-6`）；pushci 侧 `_run_py` 子进程形与 window
-`--json` 出账形兼容（`:659-676`）。**但四座成本山实锚如下**：
+**Technical feasibility**: push_gate.py itself could stay unchanged (the criteria canonical copy untouched; calling it as an orchestration step fits pushci's own "orchestration, zero new engine" wording, `:5-6`); pushci's `_run_py` subprocess form is compatible with window's `--json` output form (`:659-676`). **But four cost items anchor as follows**:
 
-- **a) c1 证据死锁（无两全解）**：无 `--runs-json`/`--ci-capped-min` →
-  c1=NOT-RUN → CLOSED exit 1（`:151`·自证矢量「零证据 NOT-RUN 关窗」rc=0
-  实证）→ 第 4 闸恒关。解法一：pushci preflight 预取 runs JSON=新增真 API
-  调（现 preflight 零 API·token 凭据面提前引入）；解法二：`--ci-capped-min`
-  依赖 reflog `update by push` 条目（`:138-142`）——**新枝首推（pushci 主
-  用例）必无条目 → NOT-RUN 死锁**。
-- **b) c4 时限冲突**：c4 直跑全套 `tests/run_tests.sh`（分钟级）vs pushci
-  `--timeout` 缺省 120s（`:2026-2028`）→ 必 9 被杀。放宽 timeout=自动管线
-  每推付全套分钟级；改 `--suite` 指轻量脚本=判据掏空（认证绿名存实亡）。
-- **c) 契约联动面**：verdict 封册需第八态（现七态 `:157-165`·selftest 封册
-  断言 `:1811-1813`）＋report schema `rocqwash-pushci/1` 扩展＋git 4 调恒序
-  断言翻新（`:1497-1502`）＋dry-run 计划行＋tests/fixtures/pushci_scenarios
-  ＋README-cw/白皮书/嵌段②文档面全套对齐。
-- **d) 原子性幻觉**：窗判过≠推时窗仍开（c3 前后双读设计自证窗非原子
-  `:170-183`）——嵌进门 A 造「过闸即安全」错觉；两门并立各出各账
-  （window.json＋pushci report）证据不混叠。
+- **a) The c1 evidence deadlock (no solution satisfies both sides)**: without `--runs-json`/`--ci-capped-min`, c1 = NOT-RUN, CLOSED exit 1 (`:151`; the self-test vector "zero evidence NOT-RUN closes the window" demonstrated rc=0), so the fourth check would close the window on every run. Solution one: the pushci preflight pre-fetches the runs JSON = a new genuine API call (the current preflight makes zero API calls; the token credential surface would enter earlier). Solution two: `--ci-capped-min` depends on a reflog `update by push` entry (`:138-142`) — **the first push of a new branch (pushci's main use case) necessarily has no entry, a NOT-RUN deadlock**.
+- **b) The c4 time-limit conflict**: c4 runs the full `tests/run_tests.sh` (minutes) against pushci's `--timeout` default of 120s (`:2026-2028`), so it is necessarily killed reporting 9. Relaxing the timeout means the automated pipeline pays the full minutes-long suite on every push; pointing `--suite` at a lighter script hollows out the criterion (certification-passing in name only).
+- **c) The contract coordination surface**: the verdict register needs an eighth state (currently seven, `:157-165`; the selftest register assertion `:1811-1813`) + a report-schema `rocqwash-pushci/1` extension + a refresh of the git 4-call constant-sequence assertion (`:1497-1502`) + the dry-run plan lines + `tests/fixtures/pushci_scenarios` + full alignment of the README-cw / whitepaper / embed-block-2 documentation faces.
+- **d) The atomicity illusion**: passing the window check does not mean the window is still open at push time (c3's before/after double-read design self-demonstrates that the window is not atomic, `:170-183`) — embedding it in door A creates the illusion "passed the checks = safe"; with the two doors coexisting, each issuing its own record (`window.json` + the pushci report), the evidence stays unmixed.
 
-**裁决：技术可行·默认开闸净负（c1 死锁＋c4 成本无两全）·可选旗标形不归一
-反扩面——不推荐**（与先例文档案 B 裁决一致）。
+**Conclusion: technically feasible; enabling the check by default is net-negative (the c1 deadlock and the c4 cost admit no both-sides solution), and the optional-flag form would expand the surface instead of normalizing — not recommended** (matching the precedent document's option B ruling).
 
-### 案乙 — 保持双门＋文档写明分工（push_gate=推送授权闸·pushci=执行流水线）
+### Option B: keep the two doors and state the division of labor in documentation (push_gate = the push-authorization check, pushci = the execution pipeline)
 
-**现状即此形·规约已在档**（本席逐一实查）：
-- README-cw.md:60-63：「套件绿/behind=0 等推窗四判据不在此册·过闸纪律仍归
-  `certify/push_gate.py`」（grep 实证在位）；:188「双门并立——推窗四判据×
-  发射闸」。
-- wrapper/push_gate_rq.sh 在位（ls 实证）——门 B 独立调用面已适配。
-- cw.sh 对 push_gate **零路由**（grep 实证零命中）——门 B 不进主线一键，
-  分工边界由消费面自然维持。
-- pushci docstring 自陈「编排而非重造」（`:5-6`）——判据正本留在 certify/
-  正是「零新引擎」的实质。
+**The status quo is already this form, and the convention is on file** (this agent checked each item):
+- README-cw.md:60-63: "the suite-passing / behind=0 push-window criteria are not in this register; check discipline still belongs to `certify/push_gate.py`" (grep confirms the text is in place); `:188` "two doors coexisting — the four push-window criteria x the preflight check".
+- `wrapper/push_gate_rq.sh` is in place (ls confirms) — door B's independent invocation face is already adapted.
+- cw.sh routes nothing to push_gate (grep confirms zero hits) — door B stays out of the single-command main line; the division boundary is maintained naturally by the consuming side.
+- pushci's docstring self-describes "orchestration rather than rebuilding" (`:5-6`) — keeping the criteria canonical copy in certify/ is the substance of that "zero new engine".
 
-**迁移成本：零代码**（本轮仅落本文档）。残余风险（如实登记·案乙固有）：
-无机械闸强制工作流先判门 B——pushci 单跑即发射，窗纪律靠文档与工作流嵌段
-约束；此系「推窗纪律由调用方显式发起」哲学的自洽代价，非缺口。
+**Migration cost: zero code** (this round lands only this document). Residual risk (registered honestly; inherent to option B): no mechanical check forces a workflow to decide door B first — running pushci alone initiates, and window discipline rests on documentation and workflow embed blocks. This is the self-consistent cost of the "push-window discipline is initiated explicitly by the caller" philosophy, not a gap.
 
-**裁决：推荐**。判据集零交（§3.1）＋问题异质（「该不该现在推」vs「环境能不能
-发射」）⇒ 归一收益不存在、成本全是实打实（§4 甲/丙）——并立即正解。
+**Conclusion: recommended**. The criterion sets have zero intersection (§3.1) and the problems are heterogeneous ("should we push now" vs "can the environment initiate"), so the normalization benefit does not exist while the costs are all real (§4 options A/C) — coexistence is the correct answer.
 
-### 案丙 — 推窗判据下沉为库函数双器 import
+### Option C: sinking the push-window criteria into a library function imported by both tools
 
-**冻结面核对**：push_gate.py 非冻结（§0 实跑证据）→ 无冻结障碍；但其
-import 冻结件 freeze_manifest 只读复用 tier1_lines/tier2_of（`:79-88`）——
-重构 push_gate 须保冻结接口原样（tier1/tier2 口径函数签名零改动），且
-push_gate md5 变更牵动其自证矢量组（`:401-567`）与 wrapper 注入形。
+**Frozen-face check**: push_gate.py is not frozen (the §0 run evidence), so there is no frozen obstacle; but its import of the frozen file freeze_manifest reuses `tier1_lines`/`tier2_of` read-only (`:79-88`), so a push_gate refactor must keep the frozen interface as-is (the tier1/tier2 criterion function signatures change in zero ways), and a push_gate md5 change moves its self-test vector group (`:401-567`) and the wrapper injection form.
 
-**成本清单**：c1-c4 抽库改 certify 深件结构→双器 import 后同一判据两个
-消费面=漂移温床；tools/ 与 certify/ 无包结构（pushci 现只 import 同目录
-`_http_backoff` `:174-176`）→ 须 sys.path 注入或包化=结构改造；**c1 证据
-模型与 c4 成本两座山原样照搬**（库化不解决语义相克——判据归属变了，
-「NOT-RUN=关窗」vs「探针现跑现判」的模型冲突还在）。
+**Cost list**: extracting c1-c4 into a library reshapes certify's deep structure; after both tools import it, one criterion with two consumers is a drift-prone arrangement; tools/ and certify/ have no package structure (pushci currently imports only the same-directory `_http_backoff`, `:174-176`), so sys.path injection or packaging is required = a structural change; **the c1 evidence model and the c4 cost carry over unchanged** (library-izing does not resolve the semantic conflict: the criterion's ownership changes, and the model conflict between "NOT-RUN closes the window" and "run the probe now and decide now" remains).
 
-**裁决：改冻结邻接面风险中＋漂移面扩张＋核心矛盾不消——否决**（与先例
-文档案 C「唯一明确劣解」同判）。
+**Conclusion: a medium risk of touching frozen-adjacent surfaces, an expanding drift surface, and the core contradiction unresolved — rejected** (the same ruling as the precedent document's option C, "the one clearly inferior option").
 
----
+## 5. Conclusions and recommendation
 
-## 5 结论与建议
+**Disposition: option B (keep the two doors, division of labor in documentation)** — this round's deliverable is this document; options A/C are registered as pending execution (if option A is later adopted by decision, §4-A items a/b — the c1 evidence pre-fetch and the c4 time limit — must be resolved first).
 
-**倾向：案乙（保持双门＋文档分工）**——本轮落地即本文档；甲/丙登记为候令
-（若主会话日后钦定甲·须先解 §4 甲 a/b 两座山：c1 证据预取与 c4 时限）。
+Four reasons:
+1. **Zero criterion intersection** (§3.1 anchors: 7 surfaces, none overlapping) — the duplication normalization would eliminate does not exist;
+2. **The cost asymmetry forbids embedding** (c4's minutes-long suite against the automated per-push pipeline's 120s time-limit cap);
+3. **The evidence models conflict** (door B's fail-closed rule "absent corroboration closes the window" against door A's "run the probe now, decide now": putting c1 inside door A either deadlocks new branches or dilutes the honesty rule with a passing default; the flat-mode passing-default precedent `:766-774` cannot be cited for c1);
+4. **A single canonical copy of the criteria is the only drift-free form** (the four criteria's canonical copy lives only in `certify/push_gate.py`; pushci references it zero times, grep-confirmed — the current coexistence is already the optimal form under that constraint).
 
-四条理由：
-1. **判据零交**（§3.1 实锚 7 面无一重合）——归一要消的「重复」不存在；
-2. **成本不对称禁嵌**（c4 分钟级套件 vs 每推自动管线的 120s 时限帽）；
-3. **证据模型相克**（门 B「旁证缺席即关窗」的 fail-closed 诚实律 vs 门 A
-   「探针现跑现判」——c1 塞进门 A 要么新枝死锁要么缺省绿稀释诚实律·flat
-   形缺省绿先例 `:766-774` 不可援引到 c1）；
-4. **判据单一正本=唯一无漂移形态**（四判据正本只在 certify/push_gate.py
-   一处·pushci 零引用 grep 实证——现状并立已是该约束下最优）。
+## 6. No-change statement and evidence surface
 
-## 6 禁改说明与证据面
+**No-change statement**: this assessment changed zero code — push_gate.py / pushci.py / frozen8.py / wrapper / cw.sh / tests / README all untouched; the frozen eight (the eight items on frozen8.py's `LEDGER8`), the quad8 domain and `更新账.md` were never read and never touched under the no-touch constraint (the ledger-related conclusions rest on the task instruction, on `pushci.py:3` self-describing the v36 flagship registered on November 11, 2026, and on README-cw.md:188).
 
-**禁改声明**：本评估零代码变更——push_gate.py / pushci.py / frozen8.py /
-wrapper / cw.sh / tests / README 全部未动；冻结八件（frozen8.py LEDGER8 在册
-八件）与 quad8 域/更新账.md 遵禁触令**未读未动**（更新账相关结论以任务书
-＋pushci.py:3「v36 flagship·20261111 入账」＋README-cw.md:188 为证）。
+**This agent's run evidence** (November 11, 2026; every run wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`, FRONT tier):
 
-**本席实跑证据**（2026-11-11·全部经 `bash /Users/apple/Desktop/ConstructiveWorld/
-cpu_guard.sh -MaxWaitSec 120` 包裹·FRONT 档实跑）：
-
-| 检查 | 命令 | 实测 |
+| check | command | measured |
 |---|---|---|
-| 冻结名单 | `python3 -B certify/frozen8.py --ledger` | rc=0·出账恰八行·push_gate 不在册 |
-| 门 B 自证 | `python3 -B certify/push_gate.py --selftest` | rc=0·UNION 六判＋window c1 双源/c2 behind/c4 红套件/零证据 NOT-RUN 四判全过（本地 bare 远端零网络） |
-| 门 A 自证 | `python3 -B tools/pushci.py --selftest` | rc=0·八矢量＋flat 咬合＋韧性层＋CLI 四码全过（零真网络零真 push 零编译） |
-| 门 A 三闸结构 | `python3 -B tools/pushci.py --repo-path <仓> --branch master --dry-run` | rc=0·计划恰三闸无窗闸·零副作用 |
-| 双门零互连 | `grep -n push_gate tools/pushci.py` | 零命中 |
-| 分工在档 | `grep -n push_gate README-cw.md`／`grep push_gate cw.sh`／`ls wrapper/push_gate_rq.sh` | README:60-63,188 在档·cw.sh 零命中·wrapper 在位 |
-| 盘面状态 | `git rev-parse --short HEAD`＋`git status --porcelain` | 8e124b3（v45）·工作树净 0 行 |
+| frozen list | `python3 -B certify/frozen8.py --ledger` | rc=0; output exactly eight lines; push_gate not listed |
+| door B self-test | `python3 -B certify/push_gate.py --selftest` | rc=0; the six UNION criteria plus the window's four criteria — c1 two-source, c2 behind, c4 failing-suite, zero-evidence NOT-RUN — all passed (local bare remote, zero network) |
+| door A self-test | `python3 -B tools/pushci.py --selftest` | rc=0; eight vectors + the flat binding + the resilience layer + the CLI's four exit codes, all passed (zero real network, zero real push, zero compilation) |
+| door A three-check structure | `python3 -B tools/pushci.py --repo-path <repo> --branch master --dry-run` | rc=0; the plan is exactly three checks, no window check; zero side effects |
+| two-door zero interconnection | `grep -n push_gate tools/pushci.py` | zero hits |
+| division of labor on file | `grep -n push_gate README-cw.md` / `grep push_gate cw.sh` / `ls wrapper/push_gate_rq.sh` | README:60-63,188 on file; cw.sh zero hits; wrapper in place |
+| tree state | `git rev-parse --short HEAD` + `git status --porcelain` | 8e124b3 (v45); working tree clean, 0 lines |
 
-**码面精读**：certify/push_gate.py 全文 633 行；tools/pushci.py 全文 2086 行；
-certify/frozen8.py 全文 408 行；docs/push-gate-dual-door-assessment-v1.0-
-20261111.md 全文（先例旁证）。
+**Code surfaces read**: `certify/push_gate.py` all 633 lines; `tools/pushci.py` all 2086 lines; `certify/frozen8.py` all 408 lines; `docs/push-gate-dual-door-assessment-v1.0-20261111.md` in full (the corroborating precedent).
 
-**未实跑项（如实声明）**：①push_gate window 对真远端的线上判窗（需真网络
-凭据·本席纪律零真网络；行为已由自证矢量本地 bare 远端覆盖）；②c4 对本仓
-套件的实跑基线（本席未复跑；先例文档同日实测 52 过/0 failing/4 略 rc=0 可资参考，
-本席不背书其数）；③更新账.md 依禁触令未读——「v36 登记」以任务书与在盘
-docstring 为证。以上三项均不影响判据对照与方案裁决（全部锚在盘代码与
-自证矢量）。
+**Not run (declared honestly)**: (1) push_gate window's online window decision against a real remote (requires real network credentials; this agent's discipline is zero real network; the behavior is covered by the self-test vectors' local bare remote); (2) c4's actual baseline over this repository's suite (not re-run by this agent; the precedent document's same-day measurement of 52 passing / 0 failing / 4 skipped, rc=0, is available for reference, and this agent does not vouch for those numbers); (3) `更新账.md` was never read under the no-touch constraint, so the "v36 registration" rests on the task instruction and the on-disk docstring. None of the three affects the criterion comparison or the option rulings (all anchored in on-disk code and self-test vectors).
