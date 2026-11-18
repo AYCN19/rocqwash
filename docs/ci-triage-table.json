@@ -1,7 +1,7 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
-  "version": "1.0",
-  "updated": "2026-11-16",
+  "version": "1.1",
+  "updated": "2026-11-19",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
   "classes": [
@@ -222,6 +222,34 @@
       "auto_repairable": false,
       "guard": "A shape migration must land with every consumer of the old shape patched in the same commit; the sync tool runs a post-sync consumer smoke as its exit gate; hosted-green + canonical-red means the red is real.",
       "prescription": "Reproduce on the canonical machine by calling the check functions directly; patch each consumer to accept BOTH shapes during the transition; re-sign drifted provenance md5 per the sync discipline; move time-dependent assertions when the shape becomes legal. Push only after the canonical three-gate run is green."
+    },
+    {
+      "id": "R15",
+      "title": "provenance pin drift on a canonical-only verification layer (snapshot md5)",
+      "markers": [
+        "source drifted from the pinned snapshot",
+        "re-transcribe the seed per the sync discipline",
+        "jargon/snapshot-md5"
+      ],
+      "precedence": 15,
+      "family": "content-red",
+      "auto_repairable": true,
+      "prescription": "On the canonical machine run the sync tool zero-write plan (python -I tools/jargon_map_sync.py) and require VERDICT IN-SYNC; if IN-SYNC, re-sign the drifted md5 in seeds/jargon/jargon-map.json provenance.sources (wave59 precedent 6d79e29, live precedent b3cbcf0) and land it the same commit as any source edit; if the plan is NOT in sync, escalate (content retag needed, machine-apply is alternation-guarded). Verify with python -I tests/t_engines_seeds.py (jargon segment 9/0) before pushing. A hosted-verifiable pin form (repo-relative in-repo sources) is a desk-gated design change.",
+      "guard": "Re-sign only behind the sync tool's zero-write plan verdict IN-SYNC (content healthy, pin alone stale); a pinned-source edit and its md5 re-sign are same-commit (R14 cousin); hosted-green + canonical-red here is structural - the pinned sources sit at absolute paths hosted runners cannot open (OSError -> SKIP), so the canonical face is the only layer that verifies."
+    },
+    {
+      "id": "R16",
+      "title": "fingerprint-gate exemption dead (hashFiles negation) / FP machinery red",
+      "markers": [
+        "Fingerprint gate",
+        "Run anchor tier",
+        "verdict-cache key"
+      ],
+      "precedence": 16,
+      "family": "structural",
+      "auto_repairable": false,
+      "prescription": "Fingerprint the committed tree directly: git ls-tree -r HEAD minus the pure-prose allowlist (grep -v filter + git hash-object --stdin; standing form landed in 74cc082) - restore that form if a regression reintroduces hashFiles negation patterns; verify locally against real commit pairs (prose-only diff leaves FP unchanged, code/data diffs change it); the next prose-only push must take the ANCHORS branch - judge the mode by the job-step conclusions (anchor-tier step success = ANCHORS), never the run-level conclusion (the local face has no gate; other faces may red for unrelated roots).",
+      "guard": "An FP exemption is only real if two runs' verdict-cache keys prove it: push a diff confined to the allowlist faces and compare keys - equality exempts, difference indicts the construction. The canonical local face carries no gate (R12) and never skips."
     }
   ]
 }
