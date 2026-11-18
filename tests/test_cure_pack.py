@@ -2,61 +2,32 @@
 """test_cure_pack.py — regression coverage for the consumer-cure canonical pack
 (wash/cure_pack.json + wash/cure_applier.py).
 
-Vectors:
-  1. applier selftest (in-memory mechanics: legacy five patterns plus the
-     v1.1 face-regex patterns cure6..cure14, trigger gates, guards,
-     idempotence, exclusive-group conflict) — rc 0.
-  2. pack integrity: JSON parses, the legacy five pattern ids present with
-     their trigger/template/idempotence fields, the nine v1.1 patterns
-     present with idempotence notes and lineage fields.
-  3. dry-run then --apply on a temp copy of the shadow fixture restricted to
-     cure4: exactly three stations cured, binder-bound lines untouched,
-     written file idempotent (applier's own second-pass assertion).
-  4. v1.1 fixture flows (dry-run + --apply + re-run zero-change):
-     qle fixture (face downshifts + refl opener; binder/named/unmarked
-     negatives untouched), natle fixture (premise lift + intros-tail-guarded
-     drop wrap; constant-tail station untouched), shadow fixture (both
-     exclusive variants individually, plain no-import file at zero matches,
-     variant pair conflict rc=4 with file untouched).
-  5. compile check (env-gated): with ROCWASH_ROCQ set to the rocq binary
-     (Rocq/Coq 9.x), tests/fixtures/cure_examples.v compiles rc=0 in a temp
-     dir, and a negative-control variant (bare reflexivity directly on the
-     carrier face) fails — the opacity the cure3 pattern addresses.  The
-     v1.4.1 compile-leg arc runs here too: the old-class disease form is
-     intercepted by the --apply compile leg (rc 1, file untouched), the
-     shipped class cures canonically, the cured face compiles after the
-     documented proof re-fit, and the leg records a real compile-ok pass.
-     Skipped (rc 111) when ROCWASH_ROCQ is unset, so external clones pass
-     without a toolchain.
-  6. v1.2 S07-lineage flows: the cure32 adaptation arc — pre-cure station
-     count (report-only, file untouched), full-pack dry-run counts on the
-     base fixture, apply + documented binder surgery + all-zero re-run,
-     and the exclusive-group conflict regression (rc 4 with --json, report
-     written, no traceback).  The env-gated compile section also runs the
-     S07 arc end to end: the miniature world compiles, the base consumer
-     fails with "Illegal application", the cured consumer (after the
-     documented binder surgery) compiles rc=0, and Separate Extraction
-     reports Obj.magic 0 on every .ml/.mli with the bare fields resolved
-     through the global instance.
-  7. v1.3 E2/E3 flows (CI #178 extraction-defect families): pack
-     integrity for the five cure34 patterns, fixture flows for both
-     families (dry-run counts on the pre-fix miniatures, apply, all-zero
-     re-run, report-only station residual), and the env-gated compile arc:
-     the miniature world compiles, both pre-fix consumers compile green
-     (these families are extraction-time defects, not compile-time ones —
-     the red face of record is the extraction census), the cured consumers
-     compile rc=0, and the extraction census shows magic 0/0 with the
-     monomorphic station faces (E3 shim call; E2 "val unann : nat -> nat"
-     on the .mli).  Compile sections are skipped (rc 111) when ROCWASH_ROCQ
-     is unset, so external clones pass without a toolchain.
-  8. v1.4 corpus-survey flow (cure39, b48-52 wash-work stream citation): the
-     interface-quantified connective qualification — dry-run station
-     count on the T13 miniature (10 = two compat statements x five
-     connective stations), apply rc=0 with the qualified faces and the
-     guarded negatives (Definition face, binder declaration, already-
-     qualified face, proof witness call) verbatim, re-run zero, and the
-     differently-named-context negative fixture at zero matches (the
-     file_include gate pins the exact RI0 context face).
+Purpose.  Regression coverage for the consumer-cure canonical pack: the
+  applier selftest (rc 0); pack integrity — JSON parses, the legacy five
+  ids, the nine `cure6..cure14`, the five `cure32_*`, the five `cure34_*`,
+  `cure39`, pattern count 25, pack version 1.4.1; dry-run then --apply
+  arcs on temp copies of the fixtures (guarded negatives asserted
+  verbatim, re-run all-zero); the exclusive-group conflict rc=4 face; and
+  env-gated compile arcs — skipped (rc 111) when ROCWASH_ROCQ is unset,
+  so external clones pass without a toolchain.
+
+Interface.  Run as a script: `python3 -B tests/test_cure_pack.py`, no
+  flags; `ROCWASH_ROCQ` gates the compile arcs, `ROCWASH_BASH` overrides
+  the bash argv for the `tools/cpu_guard.sh` wrapper on Windows.
+
+Dependencies.  Python 3 standard library only; `wash/cure_applier.py`,
+  `wash/cure_pack.json`, the fixtures under `tests/fixtures/`; every
+  compile runs through `tools/cpu_guard.sh` with `ROCWASH_ROCQ` set to
+  the rocq binary (Rocq/Coq 9.x).
+
+Evidence.  Registered in the suite (`tests/run_tests.sh`, described in
+  `tests/README.md`); fixture arcs drive temp-directory copies only
+  (zero real-repo touch, dry runs write nothing); idempotence, guarded
+  negatives and the conflict face are asserted mechanically.
+
+Exit-codes.  0 = every check printed ok; 1 = at least one FAIL (names
+  listed on the final `TEST-CURE-PACK` line); compile arcs print SKIP
+  when `ROCWASH_ROCQ` is unset.
 """
 import io, os, re, shutil, subprocess, sys, tempfile
 
@@ -465,7 +436,7 @@ finally:
 # 8. v1.4 fixture flow: interface-quantified connective qualification
 #    (cure39, b48-52 wash-work stream citation commit 9a51c74, UpAblT13
 #    re-anchor form).  --only run: the miniature also carries the
-#    shadowing Import line the campaign added, which cure11 (full pack)
+#    shadowing Import line the work stream added, which cure11 (full pack)
 #    would delete — the interplay is documented in the fixture header.
 T13_F = os.path.join(HERE, "fixtures", "cure39_t13_fixture.v")
 T13_PLAIN_F = os.path.join(HERE, "fixtures", "cure39_plain_fixture.v")
