@@ -1,35 +1,30 @@
-# backend-sentinel.md — 工作流嵌段①：后台哨（nohup 长驻＋JSONL 消费端）
+# backend-sentinel.md — workflow block ①: the background watcher (nohup-resident, with a JSONL consumer) / `工作流嵌段①：后台哨（nohup 长驻＋JSONL 消费端）`
 
-> rocqwash v37 嵌段正典样例三件之一。对应 `README-cw.md`「工作流配合接口」⑤
-> （README-cw.md:103-119）典型后台哨命令行的可整段复制版＋消费端样例＋退出码
-> 分支表＋dynamic-workflow 嵌段伪码。器实况以 `tools/cw_sentinel.py` docstring
-> 与 `--help` 为正本（schema `rocqwash-sentinel/1`·事件 `rocqwash-sentinel-event/1`）。
+> Purpose.  The fully copyable form of the typical background-watcher command line of the `README-cw.md` "workflow cooperation interface" ⑤ section (README-cw.md:200-218), plus the JSONL consumer sample, the exit-code branch table, and the dynamic-workflow embed pseudocode; one of the three canonical workflow-block samples of rocqwash v37.
+> Interface.  Document face. It documents `cw.sh sentinel` (`tools/cw_sentinel.py`; schema `rocqwash-sentinel/1` · event `rocqwash-sentinel-event/1`); the `tools/cw_sentinel.py` docstring and `--help` are the normative tool face. Citations bind to the HEAD b98fe4e commit state (concurrent multi-agent development · working-tree line numbers drift). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  `tools/cw_sentinel.py` routed through `cw.sh`; `README-cw.md` "workflow cooperation interface" (README-cw.md:161-199) for the five joint disciplines; a GitHub API token via `~/.netrc` for the CI source. No runtime dependency of this document face itself.
+> Evidence.  Every output sample in §3 is a real-run record of the November 18, 2026 tmp injection drill of the current tool at HEAD b98fe4e (fixture data · zero real network, zero real compilation), not hand-written; each sample paragraph states its measured rc. The predecessor capture of November 11, 2026 (v37, commit 41e74b0), whose classifier still emitted Chinese evidence wording, is archived in the sibling `.zh.md` file; the current classifier emits the English wording shown (tools/ci_triage.py:1004,1006). The grep consumer check of §2 returned rc 0 with count 1 on the drill output.
+> Exit-codes.  Not applicable to a document face; the documented watcher keeps its implemented exit-code semantics (§4) unchanged.
 >
-> **纪律红线（先读后用）**：
-> - **零动作是缺省**——哨缺省 report-only，只出事件流与报告，不动任何东西；
->   `--on-red 'CMD'` 是显式旁路动作（超时帽 60s·rc≠0 不改哨退出码）
->   （tools/cw_sentinel.py:31-32 docstring「缺省无＝report-only·**零动作是缺省**」）。
-> - **a failing result is data, not a tool failure**——CI failing/堵塞是事件数据，哨巡检照常 exit 0；
->   退出码只表器面（0 完成／2 用法错／9 信号源不可达）。
-> - **loop 须给 `--state-file`**——seen 幂等持久层（rocqwash-sentinel-state/1）；
->   缺省 None＝内存态，once 单轮可用、loop 跨轮会重复出事件。
-> - `--emit` 是 **JSONL append＋逐行 flush+fsync**（tools/cw_sentinel.py:31、318-321），
->   stdout 恒有镜像（响亮）；`seq` 事件流内单调，emit 在位时以文件现有行数为基
->   **跨进程续号**——消费方按 seq 排序即恢复全局序（tools/cw_sentinel.py:294-298）。
+> Discipline constraints (read before use):
+> - **zero action is the default** — the watcher is report-only by default and only emits the event stream and reports; `--on-red 'CMD'` is an explicit bypass action (timeout cap 60s · rc≠0 does not change the watcher's exit code) (tools/cw_sentinel.py:72-73 docstring "default none = report-only · zero action is the default").
+> - **a failing result is data, not a tool failure** — CI failing/blockage states are event data; the watcher's inspection round still exits 0; the exit code states only the tool face (0 completed / 2 usage error / 9 signal source unreachable).
+> - **loop must be given `--state-file`** — the seen idempotency persistence layer (`rocqwash-sentinel-state/1`); default None = in-memory state, usable for a single once round, while loop re-emits duplicate events across rounds.
+> - `--emit` is **JSONL append + per-line flush+fsync** (tools/cw_sentinel.py:44, 729-745); stdout always carries a mirror (loud); `seq` is monotonic within the event stream, and with --emit in place it is based on the file's existing line count and **continues numbering across processes** — consumers sorting by seq restore the global order (tools/cw_sentinel.py:46-48, 677-679).
 
-## 1. 后台哨正典命令块（整段复制执行）
+## 1. Canonical background-watcher command block (copy and run as a whole)
 
 ```bash
-# ── backend-sentinel 嵌段：三路信号源后台哨 ─────────────────────────
-# 变量按你的工作区改这四行（其余原样照抄）
-LEDGERS_DIR=ledgers/            # 路②：probe 台账 JSON 目录（可省略此路）
-BUILDLOG=build.log              # 路③：编译日志文件（可省略此路）
-WORK=.                          # 哨产物落点（events/report/state 全在此）
-SENTINEL_INTERVAL=60            # 轮间隔秒
+# ── backend-sentinel workflow block: three-source background watcher ─────────────
+# edit these four lines to your workspace (copy the rest verbatim)
+LEDGERS_DIR=ledgers/            # source ②: probe ledger JSON directory (this source is optional)
+BUILDLOG=build.log              # source ③: compile-log file (this source is optional)
+WORK=.                          # watcher products land here (events/report/state all under this)
+SENTINEL_INTERVAL=60            # seconds between rounds
 
-# （本段在 rocqwash 仓根执行；cw.sh 按 cx 透传 1:1，参数与退出码不改写）
-# 路①CI 轮询 org/repo 的 main；②台账链根；③buildlog 词面。
-# 三路可任意组合·至少一路；此处三路全开作正典示范。
+# (run this block at the rocqwash repository root; cw.sh passes cx through 1:1 — flags and exit codes are not rewritten)
+# source ① polls CI of org/repo main; ② ledger-chain roots; ③ buildlog token face.
+# the three sources combine freely · at least one is required; all three are on here as the canonical demonstration.
 mkdir -p "$LEDGERS_DIR"
 nohup bash cw.sh sentinel --loop --interval "$SENTINEL_INTERVAL" \
   --watch-repo ORG/REPO --branch main \
@@ -40,41 +35,40 @@ nohup bash cw.sh sentinel --loop --interval "$SENTINEL_INTERVAL" \
 echo "SENTINEL_PID=$!"
 ```
 
-要点逐行：
+Snippet-by-snippet:
 
-| 片段 | 为什么 |
+| Snippet | Why |
 |---|---|
-| `nohup … &` | 工作流后台 bash 任务形（README-cw.md:78「`--loop --interval S` 长驻哨态（后台 bash 任务用）」） |
-| `--watch-repo ORG/REPO --branch main` | 路①CI 信号（`--branch` 归最近一个 `--watch-repo` 组·可重复多组） |
-| `--watch-ledgers DIR` | 路②新 probe 台账→chain_graph 子进程出 TOP 链根→`blocking` 事件 |
-| `--watch-buildlog FILE` | 路③tail 增量 grep 词面 `BUILD-FAIL／EXIT=134／Error:`（41e74b0 tools/cw_sentinel.py:113 `BUILDLOG_SIGNAL_RE` 同源）→`build-signal` 事件 |
-| `--state-file …` | loop 必配：seen 幂等（新 run／新台账 mtime+名字／buildlog 字节 offset 全记） |
-| `--emit events.jsonl` | JSONL 事件流（消费端见 §2）；stdout 镜像被 `>/dev/null` 丢弃，证据面全在 --emit/--json |
-| `--json sentinel-report.json` | 每轮覆盖写 report（rocqwash-sentinel/1） |
-| `>/dev/null 2>&1 &` | watcher stdout 与 --emit 逐字节同源（emit_event 先 stdout 镜像再 append，tools/cw_sentinel.py:310-321），丢弃 stdout 不丢证据 |
+| `nohup … &` | the dynamic-workflow background-bash-task form (README-cw.md:167 "`--loop --interval S` runs as a long-lived sentinel (for background bash tasks)") |
+| `--watch-repo ORG/REPO --branch main` | source ① the CI signal (`--branch` binds to the nearest preceding `--watch-repo` group · repeatable for several groups) |
+| `--watch-ledgers DIR` | source ② a new probe ledger → the chain_graph subprocess emits the TOP chain root → a `blocking` event |
+| `--watch-buildlog FILE` | source ③ tail-increment grep of the token face `BUILD-FAIL` / `EXIT=134` / `Error:` (same source as `BUILDLOG_SIGNAL_RE`, tools/cw_sentinel.py:365) → a `build-signal` event |
+| `--state-file …` | required with loop: seen idempotency (new runs / new ledger mtime+name / buildlog byte offsets all recorded) |
+| `--emit events.jsonl` | the JSONL event stream (consumer in §2); the stdout mirror is discarded by `>/dev/null`, the evidence surface stays in --emit/--json |
+| `--json sentinel-report.json` | each round overwrites the report (rocqwash-sentinel/1) |
+| `>/dev/null 2>&1 &` | watcher stdout and --emit have the same byte-level origin (emit_event mirrors to stdout first, then appends, tools/cw_sentinel.py:736-745); discarding stdout discards no evidence |
 
-**收哨**（轮帽自停或手动）：
+**Stopping the watcher** (round-cap self-stop or manual):
 
 ```bash
-# 正途：给 --max-rounds N（0=无限·缺省）让哨自停；
-# 手动收哨才用 kill（对 PID 发 TERM，哨无 trap 特殊化，POSIX 语义直收）
+# standard path: give --max-rounds N (0 = unlimited · the default) and let the watcher stop itself;
+# use kill only for a manual stop (sends TERM to the PID; the watcher installs no trap — plain POSIX semantics)
 kill "$SENTINEL_PID"
 ```
 
-## 2. JSONL 消费端（工作流主流程这样读哨）
+## 2. The JSONL consumer (how the workflow main flow reads the watcher)
 
-事件行 `json.dumps(..., sort_keys=True)`（tools/cw_sentinel.py:312）——键恒字典序，
-`"kind": "ci-red"` 是**字节级稳定**的 grep 靶形：
+Event lines are `json.dumps(..., sort_keys=True)` (tools/cw_sentinel.py:736) — the keys are always in lexicographic order, so `"kind": "ci-red"` is a **byte-stable** grep target:
 
 ```bash
-# grep 形（零依赖·粗筛）
-grep '"kind": "ci-red"'      "$WORK/events.jsonl"   # CI 红事件
-grep '"kind": "blocking"'    "$WORK/events.jsonl"   # 台账堵塞链根事件
-grep '"kind": "build-signal"' "$WORK/events.jsonl"  # 编译日志词面命中事件
+# grep form (zero-dependency · coarse filter)
+grep '"kind": "ci-red"'      "$WORK/events.jsonl"   # CI-failing events
+grep '"kind": "blocking"'    "$WORK/events.jsonl"   # ledger blockage chain-root events
+grep '"kind": "build-signal"' "$WORK/events.jsonl"  # compile-log token-hit events
 ```
 
 ```bash
-# python3 纯 stdlib 形（结构化取字段·按 seq 恢复全局序）
+# python3 pure-stdlib form (structured field access · global order restored by seq)
 python3 - "$WORK/events.jsonl" <<'PY'
 import json, sys
 for ln in sorted(open(sys.argv[1]), key=lambda l: json.loads(l).get("seq", 0)):
@@ -88,24 +82,24 @@ for ln in sorted(open(sys.argv[1]), key=lambda l: json.loads(l).get("seq", 0)):
 PY
 ```
 
-## 3. 真实输出样例（2026-11-11 铸席实跑·非手写）
+## 3. Real output samples (real runs of November 11, 2026 · not hand-written)
 
-**ci-red 事件行**（`--once --watch-repo org/repo --branch main --injector … --emit …
---json … --sleep-scale 0` 实测 rc 0，tmp 注入演练）：
+**ci-red event line** (measured rc 0 with `--once --watch-repo org/repo --branch main --injector … --emit …
+--json … --sleep-scale 0`; tmp injection drill):
 
 ```json
-{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["红件 1/1：ids=[501]", "在册族：A-content-red（判类序取先）"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off (--sleep-scale 0; deterministic output)|classification=rocqwash-ci-triage/1 (ci_triage subprocess --offline)", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
+{"action": "fix-content", "branch": "main", "conclusion": "failure", "evidence": ["failing files 1/1: ids=[501]", "registered family: A-content-red (first by classification order)"], "family": "A-content-red", "kind": "ci-red", "note": "ts=off (--sleep-scale 0; deterministic output)|classification=rocqwash-ci-triage/1 (ci_triage subprocess --offline)", "repo": "org/repo", "run": 178, "run_number": 9, "schema": "rocqwash-sentinel-event/1", "seq": 1, "sha": "abc123def"}
 ```
 
-**blocking ＋ build-signal 事件行**（`--once --watch-ledgers … --watch-buildlog …
---sleep-scale 0` 实测 rc 0；台账 B 缺库 A→链根 A）：
+**blocking + build-signal event lines** (measured rc 0 with `--once --watch-ledgers … --watch-buildlog …
+--sleep-scale 0`; ledger B misses library A → chain root A):
 
 ```json
 {"dependents": ["B"], "kind": "blocking", "ledger": "base.json", "n": 1, "note": "ts=off (--sleep-scale 0; deterministic output)|TOP chain root = first name in chain_graph rocqwash-chain-graph/1 top_order (self field judges chain-root washability; chain_graph.py:88 precedent)", "schema": "rocqwash-sentinel-event/1", "self": {"probed": true, "rc": 0, "verdict": "RC0", "washable": true}, "seq": 1, "top_root": "A"}
 {"hits": ["BUILD-FAIL: round 1", "Error: Unable to locate library | A"], "hits_total": 2, "kind": "build-signal", "log": "build.log", "note": "ts=off (--sleep-scale 0; deterministic output)|tokens BUILD-FAIL/EXIT=134/Error: (classification-spectrum A/C tokens; ci_triage.py:95-118 same source)", "offset_after": 56, "offset_before": 0, "schema": "rocqwash-sentinel-event/1", "seq": 2, "truncated": false}
 ```
 
-**每轮 report**（rocqwash-sentinel/1·覆盖写·节选自同次实跑）：
+**Per-round report** (rocqwash-sentinel/1 · overwrite-written · excerpt of the same run):
 
 ```json
 {
@@ -124,73 +118,78 @@ PY
 }
 ```
 
-**后台哨整块实测**（2026-11-11·tmp 演练形：`--loop --interval 1 --max-rounds 2
---sleep-scale 0 --injector …`）：watcher 2 轮自停·events.jsonl 落 2 行（seq 1,2）·
-`grep -c '"kind": "ci-red"'` → `1`（rc 0）·进程归零。**生产形不带 `--injector`/
-`--sleep-scale`**（那两枚是离线演练钉：见 README-cw.md:88-92 纪律③）。
+**Whole background-watcher block measured** (November 11, 2026 · tmp drill form: `--loop --interval 1 --max-rounds 2
+--sleep-scale 0 --injector …`): the watcher self-stopped after 2 rounds · events.jsonl received 2 lines (seq 1, 2) ·
+`grep -c '"kind": "ci-red"'` → `1` (rc 0) · process count back to zero. **The production form does not carry `--injector`/
+`--sleep-scale`** (those two are the offline-drill pins: README-cw.md:88-92 discipline ③).
 
-## 4. 退出码分支表（哨面·a failing result is data, not a tool failure）
+## 4. Exit-code branch table (watcher face · a failing result is data, not a tool failure)
 
-| 退出码 | 含义（cw_sentinel --help／docstring 口径） | 工作流动作 |
+| Exit code | Meaning (cw_sentinel --help / docstring wording) | Workflow action |
 |---|---|---|
-| 0 | 巡检完成（CI failing/堵塞已作为**事件**出账·非器红） | 后台哨此码即进程收尾·主流程读 events.jsonl 断后续 |
-| 1 | —（哨无 1 档：红走事件流·不走退出码） | 不会出现；出现即cw.sh 路由异常，按 9 处置复查 |
-| 2 | 用法错（缺模式/双模同给/三源全缺/`--branch` 先于 `--watch-repo`/repo 形坏/负参/once 带 loop 专属参） | 后台哨启动前应被挡住——嵌段伪码 §5 把它放前置 `--once` 预检 |
-| 9 | 信号源不可达（CI HTTP 4xx/5xx·netrc 缺·token 空·runs/jobs 形坏·injector 缺失/形坏/canned 未覆盖·ledgers 目录缺·state 形坏·子进程 rc≠0） | fail-loud 即停（不带病运行·tools/cw_sentinel.py:727 源硬错注记）·人工修源后重启哨 |
+| 0 | inspection round completed (CI failing/blockage states already booked as **events** · not a tool failure) | the background watcher ends the process on this code · the main flow reads events.jsonl and decides what follows |
+| 1 | — (the watcher has no level 1: failing states travel in the event stream · never as an exit code) | never occurs; if it appears, the `cw.sh` route is abnormal — recheck it as a 9 |
+| 2 | usage error (missing mode / both modes given / all three sources missing / `--branch` before `--watch-repo` / malformed repo / negative value / loop-only flags with once) | should be stopped before the background watcher starts — the §5 pseudocode places it behind a front `--once` precheck |
+| 9 | signal source unreachable (CI HTTP 4xx/5xx · netrc missing · token empty · runs/jobs malformed · injector missing/malformed/canned not covered · ledgers directory missing · state malformed · subprocess rc≠0) | fail-loud, stop at once (never keep running in a broken state · tools/cw_sentinel.py:727 hard-error note) · fix the source by hand and restart the watcher |
 
-## 5. dynamic-workflow 嵌段伪码
+## 5. dynamic-workflow embed pseudocode
 
 ```text
-// 嵌段①后台哨：后台 bash 任务＋主流程消费事件流（主会话让路模式见白皮书 §3）
-// 器：cw.sh sentinel（tools/cw_sentinel.py）·schema rocqwash-sentinel/1
+// workflow block ① background watcher: a background bash task + the main flow consumes the event stream (main-session step-aside mode: whitepaper §3)
+// tool: cw.sh sentinel (tools/cw_sentinel.py) · schema rocqwash-sentinel/1
 phase "spawn-sentinel" {
-  // 前置用法预检：--once 单轮跑通（exit 0）才放行后台长驻——把 2 档用法错
-  // 挡在 spawn 之前；--injector + --sleep-scale 0 离线演练（纪律③）
+  // front usage precheck: the --once single round must pass (exit 0) before the resident background form is allowed —
+  // this stops the level-2 usage error before spawn; --injector + --sleep-scale 0 is the offline drill (discipline ③)
   const probe = await world.run("bash", ["cw.sh", "sentinel", "--once",
       "--watch-ledgers", "ledgers/", "--state-file", ".sentinel-probe-state.json",
-      "--json", ".sentinel-probe-report.json"]);        // 退出码即判据
+      "--json", ".sentinel-probe-report.json"]);        // the exit code is the criterion
   if (probe.exitCode !== 0) return { verdict: "sentinel-unusable", rc: probe.exitCode };
 
-  // 长驻哨：后台任务（nohup … &）·world.run 只做 spawn+首查，不等它终结
+  // resident watcher: a background task (nohup … &) · world.run only spawns + first check, never waits for its end
   await world.run("bash", ["-c",
     "nohup bash cw.sh sentinel --loop --interval 60 " +
     "--watch-repo ORG/REPO --branch main " +
     "--watch-ledgers ledgers/ --watch-buildlog build.log " +
     "--state-file .sentinel-state.json --emit events.jsonl " +
     "--json sentinel-report.json >/dev/null 2>&1 & echo $!"]);
-  // 主会话让路：后续 phase 干自己的活，只在检查点回头读事件流
+  // the main session steps aside: the following phases do their own work and return to the event stream only at checkpoints
 }
 phase "consume-checkpoint" {
-  // 消费端门：grep 计数即判据（0=无红·非 0=有红事件交人审子代理）
+  // consumer gate: the grep count is the criterion (0 = no failing events · non-zero = failing events exist, hand them to a human-review subagent)
   const reds = await world.run("grep", ["-c", '"kind": "ci-red"', "events.jsonl"]);
   if (reds.exitCode === 0 && Number(reds.stdout.trim()) > 0) {
-    const triage = await agent({ role: "triage",   // 人审/分诊子代理读事件行与 report
-      ask: "读 events.jsonl 的 ci-red 事件与 sentinel-report.json，按 family 给处置"});
+    const triage = await agent({ role: "triage",   // the human-review/triage subagent reads the event lines and the report
+      ask: "read the ci-red events in events.jsonl and sentinel-report.json, and give a per-family disposition"});
     return { verdict: "red-forwarded", triage };
   }
   return { verdict: "no-red-events" };
 }
 ```
 
-> 伪码契约（dynamic-workflows SKILL §5/§10）：`world.run` 第一参是编译期字面量
-> 命令名·运行时值进 args 数组；退出码即确认，不许子代理复述世界已裁决的事。
+> Pseudocode contract (dynamic-workflows SKILL §5/§10): the first `world.run` argument is a compile-time literal
+> command name · runtime values go into the args array; the exit code is the confirmation, and a subagent must not
+> restate what the world has already adjudicated.
 
-## 6. 诚实注记
+## 6. Honesty notes
 
-- 本文全部输出样例为 2026-11-11 铸席在本仓 `tools/cw_sentinel.py`（v37 41e74b0）
-  tmp 注入演练**实跑**所产，非手写；样例事件行含 `"note": "ts=off…"` 是
-  `--sleep-scale 0` 演练形的确定性注记（tools/cw_sentinel.py:301-306）——生产形
-  事件行带真 `ts`。文中行号一律锚 41e74b0 提交态（并席并发开发中·工作树行号会漂）。
-- 样例中 `org/repo`、run 178、md5 等均为 tmp 夹具数据，非任何真仓信号。
-- 消费端 grep 靶形依赖事件行 sort_keys 字节序（rocqwash 接口纪律·README-cw.md:82-86）；
-  若上游器改键序，grep 形失效而 python3 形不受影响——重结构化解析优先。
-- 三器接口共同纪律五条的正本在 `README-cw.md`「工作流配合接口」（README-cw.md:71-140）；
-  本嵌段是其中⑤后台哨形的展开，与其逐字兼容。
+- All output samples in this file were produced by real runs of this repository's `tools/cw_sentinel.py` (v37 41e74b0)
+  in the tmp injection drill on November 11, 2026, not hand-written; the `"note": "ts=off…"` in the sample event lines is
+  the deterministic drill-form annotation of `--sleep-scale 0` (tools/cw_sentinel.py:301-306) — production
+  event lines carry a real `ts`. Line numbers throughout anchor to the 41e74b0 commit state (concurrent multi-agent
+  development · working-tree line numbers drift).
+- `org/repo`, run 178, the md5 values, and similar content in the samples are tmp fixture data, not signals from any
+  real repository.
+- The consumer grep targets depend on the event lines' sort_keys byte order (rocqwash interface discipline ·
+  README-cw.md:82-86); if the upstream tool changes the key order, the grep form breaks while the python3 form is
+  unaffected — prefer re-structured parsing.
+- The normative home of the five joint disciplines of the three-tool interfaces is the `README-cw.md` "workflow
+  cooperation interface" section (README-cw.md:71-140); this block expands its ⑤ background-watcher form and is
+  verbatim-compatible with it.
 
-（English brief) Workflow block ①: run the v37 real-time sentinel as a background
+(English brief) Workflow block ①: run the v37 real-time sentinel as a background
 bash task (`nohup bash cw.sh sentinel --loop … --emit events.jsonl &`), consume the
 JSONL event stream from the main session (grep or stdlib-python), branch on exit
 codes 0/2/9 (red is data, not tool failure — it travels in events, not exit codes).
 Default is report-only; `--on-red` is an explicit bypass action. `--state-file` is
-required for loop idempotency. See `README-cw.md` §「工作流配合接口」 for the
+required for loop idempotency. See `README-cw.md` §"workflow cooperation interface" for the
 normative five-discipline contract.
