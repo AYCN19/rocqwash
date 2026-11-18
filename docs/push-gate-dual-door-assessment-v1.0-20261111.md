@@ -1,247 +1,129 @@
-# push_gate 推窗四判据 × pushci preflight 发射闸 — 双门归一评估报告
+# push-gate-dual-door-assessment — the push_gate push-window four criteria × the pushci preflight check: dual-door normalization assessment report (v1.0, November 11, 2026)
 
-- **版本**：v1.0 · 2026-11-11（rocqwash v40 496ebdf 后工作树·评估席单独成文）
-- **任务书**：v39/v40 更新账排程项「push_gate.py 推窗四判据与 pushci preflight 的
-  归一评估（双门并立现况如实注）」（`更新账.md:3609`、`更新账.md:3700`）
-- **评估域**：`certify/push_gate.py`（window 子命令·推窗四判据）与
-  `tools/pushci.py`（五段管线第 1 段 preflight·发射闸）两扇门的判据面、重叠面、
-  差异面、归一可行性三案与建议案。
-- **纪律声明（只评估不动码）**：本报告零代码变更——两器、wrapper、cw.sh、
-  tests、README 系列在本评估任务下一概未动（本席同轮另有一项钦定的
-  cw_sentinel 护栏修复，属任务书另一件，与本评估互不相涉）。全部结论只锚
-  在盘代码与实跑证据，行号锚 496ebdf 后工作树现势。
+> Purpose.  Assessment-only evaluation of whether the two push gates — the `certify/push_gate.py` `window` subcommand (the four push-window criteria) and the `tools/pushci.py` stage-1 preflight check — overlap, differ, and can be normalized into one; three options are examined and one is recommended. Commissioned by the v39/v40 ledger scheduling item "normalize-assess the `push_gate.py` push-window four criteria against the pushci preflight (the standing two-gate arrangement recorded as-is)" (`更新账.md:3609`, `更新账.md:3700`). Zero code change: both tools, the wrapper, `cw.sh`, the tests, and the README series were untouched under this task instruction (a separately commissioned `cw_sentinel` guard fix landed by this agent in the same round belongs to a different task instruction and is unrelated to this assessment). All conclusions anchor only on code and run evidence present in the tree; line anchors reflect the tree state after 496ebdf (rocqwash v40). Written separately by the assessment agent.
+> Interface.  Document face only; no runtime interface. Assessment domain: `certify/push_gate.py` (the `window` subcommand, the four push-window criteria) and `tools/pushci.py` (the five-stage pipeline preflight→push→watch→heal→verdict±merge, stage 1 = the preflight check, the launch-time gate). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  Read-only citations of the on-tree faces `certify/push_gate.py`, `tools/pushci.py`, `wrapper/push_gate_rq.sh`, `cw.sh`, `README-cw.md`, `docs/workflow-integration-whitepaper-v1.0-20261111.md`, `examples/workflows/step-pushci.md`, and `更新账.md`; no runtime dependency on any code face.
+> Evidence.  §6: the `--selftest` runs of both assessed tools (both rc=0), the `certify/frozen8.py --ledger` roster check (`certify/push_gate` count = 0), and the suite baseline `bash tests/run_tests.sh` (52 passed / 0 failing / 4 skipped, rc=0); items not run live are declared as such in §6.
+> Exit-codes.  Not applicable to a document face; the assessed tools keep their implemented exit-code semantics unchanged (0/1/2/9, documented in §1).
 
 ---
 
-## 1 两门各判什么
+## 1 What each gate judges
 
-### 1.1 门 B：push_gate window — 推窗四判据（时机与凭证）
+### 1.1 Gate B: push_gate window — the four push-window criteria (timing and evidence)
 
-正本 `certify/push_gate.py:8-30`（docstring）＋实作 `:109-212`。承战役推送窗
-铁律（`push_gate.py:9` 引 ConstructiveWorld 战役 wf_land.dwf.ts:40）：
-「①runs in_progress=0 ②本地≥云端 ③fetch 干净 ④认证绿已坐实」。机械落地：
+Canonical statement: `certify/push_gate.py:8-30` (docstring); implementation at `:109-212`. It carries the effort-level push-window hard requirement (`push_gate.py:9` cites the ConstructiveWorld effort workflow wf_land.dwf.ts:40): "① runs in_progress=0 ② local ≥ remote ③ fetch clean ④ certification passing confirmed". Mechanical form:
 
-| 判据 | 判什么 | 证据源 | 锚 |
+| criterion | what it judges | evidence source | anchor |
 |---|---|---|---|
-| c1 ci-idle | CI 在飞 run=0。status≠`completed` 一律保守计在飞（fail-closed） | `--runs-json`（预取 Actions runs JSON·**本器自身零网络**只做判读）或 `--ci-capped-min N`（reflog 最近 `update by push` 距今 ≥N 分钟＋CI 时长封顶 ⇒ 在飞不可能） | `push_gate.py:109-151` |
-| c2 local≥remote | fetch 后 `rev-list --count HEAD..<remote>/<branch>`（behind）==0；ahead 不设上限（本地领先正是待推态） | git 机械计数 | `push_gate.py:154-165` |
-| c3 fetch-clean | ls-remote **前后双读同 sha**＋fetch rc=0＋远端 sha 是本地 HEAD 祖先（merge-base --is-ancestor）——窗内无人动云端 | 真远端只读操作（fetch/ls-remote） | `push_gate.py:168-187` |
-| c4 cert-green | 本仓认证绿机械复核：`bash tests/run_tests.sh` rc==0（`--suite` 可指认）；可另加 `--freeze-manifest` 冻结件零漂移亦须 rc==0 | 退出码 | `push_gate.py:190-212` |
+| c1 ci-idle | CI runs in flight = 0. Any status ≠ `completed` is conservatively counted as in flight (fail-closed). | `--runs-json` (pre-fetched Actions runs JSON — **this tool itself does zero networking**, it only interprets) or `--ci-capped-min N` (the most recent reflog `update by push` entry is ≥ N minutes old plus a CI-duration cap ⇒ an in-flight run is impossible) | `push_gate.py:109-151` |
+| c2 local≥remote | after fetch, `rev-list --count HEAD..<remote>/<branch>` (behind) == 0; ahead is uncapped (a locally leading tree is exactly the to-be-pushed state) | git mechanical counting | `push_gate.py:154-165` |
+| c3 fetch-clean | ls-remote read twice, before and after, with the same sha; fetch rc=0; the remote sha is an ancestor of local HEAD (`merge-base --is-ancestor`) — nobody moved the remote inside the window | genuine remote read-only operations (fetch/ls-remote) | `push_gate.py:168-187` |
+| c4 cert-green | mechanical re-check of this repository's certification passing: `bash tests/run_tests.sh` rc==0 (`--suite` can name another suite); optionally `--freeze-manifest` frozen-artifact zero-drift must also return rc==0 | exit codes | `push_gate.py:190-212` |
 
-- 判序：**c3 先行**（fetch 落定 remote-tracking ref，c1 时间线/c2 计数方有据）
-  → c1 → c2 → c4（`cmd_window`·`push_gate.py:235-239`）。
-- 结论：四判据全 PASS ⇒ `push-window: OPEN` exit 0；否则 CLOSED exit 1——
-  **NOT-RUN＝关窗·缺席旁证不计绿**（诚实律·`push_gate.py:29`、c1 零证据
-  NOT-RUN `:151`）。退出码册 0/1/2/9（`push_gate.py:65-67`）。
-- **只判窗不开推**：push 动作在调用方（`push_gate.py:30`）；window 全程只读
-  （写域声明 `push_gate.py:49-50`·fetch/ls-remote 均远端只读操作）。
-- 在役形：手动老链（`README-cw.md:60`）＋适配层 `wrapper/push_gate_rq.sh`
-  （window 注入 `--repo <仓根> --suite <仓根>/tests/run_tests.sh` 消灭 cwd
-  敏感·无参调用 exit 2 禁 surprise 网络·`push_gate_rq.sh:60-63,71-72`）。
+- Criterion order: **c3 first** (fetch settles the remote-tracking ref; only then do the c1 timeline and the c2 count have a basis) → c1 → c2 → c4 (`cmd_window`, `push_gate.py:235-239`).
+- Conclusion: all four criteria PASS ⇒ `push-window: OPEN`, exit 0; otherwise CLOSED, exit 1 — **NOT-RUN = window closed; absent corroboration is never counted as passing** (the honesty law, `push_gate.py:29`; the c1 zero-evidence NOT-RUN at `:151`). Exit-code roster 0/1/2/9 (`push_gate.py:65-67`).
+- **It judges the window and never pushes**: the push action belongs to the caller (`push_gate.py:30`); window is read-only throughout (write-domain declaration `push_gate.py:49-50`; fetch/ls-remote are remote read-only operations).
+- In-service form: the manual legacy chain (`README-cw.md:60`) plus the adapter `wrapper/push_gate_rq.sh` (window injects `--repo <repo-root> --suite <repo-root>/tests/run_tests.sh`, removing cwd sensitivity; a no-argument call exits 2 and forbids surprise networking — `push_gate_rq.sh:60-63,71-72`).
 
-### 1.2 门 A：pushci preflight — 发射闸（环境能不能发射）
+### 1.2 Gate A: pushci preflight — the launch-time gate (can the environment initiate)
 
-正本 `tools/pushci.py:7-16`（docstring）＋实作 `stage_preflight :703-748`。
-五段管线（preflight→push→watch→heal→verdict±merge）第 1 段·禁发射律代码化：
+Canonical statement: `tools/pushci.py:7-16` (docstring); implementation `stage_preflight` at `:703-748`. Stage 1 of the five-stage pipeline (preflight→push→watch→heal→verdict±merge); the no-initiation rule in code form:
 
-| 闸 | 判什么 | 不过即停 | 锚 |
+| check | what it judges | stop condition | anchor |
 |---|---|---|---|
-| ① toolchain | `tools/toolchain_dyld_doctor.py` subprocess → verdict≠healthy（dyld 断链面） | `StopVerdict("toolchain", 1)` | `pushci.py:710-737` |
-| ② net | `tools/net_probe.py --rounds 2 --interval S --stable-window` subprocess → UNSTABLE（双探稳窗·单探禁发射由四器自带·本器只认其裁决） | `StopVerdict("unstable", 1)` | `pushci.py:739-744,787-795` |
-| ③（可选）gate4 预扫 | `--pre-scan-gate4`：git diff `<base>...<branch>` 取 .v 变更件 → `verify/gate4_comment_guard.py` 逐件 → FAIL=0 才放行（REVIEW 响亮入账不拦） | `StopVerdict("gate4-block", 2)` | `pushci.py:746-748,802-843` |
+| ① toolchain | `tools/toolchain_dyld_doctor.py` subprocess → verdict ≠ healthy (toolchain linkage failure surface) | `StopVerdict("toolchain", 1)` | `pushci.py:710-737` |
+| ② net | `tools/net_probe.py --rounds 2 --interval S --stable-window` subprocess → UNSTABLE (dual-probe stability window; the single-probe no-initiation rule belongs to the four tools themselves — this tool only honors their rulings) | `StopVerdict("unstable", 1)` | `pushci.py:739-744,787-795` |
+| ③ (optional) gate4 pre-scan | `--pre-scan-gate4`: `git diff <base>...<branch>` collects the changed .v files → `verify/gate4_comment_guard.py` per file → passes only at FAIL=0 (REVIEW is recorded loudly and does not block) | `StopVerdict("gate4-block", 2)` | `pushci.py:746-748,802-843` |
 
-- 过闸后段 2-5：push（git 四调序 get-url→rev-parse→push×3 发×45s→ghproxy
-  换路×2 发→ls-remote 远端 tip 复核·`pushci.py:17-24,847-898`）→
-  resolve+watch（head_branch+head_sha 咬合·`pushci.py:25-30,912+`）→
-  heal（ci_triage 判类分派·有界 rerun 帽 3·A 族内容红禁代修·`pushci.py:31-42`）
-  → verdict±merge。
-- 退出码册：0=success/dry-run；1=heal-exhausted/unstable/toolchain；
-  2=fix-content/gate4-block/用法错；9=目标缺失（`pushci.py:101-104`）。
-  verdict 封册七态（`pushci.py:118-119`）。
-- `--dry-run`＝只打计划零副作用（零 git 零 API 零工具子进程·`pushci.py:89`；
-  破坏面矩阵 P1 行以 api_calls/git-caller 双流水皆空实证）。
-- 主线在役形：`cw.sh pushci` 路由（`cw.sh:218`·二十工具册 `cw.sh:232`），
-  工作流嵌段②（`examples/workflows/step-pushci.md`）。
+- After the gate, stages 2-5: push (the git four-call order get-url→rev-parse→push×3, 45 s each → ghproxy reroute ×2 → ls-remote remote-tip recheck, `pushci.py:17-24,847-898`) → resolve+watch (head_branch+head_sha interlock, `pushci.py:25-30,912+`) → heal (classification via `ci_triage`, bounded rerun cap of 3, family-A content failures are never machine-fixed, `pushci.py:31-42`) → verdict±merge.
+- Exit-code roster: 0 = success/dry-run; 1 = heal-exhausted/unstable/toolchain; 2 = fix-content/gate4-block/usage error; 9 = target missing (`pushci.py:101-104`). The verdict closed roster carries seven states (`pushci.py:118-119`).
+- `--dry-run` = print the plan only, zero side effects (zero git, zero API, zero tool subprocesses, `pushci.py:89`; the destructive-surface matrix row P1 attests both flows empty through the api_calls/git-caller dual record).
+- Mainline in-service form: the `cw.sh pushci` route (`cw.sh:218`; the twenty-tool roster `cw.sh:232`), plus workflow embedded section ② (`examples/workflows/step-pushci.md`).
 
 ---
 
-## 2 重叠面（两门真正共判的很少）
+## 2 The overlap surface (very little is truly judged by both gates)
 
-1. **同一物理对象**：两门最终都服务同一次 `git push`——门 B 判「此刻开不开窗」，
-   门 A 过闸后亲自执行 push。判的对象同、动作的归属不同（B 只判不开推·A 判
-   且推）。
-2. **同款 fail-closed 姿态**：门 B 无证据=NOT-RUN=关窗（`push_gate.py:29,151`）；
-   门 A 双闸器 verdict≠healthy/UNSTABLE=禁发射（`pushci.py:737,742`）。两门
-   都禁「证据缺席按绿算」。
-3. **同款只读姿态**：门 B 写域声明全程只读（`push_gate.py:49-50`）；门 A
-   preflight 段只跑本地探针子进程＋net_probe 只读 GET，对仓树/远端零写
-   （report/--json 出调用方显式指认路径）。两门的写域纪律同源（只写显式
-   指认出账·零 surprise 写）。
-4. **c2/c3 的事后兜底在 push 自身**：push 段真推时 git 自带非快进拒绝＝
-   behind>0/窗内云端被动的最终机械兜底——但那是**发射失败后**才知道；门 B
-   的价值正在把徒劳发射省在事前。这是两门唯一实质「重叠」的判据邻接面，
-   且是兜底关系非重复判据关系。
-5. **判据集合零交**：c1-c4 与 doctor/net-probe/gate4 五个判据**无一重合**
-   （§3.2）。所谓双门重叠是纪律层（fail-closed/机械证据/只读）的重叠，
-   不是判据层的重复劳动。
+1. **The same physical object**: both gates ultimately serve the same `git push` — gate B judges "does the window open right now", gate A executes the push itself after passing its checks. The judged object is the same; the ownership of the action differs (B only judges and never pushes; A judges and pushes).
+2. **The same fail-closed posture**: gate B — no evidence = NOT-RUN = window closed (`push_gate.py:29,151`); gate A — either gate tool's verdict ≠ healthy/UNSTABLE = no initiation (`pushci.py:737,742`). Both gates forbid "absence of evidence counted as passing".
+3. **The same read-only posture**: gate B's write-domain declaration is read-only throughout (`push_gate.py:49-50`); gate A's preflight stage runs only local probe subprocesses plus net_probe read-only GETs, zero writes to the tree or the remote (report/--json write only to a caller-named path). The two gates' write-domain discipline shares one origin (write only to explicitly named outputs; zero surprise writes).
+4. **The post-hoc fallback of c2/c3 lives in the push itself**: at real push time git's own non-fast-forward rejection is the final mechanical fallback for behind>0 / a remote moved inside the window — but that is learned only after a failed initiation; gate B's value is exactly to spare the futile initiation beforehand. This is the only substantive "overlap" of criteria between the two gates, and it is a fallback relation, not a duplicated-criteria relation.
+5. **The criterion sets do not intersect**: c1-c4 and doctor/net-probe/gate4 — not one criterion of one set coincides with the other (§3.2). The alleged dual-door overlap is an overlap of discipline (fail-closed / mechanical evidence / read-only), not duplicated work at the criterion level.
 
 ---
 
-## 3 差异面
+## 3 The difference surface
 
-1. **回答的问题不同**：门 A＝「环境能不能发射」（工具链/网络稳窗/头注守卫）；
-   门 B＝「此刻该不该推」（CI 空闲/本地领先/窗内无人动/认证绿）。白皮书 §4
-   定语：「两扇门，各判各的，互不替代」
-   （`docs/workflow-integration-whitepaper-v1.0-20261111.md:163-201`）。
-2. **证据模型不同**：门 A 的证据恒在场（doctor/probe/gate4 真模式必跑必出
-   verdict·形坏 fail-loud 2）；门 B 的 c1 证据**可选**且缺席即关窗
-   （NOT-RUN 语义·`push_gate.py:141-151`）——推窗是「旁证齐了才开」的
-   判定，发射闸是「探针现跑现判」的判定。
-3. **成本结构不同**：门 A 三闸秒级；门 B 的 c4 直跑全套 `tests/run_tests.sh`
-   （本席本轮实测 52 过/0 failing/4 略·rc=0——分钟级体量）＋可选冻结件对账。
-   成本不对称是结构性的，不是实现偷懒。
-4. **网络姿态不同**：门 B 的 c3 必须触真远端（fetch/ls-remote·只读）；门 A
-   的 preflight 本段零 git 零远端调（doctor 本地·net_probe 打探针端点）。
-   适配层因此立「无参调用禁绝」契约防 surprise 网络（`push_gate_rq.sh:60-63`）。
-5. **退出码与账面不同**：门 A 闸败折进五段 verdict 封册七态＋report
-   `stages.preflight{toolchain,net,gate4?}`（`pushci.py:107-111`）；门 B 自有
-   OPEN/CLOSED 0/1 册＋逐判据 PASS/FAIL/NOT-RUN 行＋可选 window.json
-   （`push_gate.py:241-258`）。两册各自在档·互不翻译。
-6. **新鲜度时刻不同**：正典串行序（白皮书 §4·门 B 先判窗→门 A 再跑管线）
-   下，门 B 的 c3 双读证据在门 A 真推时已是数秒旧账——c3 自己的前后双读
-   设计说明作者明知窗非原子；唯一能原子化的形态是「判窗者亲自 push」，
-   而两门现在都不是（见 §4 案 B 的幻觉风险）。
-7. **消费面不同**：门 A＝主线一键（cw.sh 路由＋工作流嵌段②·verdict 可分流
-   ＋heal 有界自愈）；门 B＝手动老链＋适配层＋工作流前置判窗步骤。cw.sh
-   二十工具册**无** push-gate 路由（`cw.sh:232`）——门 B 靠 wrapper 与文档
-   在册，不进主线一键。
-8. **模块姿态不同**：门 A＝tools/ 编排胶水（四器 subprocess·零新引擎·
-   `pushci.py:5-6`）；门 B＝certify/ 深件（机械判据＋UNION v2 多世界清单
-   同件·冻结向量组自证·适配层包锚）。**push_gate.py 不在 frozen8 冻结八件
-   在册**（本席实测 `frozen8.py --ledger` 全册 grep 计数=0）——在役可修但
-   本评估不动。
+1. **They answer different questions**: gate A = "can the environment initiate" (toolchain / network stability window / head-comment guard); gate B = "should the push happen now" (CI idle / local leading / nobody moved the remote in-window / certification passing). Whitepaper §4 qualifier: "two gates, each judging its own question, neither substituting for the other" (`docs/workflow-integration-whitepaper-v1.0-20261111.md:163-201`).
+2. **Different evidence models**: gate A's evidence is always present (doctor/probe/gate4 real-mode runs always produce a verdict; a malformed run fails loud with 2); gate B's c1 evidence is **optional**, and its absence closes the window (the NOT-RUN semantics, `push_gate.py:141-151`) — the push window is a decision of "opens when the corroboration is complete"; the launch-time gate is a decision of "probes run now and are judged now".
+3. **Different cost structures**: gate A's three checks are second-scale; gate B's c4 runs the full `tests/run_tests.sh` directly (measured this round by this agent: 52 passed / 0 failing / 4 skipped, rc=0 — minute-scale bulk) plus an optional frozen-artifact reconciliation. The cost asymmetry is structural, not an implementation shortcut.
+4. **Different network postures**: gate B's c3 must touch the real remote (fetch/ls-remote, read-only); gate A's preflight stage itself makes zero git and zero remote calls (doctor is local; net_probe calls its probe endpoint). The adapter therefore establishes a "no-argument calls forbidden" contract against surprise networking (`push_gate_rq.sh:60-63`).
+5. **Different exit codes and record surfaces**: gate A's check failure folds into the five-stage verdict closed roster of seven states plus the report `stages.preflight{toolchain,net,gate4?}` (`pushci.py:107-111`); gate B keeps its own OPEN/CLOSED 0/1 roster plus per-criterion PASS/FAIL/NOT-RUN lines and an optional window.json (`push_gate.py:241-258`). The two rosters are each on file and never translated into one another.
+6. **Different freshness instants**: under the canonical serial order (whitepaper §4 — gate B judges the window first, gate A then runs the pipeline), gate B's c3 dual-read evidence is already seconds stale when gate A performs the real push — c3's own before/after dual-read design shows its author knew the window is not atomic; the only form that could make it atomic is "the window judge performs the push itself", and neither gate is that today (see the illusion risk in §4, Option B).
+7. **Different consumers**: gate A = the mainline single command (the `cw.sh` route plus workflow embedded section ②; the verdict can branch, and heal gives bounded automatic recovery); gate B = the manual legacy chain plus the adapter plus a workflow pre-window step. The `cw.sh` twenty-tool roster carries **no** push-gate route (`cw.sh:232`) — gate B stays registered through the wrapper and the docs, outside the mainline single command.
+8. **Different module postures**: gate A = `tools/` orchestration glue (the four tool subprocesses, zero new engines, `pushci.py:5-6`); gate B = a `certify/` deep face (mechanical criteria plus a UNION v2 multi-world checklist in the same file, frozen vector groups self-attesting, adapter-wrapped). **push_gate.py is not on the frozen8 frozen-eight roster** (measured by this agent: `frozen8.py --ledger` full-roster count = 0) — it is in service and repairable, but this assessment changes nothing.
 
 ---
 
-## 4 归一可行性三案
+## 4 Three normalization options
 
-### 案 A — 保持并立·各判各的（现状固化）
+### Option A — keep the two gates side by side, each judging its own question (fix the status quo)
 
-**形态**：两器零改动。白皮书 §4 正典串行序（先门 B 判窗·OPEN 才进门 A）
-＋README-cw 诚实旁注（`README-cw.md:60-63`「套件绿/behind=0 等推窗四判据
-不在此册·过闸纪律仍归 certify/push_gate.py」）＋嵌段②注记（「两扇门…
-互不替代」`step-pushci.md:159-161`）即现状的全部规约。
+**Form**: zero change to both tools. Whitepaper §4 canonical serial order (gate B judges the window first; only an OPEN window enters gate A) + the honest side note in README-cw (`README-cw.md:60-63`: "the push-window four criteria such as suite passing / behind=0 are not in that roster; check discipline remains with `certify/push_gate.py`") + the embedded section ② note ("two gates … neither substitutes for the other", `step-pushci.md:159-161`) — that is the entire regulation of the status quo.
 
-- 收益：零代码零回归面；判据归属单一（四判据唯一正本在 certify·判据无
-  第二份实现＝无漂移面）；c1 证据「调用方显式发起」的契约（适配层契的 3）
-  保持——推窗纪律由人/工作流按仓况选择证据源，器不越权猜。
-- 代价：要双门全查的调用方需串行两条命令（工作流嵌段已给正典序·人手
-  老链用户需自读文档）；pushci 单跑仍可不判窗（见 §5 残余风险）。
-- 裁决：**可行·现状即稳态**。
+- Benefit: zero code, zero regression surface; single ownership of criteria (the four criteria have their sole canonical home in certify; no second implementation = no drift surface); the contract that c1 evidence is "initiated explicitly by the caller" (adapter contract clause 3) is preserved — the push-window discipline lets the human/workflow choose the evidence source per repository state, and the tool never overreaches by guessing.
+- Cost: a caller wanting both gates must run two commands serially (the workflow embedded section already gives the canonical order; manual-chain users must read the docs); pushci alone can still skip the window judgment (see the residual risk in §5).
+- Ruling: **feasible; the status quo is the steady state**.
 
-### 案 B — pushci preflight 调 push_gate window 作闸（编排放大一格）
+### Option B — pushci preflight calls push_gate window as a check (orchestration enlarged by one notch)
 
-**形态**：preflight 增第④步 subprocess `python3 -B certify/push_gate.py
-window --repo <repo_path> --branch <branch> [--runs-json …]`，exit 0 才过闸；
-push_gate 仍系判据唯一正本（编排调用非重实现·合「编排零新引擎」字面）。
+**Form**: preflight gains a step ④, the subprocess `python3 -B certify/push_gate.py window --repo <repo_path> --branch <branch> [--runs-json …]`; only exit 0 passes the check; push_gate remains the sole canonical home of the criteria (an orchestration call, not a reimplementation — fits "orchestration adds no new engine" literally).
 
-逐条过堂：
+Examined item by item:
 
-- **c4 成本并入每次发射**：c4 直跑全套套件（§3.3）——嵌进 pushci＝每次
-  真推前付全套分钟级时长；改 `--suite` 指轻量脚本＝判据掏空（认证绿名存
-  实亡）。**无两全**。
-- **c1 证据在 pushci 侧结构性缺席**：c1 双源（runs-json/ci-capped-min）
-  pushci 一概无旗标可透传；且 ci-capped-min 时间线证据要求 reflog 有
-  `update by push` 条目（`push_gate.py:138-142`）——**新枝首推（pushci 的
-  主用例）必无此条目 → NOT-RUN → CLOSED**：默认开闸＝pushci 对新枝永闭。
-  要解须给 pushci 加 runs-json 预取旗标＋文档面全套同步——改动已出
-  「一格编排」量级。
-- **verdict 封册要第八态**：CLOSED 折进七态无位可归——映射 unstable=1 是
-  语义扭曲（unstable 系网络/推路不稳非时机未到）；新态=report schema
-  `rocqwash-pushci/1` 扩展＋README-cw/白皮书/嵌段②/CHANGELOG/doc_lint
-  所查面全套对齐＋tests/fixtures/pushci_scenarios 与 t_pushci 15 矢量、
-  矩阵 P1（dry-run `stages == {}` 断言）逐面复核。
-- **原子性幻觉**：窗判过≠推时窗仍开（§3.6）——把门 B 嵌进门 A 会造出
-  「过闸即安全」的错觉，而 c3 双读设计恰恰自证窗非原子。两门并立时各出
-  各账（window.json＋pushci report），嵌套后证据反而混叠。
-- **门 B 并不因此退役**：手动老链（README-cw:60）合法在册——push_gate
-  window 仍须独立可调；同一判据集出现两条调用面（pushci 内嵌＋独立 CLI）
-  ＝doc_lint 日日对抗的漂移温床。
-- 裁决：**技术可行·默认开闸净负·可选旗标形不归一反扩面**。归一目标
-  （一个入口判全）达不到，只把两扇门变成一扇半。
+- **The c4 cost folds into every initiation**: c4 runs the full suite directly (§3.3) — embedded in pushci, every real push pays the full minute-scale duration; switching `--suite` to a lightweight script hollows out the criterion (certification passing in name only). **There is no way to have both.**
+- **The c1 evidence is structurally absent on the pushci side**: of c1's two sources (runs-json/ci-capped-min), pushci has no flag to pass either through; and the ci-capped-min timeline evidence requires a reflog `update by push` entry (`push_gate.py:138-142`) — **a new branch's first push (pushci's primary use case) necessarily lacks that entry → NOT-RUN → CLOSED**: the default-open gate makes pushci permanently closed for new branches. Fixing it requires adding a runs-json pre-fetch flag to pushci plus a full documentation sweep — the change has already outgrown "one notch of orchestration".
+- **The verdict closed roster would need an eighth state**: CLOSED has no slot among the seven states; mapping it to unstable=1 is a semantic distortion (unstable is network/push-path instability, not "the time has not come"); a new state = a `rocqwash-pushci/1` report schema extension plus a full alignment sweep of README-cw / the whitepaper / embedded section ② / CHANGELOG / every doc_lint-checked face, plus per-face re-checks of `tests/fixtures/pushci_scenarios` and the 15 t_pushci vectors and matrix row P1 (the dry-run `stages == {}` assertion).
+- **The atomicity illusion**: the window having passed its judgment ≠ the window still being open at push time (§3.6) — nesting gate B inside gate A would create the illusion of "check passed, therefore safe", while c3's dual-read design is itself proof that the window is not atomic. Side by side, the two gates keep separate records (window.json plus the pushci report); nested, the evidence instead blurs together.
+- **Gate B does not retire because of this**: the manual legacy chain (README-cw:60) stays legitimately registered — push_gate window must remain independently callable; one criterion set gaining two call surfaces (embedded in pushci + standalone CLI) = the standing drift breeding ground that doc_lint fights daily.
+- Ruling: **technically feasible; a default-open gate is a net negative; the optional-flag form does not normalize, it enlarges the surface**. The normalization goal (one entry judging everything) is not reached; the two gates become one and a half.
 
-### 案 C — 判据合并（一扇大门·单一器面）
+### Option C — merge the criteria (one large gate, a single tool face)
 
-**形态**：或把 c1-c4 重实现进 pushci preflight，或把 doctor/net-probe/gate4
-并进 push_gate window——判据单器全判。
+**Form**: either reimplement c1-c4 inside pushci preflight, or fold doctor/net-probe/gate4 into push_gate window — one tool judges all criteria.
 
-- 向 pushci 合并＝四判据第二份实现：违背「编排零新引擎」的实质（判据
-  重实现即新引擎）；certify 正本仍在（老链在册）→ 双正本漂移面；
-  c4 成本与 c1 缺席两座山原样照搬（同案 B 前两条）。
-- 向 push_gate 合并＝certify 深件姿态改变：只读 window 变成跑 doctor/
-  probe/gate4 子进程的编排面（certify 件从未有工具编排职能·UNION 清单
-  同件的冻结向量组语义被搅动）；pushci 老调用面仍须在册 → 同样双正本。
-- 两向共同：两器的既有 CLI、文档、测试矢量、消费面一个都删不掉——合并
-  只增不减。**归一评估三案中唯一明确劣解。**
-- 裁决：**否决**。
+- Merging into pushci = a second implementation of the four criteria: it violates the substance of "orchestration adds no new engine" (a criterion reimplementation is a new engine); the certify canonical home remains (the legacy chain stays registered) → a dual-canonical-home drift surface; the c4 cost and c1 absence mountains are carried over unchanged (Option B's first two bullets).
+- Merging into push_gate = a change of the certify deep-face posture: a read-only window becomes an orchestration face running doctor/probe/gate4 subprocesses (a certify file has never carried tool-orchestration duties; the UNION checklist's same-file frozen vector groups get their semantics disturbed); pushci's legacy call surface must stay registered → again a dual canonical home.
+- Common to both directions: neither tool's existing CLI, documentation, test vectors, or consumers can be deleted — merging only adds. **The only clearly inferior option among the three.**
+- Ruling: **rejected**.
 
 ---
 
-## 5 建议案与理由
+## 5 The recommended option and the reasons
 
-**建议案：A — 保持并立·各判各的。** 理由四条：
+**Recommendation: A — keep the two gates side by side, each judging its own question.** Four reasons:
 
-1. **判据零交·问题异质**（§2.5/§3.1）：两门没有一条重复判据，回答的是
-   「能不能发射」与「该不该现在推」两个不同问题——归一的收益（消重复）
-   在此不存在，归一的成本（c4 并入每推·c1 新枝死锁·封册第八态·schema/
-   文档/夹具全套联动）全是实打实的。无利有损，不归一。
-2. **成本结构禁嵌**（§3.3/§4-B）：c4 全套套件的分钟级体量只适合「人要开窗
-   时付一次」，不适合嵌进每次发射的自动管线。案 B/C 的所有形态都绕不开
-   这座山。
-3. **c1 证据模型与 pushci 语义相克**（§4-B）：推窗判据的核心是「旁证缺席
-   即关窗」的 fail-closed 诚实律；发射闸的核心是「探针现跑现判」。把前者
-   塞进后者，要么造新枝首推死锁，要么用缺省绿注记把 NOT-RUN 稀释掉
-   （pushci flat 形 preflight 缺省绿已有先例 `pushci.py:766-774`——同款
-   手法用在 c1 上＝诚实律失守）。
-4. **判据单一正本＝唯一无漂移形态**（§4-B/C）：四判据正本只在 certify/
-   push_gate.py 一处，门 A 不复判、门 B 不复跑探针——「重复判一次是浪费，
-   漏判一扇是洞」的既定口诀（白皮书 §4 要点 1）正是案 A 的规约现成文。
-   现状双门并立＋正典串行序已是该约束下的最优解。
+1. **The criterion sets do not intersect; the questions are heterogeneous** (§2.5/§3.1): the two gates share not one duplicated criterion and answer two different questions — "can the environment initiate" and "should the push happen now". The benefit of normalization (eliminating duplication) does not exist here, while the costs (c4 folded into every push, the c1 new-branch deadlock, the eighth roster state, the full schema/documentation/fixture alignment sweep) are all real. No gain, real loss: do not normalize.
+2. **The cost structure forbids nesting** (§3.3/§4-B): the minute-scale bulk of c4's full suite fits "paid once when a human wants the window open", not "folded into every automated initiation". Every form of Options B/C must climb this mountain.
+3. **The c1 evidence model clashes with pushci semantics** (§4-B): the core of the push-window criteria is the fail-closed honesty law of "corroboration absent = window closed"; the core of the launch-time gate is "probes run now and are judged now". Forcing the former into the latter either creates the new-branch first-push deadlock, or dilutes NOT-RUN with default-passing annotations (pushci's flat-form preflight default-passing precedent already exists, `pushci.py:766-774` — the same technique applied to c1 = the honesty law lost).
+4. **A single canonical home for criteria is the only drift-free form** (§4-B/C): the four criteria's canonical home is only in `certify/push_gate.py`; gate A never re-judges them, gate B never reruns the probes — the standing maxim "judging twice is waste, missing one gate is a hole" (whitepaper §4 point 1) is precisely Option A's regulation, already written. The standing arrangement of two gates side by side plus the canonical serial order is already the optimum under this constraint.
 
-**规约现状确认（均已在档·本评估零新增义务）**：白皮书 §4 正典串行序与
-三要点（`workflow-integration-whitepaper-v1.0-20261111.md:163-201`）；
-README-cw 诚实旁注（`README-cw.md:60-63`）；嵌段②两门互不替代注记
-（`step-pushci.md:159-161`）；适配层注入/禁 surprise 网络契约
-（`wrapper/push_gate_rq.sh:60-63,71-72`）。v39 排程本评估时注「双门并立
-现况如实注」（`更新账.md:3609`）——本评估结论：**并立即正解·如实注已足·
-无须改码**。
+**Confirmation of the regulatory status quo (all already on file; this assessment adds zero obligations)**: whitepaper §4 canonical serial order and the three points (`workflow-integration-whitepaper-v1.0-20261111.md:163-201`); the README-cw honest side note (`README-cw.md:60-63`); the embedded section ② two-gates-not-substitutable note (`step-pushci.md:159-161`); the adapter injection / no-surprise-networking contract (`wrapper/push_gate_rq.sh:60-63,71-72`). When v39 scheduled this assessment it noted "the standing two-gate arrangement recorded as-is" (`更新账.md:3609`) — this assessment's conclusion: **side by side is the correct answer; recording it as-is suffices; no code change needed**.
 
-**残余风险（如实登记·案 A 固有）**：无任何机械闸强制工作流先判门 B——
-pushci 单跑即发射，窗纪律靠文档与嵌段约束。此系「环候窗纪律由调用方显式
-发起」哲学（适配层契的 3 同源）的自洽代价，非缺口；若主会话日后要机械
-强制，案 B 是唯一不改判据正本的路径，但须先解 §4-B 四条（尤其 c4 成本
-与 c1 新枝死锁）再议。
+**Residual risk (recorded as-is; inherent to Option A)**: no mechanical check forces a workflow to judge gate B first — pushci alone runs and initiates, and window discipline rests on documentation and the embedded section. This is the self-consistent cost of the "window discipline is initiated explicitly by the caller" philosophy (same origin as adapter contract clause 3), not a gap. If mechanical enforcement is wanted later, Option B is the only path that leaves the criteria canonical home unchanged, but §4-B's four items (especially the c4 cost and the c1 new-branch deadlock) must be solved before revisiting.
 
 ---
 
-## 6 证据面（本席实跑·2026-11-11）
+## 6 The evidence surface (run by this agent, November 11, 2026)
 
-| 检查 | 命令（经 `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120` 包裹） | 实测 |
+| check | command (wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`) | measured |
 |---|---|---|
-| 门 B 自证 | `python3 -B certify/push_gate.py --selftest` | rc=0·UNION 六判＋window c1 双源/c2 behind/c4 红套件/零证据 NOT-RUN 四判全过 |
-| 门 A 自证 | `python3 -B tools/pushci.py --selftest` | rc=0·八矢量＋flat 咬合＋韧性层＋CLI 四码全过（零真网络零真 push 零编译） |
-| 冻结册核对 | `python3 -B certify/frozen8.py --ledger` 输出 grep `certify/push_gate` | 计数=0（push_gate 不在冻结八件） |
-| 套件现状基线 | `bash tests/run_tests.sh`（本席同轮护栏修复回归一并实证） | 52 过/0 failing/4 略·rc=0（56 例·四略系正本环境缺·真本机全跑） |
+| gate B self-attestation | `python3 -B certify/push_gate.py --selftest` | rc=0; the UNION six verdicts plus the window c1 dual-source / c2 behind / c4 failing-suite / zero-evidence NOT-RUN four verdicts all passed |
+| gate A self-attestation | `python3 -B tools/pushci.py --selftest` | rc=0; the eight vectors + flat interlock + resilience layer + CLI four exit codes all passed (zero real network, zero real push, zero compilation) |
+| frozen-roster check | `python3 -B certify/frozen8.py --ledger` output searched for `certify/push_gate` | count = 0 (push_gate is not among the frozen eight) |
+| suite status baseline | `bash tests/run_tests.sh` (also attesting the same-round guard-fix regression) | 52 passed / 0 failing / 4 skipped, rc=0 (56 cases; the four skips are source-environment absences; the real machine runs all) |
 
-**码面精读**：`certify/push_gate.py` 全文 632 行（window 四判据实作 :109-258
-＋UNION v2 ＋自证）；`tools/pushci.py` docstring 与管线关键段（:1-120 头注
-退出码册·:703-843 preflight 三闸·:847-908 push 段·:1116-1180 run 入口）；
-`wrapper/push_gate_rq.sh` 全文；`cw.sh` 路由与工具册；`README-cw.md:40-80`；
-`docs/workflow-integration-whitepaper-v1.0-20261111.md` §4；`examples/
-workflows/step-pushci.md:156-167`；`更新账.md` 排程锚。
+**Close reading of the code faces**: `certify/push_gate.py` in full, 632 lines (the window four-criteria implementation at `:109-258` + UNION v2 + self-attestation); `tools/pushci.py` docstring and pipeline key sections (`:1-120` header comments and exit-code roster, `:703-843` preflight three checks, `:847-908` push stage, `:1116-1180` run entry); `wrapper/push_gate_rq.sh` in full; the `cw.sh` routes and tool roster; `README-cw.md:40-80`; `docs/workflow-integration-whitepaper-v1.0-20261111.md` §4; `examples/workflows/step-pushci.md:156-167`; the `更新账.md` scheduling anchors.
 
-**未实跑项（如实声明）**：pushci 真发段与 push_gate window 对真远端的
-线上判窗（需真远端凭据与真网络·用户面——本席纪律零真网络）；c4 对本仓
-套件的 window 内递归实跑（判据行为已由 push_gate 自证矢量「c4 红套件→
-CLOSED」与本席直跑套件基线双侧覆盖）。两者命令形均以在盘代码为正本给出，
-运行时行为未经本席线上验证。
+**Items not run (declared as such)**: pushci's real push stage and push_gate window's live window judgment against a real remote (requires real remote credentials and a real network — user-side; this agent's discipline is zero real network); c4's in-window recursive run against this repository's suite (the criterion behavior is covered on both sides by the push_gate self-attestation vector "c4 failing suite → CLOSED" and this agent's direct suite baseline). Both command shapes are given with the on-tree code as the canonical source; their runtime behavior was not verified live by this agent.
