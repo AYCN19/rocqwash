@@ -1,28 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """selfheal_rocqwash.py - rocqwash self-heal CI driver.
-
-Mirror of the Main repo watch (.github/workflows/rocqwash-triage.yml +
-rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
-
-  * budget: heal only run_attempt==1 runs - GitHub's own attempt counter
-    guarantees at-most-once without persistent state (hosted runners keep
-    no state between runs)
-  * cancel-intent: conclusion==cancelled runs are NEVER revived
-    (same policy as the Main watch)
-  * queue governor (reconcile): keep at most MAX_QUEUED_RUNS queued runs,
-    oldest trimmed; in-progress runs are never touched
-  * branch census (reconcile, weekly): a stateless run-number gate
-    (BRANCH_CENSUS_EPOCH) runs a READ-ONLY branch census - merged-stale
-    stubs are reported to the desk as deletion CANDIDATES, never deleted
-    in-run
-  * content reds: MECHANICAL classes are auto-repaired via the landed
-    repair_scope roster (the watch repairs, not only records);
-    non-mechanical classes stay desk-gated pending E1/E2 model legs;
-    every repair lands as its own commit so CI re-judges it
-  * ledger: no repo writes - verdicts land in the job log and the uploaded
-    artifact (the desk inbox face belongs to the Main watch)
-
 Purpose.  Triage a red CI run into the transient-infra / content-red
   families, heal transient-infra failures under three guards
   (cancel-intent, attempt==1, live re-check), auto-repair mechanical
@@ -30,30 +8,57 @@ Purpose.  Triage a red CI run into the transient-infra / content-red
   run count, automerge green supply/* pull requests, and run a weekly
   read-only branch census. Stateless by design: no persistent state, no
   repository writes outside the single repair commit face.
-
 Interface.  Invoked by `.github/workflows/selfheal.yml` in three forms:
   triage+heal `--repo OWNER/REPO --run RUN_ID --out DIR --heal`;
   reconcile `--repo OWNER/REPO --run 0 --out DIR --reconcile`;
   automerge-only `--repo OWNER/REPO --run 0 --out DIR --automerge-only`.
   Reports land as files under `--out` (triage-report.txt, summary.txt,
   reconcile-report.txt, automerge-report.txt, branch-census.txt) and are
-  uploaded as workflow artifacts. The API credential comes from the
-  `GITHUB_TOKEN` environment variable.
-
+  uploaded as workflow artifacts; the API credential comes from the
+  `GITHUB_TOKEN` environment variable. The R15 repair-plan leg appends
+  its verdict rows to docs/repair-plan-ledger.jsonl in the repository
+  (the single repo-write exception; guards in the contract note below).
 Dependencies.  Python 3 standard library only; GitHub REST API v3 over
-  urllib; `tests/run_tests.sh` read as the repair roster;
-  `tools/repair_scope.py` imported by path for the frozen-face exclusion;
-  `docs/ci-triage-table.json` (schema rocqwash.ci-triage-table/1) as the
-  failure-class table when present.
-
-Evidence.  Exercised live by `.github/workflows/selfheal.yml` (three
-  invocation forms); the repair leg lands exactly one commit per repair so
-  CI re-judges it; the branch census and the parse-death probe are
-  read-only and report candidates, never deletions.
-
-Exit-codes.  0 = triage/verdict obtained (a red verdict is data, not a tool
-failure); 2 = wiring/usage failure; 3 = internal error.
+  urllib; `tests/run_tests.sh` (repair roster); `tools/repair_scope.py`
+  (imported by path); `tools/pin_repair.py` (plan executor, when present);
+  `docs/ci-triage-table.json` (failure-class table, when present).
+Evidence.  Exercised live by `.github/workflows/selfheal.yml`; the repair
+  leg lands one commit per repair so CI re-judges it; the branch census
+  and the parse-death probe are read-only; every repair-plan executor
+  failure is reported loudly in the heal detail.
+Exit-codes.  0 = triage/verdict obtained (a red verdict is data, not a
+  tool failure); 2 = wiring/usage failure; 3 = internal error.
 """
+# Extended contract (kept outside the five-field docstring so the header
+# stays within the 30-line budget of the annotation standard).  Mirror of
+# the Main repo watch (.github/workflows/rocqwash-triage.yml +
+# rocqwash_triage.py), adapted for a hosted-runner, STATELESS face:
+#  * budget: heal only run_attempt==1 runs - GitHub's own attempt counter
+#    guarantees at-most-once without persistent state (hosted runners keep
+#    no state between runs)
+#  * cancel-intent: conclusion==cancelled runs are NEVER revived
+#    (same policy as the Main watch)
+#  * queue governor (reconcile): keep at most MAX_QUEUED_RUNS queued runs,
+#    oldest trimmed; in-progress runs are never touched
+#  * branch census (reconcile, weekly): a stateless run-number gate
+#    (BRANCH_CENSUS_EPOCH) runs a READ-ONLY branch census - merged-stale
+#    stubs are reported to the desk as deletion CANDIDATES, never deleted
+#    in-run
+#  * content reds: MECHANICAL classes are auto-repaired via the landed
+#    repair_scope roster (the watch repairs, not only records);
+#    non-mechanical classes stay desk-gated pending E1/E2 model legs;
+#    every repair lands as its own commit so CI re-judges it
+#  * repair-plan leg: an R15 match (provenance pin drift) with
+#    auto_repairable additionally asks the pin-repair executor
+#    (tools/pin_repair.py --plan) for its zero-write plan verdict and
+#    appends one JSON row per match to docs/repair-plan-ledger.jsonl
+#    (schema rocqwash.repair-plan/1, append-only, one JSON object per
+#    line); plan only - nothing is applied on the CI side, and this
+#    ledger append is the single repo-write exception to the
+#    no-repo-writes rule above; every executor failure (missing executor,
+#    timeout, nonzero exit, unparseable stdout) is reported loudly
+#  * ledger: no repo writes - verdicts land in the job log and the uploaded
+#    artifact (the desk inbox face belongs to the Main watch)
 import argparse
 import json
 import os
@@ -71,6 +76,11 @@ HEAL_DELAY_S = 90
 TRANSIENT_WORDS = ("checkout", "connection", "timeout", "fetch", "runner",
                    "network", "set up")
 SUITE_STEP = "Run self-test suite"
+# Repair-plan leg (R15): the zero-write plan executor and the append-only
+# JSONL ledger where each plan verdict is recorded, both relative to the
+# repository root (the script's working directory on every invocation face).
+REPAIR_PLAN_LEDGER = os.path.join("docs", "repair-plan-ledger.jsonl")
+PIN_REPAIR_EXECUTOR = os.path.join("tools", "pin_repair.py")
 
 
 def log(msg):
@@ -255,6 +265,21 @@ def triage_leg(args, repo, run_id):
             repair_verdict, repair_detail = ("failed(exception)", repr(exc))
         log("repair: %s | %s" % (repair_verdict, repair_detail[:200]))
 
+    # Repair-plan leg (R15): the matched classes above additionally drive
+    # the zero-write plan executor; its verdict row lands in the ledger
+    # and its note rides the heal detail. Never raises (failures are
+    # recorded, not swallowed).
+    repair_plan_note = ""
+    if triage_matched:
+        try:
+            repair_plan_note = repair_plan_leg(triage_matched, run_id)
+        except Exception as exc:
+            repair_plan_note = ("repair-plan: unexpected failure, "
+                                "escalated: %r" % exc)
+            log(repair_plan_note)
+    if repair_plan_note:
+        heal_detail = "%s | %s" % (heal_detail, repair_plan_note)
+
     points = ("rocqwash CI red run %d: family=%s failed_steps=%s (auto "
               "triage by rocqwash self-heal)" % (run_id, family,
                                                  failed_steps[:3]))
@@ -276,6 +301,94 @@ def triage_leg(args, repo, run_id):
          "triage-table=%s"
          % (run_id, family, heal_verdict, repair_verdict, triage_note)),
     ]
+
+
+def repair_plan_leg(matched, run_id, repo_root="."):
+    """Repair-plan leg for R15 (provenance pin drift, auto_repairable):
+    ask the pin-repair executor for its zero-write plan verdict and append
+    one JSON row per R15 match to docs/repair-plan-ledger.jsonl (schema
+    rocqwash.repair-plan/1). Plan only: nothing is applied on the CI side
+    (apply belongs to the cron / desk face). Every failure is loud: a
+    missing executor is recorded as action="executor-absent"; a failed,
+    timed-out, or nonzero executor run is recorded with ok=false and the
+    executor's stdout/stderr tail in the note; a ledger write failure is
+    recorded with ok=false and the OS error. The returned note string is
+    appended to the heal detail (it never raises)."""
+    import subprocess
+    rows = [c for c in matched if c.get("id") == "R15"
+            and c.get("auto_repairable")]
+    if not rows:
+        return ""
+    run_key = str(run_id) if run_id else "local"
+    notes = []
+    for _hit in rows:
+        ts = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        row = {"schema": "rocqwash.repair-plan/1", "ts": ts, "run": run_key,
+               "class": "R15", "action": "plan", "ok": False, "drifted": [],
+               "verdict": "", "note": ""}
+        if not os.path.isfile(os.path.join(repo_root, PIN_REPAIR_EXECUTOR)):
+            row["action"] = "executor-absent"
+            row["note"] = ("pin-repair executor not present at %s; "
+                           "plan leg cannot run, escalated"
+                           % PIN_REPAIR_EXECUTOR)
+            note = "repair-plan: executor-absent | %s" % row["note"]
+        else:
+            try:
+                proc = subprocess.run(
+                    [sys.executable, "-I", PIN_REPAIR_EXECUTOR, "--plan"],
+                    cwd=repo_root, capture_output=True, timeout=120)
+            except subprocess.TimeoutExpired:
+                row["note"] = ("pin-repair --plan timed out after 120s; "
+                               "escalating")
+            except OSError as exc:
+                row["note"] = ("pin-repair --plan spawn failed: %r; "
+                               "escalating" % exc)
+            else:
+                stdout_tail = ((proc.stdout or b"").decode(
+                    "utf-8", "replace").strip()[-300:])
+                stderr_tail = ((proc.stderr or b"").decode(
+                    "utf-8", "replace").strip()[-300:])
+                parsed = None
+                if proc.returncode == 0 and stdout_tail:
+                    try:
+                        parsed = json.loads(stdout_tail.splitlines()[-1])
+                    except ValueError:
+                        parsed = None
+                if isinstance(parsed, dict):
+                    row["ok"] = bool(parsed.get("ok"))
+                    row["drifted"] = parsed.get("drifted") or []
+                    verdict = parsed.get("verdict", parsed.get("action", ""))
+                    row["verdict"] = verdict if isinstance(verdict, str) \
+                        else json.dumps(verdict)
+                else:
+                    row["verdict"] = "unparseable"
+                if proc.returncode != 0:
+                    row["note"] = ("pin-repair --plan exit %d; stdout=%s; "
+                                   "stderr=%s"
+                                   % (proc.returncode, stdout_tail,
+                                      stderr_tail))
+                elif not isinstance(parsed, dict):
+                    row["note"] = ("pin-repair --plan stdout not one JSON "
+                                   "line: %s" % stdout_tail)
+                else:
+                    row["note"] = ("pin-repair --plan exit 0 ok=%s "
+                                   "drifted=%d" % (row["ok"],
+                                                   len(row["drifted"])))
+            note = ("repair-plan: ok=%s verdict=%s drifted=%d | %s"
+                    % (row["ok"], row["verdict"], len(row["drifted"]),
+                       row["note"]))
+        try:
+            with open(os.path.join(repo_root, REPAIR_PLAN_LEDGER), "a",
+                      encoding="utf-8", newline="\n") as fh:
+                fh.write(json.dumps(row, ensure_ascii=True) + "\n")
+        except OSError as exc:
+            row["ok"] = False
+            row["note"] = ("repair-plan ledger append failed (%s): %r"
+                           % (REPAIR_PLAN_LEDGER, exc))
+            note = "repair-plan: ledger-append-failed | %r" % exc
+            log(note)
+        notes.append(note)
+    return "; ".join(notes)
 
 
 def heal_leg(args, token, repo, run, family):
@@ -444,7 +557,7 @@ def automerge_leg(token, repo):
                 mine.append(r)
         if not mine:
             # The PR head branch may be deleted while the PR stays open -
-            # a dispatch has no ref to target.
+            # a workflow_dispatch run has no ref to target.
             # Restore the head ref from the PR head commit first (the
             # commit still exists; the deletion is ref-level only).
             _, berr = gh_api(token, "/repos/%s/branches/%s" % (repo, ref))
@@ -474,7 +587,8 @@ def automerge_leg(token, repo):
             out.append("#%s hold (head CI running)" % num)
             continue
         # Gate on the hosted faces: the local self-hosted face is main-only
-        # evidence and must not gate a PR merge (a branch dispatch from a
+        # evidence and must not gate a PR merge (a workflow_dispatch run
+        # from a
         # ref whose ci.yml predates the main_only gate still runs it, and
         # its bridge-resolved checkout cannot serve non-main refs).
         hosted_seen, hosted_ok = False, True
@@ -511,7 +625,7 @@ def automerge_leg(token, repo):
         # Post-merge judge: the merge push carried GITHUB_TOKEN, so GitHub
         # suppresses the push event and the merge commit gets NO CI
         # (verified live, e73a34a: zero runs). workflow_dispatch
-        # is the documented suppression exception - dispatch ci.yml at the
+        # is the documented suppression exception - trigger ci.yml at the
         # base branch so the merge commit is judged on its own.
         _, perr = gh_api(token, "/repos/%s/actions/workflows/%s/dispatches"
                          % (repo, WF_FILE), method="POST",
@@ -819,7 +933,7 @@ def main():
         files = [("reconcile-report.txt", report)]
         # Weekly branch census (read-only): stateless gate on the workflow
         # run number - 336 half-hour passes per week - with a
-        # ROCWASH_BRANCH_CENSUS=1 override for dispatch tests. Never
+        # ROCWASH_BRANCH_CENSUS=1 override for on-demand test runs. Never
         # deletes; the report is the desk's deletion-order input.
         forced = os.environ.get("ROCWASH_BRANCH_CENSUS", "").strip() == "1"
         num = int(os.environ.get("GITHUB_RUN_NUMBER", "0") or 0)

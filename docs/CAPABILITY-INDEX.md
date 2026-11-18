@@ -1,4 +1,4 @@
-# rocqwash CAPABILITY-INDEX（工具能力契约面 · Tool Capability Contract Surface）
+# rocqwash CAPABILITY-INDEX (Tool Capability Contract Surface)
 
 Purpose.  The single contract surface for rocqwash tool capability: one entry
   per tool, transcribed line-by-line from the same-batch word-face census, so
@@ -22,7 +22,7 @@ Exit-codes.  None of its own; exit-code semantics are runtime evidence not
 
 Version anchor: `d6d0ec75747edee957e334d1ff9391707cb39f21`, the engine-body batch integration commit, recorded here as the construction-base annotation; measured locally on November 15, 2026 (`git rev-parse HEAD` on the working tree). The census was not re-run: the §1/§2 transcribed lines remain the census-time word-face facts cast at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`; the census re-scan awaits the next work stream.
 
-## 0. 定位与读法 · Positioning and How to Read
+## 0. Positioning and How to Read
 
 
 **Positioning**: this file is the single contract surface for rocqwash tool capability. One entry per tool, transcribed line-by-line from the same-batch word-face census; callers (workflow tickets, automation tasks, a future MCP layer) invoke straight from the entry line instead of hand-writing paths and arguments. Each entry carries seven fields: path, one-line purpose, invocation form (restored from the argparse word face), a copyable example, imports, network face, and the SKIP face.
@@ -36,7 +36,7 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 - Exit-code semantics are runtime evidence not measured at cast time (census boundary §1); the light-probe ledger in §4 records rc and output face for the 8 measured items; the remaining items await the later verification step.
 - `cpu_guard.sh` (4,053 B) is the only non-`.py` file in the directory, outside the census scope, recorded as metadata; its contract face is not in this index.
 
-## 1. 总表 · Summary Table
+## 1. Summary Table
 
 | File | Bytes | Lines | Doc | Arg | Pos/Opt | Network face (word) | Env markers | Basis |
 |---|---|---|---|---|---|---|---|---|
@@ -47,10 +47,12 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | ai_flavor_apply.py | 54,124 | 1,299 | Y | Y | 0/7 | urllib.request | env | arg |
 | auto_round.py | 84,108 | 1,898 | Y | Y | 2/22 | zero | none | arg |
 | axiom_guard.py | 22,281 | 504 | Y | Y | 0/7 | zero | env (ROCWASH_ROCQ, ROCWASH_COQCHK) | arg |
+| b_gate_audit.py | pending | pending | Y | Y | 0/1 | zero | none | arg |
 | i18n_pipeline.py | 80,939 | 1,939 | Y | Y | 0/4 | zero | env | arg |
 | i18n_translate.py | 45,371 | 1,301 | Y | Y | 0/13 | urllib.request | env | arg |
 | i18n_verify.py | 47,407 | 1,030 | Y | Y | 0/13 | zero | none | arg |
 | jargon_apply.py | 41,610 | 967 | Y | Y | 0/10 | zero | none | arg |
+| learning_feedback.py | pending | pending | Y | Y | 0/1 | zero | none | arg |
 | termbase.py | 22,477 | 520 | Y | Y | 0/5 | zero | none | arg |
 | baseline_diff.py | 41,200 | 800 | Y | Y | 2/2 | zero | none | arg |
 | bus_feeder.py | 33,027 | 749 | Y | Y | 1/4 | zero | none | arg |
@@ -66,6 +68,7 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 | net_probe.py | 19,076 | 412 | Y | Y | 0/7 | socket, urllib.request | none (network is its subject) | arg |
 | netname_normalize.py | 15,059 | 332 | Y | Y | 0/4 | zero | none | arg |
 | norm_lint.py | 32,256 | 823 | Y | Y | 0/8 | zero | none | arg |
+| pin_repair.py | pending | pending | Y | Y | 0/4 | zero | none | arg |
 | pushci.py | 108,070 | 2,134 | Y | Y | 0/21 | urllib.request, git: push+ls-remote | env, coq(11) | arg |
 | red_dispatch.py | 48,353 | 935 | Y | Y | 0/10 | zero | coq(5), thermal(1) | arg |
 | registry_audit.py | 51,476 | 1,054 | Y | Y | 0/11 | zero | coq(12) | arg |
@@ -84,9 +87,9 @@ When invoking from an entry, record the HEAD sha used as the version anchor; aft
 
 Legend: Doc = module docstring present; Arg = argparse import present; Pos/Opt = positional/optional flag counts; Network face = three-channel word-face reading (zero = no hit in any channel); Env markers = marker families with word-face hit counts (ocaml = ocamlc/ocamldep/opam; coq = coqc/coqtop/coqchk/coqdep/rocq family; thermal = cpu_guard/_THERMAL family; runner = self-hosted/actions-runner; win = Windows guard wording; env = ROCWASH_* environment variables; dyld = macOS dyld tooling face; lean = lake/mathlib/Lean/elan family). Env markers are word-face hits, not proof of runtime requirements (boundary in §3.1). Basis = invocation reconstruction source (arg = argparse; usage = usage string).
 
-## 2. 逐件契约 · Per-Item Contract Lines
+## 2. Per-Item Contract Lines
 
-27 items in filename order; each entry transcribes the census verbatim; the only added line is the Example line.
+43 items in filename order; each entry transcribes the census verbatim; the only added line is the Example line.
 
 Integration note (the engine-body ticket, at integration): the seven engine-body entries are inserted in filename order, transcribed from docs/engine-body-capabilities.md (the lane-8 draft) and re-verified live by the integration agent per file (--selftest); the Status line is this batch's added line (declared single-line addition); the section 1 rows carry live measurements on the integration tree; the aggregates below stay the census-time word-face facts.
 
@@ -99,6 +102,8 @@ Integration note (the evolution-dashboard ticket, at integration): the evolution
 Integration note (the bus-feeder ticket, at integration): the bus_feeder entry below is inserted in filename order (between baseline_diff and chain_graph); the purpose, invocation, and example lines are transcribed from this tree's live `py -I -B tools/bus_feeder.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on this tree; the Status line is this batch's added line (declared single-line addition). The `cw.sh bus-feeder` route (header table / usage / hint_for / case, all four places) lands with this increment, together with the `DEFAULT_HELP_CAP` bump 48 to 49 under the same registered-tool precedent (under concurrent writers, the 47 to 48 bump was landed first by the evolution-dashboard lane). `tests/t_bus_feeder_shape.py` (run directly, deliberately not rostered in tests/run_tests.sh: the roster count is coupled to the README count lines, whose rewrite belongs to the work stream holding that authorization) and `docs/symbiosis_sop.md` section 6 (the feed-face contract increment) hang their contracts on this entry. The recognition-set divergence is on record: the `tools/gap_cluster.py` category token escape `\u5748` (U+5748) differs in code point from the token its own producer emits (U+5751, `tools/vacgen.py` line 2470) and reads only the `category` key spelling, so the feeder pins U+5751 itself and reads both key spellings (the divergence is documented in that tool's extended contract comment and in the SOP section boundary line); the gap_cluster body is outside this ticket's write face.
 
 Integration note (the substrate compile-loop and axiom-guard ticket, at integration): the axiom_guard entry below is inserted in filename order (between auto_round and i18n_pipeline); the purpose, invocation, and example lines are transcribed from this tree's live `py -B tools/axiom_guard.py --help` word face and the module docstring (not a census product; this entry is transcribed from the live word face); the section 1 row carries live measurements on this tree; the Status line is this batch's added line (declared single-line addition). The `cw.sh axiom-guard` route (header table / usage / hint_for / case, all four places) lands with this increment, together with the `DEFAULT_HELP_CAP` bump 49 to 50 under the same registered-tool precedent. This tool is the package's axiom guard (the owner of the repo's most serious misalignment named in audit report section 3.2): compile tri-classification (compile-ok / compile-broken debt register / skip-no-toolchain) plus two-level detection on compile-ok files (light face = per-theorem Print Assumptions census; heavy face = coqchk -o kernel recheck as the authority; the token-quarantine face is not adopted per the gate5 precedent: quarantine only, never a verdict). `ROCWASH_ROCQ` / `ROCWASH_COQCHK` environment gating (unconfigured = rc 111 honest skip). Write faces: the caller-named `--out` report volume plus a private temp workdir (the .vo output face is temp-only; the repository tree gains zero bytes); the byte-identical double run is measured and on record. Two destructive-matrix rows (this tool's compile-leg write face and the cure_applier compile-leg write face) hang on this entry as `tests/test_destructive_matrix.py` additions of the same batch.
+
+Integration note (the recursive three-gap batch, at cast): the b_gate_audit, learning_feedback, and pin_repair entries below are inserted in filename order at their alphabetical slots (b_gate_audit between ai_flavor_apply and baseline_diff; learning_feedback between jargon_apply and ledger_sync; pin_repair between norm_lint and pushci); the three tools are this batch's parallel deliverables and the entries are cast from the batch contract faces under the contract-first rule (the entry text rides the contract, not a live tool face, and does not wait for the tool lanes); each entry carries a Status line as this batch's added line (declared single-line addition). The section 1 rows carry the same contract-face declarations (Doc/Arg/Pos-Opt/Network face/Env markers/Basis from the contract-mandated faces); the Bytes and Lines cells stay `pending` until the tool lanes' own integration increments carry the on-disk measurements. The section header count line above is advanced to the live entry count per the live-count rule; the census-scope count (27 `.py` files at census time), the aggregates at the end of this section, and the section 5 fidelity line stay the records of their own cast times and are not rewritten.
 
 ### tools/_abl1_4b_compile.py
 - Purpose: Internal helper: incremental OCaml compilation of an extracted module directory in dependency fixpoint order (interface files first), optionally linking and running a driver; exits loudly if `ocamlc`/`ocamldep` are absent from PATH (`_abl1_4b_compile.py:12-20`).
@@ -139,8 +144,17 @@ Integration note (the substrate compile-loop and axiom-guard ticket, at integrat
 - Invocation: `python -I tools/ai_flavor_apply.py --file <p> [--json <out>] [--emit-handoff <out.jsonl> | --apply-handoff <in.jsonl> --state <p>] [--provider handoff|http]`
 - Example: `python -I tools/ai_flavor_apply.py --file docs/report.md --emit-handoff out/handoff.jsonl --state out/state.json`
 - Imports: argparse, importlib.util, io, json, os, re, sys, tempfile, time, urllib.request + in-repo `tools/ai_flavor.py` (same directory)
-- Network face: handoff face zero; http leg non-zero (default-deny: `ROCQWASH_MCP_ALLOW_NET=1` plus `ROCQWASH_LLM_ENDPOINT` / `ROCQWASH_LLM_MODEL` / `ROCQWASH_LLM_KEY` — missing any of the three refuses loudly and names the missing item; each call writes a NETRED ledger line including failures; credential values never hit disk or logs)
+- Network face: handoff face zero; http leg non-zero (default-deny: `ROCQWASH_MCP_ALLOW_NET=1` plus `ROCQWASH_LLM_ENDPOINT` / `ROCQWASH_LLM_MODEL` / `ROCQWASH_LLM_KEY`: missing any of the three refuses loudly and names the missing item; each call writes a NETRED ledger line including failures; credential values never hit disk or logs)
 - SKIP face: the 10 zh faces are disposition=human, never machine-written; handoff ingest refuses fail-loud (`rejected[]` reported as-is); without model configuration the handoff form is fully functional (the model site plays the executing-agent role)
+
+### tools/b_gate_audit.py
+- Status: [contracted](B-gate audit deliverable, cast from the batch contract face under the contract-first parallel rule; the [live] marker rides the tool lane's own integration increment)
+- Purpose: B-level generalization threshold audit: per class, counts the instances (admissions occurrences in the round ledger, deduplicated within one round) and the distinct admitting rounds, and issues a readiness verdict against the threshold of 3 instances with at least 1 admitted round each; a class is ready when instances >= 3 and rounds >= 1; writes `docs/b-gate-audit.json` (schema `rocqwash.b-gate-audit/1`) carrying the threshold, the per-class readings (`class`/`instances`/`rounds`/`ready`/`gap`), the ready-class list, `verdict`, and `remaining_to_b`; an empty record reads verdict `not-ready` with remaining 3, reported as data and never padded.
+- Invocation: `python -I tools/b_gate_audit.py [--selftest]` (the default run reads the round ledger, the round state, and the taxonomy word table, and writes the audit file plus a stdout summary)
+- Example: `python -I tools/b_gate_audit.py --selftest`
+- Imports: standard library only per the contract face (argparse CLI, JSON reading, tempfile fixtures); the itemized import list rides the tool lane's own integration increment
+- Network face: zero (no network by design per the contract face)
+- SKIP face: exit 0 = readings are data (a `not-ready` verdict on empty or below-threshold classes is a data state, never padded); a bad ledger row or a missing record lands in an `error` field and the stdout summary fails loud, continuing rather than silently skipping; the only write face is `docs/b-gate-audit.json`; `--selftest` runs four offline vectors on tempfile fixtures (a threshold-passing class, a single-instance class, an empty record, bad-row tolerance), zero network, zero touches of the real records
 
 ### tools/baseline_diff.py
 - Purpose: Compares two baseline files and reports additions and removals (JSON and markdown output).
@@ -236,7 +250,7 @@ Integration note (the substrate compile-loop and axiom-guard ticket, at integrat
 
 ### tools/axiom_guard.py
 - Status: [live](substrate compile-loop and axiom-guard ticket deliverable, integrated, added by this batch)
-- Purpose: Repo-wide axiom guard: compiles and tri-classifies every .v file under the repo (23 files at the reference HEAD, .git excluded) — compile-ok / compile-broken into the debt register with error tails / skip-no-toolchain — and judges every compile-ok file at two levels: the light face, a per-theorem Print Assumptions census (statement names extracted through a comment/string masking scanner, one batched census compile attributed in order, per-statement fallback when the marker count mismatches), and the heavy face, a coqchk -o kernel recheck whose CONTEXT SUMMARY Axioms section is the only judged section (stdlib index-relaxation sections are never judged) as the authoritative verdict. The token-quarantine face is not adopted (the gate5 precedent: quarantine only, never a verdict). The repo standard is Closed zero axioms with an empty default whitelist (`--allow-axiom` repeats); a light-face axiom fails the file (pre-screen), a heavy-face axiom or an unjudgeable heavy face fails the file (unjudgeable is not green); compile-broken files are debt, not red. Compiles run in a private temp workdir (the .vo output face is temp-only; the repository tree gains zero bytes; the source directory is mapped -Q read-only so built sibling worlds resolve); the report volume is `axiom-guard-report.json` under the caller-named `--out` (sorted inputs, no wall clock, byte-identical double run).
+- Purpose: Repo-wide axiom guard: compiles and tri-classifies every .v file under the repo (23 files at the reference HEAD, .git excluded): compile-ok / compile-broken into the debt register with error tails / skip-no-toolchain, and judges every compile-ok file at two levels: the light face, a per-theorem Print Assumptions census (statement names extracted through a comment/string masking scanner, one batched census compile attributed in order, per-statement fallback when the marker count mismatches), and the heavy face, a coqchk -o kernel recheck whose CONTEXT SUMMARY Axioms section is the only judged section (stdlib index-relaxation sections are never judged) as the authoritative verdict. The token-quarantine face is not adopted (the gate5 precedent: quarantine only, never a verdict). The repo standard is Closed zero axioms with an empty default whitelist (`--allow-axiom` repeats); a light-face axiom fails the file (pre-screen), a heavy-face axiom or an unjudgeable heavy face fails the file (unjudgeable is not green); compile-broken files are debt, not red. Compiles run in a private temp workdir (the .vo output face is temp-only; the repository tree gains zero bytes; the source directory is mapped -Q read-only so built sibling worlds resolve); the report volume is `axiom-guard-report.json` under the caller-named `--out` (sorted inputs, no wall clock, byte-identical double run).
 - Invocation: `python3 tools/axiom_guard.py --repo <dir> [--out <dir>] [--rocq <bin>] [--coqchk <bin>] [--allow-axiom <name>]... [--timeout <sec>] [--keep]`
 - Example: `ROCWASH_ROCQ=/path/rocq ROCWASH_COQCHK=/path/coqchk python3 tools/axiom_guard.py --repo . --out evid/t0-2`
 - Imports: argparse, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile (all standard library) + external binaries rocq / coqchk (provided by flag or env; missing either = skip, never simulated)
@@ -279,6 +293,15 @@ Integration note (the substrate compile-loop and axiom-guard ticket, at integrat
 - Network face: zero
 - SKIP face: zero writes by default; `rewrite_or_delete` rows are disposition=human; a non-zero rescan residue exits non-zero (verification failing); idempotent (a second apply reports zero would-fix)
 
+### tools/learning_feedback.py
+- Status: [contracted](learning-feedback deliverable, cast from the batch contract face under the contract-first parallel rule; the [live] marker rides the tool lane's own integration increment)
+- Purpose: Scheduling feedback edge: reads the three standing accounts (`docs/round-ledger.jsonl`, `docs/round-state.json`, `docs/exp-ledger.jsonl`) and computes the scheduling-readable feedback file `docs/scheduling-feedback.json` (schema `rocqwash.scheduling-feedback/1`): the round totals with the auto and human-approved split, the approval rate over all rounds (human-approved rounds stay in the denominator), the per-class gear and confidence readings, and the four-state repair outcome tally (repaired / escalated / watch-only-guard-correct, with rows that fit no state honestly counted as `unrecorded`); the feedback edge is declared open: the approval rate becomes readable while scheduling does not yet consume it (declared blank).
+- Invocation: `python -I tools/learning_feedback.py [--selftest]` (the default run reads the three accounts and writes the feedback file plus a stdout summary)
+- Example: `python -I tools/learning_feedback.py --selftest`
+- Imports: standard library only per the contract face (argparse CLI, JSONL reading, tempfile fixtures); the itemized import list rides the tool lane's own integration increment
+- Network face: zero (no network by design per the contract face)
+- SKIP face: exit 0 = readings are data (a missing account or a damaged row lands in an `error` field, the stdout summary fails loud, and the run continues rather than silently skipping; `repair_action_rate` reads null on a zero denominator, reported as declared, never padded); the only write face is `docs/scheduling-feedback.json`; `--selftest` runs four vectors on tempfile fixtures (one auto plus one human round, bad-row tolerance, an empty account, all-unrecorded outcomes), zero network, zero touches of the real accounts
+
 ### tools/ledger_sync.py
 - Purpose: TSV merge synchronizer between the probe ledger and the status ledger (policy parameterized).
 - Invocation: `python tools/ledger_sync.py [--probe] [--ledger] [--out] [--report] [--policy]`
@@ -311,6 +334,15 @@ Integration note (the substrate compile-loop and axiom-guard ticket, at integrat
 - Imports: argparse, fnmatch, io, json, os, re, shutil, sys, tempfile, tokenize
 - Network face: zero
 - SKIP face: no special environment word-face markers
+
+### tools/pin_repair.py
+- Status: [contracted](pin-repair deliverable, cast from the batch contract face under the contract-first parallel rule; the [live] marker rides the tool lane's own integration increment)
+- Purpose: Pin-drift repair executor for the R15 class: reads the seed JSON's `provenance.sources` array and md5-checks each pinned source, runs the sync tool's zero-write plan (`python -I tools/jargon_map_sync.py`), and proceeds only on the `VERDICT IN-SYNC` reading (any other verdict means content retagging, which belongs to human adjudication: exit 3 with the raw verdict reported); `--plan` reports the drifted sources (path, pinned md5, current md5) with zero writes; `--apply` re-signs the seed's md5 fields from the source files' current bytes (JSON key order and 2-space indent preserved, only md5 values change) and re-runs `python -I tests/t_engines_seeds.py` as the local verification gate, restoring the seed from the pre-apply byte snapshot (exit 4, fail-loud) when verification is not green.
+- Invocation: `python -I tools/pin_repair.py --selftest | --plan | --apply [--seed <path>]` (`--seed` defaults to `seeds/jargon/jargon-map.json`)
+- Example: `python -I tools/pin_repair.py --plan`
+- Imports: hashlib, io, json, subprocess named by the contract face (standard library only); the itemized import list rides the tool lane's own integration increment
+- Network face: zero (the subprocesses are the local sync tool and the local seeds suite; no network by design)
+- SKIP face: exit 0 = plan reported or apply verified green (`action:"none"` when nothing drifted, `action:"plan"` on the report face, `verify:"seeds-suite-green"` after a green apply); 3 = non-IN-SYNC plan verdict (content retagging needs human adjudication, reported with the raw verdict, never machine-applied); 4 = post-apply verification not green, seed restored from the pre-apply byte snapshot, fail-loud; stdout carries one JSON result line, the human-readable process goes to stderr, and no credential value is printed; `--selftest` runs four vectors on tempfile fixtures (in-sync, drifted, absent source, non-IN-SYNC), zero network, zero touches of the real seed
 
 ### tools/pushci.py
 - Purpose: One-shot push-then-CI orchestrator: push, ls-remote confirmation, CI watching, verdict reading, and heal rounds (steps, heal cap, and watch cadence parameterized).
@@ -436,24 +468,24 @@ Integration note (the substrate compile-loop and axiom-guard ticket, at integrat
 - Network face: zero
 - SKIP face: the `ROCWASH_HEADER_MAP` environment variable, coq family word face (6)
 
-### 第 2 节汇总观察 · Aggregates for this section
+### Aggregates for this section
 
 Aggregates transcribed from census §4 (each line is a word-face fact at census time):
 
 - Argparse face: 25/27 files carry an argparse import and a flag face; 2 files (`_abl1_4b_compile.py`, `_http_backoff.py`) have no argparse, their invocation form restored from usage strings (the former parses `sys.argv` positional arguments by hand, the latter documents `--selftest` on its doc face).
-- Subcommand face: zero `add_parser` word-face hits across all 27 files (per-file AST scan) — all are flat flag forms with no subcommand routing face.
+- Subcommand face: zero `add_parser` word-face hits across all 27 files (per-file AST scan): all are flat flag forms with no subcommand routing face.
 - Network face: 22/27 files with zero hits across the three word-face channels; 5 non-zero (ci_triage, cw_sentinel, net_probe, pushci carry transport-class imports; contrib_intake carries the git `clone` subprocess token face).
 - Special-environment face: 18/27 files hit at least one marker family; 9 carry no marker at all (baseline_diff, chain_graph, doc_lint, ledger_sync, netname_normalize, norm_lint, render_events, _http_backoff, plus net_probe which needs only a network window).
 - Docstring face: 27/27 files carry a file-header docstring; the verbatim text is recorded in the JSON.
 - Dependency face: all 27 files import standard-library or in-repo modules only, zero third-party dependencies; two in-repo cross-directory references (`evolve.py` to `certify/frozen8.py`, `_gen_fin_mac.py` to `names/mac_stmt_names.py`, both via sys.path injection) and one in-repo same-directory shared helper (`tools/_http_backoff.py`, imported by the three network tools).
 - `--selftest` token face: 24/27 files carry the `--selftest` word face in source; norm_lint and red_dispatch carry an argparse flag position, net_probe dispatches manually via argv (see the §2 note), and the flag positions of the rest await the light-probe check.
-- Internal-item convention: the 3 underscore-prefixed files (`_abl1_4b_compile.py`, `_gen_fin_mac.py`, `_http_backoff.py`) self-describe as internal helper/shared items, consistent with their names.
+- Internal-item convention: the 3 files whose names begin with `_` (`_abl1_4b_compile.py`, `_gen_fin_mac.py`, `_http_backoff.py`) self-describe as internal helper/shared items, consistent with their names.
 - File size span: 3,451 B to 122,111 B; line counts 80 to 2,625.
 - `vacgen.py` is a newly added file under tools/ (present on disk at census time; the earlier external account was a 23-tool snapshot; this census tabulates the current 27 files item by item, compatible with the 28/25 bookkeeping in section 6 of the reconciliation receipt: 28 = 27 py + cpu_guard.sh).
 
-## 3. 尾 · Tail
+## 3. Tail
 
-### 3.1 负发现边界（四要素） · Negative-Finding Boundaries (four elements)
+### 3.1 Negative-Finding Boundaries (four elements)
 
 Each item below is a negative finding of that scan, not an absolute claim (transcribed from census §5).
 
@@ -485,7 +517,7 @@ Re-check condition: re-check when the light-probe step spot-checks flag semantic
 4. Aliases not exhausted: other environment-dependency forms (containers, specific shells, PATH layouts) not systematically surveyed.
 Re-check condition: verify item by item at the light-probe step and at later real invocations.
 
-### 3.2 零网络声明 · Zero-Network Declaration
+### 3.2 Zero-Network Declaration
 
 
 **Cast face (this file itself)**: this file was cast with zero network. Casting actions were limited to: word-face reads of the pinned clone (the census AST face, the AST flag-shape face, read-only `git show --stat` and `grep` commands) and 8 local light probes (`--help` on 7 tools, `--selftest` on 1, local processes, no network); no network call occurred during casting.
@@ -493,21 +525,21 @@ Re-check condition: verify item by item at the light-probe step and at later rea
 
 **Per-item face (network reading of the 27 tools)**: the 22 zero-network readings are negative findings of the three-channel word-face scan, not absolute runtime claims; the four elements are in §3.1 item 5.2. For the five tools with a non-zero network face (ci_triage, cw_sentinel, net_probe, pushci, contrib_intake), callers must assess the network window and remote access rights against each SKIP face before invoking. The re-check conditions of §3.1 item 5.2 and the light-probe ledger (§4) apply together; re-scan after tool versions advance.
 
-### 3.3 vacgen 段（落岸注记） · vacgen Section (integration note)
+### 3.3 vacgen Section (integration note)
 
 - **Landing facts (first-hand measured)**: `tools/vacgen.py` landed on November 13, 2026 via graft commit `5829f6d` (the version anchor of this file). `git show --stat` measured four files: `tools/vacgen.py` 2,625 lines, `docs/vacgen_sop.md` 384 lines, `tests/t_vacgen_shape.py` 51 lines, `更新账.md` +1 line. Landing-package note: RQW02.
 - **Two faces**: a zero-compile face (skeleton casting runs without a Lean environment) plus a compile-verification leg (needs a Lean toolchain, a design SKIP face); the three-channel word faces (lean/lake/mathlib/elan, 64 hits) and the SKIP face are transcribed in the §2 vacgen entry. Detailed procedure = `docs/vacgen_sop.md`; shape regression selftest = `tests/t_vacgen_shape.py`.
 - **Route face (re-measured November 14, 2026, current)**: the cw.sh vacgen branch has landed (commit `8e04cc6`, all four places present: header table / usage / hint_for / case; `grep -c vacgen cw.sh` = 6 measured); both `bash cw.sh vacgen ...` and the direct `python tools/vacgen.py ...` invocation forms are valid.
 - **CI anchor**: the run at this head, #43421710372, concluded success (reconciliation receipt channel N3, measured November 13, 2026; the three prior runs at earlier heads were all success).
 
-### 3.4 记录 · Provenance
+### 3.4 Provenance
 
 - Scan tree: pinned clone `D:/ComplexAnalysis/rocqwash` at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` (measured locally via `git rev-parse HEAD`, November 14, 2026; working tree porcelain 0 lines).
 - Per-item source: `census.md` plus `census-tools.json` (with per-file sha256 anchors; builder `census_tools_build.py` in the same directory, stdlib-only, `python -I`).
 - Example flag-shape basis: `flag_shape_probe.py` (AST-level read-only pass; no tool executed or imported) produced `flag-shape.json`; five counter-intuitive flags (`--offline`, `--stable-window`, `--suite-now`, `--fix-plan`, `--once`) were additionally spot-checked at source-line level, agreeing with the AST reading.
 - Cast time: November 14, 2026.
 
-## 4. 轻探账（≤8 件） · Light-Probe Ledger
+## 4. Light-Probe Ledger
 
 Measured November 14, 2026; command form `python -I tools/<name>.py --help` (run from the pinned clone root); rc and output face recorded per item. Light tools only; the five network-face tools and special-environment/heavy tools are marked SKIP and not probed, awaiting the later verification pass.
 
@@ -528,7 +560,7 @@ Probe-side details (measured `--help` face, absent from the census word face): `
 
 SKIP (not probed by this agent, awaiting the later verification pass): the five network-face tools ci_triage / cw_sentinel / net_probe / pushci / contrib_intake (their runs need a network window or remote access); special-environment/heavy tools _abl1_4b_compile (usage face; a bare call triggers the compile face), _gen_fin_mac, cw_doctor, evolve, red_dispatch, registry_audit, registry_fix, registry_regen, registry_union, select_audit, toolchain_dyld_doctor, unclog, vacgen, wash_shape. The `net_probe` `--selftest` divergence (§2 note) also awaits that step.
 
-### 4.1 Follow-up probes · 补充探活（后续核验步骤产出）
+### 4.1 Follow-up probes
 
 Measured November 14, 2026 against HEAD `8e04cc6f9b6ee118e8e2729e9ae3edd6a163bf79`. The census anchor above stays the cast-time anchor; this block extends the light-probe ledger without re-casting the census, and the caller duty at §0 governs re-checks after HEAD advances. Uncommitted worktree lanes were held by a concurrent integration during measurement (recorded, not attributed).
 
@@ -537,7 +569,7 @@ Measured November 14, 2026 against HEAD `8e04cc6f9b6ee118e8e2729e9ae3edd6a163bf7
 - The §2 registry pair aimed at this tool repo: rc=9 fail-loud REGISTERED (git show main:order.txt fatal: path does not exist): `git ls-tree main` carries no order.txt and no _CoqProject anywhere in the tree; the registry signal stays pointed at the serviced books only.
 - Suite face, bash form: 51 pass / 12 failing / 4 skip / 67 total, rc=1; the 12 failing cases are lane-level and tool faces registered in the cycle accounts (Windows-lane environment faces for dyld/taskpolicy, the wash_shape report fd face, the unclog cure md5 text-mode face, the red_dispatch selftest vector face, the registry_audit reanchor-order face, and the probe/verify faces owned by their own lanes). The ask's literal interpreter form against a `.sh` file is a category error (Python parses the script); the bash form is the executable face.
 
-## 5. 语域自查断言 · Register Self-Check Assertion
+## 5. Register Self-Check Assertion
 
 The authored text of this file was checked with the instrument `ai_flavor_selfcheck.sh` (36 wording faces plus the em-dash U+2014 battery; register source: glossary §4.6/§5), target = this whole file. Measured output is appended below at closing time.
 
@@ -559,7 +591,7 @@ Execution: `sh ai_flavor_selfcheck.sh CAPABILITY-INDEX.md`, exit 0. Instrument c
 
 Transcription-fidelity checks (closing time): census §3 five-field lines 135 = 135, diffs=0; negative-finding four-element rows 16 = 16, diffs=0; entry count / example lines / SKIP face 27 = 27 = 27; all 7 light-probe `--help` flag faces present (baseline_diff positional arguments render as metavars).
 
-## 6. 锚滞后登记 · Anchor-lag register (growth cycle 3)
+## 6. Anchor-lag register (growth cycle 3)
 
 Register note (November 15, 2026, work stream-2 annotation closeout): the version anchor at the top advanced to `d6d0ec7` (the engine-body batch integration commit) as a construction-base annotation. The census cast stays pinned at `5829f6d`; no census re-scan ran (the census re-scan awaits the next work stream). The cycle-3 entry below is kept as written for its own time.
 

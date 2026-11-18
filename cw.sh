@@ -157,6 +157,12 @@
 #               cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest
 #   selfevolve-round  one deterministic mechanical round, cron face (census jargon_apply --plan, then apply, then verify py_compile/bash -n hard gates plus norm_lint/doc_lint advisory, then auto_round commit, then push, then route the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue nonzero = fail-loud, no commit) -> tools/selfevolve_round.py
 #               cw.sh selfevolve-round [--dry-run]
+#   pin-repair  provenance-pin drift repair for the jargon seed map, triage row R15 auto-repair executor (re-signs drifted provenance.sources md5 pins behind the sync tool's zero-write plan IN-SYNC verdict; --plan writes nothing, --apply touches only md5 values and re-runs the seeds suite, red verify rolls back to the pre-apply bytes; not-IN-SYNC exits without touching the seed) -> tools/pin_repair.py
+#               cw.sh pin-repair --selftest | --plan | --apply [--seed P]
+#   learning-feedback  scheduling feedback face over the three standing ledgers (round ledger, round state, experience ledger read-only; casts schema rocqwash.scheduling-feedback/1 into docs/scheduling-feedback.json: the auto versus human-approved round split, the approval rate, the per-class breakdown, and the four-state repair outcome tally; missing or corrupt inputs land in the errors field, never guessed) -> tools/learning_feedback.py
+#               cw.sh learning-feedback [--selftest]
+#   b-gate  B-level generalization threshold audit over the round records (3 instances, each grounded in at least 1 executed round; per-class instance and round counts, a per-class readiness verdict, and an explicit gap list into docs/b-gate-audit.json, schema rocqwash.b-gate-audit/1; counts are measured from the records, never inflated) -> tools/b_gate_audit.py
+#               cw.sh b-gate [--selftest]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # Routing contract:
@@ -328,6 +334,12 @@ Tools:
               cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest
   selfevolve-round  one deterministic mechanical round, cron face (census jargon_apply --plan, then apply, then verify py_compile/bash -n hard gates plus norm_lint/doc_lint advisory, then auto_round commit, then push, then route the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue nonzero = fail-loud, no commit) -> tools/selfevolve_round.py
               cw.sh selfevolve-round [--dry-run]
+  pin-repair  provenance-pin drift repair for the jargon seed map, triage row R15 auto-repair executor (re-signs drifted provenance.sources md5 pins behind the sync tool's zero-write plan IN-SYNC verdict; --plan writes nothing, --apply touches only md5 values and re-runs the seeds suite, red verify rolls back to the pre-apply bytes; not-IN-SYNC exits without touching the seed) -> tools/pin_repair.py
+              cw.sh pin-repair --selftest | --plan | --apply [--seed P]
+  learning-feedback  scheduling feedback face over the three standing ledgers (round ledger, round state, experience ledger read-only; casts schema rocqwash.scheduling-feedback/1 into docs/scheduling-feedback.json: the auto versus human-approved round split, the approval rate, the per-class breakdown, and the four-state repair outcome tally; missing or corrupt inputs land in the errors field, never guessed) -> tools/learning_feedback.py
+              cw.sh learning-feedback [--selftest]
+  b-gate  B-level generalization threshold audit over the round records (3 instances, each grounded in at least 1 executed round; per-class instance and round counts, a per-class readiness verdict, and an explicit gap list into docs/b-gate-audit.json, schema rocqwash.b-gate-audit/1; counts are measured from the records, never inflated) -> tools/b_gate_audit.py
+              cw.sh b-gate [--selftest]
 
   help        this help (help <tool> = the tool's one-line usage hint)
 
@@ -402,6 +414,9 @@ hint_for() {  # $1=tool
     jargon-map-sync) echo "cw.sh jargon-map-sync [--md P] [--map P] [--json P] | --apply | --selftest   # jargon map sync, md table -> seed JSON (detector-map superset absorbed into the apply map; single-form admission: parenthetical annotations stripped, em-dash cells land as rewrite_or_delete, slash alternations rejected, six note-guard markers rejected; existing entries preserved with their id/exempts/cross_track_note; exact count label; plan zero-write default, --apply writes the map) -> tools/jargon_map_sync.py" ;;
     repair-weekly) echo "cw.sh repair-weekly [--ledger P] [--date YYYY-MM-DD] [--out FILE] [--json P] | --record --class CLASS --target T --repair-outcome VALUE [--ticket K] [--evidence-file J] [--reason S] [--apply] | --selftest   # repair-outcome ledger weekly distribution face, repair class E6 (ISO-week per-red outcome census + class/ticket distributions; read-only over the ledger, --out/--json the only write faces; --record appends one per-red rocqwash-repair-ledger/2 row under the enforced vocabulary, --apply required) -> tools/repair_weekly.py" ;;
     selfevolve-round) echo "cw.sh selfevolve-round [--dry-run]   # one deterministic mechanical round, cron face (census jargon_apply --plan -> apply -> verify py_compile/bash -n hard gates + norm_lint/doc_lint advisory -> auto_round commit -> push -> dispatch the CI judge; frozen faces excluded by jargon_apply; zero qualifying fixes = clean no-op pass; apply residue != zero = fail-loud, no commit) -> tools/selfevolve_round.py" ;;
+    pin-repair) echo "cw.sh pin-repair --selftest | --plan | --apply [--seed P]   # provenance-pin drift repair for the jargon seed map, triage row R15 auto-repair executor (re-signs drifted provenance.sources md5 pins behind the sync tool's zero-write plan IN-SYNC verdict; --plan writes nothing, --apply touches only md5 values and re-runs the seeds suite, red verify rolls back to the pre-apply bytes; not-IN-SYNC exits without touching the seed) -> tools/pin_repair.py" ;;
+    learning-feedback) echo "cw.sh learning-feedback [--selftest]   # scheduling feedback face over the three standing ledgers (round ledger, round state, experience ledger read-only; casts schema rocqwash.scheduling-feedback/1 into docs/scheduling-feedback.json: the auto versus human-approved round split, the approval rate, the per-class breakdown, and the four-state repair outcome tally; missing or corrupt inputs land in the errors field, never guessed) -> tools/learning_feedback.py" ;;
+    b-gate) echo "cw.sh b-gate [--selftest]   # B-level generalization threshold audit over the round records (3 instances, each grounded in at least 1 executed round; per-class instance and round counts, a per-class readiness verdict, and an explicit gap list into docs/b-gate-audit.json, schema rocqwash.b-gate-audit/1; counts are measured from the records, never inflated) -> tools/b_gate_audit.py" ;;
     *) return 1 ;;
   esac
 }
@@ -482,6 +497,9 @@ case "${1:-}" in
   jargon-map-sync) shift; run_tool jargon-map-sync "tools/jargon_map_sync.py" "$@" ;;
   repair-weekly) shift; run_tool repair-weekly "tools/repair_weekly.py" "$@" ;;
   selfevolve-round) shift; run_tool selfevolve-round "tools/selfevolve_round.py" "$@" ;;
+  pin-repair) shift; run_tool pin-repair "tools/pin_repair.py" "$@" ;;
+  learning-feedback) shift; run_tool learning-feedback "tools/learning_feedback.py" "$@" ;;
+  b-gate) shift; run_tool b-gate "tools/b_gate_audit.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then

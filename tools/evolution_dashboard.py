@@ -9,7 +9,8 @@ Purpose.  Aggregate the experience ledger (docs/exp-ledger.jsonl, schema
   per-point TODO-SEAT delta and rise flag, the rounds conversion face,
   and the per-run gap thermometer reading.  Absent standing ledgers and
   zero rows are data, loudly marked, never errors; every reading is a
-  dated snapshot taken from input content only.
+  dated snapshot taken from input content only.  A fourth face, the
+  scheduling feedback reading, is aggregated as well (absent is data).
 Interface.  `python -I tools/evolution_dashboard.py [--repo ROOT]
   [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P]
   [--md-out P] [--stdout markdown|json] [--selftest]`.  Defaults resolve
@@ -44,6 +45,8 @@ TOOL_VERSION = "1.0.0"
 EXP_DEFAULT = ("docs", "exp-ledger.jsonl")
 ROUNDS_DEFAULT = ("docs", "round-ledger.jsonl")
 REPORTS_DEFAULT = ("docs", "vacgen-reports")
+FEEDBACK_DEFAULT = ("docs", "scheduling-feedback.json")
+FEEDBACK_SCHEMA = "rocqwash.scheduling-feedback/1"
 
 # Field notes (the reading rules this dashboard implements; consumers of the
 # JSON face rely on these exact definitions):
@@ -183,6 +186,114 @@ def exp_face(rows):
             "entriesWithoutTs": missing_ts}
 
 
+def read_feedback(repo):
+    """Read the scheduling feedback file at its standing default path
+    (docs/scheduling-feedback.json under the repo root).  Absent is a
+    data state (present=false, doc None): the dashboard still renders,
+    with the section marked as not run.  Present but not valid JSON, not
+    a JSON object, or carrying a schema other than the declared one
+    raises DashboardInputError (exit 9, fail loud, nothing written): a
+    file occupying the feedback slot must speak the declared schema or
+    stop the run loudly."""
+    path = os.path.join(repo, *FEEDBACK_DEFAULT)
+    label = default_path(FEEDBACK_DEFAULT)
+    if not os.path.isfile(path):
+        return {"path": label, "present": False, "doc": None}
+    with open(path, "r", encoding="utf-8") as handle:
+        try:
+            doc = json.load(handle)
+        except ValueError as exc:
+            raise DashboardInputError(
+                "scheduling feedback %s is not valid JSON: %s"
+                % (label, exc))
+    if not isinstance(doc, dict):
+        raise DashboardInputError(
+            "scheduling feedback %s is not a JSON object" % label)
+    if doc.get("schema") != FEEDBACK_SCHEMA:
+        raise DashboardInputError(
+            "scheduling feedback %s carries schema %r, expected %s"
+            % (label, doc.get("schema"), FEEDBACK_SCHEMA))
+    return {"path": label, "present": True, "doc": doc}
+
+
+def feedback_face(inputs):
+    """Normalized scheduling-feedback readings, taken live from the
+    document each run (a live counter, never a written-in count); a
+    missing field stays None and renders as the dash cell, never an
+    invented value."""
+    meta = inputs.get("schedulingFeedback") or {}
+    path = meta.get("path", default_path(FEEDBACK_DEFAULT))
+    doc = meta.get("doc")
+    if not isinstance(doc, dict):
+        return {"path": path, "present": False, "readings": None}
+    rounds = doc.get("rounds")
+    repair = doc.get("repair_outcomes")
+    edge = doc.get("feedback_edge")
+    rounds = rounds if isinstance(rounds, dict) else {}
+    repair = repair if isinstance(repair, dict) else {}
+    edge = edge if isinstance(edge, dict) else {}
+    readings = {"roundsTotal": rounds.get("total"),
+                "autoRounds": rounds.get("auto"),
+                "humanApproved": rounds.get("human_approved"),
+                "approvalRateAuto": rounds.get("approval_rate_auto"),
+                "classes": rounds.get("by_class"),
+                "repaired": repair.get("repaired"),
+                "escalated": repair.get("escalated"),
+                "watchOnlyGuardCorrect":
+                    repair.get("watch_only_guard_correct"),
+                "unrecorded": repair.get("unrecorded"),
+                "repairActionRate": repair.get("repair_action_rate"),
+                "feedbackEdgeStatus": edge.get("status")}
+    return {"path": path, "present": True, "readings": readings}
+
+
+def feedback_lines(dash):
+    """Markdown lines for the scheduling feedback section: the three
+    readings (round totals, the auto-versus-human approval ratio, the
+    four-state repair composition) plus the feedback edge status.  An
+    absent feedback file is a data state, stated loudly."""
+    fb = dash["schedulingFeedback"]
+    lines = ["## Scheduling feedback (schema %s)" % FEEDBACK_SCHEMA, ""]
+    if not fb["present"]:
+        lines.append("feedback: absent (tool not run); no feedback file "
+                     "at the standing path %s (data, not an error)."
+                     % fb["path"])
+        return lines
+    readings = fb["readings"]
+    lines.append("| Metric | Value |")
+    lines.append("|---|---|")
+    rows = [("roundsTotal", readings["roundsTotal"]),
+            ("autoRounds", readings["autoRounds"]),
+            ("humanApproved", readings["humanApproved"]),
+            ("approvalRateAuto", readings["approvalRateAuto"]),
+            ("repaired", readings["repaired"]),
+            ("escalated", readings["escalated"]),
+            ("watchOnlyGuardCorrect", readings["watchOnlyGuardCorrect"]),
+            ("unrecorded", readings["unrecorded"]),
+            ("repairActionRate", readings["repairActionRate"]),
+            ("feedbackEdgeStatus", readings["feedbackEdgeStatus"])]
+    for name, value in rows:
+        lines.append("| %s | %s |" % (name, fmt(value)))
+    classes = readings["classes"]
+    if isinstance(classes, list) and classes:
+        lines.append("")
+        lines.append("| Class | Rounds | Gear | Confidence |")
+        lines.append("|---|---|---|---|")
+        for entry in classes:
+            if isinstance(entry, dict):
+                lines.append("| %s | %s | %s | %s |"
+                             % (fmt(entry.get("class")),
+                                fmt(entry.get("rounds")),
+                                fmt(entry.get("gear")),
+                                fmt(entry.get("confidence"))))
+    lines.append("")
+    lines.append("Feedback edge status: %s; the approval-rate reading is "
+                 "computed by the producer tool, and scheduling does not "
+                 "consume it yet (declared by the producer)."
+                 % fmt(readings["feedbackEdgeStatus"]))
+    return lines
+
+
 def resolve_reports(paths, default_dir, repo):
     """Expand and order report inputs: duplicates collapsed, sorted path
     order; a directory expands to its *.json files in sorted order.  With
@@ -309,12 +420,15 @@ def build_dashboard(exp_rows, round_rows, points, inputs):
             "inputs": inputs,
             "experienceLedger": exp,
             "rounds": rounds,
+            "schedulingFeedback": feedback_face(inputs),
             "coverage": coverage}
 
 
 def collect(repo, exp_path, rounds_path, reports_args):
     """Read all three sources with the default/explicit absence rule and
-    return (exp_rows, round_rows, points, inputs_meta)."""
+    return (exp_rows, round_rows, points, inputs_meta).  The scheduling
+    feedback face is read here as well and rides in the returned inputs
+    mapping."""
     inputs = {}
     exp_default = default_path(EXP_DEFAULT)
     exp_given = exp_path is not None
@@ -350,6 +464,7 @@ def collect(repo, exp_path, rounds_path, reports_args):
         else resolved,
         "present": reports_present}
     points = read_reports(resolved) if reports_present else []
+    inputs["schedulingFeedback"] = read_feedback(repo)
     return exp_rows, round_rows, points, inputs
 
 
@@ -467,6 +582,7 @@ def render_markdown(dash):
             lines.append("Rise signal (data): none; the TODO-SEAT count did "
                          "not grow at any step of the curve.")
     lines.append("")
+    lines.extend(feedback_lines(dash))
     return "\n".join(lines)
 
 
@@ -781,6 +897,70 @@ def selftest():
                               "present": False}}))
         assert_true("absent" in md_absent, "V8 absent stated")
         assert_true("data, not an error" in md_absent, "V8 data statement")
+
+        # V9 scheduling feedback absent is a data state: the bare repo2
+        # face states the absence loudly with the exact producer-not-run
+        # wording, and the exit code stays 0.
+        exp_rows, round_rows, points, inputs = collect(repo2, None, None,
+                                                       None)
+        dash_fb0 = build_dashboard(exp_rows, round_rows, points, inputs)
+        assert_true(dash_fb0["schedulingFeedback"]["present"] is False,
+                    "V9 absent is a data state")
+        md_fb0 = render_markdown(dash_fb0)
+        assert_true("feedback: absent (tool not run)" in md_fb0,
+                    "V9 absent stated loudly: %r"
+                    % md_fb0.splitlines()[-2:])
+
+        # V10 feedback present: the three readings (round totals, the
+        # auto-versus-human ratio, the four-state repair composition) are
+        # taken live from the document into both faces.
+        seed(os.path.join(repo1, "docs", "scheduling-feedback.json"),
+             json.dumps({
+                 "schema": FEEDBACK_SCHEMA,
+                 "rounds": {"total": 2, "auto": 1, "human_approved": 1,
+                            "approval_rate_auto": 0.5,
+                            "by_class": [{"class": "c1", "rounds": 1,
+                                          "gear": "auto",
+                                          "confidence": 1.0}]},
+                 "repair_outcomes": {"repaired": 3, "escalated": 1,
+                                     "watch_only_guard_correct": 1,
+                                     "unrecorded": 2,
+                                     "repair_action_rate": 0.5},
+                 "feedback_edge": {"status": "open",
+                                   "note": "approval-rate now readable"}},
+                 sort_keys=True) + "\n")
+        exp_rows, round_rows, points, inputs = collect(repo1, None, None,
+                                                       None)
+        dash_fb1 = build_dashboard(exp_rows, round_rows, points, inputs)
+        fb1 = dash_fb1["schedulingFeedback"]
+        assert_true(fb1["present"] is True, "V10 present face")
+        rd = fb1["readings"]
+        assert_true((rd["roundsTotal"], rd["autoRounds"],
+                     rd["humanApproved"], rd["approvalRateAuto"])
+                    == (2, 1, 1, 0.5), "V10 rounds readings: %r" % rd)
+        assert_true((rd["repaired"], rd["escalated"],
+                     rd["watchOnlyGuardCorrect"], rd["unrecorded"],
+                     rd["repairActionRate"]) == (3, 1, 1, 2, 0.5),
+                    "V10 repair readings: %r" % rd)
+        assert_true(rd["feedbackEdgeStatus"] == "open", "V10 edge status")
+        md_fb1 = render_markdown(dash_fb1)
+        assert_true("approvalRateAuto" in md_fb1
+                    and "watchOnlyGuardCorrect" in md_fb1
+                    and "| c1 | 1 | auto | 1.0 |" in md_fb1,
+                    "V10 markdown readings carry the three faces")
+
+        # V11 feedback present but invalid stops loudly (exit 9, no
+        # output claimed): foreign schema and broken JSON both.
+        seed(os.path.join(repo2, "docs", "scheduling-feedback.json"),
+             '{"schema": "rocqwash.some-other/1"}\n')
+        code_fb = main(["--repo", repo2])
+        assert_true(code_fb == 9, "V11 foreign schema exits 9, got %r"
+                    % code_fb)
+        seed(os.path.join(repo2, "docs", "scheduling-feedback.json"),
+             "not-json{\n")
+        code_fb2 = main(["--repo", repo2])
+        assert_true(code_fb2 == 9, "V11 broken JSON exits 9, got %r"
+                    % code_fb2)
     except AssertionError as exc:
         fails.append(str(exc))
     finally:
@@ -789,7 +969,7 @@ def selftest():
         for line in fails:
             sys.stderr.write("EVOLUTION-DASHBOARD SELFTEST FAIL %s\n" % line)
         return 1
-    sys.stdout.write("EVOLUTION-DASHBOARD SELFTEST PASS (8 vectors)\n")
+    sys.stdout.write("EVOLUTION-DASHBOARD SELFTEST PASS (11 vectors)\n")
     return 0
 
 
