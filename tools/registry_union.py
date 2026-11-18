@@ -1,63 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""registry_union.py — 注册册 union 手术器（rocqwash tools/·20261110 实战手术
-工具化·20261111 入账）
+"""registry_union.py — registry union tool for the order.txt/_CoqProject registry pair (rocqwash tools/)
 
-20261110 判例：分支撞 main 尾区——order.txt／_CoqProject 双方 tail-append，逐行
-merge 不可行。手术定式：**main 现版为底＋分支对 merge-base 真独有行尾插**。
-坑判例（本器存在理由）：独有行必须**对 merge-base 提取而非对 main**——main 侧
-#40 世系同名不同形 12 行（键同锚异）若对 main 提取会被误判独有而重插成撞键。
-锚正典＝`名.v#R<序>-<md5 前 8 hex>`（md5 对 anchor-src 下落地实件重算）：
-顺序号形锚（`#R97` 无指纹）与跨批锚撞文本（他批原样携锚）皆此治愈。
+Purpose.  Rebuild the registry after a branch/main tail-append collision: both sides appended to
+order.txt/_CoqProject and a line-by-line merge is impossible.  The current main registry is the
+base; branch lines truly unique against the merge-base are appended in branch order.  Uniqueness
+is judged against the merge-base, never against main: main-side rows sharing a key but carrying
+a different anchor (the same-key-different-shape lineage trap) would be misjudged unique and
+re-inserted as collisions.  Anchor canonical form `<name>.v#R<seq>-<md5_8>` (md5 recomputed
+from the on-disk entity under --anchor-src).
 
-键提取式（--kind）：
-  order       行首到 `#R97`（首 `#` 代签/注释）或 `.v` 止——键含 `.v`（如
-              `Local/LW0.v`），与 tools/select_audit.py「剥 #代签」同律；
-  coqproject  末个 `/` 后去 `.v` 扩展名——键为裸名（如 `Arch/ToyR_01.v`→
-              `ToyR_01`）；无 `/` 行原样为键（`-Q . ""` 等旗标行两侧恒同即滤）。
+Interface.  --base/--main/--branch --kind order|coqproject [--reanchor N1,N2 --anchor-src DIR]
+  [--out FILE] [--apply] [--json REPORT]; or --git REPO --ref-base/--ref-main/--ref-branch
+  [--git-path PATH].  Keys: order = head before the first # (includes .v; the strip-signature
+  rule of tools/select_audit.py); coqproject = tail after the last / minus .v.  Assertions
+  A1/A2/A3 fail loud with zero writes.  Dry run by default.  --json emits report schema
+  rocqwash-registry-union/1, sort_keys deterministic.
 
-union 算法：main 行序为底（逐字保全，含无键行）＋ branch-unique（行在 branch
-∧ 不在 base·键级去重保首·按 branch 原序）尾插。三断言 fail-loud，任一炸即
-exit 2 并列清单、零写盘：
-  A1 新增行内部键零撞   键级去重后置守卫（去重实现自证·内部自检断言）；
-  A2 新增键 ∉ main 键集 对 base 提取的真独有键若已在 main（双方各增同名模块）
-                       即撞——坑判例的机检防线；
-  A3 全表锚文本零新增重复 锚文本（`#R…` 尾段）重复对数 output ≤ main 基线，
-                       main 既有病灶如实录不判（select_audit DUP-ORDER 同律），
-                       union/重锚引入新对即炸。
+Dependencies.  Python 3 standard library only; git on PATH for --git direct reads; the selftest
+  builds its inputs in temp directories.
 
---reanchor 名1,名2 --anchor-src DIR：对列名件在 anchor-src 下（os.walk 递归）
-取同名 `.v` 实体算 md5 前 8 hex，重写全表中该键行的锚为正典形（保原序号·
-`#R97` → `#R97-<md5_8>`；已带指纹则重算）。列名件无实体→如实列缺件跳过；
-不在全表→如实列 not-in-table；列名行无锚/锚形不识→fail-loud exit 2（禁静默）。
-同名实体多处→歧义 fail-loud。--reanchor 仅 order 形（coqproject 无锚）。
+Evidence.  --selftest runs eight frozen vectors (plain union, the same-key-different-shape trap,
+  md5 vector 77c2b9a8, CRLF preservation, three assertion blasts, dry-run zero writes, CLI codes,
+  git direct read); tests/test_registry_union.py adds nine fixture sections (suite lane
+  t_registry_union).
 
-行尾保全：探 main 正本首 3KB 计 `\r` 定 CRLF/LF，输出随 main；末行换行有无
-亦随 main。三面对读时行内容一律剥终止符比对（CRLF main × LF branch 不误判）。
-
-两态制（dry run by default）：干跑零写盘打统计（main N＋unique M＝union K·重锚清单·
-断言三过）＋逐行 diff 摘要（仅新增 `+`／改锚 `~` 行）；--out 落盘须 --apply。
---json 出 report（schema rocqwash-registry-union/1，sort_keys 确定性）。
-
-输入三面：--base/--main/--branch 三文件路径（用户自行 git show 物化），或
---git REPO --ref-base/--ref-main/--ref-branch 三 ref 直读（subprocess
-`git -C REPO show REF:PATH`·仓路径参数化·PATH 缺省按 kind＝order.txt／
-_CoqProject·--git-path 可覆写）。两形互斥混给即用法错。
-
-用法：
-  python3 tools/registry_union.py --base BASE --main MAIN --branch BRANCH \
-      --kind order [--reanchor 名1,名2 --anchor-src DIR] \
-      [--out out.txt] [--apply] [--json report.json]
-  python3 tools/registry_union.py --git REPO --ref-base RB --ref-main RM \
-      --ref-branch XB --kind order [--git-path order.txt] [同上可选参]
-  python3 tools/registry_union.py --selftest
-
-退出码：0=出稿（含干跑）；2=断言炸（A1/A2/A3·重锚畸形·歧义）或用法错；
-9=输入缺失（三面件/git show/anchor-src 目录缺）。--selftest：0=全过；2=炸。
-
-确定性：输出 sorted+sort_keys 落盘、同输入重跑字节级恒同；纯 stdlib 零第三方
-零网络零编译。写隔离：写面恰为 --out（须 --apply）与显式 --json 出账路径，
-断言炸时零写盘。
+Exit-codes.  0 = report produced (dry run included); 2 = assertion blast (A1/A2/A3, reanchor
+  malformed or ambiguous) or usage error; 9 = missing input (side file, git show failure,
+  anchor-src directory).  --selftest: 0 = all vectors pass, 2 = a vector failed.
 """
 import argparse
 import hashlib
@@ -77,23 +47,24 @@ KIND_ORDER = "order"
 KIND_COQPROJECT = "coqproject"
 KINDS = (KIND_ORDER, KIND_COQPROJECT)
 
-# 锚正典：#R<序号>[-<hex 指纹>]；重锚后恒为 #R<序号>-<md5 前 8 hex>
+# Anchor canonical form: #R<seq>[-<hex fingerprint>]; after a reanchor it is
+# always #R<seq>-<first 8 hex of the md5>
 ANCHOR_RE = re.compile(r"#(R\d+(?:-[0-9A-Fa-f]+)?)")
-EOL_PROBE_BYTES = 3072  # 行尾探测窗（首 3KB 计 \r）
+EOL_PROBE_BYTES = 3072  # line-ending probe window (count \r over the first 3KB)
 
 GIT_PATH_DEFAULT = {KIND_ORDER: "order.txt", KIND_COQPROJECT: "_CoqProject"}
 
 
 class UsageError(Exception):
-    """用法错（exit 2）。"""
+    """Usage error (exit 2)."""
 
 
 class MissingInput(Exception):
-    """输入缺失（exit 9）。"""
+    """Missing input (exit 9)."""
 
 
 class AssertBlast(Exception):
-    """断言炸（exit 2·携清单）。"""
+    """Assertion blast (exit 2, carries the item list)."""
 
     def __init__(self, code, items):
         super(AssertBlast, self).__init__(code)
@@ -101,10 +72,11 @@ class AssertBlast(Exception):
         self.items = items
 
 
-# ---------- 读面与行尾 ----------
+# ---------- reading the three sides and line endings ----------
 
 def detect_eol(raw):
-    """main 正本字节 → (行尾形, 末行换行有无)。首 3KB 计 \\r：见 \\r 即 CRLF。"""
+    """main bytes -> (line-ending form, final-newline presence). Counts \\r
+    over the first 3KB: any \\r means CRLF."""
     head = raw[:EOL_PROBE_BYTES]
     eol = "CRLF" if b"\r" in head else "LF"
     final_nl = raw.endswith(b"\n") if raw else True
@@ -112,7 +84,8 @@ def detect_eol(raw):
 
 
 def read_side(path, what):
-    """三面件 → (行列表[剥终止符与首尾空白], eol, final_nl)。缺件 fail-loud 9。"""
+    """side file -> (line list [terminators and edge whitespace stripped],
+    eol, final_nl). A missing file fails loud with 9."""
     if not os.path.isfile(path):
         raise MissingInput("%s 文件缺失: %s" % (what, path))
     with io.open(path, "rb") as fh:
@@ -126,7 +99,8 @@ def read_side(path, what):
 
 
 def read_side_text(text, what):
-    """git show 直读文本 → 行列表（eol 以 main 面为准，此处仅拆行）。"""
+    """git show text -> line list (eol follows the main side; only split
+    here)."""
     lines = [ln.rstrip("\r\n").strip() for ln in text.split("\n")]
     while lines and lines[-1] == "":
         lines.pop()
@@ -134,7 +108,8 @@ def read_side_text(text, what):
 
 
 def git_show(repo, ref, path):
-    """`git -C REPO show REF:PATH` 直读（仓路径参数化·fail-loud 9）。"""
+    """`git -C REPO show REF:PATH` direct read (repo path parameterized;
+    fail-loud 9)."""
     cmd = ["git", "-C", repo, "show", "%s:%s" % (ref, path)]
     try:
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -147,12 +122,14 @@ def git_show(repo, ref, path):
     return p.stdout.decode("utf-8")
 
 
-# ---------- 键与锚 ----------
+# ---------- keys and anchors ----------
 
 def key_of(line, kind):
-    """行 → 键（order=首 # 前段·含 .v；coqproject=末 / 后去 .v 扩展名）。
+    """line -> key (order: segment before the first #, includes .v;
+    coqproject: tail after the last / minus the .v extension).
 
-    空行/注释行（剥 # 后为空）→ None（main 侧原样保全，branch 侧如实列 skip）。
+    Blank lines and comment lines (empty after stripping #) -> None (kept
+    verbatim on the main side, listed as skipped on the branch side).
     """
     s = line.strip()
     if not s:
@@ -160,7 +137,8 @@ def key_of(line, kind):
     if kind == KIND_ORDER:
         head = s.split("#", 1)[0].strip()
         return head or None
-    # coqproject：末个 / 后去扩展名（本域扩展名＝.v；无 .v 行原样为键）
+    # coqproject: strip the extension after the last / (this domain's
+    # extension is .v; a line without .v keeps its whole tail as the key)
     tail = s.rsplit("/", 1)[-1]
     if tail.endswith(".v"):
         tail = tail[:-2]
@@ -168,13 +146,15 @@ def key_of(line, kind):
 
 
 def anchor_of(line):
-    """行 → 锚文本（首 `#R<序>[-<hex>]` 尾段·含 #）或 None。"""
+    """line -> anchor text (the first `#R<seq>[-<hex>]` tail span, including
+    #) or None."""
     m = ANCHOR_RE.search(line)
     return m.group(0) if m else None
 
 
 def bare_name(name):
-    """列名件名归一：剥首尾空白与 .v 后缀（order 键对齐用）。"""
+    """normalize a listed module name: strip edge whitespace and the .v
+    suffix (used to align with order keys)."""
     n = name.strip()
     if n.endswith(".v"):
         n = n[:-2]
@@ -182,17 +162,20 @@ def bare_name(name):
 
 
 def key_bare(key):
-    """表内键 → 裸名（order 键剥 .v；coqproject 键本裸）。"""
+    """table key -> bare name (order keys lose .v; coqproject keys are
+    already bare)."""
     return bare_name(key)
 
 
-# ---------- union 算法 ----------
+# ---------- union algorithm ----------
 
 def extract_unique(base_lines, branch_lines, kind):
-    """branch-unique＝行在 branch ∧ 不在 base（行级）→键级去重保首→branch 原序。
+    """branch-unique = lines present in branch and absent from base (line
+    level) -> key-level dedup keeping the first -> branch order.
 
-    **独有须对 merge-base 提取**（坑判例）：对 main 提取会把 main 侧同名不同形
-    世系行误判独有。返回 (added 行列表, no_key_skipped 行列表)。
+    **Uniqueness must be extracted against the merge-base** (the trap case):
+    extraction against main would misjudge main-side same-key-different-shape
+    lineage rows as unique.  Returns (added line list, no_key skipped list).
     """
     base_set = set(base_lines)
     seen_keys = set()
@@ -213,7 +196,8 @@ def extract_unique(base_lines, branch_lines, kind):
 
 
 def assert_internal_key_unique(added, kind):
-    """A1：新增行内部键零撞（键级去重后置守卫·去重实现自证）。"""
+    """A1: zero internal key collisions among added lines (guard placed
+    after key-level dedup; self-proof of the dedup implementation)."""
     seen = {}
     for ln in added:
         k = key_of(ln, kind)
@@ -224,7 +208,8 @@ def assert_internal_key_unique(added, kind):
 
 
 def assert_added_keys_not_in_main(added, main_lines, kind):
-    """A2：新增键 ∉ main 键集（坑判例机检防线·双方各增同名即撞）。"""
+    """A2: added keys absent from the main key set (the trap case's
+    machine-check defense; both sides adding the same name collides)."""
     main_keys = set()
     for ln in main_lines:
         k = key_of(ln, kind)
@@ -244,12 +229,14 @@ def assert_added_keys_not_in_main(added, main_lines, kind):
 
 
 def dup_pairs(texts):
-    """锚文本 → 重复对数 c*(c-1)/2（main 既有病灶如实录不判的度量基）。"""
+    """anchor text -> duplicate pair count c*(c-1)/2 (the measure base under
+    which main's pre-existing defects are recorded honestly, not judged)."""
     return {t: c * (c - 1) // 2 for t, c in Counter(texts).items()}
 
 
 def assert_anchor_no_new_dups(out_lines, main_lines):
-    """A3：全表锚文本零新增重复（重复对数 output > main 基线即炸）。"""
+    """A3: zero new duplicate anchor texts across the table (blast when the
+    output pair count exceeds the main baseline)."""
     out_texts = [anchor_of(ln) for ln in out_lines]
     main_texts = [anchor_of(ln) for ln in main_lines]
     out_pairs = dup_pairs([t for t in out_texts if t])
@@ -263,13 +250,15 @@ def assert_anchor_no_new_dups(out_lines, main_lines):
         raise AssertBlast("A3-ANCHOR-TEXT-NEW-DUP", hits)
 
 
-# ---------- 重锚 ----------
+# ---------- reanchor ----------
 
 def resolve_entity(name, anchor_src):
-    """列名件 → anchor-src 下唯一同名 .v 实件路径。
+    """listed module -> the unique same-name .v entity path under anchor-src.
 
-    目录缺→MissingInput(9)；零实体→None（如实列缺件）；多处→歧义用法炸(2)。
-    名含 `/` 时优先直拼路径，不命中即如实缺件（不再递归捞同基名）。
+    Missing directory -> MissingInput(9); zero entities -> None (listed as
+    missing); several hits -> ambiguous usage blast (2).  A name containing
+    / prefers the directly joined path; a miss is listed as missing (no
+    same-basename recursion).
     """
     if not os.path.isdir(anchor_src):
         raise MissingInput("--anchor-src 目录缺失: %s" % anchor_src)
@@ -289,7 +278,7 @@ def resolve_entity(name, anchor_src):
 
 
 def md5_8_of(path):
-    """实件 md5 前 8 hex（锚正典指纹源）。"""
+    """first 8 hex of the entity md5 (anchor canonical fingerprint source)."""
     h = hashlib.md5()
     with io.open(path, "rb") as fh:
         for chunk in iter(lambda: fh.read(65536), b""):
@@ -298,10 +287,14 @@ def md5_8_of(path):
 
 
 def apply_reanchor(lines, names, anchor_src, kind):
-    """对列名件全表重锚为正典形（保原序号·指纹对落地实件重算）。
+    """re-anchor the listed modules across the table to the canonical form
+    (keep the original sequence number; fingerprints recomputed from the
+    on-disk entity).
 
-    返回 (新行列表, rewrites 清单, missing_entity 名单, not_in_table 名单)。
-    列名行无锚/锚形不识→AssertBlast(2)；coqproject 无锚→用法炸。
+    Returns (new line list, rewrites list, missing_entity names,
+    not_in_table names).  A listed line without an anchor or with an
+    unrecognized anchor form -> AssertBlast(2); coqproject carries no
+    anchors -> usage blast.
     """
     if kind != KIND_ORDER:
         raise UsageError("--reanchor 仅 --kind order 有效（coqproject 行无锚）")
@@ -337,7 +330,7 @@ def apply_reanchor(lines, names, anchor_src, kind):
             seq = old[2:].split("-", 1)[0]
             new = "#R%s-%s" % (seq, fp)
             if old == new:
-                continue  # 已是正典形（已在盘即 skip·幂等律）
+                continue  # already canonical (on-disk form, skip; idempotence rule)
             out[i] = ln[:m.start()] + new + ln[m.end():]
             rewrites.append({"module": n, "line_index": i, "old_anchor": old,
                              "new_anchor": new, "md5_8": fp,
@@ -346,12 +339,13 @@ def apply_reanchor(lines, names, anchor_src, kind):
     return out, rewrites, sorted(set(missing)), sorted(set(not_in_table))
 
 
-# ---------- 组装与出稿 ----------
+# ---------- assembly and rendering ----------
 
 def build_union(main_lines, base_lines, branch_lines, kind,
                 reanchor_names=None, anchor_src=None):
-    """全流程：union→重锚→三断言。返回 (out_lines, added, rewrites, missing,
-    not_in_table, no_key)。断言炸即 AssertBlast（主流程 exit 2 零写盘）。"""
+    """full flow: union -> reanchor -> three assertions.  Returns
+    (out_lines, added, rewrites, missing, not_in_table, no_key).  An
+    assertion blast raises AssertBlast (main flow exits 2, zero writes)."""
     added, no_key = extract_unique(base_lines, branch_lines, kind)
     out_lines = list(main_lines) + added
     rewrites, missing, not_in_table = [], [], []
@@ -365,7 +359,8 @@ def build_union(main_lines, base_lines, branch_lines, kind,
 
 
 def render_output(out_lines, eol, final_nl):
-    """行列表 → 输出字节（行尾随 main·末行换行随 main）。"""
+    """line list -> output bytes (line endings follow main; final-newline
+    presence follows main)."""
     nl = "\r\n" if eol == "CRLF" else "\n"
     text = nl.join(out_lines)
     if final_nl and out_lines:
@@ -374,14 +369,16 @@ def render_output(out_lines, eol, final_nl):
 
 
 def diff_summary(main_lines, out_lines, added, kind):
-    """逐行 diff 摘要（仅新增/改锚行·确定性按 union 表序）。"""
+    """per-line diff summary (added and anchor-changed lines only;
+    deterministic in union table order)."""
     rows = []
     main_set = set(main_lines)
     added_set = set(added)
     for i, ln in enumerate(out_lines):
         if ln in added_set and ln not in main_set:
             rows.append(("add", i + 1, ln, None))
-    # 改锚行：main 原行与 union 行同键不同锚（重锚所致）逐位对出
+    # anchor-changed lines: the main row and the union row share a key but
+    # differ in anchor (a reanchor effect); paired out line by line
     for i, old, new in _anchor_changed(main_lines, out_lines, kind):
         rows.append(("reanchor", i + 1, new, old))
     rows.sort(key=lambda r: (r[1], r[0]))
@@ -389,7 +386,8 @@ def diff_summary(main_lines, out_lines, added, kind):
 
 
 def _anchor_changed(main_lines, out_lines, kind):
-    """main↔union 同键行锚变更对（重锚清单的可复算对拍面）。"""
+    """main <-> union same-key anchor-change pairs (the recomputable
+    differential face of the reanchor list)."""
     main_by_key = {}
     for ln in main_lines:
         k = key_of(ln, kind)
@@ -411,7 +409,8 @@ def _anchor_changed(main_lines, out_lines, kind):
 def build_report(args_desc, kind, eol, final_nl, main_lines, base_lines,
                  branch_lines, added, no_key, out_lines, rewrites, missing,
                  not_in_table, reanchor_names, mode):
-    """report（schema rocqwash-registry-union/1·sort_keys 确定性落盘）。"""
+    """report (schema rocqwash-registry-union/1; sort_keys deterministic on
+    disk)."""
     return {
         "schema": SCHEMA,
         "kind": kind,
@@ -439,26 +438,37 @@ def build_report(args_desc, kind, eol, final_nl, main_lines, base_lines,
 
 
 def dump_json(path, obj):
-    """确定性 JSON 落盘（sort_keys＋indent=1·与 chain_graph 同律）。"""
+    """deterministic JSON write (sort_keys + indent=1; same rule as
+    chain_graph)."""
     with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(obj, fh, indent=1, ensure_ascii=False, sort_keys=True)
 
 
-# ---------- 自证 ----------
+# ---------- self-proof ----------
 
 def selftest():
-    """内嵌冻结向量组（tmp 目录合成·零触真仓零网络零编译）：
+    """embedded frozen vectors (synthesized in a temp directory; no real
+    repository touched, no network, no compilation):
 
-    1 正 union（3+2=5·main 序底＋branch 原序尾插＋--apply 落盘）
-    2 同名不同形陷阱（branch 行≠main 行但键同·对 base 判非独有必过滤——
-      若误对 main 提取该键即 A2 炸，正道零新增）
-    3 reanchor md5 向量（已知内容→已知 md5-8＝77c2b9a8·正典形重写·缺件如实列）
-    4 CRLF 保全（首 3KB 计 \\r·输出随 main·末行换行有无随 main）
-    5 断言三炸各一例（A1 内部键撞内部守卫直证／A2 CLI 撞 main 键／A3 CLI
-      锚文本新增重复——各 exit 2 零写盘）
-    6 干跑零写盘（--out 不落盘→--apply 落盘→幂等字节恒同）
-    7 CLI 四码＋--json schema＋确定性（help0/bogus2/缺件9/无输入2/重跑恒同）
-    8 git 三 ref 直读（tmp 仓合成·缺 git 让席 SKIP）
+    1 plain union (3+2=5; main order as the base + branch-order tail append
+      + --apply write)
+    2 same-key-different-shape trap (a branch row differing from main but
+      sharing its key must be filtered as non-unique against base --
+      extraction against main would blast A2, the correct path blasts
+      nothing)
+    3 reanchor md5 vector (known content -> known md5-8 = 77c2b9a8;
+      canonical rewrite; missing entities listed honestly)
+    4 CRLF preservation (\\r counted over the first 3KB; output follows
+      main; final-newline presence follows main)
+    5 one example per assertion blast (A1 internal key collision via the
+      internal guard / A2 CLI collision against main keys / A3 CLI new
+      duplicate anchor text -- each exit 2 with zero writes)
+    6 dry run writes nothing (--out not written -> --apply writes ->
+      idempotent byte equality on rerun)
+    7 CLI code table + --json schema + determinism (help0/bogus2/missing9/
+      no-input2/rerun byte-stable)
+    8 git three-ref direct read (temp repo synthesized; SKIP when git is
+      absent, without counting as a failure)
     """
     import tempfile
 
@@ -479,7 +489,7 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_ru_self_")
     try:
-        # ---- ① 正 union：main 3 行＋真独有 2 行＝union 5 行 ----
+        # ---- (1) plain union: main 3 lines + 2 truly unique = union 5 lines ----
         d1 = os.path.join(tmp, "v1")
         os.makedirs(d1)
         base = wf(os.path.join(d1, "base.txt"),
@@ -505,7 +515,7 @@ def selftest():
         assert rep["eol"]["detected"] == "LF", rep
         print("  [1/8] 正 union 3+2=5 OK（main 序底＋branch 原序尾插＋schema）")
 
-        # ---- ② 同名不同形陷阱：对 base 判非独有必过滤 ----
+        # ---- (2) same-key-different-shape trap: non-unique against base, must be filtered ----
         d2 = os.path.join(tmp, "v2")
         os.makedirs(d2)
         wf(os.path.join(d2, "base.txt"),
@@ -521,14 +531,16 @@ def selftest():
                  "--kind", "order", "--out", out2, "--apply"])
         assert p.returncode == 0, p.stdout
         got = io.open(out2, "rb").read().decode("utf-8").splitlines()
-        # 陷阱行（键同 X40 形异）必过滤：union＝main 原样＋B 一行
+        # the trap row (same key X40, different shape) must be filtered:
+        # union = main verbatim + the one B row
         assert got == ["X40.v#R40-deadbeef", "M.v#R40-aaaa1111",
                        "B.v#R41-cccc2222"], got
-        # 反证：若误对 main 提取，X40 行会成「独有」→A2 炸（正道零炸即正道）
+        # counter-proof: extraction against main would make the X40 row
+        # "unique" -> A2 blast (no blast here proves the correct path)
         assert "X40.v#R40-3333bbbb" not in got, got
         print("  [2/8] 同名不同形陷阱 OK（对 merge-base 提取·键同必过滤）")
 
-        # ---- ③ reanchor md5 向量：已知内容→已知 md5-8 ----
+        # ---- (3) reanchor md5 vector: known content -> known md5-8 ----
         d3 = os.path.join(tmp, "v3")
         os.makedirs(os.path.join(d3, "world"))
         wf(os.path.join(d3, "world", "ToyA.v"), "module A content alpha\n")
@@ -549,8 +561,10 @@ def selftest():
         assert p.returncode == 0, p.stdout
         got = io.open(out3, "rb").read().decode("utf-8").splitlines()
         assert got == ["ToyA.v#R3-77c2b9a8", "Ghost.v#R9-11111111"], got
-        # 表内缺件＋不在全表，均如实列（Ghost 在表无实体→缺件；GhostX 不在表
-        # →not-in-table；exit 仍 0·跳过不扰动他行）
+        # missing entity and not-in-table are both listed honestly (Ghost is
+        # in the table but has no entity -> missing; GhostX is not in the
+        # table -> not-in-table; exit stays 0 and the skips do not disturb
+        # other rows)
         p = run(["--base", os.path.join(d3, "base.txt"),
                  "--main", os.path.join(d3, "main.txt"),
                  "--branch", os.path.join(d3, "branch.txt"),
@@ -565,12 +579,12 @@ def selftest():
             "缺件跳过不得扰动他行"
         print("  [3/8] reanchor md5 向量 OK（77c2b9a8 冻结·缺件如实列跳过）")
 
-        # ---- ④ CRLF 保全：输出随 main（含末行换行有无） ----
+        # ---- (4) CRLF preservation: output follows main (final newline included) ----
         d4 = os.path.join(tmp, "v4")
         os.makedirs(d4)
         wf(os.path.join(d4, "base.txt"), "A.v\r\nB.v\r\n")
         wf(os.path.join(d4, "main.txt"), "A.v\r\nB.v\r\nC.v\r\n")
-        wf(os.path.join(d4, "branch.txt"), "A.v\nB.v\nD.v\n")  # LF branch 不误判
+        wf(os.path.join(d4, "branch.txt"), "A.v\nB.v\nD.v\n")  # LF branch must not be misjudged
         out4 = os.path.join(d4, "union.txt")
         p = run(["--base", os.path.join(d4, "base.txt"),
                  "--main", os.path.join(d4, "main.txt"),
@@ -579,7 +593,7 @@ def selftest():
         assert p.returncode == 0, p.stdout
         raw = io.open(out4, "rb").read()
         assert raw == "A.v\r\nB.v\r\nC.v\r\nD.v\r\n".encode("utf-8"), raw
-        # 末行无换行的 main → 输出亦无
+        # a main whose last line carries no newline -> output likewise without
         wf(os.path.join(d4, "main2.txt"), "A.v\r\nB.v\r\nC.v")
         out4b = os.path.join(d4, "union2.txt")
         p = run(["--base", os.path.join(d4, "base.txt"),
@@ -591,10 +605,11 @@ def selftest():
             == "A.v\r\nB.v\r\nC.v\r\nD.v".encode("utf-8")
         print("  [4/8] CRLF 保全 OK（首 3KB 计 \\r·末行换行有无随 main）")
 
-        # ---- ⑤ 断言三炸各一例（exit 2·零写盘） ----
+        # ---- (5) one example per assertion blast (exit 2, zero writes) ----
         d5 = os.path.join(tmp, "v5")
         os.makedirs(d5)
-        # A2：双方各增同名（键不在 base·在 main）→ CLI exit 2
+        # A2: both sides add the same name (key absent from base, present in
+        # main) -> CLI exit 2
         wf(os.path.join(d5, "a2_base.txt"), "Z.v#R0-00000000\n")
         wf(os.path.join(d5, "a2_main.txt"),
            "Z.v#R0-00000000\nK.v#R0-11111111\n")
@@ -609,7 +624,8 @@ def selftest():
             p.returncode, p.stdout)
         assert "A2" in p.stdout and "K" in p.stdout, p.stdout
         assert not os.path.exists(out5), "断言炸零写盘违例"
-        # A3：新增行锚文本与 main 行相撞（键异锚同）→ CLI exit 2
+        # A3: an added row whose anchor text collides with a main row
+        # (different keys, same anchor) -> CLI exit 2
         wf(os.path.join(d5, "a3_base.txt"), "Z.v#R0-00000000\n")
         wf(os.path.join(d5, "a3_main.txt"), "Z.v#R0-abcabcab\n")
         wf(os.path.join(d5, "a3_branch.txt"),
@@ -622,14 +638,15 @@ def selftest():
             p.returncode, p.stdout)
         assert "A3" in p.stdout and "abcabcab" in p.stdout, p.stdout
         assert not os.path.exists(out5), "断言炸零写盘违例"
-        # A1：新增行内部键撞（键级去重后置守卫·内部直证）
+        # A1: internal key collision among added lines (post-dedup guard,
+        # proven through the internal check)
         try:
             assert_internal_key_unique(["P.v#R1-11111111", "P.v#R1-22222222"],
                                        KIND_ORDER)
             raise AssertionError("A1 守卫未炸＝违例")
         except AssertBlast as e:
             assert e.code == "A1-INTERNAL-KEY-DUP", e.code
-        # 重锚畸形面：列名行无锚 → fail-loud exit 2
+        # reanchor malformed face: a listed line without an anchor -> fail-loud exit 2
         wf(os.path.join(d5, "na_base.txt"), "N.v#R0-00000000\n")
         wf(os.path.join(d5, "na_main.txt"), "N.v#R0-00000000\nNA.v\n")
         wf(os.path.join(d5, "na_branch.txt"), "N.v#R0-00000000\n")
@@ -644,7 +661,7 @@ def selftest():
         assert p.returncode == 2 and "REANCHOR-NO-ANCHOR" in p.stdout, p.stdout
         print("  [5/8] 断言三炸各一例 OK（A1 内证／A2 CLI／A3 CLI＋重锚畸形）")
 
-        # ---- ⑥ 干跑零写盘→--apply→幂等 ----
+        # ---- (6) dry run writes nothing -> --apply writes -> idempotent ----
         d6 = os.path.join(tmp, "v6")
         os.makedirs(d6)
         wf(os.path.join(d6, "base.txt"), "A.v#R0-11111111\n")
@@ -673,7 +690,7 @@ def selftest():
             "重跑字节漂移＝违例"
         print("  [6/8] 干跑零写盘 OK（--out 须 --apply·幂等字节恒同）")
 
-        # ---- ⑦ CLI 四码＋--json 确定性＋coqproject 键形 ----
+        # ---- (7) CLI code table + --json determinism + coqproject key form ----
         p = run(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         p = run(["--bogus"])
@@ -684,7 +701,8 @@ def selftest():
                  "--main", os.path.join(tmp, "nope2.txt"),
                  "--branch", os.path.join(tmp, "nope3.txt"), "--kind", "order"])
         assert p.returncode == 9, "缺件应 rc=9 实测 %d" % p.returncode
-        # coqproject 键形（末 / 后去扩展名）＋JSON 确定性
+        # coqproject key form (tail after the last / minus the extension)
+        # + JSON determinism
         d7 = os.path.join(tmp, "v7")
         os.makedirs(d7)
         wf(os.path.join(d7, "base.txt"), '-Q . ""\nArch/ToyR_01.v\n')
@@ -710,7 +728,7 @@ def selftest():
         print("  [7/8] CLI 四码 OK（help0/bogus2/无输入2/缺件9）＋coqproject"
               " 键形＋json 确定性")
 
-        # ---- ⑧ git 三 ref 直读（tmp repository·缺 git 让席 SKIP） ----
+        # ---- (8) git three-ref direct read (temp repo; SKIP when git is absent) ----
         if shutil.which("git") is None:
             print("  [8/8] git 直读 SKIP（git 不在卷·让席不充红）")
         else:
@@ -736,7 +754,7 @@ def selftest():
                 g("commit", "-m", msg)
 
             g("init")
-            main_ref = g("symbolic-ref", "--short", "HEAD")  # master|main 随版
+            main_ref = g("symbolic-ref", "--short", "HEAD")  # master|main, version-dependent
             commit_order("A.v#R0-11111111\nB.v#R0-22222222\n", "base")
             g("branch", "merge-base-ref")
             commit_order("A.v#R0-11111111\nB.v#R0-22222222\n"
@@ -751,7 +769,7 @@ def selftest():
             assert p.returncode == 0, p.stdout
             got = io.open(out8, "rb").read().decode("utf-8").splitlines()
             assert len(got) == 4 and got[-1] == "D.v#R1-44444444", got
-            # 坏 ref → 9
+            # a bad ref -> 9
             p = run(["--git", d8, "--ref-base", "no-such-ref",
                      "--ref-main", main_ref, "--ref-branch", "br",
                      "--kind", "order"])
@@ -765,7 +783,7 @@ def selftest():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
-# ---------- 主流程 ----------
+# ---------- main flow ----------
 
 def main():
     argv = sys.argv[1:]
@@ -812,7 +830,7 @@ def main():
         print("FAIL-LOUD: %s" % msg, file=sys.stderr)
         sys.exit(2)
 
-    # ---- 形参咬合（fail-loud 用法面） ----
+    # ---- flag interlock (fail-loud usage face) ----
     file_mode = any(v is not None for v in (args.base, args.main, args.branch))
     git_mode = args.git is not None
     if file_mode and git_mode:
@@ -838,7 +856,7 @@ def main():
         if not reanchor_names:
             die_usage("--reanchor 列名空")
 
-    # ---- 读三面 ----
+    # ---- read the three sides ----
     try:
         if git_mode:
             git_path = args.git_path or GIT_PATH_DEFAULT[args.kind]
@@ -863,7 +881,7 @@ def main():
         print("FAIL-LOUD: %s" % e, file=sys.stderr)
         sys.exit(9)
 
-    # ---- union＋重锚＋三断言（炸即 exit 2 零写盘） ----
+    # ---- union + reanchor + three assertions (blast = exit 2, zero writes) ----
     try:
         out_lines, added, rewrites, missing, not_in_table, no_key = \
             build_union(main_lines, base_lines, branch_lines, args.kind,
@@ -877,7 +895,7 @@ def main():
         print("FAIL-LOUD: %s" % e, file=sys.stderr)
         sys.exit(2)
 
-    # ---- 出稿面 ----
+    # ---- rendering ----
     mode = "APPLY" if args.apply else "DRY-RUN"
     payload = render_output(out_lines, eol, final_nl)
     if args.apply:

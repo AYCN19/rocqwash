@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_registry_union.py — tools/registry_union.py 自测（tests/·20261110 实战
-手术工具化轮·20261111）
+"""test_registry_union.py — self-test for tools/registry_union.py (tests/)
 
-注册册 union 手术器九节判：
-  1 工具自证    --selftest 八判全过（rc 0）
-  2 coq 夹具组  coq_base/main/branch 三件套 union：main 6＋unique 2＝union 8·
-                `-Q . ""` 旗标行保全·路径键（Deep/BrNew2.v→BrNew）去扩展名
-  3 陷阱夹具组  order_trap 三件套：#40 世系同名不同形（C40 基线形 vs main 重锚
-                形）对 merge-base 判非独有必过滤——union 6＝main 4＋BrNew×2，
-                C40 行不重插（若误对 main 提取即 A2 炸，正道零炸）
-  4 重锚冻结向  anchor_src/C40.v 实件 md5 前 8＝1414cddb 冻结·保序号重写
-                #R40-deadbeef→#R40-1414cddb·缺件（MainAdd）与不在全表（Ghost）
-                如实列跳过·exit 0
-  5 A2 负判     双方各增同名（键不在 base 在 main）→exit 2 列键·零写盘
-  6 A3 负判     新增行锚文本与 main 行相撞（键异锚同）→exit 2 列文本·零写盘
-  7 dry run/apply  干跑零写盘→--apply 落盘→幂等重跑字节恒同＋--json schema
-                rocqwash-registry-union/1＋确定性重跑恒同
-  8 CLI/用法面  help0／未知形参2／无输入2／缺件9／--apply 无 --out 2／
-                --reanchor 无 --anchor-src 2／--git 与三文件混给 2／
-                --reanchor×coqproject 2
-  9 git 直读    tmp 仓三 ref subprocess git show（缺 git 让席 SKIP 不充红）
+Purpose.  Nine-section external test of the registry union tool: the tool
+contract must stay green and any regression must fail loud, using read-only
+fixtures and temp output only.
 
-零触律：夹具只读，全部输出落 mktemp 临时目录即写即清；零真编译零网络零触真仓。
-幂等：python3 -B 禁 __pycache__。退出码：0=九节全过；1=任一红。
+Interface.  `python3 -B tests/test_registry_union.py`; sections run in
+order and the runner exits 0 on all-pass, 1 on any failure (fail-loud
+listing).  Suite lane: t_registry_union in tests/run_tests.sh.
+
+Dependencies.  Python 3 standard library only; the tool under test
+(tools/registry_union.py) and the read-only fixtures under
+tests/fixtures/registry_union/; git on PATH for section 9 (SKIP when
+absent, without counting as a failure).
+
+Evidence.  Sections: 1 tool --selftest (eight vectors); 2 coqproject
+fixture union (main 6 + unique 2 = union 8, flag lines preserved, path
+keys); 3 trap fixture (same-key-different-shape rows filtered against the
+merge-base); 4 reanchor frozen md5 vector 1414cddb; 5 A2 negative case;
+6 A3 negative case; 7 dry run/apply/json determinism; 8 CLI usage codes;
+9 git direct read.  Fixtures are read-only; all output lands in one mktemp
+directory removed on exit; no real compilation, no network, no real
+repository touched.  Idempotence: python3 -B keeps __pycache__ away.
+
+Exit-codes.  0 = all nine sections pass; 1 = any section failed.
 """
 import importlib.util
 import io
@@ -61,7 +62,8 @@ def rd(path):
 
 
 def three(base, main, branch, kind, extra=None):
-    """夹具三件套＋kind 的 CLI 实参（--out/--apply 由调用方加）。"""
+    """fixture trio plus kind as CLI arguments (--out/--apply added by the
+    caller)."""
     return ["--base", os.path.join(FIX, base),
             "--main", os.path.join(FIX, main),
             "--branch", os.path.join(FIX, branch), "--kind", kind] \
@@ -108,12 +110,13 @@ def sec3_trap_fixture(tmp):
     assert rc == 0, sout
     got = rd(out).decode("utf-8").splitlines()
     assert len(got) == 6, got  # main 4 + BrNew×2
-    # 坑判例机械实证：C40 行（branch 携基线形·main 已重锚异形）必过滤不重插
+    # mechanical proof of the trap case: the C40 row (branch carries the base
+    # shape, main a re-anchored shape) must be filtered, not re-inserted
     assert got.count("C40.v#R40-deadbeef") == 1, got
     assert "C40.v#R40-3333cccc" not in got, \
         "对 base 提取失效：基线形 C40 被误判独有重插＝坑判例复发"
     assert got[4:] == ["BrNew1.v#R41-5555eeee", "BrNew2.v#R41-6666ffff"], got
-    # 干跑面 stats 咬合
+    # dry-run stats agreement
     rc2, sout2 = run(three("order_trap_base.txt", "order_trap_main.txt",
                            "order_trap_branch.txt", "order"))
     assert rc2 == 0 and "main=4 + unique=2 = union=6" in sout2, sout2
@@ -128,13 +131,14 @@ def sec4_reanchor_frozen(tmp):
                           "--anchor-src", os.path.join(FIX, "anchor_src"),
                           "--out", out, "--apply"]))
     assert rc == 0, "缺件/不在全表属披露非红：%s" % sout
-    # 冻结向量：anchor_src/C40.v 内容 md5 前 8＝1414cddb（保序号 R40）
+    # frozen vector: md5-8 of the anchor_src/C40.v content = 1414cddb (sequence R40 kept)
     assert rd(out).decode("utf-8").splitlines()[2] == "C40.v#R40-1414cddb", \
         rd(out).decode("utf-8").splitlines()
     assert "C40.v#R40-1414cddb" in sout and "1414cddb" in sout, sout
     assert "MainAdd" in sout and "缺件" in sout, sout
     assert "Ghost" in sout and "不在全表" in sout, sout
-    # 已是正典形即 skip（幂等律）：main 喂正典锚行 → 零 rewrite 输出恒同
+    # already canonical means skip (idempotence rule): feeding main a canonical
+    # anchor row -> zero rewrites, output unchanged
     bdir = os.path.join(tmp, "ra_canon")
     os.makedirs(bdir)
     shutil.copy(os.path.join(FIX, "order_trap_base.txt"),
@@ -157,7 +161,8 @@ def sec4_reanchor_frozen(tmp):
 
 
 def sec5_a2_blast(tmp):
-    # 负判夹具临时变形（改 branch 复制件·零触原夹具）：双方各增同名 K40
+    # negative-case fixture as a temp copy (the branch copy is edited; the
+    # original fixtures stay untouched): both sides add the same name
     bdir = os.path.join(tmp, "a2")
     os.makedirs(bdir)
     shutil.copy(os.path.join(FIX, "order_trap_base.txt"),
@@ -167,7 +172,7 @@ def sec5_a2_blast(tmp):
     shutil.copy(os.path.join(FIX, "order_trap_branch.txt"),
                 os.path.join(bdir, "branch.txt"))
     with io.open(os.path.join(bdir, "branch.txt"), "a", encoding="utf-8") as fh:
-        fh.write("BothAdd.v#R42-9999eeee\n")  # 不在 base·在 main→A2
+        fh.write("BothAdd.v#R42-9999eeee\n")  # absent from base, present in main -> A2
     with io.open(os.path.join(bdir, "main.txt"), "a", encoding="utf-8") as fh:
         fh.write("BothAdd.v#R42-8888eeee\n")
     out = os.path.join(bdir, "union.txt")
@@ -190,9 +195,10 @@ def sec6_a3_blast(tmp):
                 os.path.join(bdir, "main.txt"))
     shutil.copy(os.path.join(FIX, "order_trap_branch.txt"),
                 os.path.join(bdir, "branch.txt"))
-    # 新增行键独有但锚文本与 main 行相撞（他批原样携锚病）
+    # the added line's key is unique but its anchor text collides with a main
+    # row (anchors carried over verbatim from another batch)
     with io.open(os.path.join(bdir, "branch.txt"), "a", encoding="utf-8") as fh:
-        fh.write("Xn.v#R40-4444dddd\n")  # 与 main MainAdd 锚文本同
+        fh.write("Xn.v#R40-4444dddd\n")  # same anchor text as main's MainAdd row
     out = os.path.join(bdir, "union.txt")
     rc, sout = run(["--base", os.path.join(bdir, "base.txt"),
                     "--main", os.path.join(bdir, "main.txt"),
@@ -215,7 +221,8 @@ def sec7_dryrun_apply_json(tmp):
     assert "干跑未写盘" in sout, sout
     rep = json.loads(rd(js).decode("utf-8"))
     assert rep["schema"] == ru.SCHEMA and rep["mode"] == "DRY-RUN", rep
-    # apply 落盘＋确定性：同输入重跑 json/union 稿字节恒同（同为 APPLY 态对比）
+    # apply writes + determinism: rerunning on the same input keeps json/union
+    # bytes identical (both compared in APPLY mode)
     rc2, sout2 = run(three("order_trap_base.txt", "order_trap_main.txt",
                            "order_trap_branch.txt", "order",
                            ["--out", out, "--json", js, "--apply"]))
@@ -245,7 +252,8 @@ def sec8_cli_usage():
                    "--branch", os.path.join(FIX, "coq_branch.txt"),
                    "--kind", "coqproject"])
     assert rc == 9 and "nope.txt" in out, "缺件应 9：%s" % out
-    # 用法对偶面：--apply 无 --out／--reanchor 无 --anchor-src／混给／reanchor×coq
+    # usage dualities: --apply without --out / --reanchor without --anchor-src /
+    # mixed input forms / reanchor with coqproject
     base3 = three("order_trap_base.txt", "order_trap_main.txt",
                   "order_trap_branch.txt", "order")
     rc, _ = run(base3 + ["--apply"])
