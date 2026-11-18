@@ -281,6 +281,11 @@ SEED_JSON = os.path.join(os.path.dirname(HERE), "seeds", "jargon",
 # table (SPEC section 2, projection rule)
 UNMAPPED_SUGGEST = "rewrite per context or delete (no fixed standard recorded)"
 
+# the in-repo derivation source tag (the in-repo-md-v1 contract): entries the
+# sync admitted from the in-repo md table carry it; their containment source
+# is that table, compared by the sync's own derivation rule
+IN_REPO_TAG = "(in-repo-md-v1)"
+
 # loader skip rules (norm_lint load_jargon_map): a row is skipped when its
 # first cell is empty, a dash run, or carries the loader's CJK header marker;
 # the separator-first form keeps this file ASCII-only
@@ -404,8 +409,16 @@ def check_transcription(seed, sroot, res):
         except OSError:
             mv_text = ""
     bad = []
+    inrepo = 0
     for e in seed["entries"]:
-        # Dual-source presence (20261118 wave59 fix): the seed legitimately
+        src = e.get("standard_source") or ""
+        if IN_REPO_TAG in src:
+            # the sync's own product: its containment is the in-repo md
+            # table by the derivation rule — a separate check that runs on
+            # every machine (check_md_containment)
+            inrepo += 1
+            continue
+        # Dual-source presence: the seed legitimately
         # draws faces from BOTH pinned tracks — an annotation-whitepaper face
         # or a tool-track mapping-table face both count as transcribed.
         # Requiring the whitepaper alone broke on the 62->159 tool-track
@@ -415,15 +428,87 @@ def check_transcription(seed, sroot, res):
             continue
         if e["disposition"] != "replace":
             continue
-        if e["standard_source"].startswith("annotation-whitepaper"):
+        if src.startswith("annotation-whitepaper"):
+            if e["standard"] not in wp_text:
+                bad.append("%s standard not verbatim in whitepaper" % e["id"])
+        elif src.endswith("(tool-repository track)"):
+            # original tool-track transcriptions (the in-repo-md-v1 contract):
+            # their containment source is the whitepaper — these rows carry
+            # whitepaper-verbatim standards on the original tag
             if e["standard"] not in wp_text:
                 bad.append("%s standard not verbatim in whitepaper" % e["id"])
         else:
             if not mv_text or e["standard"] not in mv_text:
                 bad.append("%s standard not verbatim in tool-track table" % e["id"])
     res.append(("transcription", not bad,
-                "every face verbatim in the whitepaper; standards verbatim in their pinned sources"
+                "%d pinned-track entries verbatim in their sources"
+                " (%d in-repo-md-v1 entries covered by the md-containment"
+                " check)" % (len(seed["entries"]) - inrepo, inrepo)
                 if not bad else "; ".join(bad)))
+
+
+def check_md_containment(seed, root, res):
+    """Second containment source (the in-repo-md-v1 contract): entries the sync
+    tagged as in-repo derivations are checked against the in-repo md table
+    by the sync's own derivation rule — the paren-stripped standard cell.
+    The table and the sync tool are repository faces, so this check runs on
+    every machine; it never depends on the pinned originals."""
+    if root is None:
+        res.append(("md-containment", None,
+                    "SKIP — repository root not found (set ROCWASH_ROOT)"))
+        return
+    md_path = os.path.join(root, "docs", "jargon-to-standard-mapping-v1.md")
+    sync_path = os.path.join(root, "tools", "jargon_map_sync.py")
+    if not os.path.isfile(md_path) or not os.path.isfile(sync_path):
+        res.append(("md-containment", None,
+                    "SKIP — in-repo md table or sync tool absent (%s)"
+                    % md_path))
+        return
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "rqw_jargon_sync_seed", sync_path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+    except Exception as exc:  # noqa: BLE001 — reported loud below
+        res.append(("md-containment", False,
+                    "cannot load tools/jargon_map_sync.py: %r" % (exc,)))
+        return
+    try:
+        rows = mod.parse_md_rows(md_path)
+    except SystemExit as exc:
+        res.append(("md-containment", False,
+                    "the in-repo md table fails the loader grammar (exit %r)"
+                    % (getattr(exc, "code", None),)))
+        return
+    index = {}
+    for r in rows:
+        index.setdefault(r["face"], []).append((r["line"], r["standard_cell"]))
+    targets = [e for e in seed["entries"]
+               if IN_REPO_TAG in (e.get("standard_source") or "")]
+    if not targets:
+        res.append(("md-containment", False,
+                    "no entry carries the %s tag — the second containment"
+                    " source is not exercised" % IN_REPO_TAG))
+        return
+    bad = []
+    for e in targets:
+        found = index.get(e["face"]) or []
+        if len(found) != 1:
+            bad.append("%s: md rows for the face: %d (need exactly 1)"
+                       % (e["id"], len(found)))
+            continue
+        disp, derived, reason = mod.derive_standard(found[0][1])
+        want_disp = ("replace" if e["disposition"] == "replace"
+                     else "rewrite_or_delete")
+        if reason is not None or disp != want_disp \
+                or derived != e["standard"]:
+            bad.append("%s standard not the derived md cell (md line %d)"
+                       % (e["id"], found[0][0]))
+    res.append(("md-containment", not bad,
+                "%d/%d in-repo-md-v1 entries equal the paren-stripped md"
+                " cells (the sync's own derivation rule, in-repo table)"
+                % (len(targets) - len(bad), len(targets))
+                if not bad else "; ".join(bad[:8])))
 
 
 def check_snapshot_md5(seed, res):
@@ -473,8 +558,8 @@ def check_projection_roundtrip(seed, root, res):
             if len(t.exempts) != len(want_ex):
                 ok = False
                 det.append("%s exempt count mismatch" % e["id"])
-        # JSON seed form is loader-native since the wave59 sync (20261118):
-        # the loader must read the raw JSON directly (159 terms), and the
+        # JSON seed form is loader-native since the wave59 sync: the loader
+        # must read the raw JSON directly (159 terms), and the
         # fail-loud contract moves to malformed JSON (SPEC section 2 gap).
         native = None
         try:
@@ -636,6 +721,7 @@ def run_segment_jargon():
     check_json_contract(seed, res)
     sroot = source_root(seed)
     check_transcription(seed, sroot, res)
+    check_md_containment(seed, root, res)
     check_snapshot_md5(seed, res)
     check_projection_roundtrip(seed, root, res)
     check_detection_coverage(seed, root, res)

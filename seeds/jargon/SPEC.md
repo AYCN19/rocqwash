@@ -20,10 +20,10 @@ Dependencies.  `tools/norm_lint.py`, `tools/wash_shape.py` (absence probe),
   `provenance`; `RQW_SOURCE_ROOT` overrides the root in the tests), and
   `docs/jargon-to-standard-mapping-v1.md`; Python 3 standard library only.
 
-Evidence.  `test_snippet.py` asserts the data contract, per-entry verbatim
-  containment against the pinned sources, snapshot md5 pinning, the 62-face
-  detection round-trip, the preserve carve-out exemption, clean-fixture
-  silence, fail-loud raw-JSON behavior, and the absence probe (section 5).
+Evidence.  `test_snippet.py` asserts the data contract, the two-source
+  transcription containment (pinned sources verbatim; in-repo-md-v1 against
+  the in-repo md table on every machine), md5 pinning, the detection
+  round-trip, and the exemption, silence, and fail-loud loader faces.
 
 Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
   fail-loud); missing externals yield loud SKIP lines, never silent passes;
@@ -173,3 +173,44 @@ machine, against the sources pinned in the JSON `provenance`:
   faces (the screening, review-round numbering and similar families) lie
   outside the 62-face prefix and are enumerable from that source; they are
   not silently dropped — this boundary statement is their register here.
+
+## 7. Transcription containment sources (the in-repo-md-v1 contract)
+
+- The transcription contract carries two containment sources.  Source 1 is
+  the pinned authorities: entries tagged `annotation-whitepaper` are
+  verbatim against the pinned whitepaper snapshot; entries tagged with the
+  original tool-track style (`(tool-repository track)`) carry
+  whitepaper-verbatim standards under this contract and their containment
+  source is the whitepaper.  Source 2 is the in-repo derivation: entries
+  the sync admitted from `docs/jargon-to-standard-mapping-v1.md` carry the
+  tag `(in-repo-md-v1)` (it extends the tool-track prefix so the applier's
+  A2 gate keeps scoping them), and their containment is that table itself —
+  the entry's standard must equal the paren-stripped standard cell of the
+  face's single md row, derived by the same rule the sync uses (fullwidth
+  and ASCII parenthetical annotations stripped, em-dash head as
+  rewrite_or_delete, a surviving ` / ` or its fullwidth counterpart
+  rejected as an alternation guard).
+- Machine availability is the point of the second source: the md table and
+  the sync tool are repository faces, so `check_md_containment` (in
+  `test_snippet.py`, mirrored in `tests/t_engines_seeds.py`) runs on every
+  machine and never depends on the pinned originals; a run with zero
+  in-repo-tagged targets fails loud instead of passing vacuously.
+- The four diverged originals (J012, J046, J061, J098) revert to their
+  whitepaper-verbatim zh standards (the cast values, recoverable from the
+  map's git history) and keep the original tool-track tag: the md's
+  single-form suggestions for these faces were a mechanical normalization
+  that contradicts the whitepaper register, and the register authority
+  stays with the whitepaper until its owner updates it.  Machine apply
+  returns to guarded for them (note-guard J012/J046, alternation-guard
+  J061/J098); the md keeps the single-form suggestions, so detector and
+  applier may differ on these guarded faces.
+- Sync provenance rules under the same contract: every row the sync writes
+  or already owns carries the in-repo source; an admitted row whose
+  existing entry has an equal standard is retagged from the legacy
+  tool-track style to the in-repo source (action `retagged` — the
+  re-admission mark of this contract; 122 rows at this contract); an
+  admitted row whose existing entry has a zh standard is a whitepaper-track
+  transcription and is never machine-superseded (action `authority-kept`).
+  The applier's A2 gate scopes to the in-repo-md-v1 rows (122/122 equal at
+  this contract); the four authority rows sit outside that gate by the
+  contract above.

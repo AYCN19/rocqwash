@@ -16,19 +16,36 @@ Purpose.  Deterministic one-way sync from docs/jargon-to-standard-mapping-v1.md
   tool track's em-dash standard cells ("- (delete ...)") are its
   rewrite-or-delete convention: they land as disposition rewrite_or_delete
   with no fixed standard (never machine-applied), the same bucket the seed
-  uses for such rows.  An admitted face that is new appends one entry after
-  the seed prefix in md document order; an admitted face that already exists
-  updates that entry's standard, standard_language, standard_source,
+  uses for such rows.  Every row the sync writes is tagged with the in-repo
+  derivation source (in-repo-md-v1) - the transcription contract's second
+  containment source: those entries are checked against this very table by
+  the same derivation rule, a check that runs on every machine because the
+  table is a repository face.  An admitted face that is new appends one entry
+  after the seed prefix in md document order; an admitted face that already
+  exists with an equal standard is retagged from the legacy tool-track style
+  to the in-repo source (action retagged - the re-admission mark of the
+  in-repo-md-v1 contract); an admitted face that already exists with a
+  differing standard updates standard, standard_language, standard_source,
   source_line and note in place - the curated superset supersedes - while
   the entry's id, face, exempts, disposition and cross_track_note are
-  preserved verbatim.  Every existing entry survives the sync and the count
-  label stays exact (count == len(entries)).  Plan is the default and writes
-  nothing; only --apply writes the map.
+  preserved verbatim.  One authority rule bounds the supersede: an existing
+  entry whose standard_language is zh is a whitepaper-track transcription
+  (the register authority) and is never machine-superseded - the row is
+  reported authority-kept and left byte-identical; the four diverged
+  originals J012/J046/J061/J098 carry their whitepaper-verbatim standards on
+  the original tool-track tag under this rule, machine-apply stays guarded
+  for them (note guards and the alternation guard), and the md keeps the
+  single-form suggestions, so detector and applier may differ on those
+  guarded faces until the register owner updates the whitepaper.  Every
+  existing entry survives the sync and the count label stays exact
+  (count == len(entries)).  Plan is the default and writes nothing; only
+  --apply writes the map.
 
 Interface.  python3 tools/jargon_map_sync.py [--md P] [--map P] [--apply]
   [--json P] [--selftest].  Report schema rocqwash-jargon-map-sync/1; the
   report carries one row per parsed md face (appended / updated / unchanged /
-  rejected with the reason), the admit counts, and the resulting entry total.
+  retagged / authority-kept / rejected with the reason), the admit counts,
+  and the resulting entry total.
 
 Dependencies.  Python 3 standard library only; tools/norm_lint.py is loaded
   by path as the same-source RE_FW_PAREN and loader-grammar provider (absent
@@ -40,9 +57,11 @@ Dependencies.  Python 3 standard library only; tools/norm_lint.py is loaded
 Evidence.  --selftest: filter vectors on fixture tables (single-form admit
   with annotation stripping, slash and fullwidth-slash alternation rejects,
   each of the six note-guard rejects, the em-dash rewrite-or-delete admit,
-  upsert preserving id/exempts/cross_track_note, append with the next id and
-  the tool-track source style, exact count label, byte-identical rerun,
-  duplicate admitted face refusal, unreadable/absent input exit 9).
+  upsert preserving id/exempts/cross_track_note, the in-repo source tag on
+  every written row, the equal-row retag to the in-repo source, the zh
+  authority-kept refusal, append with the next id and the tool-track source
+  style, exact count label, byte-identical rerun, duplicate admitted face
+  refusal, unreadable/absent input exit 9).
 
 Exit-codes.  0 clean plan or a written sync; 1 admit findings listed in plan
   mode or a failed selftest vector or a duplicate admitted face; 2 usage;
@@ -73,6 +92,16 @@ NL_PATH = os.path.join(REPO_ROOT, "tools", "norm_lint.py")
 # verbatim from the seed's existing tool-track entries
 TOOL_TRACK_SOURCE = ("rocqwash docs/jargon-to-standard-mapping-v1.md"
                      " (tool-repository track)")
+
+# the in-repo derivation source (the in-repo-md-v1 contract): every row the sync
+# writes or owns carries this tag; it deliberately extends the tool-track
+# prefix above so tools/jargon_apply.py's A2 md-row gate keeps scoping every
+# admitted row, while the transcription check can tell the sync's product
+# (in-repo-md-v1, containment = the paren-stripped md cell by the derivation
+# rule below) from the original tool-track transcriptions (containment = the
+# pinned whitepaper)
+IN_REPO_SOURCE = ("rocqwash docs/jargon-to-standard-mapping-v1.md"
+                  " (in-repo-md-v1)")
 
 # note markers that keep a row out of the apply map (seed SPEC section 3
 # guard families, same list tools/jargon_apply.py enforces on the loaded map)
@@ -258,12 +287,18 @@ def sync_plan(md_rows):
 def sync_apply(m, plan):
     """Apply the admission plan to the loaded map dict (in place).
 
-    Rejected rows touch nothing.  An admitted face that already exists
-    updates standard / standard_language / standard_source / source_line /
-    note in place (id, face, exempts, disposition, cross_track_note
-    preserved); an equal-standard replace row is a no-op.  An admitted new
+    Rejected rows touch nothing.  An admitted face that already exists with
+    an equal standard is retagged to the in-repo derivation source when its
+    tag is the legacy tool-track style (action retagged, no other field
+    touched); an equal row already carrying the in-repo source is unchanged.
+    An admitted face whose existing entry carries a zh standard is a
+    whitepaper-track transcription (the register authority): reported
+    authority-kept and never machine-superseded.  Otherwise an admitted
+    existing face updates standard / standard_language / standard_source /
+    source_line / note in place (id, face, exempts, disposition,
+    cross_track_note preserved) with the in-repo source tag; an admitted new
     face appends one entry in md document order with the next J-number and
-    the tool-track source style.  Returns the plan with per-row actions."""
+    the in-repo source tag.  Returns the plan with per-row actions."""
     by_face = dict((e["face"], e) for e in m["entries"])
     for row in plan:
         if row["reject"] is not None:
@@ -285,11 +320,27 @@ def sync_apply(m, plan):
                        if disp == "replace"
                        else entry.get("standard") is None)
             if already:
-                row["action"] = "unchanged"
+                if entry.get("standard_source") == TOOL_TRACK_SOURCE:
+                    # the re-admission mark: the row is the sync's product,
+                    # so its provenance moves to the in-repo derivation tag
+                    entry["standard_source"] = IN_REPO_SOURCE
+                    row["action"] = "retagged"
+                else:
+                    row["action"] = "unchanged"
+                row["entry_id"] = entry["id"]
+                continue
+            if entry.get("standard_language") == "zh":
+                # whitepaper-track authority row: the register decision lives
+                # in the whitepaper, not in this mechanical derivation; the
+                # md keeps its single-form suggestion and the two faces may
+                # differ on such guarded rows until the register owner
+                # updates the whitepaper
+                row["action"] = "authority-kept"
+                row["entry_id"] = entry["id"]
                 continue
             entry["standard"] = row["derived"]
             entry["standard_language"] = "en" if disp == "replace" else None
-            entry["standard_source"] = TOOL_TRACK_SOURCE
+            entry["standard_source"] = IN_REPO_SOURCE
             entry["source_line"] = row["line"]
             entry["note"] = row["note"]
             row["action"] = "updated"
@@ -300,7 +351,7 @@ def sync_apply(m, plan):
             "face": face,
             "standard": row["derived"],
             "standard_language": "en" if disp == "replace" else None,
-            "standard_source": TOOL_TRACK_SOURCE,
+            "standard_source": IN_REPO_SOURCE,
             "source_line": row["line"],
             "disposition": disp,
             "exempts": [],
@@ -365,15 +416,25 @@ def run_sync(args):
             fh.write(json.dumps(report, ensure_ascii=False, indent=1,
                                 sort_keys=True) + "\n")
     print("%s %s: mode=%s md_faces=%d appended=%d updated=%d unchanged=%d"
-          " rejected=%d entries=%d count=%d wrote=%s"
+          " retagged=%d authority_kept=%d rejected=%d entries=%d count=%d"
+          " wrote=%s"
           % (TOOL, SCHEMA, mode, len(md_rows),
              counts.get("appended", 0), counts.get("updated", 0),
-             counts.get("unchanged", 0), counts.get("rejected", 0),
+             counts.get("unchanged", 0), counts.get("retagged", 0),
+             counts.get("authority-kept", 0), counts.get("rejected", 0),
              len(m["entries"]), m["count"], str(wrote).lower()))
     for row in plan:
         if row["action"] == "rejected":
             print("  rejected %s (md line %d): %s"
                   % (row["face"], row["line"], row["reject"]))
+        elif row["action"] == "authority-kept":
+            print("  authority-kept %s (md line %d, entry %s): the existing"
+                  " zh standard is a whitepaper-track transcription and is"
+                  " never machine-superseded"
+                  % (row["face"], row["line"], row["entry_id"]))
+        elif row["action"] == "retagged":
+            print("  retagged %s -> in-repo source (md line %d, entry %s)"
+                  % (row["face"], row["line"], row["entry_id"]))
         elif row["action"] == "updated":
             print("  updated %s -> %s %s (md line %d, entry %s)"
                   % (row["face"], row["disposition"], row["derived"],
@@ -383,7 +444,8 @@ def run_sync(args):
                   % (row["face"], row["disposition"], row["derived"],
                      row["line"], row["entry_id"]))
     if mode == "plan":
-        changed = (counts.get("appended", 0) + counts.get("updated", 0))
+        changed = (counts.get("appended", 0) + counts.get("updated", 0)
+                   + counts.get("retagged", 0))
         print("VERDICT " + ("PENDING" if changed else "IN-SYNC")
               + " (plan is zero-write)")
         return 1 if changed else 0
@@ -421,31 +483,36 @@ FX_MD = "\n".join([
     "| \u94fe\u6761 | evidence chain | seed twin, standard differs."
     " 1 file. |",
     "| \u80fd\u91cf | unchanged form | seed twin, standard equal. 1 file. |",
+    "| \u6e05\u76d8 | liquidated | zh authority twin, admitted md row."
+    " 1 file. |",
 ]) + "\n"
 
 FX_MAP = {
     "schema": MAP_SCHEMA, "engine": "jargon",
     "seed_role": "fixture map for the sync selftest",
     "face_language": "zh",
-    "count": 2,
+    "count": 3,
     "selection_rule": "fixture",
     "boundary_note": "fixture",
     "provenance": {"sources": []},
     "entries": [
         {"id": "J001", "face": "\u94fe\u6761",
-         "standard": "\u8bc1\u636e\u94fe",
-         "standard_language": "zh",
-         "standard_source":
-             "annotation-whitepaper section 4 mapping table (annotation"
-             " track)",
+         "standard": "old chain form",
+         "standard_language": "en",
+         "standard_source": TOOL_TRACK_SOURCE,
          "source_line": 12, "disposition": "replace", "exempts": ["\u4e3b\u94fe"],
          "cross_track_note": "glossary quote preserved",
-         "note": "older annotation-track note"},
+         "note": "older tool-track transcription, standard differs"},
         {"id": "J002", "face": "\u80fd\u91cf",
          "standard": "unchanged form", "standard_language": "en",
          "standard_source": TOOL_TRACK_SOURCE, "source_line": 99,
          "disposition": "replace", "exempts": [], "cross_track_note": None,
          "note": "already in sync"},
+        {"id": "J003", "face": "\u6e05\u76d8",
+         "standard": "\u6e05\u7b97", "standard_language": "zh",
+         "standard_source": TOOL_TRACK_SOURCE, "source_line": 101,
+         "disposition": "replace", "exempts": [], "cross_track_note": None,
+         "note": "whitepaper-track authority row on the tool-track tag"},
     ],
 }
 
@@ -539,8 +606,8 @@ def run_selftest(args):
              "the md delete convention lands in the never-applied bucket"
              if ok else "plan=%r" % plan)
 
-        # vector 4: full sync over the fixture map - append, upsert, no-op,
-        # count label exact, preserve id/exempts/cross_track_note
+        # vector 4: full sync over the fixture map - append, upsert, retag,
+        # authority-kept, count label exact, preserve id/exempts/cross_track
         md_path = _write(tmp, "fx.md", FX_MD)
         map_path = _write(tmp, "fx-map.json",
                           json.dumps(FX_MAP, ensure_ascii=False,
@@ -548,29 +615,42 @@ def run_selftest(args):
         report, _rc = _run_sync_apply(md_path, map_path)
         m = report["map"]
         ents = dict((e["face"], e) for e in m["entries"])
+        acts = dict((r["face"], r["action"]) for r in report["plan"])
         link = ents["\u94fe\u6761"]
-        ok = (m["count"] == len(m["entries"]) == 6
+        power = ents["\u80fd\u91cf"]
+        qing = ents["\u6e05\u76d8"]
+        ok = (m["count"] == len(m["entries"]) == 7
               and link["id"] == "J001" and link["standard"] == "evidence chain"
               and link["standard_language"] == "en"
-              and link["standard_source"] == TOOL_TRACK_SOURCE
+              and link["standard_source"] == IN_REPO_SOURCE
               and link["exempts"] == ["\u4e3b\u94fe"]
               and link["cross_track_note"] == "glossary quote preserved"
-              and ents["\u80fd\u91cf"]["note"] == "already in sync"
-              and ents["\u80fd\u91cf"]["source_line"] == 99
-              and ents["\u6253\u5305"]["id"] == "J003"
+              and power["standard_source"] == IN_REPO_SOURCE
+              and power["note"] == "already in sync"
+              and power["source_line"] == 99
+              and acts["\u80fd\u91cf"] == "retagged"
+              and qing["standard"] == "\u6e05\u7b97"
+              and qing["standard_language"] == "zh"
+              and qing["standard_source"] == TOOL_TRACK_SOURCE
+              and qing["source_line"] == 101
+              and qing["note"] == "whitepaper-track authority row on the"
+                                  " tool-track tag"
+              and acts["\u6e05\u76d8"] == "authority-kept"
+              and ents["\u6253\u5305"]["id"] == "J004"
               and ents["\u6253\u5305"]["standard"] == "\u5c01\u88c5"
-              and ents["\u6253\u5305"]["standard_source"] == TOOL_TRACK_SOURCE
-              and ents["seat"]["id"] == "J006"
+              and ents["\u6253\u5305"]["standard_source"] == IN_REPO_SOURCE
+              and ents["seat"]["id"] == "J007"
               and ents["seat"]["standard"] == "agent"
               and ents["\u4ea4\u68d2"]["disposition"] == "rewrite_or_delete"
               and ents["\u4ea4\u68d2"]["standard"] is None
               and ents["\u94fe\u6761"]["note"] == "seed twin, standard"
                                             " differs. 1 file.")
-        _vec(results, "sync-append-upsert-preserve", ok,
-             "append J003..J006, upsert J001 to the md standard with id,"
-             " exempts and cross_track_note preserved, equal twin untouched,"
-             " count label exact (6)"
-             if ok else "entries=%r" % m["entries"])
+        _vec(results, "sync-append-upsert-retag-authority", ok,
+             "append J004..J007, upsert J001 and retag the equal J002 to the"
+             " in-repo source with id, exempts and cross_track_note"
+             " preserved, zh authority twin J003 never superseded, count"
+             " label exact (7)"
+             if ok else "entries=%r plan=%r" % (m["entries"], report["plan"]))
 
         # vector 5: the sync is deterministic and byte-identical on rerun
         first = json.dumps(m, ensure_ascii=False, indent=2) + "\n"
@@ -580,9 +660,11 @@ def run_selftest(args):
         second = json.dumps(m2, ensure_ascii=False, indent=2) + "\n"
         acts = dict((r["face"], r["action"]) for r in plan2)
         ok = first == second and acts["\u94fe\u6761"] == "unchanged" \
-            and acts["\u80fd\u91cf"] == "unchanged"
+            and acts["\u80fd\u91cf"] == "unchanged" \
+            and acts["\u6e05\u76d8"] == "authority-kept"
         _vec(results, "rerun-byte-identical", ok,
-             "second sync is a byte-identical no-op with unchanged actions"
+             "second sync is a byte-identical no-op with unchanged and"
+             " authority-kept actions"
              if ok else "rerun drifted")
 
         # vector 6: duplicate derived face fails loud (exit 1)

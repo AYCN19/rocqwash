@@ -27,8 +27,10 @@ Dependencies.  Python 3 standard library only; tools/norm_lint.py is the
 
 Evidence.  --selftest: seed contract; classification; derive_after
   vectors; projector byte equality; loader round-trip; A2 row-equality
-  diff of the 13 md-provenance rows; apply idempotence; guarded
-  rejection; carve-out silence; backtick masking; scan parity; frozen faces.
+  diff of the in-repo-md-v1 rows (the sync's own product; the four
+  original tool-track authority rows sit outside the gate by contract);
+  apply idempotence; guarded rejection; carve-out silence; backtick
+  masking; scan parity; frozen faces.
 
 Exit-codes.  0 clean or residue zero after apply; 1 hits, residue, or a failed vector; 2 usage; 9 missing input."""
 
@@ -450,12 +452,16 @@ def sync_module():
 def a2_diff(m, md_path):
     """A2 row-equality duty, mechanically scoped by map provenance.
 
-    The map's md-provenance rows must mirror the in-repo md table: for each
-    of them the md row must exist exactly once and the map's standard cell
-    must equal the md row's DERIVED standard cell - the same derivation the
-    sync wrote it from (parenthetical annotations stripped, em-dash cells
-    carried as rewrite_or_delete with no standard).  Returns (diffs,
-    checked, md_rows).
+    The map's in-repo-derivation rows (the sync's own product, tagged
+    in-repo-md-v1) must mirror the in-repo md table: for each of them the md
+    row must exist exactly once and the map's standard cell must equal the
+    md row's DERIVED standard cell - the same derivation the sync wrote it
+    from (parenthetical annotations stripped, em-dash cells carried as
+    rewrite_or_delete with no standard).  Rows on the original tool-track
+    tag are outside this scope: they carry whitepaper-verbatim standards
+    under the in-repo-md-v1 contract and their divergence from the md
+    single-form suggestions is the registered detector/applier difference
+    on guarded faces.  Returns (diffs, checked, md_rows).
     """
     sync = sync_module()
     rows = parse_md_rows(md_path)
@@ -466,7 +472,7 @@ def a2_diff(m, md_path):
     checked = 0
     for e in m["entries"]:
         src = e.get("standard_source") or ""
-        if not src.startswith("rocqwash docs/jargon-to-standard-mapping-v1.md"):
+        if "(in-repo-md-v1)" not in src:
             continue
         checked += 1
         found = index.get(e["face"]) or []
@@ -878,16 +884,18 @@ def run_selftest(args):
         alternation = sorted(r["face_id"] for r in recs
                              if r["reason"] == "alternation-guard")
         rod = sorted(r["face_id"] for r in recs if r["reason"] == "rewrite_or_delete")
-        want_note = ["J013", "J047"]
+        want_note = ["J012", "J013", "J046", "J047"]
         want_alt = ["J001", "J003", "J004", "J023", "J024", "J048", "J049",
-                    "J050", "J056", "J057"]
+                    "J050", "J056", "J057", "J061", "J098"]
         want_rod = ["J032", "J033", "J034", "J149", "J152", "J153", "J154",
                     "J155", "J156", "J157", "J158", "J159"]
-        ok = (len(machine) == 135 and note_guard == want_note
+        ok = (len(machine) == 131 and note_guard == want_note
               and alternation == want_alt and rod == want_rod)
         _vec(results, "classification", ok,
-             "machine=135 note-guard=2 alternation-guard=10"
-             " rewrite_or_delete=12 (post-sync P1 map)"
+             "machine=131 note-guard=4 alternation-guard=12"
+             " rewrite_or_delete=12 (in-repo-md-v1 contract: the four"
+             " authority rows J012/J046/J061/J098 reverted to their"
+             " whitepaper-verbatim standards and are guarded again)"
              if ok else
              "machine=%d note=%s alt=%s rod=%s" % (len(machine), note_guard,
                                                    alternation, rod))
@@ -902,18 +910,19 @@ def run_selftest(args):
                 "J058": "\u4f59\u91cf\u6d88\u9664\u8bba\u8bc1",
                 "J062": "\u63a5\u53e3\u53c2\u6570",
                 "J009": "\u4f7f\u7528", "J022": "machine ruling",
-                "J012": "flagship", "J016": "assignment",
-                "J018": "close out", "J046": "onboard",
-                "J061": "watcher"}
+                "J012": "\u4e3b", "J016": "assignment",
+                "J018": "close out", "J046": "\u4e00\u5e76\u6ce8\u518c"}
         bad = [k for k, v in want.items() if derive_after(by_id[k]) != v]
         bad += [k for k in ("J001", "J003", "J004", "J023", "J024", "J048",
-                            "J049", "J050", "J056", "J057")
+                            "J049", "J050", "J056", "J057", "J061", "J098")
                 if derive_after(by_id[k]) is not None]
         bad += [k for k in ("J013", "J047")
                 if derive_after(by_id[k]) is None]
         _vec(results, "derive-after", not bad,
-             "13 arrow/plain cells derive; 10 alternation cells derive none; "
-             "2 note-guard cells derive a plain form (note guards them)"
+             "13 arrow/plain cells derive (J012/J046 reverted to their"
+             " whitepaper-verbatim forms); 12 alternation cells derive"
+             " none (incl. the reverted J061/J098); 2 note-guard cells"
+             " derive a plain form (note guards them)"
              if not bad else "wrong derivation for: " + ", ".join(bad))
 
     # vector 4: projector form equals the seed test projector byte for byte
@@ -977,12 +986,14 @@ def run_selftest(args):
              "SKIP: in-repo md table not found at " + a2_path)
     else:
         diffs, checked, md_rows = a2_diff(m_real, a2_path)
-        ok = not diffs and checked == 126
+        ok = not diffs and checked == 122
         _vec(results, "a2-row-equality", ok,
-             "126/126 md-provenance rows equal to the derived md cells"
-             " (post-sync P1 map); md table parsed faces=%d; scope note: the"
-             " annotation-track rows come from the whitepaper, outside this"
-             " repository" % md_rows
+             "122/122 in-repo-md-v1 rows equal to the derived md cells"
+             " (the sync's own product); md table parsed faces=%d; scope"
+             " note: the four original tool-track rows carry"
+             " whitepaper-verbatim standards and sit outside this gate, and"
+             " the annotation-track rows come from the whitepaper, outside"
+             " this repository" % md_rows
              if ok else "diffs: " + "; ".join(diffs[:5]))
 
     # vectors 7 to 9: functional vectors on the embedded fixture map
