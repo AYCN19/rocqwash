@@ -1,43 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""toolchain_dyld_doctor.py — dyld 工具链断链诊断器（rocqwash tools/·20261110
-实战判例工具化·20261111 入账）
-
-背景判例（20261110）：CI 真编译件批量秒级 EXIT=134＝rocqworker 的 dyld 硬编码
-外部库失配（本机实证＝libgmp.10.dylib 于 ConstructiveWorld/Live/toolchain/gmp/
-lib/ 被移走）；SKIP 件全过＝环境非内容佐证。本器把判例固化为三步诊断——只诊断
-＋只打印 restore 建议命令，禁代执行（还原动作归操作者亲笔）：
-  1 otool -L 解析 worker 全部加载库引用：剔除 /usr/lib/ 与 /System/ 系统前缀，
-    其余保留为「外部硬引用」（dyld 启动即需、失配即 134 的那一批）。
-  2 逐条 exists/missing（os.path.exists 字面判定）；missing 件在 --donor DIR 下
-    溯源：先按「引用路径中 Live/toolchain/ 之后相对段」同位命中，再按同名库
-    （os.walk 每层 sorted·典序首个·确定性）兜底命中——命中只打印 cp 源→目标
-    建议命令。诚实注记：@rpath 项按 spec 字面 os.path.exists 判定、不代 resolve
-    LC_RPATH（判例机 worker 实证仅 libgmp＋libSystem 两条·无 @rpath 项）。
-  3 --smoke 可选（缺省关）：经 cpu_guard 跑最小 coqc 冒烟（--coqc 显传），报
-    SMOKERC 与 .vo 魔数前 8 字节 hex（期望前缀 436f7121＝9.3 代判据之一——
-    魔数只报不判）。
-
-worker 依序：--worker 显传 > env ROCWASH_ROCQWORKER > 缺省路径。缺省路径为本器
-仅有的两处 sanctioned 判例机绝对缺省之一（另一处为 --guard 缺省；任务书指定·
-全可参数化覆盖·selftest 零依赖）：
-  /Users/apple/Desktop/mac93_install_work/opam93/rocq93/lib/rocq-runtime/rocqworker
-显式指定（flag/env）不存在 → fail-loud 不回退缺省链（禁静默降级）；仅未显式
-指定时才落缺省。
-
-用法（除上述 sanctioned 缺省外零硬编码·零网络·selftest 零真 otool 零编译零网络）：
-  python3 tools/toolchain_dyld_doctor.py [--worker PATH] [--donor DIR] [--json out.json]
-  python3 tools/toolchain_dyld_doctor.py --smoke --coqc PATH [--guard PATH] [--json out.json]
-  python3 tools/toolchain_dyld_doctor.py --selftest
-
-退出码：0=healthy（外部硬引用全部在位）；1=missing-libs（红响亮·stderr 同报）；
-2=用法错／otool 非零退出／otool 输出零引用断言失败／smoke 超时／报告落盘失败；
-9=目标缺失（worker／otool 不在 PATH／--guard／--coqc／--donor）。--json 报告
-schema=rocqwash-dyld-doctor/1：
-  worker / external_refs[{path, exists, restore_source?}] / smoke?{rc, vo_magic}
-  / verdict: healthy|missing-libs|worker-missing
-落盘 json.dump(indent=1, ensure_ascii=False, sort_keys=True)＋newline="\\n"；
-报告不含墙钟字段·同输入重跑字节级恒同。
+"""toolchain_dyld_doctor.py — dyld toolchain linkage-failure diagnostician (rocqwash tools/).
+Purpose.  Diagnoses dyld external-library breakage in the rocqworker binary; diagnose-only:
+  restore advice is printed, never executed (the restore action belongs to the operator).
+  Precedent: real CI compile jobs exiting 134 within seconds = rocqworker's hardcoded external
+  dylib references gone stale (machine-verified: libgmp.10.dylib moved away from
+  ConstructiveWorld/Live/toolchain/gmp/lib/; SKIP-only runs all passing pinned the environment,
+  not the content).  Steps: (1) parse every `otool -L` load-library reference, drop the
+  /usr/lib/ and /System/ system prefixes, keep the rest as external hard references (needed at
+  dyld startup; a mismatch is the 134 class); (2) per-entry exists/missing (literal
+  os.path.exists), missing entries under --donor DIR get a deterministic restore-source lookup;
+  (3) --smoke (default off) runs a minimal coqc smoke under cpu_guard (--coqc explicit),
+  reporting SMOKERC and the .vo magic's first 8 bytes as hex (expected prefix 436f7121, reported,
+  never judged); @rpath entries follow the literal os.path.exists per spec, LC_RPATH never resolved.
+Interface.  Worker resolution: --worker explicit > env ROCWASH_ROCQWORKER > default path; the
+  default path and --guard are the tool's only two sanctioned reference-machine absolute defaults
+  (parameterizable, the selftest depends on neither); an explicitly set (flag/env) worker that
+  does not exist fails loud at 9, no fallback.  Usage (zero network):
+  python3 tools/toolchain_dyld_doctor.py [--worker PATH] [--donor DIR] [--json out.json] | --smoke --coqc PATH [--guard PATH] | --selftest
+  --json schema rocqwash-dyld-doctor/1: worker / external_refs[{path, exists, restore_source?}] / smoke?{rc,
+  vo_magic} / verdict: healthy|missing-libs|worker-missing; deterministic write (json.dump indent=1,
+  ensure_ascii=False, sort_keys=True, newline="\\n"), byte-identical rerun on identical input.
+Dependencies.  Python 3 stdlib only (argparse, io, json, os, shutil, subprocess, sys, tempfile); macOS otool
+  (Xcode CLT) on PATH for live runs; bash plus cpu_guard.sh for --smoke; zero network.
+Evidence.  --selftest frozen vector group on tmp-synthesized fixtures (parse dedup / exists plus restore /
+  verdict three-way / full CLI via a canned otool stub, print-only restore proven / byte-identical --json
+  reruns / usage target codes; zero real otool, zero compiles, zero network); suite: tests/test_toolchain_dyld_doctor.py (t_toolchain_dyld_doctor).
+Exit-codes.  0 = healthy (all external hard references present); 1 = missing-libs (loud, stderr mirrored);
+  2 = usage error / otool nonzero exit / zero-reference otool output / smoke timeout / report write failure;
+  9 = target missing (worker or otool not in PATH, --guard, --coqc, --donor).
 """
 import argparse
 import io
@@ -56,7 +47,7 @@ ENV_WORKER = "ROCWASH_ROCQWORKER"
 def _clean_mode():
     # Clean mode (ROCWASH_CLEAN=1) declares the canonical environment absent:
     # canonical-dependency faces report "requires canonical environment" and
-    # refuse instead of probing (docs/clean-mode-manual-20261114.md). Default
+    # refuse instead of probing (the clean-mode manual under docs/). Default
     # (env unset) keeps historical behavior byte-identical.
     return os.environ.get("ROCWASH_CLEAN", "").strip() == "1"
 
@@ -72,8 +63,9 @@ SMOKE_TIMEOUT = 180
 
 
 def parse_otool_L(text):
-    """otool -L 原文 → 全部加载库路径（保序去重）。以':'结尾的行＝二进制自身头
-    剔除；其余行取首个空白前 token 为路径。"""
+    """otool -L raw output -> all load-library paths (order preserved, dedup).
+    Lines ending in ':' are the binary's own header and are dropped; every
+    other line contributes its first whitespace-delimited token as a path."""
     refs = []
     for line in text.splitlines():
         s = line.strip()
@@ -86,14 +78,17 @@ def parse_otool_L(text):
 
 
 def is_external_ref(path):
-    """系统前缀（/usr/lib/、/System/）剔除·其余＝外部硬引用。"""
+    """System prefixes (/usr/lib/, /System/) are dropped; everything else is
+    an external hard reference."""
     return not path.startswith(SYSTEM_PREFIXES)
 
 
 def donor_restore_source(ref, donor_dir):
-    """missing 件在 donor 下的确定性溯源：先按 Live/toolchain/ 之后相对段同位
-    命中（保 donor 结构），再按同名库兜底（os.walk 每层 sorted·典序首个）。
-    无命中/donor 缺席 → None。"""
+    """Deterministic restore-source lookup for a missing entry under the donor
+    directory: first a same-relative-path hit on the segment after
+    Live/toolchain/ (donor structure preserved), then a same-basename fallback
+    (os.walk with each level sorted, first in canonical order).  No hit or an
+    absent donor -> None."""
     if not donor_dir or not os.path.isdir(donor_dir):
         return None
     seg = None
@@ -113,8 +108,9 @@ def donor_restore_source(ref, donor_dir):
 
 
 def check_refs(refs, donor_dir=None):
-    """逐条 exists 判定＋missing 件 donor 溯源 → [{path,exists,restore_source?}]
-    （保序；restore_source 仅命中时在场）。"""
+    """Per-entry exists check plus donor restore-source lookup for missing
+    entries -> [{path, exists, restore_source?}] (order preserved;
+    restore_source present only on a hit)."""
     out = []
     for r in refs:
         e = {"path": r, "exists": os.path.exists(r)}
@@ -127,8 +123,8 @@ def check_refs(refs, donor_dir=None):
 
 
 def verdict_of(external_refs, worker_exists=True):
-    """verdict 汇总：worker 缺席 → worker-missing；任一外部硬引用 missing →
-    missing-libs；否则 healthy。"""
+    """Verdict roll-up: worker absent -> worker-missing; any external hard
+    reference missing -> missing-libs; otherwise healthy."""
     if not worker_exists:
         return "worker-missing"
     if any(not e["exists"] for e in external_refs):
@@ -137,12 +133,13 @@ def verdict_of(external_refs, worker_exists=True):
 
 
 def restore_cmd(src, dst):
-    """restore 建议命令行（只打印·禁代执行）。"""
+    """Restore advice command line (print-only, never executed)."""
     return "cp '%s' '%s'" % (src, dst)
 
 
 def build_report(worker, external_refs, smoke, verdict):
-    """schema=rocqwash-dyld-doctor/1 报告组装（smoke 仅 --smoke 时在场）。"""
+    """rocqwash-dyld-doctor/1 report assembly (smoke present only under
+    --smoke)."""
     rep = {"schema": SCHEMA, "worker": worker,
            "external_refs": external_refs, "verdict": verdict}
     if smoke is not None:
@@ -151,26 +148,28 @@ def build_report(worker, external_refs, smoke, verdict):
 
 
 def write_report(path, report):
-    """确定性落盘（indent=1·ensure_ascii=False·sort_keys·newline=\\n）。"""
+    """Deterministic report write (indent=1, ensure_ascii=False, sort_keys,
+    newline="\\n")."""
     try:
         with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(report, fh, indent=1, ensure_ascii=False, sort_keys=True)
     except OSError as exc:
-        print("FAIL-LOUD: 报告落盘失败 %s: %s" % (path, exc), file=sys.stderr)
+        print("FAIL-LOUD: report write failed %s: %s" % (path, exc), file=sys.stderr)
         sys.exit(2)
 
 
 def run_otool(worker):
-    """真 otool -L（只诊断读）→ 原文。otool 不在 PATH → 9；非零退出 → 2。"""
+    """Real otool -L (read-only diagnosis) -> raw output.  otool not in PATH
+    -> 9; nonzero exit -> 2."""
     if shutil.which("otool") is None:
-        print("FAIL-LOUD: otool 不在 PATH（macOS 需 Xcode CLT）", file=sys.stderr)
+        print("FAIL-LOUD: otool not in PATH (macOS needs the Xcode CLT)", file=sys.stderr)
         sys.exit(9)
     p = subprocess.run(["otool", "-L", worker],
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if p.returncode != 0:
         err = p.stderr.decode("utf-8", "replace") if isinstance(p.stderr, bytes) \
             else (p.stderr or "")
-        sys.stderr.write("FAIL-LOUD: otool -L 非零退出 rc=%d worker=%s\n"
+        sys.stderr.write("FAIL-LOUD: otool -L nonzero exit rc=%d worker=%s\n"
                          "--stderr--\n%s" % (p.returncode, worker, err))
         sys.exit(2)
     return p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
@@ -178,9 +177,11 @@ def run_otool(worker):
 
 
 def run_smoke(coqc, guard, wait_sec=SMOKE_GUARD_WAIT, timeout=SMOKE_TIMEOUT):
-    """cpu_guard 包裹最小 coqc 冒烟（真编译·必经温控）→ {"rc", "vo_magic",
-    "log"}。魔数只报不判；.vo 缺席 → vo_magic=None（如实）。guard/coqc 在位性
-    由调用方预检（缺 → 9）。log 仅诊断 stdout 用·不入 JSON（含 tmp 路径）。"""
+    """Minimal coqc smoke wrapped in cpu_guard (real compile, temperature
+    guarded) -> {"rc", "vo_magic", "log"}.  The magic is reported, never
+    judged; a missing .vo -> vo_magic=None (honest).  Guard/coqc presence is
+    pre-checked by the caller (missing -> 9).  The log serves diagnostic
+    stdout only and never enters the JSON (it carries tmp paths)."""
     tmp = tempfile.mkdtemp(prefix="rocqwash_dyld_smoke_")
     try:
         vfile = os.path.join(tmp, "smoke.v")
@@ -191,7 +192,7 @@ def run_smoke(coqc, guard, wait_sec=SMOKE_GUARD_WAIT, timeout=SMOKE_TIMEOUT):
             p = subprocess.run(cmd, cwd=tmp, stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT, timeout=timeout)
         except subprocess.TimeoutExpired:
-            print("FAIL-LOUD: smoke 超时（>%ds）guard=%s coqc=%s"
+            print("FAIL-LOUD: smoke timed out (> %ds) guard=%s coqc=%s"
                   % (timeout, guard, coqc), file=sys.stderr)
             sys.exit(2)
         out = p.stdout.decode("utf-8", "replace") if isinstance(p.stdout, bytes) \
@@ -207,7 +208,8 @@ def run_smoke(coqc, guard, wait_sec=SMOKE_GUARD_WAIT, timeout=SMOKE_TIMEOUT):
 
 
 def run_args(argv, env=None):
-    """selftest 辅助：子进程跑本器（stdout+stderr 合流·env 可注入 PATH stub）。"""
+    """Selftest helper: run this tool in a subprocess (stdout+stderr merged;
+    env can inject a PATH stub)."""
     import subprocess
     e = dict(os.environ) if env is None else dict(env)
     p = subprocess.run([sys.executable, "-B",
@@ -233,14 +235,19 @@ OTOL_SAMPLE = (
 
 
 def selftest():
-    """内嵌冻结向量组（tmp 合成·零真 otool 零编译零网络·canned stub 注入 PATH）：
-    V1 otool -L 样例解析（/usr/lib//System 剔除·外部保留·保序去重）
-    V2 exists 判定（tmp 真件/假件）＋restore 路径计算（相对段同位/同名兜底/无命中）
-    V3 verdict 汇总三分
-    V4 CLI 全管线（canned otool stub）：healthy→0／missing-libs→1（failing·restore
-       建议只打印不执行实证）／--json 同输入两跑字节恒同
-    V5 CLI 用法与目标码：--bogus→2·--smoke 缺 --coqc→2·--coqc 缺失→9·
-       --donor 缺失→9·worker 缺失→9·otool 缺失（PATH 剥空）→9
+    """Embedded frozen vector group (tmp-synthesized; zero real otool, zero
+    compiles, zero network; canned stub injected into PATH):
+    V1 otool -L sample parsing (/usr/lib/ and /System/ dropped, external kept,
+       order-preserving dedup)
+    V2 exists check (real and fake tmp fixtures) plus restore-source
+       computation (relative-segment hit / same-basename fallback / no hit)
+    V3 verdict roll-up, three-way
+    V4 full CLI pipeline (canned otool stub): healthy -> 0 / missing-libs -> 1
+       (failing; restore advice proven print-only) / --json byte-identical
+       across two runs on the same input
+    V5 CLI usage and target codes: --bogus -> 2 / --smoke without --coqc -> 2 /
+       --coqc missing -> 9 / --donor missing -> 9 / worker missing -> 9 /
+       otool missing (PATH stripped) -> 9
     """
     import shutil as _shutil
 
@@ -260,48 +267,54 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_dyld_self_")
     try:
-        # ---- V1 纯解析：剔除 /usr/lib//System·保留外部·保序去重 ----
+        # ---- V1 pure parsing: /usr/lib/ and /System/ dropped, external kept,
+        # order-preserving dedup ----
         refs = parse_otool_L(OTOL_SAMPLE)
         assert refs == ["/usr/lib/libSystem.B.dylib",
                         "/System/Library/Frameworks/CoreFoundation.framework/"
                         "Versions/A/CoreFoundation",
                         "/Users/x/Live/toolchain/gmp/lib/libgmp.10.dylib",
                         "@rpath/libzmq.5.dylib"], refs
-        assert is_external_ref(refs[0]) is False, "系统前缀须剔除"
-        assert is_external_ref(refs[1]) is False, "系统前缀须剔除"
-        assert is_external_ref(refs[2]) is True, "Live 硬引用须保留"
-        assert is_external_ref(refs[3]) is True, "@rpath 按 spec 保留"
+        assert is_external_ref(refs[0]) is False, "system prefixes must be dropped"
+        assert is_external_ref(refs[1]) is False, "system prefixes must be dropped"
+        assert is_external_ref(refs[2]) is True, "Live hard reference must be kept"
+        assert is_external_ref(refs[3]) is True, "@rpath kept per spec"
 
-        # ---- V2 exists＋restore ----
+        # ---- V2 exists plus restore ----
         real_lib = os.path.join(tmp, "fx", "real.dylib")
         wfile(real_lib)
         missing = os.path.join(tmp, "fx", "absent", "libfoo.dylib")
         got = check_refs([real_lib, missing])
         assert got[0]["exists"] is True and got[1]["exists"] is False, got
-        assert "restore_source" not in got[1], "无 donor 不得有 restore_source"
-        # 相对段同位：ref 含 Live/toolchain 标记 → donor/<seg>
+        assert "restore_source" not in got[1], "no donor means no restore_source key"
+        # relative-segment hit: a ref carrying the Live/toolchain mark resolves
+        # to donor/<seg>
         donor_a = os.path.join(tmp, "donorA")
         wfile(os.path.join(donor_a, "gmp", "lib", "libgmp.10.dylib"))
         mark_ref = os.path.join(tmp, "Live", "toolchain", "gmp", "lib",
                                 "libgmp.10.dylib")
         assert donor_restore_source(mark_ref, donor_a) == os.path.join(
-            donor_a, "gmp", "lib", "libgmp.10.dylib"), "相对段同位未命中"
-        # 同名兜底：ref 无标记 → donor 典序首同名（ref 须真缺失——GitHub macos-15
-        # runner 预装 Homebrew gmp 使硬编码 /opt/... exists=True 破坏 fixture·
-        # 20261112 改 tmp 合成保零环境依赖）
+            donor_a, "gmp", "lib", "libgmp.10.dylib"), "relative-segment hit missed"
+        # same-basename fallback: a ref without the mark resolves to the first
+        # same-named library in donor canonical order (the ref must be truly
+        # missing: the GitHub macos-15 runner preinstalls Homebrew gmp, which
+        # makes the hardcoded /opt/... path exist and breaks the fixture;
+        # synthetic tmp fixtures keep the selftest free of environment
+        # dependencies)
         donor_b = os.path.join(tmp, "donorB")
         wfile(os.path.join(donor_b, "nested", "dir", "libgmp.10.dylib"))
         plain_ref = os.path.join(tmp, "absentbrew", "opt", "gmp", "lib",
                                  "libgmp.10.dylib")
         assert donor_restore_source(plain_ref, donor_b) == os.path.join(
-            donor_b, "nested", "dir", "libgmp.10.dylib"), "同名兜底未命中"
-        # donorA 在场：mark_ref 走相对段同位·plain_ref 走同名兜底·双双命中
+            donor_b, "nested", "dir", "libgmp.10.dylib"), "same-basename fallback missed"
+        # with donorA present: mark_ref takes the relative-segment hit,
+        # plain_ref the same-basename fallback, both hit
         got2 = check_refs([mark_ref, plain_ref], donor_a)
         assert got2[0]["restore_source"] == os.path.join(
             donor_a, "gmp", "lib", "libgmp.10.dylib"), got2
         assert got2[1]["restore_source"] == os.path.join(
-            donor_a, "gmp", "lib", "libgmp.10.dylib"), "同名兜底未命中"
-        # 无命中：键不得在场；donor 缺席 → None
+            donor_a, "gmp", "lib", "libgmp.10.dylib"), "same-basename fallback missed"
+        # no hit: the key must stay absent; an absent donor -> None
         nohit = check_refs([os.path.join(tmp, "nope", "libother.1.dylib")],
                            donor_a)
         assert "restore_source" not in nohit[0], nohit
@@ -309,20 +322,20 @@ def selftest():
                                     os.path.join(tmp, "nodir")) is None
         assert restore_cmd("s", "d") == "cp 's' 'd'"
 
-        # ---- V3 verdict 三分 ----
+        # ---- V3 verdict three-way ----
         assert verdict_of([], False) == "worker-missing"
         assert verdict_of([{"exists": True}], True) == "healthy"
         assert verdict_of([{"exists": True}, {"exists": False}],
                           True) == "missing-libs"
 
-        # ---- V4 CLI 全管线（canned otool stub 注入 PATH·零真 otool）----
+        # ---- V4 full CLI pipeline (canned otool stub injected into PATH, zero real otool) ----
         bin_dir = os.path.join(tmp, "bin")
         os.makedirs(bin_dir)
         stub = os.path.join(bin_dir, "otool")
         with io.open(stub, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(
                 "#!/bin/bash\n"
-                "# canned otool -L stub（rocqwash selftest 专用·零真 otool·离线）\n"
+                "# canned otool -L stub (rocqwash selftest only; no real otool; offline)\n"
                 "printf '%s:\\n' \"$2\"\n"
                 "printf '\\t/usr/lib/libSystem.B.dylib (compatibility version"
                 " 1.0.0, current version 1319.0.0)\\n'\n"
@@ -349,13 +362,14 @@ def selftest():
         assert rep["verdict"] == "healthy", rep
         assert rep["external_refs"] == [{"path": ok_lib, "exists": True}], rep
         assert set(rep) == {"schema", "worker", "external_refs", "verdict"}, rep
-        # 确定性：同输入两跑字节恒同
+        # determinism: two runs on the same input are byte-identical
         j2 = os.path.join(tmp, "r2.json")
         p = run_args(["--worker", wk, "--json", j2], env=env_ok)
         assert p.returncode == 0, p.stdout
         assert io.open(j1, "rb").read() == io.open(j2, "rb").read(), \
-            "json 字节漂移＝违例"
-        # missing-libs 红路径＋restore 建议只打印不执行
+            "json byte drift = violation"
+        # missing-libs failing path plus restore advice proven print-only
+        # (never executed)
         miss_ref = os.path.join(tmp, "missdir", "Live", "toolchain", "gmp",
                                 "lib", "libgmp.10.dylib")
         donor = os.path.join(tmp, "donor")
@@ -365,7 +379,7 @@ def selftest():
         jm = os.path.join(tmp, "rm.json")
         p = run_args(["--worker", wk, "--donor", donor, "--json", jm],
                      env=env_miss)
-        assert p.returncode == 1, "missing-libs 应红 exit=1 实测 %d" % p.returncode
+        assert p.returncode == 1, "missing-libs must exit 1, got %d" % p.returncode
         assert "missing-libs" in p.stdout and "cp '" in p.stdout, p.stdout
         repm = json.load(io.open(jm, encoding="utf-8"))
         assert repm["verdict"] == "missing-libs", repm
@@ -373,30 +387,32 @@ def selftest():
         assert repm["external_refs"][0]["exists"] is False, repm
         assert repm["external_refs"][0]["restore_source"] == os.path.join(
             donor, "gmp", "lib", "libgmp.10.dylib"), repm
-        assert not os.path.exists(miss_ref), "cp 竟被执行＝禁代执行违例"
+        assert not os.path.exists(miss_ref), "cp was executed = forbidden-execution violation"
 
-        # ---- V5 CLI 用法与目标码 ----
+        # ---- V5 CLI usage and target codes ----
         empty_dir = os.path.join(tmp, "empty")
         os.makedirs(empty_dir)
         p = run_args(["--bogus"])
-        assert p.returncode == 2, "未知形参应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "unknown flag must exit 2, got %d" % p.returncode
         p = run_args(["--worker", wk, "--smoke"])
-        assert p.returncode == 2, "--smoke 缺 --coqc 应 rc=2 实测 %d" % p.returncode
+        assert p.returncode == 2, "--smoke without --coqc must exit 2, got %d" % p.returncode
         p = run_args(["--worker", wk, "--smoke", "--coqc",
                       os.path.join(tmp, "nocoqc")])
-        assert p.returncode == 9, "--coqc 缺失应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "--coqc missing must exit 9, got %d" % p.returncode
         p = run_args(["--worker", wk, "--donor", os.path.join(tmp, "nodonor")])
-        assert p.returncode == 9, "--donor 缺失应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "--donor missing must exit 9, got %d" % p.returncode
         p = run_args(["--worker", os.path.join(tmp, "nope")])
-        assert p.returncode == 9, "worker 缺失应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "worker missing must exit 9, got %d" % p.returncode
         assert "worker-missing" in p.stdout, p.stdout
         p = run_args(["--worker", wk], env={"PATH": empty_dir})
-        assert p.returncode == 9, "otool 缺失应 rc=9 实测 %d" % p.returncode
+        assert p.returncode == 9, "otool missing must exit 9, got %d" % p.returncode
 
-        print("DYLD-DOCTOR-SELFTEST PASS: otool 样例解析（系统剔除/外部保留/去重）/"
-              "exists 真假件/restore 同位＋同名兜底＋无命中/verdict 三分/"
-              "CLI 全管线 healthy0＋missing1＋禁代执行/落盘字节恒同/用法目标六码 "
-              "七节全过")
+        print("DYLD-DOCTOR-SELFTEST PASS: otool sample parsing (system dropped/"
+              "external kept/dedup)/exists true and false fixtures/restore "
+              "relative-segment plus same-basename fallback plus no-hit/"
+              "verdict three-way/full CLI pipeline healthy0 plus missing1 plus "
+              "print-only restore/report bytes identical/usage target codes "
+              "all seven sections passing")
         return 0
     finally:
         _shutil.rmtree(tmp, ignore_errors=True)
@@ -408,20 +424,25 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="dyld 工具链断链诊断器：otool -L 外部硬引用 exists/missing"
-                    "＋donor 溯源 restore 建议（只打印禁代执行）＋可选 coqc 冒烟")
+        description="dyld toolchain linkage-failure diagnostician: otool -L "
+                    "external hard-reference exists/missing plus donor "
+                    "restore-source lookup with restore advice (print-only, "
+                    "never executed) plus optional coqc smoke")
     ap.add_argument("--worker", default=None, metavar="PATH",
-                    help="worker 二进制（缺省依序 env %s→判例机缺省）" % ENV_WORKER)
+                    help="worker binary (default resolution: env %s, then the "
+                         "sanctioned-machine default)" % ENV_WORKER)
     ap.add_argument("--donor", default=None, metavar="DIR",
-                    help="missing 件溯源目录（如抽取残面）；命中只打印 cp 建议")
+                    help="restore-source lookup directory for missing entries "
+                         "(e.g. extracted leftovers); a hit only prints the cp advice")
     ap.add_argument("--smoke", action="store_true",
-                    help="经 cpu_guard 跑最小 coqc 冒烟（需显传 --coqc）")
+                    help="run a minimal coqc smoke under cpu_guard (requires "
+                         "explicit --coqc)")
     ap.add_argument("--coqc", default=None, metavar="PATH",
-                    help="coqc 可执行（--smoke 时必显传）")
+                    help="coqc executable (required with --smoke)")
     ap.add_argument("--guard", default=DEFAULT_GUARD, metavar="PATH",
-                    help="cpu_guard.sh（--smoke 用·判例机缺省）")
+                    help="cpu_guard.sh (used by --smoke; sanctioned-machine default)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="诊断报告出账（schema rocqwash-dyld-doctor/1）")
+                    help="write the diagnostic report (schema rocqwash-dyld-doctor/1)")
     args = ap.parse_args(argv)
 
     try:
@@ -431,16 +452,16 @@ def main():
 
     if args.smoke:
         if not args.coqc:
-            print("FAIL-LOUD: --smoke 需显传 --coqc PATH", file=sys.stderr)
+            print("FAIL-LOUD: --smoke requires explicit --coqc PATH", file=sys.stderr)
             sys.exit(2)
         if not os.path.exists(args.coqc):
-            print("FAIL-LOUD: --coqc 缺失: %s" % args.coqc, file=sys.stderr)
+            print("FAIL-LOUD: --coqc missing: %s" % args.coqc, file=sys.stderr)
             sys.exit(9)
         if not os.path.isfile(args.guard):
-            print("FAIL-LOUD: --guard 缺失: %s" % args.guard, file=sys.stderr)
+            print("FAIL-LOUD: --guard missing: %s" % args.guard, file=sys.stderr)
             sys.exit(9)
     if args.donor is not None and not os.path.isdir(args.donor):
-        print("FAIL-LOUD: --donor 目录缺失: %s" % args.donor, file=sys.stderr)
+        print("FAIL-LOUD: --donor directory missing: %s" % args.donor, file=sys.stderr)
         sys.exit(9)
 
     if args.worker:
@@ -458,11 +479,12 @@ def main():
         worker, wsrc = DEFAULT_WORKER, "default"
 
     print("=== DYLD-DOCTOR ===")
-    print("worker: %s（%s）" % (worker, wsrc))
+    print("worker: %s (%s)" % (worker, wsrc))
 
     if not os.path.exists(worker):
         print("verdict: worker-missing")
-        print("FAIL-LOUD: worker 缺失（来源=%s·显式指定不回退缺省链）: %s"
+        print("FAIL-LOUD: worker missing (source=%s; explicit setting never "
+              "falls back to the default chain): %s"
               % (wsrc, worker), file=sys.stderr)
         if args.json:
             write_report(args.json,
@@ -473,8 +495,8 @@ def main():
     text = run_otool(worker)
     refs = parse_otool_L(text)
     if not refs:
-        print("FAIL-LOUD: otool -L 解析零引用（非 Mach-O 或形态异常）: %s"
-              % worker, file=sys.stderr)
+        print("FAIL-LOUD: otool -L parsed zero references (not a Mach-O or "
+              "unexpected shape): %s" % worker, file=sys.stderr)
         sys.exit(2)
     external = [r for r in refs if is_external_ref(r)]
     checked = check_refs(external, args.donor)
@@ -485,18 +507,19 @@ def main():
     for e in checked:
         print("  [%s] %s" % (" OK " if e["exists"] else "MISS", e["path"]))
         if "restore_source" in e:
-            print("    restore（建议·禁代执行）: %s"
+            print("    restore (advice; never executed): %s"
                   % restore_cmd(e["restore_source"], e["path"]))
 
     report_smoke = None
     if args.smoke:
         smoke = run_smoke(args.coqc, args.guard)
         report_smoke = {"rc": smoke["rc"], "vo_magic": smoke["vo_magic"]}
-        print("smoke: SMOKERC=%d vo_magic=%s（期望前缀 436f7121·只报不判）"
+        print("smoke: SMOKERC=%d vo_magic=%s (expected prefix 436f7121; "
+              "reported, never judged)"
               % (smoke["rc"],
                  smoke["vo_magic"] if smoke["vo_magic"] else "none"))
         if smoke["rc"] != 0:
-            print("--- smoke log tail（SMOKERC=%d·诊断响亮）---" % smoke["rc"])
+            print("--- smoke log tail (SMOKERC=%d; loud diagnosis) ---" % smoke["rc"])
             for ln in smoke["log"].rstrip().splitlines()[-40:]:
                 print("  | %s" % ln)
 
@@ -508,7 +531,8 @@ def main():
         print("json ->", args.json)
     if verdict == "missing-libs":
         miss = [e["path"] for e in checked if not e["exists"]]
-        print("FAIL: verdict=missing-libs 外部硬引用缺失 %d 条（红响亮）: %s"
+        print("FAIL: verdict=missing-libs, %d external hard reference(s) "
+              "missing (loud failure): %s"
               % (len(miss), ", ".join(miss)), file=sys.stderr)
         sys.exit(1)
     sys.exit(0)

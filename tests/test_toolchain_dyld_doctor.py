@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_toolchain_dyld_doctor.py — tools/toolchain_dyld_doctor.py 最小自测壳（tests/·
-20261111 集成席四工具波挂接）
-
-dyld 工具链断链诊断器挂接件：诊断器自带 --selftest 全链离线向量组（otool 样例
-解析/系统剔除外部保留/exists-missing/同名兜底/CLI 四码·零真 otool 零编译零网络）
-已由铸席自证，本壳只把它接进套件总入口并加 --help 冒烟：
-  1 --selftest rc=0 且 stdout 含 "DYLD-DOCTOR-SELFTEST PASS" 冻结标记
-  2 --help rc=0（argparse 用法面在位）
-
-用法：
-  python3 tests/test_toolchain_dyld_doctor.py        # 套件内经 run_tests.sh 调
-  python3 -B tests/test_toolchain_dyld_doctor.py     # 手动（-B 禁 __pycache__）
-
-零触律：零真 otool 零编译零网络零写盘零触真仓；python3 -B 禁 __pycache__。
-退出码：0=两判全过；1=任一红（fail-loud 响亮列红·禁静默）。
+"""test_toolchain_dyld_doctor.py — minimal selftest shell for tools/toolchain_dyld_doctor.py (tests/).
+Purpose.  Hooks the dyld toolchain linkage-failure diagnostician into the suite
+  entry: the tool carries its own full offline --selftest vector group (otool
+  sample parsing / system-prefix drop with external keep / exists-missing /
+  same-basename fallback / CLI codes; zero real otool, zero compiles, zero
+  network), self-attested there; this shell wires it into the suite and adds a
+  --help smoke: (1) --selftest exits 0 and stdout contains the frozen
+  "DYLD-DOCTOR-SELFTEST PASS" marker; (2) --help exits 0 (the argparse usage
+  face is present).
+Interface.  python3 tests/test_toolchain_dyld_doctor.py (called from the suite
+  via run_tests.sh) or python3 -B tests/test_toolchain_dyld_doctor.py (manual;
+  -B keeps __pycache__ off); no flags; two subprocess checks of the tool.
+Dependencies.  Python 3 standard library only (os, subprocess, sys); spawns the
+  local tool via sys.executable -B; zero real otool, zero compiles, zero
+  network, zero writes, zero touches of the real repository.
+Evidence.  Registered as t_toolchain_dyld_doctor in tests/run_tests.sh and
+  tests/README.md; the underlying vector group is attested by the tool's
+  --selftest (frozen marker "DYLD-DOCTOR-SELFTEST PASS").
+Exit-codes.  0 = both checks passing; 1 = any check failing (loud per-check
+  listing, no silent downgrade); 111 = honest skip on a non-POSIX host (the
+  canned otool stub is a shell script), reported as SKIP, never a silent pass.
 """
 import os
 import subprocess
@@ -26,7 +32,8 @@ MARK = "DYLD-DOCTOR-SELFTEST PASS"
 
 
 def run(args):
-    """子进程跑诊断器（stdout+stderr 合流·零写盘零网络）。"""
+    """Run the diagnostician in a subprocess (stdout+stderr merged; zero
+    writes, zero network)."""
     p = subprocess.run([sys.executable, "-B", TOOL] + args,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return p.returncode, p.stdout.decode("utf-8", errors="replace")
@@ -44,23 +51,24 @@ def main():
         skipped = True
         print(out)
     elif rc != 0 or MARK not in out:
-        fails.append("判1 --selftest 应 rc=0 且含 %r（实测 rc=%d）" % (MARK, rc))
+        fails.append("check1 --selftest must exit 0 and contain %r (got rc=%d)"
+                     % (MARK, rc))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:
-        fails.append("判2 --help 应 rc=0（实测 rc=%d）" % rc)
+        fails.append("check2 --help must exit 0 (got rc=%d)" % rc)
         print(out)
     if fails:
-        print("== test_toolchain_dyld_doctor: %d 过 / %d 红 =="
+        print("== test_toolchain_dyld_doctor: %d passing / %d failing =="
               % (2 - len(fails), len(fails)))
         for f in fails:
             print("FAIL:", f)
         return 1
     if skipped:
-        print("== test_toolchain_dyld_doctor: SKIP（POSIX 宿主 required·"
-              "honest skip rc=111）==")
+        print("== test_toolchain_dyld_doctor: SKIP (POSIX host required; "
+              "honest skip rc=111) ==")
         return 111
-    print("== test_toolchain_dyld_doctor: 2 过 / 0 红 ==")
+    print("== test_toolchain_dyld_doctor: 2 passing / 0 failing ==")
     return 0
 
 
