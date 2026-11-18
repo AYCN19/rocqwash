@@ -1,11 +1,11 @@
-# annotation-standard-v1.0-20261113.md — rocqwash Annotation Standard Card v1.0.
-> **AnnotationStandardCard**: the canonical comment/annotation standard for the rocqwash tool repository, v1.0 (2026-11-13).
+# annotation-standard — rocqwash Annotation Standard Card v1.0 (issued November 13, 2026).
+> **AnnotationStandardCard**: the canonical comment/annotation standard for the rocqwash tool repository, v1.0 (November 13, 2026).
 >
-> Purpose.  Define the file-header form, the five-field doc block, the forbidden-word surface, and the bilingual-transition rules for every prose face of this repository (code comments, docstrings, shell help text, documentation), together with the error/warn grading a mechanical checker applies. Adapted from the M-work stream Annotation Card (2026-10-25) into the tool-repository context; Appendix A (`docs/jargon-to-standard-mapping-v1.md`) supplies the per-word replacement table.
+> Purpose.  Define the file-header form, the five-field doc block, the forbidden-word surface, and the bilingual-transition rules for every prose face of this repository (code comments, docstrings, shell help text, documentation), together with the error/warn grading a mechanical checker applies. Adapted from the M-work stream Annotation Card (October 25, 2026) into the tool-repository context; Appendix A (`docs/jargon-to-standard-mapping-v1.md`) supplies the per-word replacement table.
 >
 > Interface.  Applies to `*.py`, `*.sh` (including `cw.sh` help text), and `*.md` prose faces repo-wide. Consumers: translation-replacement work, the future mechanical checker, and review gates. Five-field names are spelled exactly `Purpose.` / `Interface.` / `Dependencies.` / `Evidence.` / `Exit-codes.` (trailing period mandatory, verbatim).
 >
-> Dependencies.  Grounded in three read-in-full base assets: JARGON filter list v0.9→v1.1 (从零论文构建方法论白皮书 §9.1), Annotation whitepaper §4 mapping table v1.0→v1.8 plus the 65-face consolidated banned-word list enforced by `verify/gate4_comment_guard.py`, and the M-work stream Annotation Card 2026-10-25. Repository state reconciled before any version citation: v52, `79a766c`, clean tree (2026-11-13).
+> Dependencies.  Grounded in three read-in-full base assets: the JARGON filter list v0.9→v1.1 (§9.1 of the ConstructiveWorld paper-construction methodology whitepaper v1.0, the paper-track filter list), the Annotation whitepaper §4 mapping table v1.0→v1.8 plus the 65-face consolidated banned-word list enforced by `verify/gate4_comment_guard.py`, and the M-work stream Annotation Card (October 25, 2026). The first source is cited by its verbatim title and archive path in Appendix A §0. Repository state reconciled before any version citation: v52, `79a766c`, clean tree (November 13, 2026).
 >
 > Evidence.  Lineage: M-work stream five fields Mission./Dependencies./References./Constructivity./Build. are renamed to the tool-repository five fields as Purpose.(←Mission.), Interface.(new: CLI/schema face), Dependencies.(unchanged), Evidence.(←References., absorbing Constructivity.), Exit-codes.(←Build. contract side). Header-length warn threshold follows gate4's `length_cap=30` review-grade default (gate4_comment_guard.py:379,527).
 >
@@ -15,7 +15,7 @@
 
 1. **Object surfaces** — comments, docstrings, shell help text, and documentation prose (`*.py`, `*.sh`, `*.md`). This card governs what those surfaces say; it does not govern what the code does.
 2. **Stability boundary** — code identifiers, CLI flags, JSON schema field names, file-format names, and exit-code semantics are outside this card's rewrite scope in all cases (§5.4). A standard that moved an interface would fail the repository's own doc-vs-implementation consistency checks (`tools/doc_lint.py`).
-3. **Audience criterion (inherited from gate4's判定原则)** — the only assumed reader of any prose face is an international reader with no internal project context. A sentence whose comprehension requires internal organization, process history, or agent topology is non-conforming even when no listed word appears.
+3. **Audience criterion (inherited from the `gate4` judgment principle)** — the only assumed reader of any prose face is an international reader with no internal project context. A sentence whose comprehension requires internal organization, process history, or agent topology is non-conforming even when no listed word appears.
 
 ## 2. File header (A-zone, two-part)
 
@@ -73,24 +73,25 @@ Function/class/section comments: one English line stating the unit's role; no em
 
 ## 4. Forbidden-word surface
 
-The banned faces are enumerated in §4.1–4.3 and classified in §4.4; Appendix A (`docs/jargon-to-standard-mapping-v1.md`) supplies each face's standard replacement and sense boundary, and additionally maps a small near-standard superset (phrase-level mappings such as a failing result is data, not a tool failure and translation mappings such as checkpoint→checkpoint) that are prose-replacement targets without being hard bans. For mechanical enumerability the faces are grouped here:
+The banned faces are classified in §4.1–4.3 and §4.4 and enumerated verbatim, one row per face, in Appendix A (`docs/jargon-to-standard-mapping-v1.md`), which supplies each face's standard replacement and sense boundary, and additionally maps a small near-standard superset (phrase-level mappings such as a failing result is data, not a tool failure and translation mappings such as checkpoint→checkpoint) that are prose-replacement targets without being hard bans. For mechanical enumerability the classification is stated here while the verbatim face lists live in Appendix A:
 
 ### 4.1 Hard faces (literal ban, multi-character, error on any prose hit)
 
-- Campaign/organization family: agent, agent, 波次, batch, 战役, wrap-up, ticket assignment, assignment, task instruction, queued, handoff, write freeze, pending execution, pending verification, account closing, 并入, execution record, push, apply, strip, yield, 活账, 死账, 台账, 遗留事项, revision round, pending work item, apply the revision, monitor, reconcile（工程义）, cross-check against the reference.
-- Engineering-metaphor family: gold-standard, current state, flagship, 核验, 收束, 注册, 传参, 直接代入, 直接匹配, 重述, 声明, 结论, close out, automatic recovery, designated, differential comparison, survey, broken linkage, clear blockages, 堵账, 已证结论, 装配, non-negotiable constraint, 铁律, primary feature, source transcript, evidence chain, independently verified, construct, reorganize, regression, newly introduced issue, 落盘, present in the tree, 入库, primary arithmetic component, evidence required before issuance, 红炉, 绿判, failure output, showing failure, immediate failure, spurious pass, spurious failure, 全绿, overheated state, 发射闸, shape normalization, delisted, credit tally, splice, double failure, shot down, overturned, liquidated, thinned, machine ruling, unloaded, cyclic account, onboard, axiom-free born, born-in-place.
+- Campaign/organization family: role and organization nouns, work-stream and round numbering, queue-state and freeze wording, ledger data surfaces and ledger-freshness slang, handoff and other process narration, ticket assignment, task instruction, and the process-verb faces.
+- Engineering-metaphor family: evidence and conclusion metaphors, build-state and gate metaphors, blockage metaphors, assembly, splice, and integration metaphors, invariant slogans, failure/pass color wording, and the remaining metaphor faces.
+- Both families are enumerated verbatim in Appendix A (Tables A, B0, B, and D), the authoritative enumeration surface; a suspected face absent from that enumeration is judged by the audience criterion of §1.3.
 
 ### 4.2 Context faces (error when used in the engineering sense of their Appendix A row)
 
-agent（角色义）, 洗（工程义）, run, failing（工程义）, passing（工程义）, build, 闸（工程义）, 堵, watcher, watcher（叙述义）, 检验（叙述义）, triage, classification, fallback, normalize, dry run, canonical（内部行话义）, 榜, operation, repository. Each face's sense boundary and standard form = its Appendix A row's context note; identifier citations are exempt (Appendix A §6).
+Two groups: (a) standard English terms that double as translation targets — run, failing, passing, build, watcher, triage, classification, fallback, normalize, dry run, canonical, operation, repository; (b) sense-split faces whose Appendix A row marks the banned sense in its context note (role-noun sense, engineering sense, narrative sense, internal-canon sense). A context face is an error only in the sense its Appendix A row marks. Each face's sense boundary and standard form = its Appendix A row's context note; identifier citations are exempt (Appendix A §6).
 
 ### 4.3 English slang / hyperbole faces (literal ban, word boundary, error)
 
-work stream（组织义）, agent, campaign（叙述义）, route（叙述义）, handover, integration, adaptation, trivial（夸饰义）, obvious（夸饰义）, hack, workaround, FIXME, XXX, HACK. Data/preset/preset-name occurrences are identifier citations, not hits (Appendix A §6).
+The English-language slang family, banned literally at word boundary: organization metaphors, process-narration nouns, route-narration senses, hyperbole adjectives, limitation slang, and unfinished-work markers. The faces and their per-face dispositions (delete the narration, state the actual limitation, or remove) are enumerated in Appendix A Table D. Data/preset/preset-name occurrences are identifier citations, not hits (Appendix A §6).
 
 ### 4.4 Process-narration classes (error)
 
-Seat numbers/names; campaign names; date/time stamps in comments; "this round / previously / fixed by …" narrations; file-progress accounting inside headers. These are detectable as classes (inherited from gate4's judgment-principle heuristics) and are errors regardless of whether any §4.1–4.3 word appears.
+Agent numbers and names; effort names; date/time stamps in comments; "this round / previously / fixed by …" narrations; file-progress accounting inside headers. These are detectable as classes (inherited from gate4's judgment-principle heuristics) and are errors regardless of whether any §4.1–4.3 word appears.
 
 ## 5. Bilingual transition rules
 

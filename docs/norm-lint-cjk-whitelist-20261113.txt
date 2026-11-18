@@ -12,7 +12,6 @@ certify/freeze_manifest.py
 certify/frozen8.py
 certify/push_gate.py
 cw.sh
-docs/annotation-standard-v1.0-20261113.md
 docs/en/architecture.md
 docs/jargon-to-standard-mapping-v1.md
 docs/ops-live-run-log-20261111.md
