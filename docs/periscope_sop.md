@@ -1,124 +1,127 @@
-# SOP · periscope 六源外围情报采集与判读草案工具 / SOP: Periscope Six-Source Peripheral-Intelligence Sweep and Judgment-Draft Tool
+# SOP: Periscope Six-Source Peripheral-Intelligence Sweep and Judgment-Draft Tool / `SOP · periscope 六源外围情报采集与判读草案工具`
 
-> **一句话 One-liner**: periscope 把 2026-11-13 首轮外围情报采集的 as-built 工艺（六源观察清单·窗口协议·哨伴飞·判读草案五段模板）固化为一支可复跑的命令行工具；判读升级（撞车三态裁定·C1 重扫·对外披露）永远不在工具内自动发生。
-> periscope freezes the as-built craft of the 2026-11-13 round-1 peripheral-intelligence sweep (six-source watchlist, window protocol, sentinel companion, five-section judgment draft) into one re-runnable CLI; adjudication upgrades (three-state collision verdicts, C1 rescans, external disclosure) never happen automatically inside the tool.
+> Purpose.  Standard-operating-procedure face for `tools/periscope.py`, the re-runnable CLI that freezes the as-built craft of the round-1 peripheral-intelligence sweep of November 13, 2026 (six-source watchlist, window protocol, watcher companion, five-section judgment draft); adjudication upgrades (three-state collision verdicts, C1 rescans, external disclosure) never happen automatically inside the tool.
+> Interface.  Documents the six-flag CLI `--config` / `--out` / `--rounds` / `--netrc` / `--dry-run` / `--selftest` (section 1), the config schema `rocqwash-periscope-config/1` and the default six-source as-built list (section 2), the three burned-in behaviors (section 3), the window and watcher-companion protocols (sections 4-5), the five-section judgment-draft template (section 6), the NETRED record forms and the read-only pledge (section 7), the offline selftest and suite membership (section 8), and the operating order (section 9). The original mixed-language text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  Subject face `tools/periscope.py` (Python 3 standard library only) and its suite shell `tests/t_periscope_shape.py`, which stays outside the `run_tests.sh` roster; credentials supplied through a netrc file passed to curl; the default config cites the `api.github.com` and `export.arxiv.org` endpoints. Read-only document face; no runtime dependency.
+> Evidence.  The selftest vectors V1-V10 (section 8) attest every documented behavior — the six flags, the schema matrix, the three burned-in behaviors, the cap/stop/retry rules, the read-only full sweep, the draft template with its four mandatory negative-finding elements, dry-run zero writes, and the NETRED per-shot reconciliation; the worked sample is the round-1 judgment volume cited in section 6; the identifiers, endpoints, anchors and exit codes quoted here match `tools/periscope.py` as read on the tree (six flags, schema name, `ROUND_SECONDS`, `assert_read_only`, `render_draft`, selftest vectors V1-V10 all present).
+> Exit-codes.  Not applicable to a document face; the tool's documented codes in section 1 (0 run/dry-run/selftest passing with negative findings and C1 triggers included; 1 selftest or draft-invariant failure; 2 usage/schema error; 9 missing input) are the implemented semantics, described as implemented.
 
 ---
 
-## 〇、适用域、前置闸与总判定语义 Scope, Pre-Flight Gates, and Verdict Semantics
+## 0. Scope, pre-flight gates, and verdict semantics
 
-### 0.1 适用域与输入输出面 Scope and I/O Surface
+### 0.1 Scope and I/O surface
 
-- **适用域 Scope**: 对一份可配置观察清单（schema `rocqwash-periscope-config/1`，缺省=六源 as-built 表）执行只读 GET 采集，落盘 raw 体＋逐发 NETRED 账＋哨窗口账，并产出五段式判读草案 `intel-ledger-draft.md`。
-- **输入 Inputs**: `--config`（六源 JSON，缺省内置）、`--out`（输出目录，真跑必填）、`--rounds`（哨轮数）、`--netrc`（凭据文件，直传 curl，工具本身零读凭据）。
-- **输出 Outputs**: `<out>/raw/<key>.json`（取件体）、`raw/<key>.retry.json`（404 定谳负发现证据体）、`raw/<key>.a<n>.json`（逐发体）、`raw/<key>.netred.txt`＋`raw/netred-master.txt`（逐发账含失败）、`raw/windowsniff.netred.txt`（哨窗口账）、`intel-ledger-draft.md`（判读草案）。
-- **真跑前置门 Pre-flight gates (fail-loud)**:
-  1. `--out` 缺席即拒绝发射（exit 2）——禁隐式网络扫；
-  2. `--config` 文件缺席 exit 9，schema 漂移 exit 2（未知顶层键/未知 kind/越界 cap/非 hex 冻结前缀皆拒）；
-  3. 只读承诺 GET-only：curl 实参构造器结构上不可能产出写动词，每次发射前 `assert_read_only` 复断言。
+- **Scope**: runs read-only GET collection against a configurable watchlist (schema `rocqwash-periscope-config/1`, default = the six-source as-built list), persists the raw bodies, the per-shot NETRED records and the watcher-window records to disk, and produces the five-section judgment draft `intel-ledger-draft.md`.
+- **Inputs**: `--config` (six-source JSON, built-in default), `--out` (output directory, required for a real run), `--rounds` (watcher rounds), `--netrc` (credentials file, passed straight to curl; the tool itself never reads the credentials).
+- **Outputs**: `<out>/raw/<key>.json` (fetched bodies), `raw/<key>.retry.json` (evidence bodies for definite 404 negative findings), `raw/<key>.a<n>.json` (per-shot bodies), `raw/<key>.netred.txt` + `raw/netred-master.txt` (per-shot records, failures included), `raw/windowsniff.netred.txt` (watcher-window records), `intel-ledger-draft.md` (the judgment draft).
+- **Pre-flight gates (fail-loud)**:
+  1. a missing `--out` refuses to initiate the run (exit 2) — implicit network sweeps are forbidden;
+  2. a missing `--config` file exits 9; schema drift exits 2 (unknown top-level keys / unknown kinds / out-of-range caps / non-hex frozen prefixes are all rejected);
+  3. the read-only pledge, GET-only: the curl argument builder is structurally incapable of producing a write verb, and `assert_read_only` re-asserts it before every shot.
 
-### 0.2 总判定语义 Top-Level Verdict Semantics
+### 0.2 Top-level verdict semantics
 
-- **一切发现皆数据 Data, never errors**: 负发现（404 已证结论/帽尽未取/窗口死）与 C1 触发都响亮登记、exit 0——升级通道（重扫/披露）候令不自动。
-- **草案≠裁定 Draft ≠ verdict**: 草案的机械行（初筛三态/哨判/排窗建议）是初筛；裁定是判读方的事。哨判词效力只及实测轮（负发现自划边界律同款）。
+- **Data, never errors**: negative findings (definite 404 conclusions / cap exhausted without collection / a dead window) and C1 triggers are all registered loudly and the tool exits 0 — the upgrade paths (rescan / disclosure) stay pending execution, never automatic.
+- **Draft ≠ verdict**: the draft's mechanical lines (three-state first screening / watcher conclusions / windowing suggestions) are a first screening; the verdict is the adjudicator's work. A watcher conclusion is valid only for the rounds actually measured (the same self-bounding rule as the negative-finding boundary).
 
-## 一、CLI 面 CLI Face（六旗标）
+## 1. CLI face (six flags)
 
 | Flag | Meaning | Default |
 |---|---|---|
 | `--config FILE` | six-source JSON (schema `rocqwash-periscope-config/1`) | built-in as-built list |
 | `--out DIR` | output directory; **required for a real run** (implicit sweeps refused, exit 2) | — |
-| `--rounds N` | sentinel companion rounds; one beat always fires after the sweep closes | 10 |
+| `--rounds N` | watcher companion rounds; one beat always fires after the sweep closes | 10 |
 | `--netrc FILE` | passed to `curl --netrc-file`; the token is never read/logged by the tool | none |
 | `--dry-run` | validate + plan + render the draft skeleton; zero network, zero writes | off |
 | `--selftest` | offline frozen vector group (canned transport + virtual clock) | off |
 
-Exit-codes: `0` run/dry-run/selftest green (negative findings and C1 triggers included) · `1` selftest red or draft invariant red · `2` usage/schema error · `9` missing input (config absent, output root not creatable).
+Exit-codes: `0` run/dry-run/selftest passing (negative findings and C1 triggers included) · `1` selftest failing or draft invariant failing · `2` usage/schema error · `9` missing input (config absent, output root not creatable).
 
-## 二、Config Schema 与六源 as-built 表 Config Schema and the Six-Source As-Built List
+## 2. Config schema and the six-source as-built list
 
-Schema `rocqwash-periscope-config/1` 顶层键：`schema` / `sentinel` / `defaults` / `deposit_anchors` / `sources`（未知键 fail-loud）。每源键位：`key` / `kind`（`github_search`｜`github_api`｜`github_issue`｜`github_commits`｜`arxiv`）/ `url` / `auth`（`netrc`｜`none`）/ `cap`（1–16，缺省 8）/ `days_window`（arXiv 滚动窗，URL 带 `{WINDOW}` 占位）/ `comments`（issue 子面 `{enabled, per_page}`）/ `c1_frozen_prefix`（仅 `github_commits`，hex 前缀）/ `screening`（`keywords` / `own_markers` / `anchor`）/ `retry_param_overrides`（逐次重试的 URL 参数覆盖表）。
+Schema `rocqwash-periscope-config/1` top-level keys: `schema` / `sentinel` / `defaults` / `deposit_anchors` / `sources` (unknown keys fail loud). Per-source keys: `key` / `kind` (`github_search` / `github_api` / `github_issue` / `github_commits` / `arxiv`) / `url` / `auth` (`netrc` / `none`) / `cap` (1-16, default 8) / `days_window` (the arXiv rolling window; the URL carries the `{WINDOW}` placeholder) / `comments` (the issue sub-face `{enabled, per_page}`) / `c1_frozen_prefix` (`github_commits` only, a hex prefix) / `screening` (`keywords` / `own_markers` / `anchor`) / `retry_param_overrides` (the per-retry URL parameter override table).
 
-缺省六源（2026-11-13 首轮 as-built watchlist；可整表替换·端点改动只需改 config）：
+Default six sources (the round-1 as-built watchlist of November 13, 2026; the whole list is replaceable — an endpoint change only needs a config change):
 
-| # | Key | Kind | Endpoint (as-built) | 判读面 Reading face |
+| # | Key | Kind | Endpoint (as-built) | Reading face |
 |---|---|---|---|---|
-| 1 | `mathlibpr` | github_search | `api.github.com/search/issues?q=repo:leanprover-community/mathlib4+is:pr+zeta&per_page=10` | 同题在先/竞速发现 |
-| 2 | `pr45912` | github_api | `api.github.com/repos/leanprover-community/mathlib4/pulls/45912` | state/mergeable/CI 动态 |
-| 3 | `arxiv-dzeta` | arxiv | `export.arxiv.org/api/query?...all:"Dedekind zeta"...{WINDOW}` · days_window=30 | 文献竞速面 |
-| 4 | `arxiv-quasir` | arxiv | 同型（"quasi-Riemann"）· days_window=30 | 文献竞速面 |
-| 5 | `issues` | github_issue | `api.github.com/repos/hy7pc8gfmf-dotcom/ConstructiveWorld-Main/issues/3` ＋ `/comments?per_page=30` 子面（可配置） | 自家派单帖动态 |
-| 6 | `dzzftip` | github_commits | `api.github.com/repos/AxiomMath/DedekindZetaZeroFree/commits?per_page=3` · `c1_frozen_prefix=09afbb4` | C1 触发判定 |
+| 1 | `mathlibpr` | github_search | `api.github.com/search/issues?q=repo:leanprover-community/mathlib4+is:pr+zeta&per_page=10` | prior registration of the same topic / racing-discovery watch |
+| 2 | `pr45912` | github_api | `api.github.com/repos/leanprover-community/mathlib4/pulls/45912` | state / mergeable / CI dynamics |
+| 3 | `arxiv-dzeta` | arxiv | `export.arxiv.org/api/query?...all:"Dedekind zeta"...{WINDOW}` · days_window=30 | literature racing watch |
+| 4 | `arxiv-quasir` | arxiv | same form ("quasi-Riemann") · days_window=30 | literature racing watch |
+| 5 | `issues` | github_issue | `api.github.com/repos/hy7pc8gfmf-dotcom/ConstructiveWorld-Main/issues/3` + the `/comments?per_page=30` sub-face (configurable) | own ticket-assignment thread dynamics |
+| 6 | `dzzftip` | github_commits | `api.github.com/repos/AxiomMath/DedekindZetaZeroFree/commits?per_page=3` · `c1_frozen_prefix=09afbb4` | C1 trigger decision |
 
-`deposit_anchors` 缺省值：`mathlib_pr45912_closed_at=2026-11-11T22:19:13Z`、`dzzf_tip_frozen_prefix=09afbb4`、`dzzf_freeze_observed_at=2026-11-10T17:42:11Z`——初筛时点对表的锚。
+Default `deposit_anchors`: `mathlib_pr45912_closed_at=2026-11-11T22:19:13Z`, `dzzf_tip_frozen_prefix=09afbb4`, `dzzf_freeze_observed_at=2026-11-10T17:42:11Z` — anchors that cross-check the first-screening time points.
 
-## 三、三坑烧入 The Three Burned-In Behaviors
+## 3. The three burned-in behaviors
 
-首轮（2026-11-13）三项实测坑已烧入工具本体，逐坑「判例 → 烧入行为 → 验证」：
+Three measured defects from the round-1 sweep of November 13, 2026 are burned into the tool body; each is documented as precedent → burn-in behavior → verification:
 
-### 坑 a · arXiv 腿第 1 发即带 `-L`
+### Behavior a: the arXiv leg carries `-L` from the first shot
 
-- **判例 Precedent**: 首轮 quasir 腿 8/8 发全 301（帽尽零收成），dzeta/leanrh 腿改参（补 `-L`）后一发即 200——重定向病烧掉 16.7% 的发数预算。
-- **烧入 Burn-in**: `build_curl_args` 对 `kind=arxiv` 无条件在第 1 发即追加 `-L`（且任何 attempt 都带）；非 arXiv 源缺省不带（可用 `follow` 配置位打开）。
-- **验证 Verification**: selftest V3——arXiv 源 attempt 1–8 的实参矢量逐发断言含 `-L`；GitHub 源矢量断言缺省无 `-L`。
+- **Precedent**: in the round-1 sweep the quasir leg went 8/8 shots all 301 (cap exhausted, zero yield), while the dzeta/leanrh legs, after adding `-L` to their parameters, returned 200 on the first shot — the redirect defect burned 16.7% of the shot budget.
+- **Burn-in**: `build_curl_args` unconditionally appends `-L` from the first shot for `kind=arxiv` (and carries it on every attempt); non-arXiv sources omit it by default (openable through the `follow` config switch).
+- **Verification**: selftest V3 — the argument vectors for attempts 1-8 of the arXiv source assert `-L` shot by shot; the GitHub-source vectors assert no `-L` by default.
 
-### 坑 b · 哨前台伴飞零静默洞（轮距 60s·让渡必写 SUSPEND 行）
+### Behavior b: the watcher companion leaves zero silent gaps (60s round spacing; every yield writes a SUSPEND line)
 
-- **判例 Precedent**: 首轮哨后台档轮距 97s，且 R2→R3 出现 15min46s 零采样洞——「无采样」与「测得死」分不了账。
-- **烧入 Burn-in**: 哨伴飞内建于采集同进程：beat 1 开扫前采样→采集扫（可能超时越过多拍）→被越过的每一拍显式写 `SUSPEND|<beat>|<UTC>|collection-sweep-in-flight`（禁静默跳轮）→扫毕后一拍必采样→余轮按 60s 节距补齐。`_assert_no_silent_gap` 机械断言 beat 序号 1..N 连续无缺；windowsniff 账落盘后回读断言（行数==beat 数·头行在位），漂移即 exit 9。
-- **验证 Verification**: selftest V5——虚拟时钟下采集扫越拍 2 拍 → 恰 2 条 SUSPEND，序号连续，末拍为采样拍，回读对账过。
+- **Precedent**: in the round-1 sweep the background-mode watcher ran at 97s spacing and R2→R3 carried a 15min46s zero-sampling gap — "not sampled" and "measured dead" could not be told apart.
+- **Burn-in**: the watcher companion is built into the same process as collection: beat 1 samples before the sweep opens → the collection sweep runs (it may time out across several beats) → every skipped beat explicitly writes `SUSPEND|<beat>|<UTC>|collection-sweep-in-flight` (silent skipping is forbidden) → the beat right after the sweep must sample → the remaining rounds fill in at the 60s spacing. `_assert_no_silent_gap` mechanically asserts that beat numbers 1..N are contiguous with none missing; after the windowsniff record is persisted to disk it is read back and asserted (line count == beat count · header line in place), and any drift exits 9.
+- **Verification**: selftest V5 — under the virtual clock the collection sweep skips 2 beats → exactly 2 SUSPEND lines, contiguous numbering, the last beat is a sampling beat, and the read-back reconciliation passes.
 
-### 坑 c · 源④端点＝Main issue#3＋comments 子面（可配置）
+### Behavior c: source 4's endpoint = the Main issue#3 plus the comments sub-face (configurable)
 
-- **判例 Precedent**: 首轮源④按五源表钉到 `rocqwash/issues/3` 吃 404 定谳负发现；根因＝派单协调台实在 `ConstructiveWorld-Main` issue#3（GET 200 · 87 comments 实证）——端点定装必须先经存在性 GET 验明。
-- **烧入 Burn-in**: 缺省 config 的 `issues` 源 URL 钉 Main repository issue#3，`comments.enabled=true`＋`per_page=30` 子面在同源帽内随单点后取（发间 ≥2s、逐发入 NETRED）；单点 404 时子面不起飞（负发现四要素先行）。端点退役件（rocqwash repository issue 面单点）不入缺省表。
-- **验证 Verification**: selftest V4——缺省 issues 端点==Main issue#3 且不含 rocqwash/issues；罐装两发（单点 200→comments 200）断言子面 URL 形、两发皆入账、comments count 解析在卷。
+- **Precedent**: in the round-1 sweep, source 4 was pinned by the five-source list to `rocqwash/issues/3` and took a 404 as a definite negative finding; the root cause was that the ticket-assignment coordination thread actually lived at `ConstructiveWorld-Main` issue#3 (GET 200 · 87 comments verified) — an endpoint pinning must first be proven by an existence GET.
+- **Burn-in**: the default config pins the `issues` source URL to the Main repository issue#3; the `comments.enabled=true` + `per_page=30` sub-face is fetched within the same source cap right after the single point (≥2s between shots, every shot enters NETRED); on a 404 at the single point the sub-face does not start (the negative-finding four elements come first). The retired endpoint face (the rocqwash repository issue single point) stays out of the default list.
+- **Verification**: selftest V4 — the default issues endpoint equals the Main issue#3 and contains no rocqwash/issues; two canned shots (single point 200 → comments 200) assert the sub-face URL form, both shots entering the record, and the comments count parsed on file.
 
-## 四、窗口协议 Window Protocol（帽 8·取到即停·sleep60 改参重试）
+## 4. Window protocol (cap 8, stop when obtained, sleep-60 retry with changed parameters)
 
-| 规则 Rule | 行为 Behavior |
+| Rule | Behavior |
 |---|---|
-| 帽 Cap | 每源 8 发（config `cap` 可改 1–16）；哨拍与 comments 子面发同样逐发入账 |
-| 取到即停 Stop-when-obtained | 任一发 HTTP 200 且体可解析 → 该源终态 `obtained`，剩余帽不烧 |
-| 失败重试 Retry | 非 200 非 404 → sleep 60s → **改参**重发：每次重试的有效超时放宽 30s（`curl-timeout:NNs` 记入 NETRED `changed=`），config `retry_param_overrides` 的逐次覆盖一并记 `config-override:n` |
-| 404 已证结论 Negative-definite | 404 即停（不退避·保帽），404 体保全为 `raw/<key>.retry.json` 作四要素证据 |
-| 帽尽未取 Cap-exhausted | 终态 `cap-exhausted-registered`＝登记非失败，四要素草案强制 |
-| 解析败 Parse-error | 200 但体不可解析 → `parse-error-retryable`，照失败重试面走（首轮判例：体解析败＝管道数据非窗口数据） |
+| Cap | 8 shots per source (the config `cap` allows 1-16); watcher beats and comments sub-face shots likewise enter the record shot by shot |
+| Stop-when-obtained | any shot with HTTP 200 and a parseable body → the source's terminal state is `obtained`; the remaining cap is not burned |
+| Retry | not 200 and not 404 → sleep 60s → resend with **changed parameters**: each retry widens the effective timeout by 30s (`curl-timeout:NNs` recorded into the NETRED `changed=` field), and each override from the config `retry_param_overrides` is additionally recorded as `config-override:n` |
+| Negative-definite 404 | a 404 stops immediately (no backoff, cap preserved) and the 404 body is preserved as `raw/<key>.retry.json` as the four-element evidence |
+| Cap-exhausted | terminal state `cap-exhausted-registered` = registered, not failed; the four-element draft is mandatory |
+| Parse-error | 200 but an unparseable body → `parse-error-retryable`, taking the failure-retry path (round-1 precedent: a body parse failure = pipeline data, not window data) |
 
-## 五、哨伴飞协议 Sentinel Companion Protocol
+## 5. Watcher companion protocol
 
-- 节距 `ROUND_SECONDS=60` 烧入不可配（改节距=改三坑 b 的语义，须改工具本体并过 selftest）。
-- 窗口账行形：`R<n>|<UTC>|<code>|LIVE|DEAD` ＋ `SUSPEND|<n>|<UTC>|<reason>`；哨探活端点缺省 `api.github.com/rate_limit`。
-- 哨判词边界（写死进草案第 5 段第 1 条）：只覆盖实测轮；未测段不能定谳死活——首轮判例「26 分钟连续活证不足以证伪碎片化假设」。
+- The `ROUND_SECONDS=60` spacing is burned in and not configurable (changing the spacing changes the behavior-b semantics; it requires changing the tool body and passing the selftest).
+- Window-record line forms: `R<n>|<UTC>|<code>|LIVE|DEAD` plus `SUSPEND|<n>|<UTC>|<reason>`; the default watcher liveness endpoint is `api.github.com/rate_limit`.
+- Watcher-conclusion boundary (hard-coded into item 1 of draft section 5): it covers only the measured rounds; an unmeasured segment cannot be finally established as dead or alive — the round-1 precedent: "26 minutes of continuous liveness evidence does not falsify the fragmentation hypothesis".
 
-## 六、判读草案模板 The Judgment-Draft Template（五段·强制形）
+## 6. The judgment-draft template (five sections, mandatory form)
 
-`render_draft` 产出 `intel-ledger-draft.md`，五段结构对齐首轮判读卷：
+`render_draft` produces `intel-ledger-draft.md`; the five-section structure aligns to the round-1 judgment volume:
 
-| 段 Section | 内容 Content | 强制点 Mandatory face |
+| Section | Content | Mandatory face |
 |---|---|---|
-| 一 逐源 digest | per-source 表：fetched-at（UTC）/ shots / state / key facts（time-bound） | 逐源必有一行；raw 文件指引随附 |
-| 二 撞车初筛三态 | 逐条目行：created/published vs deposit anchor＋关键词重叠 → `prior-registered` / `suspected-collision(adjudicate)` / `no-bearing` / `ours(registered)` | 机械初筛行必带判据说明；疑似撞车升格永不自动 |
-| 三 C1 触发判定 | tip sha vs 冻结前缀 → `C1-CLEAN` / `C1-TRIGGERED` / `UNDETERMINED` | 触发=响亮登记，重扫候令 |
-| 四 负发现四要素 | 每个未取到源一节：①scanned ②not scanned ③not an absolute claim ④aliased equivalents not exhausted | **强制 mandatory**：渲染器对任一 `negative-definite`/`cap-exhausted` 源缺任一要素即 AssertionError（exit 1，fail-loud）——四要素措辞正形承 negative-finding 边界律卡 |
-| 五 排窗建议五条 | ①首发放行相位（哨实测＋边界句）②哨伴飞（beat/SUSPEND 计数＋零静默洞验证）③席间错峰（first-shot 取件面＋arXiv 错后）④帽与协议（逐源发数对帽）⑤改钉与跟进（C1 态/404 重钉候选/疑似撞车计数） | 五条形固定，逐条带 as-run 机械数据 |
+| 1 Per-source digest | a per-source table: fetched-at (UTC) / shots / state / key facts (time-bound) | every source carries one row; the raw file pointers are attached |
+| 2 Three-state collision first screening | per-entry lines: created/published vs the deposit anchor plus keyword overlap → `prior-registered` / `suspected-collision(adjudicate)` / `no-bearing` / `ours(registered)` | every mechanical first-screening line carries its criterion note; promoting a suspected collision never happens automatically |
+| 3 C1 trigger decision | the tip sha vs the frozen prefix → `C1-CLEAN` / `C1-TRIGGERED` / `UNDETERMINED` | a trigger is registered loudly; the rescan stays pending execution |
+| 4 Negative-finding four elements | one block per uncollected source: 1 scanned, 2 not scanned, 3 not an absolute claim, 4 aliased equivalents not exhausted | **mandatory**: for any `negative-definite` / `cap-exhausted` source the renderer raises AssertionError when any element is missing (exit 1, fail-loud) — the four-element wording is the exact form pinned by the negative-finding boundary rule |
+| 5 Five windowing suggestions | 1 first-release timing (watcher measurements plus the boundary sentence) 2 watcher companion (beat/SUSPEND counts plus the zero-silent-gap verification) 3 staggered timing between agents (the first-shot pickup face plus delaying arXiv) 4 caps and protocol (per-source shot counts vs the cap) 5 re-pinning and follow-up (C1 state / 404 re-pin candidates / suspected-collision counts) | the five-item form is fixed; every item carries its as-run mechanical data |
 
-**样例 Worked sample**: 首轮判读卷＝`attn/_periscope_20261113/intel-ledger-20261113.md`（25 发总账＋三态初筛 11 行＋C1 判定＋issues 404 四要素范文＋排窗五条原文）——工具产出的草案即该卷的骨架预填形，裁定句由判读方续写。
+**Worked sample**: the round-1 judgment volume is `attn/_periscope_20261113/intel-ledger-20261113.md` (the 25-shot master record, 11 three-state first-screening lines, the C1 decision, the issues-404 four-element exemplar, and the five windowing suggestions verbatim) — the tool's draft is that volume's skeleton-prefilled form, and the adjudicator continues writing the verdict sentences.
 
-## 七、NETRED 与只读承诺 NETRED and the Read-Only Pledge
+## 7. NETRED and the read-only pledge
 
-- 逐发账（含失败发）一行一发：`<UTC>|<key>|attempt=<n>|GET <url>|HTTP <code>|<bytes>B|<verdict>[|changed=…]`；per-source 账＋master 账双落。
-- 只读承诺机械面：实参构造器无写动词位；`assert_read_only` 对每矢量扫描 `-d/--data*`（ outright 拒）与 `-X` 非 GET（拒）；selftest V7 对五种 kind×三档 attempt 全扫。
-- 凭据排除：工具零读零存零回显 token——netrc 路径直传 curl；NETRED 行不含凭据字段。
-- hosts 钉（本机 DNS 污染域）属环境面：操作者按 hosts 卡维护 `hosts` 文件，工具不代管。
+- The per-shot record (failed shots included) is one line per shot: `<UTC>|<key>|attempt=<n>|GET <url>|HTTP <code>|<bytes>B|<verdict>[|changed=…]`; the per-source record and the master record are both persisted to disk.
+- The read-only pledge's mechanical face: the argument builder has no write-verb slot; `assert_read_only` scans every vector for `-d/--data*` (rejected outright) and for `-X` with a non-GET verb (rejected); selftest V7 sweeps the five kinds × three attempt tiers in full.
+- Credential exclusion: the tool never reads, stores or echoes the token — the netrc path goes straight to curl; NETRED lines carry no credential fields.
+- The hosts pins (locally DNS-poisoned domains) are an environment face: the operator maintains the `hosts` file per the hosts card; the tool does not manage it.
 
-## 八、离线自测与套件位 Offline Selftest and Suite Membership
+## 8. Offline selftest and suite membership
 
-- `--selftest`＝10 矢量冻结组：V1 CLI 面（六旗标＋裸跑拒绝）· V2 schema 矩阵（缺席 9/漂移 2×5 形）· V3 坑 a `-L` 逐发 · V4 坑 c 端点＋子面 · V5 坑 b SUSPEND＋零静默洞＋回读 · V6 帽/停/重试三分 · V7 只读全扫 · V8 草案五段＋四要素＋C1 双枝＋初筛四态 · V9 dry-run 零写入 · V10 NETRED 逐发对账。罐装 transport＋虚拟时钟——**零网络零写盘**（临时目录外零字节）。
-- `tests/t_periscope_shape.py`＝套件壳（subprocess 四查：selftest 标记/--help 面/退出码口径/dry-run 骨架与零写入）。**不进 `run_tests.sh` 名册**：名册计数与 README.md 行三处机械对账（doc_lint ②计数查），README 归名册授权波管辖——承 `t_exp_port.py` 判例（tests/t_exp_port.py:11-14 同款登记）。
+- `--selftest` = a frozen group of 10 vectors: V1 CLI face (six flags + bare-run refusal) · V2 schema matrix (missing 9 / drift 2 × 5 forms) · V3 behavior a `-L` shot by shot · V4 behavior c endpoint + sub-face · V5 behavior b SUSPEND + zero silent gaps + read-back · V6 cap/stop/retry three-way split · V7 read-only full sweep · V8 draft five sections + four elements + both C1 branches + first-screening four states · V9 dry-run zero writes · V10 NETRED per-shot reconciliation. Canned transport + virtual clock — **zero network, zero disk writes** (zero bytes outside the temporary directory).
+- `tests/t_periscope_shape.py` is the suite shell (four subprocess checks: the selftest marker / the `--help` face / the exit-code contract / dry-run skeleton and zero writes). It is **not entered in the `run_tests.sh` roster**: the roster count and the README.md lines reconcile mechanically in three places (doc_lint's second count check), and README membership is governed by the roster-authorization work stream — following the `t_exp_port.py` precedent (the same registration form at tests/t_exp_port.py:11-14).
 
-## 九、操作序 Operating Order（真跑三步）
+## 9. Operating order (three steps for a real run)
 
-1. **干跑验装**：`python tools/periscope.py --dry-run [--config my.json]`——读 plan 六行与草案骨架，确认端点/帽/锚无漂移（零网络零写盘）；
-2. **真跑**：`python tools/periscope.py --out <dir> [--netrc <file>] [--rounds 10]`——产出 raw 体＋三账＋草案；哨拍先行探路；
-3. **判读续写**：以 `intel-ledger-draft.md` 为骨架，按样例卷五段形续写裁定句（三态裁定/C1 处置/四要素补全②④要素），终卷按日期另名落盘；疑似撞车披露与重扫皆候令。
+1. **Dry-run validation**: `python tools/periscope.py --dry-run [--config my.json]` — read the six plan lines and the draft skeleton; confirm that endpoints/caps/anchors show no drift (zero network, zero disk writes);
+2. **Real run**: `python tools/periscope.py --out <dir> [--netrc <file>] [--rounds 10]` — produces the raw bodies, the three records and the draft; the watcher beats probe ahead;
+3. **Adjudication continuation**: with `intel-ledger-draft.md` as the skeleton, continue writing the verdict sentences in the worked volume's five-section form (three-state verdicts / C1 disposition / completing elements 2 and 4 of the four elements); the final volume is persisted to disk under its dated name; suspected-collision disclosure and rescans both stay pending execution.
