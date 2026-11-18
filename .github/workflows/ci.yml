@@ -129,7 +129,15 @@ jobs:
       - name: Fingerprint gate
         id: fp
         run: |
-          FP="${{ hashFiles('**', '!docs/ci-whitepaper-recursive-era-v1-*.md', '!**/*.zh.md') }}"
+          # hashFiles negation patterns are dead on the runner (2026-11-19
+          # live case: a whitepaper-only push produced a different verdict-
+          # cache key, forcing FULL on every push and leaving the ANCHORS
+          # branch unreachable by construction). Fingerprint the committed
+          # tree directly instead: the blob listing minus the pure-prose
+          # allowlist, hashed with git itself (portable across hosted
+          # Linux/Windows/macOS; content-addressed via blob SHAs, EOL-immune,
+          # and blind to untracked leftovers in the runner workspace).
+          FP="$(git ls-tree -r HEAD | grep -v -e 'docs/ci-whitepaper-recursive-era-v1-.*\.md$' -e '\.zh\.md$' | git hash-object --stdin)"
           echo "key=ci-verdict-${{ matrix.label }}-${FP}" >> "$GITHUB_OUTPUT"
 
       - name: Verdict cache (fingerprint-keyed)
