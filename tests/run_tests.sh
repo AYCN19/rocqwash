@@ -1,252 +1,33 @@
 #!/bin/bash
-# run_tests.sh — rocqwash tests/ 自测套件总入口（rocqwash tests/·20261030）
+# run_tests.sh — rocqwash tests/ self-test suite entry point
 #
-# 形制：
-#   - 逐例 PASS/FAIL 汇总；全绿 EXIT 0；任一红 EXIT 1。
-#   - 幂等：不向仓库写任何字节（python3 -B 禁 __pycache__；临时日志 mktemp+trap 清理；
-#     wash/adaptation 测试只在临时目录/内存驱动，硬编码席位路径永不被触碰）。重复运行结果恒同。
-#   - 覆盖面（每例正/负两判优先）：
-#       scan/mac_stmt_scan.py   --selftest（E364 冻结向量组）
-#       names/mac_stmt_names.py --expect 形（fixture 正判/含-Let/负判 exit 2）
-#       verify/gate4_comment_guard.py --file（净样例 PASS=0 / 脏样例 FAIL=1 两判）
-#       verify/retrofit_gate7_irr.py dry run（tests/test_retrofit_dryrun.py·零落盘）
-#       wash/_abl1_wash.py exact-string+count（tests/test_wash_fixture.py·正/幂等/负三判）
-#       wash/wash_engine.py 通用逐件引擎（tests/test_wash_engine.py·六判 subprocess）
-#       verify/verify_vo.py four-point pass criterion（--selftest 九判）
-#       seam/seam_probe.py W13 四机制（--selftest 四正例＋掩蔽负例）
-#       certify/freeze_manifest.py 两层冻结（--selftest 四判）
-#       certify/push_gate.py 推窗四判据＋UNION v2（--selftest UNION 六判＋window 四判）
-#       certify/frozen8.py 八件冻结名单（--selftest 账载四判＋在册名单对账·账载≡文档/盘≡账/篡改现形）
-#       watch/watch.py CI 监控＋钉 IP 推送＋confirm（--selftest 零网络向量组）
-#       tools/cpu_guard.sh -Direct 冒烟（探针一发即退＋退出码传播）
-#       wrapper/scan_station.py 正本指认包装（tests/test_scan_station.py·九判零写盘）
-#       wrapper/gate7_probe.sh＋coqc_shim.sh gate7 探针链适配层（tests/test_gate7_wrapper.py·十三判零编译零写盘）
-#       wrapper/gate6_census.sh＋born_world.sh gate6 普查闸启动层＋born 世界基正形
-#         （tests/test_gate6_born_wrapper.py·二十一判零编译零写盘）
-#       wrapper/verify_born.py born 轮判绿接线（tests/test_verify_born.py·九判零写盘）
-#       wrapper/quad8_reconcile.py 四仓同 md5 副本群对账（--selftest 夹具八判＋
-#         在册四仓名单对账 t_quad8_check·11 副本/六环咬合/audit 只录不判·零写盘）
-#       wrapper/frozen_call.py 逐调断言（--selftest 夹具五判·PASS 透传入账/拒执四向）
-#       wash/world_hook.py 世界基校验钩子（tests/test_world_hook.py·五判·五课负例①nw5）
-#       tools/select_audit.py 选件审计器（tests/test_select_audit.py·二十判·五课负例②nw6＋③enbig7
-#         ＋v6 判据 nw10/abl6 空账：parse_requires 全形式/STDLIB_ROOTS 豁免/
-#         audit_requires 世界 .v/.vo 存在性闭包/实盘补件面＋CLI 四码）
-#       verify/verify_gate6.py gate6 薄包装＋eum 判例器化（tests/test_verify_gate6.py·五判·五课夹具④）
-#       recipes/S07 处方件＋E5 病面机检（tests/test_recipe_s07.py·五判·五课夹具⑤）
-#       tools/netname_normalize.py .v.v 双后缀名净名归一器（tests/test_netname_normalize.py·
-#         九节·本轮实战判例工具化①：干跑默认零落盘/--apply md5 前后验讫/COLLIDE 拒覆写/CLI 四码）
-#       verify/verify_vo.py --require-fresh fresh-compile 防线（tests/test_verify_fresh.py·
-#         八节·本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例——魔数＋新鲜度双判 rc=9 fail-loud）
-#       verify/extract_magic_check.py gate7 提取面 Obj.magic 逐件机检闸（tests/test_extract_magic.py·
-#         十一节·本轮实战判例工具化③：run97/98 gate7 三件涨账 28/4/1 坑账第十笔工具化——
-#         Separate Extraction 解析→rocq 提取→ocamlc→grep -c Obj.magic→--max 判红绿·假桩全链零真编译；
-#         v15 增盲区补全节：首战 G09 Class/G13 Extraction 双红→DECL_SKIP_EXT 声明/命令
-#         vernacular 就地扩补·Class 声明夹具 census 不误判·未知 vernacular 仍红 9）
-#       scan/scan_v4_token.py token 级限定名普查（tests/test_scan_v4_token.py·十一判·
-#         W15 实战判例工具化①：混合行遮蔽夹具三站复现＋旧法盲区机械实证＋binder 追踪
-#         零误报；真树抽查经 ROCWASH_TREE_SAMPLES 环境门控·缺省跳过不充红）
-#       wash/cure_pack.json＋cure_applier.py 消费位治愈正典包五式（tests/test_cure_pack.py·
-#         十一判·W15 工具化②：五式触发/幂等/门控自检＋fixture dry run-apply-二次零变更＋
-#         cure_examples.v 编译 rc=0（ROCWASH_ROCQ 门控·cpu_guard 包裹·v47 ⑧A 案
-#         总开关缺省探测自动跑）＋不透明 reflexivity 负证 rc!=0）
-#       verify/erasure_classifier.py 擦除位分类器六簇（tests/test_erasure_classifier.py·
-#         十三判·W15 工具化③：六簇判定/coq_ 前缀/多行 inner-component/premise 位/
-#         CAPTURE 交叉对拍/resolve 状态；真件回放经 ROCWASH_ERASURE_MLI/SCAN 门控）
-#       wash/probe_engine.py 批量闭包相容探针引擎（tests/test_probe_engine.py·九节·
-#         v30 工具化①·承 W13 probe_batch.py：stub 全链 rc 三分 WASHABLE/BORN-CLEAN/
-#         RED-MISSING_LIB·NO-SRC/TIMEOUT 124·resume 幂等同账字节恒同·guard 包裹
-#         rc 真取·RED 缺列 RC0·CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控·套件缺省
-#         探测自动跑（v47 ⑧A 案）·env 缺且 9.3 缺卷仍 SKIP）
-#       tools/chain_graph.py 多账合并链根图（tests/test_chain_graph.py·七节·
-#         v30 工具化②·承 W25 w25_merge_ledgers.py：双形通吃/后批覆盖/batches 累积/
-#         链根自身可洗性三分/missing 双源/TOP 榜排序截断＋确定性字节恒同/CLI 四码）
-#       tools/ledger_sync.py probe×状态台账合并同步（tests/test_ledger_sync.py·
-#         十节·v30 工具化③·v2.1 增补：CLEAN 升格全链/E1 去重/E3 幽灵/MD5-DRIFT/
-#         NO-MD5/timeout·no-src 特异 tag/report JSON/列校验 fail-loud/幂等字节恒同/
-#         CLI 四码/items 子键壳＋元数据滤除/GEN-DIVERGENCE 分歧出账）
-#       wash/comment_pack.json＋comment_sweep.py 注释域 sweep 旁车（tests/test_comment_pack.py·
-#         六节·v31 工具化：嵌套注释+字符串感知状态机/旗词换形/头注换代/
-#         w7 code 行全等/幂等/CLI 四码）
-#       scan/dual_scan.py 双器对拍驱动（tests/test_dual_scan.py·十节·
-#         v32 工具化：scan_v4_token＋mac_stmt_scan 双扫×逐件差异报告
-#         only_v4/only_stmt/common·确定字节恒同·CLI 四码·零触真仓）
-#       wash/cure_pack v1.2 S07 适配式（tests/test_cure_pack.py 扩节·
-#         cure32 壳除/记号重绑/投影桥/谓词面收敛/binder 站型·dry run-apply-
-#         operation-全零复跑＋conflict --json rc4 回归＋门控 S07 编译弧红→passing→提取 0/0）
-#       cw.sh v29-v32 工具波统一入口（tests/test_cw_entry.sh·v33 工具化·
-#         四节：帮助/路由冒烟＋七工具 --help 透传＋功能透传（scan4/dual-scan/
-#         chain/sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）
-#         ＋零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
-#         夹具只读输出全落 mktemp·零触真仓）
-#       tools/toolchain_dyld_doctor.py dyld 工具链断链诊断器（tests/
-#         test_toolchain_dyld_doctor.py·最小自测壳两判：--selftest 冻结标记
-#         DYLD-DOCTOR-SELFTEST PASS＋--help 冒烟·零真 otool 零编译零网络零写盘）
-#       tools/ci_triage.py CI 红炉分诊器（tests/test_ci_triage.py·最小自测壳
-#         两判：--selftest 冻结标记 CI-TRIAGE-SELFTEST PASS＋--help 冒烟·
-#         零网络零写盘；selftest〔十〕gate2-only E 变体矢直挂
-#         tests/fixtures/ci_triage_gate2_only_{cancelled,failure}.json
-#         真形两件（v50 20261112 工装席入谱·retro 台账 run#7/#10 誊录·
-#         fixtures 九件套＝六件套＋Main 形＋gate2-only 两件；v51 20261112
-#         集成席登记：复核台账 token 二分限形——#10 认证态形转正 UNREC·
-#         banner-absent 形保持 E·两 fixture 增 canned job_logs 真执行行
-#         誊录＋dump 行滤除矢＋五 token 在册矢）
-#       tools/net_probe.py 网络窗探针（tests/test_net_probe.py·最小自测壳两判：
-#         --selftest 冻结标记 NET-PROBE-SELFTEST PASS＋--help 冒烟·零网络零写盘）
-#       tools/registry_union.py 注册册 union 手术器（tests/test_registry_union.py·
-#         九节：selftest/coq 夹具组/陷阱组同名不同形/重锚 md5 冻结向量/dry run-
-#         apply-幂等/json 确定性/CLI 四码＋git 三 ref 直读·零触真仓零网络零编译）
-#       tools/pushci.py 推送 CI 一键流水线编排器（tests/test_pushci.py·
-#         六场景壳十节：selftest 冻结矢量/tmp repository helper/S1 绿径/S2 NETRED 愈合/
-#         S3 内容红零 rerun/S4 heal 耗尽/S5 merge/S6 dry-run/幂等字节恒同/
-#         CLI 五码·全离线全注入零真网络零真 push 零编译·v41 波器面零新矢量
-#         ——本波 pushci 相关新产出＝双门归一评估 docs/push-gate-dual-door-
-#         assessment-v1.0-20261111.md 只评估零代码变更）
-#       tools/cw_sentinel.py 实时动态哨（tests/test_cw_sentinel.py·最小自测壳
-#         两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
-#         哨自身 --selftest 十五矢量 canned 注入零真网络零编译·v41 波⑨on-red
-#         双路同守卫/⑬预设表扩展五预设链式·v51 波⑭韧性层传输层瞬断有界重试
-#         （--net-retries 退避 5s/15s/45s）＋loop 逐源 skip 宁跳轮不崩驻/
-#         ⑮监督壳部署形冒烟 examples/sentinel_supervisor.sh bash -n＋关键行
-#         静态断言零执行零网络）
-#       tools/wash_shape.py shape-normalizing tool·正典形五洗流水（tests/test_wash_shape.py·
-#         最小自测壳三判：--selftest 冻结标记 WASH-SHAPE-SELFTEST PASS
-#         十六判向量（plan/apply/幂等/锚/冻结红拒/CLI/--loop/确定性＋preset
-#         链：模板库装载·preset/--header-map 胜 env·占位渲染→apply 端到端·
-#         同槽互斥 rc2·无源 plan-miss）＋--help 冒烟＋退出码口径抽验 2/2/9·
-#         零编译零网络·v39 轮洗形席扩容）
-#       tools/unclog.py 疏通堵塞闭环引擎（tests/test_unclog.py·最小自测壳
-#         三判：--selftest 冻结标记 UNCLOG-SELFTEST PASS（十四矢量全 --injector
-#         canned 罐装零真编译·v41 波⑬--jobs 维度）＋--help 冒烟＋退出码口径
-#         抽验 2/2/9·零网络零触真仓）
-#       tools/cw_doctor.py 综合体检器·四域聚合（tests/test_cw_doctor.py·最小
-#         自测壳两判：--selftest 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全
-#         --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译）＋
-#         --help 冒烟·20261111 v38 集成席挂接）
-#       tests/test_relay_e2e.py 接驳实战核 e2e（v39 工装席铸件·集成席挂接·
-#         cw_sentinel --on-red-preset unclog 全链三判：①watcher --once＋injector
-#         canned CI 红炉→ci-red 事件→preset 代跑 unclog rc=9 如实入账·哨退
-#         出码仍 0 ②unclog --audit dry run rc=0·--src 全文件 md5 清单跑前跑后
-#         自证零写盘 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍·
-#         全 canned 罐装零真网络零真编译）
-#       tools/doc_lint.py 文档←→实现一致性三查器（tests/test_doc_lint.py·
-#         最小自测壳三判：--selftest 冻结标记 DOC-LINT-SELFTEST PASS（tmp
-#         迷你仓六矢量 V1-V6 由铸席 --selftest 自证）＋--help 冒烟＋退出码
-#         口径抽验 2/2/9·零网络零写盘·20261111 v39 集成席缺壳自补挂接）
-#       tests/test_destructive_matrix.py 破坏面复核矩阵（20261111 v40 破坏面席
-#         铸件·集成席挂接·17 行拒写判据一行一拒写：器×写面×护栏锚 file:line
-#         ——unclog×4（缺 --apply 零写盘/--audit 零写盘＋互斥/frozen 红拒/
-#         非链根件零被动）＋wash_shape×4（plan 零写盘/rescan partial 不谎报
-#         shaped/冻结名红拒/同槽互斥）＋pushci×3（dry-run 零副作用/内容红零
-#         rerun/heal 帽尽停）＋cw_sentinel×2（缺省 report-only/preset 缺
-#         --emit rc=2）＋registry_union×2＋cure_applier×2（干跑零写盘/
-#         --apply 才落刀＋幂等断言拒写）·全 tmp fixture＋injector 罐装零真
-#         网络零真仓零真编译·矩阵红＝护栏破响亮列破口）
-#       tools/baseline_diff.py 堵账基线对比器（tests/test_baseline_diff.py·
-#         最小自测壳三判：--selftest 冻结标记 BASELINE-DIFF-SELFTEST PASS
-#         （六矢量 improved/degraded＋墙因变/stable＋timing 不入对比＋幂等/
-#         incomparable/md 输出/CLI 四码＋形坏拒判由铸席自证）＋--help 冒烟
-#         ＋退出码口径抽验 2/2/9·零网络零编译零触真仓·20261111 v40 集成席
-#         缺壳自补挂接）
-#       tools/red_dispatch.py 红事件路由器（tests/test_red_dispatch.py·
-#         最小自测壳三判：--selftest 冻结标记 RED-DISPATCH-SELFTEST PASS
-#         （十二矢量路由全族/占位/auto 执行实证/state 防重/cooldown/
-#         report-only 零执行/stdin 多事件/fail-loud/rc≠0 不改退出码/fix 清单/
-#         确定性/单对象兜底由铸席 --selftest 自证）＋--help 冒烟＋退出码
-#         口径抽验 2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补
-#         挂接）
-#       tools/registry_audit.py 注册册卫生审计器（tests/test_registry_audit.py·
-#         最小自测壳三判：--selftest 冻结标记 REGISTRY-AUDIT-SELFTEST PASS
-#         （四账判类全谱/处方保首＋md5 冻结向量/只读实证/确定性/git 直读/
-#         CLI 四码由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验
-#         2/2/9·零网络零编译零触真仓·20261112 v46 集成席缺壳自补挂接）
-#       tools/registry_fix.py 注册册处方执行器（tools/registry_fix.py --selftest
-#         直挂八矢量：①干跑零写盘＋逐条 md5 账＋skip 清单全谱＋dry run report 重跑
-#         字节恒同②--apply 12 重复块→0＋断言三过＋md5 账对盘③77c2b9a8 锚刷
-#         md5 冻结向量＋同输同出④注入炸点回滚⑤自然炸点 A-fix-2 回滚⑥staging
-#         炸零写盘⑦CLI 四码⑧落刀确定性——registry_audit --fix-plan 处方逐条
-#         apply·dry run by default·20261112 v47 集成席直挂）
-#       tools/norm_lint.py 注释面规范化检查器·report-only 首形（tests/
-#         test_norm_lint.py 最小自测壳三判：--selftest 六矢量 map-load/
-#         jargon-hit/fields-missing/substring-exemption/whitelist-exemption/
-#         english-clean 由器自证＋--help 冒烟＋退出码口径抽验 2/9（bogus/
-#         缺 tree/--selftest 与扫描旗标同用/非 .py/.sh/.md 扩展名=2·
-#         缺 jargon-map=9）＋基线账报告出账（norm-lint-baseline json/md 两
-#         报告·全仓注释面现状如实）·套件挂接·零网络零编译零触真仓）
-#       tools/contrib_intake.py contribution intake inspector (tests/
-#         test_contrib_intake.py minimal shell, three checks: --selftest
-#         rc=0 with the CONTRIB-INTAKE-SELFTEST PASS frozen marker — the
-#         tool's own dual-git-clone four-gate vectors are attested by the
-#         tool, the suite shell is self-supplemented — plus --help smoke
-#         plus exit-code spot checks bogus=2/no-input=2/missing-face=9/
-#         bad-ref=9; tmp fixtures only, zero writes, zero network)
-#       tools/registry_regen.py contribution registration-row regenerator
-#         (tests/test_registry_regen.py minimal shell, three checks:
-#         --selftest rc=0 with the REGISTRY-REGEN-SELFTEST PASS frozen
-#         marker — the tool's own tmp-fixture vectors attest topological
-#         regeneration, missing-dependency BLOCK, the frozen md5 vector,
-#         dry-run zero-write, blast/divergence and rerun-identity — plus
-#         --help smoke plus exit-code spot checks bogus=2/no-input=2/
-#         apply-without-out=2/negative-seq=2/missing-base=9; tmp fixtures
-#         only, zero writes, zero network)
-#       tools/symbiosis_bus.py + tools/bus_feeder.py + tools/uplink.py +
-#         tools/evolution_dashboard.py + tools/mcp_server.py + tools/exp_port.py
-#         + tools/periscope.py shape shells (tests/t_symbiosis_shape.py +
-#         t_bus_feeder_shape.py + t_uplink_shape.py +
-#         t_evolution_dashboard_shape.py + t_mcp_face.py + t_exp_port.py +
-#         t_periscope_shape.py · 20261115 roster hookup, audit finding P0-6:
-#         the five new tool faces and the two bus-family shells were cast
-#         with a standing "not rostered" note; each shell drives its tool's
-#         real argparse face in subprocesses, offline by construction, tmp
-#         fixtures only, zero repository writes; t_mcp_face drives one
-#         newline-delimited JSON-RPC session over the 25-capability stdio
-#         server face; t_evolution_dashboard_shape adds one read-only live
-#         check over the standing account paths)
-#       engine-body contract suites (tests/t_engines_body.py nine segments
-#         60 checks over ai_flavor / jargon_apply / ai_flavor_apply /
-#         i18n_pipeline / i18n_translate / i18n_verify + termbase, and
-#         tests/t_engines_seeds.py five seed segments 40 checks E1..E5 ·
-#         20261115 roster hookup; modules load dynamically from tools/, a
-#         not-yet-landed module is one loud SKIP line, never a silent pass;
-#         zero network, zero writes outside mkdtemp)
-#       negative-vector pins (tests/test_evolve_flag_contract.py four checks
-#         pinning the evolve.py user-facing flag contract, and
-#         tests/test_watch_repo_form.py three checks pinning the
-#         cw_sentinel --watch-repo ORG/REPO form refusal · 20261115 roster
-#         hookup; the form check fires before any fetch, zero network,
-#         tmpdir fixtures, zero repository writes)
-#       repair-guard hookups (E2 repair classes; each guard imports the
-#         shared exclusion table tools/repair_scope.py and appends
-#         rocqwash-repair ledger rows; tmp fixtures only, dry-run faces in
-#         the suite, zero real-repo writes, zero network)
-#       roster count drift guard hookup (tools/roster_resync.py, E2 repair
-#         class 2, tests/test_roster_resync.py four checks: --selftest
-#         rc=0 with the ROSTER-RESYNC-SELFTEST PASS frozen marker (the
-#         guard's own vectors attest the real doc_lint consistent flip as
-#         the green criterion, the one-way CASES roster discipline, the
-#         budget cap, and the shared repair_scope gate), --help rc=0, and
-#         exit-code spot checks 2/9; 20261116 roster hookup)
-#       auto-merge gate judge hookup (tools/auto_merge.py, X5 gate;
-#         tests/test_auto_merge.py five checks: --selftest rc=0 with the
-#         AUTO-MERGE-SELFTEST PASS frozen marker (24 vectors: the five
-#         calibration samples S-1..S-5 pinned to already-landed /
-#         superseded-landed-elsewhere / merge-ok / superseded-
-#         landed-elsewhere / hold-red, the unrecognized-family escalation,
-#         the merged-anchor-beats-red and containment-beats-conflict
-#         ordering pins, the supply/* whitelist both ways, the daily budget cap,
-#         dry-run zero-write, the duplicate refusals, the post-merge
-#         revert arc four families, byte-identical reports, CLI codes),
-#         --help face, exit-code spots 2/9, the five calibration fixtures
-#         judged through the real CLI face, and the dry-run zero-write
-#         pledge; tmp fixtures only, zero network, zero repository
-#         writes; 20261116 roster hookup)
+# Purpose.  Run the statically rostered 86-case suite one case at a time with a
+#   per-case PASS/FAIL/SKIP line and a final summary; all green exits 0, any red
+#   exits 1.  Idempotent: zero bytes written into the repository (python3 -B bans
+#   __pycache__; the temp log lives in mktemp under a trap; the wash and adaptation
+#   cases drive only temp directories and in-memory fixtures, so the hardcoded
+#   script paths are never touched); repeated runs are byte-identical.
 #
-# 用法：
-#   bash tests/run_tests.sh
-#   ROCQWASH_TESTS_FAIL_PROBE=1 bash tests/run_tests.sh   # 套件自检：注入必红例，应 EXIT 1
+# Interface.  bash tests/run_tests.sh; ROCWASH_TESTS_FAIL_PROBE=1 bash
+#   tests/run_tests.sh injects one always-red case (suite self-check; must exit 1).
+#   ROCWASH_TESTS_ONLY / ROCWASH_TESTS_EXCLUDE select cases; ROCWASH_ADVISORY_ROSTER
+#   points at the flaky-quarantine roster; ROCWASH_CLEAN=1 disables canonical
+#   auto-detection; ROCWASH_PY overrides the interpreter.  Exit-code contract per
+#   CONTRIBUTING section 4: 0 = all green (SKIP not counted red); 1 = any red; a
+#   case exiting 111 = SKIP (canonical environment absent).
 #
-# 退出码口径承 CONTRIBUTING §4：0=全绿（SKIP 不计红）；1=任一红。
-# 例级 exit 111=SKIP：正本环境缺卷（CI runner 无本机正本）时，依赖正本的
-# reconcile/包装例让席不充红不假绿；正本在卷（真本机）恒全量真扫。
+# Dependencies.  bash 3.2+ and python3; the rostered test faces under tests/;
+#   the canonical pointers ROCWASH_CANON_SET / ROCWASH_CANON_CW / ROCWASH_CANON_W1
+#   and the guarded compile-arc switch (ROCWASH_ROCQ / GATE7_PROBE_SCRIPT /
+#   GATE6_SCRIPT / BORN_WORLD_ROCQ), probed by default and overridable by env.
+#
+# Evidence.  One case per t_* function below; the per-case contract tables (86
+#   rows) live in tests/README.md; the CASES roster count is pinned by
+#   tools/doc_lint.py check 2 against the tests/README.md count lines; the roster
+#   is never written at run time.
+#
+# Exit-codes.  0 = all green (SKIP not counted red); 1 = any red (the failing
+#   case's first 40 log lines print); 2 = selection error; case rc 111 = SKIP.
 set -u
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -261,10 +42,12 @@ PY=${ROCWASH_PY:-python3}
 export PYTHONIOENCODING=utf-8
 export PYTHONUTF8=1
 
-# ---------- 正本环境探针（CI 准入）----------
-# 四例（t_gate7_wrapper/t_quad8_check/t_gate6_born_wrapper/t_verify_gate6）的
-# 在跑判据依赖本机正本：Set repository gates 正本脚本＋CW rocq 工具链＋四仓副本群。
-# 正本缺卷 → 诸例 exit 2=SKIP；路径可用 ROCWASH_CANON_* 覆写（CI 演练用）。
+# ---------- canonical-environment probe (CI admission) ----------
+# Four cases (t_gate7_wrapper / t_quad8_check / t_gate6_born_wrapper /
+# t_verify_gate6) judge against the on-machine canonical environment at run
+# time: the Set repository gate scripts, the CW rocq toolchain, and the
+# four-repository replica set.  Canonical environment absent -> those cases
+# exit 2 = SKIP; the paths are overridable via ROCWASH_CANON_* (CI rehearsal).
 CANON_SET=${ROCWASH_CANON_SET:-/Users/apple/Desktop/ConstructiveWorld-Set}
 CANON_CW=${ROCWASH_CANON_CW:-/Users/apple/Desktop/ConstructiveWorld}
 CANON_W1=${ROCWASH_CANON_W1:-/Users/apple/Desktop/S系Prop清除战役工单}
@@ -286,15 +69,23 @@ if [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ] \
 fi
 fi
 
-# ---------- 门控编译弧总开关（v47 波⑧A 案·缺省探测 20261112）----------
-# env 已设则尊（外部 clone 显式指认不受扰）；否则探测在卷正典/代役路径即 export
-# ——诸闸位判据语义不变（在即跑·缺才 SKIP），只翻缺省面：
-#   ROCWASH_ROCQ        t_cure_pack 编译 check 段＋t_probe_engine 真 rocq 节
-#                       （探测 9.3 多路器·v43 第三发 27/27 同源实证 更新账.md:3753）
-#   GATE7_PROBE_SCRIPT  t_gate7_wrapper（Set repository gate7 正本·judge13 缺省解析同路径）
-#   GATE6_SCRIPT        t_verify_gate6＋t_gate6_born_wrapper census 段（Set repository gate6 正本）
-#   BORN_WORLD_ROCQ     t_gate6_born_wrapper born 段（born_world.sh:114 存在性闸·
-#                       该测试零编译不触代差语义；CW Live rocq 缺卷→9.3 代役）
+# ---------- guarded compile-arc master switch (work stream 47 item 8A; default probing, 2026-11-12) ----------
+# An env value already set wins (an external clone's explicit pointers stay
+# undisturbed); otherwise the on-disk canonical/deputy paths are probed and
+# exported.  The gate criteria keep their semantics (run when present, SKIP
+# only when absent); only the default face flips:
+#   ROCWASH_ROCQ        t_cure_pack compile-check section + t_probe_engine
+#                       real-rocq section (9.3 multiplexer probe; the v43
+#                       third shot's 27/27 same-source evidence,
+#                       `更新账.md:3753`)
+#   GATE7_PROBE_SCRIPT  t_gate7_wrapper (Set repository gate7 canonical;
+#                       judge13 resolves the same path by default)
+#   GATE6_SCRIPT        t_verify_gate6 + t_gate6_born_wrapper census section
+#                       (Set repository gate6 canonical)
+#   BORN_WORLD_ROCQ     t_gate6_born_wrapper born section (the existence
+#                       check at born_world.sh:114; that test compiles
+#                       nothing and never touches generation semantics; CW
+#                       Live rocq absent -> the 9.3 multiplexer deputizes)
 GATE93_ROCQ=/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/rocq
 # Clean mode skips the whole default-pointer block below (auto-detection off;
 # ROCWASH_ROCQ/GATE7_PROBE_SCRIPT/GATE6_SCRIPT/BORN_WORLD_ROCQ stay unset so
@@ -302,22 +93,22 @@ GATE93_ROCQ=/Users/apple/Desktop/mac93_install_work/opam93/rocq93/bin/rocq
 if [ "${ROCWASH_CLEAN:-0}" != "1" ]; then
 if [ -z "${ROCWASH_ROCQ:-}" ] && [ -x "$GATE93_ROCQ" ]; then
   export ROCWASH_ROCQ="$GATE93_ROCQ"
-  echo "（探测注记）ROCWASH_ROCQ 未设→9.3 多路器在卷·缺省指认 ${ROCWASH_ROCQ}（⑧A 案）"
+  echo "(probe note) ROCWASH_ROCQ unset -> 9.3 multiplexer on disk; defaulted to ${ROCWASH_ROCQ} (item 8A)"
 fi
 if [ -z "${GATE7_PROBE_SCRIPT:-}" ] && [ -f "$CANON_SET/scripts/gates/gate7_extract_run.py" ]; then
   export GATE7_PROBE_SCRIPT="$CANON_SET/scripts/gates/gate7_extract_run.py"
-  echo "（探测注记）GATE7_PROBE_SCRIPT 未设→Set 仓 gate7 正本在卷·缺省指认（t_gate7_wrapper 解锁）"
+  echo "(probe note) GATE7_PROBE_SCRIPT unset -> Set repository gate7 canonical on disk; defaulted (unlocks t_gate7_wrapper)"
 fi
 if [ -z "${GATE6_SCRIPT:-}" ] && [ -f "$CANON_SET/scripts/gates/gate6_statement_census.py" ]; then
   export GATE6_SCRIPT="$CANON_SET/scripts/gates/gate6_statement_census.py"
-  echo "（探测注记）GATE6_SCRIPT 未设→Set 仓 gate6 正本在卷·缺省指认（t_verify_gate6/t_gate6_born_wrapper census 段解锁）"
+  echo "(probe note) GATE6_SCRIPT unset -> Set repository gate6 canonical on disk; defaulted (unlocks the t_verify_gate6 / t_gate6_born_wrapper census sections)"
 fi
 if [ -z "${BORN_WORLD_ROCQ:-}" ]; then
   if [ -x "$CANON_CW/Live/toolchain/opam/live/bin/rocq" ]; then
     export BORN_WORLD_ROCQ="$CANON_CW/Live/toolchain/opam/live/bin/rocq"
   elif [ -x "$GATE93_ROCQ" ]; then
     export BORN_WORLD_ROCQ="$GATE93_ROCQ"
-    echo "（探测注记）BORN_WORLD_ROCQ 未设且 CW Live rocq 缺卷→9.3 多路器代役（t_gate6_born_wrapper 解锁·该测试零编译仅存在性闸）"
+    echo "(probe note) BORN_WORLD_ROCQ unset and CW Live rocq absent -> the 9.3 multiplexer deputizes (unlocks t_gate6_born_wrapper; that test compiles nothing, existence check only)"
   fi
 fi
 fi
@@ -507,7 +298,7 @@ if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ] || [ 
   fi
 fi
 
-# ---------- 用例（每例自管退出码；0=该例绿） ----------
+# ---------- cases (each case owns its exit code; 0 = that case green) ----------
 
 t_scan_selftest() {
   "$PY" -B "$REPO/scan/mac_stmt_scan.py" --selftest
@@ -524,7 +315,7 @@ t_names_expect_let() {
 t_names_expect_neg() {
   "$PY" -B "$REPO/names/mac_stmt_names.py" "$FIX/names_sample.v" --expect 6 >/dev/null 2>&1
   local rc=$?
-  [ "$rc" -eq 2 ] || { echo "负判应 exit 2（CONTRIBUTING §4 口径），实测 $rc"; return 1; }
+  [ "$rc" -eq 2 ] || { echo "negative case should exit 2 (CONTRIBUTING section 4 contract), got $rc"; return 1; }
 }
 
 t_gate4_clean() {
@@ -534,7 +325,7 @@ t_gate4_clean() {
 t_gate4_dirty() {
   "$PY" -B "$REPO/verify/gate4_comment_guard.py" --file "$FIX/gate4_dirty_sample.v" >/dev/null 2>&1
   local rc=$?
-  [ "$rc" -eq 1 ] || { echo "脏样例应 FAIL exit 1，实测 $rc"; return 1; }
+  [ "$rc" -eq 1 ] || { echo "dirty sample should FAIL with exit 1, got $rc"; return 1; }
 }
 
 t_retrofit_dryrun() {
@@ -571,19 +362,19 @@ t_watch() {
 
 t_cpu_guard_direct_smoke() {
   local out rc
-  out=$("$REPO/tools/cpu_guard.sh" -Direct -- true 2>&1)  # 探针一发即退（不排队不注册）
+  out=$("$REPO/tools/cpu_guard.sh" -Direct -- true 2>&1)  # one-shot probe (no queueing, no registration)
   rc=$?
-  [ "$rc" -eq 0 ] || { echo "探针应 rc=0，实测 $rc"; echo "$out"; return 1; }
+  [ "$rc" -eq 0 ] || { echo "probe should return rc=0, got $rc"; echo "$out"; return 1; }
   case "$out" in
     *"DIRECT bypass"*) : ;;
-    *) echo "缺 [cpu_guard] DIRECT bypass 横幅"; echo "$out"; return 1 ;;
+    *) echo "missing the [cpu_guard] DIRECT bypass banner"; echo "$out"; return 1 ;;
   esac
 }
 
 t_cpu_guard_direct_rc() {
   "$REPO/tools/cpu_guard.sh" -Direct -- sh -c 'exit 7' >/dev/null 2>&1
   local rc=$?
-  [ "$rc" -eq 7 ] || { echo "退出码应传播探针 rc=7，实测 $rc"; return 1; }
+  [ "$rc" -eq 7 ] || { echo "exit code should propagate the probe rc=7, got $rc"; return 1; }
 }
 
 t_scan_station() {
@@ -591,8 +382,10 @@ t_scan_station() {
 }
 
 t_gate7_wrapper() {
-  # judge11/13 依赖 Set repository gate7 正本；缺卷让席（正判/GATE7_PROBE_SCRIPT 覆写在卷则照跑）
-  [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 正本不在卷（$CANON_SET/scripts/gates/gate7_extract_run.py）"; return 111; }
+  # judge11/13 depend on the Set repository gate7 canonical face; absent ->
+  # the case yields (still runs when the positive-face GATE7_PROBE_SCRIPT
+  # override is on disk)
+  [ "$CANON" = "1" ] || [ -n "${GATE7_PROBE_SCRIPT:-}" ] || { echo "SKIP: gate7 canonical not on disk ($CANON_SET/scripts/gates/gate7_extract_run.py)"; return 111; }
   "$PY" -B "$REPO/tests/test_gate7_wrapper.py"
 }
 
@@ -605,344 +398,462 @@ t_frozen8() {
 }
 
 t_frozen8_check() {
-  # 在册八件冻结名单随套件在跑对账（推送轮 c4 套件绿即含八件对账绿·只读零写盘）
+  # the registered eight-piece frozen list reconciles at every suite run (a push-window c4 green suite includes this eight-piece reconciliation; read-only, zero writes)
   "$PY" -B "$REPO/certify/frozen8.py" check \
     --list "$REPO/certify/frozen8_manifest.json" \
     --tier2 "$REPO/certify/frozen8_tier2.md5"
 }
 
 t_quad8() {
-  # 四仓同 md5 副本群对账器夹具八判（零触真仓·20261031 agent rqadapt）
+  # four-repository same-md5 replica-set reconciler: the fixture eight-check group (zero real-repo touch; 20261031 agent rqadapt)
   "$PY" -B "$REPO/wrapper/quad8_reconcile.py" --selftest
 }
 
 t_quad8_check() {
-  # 在册四仓对账名单随套件在跑对账（11 副本·audit 域只录不判·只读零写盘）
-  # 副本群横跨四仓正本；缺卷让席（夹具八判 t_quad8 无依赖恒跑）
-  [ -d "$CANON_CW" ] && [ -d "$CANON_SET" ] && [ -d "$CANON_W1" ] || { echo "SKIP: 四仓副本群不在卷（quad8 在跑对账仅真本机）"; return 111; }
+  # the registered four-repository list reconciles at every suite run (11
+  # replicas; the audit domain records without judging; read-only, zero writes)
+  # the replica set spans the four repository canonicals; absent -> the case
+  # yields (the fixture eight checks in t_quad8 have no dependency and always run)
+  [ -d "$CANON_CW" ] && [ -d "$CANON_SET" ] && [ -d "$CANON_W1" ] || { echo "SKIP: the four-repository replica set is not on disk (the quad8 live reconciliation runs on the canonical machine only)"; return 111; }
   "$PY" -B "$REPO/wrapper/quad8_reconcile.py" check \
     --list "$REPO/wrapper/quad8_manifest.json" \
     --tier2 "$REPO/wrapper/quad8_tier2.md5"
 }
 
 t_frozen_call() {
-  # wrapper 层逐调断言夹具五判（零触真仓真组件·临时账面）
+  # wrapper-layer per-call assertion fixture, five checks (zero touch of the real repository and components; temporary account face)
   "$PY" -B "$REPO/wrapper/frozen_call.py" --selftest
 }
 
 t_gate6_born_wrapper() {
-  # wrapper 层 gate6 普查闸启动层＋born 世界基正形十六判（零编译零写盘）
-  # census 判据依赖 Set repository gate6 正本；born 判据依赖 CW rocq 工具链；缺卷让席
-  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 正本/rocq 工具链不在卷（$CANON_SET/scripts/gates/＋$CANON_CW/Live/toolchain）"; return 111; }
+  # wrapper-layer gate6 survey-check launch layer + born world-baseline shape,
+  # sixteen checks (zero compile, zero writes)
+  # the census criterion depends on the Set repository gate6 canonical; the
+  # born criterion depends on the CW rocq toolchain; absent -> the case yields
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || [ -n "${BORN_WORLD_ROCQ:-}" ] || { echo "SKIP: gate6 canonical / rocq toolchain not on disk ($CANON_SET/scripts/gates/ + $CANON_CW/Live/toolchain)"; return 111; }
   "$PY" -B "$REPO/tests/test_gate6_born_wrapper.py"
 }
 
 t_world_hook() {
-  # 五课反馈轮·负例①nw5 世界偏斜：born 前断言拦下＋冻结引擎零触旁证（零编译零写盘）
+  # five-lesson feedback round, negative example 1 nw5 world skew: the assertion intercepts before born + the frozen-engine zero-touch side evidence (zero compile, zero writes)
   "$PY" -B "$REPO/tests/test_world_hook.py"
 }
 
 t_select_audit() {
-  # 五课反馈轮·负例②nw6 批内重复＋③enbig7 跨批撞名＋v6 判据 nw10/abl6 空账
-  # Require 面（parse_requires/STDLIB_ROOTS/audit_requires·零仓库写盘零网络）
+  # five-lesson feedback round, negative example 2 nw6 in-batch duplicates +
+  # example 3 enbig7 cross-batch name collisions + the v6 criteria nw10/abl6
+  # empty ledger
+  # Require face (parse_requires / STDLIB_ROOTS / audit_requires; zero
+  # repository writes, zero network)
   "$PY" -B "$REPO/tests/test_select_audit.py"
 }
 
 t_verify_gate6() {
-  # 五课反馈轮·夹具④gate6 ch1：eum 判例正判/滞治负例/正本真扫（正本只读·-B 禁 pycache）
-  # 「正本真扫」子判依赖 Set repository gate6 正本；缺卷让席（自检夹具两子判无依赖恒跑）
-  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 正本不在卷（$CANON_SET/scripts/gates/gate6_statement_census.py）"; return 111; }
+  # five-lesson feedback round, fixture 4 gate6 ch1: the eum judgment positive
+  # case / untreated negative case / canonical true scan (canonical read-only;
+  # -B bans pycache)
+  # the "canonical true scan" sub-check depends on the Set repository gate6
+  # canonical; absent -> the case yields (the two selftest fixture sub-checks
+  # have no dependency and always run)
+  [ "$CANON" = "1" ] || [ -n "${GATE6_SCRIPT:-}" ] || { echo "SKIP: gate6 canonical not on disk ($CANON_SET/scripts/gates/gate6_statement_census.py)"; return 111; }
   "$PY" -B "$REPO/tests/test_verify_gate6.py"
 }
 
 t_recipe_s07() {
-  # 五课反馈轮·夹具⑤S07 投影重锚 E5：处方件锚词面＋病面/掩蔽/愈面机检（冻结引擎只读 import）
+  # five-lesson feedback round, fixture 5 S07 projection re-anchor E5: prescription-piece anchor word face + diseased/masked/cured machine checks (frozen engine read-only import)
   "$PY" -B "$REPO/tests/test_recipe_s07.py"
 }
 
 t_recipe_pw1() {
-  # 五课打磨轮·课件③dver2-enbig7 同域撞：PW1 处方件锚词面＋前兆 DUP-CROSS/
-  # 入侵置换 WDIFF 拦截（零落盘）＋私占重建 WORLD-BASE-OK（零编译零写盘）
+  # five-lesson polish round, courseware 3 dver2-enbig7 same-domain collision:
+  # the PW1 prescription-piece anchor word face + precursor DUP-CROSS /
+  # invasive-substitution WDIFF interception (zero disk writes) +
+  # private-occupancy rebuild WORLD-BASE-OK (zero compile, zero writes)
   "$PY" -B "$REPO/tests/test_recipe_enbig7_pw1.py"
 }
 
 t_precedent_station() {
-  # 五课打磨轮·课件⑤三判例剧本 toolify：三判例验收站十判自检＋轻链正负判
-  # （names cross-check against the reference/gate4/REVIEW 升格/gate7 形制/刀面记名·零编译零写盘·gate7 实跑不入套件）
+  # five-lesson polish round, courseware 5 three-precedent script toolified:
+  # the three-precedent acceptance station ten-check selftest + light-chain
+  # positive/negative judgments (names cross-check against the reference /
+  # gate4 / REVIEW escalation / gate7 shape / apply-face naming; zero compile,
+  # zero writes; the real gate7 run stays out of the suite)
   "$PY" -B "$REPO/tests/test_precedent_station.py"
 }
 
 t_netname_normalize() {
-  # 本轮实战判例工具化①：.v.v 双后缀名净名归一器（tests/test_netname_normalize.py·
-  # 九节：干跑默认零落盘/--apply md5 前后验讫（改名不改字节）/COLLIDE 拒覆写/
-  # CLI 四码 help0·未知形参2·缺dir2·9——零触真仓）
+  # this round's precedent toolification 1: the .v.v double-suffix clean-name
+  # normalizer (tests/test_netname_normalize.py; nine sections: dry run by
+  # default zero-write / --apply with md5 before-and-after verification
+  # (rename without byte change) / COLLIDE refuses overwrite / CLI four codes
+  # help 0, unknown flag 2, missing dir 2, absent dir 9 — zero real-repo touch)
   "$PY" -B "$REPO/tests/test_netname_normalize.py"
 }
 
 t_verify_fresh() {
-  # 本轮实战判例工具化②：divmod_gen 陈旧 vo 假绿判例 fresh-compile 防线
-  # （tests/test_verify_fresh.py·八节：--require-fresh 9.1 魔数＋新鲜度双判·
-  # 任一不过 rc=9 fail-loud——零触真仓零编译）
+  # this round's precedent toolification 2: the fresh-compile defense line
+  # against the divmod_gen stale-vo spurious-pass precedent
+  # (tests/test_verify_fresh.py; eight sections: --require-fresh dual judgment
+  # on the 9.1 magic number + freshness; either failing -> rc=9 fail-loud —
+  # zero real-repo touch, zero compile)
   "$PY" -B "$REPO/tests/test_verify_fresh.py"
 }
 
 t_extract_magic() {
-  # 本轮实战判例工具化③：gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·
-  # run97/98 三件涨账 28/4/1 承工单给料）。tests/test_extract_magic.py 十一节：
-  # Separate Extraction 解析（inline/driver 双形）→rocq 提取→ocamlc→grep -c
-  # Obj.magic→--max 判红绿＋--json 台账·假 rocq/ocamlc 桩全链（零真编译零触真仓·
-  # 夹具含本仓自带 names_sample.v 只读）；v15 增盲区补全节（首战 G09 Class/
-  # G13 Extraction 双红→声明/命令 vernacular 就地扩补·Class 夹具 census 不误判·
-  # 未知 vernacular 仍红 9）
+  # this round's precedent toolification 3: the gate7 extraction-face
+  # Obj.magic per-file machine check (toolification of the tenth defect-ledger
+  # entry; run97/98's three-file ledger growth 28/4/1, fed by the task
+  # instruction).  tests/test_extract_magic.py, eleven sections: Separate
+  # Extraction parsing (inline/driver forms) -> rocq extraction -> ocamlc ->
+  # grep -c Obj.magic -> --max red/green judgment + --json ledger; fake
+  # rocq/ocamlc stubs across the whole chain (zero real compile, zero
+  # real-repo touch; fixtures include this repository's own names_sample.v
+  # read-only); v15 adds the blind-spot completion section (first battle G09
+  # Class / G13 Extraction double red -> declaration/command vernacular
+  # expanded in place; the Class fixture no longer misjudged by the census;
+  # unknown vernacular still red 9)
   "$PY" -B "$REPO/tests/test_extract_magic.py"
 }
 
 t_fail_probe() {
-  echo "（套件自检注入例：恒红）"
+  echo "(suite self-check injected case: always red)"
   return 1
 }
 
 t_scan_v4_token() {
-  # W15 工具化①：token 级普查（混合行遮蔽夹具三站＋旧法盲区实证＋binder 零误报；
-  # 真树抽查 ROCWASH_TREE_SAMPLES 环境门控·零硬编码路径·缺省夹具级恒跑）
+  # W15 toolification 1: the token-level survey (mixed-line shadowing fixture
+  # across three stations + mechanical evidence of the old method's blind spot
+  # + binder tracking with zero false positives; real-tree spot checks gated
+  # by ROCWASH_TREE_SAMPLES, zero hardcoded paths; fixture-level checks always
+  # run by default)
   "$PY" -B "$REPO/tests/test_scan_v4_token.py"
 }
 
 t_cure_pack() {
-  # W15 工具化②：消费位治愈正典包五式（applier 自检＋pack 完整性＋dry run/apply/
-  # 幂等；编译验证 ROCWASH_ROCQ 门控且经 tools/cpu_guard.sh 包裹·套件缺省探测
-  # 自动跑（v47 ⑧A 案·run_tests.sh 总开关）·env 缺且 9.3 缺卷仍 SKIP）
+  # W15 toolification 2: the consumer-site cure canonical pack, five forms
+  # (applier selftest + pack integrity + dry run/apply/idempotence; compile
+  # verification gated on ROCWASH_ROCQ and wrapped by tools/cpu_guard.sh; the
+  # suite probes by default and runs automatically (work stream 47 item 8A,
+  # the run_tests.sh master switch); env absent and 9.3 absent -> still SKIP)
   "$PY" -B "$REPO/tests/test_cure_pack.py"
 }
 
 t_erasure_classifier() {
-  # W15 工具化③：擦除位六簇分类器（自检＋合成 interface＋CAPTURE 交叉对拍；
-  # 真件回放 ROCWASH_ERASURE_MLI/SCAN 门控·缺省跳过）
+  # W15 toolification 3: the erasure-site six-cluster classifier (selftest +
+  # synthetic interface + CAPTURE differential comparison; real-artifact
+  # replay gated by ROCWASH_ERASURE_MLI/SCAN; skipped by default)
   "$PY" -B "$REPO/tests/test_erasure_classifier.py"
 }
 
 t_probe_engine() {
-  # v30 工具化①：批量闭包相容探针引擎（承 W13 probe_batch.py·tests/
-  # test_probe_engine.py 九节：stub 全链 rc 三分/NO-SRC/TIMEOUT/resume 幂等/
-  # guard 包裹 rc 真取/RED 缺列/CLI 四码·真 rocq 全链 ROCWASH_ROCQ 门控·套件缺省
-  # 探测自动跑（v47 ⑧A 案）·env 缺且 9.3 缺卷仍 SKIP·
-  # 零触真仓零网络）
+  # v30 toolification 1: the batch closure-compatibility probe engine
+  # (succeeds W13 probe_batch.py; tests/test_probe_engine.py nine sections:
+  # stub full-chain rc three-way split / NO-SRC / TIMEOUT / resume idempotence /
+  # guard-wrapped true rc capture / RED missing column / CLI four codes; the
+  # real rocq full chain gated on ROCWASH_ROCQ; the suite probes by default
+  # and runs automatically (work stream 47 item 8A); env absent and 9.3 absent
+  # -> still SKIP; zero real-repo touch, zero network)
   "$PY" -B "$REPO/tests/test_probe_engine.py"
 }
 
 t_chain_graph() {
-  # v30 工具化②：多账合并链根图（承 W25 w25_merge_ledgers.py·合成双账七节：
-  # 双形通吃/后批覆盖/链根自身可洗性三分/missing 双源/TOP 榜＋确定性/CLI 四码·
-  # 零触真仓零网络）
+  # v30 toolification 2: the multi-ledger merge chain-root graph (succeeds W25
+  # w25_merge_ledgers.py; synthetic double ledger, seven sections: both forms
+  # accepted / later batch overrides / chain-root own-washability three-way
+  # split / missing dual source / top list + determinism / CLI four codes;
+  # zero real-repo touch, zero network)
   "$PY" -B "$REPO/tests/test_chain_graph.py"
 }
 
 t_ledger_sync() {
-  # v30 工具化③：probe×状态台账合并同步（E1 去重/E3 幽灵/MD5-DRIFT/NO-MD5/
-  # 升格策略/列校验 fail-loud/幂等字节恒同/CLI 四码·合成夹具八节·零触真仓零网络）
+  # v30 toolification 3: the probe-by-status ledger merge sync (E1 dedup /
+  # E3 ghosts / MD5-DRIFT / NO-MD5 / promotion policy / column validation
+  # fail-loud / idempotent byte-identical reruns / CLI four codes; synthetic
+  # fixtures, eight sections; zero real-repo touch, zero network)
   "$PY" -B "$REPO/tests/test_ledger_sync.py"
 }
 
 t_comment_pack() {
-  # v31 工具化：注释域 sweep 旁车（comment_pack.json＋comment_sweep.py·
-  # 嵌套注释+字符串感知状态机/旗词换形/头注换代/w7 code 行全等/幂等·六节零触真仓）
+  # v31 toolification: the comment-domain sweep sidecar (comment_pack.json +
+  # comment_sweep.py; nesting- and string-aware state machine / flag-word
+  # rewording / header regeneration / w7 code-line equality / idempotence;
+  # six sections, zero real-repo touch)
   "$PY" -B "$REPO/tests/test_comment_pack.py"
 }
 
 t_dual_scan() {
-  # v32 工具化：双器对拍驱动（scan/dual_scan.py·scan_v4_token＋mac_stmt_scan
-  # 双扫×逐件差异报告 only_v4/only_stmt/common·确定字节恒同·CLI 四码·
-  # tests/test_dual_scan.py 十节·零触真仓零网络）
+  # v32 toolification: the two-scanner differential run driver
+  # (scan/dual_scan.py; scan_v4_token + mac_stmt_scan double scan with
+  # per-file difference reports only_v4/only_stmt/common; deterministic
+  # byte-identical reruns; CLI four codes; tests/test_dual_scan.py ten
+  # sections; zero real-repo touch, zero network)
   "$PY" -B "$REPO/tests/test_dual_scan.py"
 }
 
 t_cw_entry() {
-  # v33 工具化：cw.sh v29-v32 工具波统一入口（tests/test_cw_entry.sh·四节：
-  # 帮助/路由冒烟＋七工具 --help 透传＋功能透传（scan4/dual-scan/chain/
-  # sync-ledger 合成台账/cure/erasure selftest/probe 无参 FAIL-LOUD）＋
-  # 零硬编码行为证（空目录副本 rc=9）＋/bin/bash 3.2 语法检·
-  # 夹具只读输出全落 mktemp·零触真仓零网络）
+  # v33 toolification: the cw.sh v29-v32 unified tool entry
+  # (tests/test_cw_entry.sh; four sections: help/route smoke + seven-tool
+  # --help passthrough + functional passthrough (scan4/dual-scan/chain/
+  # sync-ledger synthetic ledger/cure/erasure selftest/probe no-arg
+  # FAIL-LOUD) + zero-hardcoding behavioral proof (empty-directory copy
+  # rc=9) + /bin/bash 3.2 syntax check; fixtures read-only, outputs to
+  # mktemp; zero real-repo touch, zero network)
   bash "$REPO/tests/test_cw_entry.sh"
 }
 
 t_registry_union() {
-  # 20261110 实战手术工具化：注册册 union 手术器（tools/registry_union.py·
-  # tests/test_registry_union.py 九节：selftest 八判/coq 夹具组/陷阱组同名不同形
-  # 对 merge-base 必过滤/重锚 md5 冻结向量 1414cddb/A2·A3 负判零写盘/dry run-apply-
-  # 幂等/json 确定性/CLI 四码＋用法对偶/git 三 ref 直读·夹具只读输出全落 mktemp·
-  # 零触真仓零网络零编译）
+  # 20261110 precedent-operation toolification: the registry union operation
+  # tool (tools/registry_union.py; tests/test_registry_union.py nine sections:
+  # selftest eight checks / coq fixture group / trap group same-name
+  # different-shape filtered against merge-base / re-anchor md5 frozen vector
+  # 1414cddb / A2 and A3 negatives zero-write / dry run-apply-idempotence /
+  # json determinism / CLI four codes + usage duality / git three-ref direct
+  # read; fixtures read-only, outputs to mktemp; zero real-repo touch, zero
+  # network, zero compile)
   "$PY" -B "$REPO/tests/test_registry_union.py"
 }
 
 t_toolchain_dyld_doctor() {
-  # 20261111 集成席挂接：dyld 工具链断链诊断器（tools/toolchain_dyld_doctor.py·
-  # 铸席 --selftest 全链离线向量组已自证·tests/test_toolchain_dyld_doctor.py
-  # 最小自测壳两判：--selftest 冻结标记＋--help 冒烟·零真 otool 零编译零网络）
+  # 20261111 integration-agent hookup: the dyld toolchain linkage-failure
+  # doctor (tools/toolchain_dyld_doctor.py; the casting agent's --selftest
+  # full-chain offline vector group is self-attested;
+  # tests/test_toolchain_dyld_doctor.py minimal shell two checks: --selftest
+  # frozen marker + --help smoke; zero real otool, zero compile, zero network)
   "$PY" -B "$REPO/tests/test_toolchain_dyld_doctor.py"
 }
 
 t_ci_triage() {
-  # 20261111 集成席挂接：CI 红炉分诊器（tools/ci_triage.py·五族+绿炉判类谱·
-  # 铸席 --selftest 离线样张已自证·tests/test_ci_triage.py 最小自测壳两判：
-  # --selftest 冻结标记＋--help 冒烟·零网络零写盘）
+  # 20261111 integration-agent hookup: the failing-build triage tool
+  # (tools/ci_triage.py; the five-family + green-build classification
+  # spectrum; the casting agent's --selftest offline samples self-attested;
+  # tests/test_ci_triage.py minimal shell two checks: --selftest frozen
+  # marker + --help smoke; zero network, zero writes)
   "$PY" -B "$REPO/tests/test_ci_triage.py"
 }
 
 t_net_probe() {
-  # 20261111 集成席挂接：网络窗探针（tools/net_probe.py·双探稳窗律·铸席
-  # --selftest 零网络向量组已自证·tests/test_net_probe.py 最小自测壳两判：
-  # --selftest 冻结标记＋--help 冒烟·零网络零写盘）
+  # 20261111 integration-agent hookup: the network-window probe
+  # (tools/net_probe.py; the dual-probe stability-window rule; the casting
+  # agent's --selftest zero-network vector group self-attested;
+  # tests/test_net_probe.py minimal shell two checks: --selftest frozen
+  # marker + --help smoke; zero network, zero writes)
   "$PY" -B "$REPO/tests/test_net_probe.py"
 }
 
 t_pushci() {
-  # 20261111 集成席挂接：推送 CI 一键流水线编排器（tools/pushci.py·五段管线
-  # preflight 发射闸→push→watch→heal→verdict±merge·v35 四器 subprocess 编排
-  # 零新引擎·tests/test_pushci.py 六场景壳十节：selftest 冻结矢量＋tmp repository
-  # helper＋S1 绿径＋S2 NETRED 愈合＋S3 内容红零 rerun＋S4 heal 耗尽＋S5
-  # merge＋S6 dry-run＋六场景幂等字节恒同＋CLI 五码——全离线全注入零真网络
-  # 零真 push 零编译零写盘）
-  # v41 波登记：pushci 器面零新矢量——本波 pushci 相关新产出＝护栏席
-  # push_gate 推窗四判据×pushci preflight 发射闸双门归一评估（docs/
-  # push-gate-dual-door-assessment-v1.0-20261111.md·只评估零代码变更·
-  # 发射闸三闸 toolchain/net/gate4 与 verdict 七态不变；pushci P1-P3 矩阵
-  # 三判照旧在 t_destructive_matrix 在册随套件复跑）
+  # 20261111 integration-agent hookup: the push-CI single-command pipeline
+  # orchestrator (tools/pushci.py; five-stage pipeline preflight check ->
+  # push -> watch -> heal -> verdict +/- merge; v35 four-tool subprocess
+  # orchestration, zero new engines; tests/test_pushci.py six-scenario shell
+  # ten sections: selftest frozen vectors + tmp repository helper + S1 green
+  # path + S2 NETRED healing + S3 content red zero rerun + S4 heal exhausted
+  # + S5 merge + S6 dry-run + six-scenario idempotent byte-identical reruns
+  # + CLI five codes — fully offline, fully injected, zero real network, zero
+  # real push, zero compile, zero writes)
+  # work stream 41 registration: zero new pushci-tool vectors — this work
+  # stream's pushci output = the guard agent's push_gate four-criteria
+  # push-window x pushci preflight-check dual-door normalization assessment
+  # (docs/push-gate-dual-door-assessment-v1.0-20261111.md; assessment only,
+  # zero code changes; the preflight three checks toolchain/net/gate4 and the
+  # seven verdict states unchanged; the pushci P1-P3 matrix three checks stay
+  # registered in t_destructive_matrix and rerun with the suite)
   "$PY" -B "$REPO/tests/test_pushci.py"
 }
 
 t_cw_sentinel() {
-  # 20261111 v37 挂接：实时动态哨（tools/cw_sentinel.py·三路信号源 CI runs/
-  # 本地台账链根/buildlog 词面→JSONL 事件流·once/loop 双模·ci_triage/
-  # chain_graph subprocess 编排零新引擎·tests/test_cw_sentinel.py 最小自测壳
-  # 两判：--selftest 冻结标记 CW-SENTINEL-SELFTEST PASS＋--help 冒烟·
-  # 哨自身 --selftest 十三矢量 canned 注入零真网络零编译（v40 稳态席扩容
-  # ⑪--state-file 崩溃恢复/⑫--emit-max-bytes JSONL 轮转·v41 护栏/预设席
-  # 扩容⑨on-red 双路同守卫 plain --on-red 缺 --emit rc=2〔破坏面矩阵 S2
-  # 转正〕/⑬预设表数据化扩展五预设 wash-shape/triage/cw-doctor＋triage
-  # repo/run 事件直替族＋链式双预设全链并集面按序一败续行）·零真网络零编译
-  # 零触真仓）
+  # 20261111 v37 hookup: the realtime watcher (tools/cw_sentinel.py; three
+  # signal sources — CI runs / local ledger chain roots / buildlog word faces
+  # -> JSONL event stream; once/loop dual mode; ci_triage / chain_graph
+  # subprocess orchestration, zero new engines; tests/test_cw_sentinel.py
+  # minimal shell two checks: --selftest frozen marker CW-SENTINEL-SELFTEST
+  # PASS + --help smoke; the watcher's own --selftest thirteen canned
+  # injection vectors, zero real network, zero compile (v40 steady-state
+  # expansion 11 --state-file crash recovery / 12 --emit-max-bytes JSONL
+  # rotation; v41 guard/preset expansion 9 on-red dual path same guard —
+  # plain --on-red without --emit rc=2 (destructive-matrix S2 promoted) /
+  # 13 the preset table extended to five chained presets; the v51 work
+  # stream 14 resilience layer bounded retry on transport-layer transient
+  # breaks (--net-retries backoff 5s/15s/45s) + loop per-source skip — skip
+  # a round rather than crash; 15 the supervisor-shell deployment-form smoke
+  # examples/sentinel_supervisor.sh bash -n + key-line static assertions;
+  # zero execution, zero network)
   "$PY" -B "$REPO/tests/test_cw_sentinel.py"
 }
 
 t_wash_shape() {
-  # 20261111 v37 洗形席挂接·v39 扩容·v40 稳态席再扩：shape-normalizing tool·正典形五洗流水
-  # （tools/wash_shape.py·gate4 词面/scan_v4+cure_applier 正典包/头注模板补写/
-  # 行尾归一/registry_union 重锚五洗 subprocess 编排·两段 plan→apply 复跑复核·
-  # schema rocqwash-shape/1·tests/test_wash_shape.py 最小自测壳三判：--selftest
-  # 冻结标记 WASH-SHAPE-SELFTEST PASS（十八判向量全 tmp 夹具·v39 轮增 preset
-  # 链四判：模板库装载在位/preset 胜 env/占位渲染→apply 端到端/同槽互斥 rc2
-  # ＋模板库缺失 rc9·v40 轮增判17 --loop 事件流同形对齐（rocqwash-sentinel-event/1·
-  # seq 跨进程续号）/判18 plan 缓存失效语义（源件 md5 变→重算·恒同→hit 复用））
-  # ＋--help 冒烟＋退出码口径抽验 2/2/9·零编译零网络零写盘）
+  # 20261111 v37 shape-normalization-agent hookup, v39 expansion, v40
+  # steady-state re-expansion: the shape-normalizing tool, canonical-form
+  # five-wash pipeline (tools/wash_shape.py; gate4 word face / scan_v4 +
+  # cure_applier canonical pack / header template backfill / line-ending
+  # normalization / registry_union re-anchor — five washes, subprocess
+  # orchestration; two-stage plan -> apply rerun recheck; schema
+  # rocqwash-shape/1; tests/test_wash_shape.py minimal shell three checks:
+  # --selftest frozen marker WASH-SHAPE-SELFTEST PASS (eighteen vector
+  # checks, all tmp fixtures; the v39 round adds four preset-chain checks:
+  # template library loaded / preset beats env / placeholder render ->
+  # apply end to end / same-slot mutual exclusion rc2, plus missing template
+  # library rc9; the v40 round adds check 17 --loop event-stream same-shape
+  # alignment (rocqwash-sentinel-event/1, seq continuing across processes)
+  # and check 18 plan-cache invalidation semantics (source md5 changed ->
+  # recompute; unchanged -> cache hit)) + --help smoke + exit-code spot
+  # checks 2/2/9; zero compile, zero network, zero writes)
   "$PY" -B "$REPO/tests/test_wash_shape.py"
 }
 
 t_unclog() {
-  # 20261111 v37 集成席挂接·v40 稳态席扩容·v41 性能波扩容：疏通堵塞闭环引擎
-  # （tools/unclog.py·手工五步闭环 probe 归集→chain_graph 挑根→cure_applier
-  # apply→rescan/resprobe 复核→verdict 判定·schema rocqwash-unclog/1·
-  # tests/test_unclog.py 最小自测壳三判：--selftest 冻结标记 UNCLOG-SELFTEST
-  # PASS（十四矢量全 --injector canned 罐装·v40 轮增⑪--state-file 同形哨态
-  # seen 差分（red-new 事件 only-new·损坏 state 红拒 9 禁静默重建）⑫--rounds/
-  # --loop 与 --audit/--state-file 两组互斥 rc=2·v41 波⑫扩容 --probe-parallel
-  # 0 用法闸 rc=2／⑬--jobs 维度 audit timing 段 jobs=K 入账（缺省 1/K=2 各录
-  # 其值·同候选面异 K 前后跑可比））＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/
-  # 无参/缺路本集成席实跑验证）·零真编译零网络零触真仓）
+  # 20261111 v37 integration-agent hookup, v40 steady-state expansion, v41
+  # performance expansion: the clear-blockages closed-loop engine
+  # (tools/unclog.py; manual five-step closed loop — probe collection ->
+  # chain_graph root picking -> cure_applier apply -> rescan/resprobe
+  # recheck -> verdict; schema rocqwash-unclog/1; tests/test_unclog.py
+  # minimal shell three checks: --selftest frozen marker UNCLOG-SELFTEST
+  # PASS (fourteen vectors, all --injector canned; the v40 round adds
+  # 11 --state-file same-shape watcher-state seen diffing (red-new events
+  # only-new; damaged state refused red 9, silent rebuild banned) and
+  # 12 --rounds/--loop vs --audit/--state-file mutual exclusion rc=2; the
+  # v41 adds 12 --probe-parallel 0 usage check rc=2 and 13 a --jobs
+  # dimension recorded into the audit timing section (jobs=K; default 1 and
+  # K=2 each recorded, the same candidate face comparable across runs with
+  # different K)) + --help smoke + exit-code spot checks 2/2/9 (bogus /
+  # no-arg / missing path verified by this integration agent's real runs);
+  # zero real compile, zero network, zero real-repo touch)
   "$PY" -B "$REPO/tests/test_unclog.py"
 }
 
 t_cw_doctor() {
-  # 20261111 v38 集成席挂接：综合体检器·四域聚合（tools/cw_doctor.py·四域
-  # subprocess 编排既有一器（dyld/net_probe/probe_engine+chain_graph/注册册锚
-  # 审计）→综合健康分 0-100＋verdict healthy/degraded＋advice·schema
-  # rocqwash-cwdoctor/1·tests/test_cw_doctor.py 最小自测壳两判：--selftest
-  # 冻结标记 CW-DOCTOR-SELFTEST PASS（九节向量全 --injector canned 罐装）＋
-  # --help 冒烟·缺壳由本集成席自补·零真 otool 零真网络零真编译零触真仓）
+  # 20261111 v38 integration-agent hookup: the comprehensive checkup tool,
+  # four-domain aggregation (tools/cw_doctor.py; four domains orchestrate the
+  # existing tools by subprocess (dyld / net_probe / probe_engine +
+  # chain_graph / registry anchor audit) -> composite health score 0-100 +
+  # verdict healthy/degraded + advice; schema rocqwash-cwdoctor/1;
+  # tests/test_cw_doctor.py minimal shell two checks: --selftest frozen
+  # marker CW-DOCTOR-SELFTEST PASS (nine sections of vectors, all --injector
+  # canned) + --help smoke; the missing shell self-supplemented by this
+  # integration agent; zero real otool, zero real network, zero real compile,
+  # zero real-repo touch)
   "$PY" -B "$REPO/tests/test_cw_doctor.py"
 }
 
 t_relay_e2e() {
-  # 20261111 v39 工装席铸件·集成席挂接：接驳实战核 e2e（tests/test_relay_e2e.py·
-  # cw_sentinel --on-red-preset unclog 全链三判：①watcher --once＋injector canned
-  # CI 红炉→ci_triage 真判类 A-content-red→ci-red 事件→preset 代跑 unclog
-  # rc=9 如实入账·旁路动作非器面·哨退出码仍 0 ②unclog --audit dry run rc=0·
-  # --src 全文件 md5 清单跑前跑后自证零写盘·见红 red_files=["B"]·出可洗链根·
-  # 墙空 ③JSONL 同盘 unclog report 路径与实落文件逐字节对拍 schema/verdict
-  # 咬合——全 canned 罐装零真网络零真编译零触真仓）
+  # 20261111 v39 tooling-agent cast, integration-agent hookup: the relay
+  # live-check e2e (tests/test_relay_e2e.py; cw_sentinel --on-red-preset
+  # unclog full chain, three checks: 1 the watcher --once + injector canned
+  # failing CI build -> ci_triage true classification A-content-red ->
+  # ci-red event -> the preset runs unclog on the tool's behalf, rc=9
+  # recorded honestly (side-effect actions are not the tool face; the
+  # watcher exit code stays 0); 2 unclog --audit dry run rc=0; the --src
+  # full-file md5 inventory proves zero writes before and after; red seen
+  # red_files=["B"]; a washable chain root emerges; walls empty; 3 the
+  # JSONL-recorded unclog report path byte-compared against the actually
+  # written file, schema/verdict interlock — all canned, zero real network,
+  # zero real compile, zero real-repo touch)
   "$PY" -B "$REPO/tests/test_relay_e2e.py"
 }
 
 t_doclint() {
-  # 20261111 v39 集成席缺壳自补挂接：文档←→实现一致性三查器（tools/doc_lint.py·
-  # 工装席铸件·schema rocqwash-doclint/1·tests/test_doc_lint.py 最小自测壳
-  # 三判：--selftest 冻结标记 DOC-LINT-SELFTEST PASS（tmp 迷你仓六矢量 V1-V6
-  # 由铸席 --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/
-  # --help-cap 0/缺仓·本集成席实跑验证）·零网络零写盘零触真仓）
+  # 20261111 v39 integration-agent shell self-supplement hookup: the
+  # docs-vs-implementation consistency three-check tool (tools/doc_lint.py;
+  # tooling-agent cast; schema rocqwash-doclint/1; tests/test_doc_lint.py
+  # minimal shell three checks: --selftest frozen marker DOC-LINT-SELFTEST
+  # PASS (tmp mini-repo six vectors V1-V6 self-attested by the casting
+  # agent's --selftest) + --help smoke + exit-code spot checks 2/2/9 (bogus /
+  # --help-cap 0 / missing repo, verified by this integration agent's real
+  # runs); zero network, zero writes, zero real-repo touch)
   "$PY" -B "$REPO/tests/test_doc_lint.py"
 }
 
 t_destructive_matrix() {
-  # 20261111 v40 破坏面席铸件·集成席挂接：破坏面复核矩阵·一行一拒写判据
-  # （tests/test_destructive_matrix.py·现役 33 行会写盘器×写面×护栏锚
-  # file:line 逐行断言拒写护栏：unclog×4/wash_shape×4/pushci×3/
+  # 20261111 v40 destructive-surface-agent cast, integration-agent hookup:
+  # the destructive-surface review matrix, one refuse-to-write criterion per
+  # row (tests/test_destructive_matrix.py; the active 33 rows assert the
+  # refuse-to-write guards row by row as writing-tool x write-face x guard
+  # anchor file:line: unclog x4 / wash_shape x4 / pushci x3 /
   # cw_sentinel×2/registry_union×2/cure_applier×4/frozen8×2/axiom_guard×1/
-  # jargon_apply×1——干跑零写盘/--apply 才落刀/frozen 红拒/内容红零 rerun/
-  # heal 帽尽停/report-only 缺省零动作等；X6 波谁写谁进阵新入 10 行：
-  # scheduler_lite×2（SL1 缺 --out 零写盘·dryRun 恒真／SL2 唯一写面=显式
-  # --out 两跑字节恒同）＋auto_merge×3（AM1 缺 --apply 零写盘／AM2 hold 永不
-  # 授权＋越权分支白名单红拒／AM3 日预算帽＋重复拒）＋repair_scope×1
-  # （RS1 --check 查询面零写盘＋共享名册判词咬合）＋E 波四守卫×4
-  # （E2A lane-extract／E2B roster-resync／E2C flaky-quarantine／E2D
-  # doc-count·四类皆干跑零写零账＋排除闸＋预算帽只落升格行）；全 tmp
-  # fixture＋injector 罐装·零真网络零真仓零真编译（唯一例外 W3 递真在册件
-  # 路径·收件即拒零读零写）·矩阵红＝护栏破·exit 1 响亮列破口 file:line＋违据）
+  # jargon_apply x1 — dry run zero-write / writes only under --apply / frozen
+  # refused red / content red zero rerun / heal stops at the cap /
+  # report-only default zero action, and so on; the X6 work stream adds 10 rows
+  # under whoever-writes-joins-the-matrix: scheduler_lite x2 (SL1 plan
+  # without --out zero-write, dryRun always true / SL2 the only write face is
+  # an explicit --out, byte-identical across two runs) + auto_merge x3 (AM1
+  # without --apply zero-write / AM2 hold never authorizes + foreign-branch
+  # allowlist refused red / AM3 the daily budget cap + duplicate refusal) +
+  # repair_scope x1 (RS1 the --check query face zero-write + the shared
+  # roster criterion interlock) + the four E-series guards x4 (E2A lane-extract
+  # / E2B roster-resync / E2C flaky-quarantine / E2D doc-count — all four
+  # dry-run, zero writes, zero ledger, plus the exclusion check and the
+  # budget cap recording only escalated rows); all tmp fixtures + injector
+  # canned, zero real network, zero real repository, zero real compile (the
+  # single exception W3 hands over a real registered-file path, refused on
+  # receipt, zero reads zero writes); a matrix red = a broken guard, exit 1
+  # loudly listing the breach file:line + evidence)
   "$PY" -B "$REPO/tests/test_destructive_matrix.py"
 }
 
 t_baseline_diff() {
-  # 20261111 v40 工装席铸件·集成席缺壳自补挂接：堵账基线对比器（tools/
-  # baseline_diff.py·两份 unclog --audit 基线 argv 序=旧→新→new_blocks/
-  # resolved_blocks/persistent 三清单＋score_delta·verdict improved/degraded/
-  # stable/incomparable·账面自洽预检拒手编·候选面四元组比对·timing 段不入
-  # 对比·schema rocqwash-baseline-diff/1·tests/test_baseline_diff.py 最小自测壳
-  # 三判：--selftest 冻结标记 BASELINE-DIFF-SELFTEST PASS（六矢量由铸席
-  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/缺参=2·
-  # 缺账文件=9·本集成席实跑验证）·零网络零编译零触真仓）
+  # 20261111 v40 tooling-agent cast, integration-agent shell self-supplement
+  # hookup: the blockage-record baseline comparator (tools/baseline_diff.py;
+  # two unclog --audit baselines in argv order old -> new -> new_blocks /
+  # resolved_blocks / persistent three lists + score_delta; verdict
+  # improved/degraded/stable/incomparable; the account self-consistency
+  # precheck refuses hand-edits; candidate four-tuple comparison; the timing
+  # section excluded from comparison; schema rocqwash-baseline-diff/1;
+  # tests/test_baseline_diff.py minimal shell three checks: --selftest frozen
+  # marker BASELINE-DIFF-SELFTEST PASS (six vectors self-attested by the
+  # casting agent's --selftest) + --help smoke + exit-code spot checks 2/2/9
+  # (bogus / missing args = 2 / missing ledger file = 9, verified by this
+  # integration agent's real runs); zero network, zero compile, zero
+  # real-repo touch)
   "$PY" -B "$REPO/tests/test_baseline_diff.py"
 }
 
 t_red_dispatch() {
-  # 20261112 v46 铸席铸件·集成席缺壳自补挂接：红事件路由器（tools/
-  # red_dispatch.py·哨红事件→动作预设路由·三档 preset report-only/suggest/
-  # auto·缺省零执行·auto 显式代跑 60s 帽 rc≠0 入账不改退出码·防重 state
-  # ＋cooldown·路由全挂既有 cw.sh 路由零新引擎·A 族内容红禁代修出 fix 清单·
-  # schema rocqwash-red-route/1·tests/test_red_dispatch.py 最小自测壳
-  # 三判：--selftest 冻结标记 RED-DISPATCH-SELFTEST PASS（十二矢量由铸席
-  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/dry-run
-  # 误档=2·事件文件缺=9·本集成席实跑验证）·零网络零编译零触真仓）
+  # 20261112 v46 casting-agent cast, integration-agent shell self-supplement
+  # hookup: the red-event router (tools/red_dispatch.py; watcher red events
+  # -> action-preset routing; the three presets report-only/suggest/auto;
+  # zero execution by default; auto runs on the tool's behalf only when
+  # explicit, 60s cap, rc!=0 recorded without changing the exit code;
+  # dedup state + cooldown; all five routes hang off the existing cw.sh
+  # routes, zero new engines; family A content red never auto-repaired, a
+  # fix list is emitted; schema rocqwash-red-route/1;
+  # tests/test_red_dispatch.py minimal shell three checks: --selftest frozen
+  # marker RED-DISPATCH-SELFTEST PASS (twelve vectors self-attested by the
+  # casting agent's --selftest) + --help smoke + exit-code spot checks 2/2/9
+  # (bogus / dry-run mistaken tier = 2 / missing event file = 9, verified by
+  # this integration agent's real runs); zero network, zero compile, zero
+  # real-repo touch)
   "$PY" -B "$REPO/tests/test_red_dispatch.py"
 }
 
 t_registry_audit() {
-  # 20261112 v46 铸席铸件·集成席缺壳自补挂接：注册册卫生审计器（tools/
-  # registry_audit.py·order.txt/_CoqProject 双册只读四账出账：重复行/锚撞/
-  # 顺序号形/形怪/缺锚/孤儿/live 拓扑＋--fix-plan 确定性处方零写盘·--apply
-  # 不存在·键式/锚正典直用 registry_union 零重造·病灶是数据恒 exit 0·
-  # schema rocqwash-registry-audit/1·tests/test_registry_audit.py 最小自测壳
-  # 三判：--selftest 冻结标记 REGISTRY-AUDIT-SELFTEST PASS（五判矢量由铸席
-  # --selftest 自证）＋--help 冒烟＋退出码口径抽验 2/2/9（bogus/无输入面/
-  # 半册=2·缺册=9·本集成席实跑验证）·零网络零编译零触真仓）
+  # 20261112 v46 casting-agent cast, integration-agent shell self-supplement
+  # hookup: the registry hygiene auditor (tools/registry_audit.py; the
+  # order.txt/_CoqProject double book read-only, four account classes:
+  # duplicate rows / anchor collisions / sequence-number shapes / odd shapes
+  # / missing anchors / orphans / the live topology + --fix-plan
+  # deterministic prescriptions zero-write; --apply does not exist; keys and
+  # anchor canonicals used directly through registry_union, zero rebuilds;
+  # the defect is data, always exit 0; schema rocqwash-registry-audit/1;
+  # tests/test_registry_audit.py minimal shell three checks: --selftest
+  # frozen marker REGISTRY-AUDIT-SELFTEST PASS (five vector groups
+  # self-attested by the casting agent's --selftest) + --help smoke +
+  # exit-code spot checks 2/2/9 (bogus / no input face / half a book = 2 /
+  # missing book = 9, verified by this integration agent's real runs); zero
+  # network, zero compile, zero real-repo touch)
   "$PY" -B "$REPO/tests/test_registry_audit.py"
 }
 
 t_registry_fix() {
-  # 20261112 v47 集成席直挂：注册册处方执行器（tools/registry_fix.py·
-  # registry_audit --fix-plan 处方逐条落刀·三类处方 DEDUP 保首/锚刷/ORPHAN-ADD
-  # skip·dry run by default·--apply 落刀后断言含 dup 零残留/锚撞零增/孤儿不增/被治锚
-  # 键锚残量零（A-fix-6·--orphan-add 时另加孤儿两判）任一炸即回滚·
-  # staging 全内存零写盘·同参纪律 audit↔执行器逐字咬合·schema
-  # rocqwash-registry-fix/1——器 --selftest 八矢量全 canned tmp fixture·
-  # 零网络零编译零触真仓）
+  # 20261112 v47 integration-agent direct hookup: the registry prescription
+  # executor (tools/registry_fix.py; applies each registry_audit --fix-plan
+  # prescription row by row; the three prescription classes DEDUP keep-first
+  # / anchor refresh / ORPHAN-ADD skip; dry run by default; after --apply the
+  # assertions run — zero duplicate residue / no new anchor collisions / no
+  # new orphans / zero treated-anchor residual (A-fix-6; two extra orphan
+  # checks under --orphan-add); any failure rolls back; staging fully
+  # in-memory, zero writes; the same-parameter discipline interlocks the
+  # audit and the executor verbatim; schema rocqwash-registry-fix/1 — the
+  # tool's --selftest eight vectors, all canned tmp fixtures; zero network,
+  # zero compile, zero real-repo touch)
   "$PY" -B "$REPO/tools/registry_fix.py" --selftest
 }
 
@@ -986,9 +897,11 @@ t_registry_fix_anchor() {
 }
 
 t_norm_lint() {
-  # 注释面规范化检查器挂接（tools/norm_lint.py·tests/test_norm_lint.py
-  # 最小自测壳三判：--selftest 六矢量＋--help 冒烟＋退出码口径抽验 2/9
-  # ——report-only 首形·基线账报告出账·零网络零编译零触真仓）
+  # annotation-face normalization linter hookup (tools/norm_lint.py;
+  # tests/test_norm_lint.py minimal shell three checks: --selftest six
+  # vectors + --help smoke + exit-code spot checks 2/9 — report-only first
+  # form, baseline account reports emitted; zero network, zero compile, zero
+  # real-repo touch)
   "$PY" -B "$REPO/tests/test_norm_lint.py"
 }
 
@@ -1045,26 +958,34 @@ t_clean_mode() {
 }
 
 t_vacgen_shape() {
-  # 20261114 递归自愈席补挂接：vacgen 四账骨架形状自测（tests/t_vacgen_shape.py
-  # ·zeta 面 fixture 铸形·四账 8 文件在盘断言·零编译零网络）。此例与
-  # t_vacgen_expectedred 自 20261113 落位起即未接线（run_tests.sh 零提及＝
-  # 套件不可见·RQW12 判例同款缺口），本轮一并补挂；subprocess 读取面补
-  # encoding=utf-8（GBK locale 读线程解码破·对齐 expectedred 读形）。
+  # 20261114 recursive-self-healing-agent hookup: the vacgen four-account
+  # skeleton shape selftest (tests/t_vacgen_shape.py; zeta-face fixture
+  # shapes; four accounts, 8 files asserted on disk; zero compile, zero
+  # network).  This case and t_vacgen_expectedred had been on disk since
+  # 20261113 without a hookup (zero mentions in run_tests.sh = invisible to
+  # the suite; the same gap as the RQW12 precedent); both hooked up this
+  # round; the subprocess read face adds encoding=utf-8 (a GBK locale breaks
+  # read-thread decoding; aligned with the expectedred read shape).
   "$PY" -B "$REPO/tests/t_vacgen_shape.py"
 }
 
 t_vacgen_expectedred() {
-  # 20261114 递归自愈席补挂接：vacgen 预期红契约自测（tests/t_vacgen_expectedred.py
-  # ·三判：EXPECTED-FAIL 逐面登记/反判契约向量/红绿边界·预期红=数据非器红·
-  # 未登记红才是缺陷·零编译零网络）。
+  # 20261114 recursive-self-healing-agent hookup: the vacgen expected-red
+  # contract selftest (tests/t_vacgen_expectedred.py; three checks:
+  # EXPECTED-FAIL per-face registration / counter-contract vectors /
+  # red-green boundary; an expected red is data, not a tool failure; only an
+  # unregistered red is a defect; zero compile, zero network).
   "$PY" -B "$REPO/tests/t_vacgen_expectedred.py"
 }
 
 t_vacgen_envelope_shape() {
-  # 20261114 递归自愈席新铸：witness 包络词面形状自测（tests/t_vacgen_envelope_shape.py
-  # ·fixture A 良形面契约钉（无裸型连言肢）＋fixture B 隐式 binder 面已知债钉
-  # （债签名 ∧ Set ( 在场=钉绿·引擎修后钉红=按 SOP §2.5 勘误更新钉）·
-  # 20261114 登记引擎债的唯一机检守卫·零编译零网络）。
+  # 20261114 recursive-self-healing-agent new cast: the witness envelope word
+  # face shape selftest (tests/t_vacgen_envelope_shape.py; fixture A pins the
+  # well-formed-face contract (no bare-type disjuncts) + fixture B pins the
+  # implicit-binder known debt (the debt signature with Set ( present = pinned
+  # passing; re-pinned failing after an engine fix = update the pin per the
+  # SOP section 2.5 erratum); the only machine check guarding the engine debt
+  # registered 20261114; zero compile, zero network).
   "$PY" -B "$REPO/tests/t_vacgen_envelope_shape.py"
 }
 
@@ -1267,9 +1188,9 @@ t_jargon_map_sync() {
   "$PY" -B "$REPO/tests/test_jargon_map_sync.py"
 }
 
-# ---------- 汇总执行 ----------
+# ---------- summary execution ----------
 
-echo "== rocqwash tests/ 自测套件（repo=${REPO}）=="
+echo "== rocqwash tests/ self-test suite (repo=${REPO}) =="
 for c in $CASES; do
   TOTAL=$((TOTAL + 1))
   if "$c" >"$LOG" 2>&1; then
@@ -1279,23 +1200,23 @@ for c in $CASES; do
     rc=$?
     if [ "$rc" -eq 111 ]; then
       SKIP=$((SKIP + 1)); SKIPS="$SKIPS $c"
-      printf '[%d/%d] %-26s SKIP (正本环境缺·rc=111)\n' "$TOTAL" "$NCASES" "$c"
+      printf '[%d/%d] %-26s SKIP (canonical environment absent, rc=111)\n' "$TOTAL" "$NCASES" "$c"
     else
       FAIL=$((FAIL + 1)); REDS="$REDS $c"
       printf '[%d/%d] %-26s FAIL (rc=%s)\n' "$TOTAL" "$NCASES" "$c" "$rc"
-      echo "-------- $c 输出（前 40 行）--------"
+      echo "-------- $c output (first 40 lines) --------"
       sed -n '1,40p' "$LOG"
       echo "------------------------------------"
     fi
   fi
 done
 
-echo "== 汇总: $PASS 过 / $FAIL 红 / $SKIP 略 / 共 $TOTAL 例 =="
+echo "== summary: $PASS pass / $FAIL failing / $SKIP skipped / $TOTAL cases total =="
 if [ "$SKIP" -ne 0 ]; then
-  echo "略例（正本环境缺·真本机全跑）:$SKIPS"
+  echo "skipped cases (canonical environment absent; the canonical machine runs the full sweep):$SKIPS"
 fi
 if [ "$FAIL" -ne 0 ]; then
-  echo "红例:$REDS"
+  echo "failing cases:$REDS"
   exit 1
 fi
 exit 0
