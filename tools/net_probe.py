@@ -1,50 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""net_probe.py — 网络窗探针（rocqwash tools/·双探稳窗律 20261110 判例工具化·
-20261111 入账）
+"""net_probe.py - network-window probe (rocqwash tools/).
 
-背景判例（20261110）：GitHub Actions artifact 上传端点 DNS 死窗（ENOTFOUND/
-Upload progress stalled）→ rerun 发射前须「双探稳窗」：连续两轮（默认 60s 间隔）
-全端点可达才准发射——单探 UP 禁发射（单轮假窗）。
+Purpose.  Probe all endpoints with a bare GET and decide the dual-probe
+  stability window (a single-probe round must not initiate): with
+  --stable-window the window holds only when every endpoint is reachable
+  in every round; without it exit 0 only means the probe completed.
+  Reachable = any HTTP status from urlopen(url, timeout=12), 500/400
+  included; URLError, timeout or DNS failure = unreachable (http_code=null);
+  HTTPError subclasses URLError, so exceptions pass classify_error first.
 
-可达性判据（纯代码化·裸 GET 语义）：
-  urllib.request.urlopen(url, timeout=12)；拿到任何 HTTP 状态码（含 500/400 等
-  HTTPError）＝TLS/DNS/HTTP 栈通＝可达即健康；URLError/超时/DNS 解析失败＝
-  不可达（http_code=null）。HTTPError 是 URLError 子类——异常一律先过
-  classify_error 分类（isinstance HTTPError→可达）再落码。
+Interface.  python3 tools/net_probe.py [--endpoints URL[,URL...]]
+  [--rounds N] [--interval S] [--stable-window] [--jitter S] [--seed N]
+  [--json out.json] | --selftest.  Defaults: --rounds 1 (>= 1), --interval
+  60 (>= 0, no sleep after the last round), jitter off, default
+  `DEFAULT_ENDPOINTS` (--endpoints overrides); --jitter S (>= 0) sleeps
+  uniform(0, S) before each endpoint probe (--seed N pins the RNG;
+  jitter_sec appears only while --jitter > 0); --stable-window requires
+  --rounds >= 2.  Report schema rocqwash-net-probe/1: rounds[{at,
+  endpoints[{url, http_code, ok(, jitter_sec)}]}], verdict (STABLE|
+  UNSTABLE with --stable-window, else all-up|partial|all-down); writes
+  deterministic, rounds[].at is wall-clock UTC (varies per round).
 
-用法（端点全参数化·除下述缺省四端点外零硬编码·selftest 零网络）：
-  python3 tools/net_probe.py [--endpoints URL[,URL...]] [--rounds N]
-      [--interval S] [--stable-window] [--jitter S] [--seed N]
-      [--json out.json]
-  python3 tools/net_probe.py --selftest
+Dependencies.  Python 3 standard library only; zero network under --selftest.
 
---jitter S（韧性层 v37·缺省 0=关·须≥0）：每端点探测前随机微抖 sleep
-  uniform(0, S) 秒（抖散对齐性重试风暴·每端点独立一抖）；--seed N 固定
-  jitter 随机 seed（缺省系统熵·selftest 用固定 seed 保证确定性）。抖值如实
-  入报告 endpoints[].jitter_sec（加法式键·--jitter 缺省 0 时零键零行为
-  变化——既有报告面逐字节不漂）。
+Evidence.  --selftest frozen vector group V1-V7; suite lane t_net_probe
+  (tests/test_net_probe.py).
 
-缺省四端点（判例 artifact 上传面＋API 面·--endpoints 逗号分隔可覆盖）：
-  https://results-receiver-actions.githubusercontent.com
-  https://productionresultssa1.blob.core.windows.net
-  https://api.github.com
-  https://github.com
-
---rounds N（默认 1·须≥1）·--interval S（默认 60·轮间 sleep·末轮不 sleep·须≥0）。
---stable-window：须 --rounds ≥2（否则用法错 2——双探稳窗·a single-probe round must not initiate）；每轮每
-端点全可达 → STABLE（exit 0），任一轮任一端点掉 → UNSTABLE（exit 1·每轮每端点
-码如实报）。无 --stable-window：probe 完成即 exit 0（exit 0 仅＝probe 完成·
-可达性看 verdict 字段），verdict 报三档 all-up|partial|all-down（跨轮汇总）。
-
-退出码：0=probe 完成且（若 --stable-window）稳窗成立；1=不稳窗；2=用法错／
-报告落盘失败。--json 报告 schema=rocqwash-net-probe/1：
-  rounds[{at, endpoints[{url, http_code, ok(, jitter_sec)}]}] / verdict
-  （jitter_sec 仅 --jitter>0 时在册·加法式）
-verdict：--stable-window 时＝STABLE|UNSTABLE；否则＝all-up|partial|all-down。
-落盘 json.dump(indent=1, ensure_ascii=False, sort_keys=True)＋newline="\\n"；
-诚实注记：rounds[].at 为墙钟 UTC（活体探测逐轮可变——本轮报告即本轮证据·不跨
-轮恒同）；端点序＝入参序确定性·其余字段确定性。
+Exit-codes.  0 = probe completed and, with --stable-window, the window
+  held; 1 = unstable window; 2 = usage error or report write failure.
 """
 import argparse
 import io
@@ -70,19 +54,22 @@ DEFAULT_ENDPOINTS = [
 
 
 def classify_error(exc):
-    """可达性分类：HTTPError（拿到 HTTP 状态码·TLS/DNS 已通）→ 可达；其余
-    （URLError/超时/DNS 失败/裸 OSError/任何异常）→ 不可达。canned 异常实例
-    可直接注入判定（selftest 零网络向量）。"""
+    """Reachability classification: HTTPError (an HTTP status was received,
+    the TLS/DNS stack resolved) -> reachable; everything else (URLError,
+    timeout, DNS failure, bare OSError, any exception) -> unreachable.
+    Canned exception instances can be injected directly (selftest
+    zero-network vectors)."""
     return isinstance(exc, urllib.error.HTTPError)
 
 
 def probe_once(url, timeout=TIMEOUT_SEC, _open=None):
-    """单端点裸 GET 探测 → (http_code:int|None, ok:bool, reason:str)。
-    _open 可注入 canned urlopen（selftest 零网络·canned 异常类注入位）。"""
+    """Single-endpoint bare-GET probe -> (http_code: int|None, ok: bool,
+    reason: str).  _open accepts a canned urlopen (selftest zero-network
+    canned-exception injection point)."""
     opener = _open if _open is not None else urllib.request.urlopen
     try:
         resp = opener(url, timeout=timeout)
-    except Exception as exc:  # noqa: BLE001 — 一切异常交 classify_error 裁决
+    except Exception as exc:  # noqa: BLE001 - classify_error judges all
         ok = classify_error(exc)
         code = getattr(exc, "code", None) if ok else None
         return code, ok, "%s: %s" % (type(exc).__name__, exc)
@@ -97,12 +84,15 @@ def probe_once(url, timeout=TIMEOUT_SEC, _open=None):
 
 def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
                 rng=None, _sleep=None):
-    """一轮全端点探测（入参序）→ (entries[{url,http_code,ok(,jitter_sec)}],
-    reasons{url:原因})（reasons 只收 down·仅诊断 stdout 用·不入 JSON）。
-    韧性层 v37：jitter>0 时每端点探测前随机微抖 sleep uniform(0, jitter) 秒
-    （每端点独立一抖·rng 缺省 random 模块·_sleep 注入位供 selftest 固定
-    seed 确定性矢量）；抖值入 entry jitter_sec（加法式·jitter=0 零键零睡
-    零行为变化）。"""
+    """One full round over the endpoints (argument order) ->
+    (entries[{url, http_code, ok(, jitter_sec)}], reasons{url: reason});
+    reasons collects down endpoints only, feeds diagnostic stdout and never
+    enters the JSON report.  Resilience: when jitter > 0, sleep
+    uniform(0, jitter) seconds before each endpoint probe (one independent
+    draw per endpoint; rng defaults to the random module; _sleep is the
+    injection point behind the selftest fixed-seed deterministic vectors);
+    the draw is recorded in entry jitter_sec (additive key: jitter=0 means
+    no key, no sleep, no behavior change)."""
     entries, reasons = [], {}
     do_sleep = _sleep if _sleep is not None else time.sleep
     r = rng if rng is not None else random
@@ -122,8 +112,9 @@ def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
 
 
 def summarize_verdict(rounds):
-    """跨轮全探针汇总三档：all-up | partial | all-down（空集防御归 all-down·
-    CLI 侧已禁空端点表）。"""
+    """Cross-round summary over all probes, three levels:
+    all-up | partial | all-down (empty input defends as all-down; the CLI
+    side rejects empty endpoint lists)."""
     probes = [e for r in rounds for e in r["endpoints"]]
     if not probes:
         return "all-down"
@@ -136,29 +127,35 @@ def summarize_verdict(rounds):
 
 
 def stable_window_holds(rounds):
-    """双探稳窗判据：非空轮集且每轮每端点全可达。"""
+    """Dual-probe stable-window criterion: a non-empty round set in which
+    every endpoint is reachable in every round."""
     if not rounds:
         return False
     return all(e["ok"] for r in rounds for e in r["endpoints"])
 
 
 def now_iso():
-    """轮墙钟（UTC ISO·秒精度）。"""
+    """Round wall clock (UTC ISO, second precision).  rounds[].at is
+    wall-clock UTC and varies per round: a round's report is that round's
+    evidence, not invariant across rounds."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def write_report(path, report):
-    """确定性落盘（indent=1·ensure_ascii=False·sort_keys·newline=\\n）。"""
+    """Deterministic report write (indent=1, ensure_ascii=False, sort_keys,
+    newline="\\n")."""
     try:
         with io.open(path, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(report, fh, indent=1, ensure_ascii=False, sort_keys=True)
     except OSError as exc:
-        print("FAIL-LOUD: 报告落盘失败 %s: %s" % (path, exc), file=sys.stderr)
+        print("FAIL-LOUD: report write failed %s: %s" % (path, exc),
+              file=sys.stderr)
         sys.exit(2)
 
 
 def run_args(argv, env=None):
-    """selftest 辅助：子进程跑本器（stdout+stderr 合流）。"""
+    """Selftest helper: run this tool in a subprocess (stdout and stderr
+    merged)."""
     import subprocess
     e = dict(os.environ) if env is None else dict(env)
     p = subprocess.run([sys.executable, "-B",
@@ -171,23 +168,33 @@ def run_args(argv, env=None):
 
 
 def selftest():
-    """内嵌冻结向量组（零网络·canned 异常类/响应体注入·零编译）：
-    V1 classify_error/probe_once 分类：HTTPError(503/500/400)→可达带码·
-       URLError→不可达·socket.timeout→不可达·canned 响应体 200/500→可达带码
-    V2 probe_round canned 双端点混装：entries 形制与序·reasons 只收 down
-    V3 verdict 三档：all-up/partial/all-down（单轮＋跨轮混装＋空集防御）
-    V4 稳窗三判：两轮全过→True·首轮掉→False·次轮掉→False（空集→False）
-    V5 CLI 用法码：--help→0·--bogus→2·--rounds 0→2·--stable-window --rounds 1→2·
-       --endpoints 空表→2·--endpoints 缺 scheme→2·--interval 负→2·--jitter 负→2
-    V6 报告落盘确定性：canned 定轮报告两写字节恒同
-    V7 jitter 固定 seed 确定性：同 seed 同抖序·异 seed 异抖序·界 [0,S]·
-       每端点一抖·抖值入账 jitter_sec·缺省 jitter=0 零键零睡零行为变化
+    """Embedded frozen vector group (zero network, canned exception and
+    response injection, zero compiles):
+    V1 classify_error/probe_once classification: HTTPError (503/500/400) ->
+       reachable with code; URLError -> unreachable; socket.timeout ->
+       unreachable; canned response bodies 200/500 -> reachable with code
+    V2 probe_round canned two-endpoint mix: entry shape and order; reasons
+       collects down endpoints only
+    V3 verdict three levels: all-up/partial/all-down (single round + mixed
+       rounds + empty-input defense)
+    V4 stable window, three decisions: two passing rounds -> True; a drop
+       in the first round -> False; a drop in a later round -> False
+       (empty input -> False)
+    V5 CLI usage codes: --help -> 0; --bogus -> 2; --rounds 0 -> 2;
+       --stable-window --rounds 1 -> 2; --endpoints empty -> 2; --endpoints
+       missing scheme -> 2; --interval negative -> 2; --jitter negative -> 2
+    V6 report write determinism: the same canned report written twice
+       yields identical bytes
+    V7 fixed-seed jitter determinism: same seed, same draw order; different
+       seed, different order; bounds [0, S]; one draw per endpoint; draws
+       recorded in jitter_sec; default jitter=0 means no key, no sleep, no
+       behavior change
     """
     import shutil
     import tempfile
 
     class FakeResp(object):
-        """canned 响应体（urlopen 假件·零网络）。"""
+        """Canned response body (urlopen stand-in, zero network)."""
         def __init__(self, status):
             self.status = status
 
@@ -203,15 +210,16 @@ def selftest():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_net_self_")
     try:
-        # ---- V1 分类 ----
+        # ---- V1 classification ----
         for code in (503, 500, 400):
             he = urllib.error.HTTPError("https://x", code,
                                         "HTTP Error %d" % code, None, None)
-            assert classify_error(he) is True, "HTTPError 须可达: %d" % code
+            assert classify_error(he) is True, \
+                "HTTPError must be reachable: %d" % code
             got = probe_once("https://x", _open=canned_open(exc=he))
             assert got[0] == code and got[1] is True, got
         ue = urllib.error.URLError("[Errno 8] nodename nor servname provided")
-        assert classify_error(ue) is False, "URLError 须不可达"
+        assert classify_error(ue) is False, "URLError must be unreachable"
         got = probe_once("https://x", _open=canned_open(exc=ue))
         assert got[0] is None and got[1] is False and "URLError" in got[2], got
         to = socket.timeout("timed out")
@@ -220,9 +228,9 @@ def selftest():
         got = probe_once("https://x", _open=canned_open(resp=FakeResp(200)))
         assert got[0] == 200 and got[1] is True, got
         got = probe_once("https://x", _open=canned_open(resp=FakeResp(500)))
-        assert got[0] == 500 and got[1] is True, "500 可达即健康"
+        assert got[0] == 500 and got[1] is True, "500 reachable means healthy"
 
-        # ---- V2 probe_round 形制 ----
+        # ---- V2 probe_round shape ----
         ok_url, dead_url = "https://ok.example", "https://dead.example"
 
         def mixed_open(url, timeout=None):
@@ -236,7 +244,7 @@ def selftest():
         assert list(reasons) == [dead_url] and "URLError" in reasons[dead_url], \
             reasons
 
-        # ---- V3 verdict 三档 ----
+        # ---- V3 verdict levels ----
         up = {"endpoints": [{"url": "a", "http_code": 200, "ok": True}]}
         down = {"endpoints": [{"url": "b", "http_code": None, "ok": False}]}
         assert summarize_verdict([up]) == "all-up"
@@ -245,13 +253,16 @@ def selftest():
         assert summarize_verdict([down]) == "all-down"
         assert summarize_verdict([]) == "all-down"
 
-        # ---- V4 稳窗三判 ----
-        assert stable_window_holds([up, up]) is True, "两轮全过须 STABLE"
-        assert stable_window_holds([up, down]) is False, "次轮掉须 UNSTABLE"
-        assert stable_window_holds([down, up]) is False, "首轮掉须 UNSTABLE"
-        assert stable_window_holds([]) is False, "空集防御"
+        # ---- V4 stable-window decisions ----
+        assert stable_window_holds([up, up]) is True, \
+            "two passing rounds must be STABLE"
+        assert stable_window_holds([up, down]) is False, \
+            "a later-round drop must be UNSTABLE"
+        assert stable_window_holds([down, up]) is False, \
+            "a first-round drop must be UNSTABLE"
+        assert stable_window_holds([]) is False, "empty-input defense"
 
-        # ---- V5 CLI 用法码 ----
+        # ---- V5 CLI usage codes ----
         p = run_args(["--help"])
         assert p.returncode == 0 and "usage" in p.stdout, p.stdout[-200:]
         for vec in (["--bogus"],
@@ -262,10 +273,10 @@ def selftest():
                     ["--interval", "-1"],
                     ["--jitter", "-1"]):
             p = run_args(vec)
-            assert p.returncode == 2, "用法错应 rc=2 实测 %d: %s" \
+            assert p.returncode == 2, "usage error must be rc=2 (%d): %s" \
                 % (p.returncode, vec)
 
-        # ---- V6 报告落盘确定性 ----
+        # ---- V6 report write determinism ----
         fixed = {"schema": SCHEMA,
                  "rounds": [{"at": "2026-11-11T00:00:00Z", "endpoints": [
                      {"url": "https://a", "http_code": 200, "ok": True}]}],
@@ -275,11 +286,11 @@ def selftest():
         write_report(j1, fixed)
         write_report(j2, fixed)
         assert io.open(j1, "rb").read() == io.open(j2, "rb").read(), \
-            "json 字节漂移＝违例"
+            "json byte drift is a violation"
         rep = json.load(io.open(j1, encoding="utf-8"))
         assert rep["schema"] == SCHEMA and rep["verdict"] == "all-up", rep
 
-        # ---- V7 jitter 固定 seed 确定性（零网络·canned 全通探针）----
+        # ---- V7 fixed-seed jitter determinism (canned all-up probes) ----
         eps = ["https://a.example", "https://b.example", "https://c.example"]
 
         def up_open(url, timeout=None):
@@ -292,22 +303,26 @@ def selftest():
                             rng=random.Random(2026), _sleep=slept_b.append)
         ec, _ = probe_round(eps, _open=up_open, jitter=0.5,
                             rng=random.Random(7), _sleep=slept_c.append)
-        assert slept_a == slept_b, "同 seed 须同抖序: %s vs %s" \
+        assert slept_a == slept_b, "same seed, same draws: %s vs %s" \
             % (slept_a, slept_b)
-        assert slept_c != slept_a, "异 seed 须异抖序"
-        assert len(slept_a) == 3, "每端点一抖·实测 %d" % len(slept_a)
+        assert slept_c != slept_a, "different seed, different draw order"
+        assert len(slept_a) == 3, "one draw per endpoint, got %d" \
+            % len(slept_a)
         assert all(0.0 <= s <= 0.5 for s in slept_a), slept_a
-        assert [e["jitter_sec"] for e in ea] == slept_a, "抖值须入账"
+        assert [e["jitter_sec"] for e in ea] == slept_a, \
+            "draws must be recorded in jitter_sec"
         assert all(set(e) == {"url", "http_code", "ok", "jitter_sec"}
                    for e in ea), ea
-        ed, _ = probe_round(eps, _open=up_open)   # 缺省 jitter=0
+        ed, _ = probe_round(eps, _open=up_open)   # default jitter=0
         assert all(set(e) == {"url", "http_code", "ok"} for e in ed), \
-            "缺省零键零行为变化"
+            "default means no key and no behavior change"
         assert ed == [{"url": u, "http_code": 200, "ok": True} for u in eps], ed
 
-        print("NET-PROBE-SELFTEST PASS: 分类（HTTPError 可达/URLError·超时不可达/"
-              "canned 200·500）/round 形制＋reasons/verdict 三档/稳窗三判/"
-              "CLI 用法八码/落盘字节恒同/jitter 固定 seed 确定性 八节全过")
+        print("NET-PROBE-SELFTEST PASS: classification (HTTPError reachable,"
+              " URLError/timeout unreachable, canned 200/500)/round shape and"
+              " reasons/verdict levels/stable-window decisions/CLI usage"
+              " codes/byte-identical report writes/fixed-seed jitter"
+              " determinism - eight sections all pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
@@ -319,24 +334,31 @@ def main():
         sys.exit(selftest())
     ap = argparse.ArgumentParser(
         prog=PROG,
-        description="网络窗探针：裸 GET 全端点可达性 N 轮探测＋双探稳窗判定"
-                    "（发射闸：--stable-window 连续全轮全端点可达才 exit 0）")
+        description="network-window probe: bare-GET all-endpoint reachability"
+                    " over N rounds with the dual-probe stable-window decision"
+                    " (preflight check: --stable-window exits 0 only when"
+                    " every round reaches every endpoint)")
     ap.add_argument("--endpoints", default=None, metavar="URL[,URL...]",
-                    help="端点表（缺省四端点·逗号分隔覆盖）")
+                    help="endpoint list (four defaults, comma-separated"
+                         " override)")
     ap.add_argument("--rounds", type=int, default=1, metavar="N",
-                    help="探测轮数（默认 1·须≥1）")
+                    help="probe rounds (default 1, >= 1)")
     ap.add_argument("--interval", type=float, default=60.0, metavar="S",
-                    help="轮间隔秒（默认 60·末轮不 sleep）")
+                    help="seconds between rounds (default 60, no sleep after"
+                         " the last round)")
     ap.add_argument("--stable-window", action="store_true",
                     dest="stable_window",
-                    help="稳窗闸：rounds≥2 且全轮全端点可达才 exit 0")
+                    help="stable-window check: exit 0 only when rounds >= 2"
+                         " and every round reaches every endpoint")
     ap.add_argument("--jitter", type=float, default=0.0, metavar="S",
-                    help="每端点探测前随机微抖秒（uniform(0,S)·默认 0=关·"
-                         "须≥0）")
+                    help="random pre-probe jitter seconds per endpoint"
+                         " (uniform(0, S), default 0 = off, >= 0)")
     ap.add_argument("--seed", type=int, default=None, metavar="N",
-                    help="jitter 随机 seed（缺省系统熵·固定 seed 保证确定性）")
+                    help="jitter random seed (default system entropy; a fixed"
+                         " seed gives determinism)")
     ap.add_argument("--json", default=None, metavar="out.json",
-                    help="探测报告出账（schema rocqwash-net-probe/1）")
+                    help="probe report output path (schema"
+                         " rocqwash-net-probe/1)")
     args = ap.parse_args(argv)
 
     try:
@@ -348,26 +370,29 @@ def main():
     if args.endpoints is not None:
         endpoints = [u.strip() for u in args.endpoints.split(",") if u.strip()]
         if not endpoints:
-            print("FAIL-LOUD: --endpoints 展开后为空", file=sys.stderr)
+            print("FAIL-LOUD: --endpoints expands to an empty list",
+                  file=sys.stderr)
             sys.exit(2)
         for u in endpoints:
             if not (u.startswith("http://") or u.startswith("https://")):
-                print("FAIL-LOUD: 端点缺 http(s) scheme: %s" % u,
+                print("FAIL-LOUD: endpoint lacks an http(s) scheme: %s" % u,
                       file=sys.stderr)
                 sys.exit(2)
     if args.rounds < 1:
-        print("FAIL-LOUD: --rounds 须≥1 实测 %d" % args.rounds, file=sys.stderr)
+        print("FAIL-LOUD: --rounds must be >= 1, got %d" % args.rounds,
+              file=sys.stderr)
         sys.exit(2)
     if args.interval < 0:
-        print("FAIL-LOUD: --interval 须≥0 实测 %s" % args.interval,
+        print("FAIL-LOUD: --interval must be >= 0, got %s" % args.interval,
               file=sys.stderr)
         sys.exit(2)
     if args.stable_window and args.rounds < 2:
-        print("FAIL-LOUD: --stable-window 须 --rounds ≥2（双探稳窗·单探禁发射）",
-              file=sys.stderr)
+        print("FAIL-LOUD: --stable-window requires --rounds >= 2 (a"
+              " single-probe round must not initiate)", file=sys.stderr)
         sys.exit(2)
     if args.jitter < 0:
-        print("FAIL-LOUD: --jitter 须≥0 实测 %s" % args.jitter, file=sys.stderr)
+        print("FAIL-LOUD: --jitter must be >= 0, got %s" % args.jitter,
+              file=sys.stderr)
         sys.exit(2)
     rng = random.Random(args.seed)
 
@@ -401,10 +426,11 @@ def main():
     print("verdict: %s" % verdict)
     if args.stable_window:
         if verdict == "UNSTABLE":
-            print("FAIL: 稳窗不成立（UNSTABLE·任一轮任一端点掉线即禁发射）",
-                  file=sys.stderr)
+            print("FAIL: stable window does not hold (UNSTABLE; any down"
+                  " endpoint in any round bars initiation)", file=sys.stderr)
             sys.exit(1)
-        print("STABLE-WINDOW OK（双探全过·准发射口径）")
+        print("STABLE-WINDOW OK (all rounds all endpoints passing; clear to"
+              " initiate)")
     sys.exit(0)
 
 
