@@ -1,204 +1,101 @@
-# 判例档：R3 复发——route2-tierA 驱动同秒全灭·哨监控→classification→自愈全环零人工（20261113）
+# `docs/判例-R3复发-route2tierA自愈-20261113.md` — R3 recurrence case record: the route2-tierA same-second driver wipeout; watcher monitoring → classification → automatic recovery; one full loop with zero human intervention (recorded November 13, 2026).
 
-> **性质**：判例复发实录档·服务层闭环首例。记录 Set repository route2-tierA 分支
-> run#301/302（sha `8f59c8f`）「相对路径 cwd=workdir 错位·驱动同秒全灭」判例
-> 复发的活逮、classification、自愈全链字据，并附 Set PR#48（integration/g1-pipeline G1
-> witness 8 件）勘形预热注记。**只读入档**——本席零代码改动·rocqwash 工作树
-> 只增本档一文件；禁触冻结八件/quad8/更新账.md（对更新账只读引据）。
-> **口径**：云上面 API 实取为准（api.github.com netrc 只读 GET·token 零回显·
-> ci_triage 真跑实判）；「R3」编号承任务书/主会话判例册口径（在库可核机制面
-> 见 §二·编号源不在本席可证面·§七如实记）。
+> Purpose.  The recurrence record of case R3, the first service-layer closed loop on file. It records the live catch, the classification, and the full automatic-recovery evidence chain of the recurrence of the "relative-path cwd=workdir misalignment · same-second driver wipeout" case on the Set repository's route2-tierA branch (runs #301/#302, sha `8f59c8f`), and carries the pre-warm annotation of the Set PR#48 survey (integration/g1-pipeline, the eight G1 witness files). Read-only registration: this agent changed zero code; the rocqwash working tree gained exactly this one file; the frozen eight faces, the quad8 set, and the ledger `更新账.md` were never touched (the ledger cited read-only).
+> Interface.  Document face only; no runtime interface. Measurement discipline: the cloud-side readings take the GitHub API as actually fetched as authoritative (read-only GET against api.github.com, the `~/.netrc` token never echoed; the `ci_triage` judgment executed as a real run); the "R3" label follows the numbering convention of the task brief and the main session's case register (the in-repo verifiable mechanism face is in §2; the numbering source is outside the surface this agent can prove, stated as-is in §7). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  Tool faces cited: `tools/ci_triage.py` (classification), `tools/cpu_guard.sh` (the wrapper around every execution), `tools/doc_lint.py` (reference consistency); the Set repository read-only (`git show` / `git log` and the REST API only); `~/.netrc` for the API token; the watcher records under `/Users/apple/Desktop/ConstructiveWorld/_log/sentinel_v48/`. No runtime dependency of this document on any code face.
+> Evidence.  Every number and every quotation below carries its first-hand anchor beside it (the runs API, the failing-job logs, the watcher event and state records, `git show` of the restore commit); every run this agent executed is listed in the §8 self-attestation table; line-number anchors bind to the November 13, 2026 recorded state.
+> Exit-codes.  Not applicable to a document face; the rc values quoted in the tables are the documented tools' observed exit codes, described as implemented.
 
 ---
 
-## 一、案情总览（时间线·全部实取）
+## 1. Case overview (timeline; all readings first-hand)
 
-| 时刻（UTC 2026-11-12） | 事件 | 实取锚 |
+| Time (UTC, November 12, 2026) | Event | First-hand anchor |
 |---|---|---|
-| 04:25:53 | run#301（pull_request·sha `8f59c8f`·branch fix/route2-tierA-supply-20261112）创建→failure | runs API id=43154750085 |
-| 04:26:07 | run#302（workflow_dispatch·同 sha 同分支）创建→failure | id=43154774367 |
-| 04:27:34–04:29:11 | run#301 failing job（130971963665 mac 观察道）gate7 步红 97s→gate5/gate2 连带 | ci_triage 步表实判 |
-| **04:38:12** | **哨活逮 run#301**：事件 seq 58·family=A-content-red·action=fix-content·classification=rocqwash-ci-triage/1（ci_triage 子进程 --offline） | `_log/sentinel_v48/events.jsonl` seq 58 |
-| 04:44:10（+0800 12:44） | 同事自诊断落 restore `bd8f38b`「restore the two lane fixes lost in the rebase（gate7 tree absolutization＋seed pre-check fallthrough）」 | git show bd8f38b（Set repository） |
-| 04:44:17 / 04:45:43 | run#303（pull_request）/run#304（workflow_dispatch）·sha `bd8f38b`·**双 success** | runs API id=43156738535/43156898674 |
-| 16:57:12 | 哨补捞 run#302（seq 59·A-content-red 同族）＋watcher state 记 303/304 **success family=null**（绿零事件·幂等在册） | seq 59＋state.json seen_runs |
+| 04:25:53 | run #301 (`pull_request`, sha `8f59c8f`, branch `fix/route2-tierA-supply-20261112`) created → failure | runs API, id 43154750085 |
+| 04:26:07 | run #302 (`workflow_dispatch`, same sha, same branch) created → failure | id 43154774367 |
+| 04:27:34–04:29:11 | run #301's failing job (130971963665, the mac observation lane): the gate7 step failing at 97s, then gate5/gate2 pulled down with it | judged first-hand from the `ci_triage` step table |
+| **04:38:12** | **watcher live catch of run #301**: event seq 58; family `A-content-red`; action `fix-content`; note field `判类=rocqwash-ci-triage/1（ci_triage 子进程 --offline）` | `_log/sentinel_v48/events.jsonl`, seq 58 |
+| 04:44:10 (12:44 at UTC+8) | the colleague session's self-diagnosis landed the restore `bd8f38b`, subject "fix(mac-lane): restore the two lane fixes lost in the rebase (gate7 tree absolutization + seed pre-check fallthrough)" | `git show bd8f38b` (Set repository) |
+| 04:44:17 / 04:45:43 | run #303 (`pull_request`) / run #304 (`workflow_dispatch`), sha `bd8f38b`, **both success** | runs API, id 43156738535 / 43156898674 |
+| 16:57:12 | the watcher's catch-up pass picked up run #302 (seq 59, the same `A-content-red` family), and the watcher state recorded 303/304 as **success, family=null** (passing runs generate no events; idempotent and on record) | seq 59 + `state.json` seen_runs |
 
-**全环零人工**：04:25:53 首红起算至 04:45:43 双绿 ≈ **20 分钟**；哨活逮（04:38）
-至 restore apply（04:44）≈ **6 分钟**。监控（watcher）→classification（ci_triage）→automatic recovery（同事
-会话依证据自诊断）→复绿（303/304）→哨记绿收环——全程无人工拍板介入＝**服务层
-闭环首例**。
+**Zero human intervention across the whole loop**: from the first failing run at 04:25:53 to the double passing at 04:45:43 is ≈ **20 minutes**; from the watcher's live catch (04:38) to the restore apply (04:44) is ≈ **6 minutes**. Monitoring (the watcher) → classification (`ci_triage`) → automatic recovery (the colleague session re-diagnosed from the evidence) → back to passing (303/304) → the watcher records the passing state and closes the loop — no human decision entered anywhere: the **first service-layer closed loop** on record.
 
----
+## 2. The case shape and the recurrence mechanism (R3: "relative-path cwd=workdir misalignment · same-second driver wipeout")
 
-## 二、判例形与复发机理（R3「相对路径 cwd=workdir 错位·驱动同秒全灭」）
+- **Mechanism (self-declared face)**: the restore `bd8f38b` commit message, verbatim — the coq.yml gate7 `--tree` parameter must be the absolute form `$GITHUB_WORKSPACE/ConstructiveWorld_Live`, because the "relative path resolved under the gate7 workdir cwd -> 544/544 instant driver failures, run 43154774367"; that is, the tree parameter was registered in the relative form `ConstructiveWorld_Live`, and after gate7 entered the workdir (`_gate7_work_mac`) cwd, the relative path resolved to a location under the workdir; the driver-side compile surface's `.vo` tree became invisible → the driver files broke at line 2 (the `Require` line) with `Unable to locate library` at the head of the error (the U-prefixed evidence lines read first-hand; some line heads truncated) → **every driver failed within the same seconds**.
+- **The in-repo mechanism precedent (same mechanism; cited read-only from the rocqwash ledger)**: the gate4 pre-scan invariant #1 — "the pre-scan must run from the Set repository root with absolute paths (the **wrong-cwd spurious-pass case**) — the tool side guards only against 'the tree does not exist' and not against 'a relative path under a wrong cwd resolving to a different tree present on disk', which is the spurious-pass mechanism face" (`更新账.md:2513-2515`). The same "relative path under a wrong cwd" mechanism has two outbreak directions: the spurious-pass direction (resolving to a different on-disk tree, judged passing) and **this incident's failing direction** (resolving to a workdir with no `.vo` files, total wipeout).
+- **The second fix riding the same commit**: in `scripts/ci_seed_mac93.sh`, the no-source-seed state reached a bare `exit 0` that short-circuited the build mode → an empty-cache 0.1s build step → every driver wiped out (the commit's own note cites run 43142078293 in the 510/510 rc=1 form); the fix routes the build mode into the compile loop. Two files, 47 insertions / 39 deletions (first-hand from `git show --stat`).
 
-- **机理（自述面）**：restore `bd8f38b` commit message 逐字——coq.yml gate7 树
-  参数须 `$GITHUB_WORKSPACE/ConstructiveWorld_Live` 绝对形，「relative path
-  resolved under the gate7 workdir cwd → 544/544 instant driver failures, run
-  43154774367」；即树参数以相对形 `ConstructiveWorld_Live` 在册，gate7 进入
-  workdir（`_gate7_work_mac`）cwd 后相对解析错位落 workdir 下·驱动编译面
-  `.vo` 树不可见→驱动件 line 2（Require 面）`Unable to locate library` 起头
-  错（U 字面证据行实取·行帽截断）→**全数驱动瞬时全灭**。
-- **在库机制判例面（同源机理·rocqwash 更新账只读引据）**：gate4 预扫铁则①
-  「预扫必须自 Set 仓根用绝对路径跑（**cwd 错位伪绿判例**）——工具侧只对
-  「树不存在」设防·对「错位 cwd 下相对路径解析到别棵在盘树」不设防＝伪绿机制面」
-  （`更新账.md:2513-2515`）。同一「相对路径 cwd 错位」机理两个发作向：伪绿向
-  （解析到别棵在盘树·判绿）与**本次红向**（解析到无 .vo 的 workdir·全灭）。
-- **随件第二修复（同 commit）**：`scripts/ci_seed_mac93.sh` 无源种子面裸
-  `exit 0` 短路 build 模式→空缓存 0.1s build 步→全部驱动灭（commit 自述
-  run 43142078293·510/510 rc=1 形）——修复＝build 模式落入编译环。两文件
-  47+/39-（git show --stat 实取）。
+## 3. The watcher live catch and the classification record (re-verified by this agent)
 
-## 三、哨活逮与判类实录（本席复跑实证）
+1. **The watcher event (the live ledger)**: `_log/sentinel_v48/events.jsonl` seq 58 (ts 04:38:12Z), all fields read first-hand — repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set · branch `fix/route2-tierA-supply-20261112` · run_number 301 · sha `8f59c8f7...` · family `A-content-red` · action `fix-content` · the two evidence rows `红件 1/2：ids=[130971963665]` and `在册族：A-content-red（判类序取先）` ("failing row 1/2, ids=[130971963665]; the family registered: A-content-red, the first in classification order") · the note field `判类=rocqwash-ci-triage/1（ci_triage 子进程 --offline）` ("classified by rocqwash-ci-triage/1, the `ci_triage` subprocess with `--offline`"). The task brief calls it round58, and that is this ledger's event seq 58 (the seq field read first-hand: 58).
+2. **The `ci_triage` judgment (re-executed for real by this agent)**: `python3 -B tools/ci_triage.py --repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set --run 43154750085 --logs --json /tmp/ci_triage_r301.json` (wrapped in cpu_guard, rc=0) → **RUN VERDICT family=A-content-red action=fix-content**; the failing job 1/2 (130971963665, the mac observation lane) with the failure-step chain gate7 extraction execution → gate5 → gate2; the passing job 2/2 skipped (neutral). The same family as the watcher's ruling, word for word.
+3. **163 rows removed by the dump filter, and the genuine error rows surface**: the same run's evidence, verbatim — `dump 行滤除 163 行（青色脚本回显/组指令·非真执行行·复核台账 §三-2 证据陷阱·--no-dump-filter 可关）` ("163 dump rows removed — cyan script echo / group instructions, not real execution rows; the evidence-trap item of the review ledger §3-2; switchable off with `--no-dump-filter`") — and this agent recomputed it independently (the full log is 1698 rows, 1535 after the filter, exactly 163 removed; `tools/ci_triage.py:196` DUMP_LINE_RE, `:526` filter_dump_lines, `:583` the dump_dropped counter); after the filter the genuinely executed rows surface = the GATE7 driver-failure genuine error rows (the line-2 form, §4).
+4. **The same-second driver wipeout shape (computed over the full logs)**: the failing-job logs of both runs fetched through the two-hop path (at the 16.9K-byte scale, through ci_triage's own fetch_job_log channel) → **exactly 531 `driver failed` rows** (driver numbers [1/544]–[544/544], 531 of them; failure index min=1 max=544), clustered into **5 seconds** at 108/105/102/104/112 (the five wall-clock seconds 04:28:07/24/42 and 04:29:01/11, ≥102 rows each); **527 rows carry an explicit "line 2"**, plus 4 log rows truncated at the line head before the line number (the same shape, no counterexample); every error position is the driver file's own line 2 characters 15-2x. The run#302 recomputation (job 130972045586) shows the same shape: 531 rows, **the per-second cluster distribution identical to run#301 (108/105/102/104/112)** — the same-second deterministic batch-misplacement signature. The 13 rows absent from the failure register = 9 exemption skips of the LW3-family workflows + 4 automatic skips with names=0 ([226 ForwardKLAdjudication / 289 DTPT / 290 DTPT_Truth / 314 b1_extract4]; their logs read `no top-level informative statements`) — 531+13=544, the reconciliation closes. The commit message's "544/544" is mechanism shorthand (all 544 drivers share the one cause); the measured count is 531 failed + 13 exempt — **both numbers are recorded side by side** (§7).
 
-1. **哨事件（活体账）**：`/Users/apple/Desktop/ConstructiveWorld/_log/sentinel_v48/
-   events.jsonl` seq 58（ts 04:38:12Z）全字段实读——repo=ConstructiveWorld-Set·
-   branch=fix/route2-tierA-supply-20261112·run_number=301·sha=`8f59c8f7…`·
-   family=A-content-red·action=fix-content·evidence「红件 1/2：ids=[130971963665]·
-   在册族：A-content-red（判类序取先）」·note「classification=rocqwash-ci-triage/1（ci_triage
-   子进程 --offline）」。任务书称 round58＝该账事件序 58（seq 字段实取 58）。
-2. **ci_triage 实判（本席真跑复现）**：`python3 -B tools/ci_triage.py --repo
-   hy7pc8gfmf-dotcom/ConstructiveWorld-Set --run 43154750085 --logs --json
-   /tmp/ci_triage_r301.json`（cpu_guard 包裹·rc=0）→ **RUN VERDICT
-   family=A-content-red action=fix-content**·failing job 1/2（130971963665·mac 观察
-   道）·failure-step=gate7 extraction execution→gate5→gate2·passing job 2/2
-   skipped（中立）。与哨判逐字同族。
-3. **dump 滤除 163 行→真错行浮出**：同跑 evidence 逐字「**dump 行滤除 163 行**
-   （青色脚本回显/组指令·非真执行行·复核台账 §三-2 证据陷阱·--no-dump-filter
-   可关）」——本席独立复算（日志全文 1698 行经 filter 滤后 1535·恰 163 行·
-   `tools/ci_triage.py:196` DUMP_LINE_RE·`:526` filter_dump_lines·`:583`
-   dump_dropped 计数）；滤后真执行行浮出＝GATE7 驱动失败真错行（line 2 形·
-   §四）。
-4. **驱动同秒全灭形（日志全文实算）**：failing job 日志两跳实取（1.69 万字节级·
-   ci_triage 自带 fetch_job_log 通道）→**driver failed 行恰 531 条**（驱动
-   号 [1/544]–[544/544] 中 531·失败指数 min=1 max=544）·**5 秒簇**分布
-   108/105/102/104/112（04:28:07/24/42、04:29:01/11 五个墙钟秒·每秒 ≥102 条）
-   ·**527 条显式「line 2」**＋4 条日志行帽截断于行号前（同形无反例）·错误位
-   全为驱动件自身 line 2 characters 15-2x。run#302（job 130972045586）同形
-   复算：531 条·**逐秒簇分布与 run#301 完全相同（108/105/102/104/112）**·
-   同秒确定性批量错位签名。13 条未入失败册＝9 件 LW3 家族工作流豁免跳过＋
-   4 件 names=0 自动跳过（[226 ForwardKLAdjudication/289 DTPT/290 DTPT_Truth/
-   314 b1_extract4] 日志实取「no top-level informative statements」）——
-   531＋13＝544 对账闭合。commit message 自述「544/544」为机理 shorthand
-   （544 驱动全数同因）·实测 531 失败＋13 豁免——**两数并录**（§七）。
+## 4. A candidate detection annotation for the R3 signature "N drivers failing in the same second" (case value one)
 
-## 四、R3 签名「N 驱动同秒」检测注记候选（判例价值一）
+- **Signature definition (the measured shape of this incident)**: within one job log, ≥100 `driver failed` rows sharing the same wall-clock second (531 rows clustered into 5 seconds, 102–112 rows per second) + every error position at the same location (line 2) + the two runs' per-second cluster distributions identical row for row = **a batch-misplacement wipeout** (environment/path class; a single cause fanning out); by contrast, genuine content failures diverge at second granularity per file and do not cluster.
+- **The annotation candidate (not a ruling)**: add a "same-second cluster count" annotation row to the ci_triage evidence (the same positional form as the existing dump-filter count row; the precedent at `tools/ci_triage.py:601-603`) — classification stays decided by the step names / token faces (`A-content-red` unchanged); the annotation only speeds up the self-diagnosis / automatic-recovery routing. Threshold candidates N=50/100; filed for the tooling agent to decide separately; this agent changed no tool.
+- **Classification output = automatic-recovery input (the watcher-fed recovery shape; case value two)**: the watcher's three-piece classification evidence (failure-step=gate7 + the dump-filtered 163 rows + the literal line-2 genuine error rows) pinned the single cause "tree parameter in relative form → cwd misplacement" directly — the colleague session landed the restore within 6 minutes on that basis. **The watcher does not merely record failures; the classification evidence is the input to the automatic-recovery prescription** — that is the closed-loop mechanism of this incident.
 
-- **签名定义（本例实测形）**：单 job 日志内 ≥100 条 `driver failed` 行共享同一
-  墙钟秒（531 条聚 5 秒·每秒 102–112 条）＋错误位全数同位（line 2）＋两 run
-  逐秒簇分布逐条相同＝**批量错位全灭**（环境/路径类·单因扇出）；对照真内容红
-  逐件编译秒级发散不成簇。
-- **注记候选（非裁决）**：ci_triage evidence 增「同秒簇计数」注记行（既有
-  dump 行滤除计数行同位形·`tools/ci_triage.py:601-603` 先例）——判类仍由
-  步名/词面定（A-content-red 不变）·注记仅供自诊断/自愈路由提速。阈值候选
-  N=50/100·入档待器席另议·本席不动器。
-- **判类输出＝自愈输入（监守自愈形态·判例价值二）**：哨判类证据三件套
-  （failure-step=gate7＋dump 滤 163 行＋line 2 真错行字面）直接锁定「树参数
-  相对形→cwd 错位」单因——同事会话据此 6 分钟落 restore。**哨不止记红·classification
-  证据即自愈处方输入**＝本例闭环机理。
+## 5. The automatic-recovery loop record (restore → double passing → the watcher closes the loop)
 
-## 五、自愈环实录（restore→双绿→哨收环）
+- **The restore `bd8f38b` (read first-hand from the Set repository)**: the commit message transcribed verbatim in §2; the diff carries exactly two changes — the coq.yml gate7 tree parameter changed from the relative form `ConstructiveWorld_Live` to the absolute form `$GITHUB_WORKSPACE/ConstructiveWorld_Live`; and in ci_seed_mac93.sh the no-source bare `exit 0` gave way so that the build mode falls into the compile loop (with the run 43142078293 510/510 self-note).
+- **The double passing (first-hand from the runs API)**: run #303 (`pull_request`, 04:44:17Z) conclusion=success; run #304 (`workflow_dispatch`, 04:45:43Z) conclusion=success — both lanes (the PR trigger and the route) passing at the same sha = complete proof of the automatic recovery.
+- **The watcher closes the loop (state read first-hand)**: `_log/sentinel_v48/state.json` seen_runs records 43156738535/43156898674 = success, family=null (passing runs generate no events; idempotent by design) — **the watcher observed the full loop itself: failing → failing-job → passing-job → passing**.
+- **Reconciliation against the main branch's current state**: the Set main HEAD `074eaa4` carries the same-subject restore (the compare API: 429ed53→main yields two commits = `9b9631b`, the route2 supply work stream of 7 files, + `074eaa4`, the mac-lane restore; read first-hand) — the automatic-recovery face has entered the mainline.
 
-- **restore `bd8f38b`（Set 仓实读）**：commit message 逐字录 §二；diff 实取
-  两处——coq.yml gate7 树参数相对形 `ConstructiveWorld_Live` 改
-  `$GITHUB_WORKSPACE/ConstructiveWorld_Live` 绝对形；ci_seed_mac93.sh 无源面
-  `exit 0` 改 build 模式落入编译环（含 run 43142078293 510/510 自述注）。
-- **双绿（runs API 实取）**：run#303（pull_request·04:44:17Z）conclusion=
-  success；run#304（workflow_dispatch·04:45:43Z）conclusion=success——双道
-  （PR 触发＋route）同 sha 双绿＝自愈完整实证。
-- **哨收环（state 实读）**：`_log/sentinel_v48/state.json` seen_runs 记
-  43156738535/43156898674＝success·family=null（绿不生事件·设计内幂等）——
-  **哨亲见红→failing→passing→绿全环**。
-- **main 现势对账**：Set main HEAD `074eaa4` 同题 restore 在册（compare API：
-  429ed53→main 两笔＝`9b9631b` route2 供应 7 件＋`074eaa4` mac-lane restore·
-  实取）——自愈面已入主线。
+## 6. The Set PR#48 survey (integration/g1-pipeline; the eight G1 witness files; the pre-warm annotation)
 
-## 六、Set PR#48 勘形（integration/g1-pipeline·G1 witness 8 件·预热注记）
+> The task brief supplied the name AYCN19 (the PR title/body carries no such literal; stated as-is). Every reading in this section came from the API; the PR was not touched.
 
-> 任务书给名 AYCN19（PR 标题/正文无此字面·如实记）。全节 API 实取·零动 PR。
+### 6.1 Meta and the CI current state
 
-### 6.1 meta 与 CI current state
+- **PR#48**: open; draft=False; head=`landing/g1-pipeline` (`adb295b`; 4 commits: `1ee7b24` the eight files installed → `d389dc2` the registry regenerated on the mainline lineage → `2c52ee9` the three orphan files restored (the w1-b5 lineage) → `adb295b` the FepIdentClass downgrade (an extraction face that is not axiom-free)); base=main; created 03:24:32Z; updated 16:50:59Z; **mergeable=False, mergeable_state=dirty**.
+- **The branch's CI current state (4 runs read first-hand)**: #300 failure (`1ee7b24`) · #306 cancelled (`d389dc2`; picked up by the watcher at seq 60; the two failing rows `A-content-red` + `E-coqchk-skipped`) · #307 failure (`2c52ee9`) · **#308 in flight** (`adb295b` = the current head; started 16:51:00Z; conclusion=None read first-hand) — pre-warm annotation: **the head's conclusion awaits a supplementary record; the current state must not be prejudged**.
 
-- **PR#48**：open·draft=False·head=`landing/g1-pipeline`（`adb295b`·4 commits：
-  `1ee7b24` 8 件落装→`d389dc2` registry 按主线重生成→`2c52ee9` 三孤件恢复
-  （w1-b5-v2 谱系）→`adb295b` FepIdentClass 降期（born-dirty 提取面））·
-  base=main·created 03:24:32Z·updated 16:50:59Z·**mergeable=False·
-  mergeable_state=dirty**。
-- **分支 CI current state（4 runs 实取）**：#300 failure（`1ee7b24`）·#306 cancelled
-  （`d389dc2`·watcher seq 60 捞获·两红件 A-content-red+E-coqchk-skipped）·#307
-  failure（`2c52ee9`）·**#308 在飞**（`adb295b`＝现 head·16:51:00Z 起·
-  conclusion=None 实取）——预热注记：**head 结论候令补记·现势不可预断**。
+### 6.2 Files API inventory (21 files; +5171/-576)
 
-### 6.2 files API 清点（21 件·+5171/-576）
-
-| 类 | 件 |
+| Class | Files |
 |---|---|
-| **G1 witness 8 件**（PR body 依赖序） | laur_extract→calib＋calib_cert→witness→phiwin→rs_channel→rs_assembly→ab_def（`planb3_g1_calib/`_cert`/planb4_g1_ab_def/laur_extract/phiwin/rs_assembly/rs_channel/witness`.v·全 added） |
-| 其余新增 .v 9 件（Set 本地谱系） | Arch_GibbsA_01/EntropyMonoSplitInst（w1-b5 孤件恢复·对 Main 树 blob 异）/N_total_assembly/WC_budget_family/atan_expl_rate/mach_fold_chain/tier_A_explicit_rate/vertex_window/window_cos_assembly |
-| registry/infra 4 件（modified） | order.txt +554/-537·_CoqProject +15·coq.yml +38/-38·ci_seed_mac93.sh +9/-1 |
+| **The eight G1 witness files** (the dependency order of the PR body) | laur_extract→calib+calib_cert→witness→phiwin→rs_channel→rs_assembly→ab_def (`planb3_g1_calib/`_cert`/planb4_g1_ab_def/laur_extract/phiwin/rs_assembly/rs_channel/witness`.v · all added) |
+| The other 9 new .v files (the Set-local lineage) | Arch_GibbsA_01/EntropyMonoSplitInst (the w1-b5 orphan-file restoration; blobs differ against the Main tree) /N_total_assembly/WC_budget_family/atan_expl_rate/mach_fold_chain/tier_A_explicit_rate/vertex_window/window_cos_assembly |
+| The 4 registry/infra files (modified) | order.txt +554/-537 · _CoqProject +15 · coq.yml +38/-38 · ci_seed_mac93.sh +9/-1 |
 
-PR body 验证自述（如实转录）：逐件编译 8/8 rc=0（Rocq 9.3.0）·全树冷编裁决
-516/518 EXIT=0（8 件落装件全绿）；另列 origin/main 既有缺陷 4 项（S05 排序
-未净·R97 三行册有件缺等·「not from this integration」自述）。
+The PR body's verification self-declaration (transcribed as-is): per-file compilation 8/8 rc=0 (Rocq 9.3.0); the full-tree cold-build adjudication 516/518 EXIT=0 (all eight installed files passing); it also lists 4 pre-existing defects of origin/main (the S05 ordering not fully cleaned, the R97 three-row register missing entries, etc.; self-declared "not from this integration").
 
-### 6.3 mergeable=dirty 撞面定形（重叠件 blob 逐件对表·11 件）
+### 6.3 The mergeable=dirty collision shape (the 11 overlapping files cross-checked at blob level, file by file)
 
-- **blob 恒同 9 件**：coq.yml/ci_seed_mac93.sh（PR 侧已含 mac-lane 两修复同文
-  面·与 `bd8f38b` 侧 blob 同）＋7 件 .v（N_total_assembly 等＝main 已落
-  route2 供应波同件 `9b9631b`）——git 同内容 add/add 自动可解。
-- **blob 异 2 件＝撞面集中 registry 两册**：order.txt（PR `32d3fc44` vs main
-  `513cb3d0`）＋_CoqProject（PR `19aac77e` vs main `3eb19523`）——双侧按各自
-  主线重生成相撞。行级撞点以 GitHub mergeable=False 现判为权威·机检为候选
-  定位。**预热注记：PR#48 须在 main current state（`074eaa4`）上重生成 registry 两册
-  后重评（与 PR#48 commit `d389dc2`「regenerate on main lineage」同法·基线
-  换现主线）——本席不动 PR·候 PR 席令**。
+- **9 files with identical blobs**: coq.yml / ci_seed_mac93.sh (the PR side already carries the two mac-lane fixes with the same text; the blobs match the `bd8f38b` side) + 7 .v files (N_total_assembly and the rest = the same files as the route2 supply work stream already merged into main, `9b9631b`) — git resolves same-content add/add collisions automatically.
+- **2 files with differing blobs = the collision concentrates in the two registry files**: order.txt (PR `32d3fc44` vs main `513cb3d0`) + _CoqProject (PR `19aac77e` vs main `3eb19523`) — the two sides were each regenerated against their own mainline and collided. The row-level collision points take GitHub's live mergeable=False ruling as authoritative; the machine check is the candidate locator. **Pre-warm annotation: PR#48 must regenerate the two registry files on the main current state (`074eaa4`) and then be re-evaluated (the same method as PR#48 commit `d389dc2`, "regenerate on main lineage", with the baseline switched to the current mainline) — this agent does not touch the PR; pending the PR agent's instruction**.
 
-### 6.4 与 Main 已并 unif limbs 波的关系（回灌判据·机检证实）
+### 6.4 The relation to the unif-limbs work stream already merged into Main (the back-flow criterion; machine-verified)
 
-- **G1 witness 8 件＝Main 一致型 L1 面回灌·成立**：8 件 blob sha 对 Main
-  main 树 `ConstructiveWorld_Live` 根逐件 SAME **8/8**（planb4_g1_witness
-  Main blob `977ba49dda61` 实取同）——PR body「byte-identical to Main-tree
-  green versions」自述获 blob 级机检证实。回灌方向＝Main→Set（Set 侧 L1 面
-  回灌）·源＝Main unif-closure 谱系（PR body 自述）。
-- **与 Main PR#9/#10 的谱系关系**：Main PR#9「y-E1 gamma-line node deposit
-  waves 1-4: 49 nodes」已并（merged 12:19:19Z）·PR#10「unif limbs work stream: L3
-  limbs（Hp/Htri closed＋Hexit wall registered）＋C3 certs」已并（12:22:29Z）
-  ——两波落点 `ConstructiveWorld_Live/y_e1_gamma_nodes/` 子目录（dir 实取
-  92 entries）·**G1 witness 8 件同出 Main 树而落点在 Live 根**（不落
-  gamma_nodes 子目录）——同谱系不同落位·回灌件互不重叠（blob 表 8 件全在
-  Main 根·零 gamma_nodes 件）。
+- **The eight G1 witness files = a Main-consistent L1-face back-flow; confirmed**: the blob shas of the 8 files were checked one by one against the root of `ConstructiveWorld_Live` in the Main main tree — SAME **8/8** (the planb4_g1_witness Main blob `977ba49dda61` read and matched first-hand) — the PR body's self-declaration "byte-identical to Main-tree green versions" is confirmed at blob level by the machine check. The back-flow direction is Main→Set (the L1-face back-flow on the Set side); the source is the Main unif-closure lineage (the PR body's self-declaration).
+- **The lineage relation to Main PR#9/#10**: Main PR#9 `y-E1 gamma-line node deposit waves 1-4: 49 nodes` is merged (12:19:19Z); PR#10 `unif limbs work stream: L3 limbs (Hp/Htri closed + Hexit wall registered) + C3 certs` is merged (12:22:29Z) — both work streams landed under the `ConstructiveWorld_Live/y_e1_gamma_nodes/` subdirectory (the directory listing read first-hand: 92 entries); **the eight G1 witness files come from the same Main tree but are placed at the Live root** (not under the gamma_nodes subdirectory) — same lineage, different placement, and the back-flow files do not overlap either stream (in the blob table all 8 files sit at the Main root; zero gamma_nodes files).
 
 ---
 
-## 七、边界与如实记
+## 7. Boundaries and the honest-record items
 
-1. **R3 编号源**：承任务书/主会话判例册口径。库内可核机制判例面＝`更新账.md:
-   2513-2515`（cwd 错位伪绿判例·gate4 预扫铁则①）＋`bd8f38b` commit message
-   自述；**未寻得库内「R3」字面判例册行**（`复核-UNREC-14事件-20261112.md:48`
-   R3 行系 Main run#8 retro 行·与本判例同名异指）——编号源不在本席可证面·
-   如实记。
-2. **544/544 vs 531/544**：commit 自述 544/544（机理 shorthand）·本席日志实算
-   531 失败＋13 豁免/跳过——两数并录不互斥（§三·4）。
-3. **round58 口径**：任务书称 round58·哨账字段实取 seq=58（rocqwash-sentinel-
-   event/1）——两口径同指该事件·轮次号与事件序同源处本席未另证·如实记。
-4. **AYCN19**：任务书给名·PR 标题/正文无此字面（§六如实记）。
-5. **本席实跑**：ci_triage 真跑 run#301（--logs·rc=0·§三·2）·run#302 日志
-   实算（fetch_job_log 两跳）·两 run 全日志落地 `/tmp/r301_job665.log`/
-   `/tmp/r302_job586.log`。**未跑**：ci_triage --selftest（在账 rc=0 引据·
-   `docs/勘形-multi-repo-Main仓适配-20261112.md:308`）；PR#48 重评/重基
-   （预热注记·pending execution）；run#308 结论（在飞）。
-6. **零写盘纪律**：rocqwash 工作树只增本档一文件；Set 仓零改动零 fetch（只读
-   git show/log＋API）；冻结八件/quad8/更新账.md 零触碰（更新账只读引据）✓；
-   git 零写操作（未 commit）✓。
+1. **The R3 numbering source**: inherited from the task brief's and the main session's case-register convention. The in-repo verifiable mechanism case face = `更新账.md:2513-2515` (the wrong-cwd spurious-pass case; the gate4 pre-scan invariant #1) + the `bd8f38b` commit message's self-declaration; **no in-repo case-register row carrying the literal "R3" was found** (the R3 row at `复核-UNREC-14事件-20261112.md:48` is the Main run#8 retro row — the same name as this case, a different referent) — the numbering source is outside the surface this agent can prove; stated as-is.
+2. **544/544 vs 531/544**: the commit's self-declaration says 544/544 (mechanism shorthand); this agent's computation over the logs gives 531 failed + 13 exempt/skipped — the two numbers are recorded side by side and are not mutually exclusive (§3 item 4).
+3. **The round58 convention**: the task brief says round58; the watcher ledger's field reads seq=58 (rocqwash-sentinel-event/1) — the two conventions denote the same event; whether the round number and the event sequence share a source was not independently verified by this agent; stated as-is.
+4. **AYCN19**: the name came from the task brief; the PR title/body carries no such literal (stated as-is in §6).
+5. **The runs this agent executed**: a real ci_triage run over run#301 (`--logs`; rc=0; §3 item 2); the run#302 log computation (the fetch_job_log two-hop path); the full logs of both runs persisted to `/tmp/r301_job665.log` and `/tmp/r302_job586.log`. **Not run**: `ci_triage --selftest` (cited from the ledger's rc=0 record at `docs/勘形-multi-repo-Main仓适配-20261112.md:308`); the PR#48 re-evaluation / re-basing (the pre-warm annotation; pending execution); the run#308 conclusion (in flight).
+6. **The zero-write discipline**: the rocqwash working tree gained exactly this one file; the Set repository took zero changes and zero fetches (read-only `git show` / `git log` + the API); the frozen eight faces, the quad8 set, and the ledger `更新账.md` were never touched (the ledger cited read-only) ✓; zero git write operations (no commit) ✓.
 
-## 八、本席自证字据（20261113·全部 cpu_guard -MaxWaitSec 120 包裹）
+## 8. This agent's self-attestation record (November 13, 2026; every run wrapped in `cpu_guard -MaxWaitSec 120`)
 
-| # | 动作 | 结果 |
+| # | Action | Result |
 |---|---|---|
-| 1 | `python3 -B tools/ci_triage.py --repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set --run 43154750085 --logs --json /tmp/ci_triage_r301.json` | rc=0·RUN VERDICT A-content-red/fix-content·dump 行滤除 163 行·GATE7 [N/544] line 2 证据行（§三） |
-| 2 | ci_triage.fetch_job_log 两跳拉 run#301/302 failing job 日志全文＋驱动行实算（python3 -B·stdlib） | run#301：1698 行·driver failed 531·5 秒簇 108/105/102/104/112·line 2 显式 527；run#302：同形 531·逐秒簇同分布（§三·4） |
-| 3 | Set repository `git show bd8f38b`（stat＋diff＋message 全文） | 两修复逐字实取（§二/§五）·47+/39- |
-| 4 | runs API（branch=fix/route2-tierA-supply-20261112·8 runs 全列） | 301/302 failure@`8f59c8f`·303/304 success@`bd8f38b`（§一/§五） |
-| 5 | 哨账实读（`_log/sentinel_v48/events.jsonl` seq 58/59＋state.json seen_runs） | 活逮/补捞/记绿三面实取（§三·1/§五） |
-| 6 | PR#48 API（pulls/48＋files 分页＋commits＋compare＋重叠 blob cross-check against the reference）＋分支 runs＋Main PR#9/#10＋Main 树 blob/y_e1_gamma_nodes | §六全节实取·8/8 SAME·mergeable=False·#308 在飞 |
-| 7 | `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | 见当轮账（drift 须=0 方合三闸基准·若幻引即修档重跑） |
+| 1 | `python3 -B tools/ci_triage.py --repo hy7pc8gfmf-dotcom/ConstructiveWorld-Set --run 43154750085 --logs --json /tmp/ci_triage_r301.json` | rc=0; RUN VERDICT A-content-red/fix-content; 163 rows removed by the dump filter; the GATE7 [N/544] line-2 evidence rows (§3) |
+| 2 | the fetch_job_log two-hop fetch of the run#301/302 failing-job full logs + the driver-row computation (python3 -B; stdlib only) | run#301: 1698 rows; 531 `driver failed`; the 5-second clusters 108/105/102/104/112; 527 explicit line-2; run#302: the same shape 531, an identical per-second cluster distribution (§3 item 4) |
+| 3 | the Set repository `git show bd8f38b` (stat + diff + the full message) | the two fixes transcribed verbatim (§2/§5); 47+/39- |
+| 4 | the runs API (branch `fix/route2-tierA-supply-20261112`; all 8 runs listed) | 301/302 failure@`8f59c8f`; 303/304 success@`bd8f38b` (§1/§5) |
+| 5 | the watcher ledger read first-hand (`_log/sentinel_v48/events.jsonl` seq 58/59 + `state.json` seen_runs) | the live catch / the catch-up pass / the passing record, all read first-hand (§3 item 1 / §5) |
+| 6 | the PR#48 API (pulls/48 + the files pages + commits + compare + the overlapping-blob cross-check against the reference) + the branch runs + Main PR#9/#10 + the Main tree blob / y_e1_gamma_nodes | all of §6 read first-hand; 8/8 SAME; mergeable=False; #308 in flight |
+| 7 | `python3 -B tools/doc_lint.py --repo /Users/apple/Desktop/rocqwash` | see the round ledger (drift must be 0 to meet the three-gate baseline; a phantom citation means repair the document and rerun) |
