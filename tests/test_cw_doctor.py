@@ -1,24 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_cw_doctor.py — tools/cw_doctor.py 最小自测壳（tests/·20261111 v38
-综合体检器挂接·集成席）
+"""test_cw_doctor.py — minimal selftest shell for tools/cw_doctor.py (rocqwash tests/).
 
-综合体检器挂接件：体检器自带 --selftest 冻结向量组（①四域全绿 100 分／②环境
-红降 60.0／③注册缺册 skip normalize 86.67＋CW_SET 缺册如实 skip／④堵账 TOP 注入
-88.75／⑤advice 生成／⑥JSON 幂等字节恒同／⑦CLI 四码＋罐装全覆盖／⑧注册审计
-单元——全 --injector canned 罐装 tmp fixture·零真 otool 零真网络零真编译·
-chain_graph/注册审计真跑纯 stdlib）已由铸席自证，本壳只把它接进套件总入口并
-加 --help 冒烟：
-  1 --selftest rc=0 且 stdout 含 "CW-DOCTOR-SELFTEST PASS" 冻结标记
-  2 --help rc=0（argparse 用法面在位）
+Purpose.  Wire the aggregate health doctor `tools/cw_doctor.py` into the
+  suite entry point (tests/run_tests.sh, lane `t_cw_doctor`) and smoke its
+  two side-effect-free faces; the doctor attests its own --selftest frozen
+  vector group, and this shell adds no vectors (marker + usage face).
 
-用法：
-  python3 tests/test_cw_doctor.py       # 套件内经 run_tests.sh 调
-  python3 -B tests/test_cw_doctor.py    # 手动（-B 禁 __pycache__）
+Interface.  python3 tests/test_cw_doctor.py      # suite lane (run_tests.sh)
+  python3 -B tests/test_cw_doctor.py             # manual; -B keeps
+  __pycache__ off.  Check 1: --selftest exits 0 and stdout carries the
+  frozen marker "CW-DOCTOR-SELFTEST PASS"; check 2: --help exits 0 (the
+  argparse usage face is present).
 
-零触律：零网络零写盘零触真仓（真 dyld/真探针面不挂套件·canned 注入面由铸席
-selftest 自证）；python3 -B 禁 __pycache__。
-退出码：0=两判全过；1=任一红（fail-loud 响亮列红·禁静默）。
+Dependencies.  Python 3 standard library only (os, subprocess, sys); runs
+  tools/cw_doctor.py as a subprocess; zero network, zero disk writes, no
+  real-repository touch (the real dyld and real probe faces stay out of
+  the suite; the canned-injection face is attested by the doctor itself).
+
+Evidence.  The doctor's --selftest frozen vectors attest the canned faces
+  (V1 four domains all green 100; V2 env failing 60.0; V3 registry skip
+  renormalize 86.67 + the CW_SET honest skip; V4 clog TOP injection 88.75;
+  V5 advice generation; V6 JSON idempotence byte-identical; V7 CLI four
+  codes; V8 the registry-audit unit — all --injector canned tmp fixtures,
+  zero real otool/network/compiles); this shell re-asserts the marker and
+  the usage face on every suite run.
+
+Exit-codes.  0 = both checks pass; 1 = at least one check failing (the
+  failing checks are listed loudly, never silent); a doctor failure
+  surfaces through check 1.
 """
 import os
 import subprocess
@@ -30,7 +40,8 @@ MARK = "CW-DOCTOR-SELFTEST PASS"
 
 
 def run(args):
-    """子进程跑体检器（stdout+stderr 合流·零写盘零网络）。"""
+    """Run the doctor tool as a subprocess (merged stdout+stderr; zero disk
+    writes, zero network)."""
     p = subprocess.run([sys.executable, "-B", TOOL] + args,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return p.returncode, p.stdout.decode("utf-8", errors="replace")
@@ -40,13 +51,13 @@ def main():
     fails = []
     rc, out = run(["--selftest"])
     if rc != 0 or MARK not in out:
-        fails.append("判1 --selftest 应 rc=0 且含 %r（实测 rc=%d）" % (MARK, rc))
+        fails.append("check 1: --selftest expected rc=0 with %r in stdout (observed rc=%d)" % (MARK, rc))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:
-        fails.append("判2 --help 应 rc=0（实测 rc=%d）" % rc)
+        fails.append("check 2: --help expected rc=0 (observed rc=%d)" % rc)
         print(out)
-    print("== test_cw_doctor: %d 过 / %d 红 ==" % (2 - len(fails), len(fails)))
+    print("== test_cw_doctor: %d passing / %d failing ==" % (2 - len(fails), len(fails)))
     for f in fails:
         print("FAIL:", f)
     return 1 if fails else 0
