@@ -1,91 +1,116 @@
-# 处方件 — S07 投影重锚（E5·magic 六件判例文档化）
+# S07_projection_reanchor_E5.md — recipe face: statement-surface projection re-anchoring, recipe E5 (the magic-zero recipe for the six-piece batch) · original title: `处方件 — S07 投影重锚（E5·magic 六件判例文档化）`
 
-> rocqwash recipes/·20261101 agent rqsupport·五课反馈轮打磨件④。
-> 判例源（只读已核在盘）：`sandbox/seat_reanchor/账/迁移账-六件重锚.md`（UpReqSampling
-> 件·重锚员 20261031·凭据=该席全部实跑命令与 json/log 在卷）＋`sandbox/seat_magic6/`
-> 台账（CI 探针基线 magic=293·P1 行）＋`seat_reanchor/账/重锚diff-96行.patch`（96 行
-> 脉冲逐 hunk 机械复核纯三映射）。
+> Purpose.  Recipe E5 cures the false-carrier defect: when a `Class` field projection carries a statement surface, extraction floods the extracted face with `Obj.magic`. The treatment re-anchors the statement-surface relation names (`req` / `lt` / `le`) onto their concrete `Real -> Real -> Set` definitions (`real_eq` / `real_lt` / `real_le`) through three exact-string mappings, changing zero proof-body characters and zero comment lines. Scope: statement faces (signatures and assert type faces) of the six-piece batch; the `Class` field definitions in `S07_RealSetoidExpLog.v` are read-only and untouched.
+>
+> Interface.  Document face only; no runtime interface. The three mappings are expressible as exact-string ledger entries for `wash/wash_engine.py` (`{"tag":"req2real_eq","old":"req ","new":"real_eq ","expect":N}`); the pre-compile world assertion rides `wash/world_hook.py` (`--world <dir> --manifest <certified-generation-account>`); close-out verification rides `verify/verify_gate6.py` and `wrapper/gate7_probe.sh`; piece selection rides `tools/select_audit.py`. The original Chinese text is preserved in the sibling `.zh.md` archive.
+>
+> Dependencies.  Read-only precedent sources, verified present in the tree at documentation time: `sandbox/seat_reanchor/账/迁移账-六件重锚.md`, the `sandbox/seat_magic6/` ledger, and `seat_reanchor/账/重锚diff-96行.patch`; the concrete-face entities live in `S02_CauchyComplete.v` and the `Class` in `S07_RealSetoidExpLog.v`.
+>
+> Evidence.  This recipe face was documented November 1, 2026, in `recipes/`, as the fourth piece polished by the five-lesson feedback round. The UpReqSampling case, measured October 31, 2026, carries the four acceptance checks recorded in section 2: first compile rc=0 (vo md5 `10d393bd3bc3641f1aa7e4fbf91be4e6`, 50826B); `gate7` extraction probe magic=0 against baseline 293 (51 names, missing=0); `mac_stmt_names` statement-name census ordered-equal at 51=51 (67=67 with `Let`); `gate4` + CJK + admission-form checks all passing. The case record holds every command the re-anchoring agent ran, with the json/log records in the migration account.
+>
+> Exit-codes.  Not applicable to a document face; the referenced tools keep their implemented exit-code semantics unchanged.
 
-## 〇、一符总纲
+## 0. At a glance
 
-| 项 | 值 |
+| item | value |
 |---|---|
-| 处方号 | **E5**（语句面投影重锚·magic 归零处方） |
-| 病名 | Class 字段投影承载语句面 → 提取面 `Obj.magic` 泛滥（假载体病） |
-| 判例件 | UpReqSampling.v（六件批之一·基线 magic=**293** → 重锚后 **0**） |
-| 六件批 | UpAblMetaWorld3 / UpDebtSqrtAbsReq / UpEntropyGainReq / UpFirewallReq / UpReqTempEntropy / UpReqSampling（M34 新落叶子件·共享 work 世界同址实录） |
-| 铁律位 | 语句面（签名+assert 类型面）重锚具体面；证明体战术/项式**零字符**；注释**零触碰** |
+| recipe number | **E5** (statement-surface projection re-anchor; the magic-zero recipe) |
+| defect name | a `Class` field projection carries the statement surface → the extracted face floods with `Obj.magic` (the false-carrier defect) |
+| case piece | UpReqSampling.v (one of the six-piece batch; baseline magic=**293** → **0** after re-anchoring) |
+| six-piece batch | UpAblMetaWorld3 / UpDebtSqrtAbsReq / UpEntropyGainReq / UpFirewallReq / UpReqTempEntropy / UpReqSampling (leaf pieces newly registered under `M34`; shared `work` world, same-address record) |
+| invariants | statement surfaces (signatures + assert type faces) re-anchor onto the concrete faces; proof-body tactics/terms change by **zero characters**; comments **untouched** |
 
-## 一、病灶（根因链·判例转录）
+## 1. The defect (root-cause chain, transcribed from the case record)
 
-1. **Class 三大关系字段是 Set 值域**：`Class RealInterfaceEnhancedSetoid`
-   （`S07_RealSetoidExpLog.v:8075`）字段 `req / lt / le : Real -> Real -> Set`。
-   提取后字段坍缩为 `type req = __`（不可 condemn 的空类型）。
-2. **实例绑定具体面**：`RealEnhancedReal`（`S07_RealSetoidExpLog.v:8740`）绑
-   `req:=real_eq ／ lt:=real_lt ／ le:=real_le`。
-3. **语句面写裸投影名**：件语句面全写在字段投影上（`Import RealInterfaceEnhancedMod`
-   裸名＋`Notation R := Real`，无 Let 锚位），而证明体与依赖链
-   （UpReqAlgebra/UpReqDist/S02）全走具体面——**两表示系交叉即 Obj.magic**。
-   实测：重锚前 CI 检验 magic=293（seat_magic6 台账 §一 P1 行在卷）。
-4. **树内健康判例**（同病灶已愈件）：树内 `UpReqAlgebra.v`（`req_plus_zero_r :
-   forall a : R, real_eq (plus a zero) a`，源 :48 邻域）同款保留 Import＋
-   `Notation R := Real`＋裸 plus/mult 字段名、**仅关系面用具体名**，树内 magic=0。
+1. **The three relation fields of the `Class` carry `Set`-valued ranges**: `Class RealInterfaceEnhancedSetoid`
+   (`S07_RealSetoidExpLog.v:8075`) declares fields `req / lt / le : Real -> Real -> Set`.
+   After extraction the fields collapse to `type req = __` (an empty type that cannot be matched on).
+2. **Instance bindings are concrete**: `RealEnhancedReal` (`S07_RealSetoidExpLog.v:8740`) binds
+   `req:=real_eq` / `lt:=real_lt` / `le:=real_le`.
+3. **Statement surfaces write bare projection names**: the pieces' statement faces are written entirely
+   over field projections (bare names after `Import RealInterfaceEnhancedMod`
+   plus `Notation R := Real`, with no `Let` anchor), while the proof bodies and the dependency chain
+   (UpReqAlgebra/UpReqDist/S02) all go through the concrete faces — crossing the two representation
+   systems is what yields `Obj.magic`.
+   Measured: before re-anchoring the CI probe read magic=293 (recorded in the `sandbox/seat_magic6/`
+   ledger, section 1, row P1).
+4. **Healthy in-tree precedent** (same defect, already cured): the in-tree `UpReqAlgebra.v`
+   (`req_plus_zero_r : forall a : R, real_eq (plus a zero) a`, source near line 48) keeps the same
+   `Import` plus `Notation R := Real` plus bare plus/mult field names and uses concrete names
+   **only on the relation faces**; in-tree magic=0.
 
-## 二、处方（E5 三映射·语句面重锚具体面）
+## 2. The recipe (E5 three mappings: statement surfaces re-anchor onto the concrete faces)
 
-具体面实体（均在 `S02_CauchyComplete.v`，均 `Real -> Real -> Set`）：
+Concrete-face entities (all in `S02_CauchyComplete.v`, all `Real -> Real -> Set`):
 
-| 投影（病面） | 具体面（愈面） | 定义位 | UpReqSampling 判例刀量 |
+| projection (defect face) | concrete face (cured face) | defined at | edits in the UpReqSampling case |
 |---|---|---|---|
-| `req` | `real_eq` | S02:411 | 58 处 |
-| `lt` | `real_lt` | S02:480 | 22 处 |
-| `le` | `real_le` | S02:484 | 38 处 |
+| `req` | `real_eq` | S02:411 | 58 occurrences |
+| `lt` | `real_lt` | S02:480 | 22 occurrences |
+| `le` | `real_le` | S02:484 | 38 occurrences |
 
-合计 118 关系名 token。**改动脉冲 96 行**（86 diff hunk，逐 hunk 机械复核纯三映射、
-0 意外——`seat_reanchor/账/重锚diff-96行.patch` 在卷）。
+118 relation-name tokens in total. The change pulse is **96 lines**
+(86 diff hunks, each hunk mechanically re-verified as a pure three-mapping edit with
+0 unexpected changes — `seat_reanchor/账/重锚diff-96行.patch` is on record).
 
-### 刀面三分（何者改·何者禁改）
+### Edit scope, three parts (what changes, what must not change)
 
-| 面 | 处置 | 判例依据 |
+| face | disposition | case basis |
 |---|---|---|
-| 签名面语句（Theorem/Lemma/Variable/Hypothesis 槽·51 条） | 三映射重锚 | 受影响语句 61 条＝签名面 51＋体内 assert 面 10 |
-| 体内 assert 类型面（Proof 内局部语句·10 条） | 同治（类型面随迁） | assert 面提取后不落独立导出名，但类型面与外层同病同治 |
-| 证明体战术/项式 | **零字符改动** | E5 处方兑现判据：改后一次编译过（born rc=0） |
-| 注释行含裸 token（14 行：源行 2/16/20/65/66/77/88/145/146/641/668/696/720/1011） | **零触碰** | 注释不进提取面；触碰即污染 diff 纯度 |
-| `Notation R := Real` 桥 | **保留** | 树内 UpReqAlgebra 判例同款保留 |
-| Class 字段定义本体（S07 正本） | **禁触**（Set 仓只读） | 重锚只动件面，不动库面 |
-| 前提/binder 位 | **零触碰**（non-negotiable constraint② lawful keep 同源） | nw6 判例同律：前提/binder 位禁硬修 |
+| signature statements (Theorem/Lemma/Variable/Hypothesis slots · 51 items) | three-mapping re-anchor | affected statements 61 = 51 signature + 10 in-body assert faces |
+| in-body assert type faces (local statements inside `Proof` · 10 items) | treated the same (type faces migrate with them) | assert faces do not land as separate extraction export names, but their type faces share the defect and take the same cure |
+| proof-body tactics/terms | **zero character changes** | the E5 acceptance criterion: the edited face compiled in a single pass (rc=0 on the first compile) |
+| comment lines carrying bare tokens (14 lines: source lines 2/16/20/65/66/77/88/145/146/641/668/696/720/1011) | **untouched** | comments never enter the extraction face; touching them would break the purity of the diff pulse |
+| the `Notation R := Real` bridge | **kept** | kept, matching the in-tree UpReqAlgebra precedent |
+| the `Class` field definitions themselves (the S07 original) | **must not be touched** (read-only in the Set repository) | re-anchoring touches piece faces only, never library faces |
+| premise/binder positions | **untouched** (same source as non-negotiable constraint 2, the lawful-keep rule) | the `nw6` precedent states the same rule: premise/binder positions accept no hard repair |
 
-### 判例验收四证（UpReqSampling 实测·20261031）
+### Four acceptance checks of the case (measured on UpReqSampling, October 31, 2026)
 
-| 关 | 判据 | 实测 |
+| check | criterion | measured |
 |---|---|---|
-| born 编译 | RC=0＋.vo 魔数 `436f7121 00015ff4`＋.vo 新于 .v | RC=0 一次过（vo md5 `10d393bd3bc3641f1aa7e4fbf91be4e6`·50826B） |
-| gate7 提取探针 | **magic=0（硬验收）** | magic_ml=0／magic_mli=0（51 名·missing=0）；基线 293→0；独立复核 grep Obj.magic .ml/.mli 双 0 |
-| cross-check against the reference（语句名） | mac_stmt_names 有序全等 | census 51=51、含 Let 67=67·有序全等 PASS（成品 md5 `45ce11a7283926051698a46ebc012a09` vs 源 `4dba5385…`） |
-| gate4＋CJK＋承认式 | PASS=1 FAIL=0；CJK=0；承认式=0 | 全达标（头注 30 行五字段齐；Admitted/admit/Abort 词界计数 0） |
+| first compile | RC=0 + `.vo` magic header `436f7121 00015ff4` + `.vo` newer than `.v` | RC=0, passed in a single attempt (vo md5 `10d393bd3bc3641f1aa7e4fbf91be4e6` · 50826B) |
+| `gate7` extraction probe | **magic=0 (hard acceptance)** | magic_ml=0 / magic_mli=0 (51 names · missing=0); baseline 293→0; an independent re-check of `Obj.magic` over the `.ml`/`.mli` faces returned zero on both |
+| cross-check against the reference (statement names) | `mac_stmt_names` ordered equality | census 51=51, with `Let` 67=67 · ordered equality PASS (product md5 `45ce11a7283926051698a46ebc012a09` vs source `4dba5385…`) |
+| `gate4` + CJK + admission forms | PASS=1 FAIL=0; CJK=0; admission forms=0 | all met (the 30-line header carries all five fields; `Admitted`/`admit`/`Abort` word-boundary counts are 0) |
 
-签名稳定律附记：六件系 M34 新落叶子件、树内零下游消费（seat_magic6 台账 §二.4 口径）
-→ 无下游适配面；落装面 md5 变更（`4dba5385…`→`45ce11a7…`）→ M34 注册锚随落装波换
-锚（注册面归编排方，非重锚席职责）。vo 代际：重锚后 vo 与落装病面 vo（`817f2929…`）
-不同 digest——重锚席世界内病面 vo 已剔除，born 纯度保持。
+Signature-stability note: the six pieces are leaf pieces newly registered under `M34`, with zero
+in-tree downstream consumers (per the `sandbox/seat_magic6/` ledger, section 2.4)
+→ no downstream adaptation surface; the registered face md5 changes
+(`4dba5385…`→`45ce11a7…`) → the `M34` registration anchor moves with the registration
+work stream (registration belongs to orchestration, not to the re-anchoring agent). `.vo`
+generation: after re-anchoring, the `.vo` digest differs from the registered defective-face
+`.vo` (`817f2929…`) — the defective-face `.vo` was removed from the re-anchoring agent's
+world, and the compile purity is preserved.
 
-## 三、rocqwash 工装接线（本仓三件各就各位）
+## 3. Wiring into the rocqwash tooling (the three pieces in this repository, each in place)
 
-1. **台账洗**（wash/wash_engine.py·在役冻结件）：三映射天然是 exact-string 台账形——
-   `{"tag":"req2real_eq","old":"req ","new":"real_eq ","expect":N}` 逐映射一条
-   （expect 取实测刀量；word-boundary 例外面——注释行/前提位/证明体——由台账 old
-   串携带足量上下文精确锚定，**禁**裸单词全替换）。
-2. **born 前世界基断言**（wash/world_hook.py·本轮新件①）：`--world <目录> --manifest
-   <认证代账>` 于 born 前断言世界=认证代（nw5 雷防线）。
-3. **收口判读**：gate6 侧 `verify/verify_gate6.py`（本轮新件③·薄调正本/判例器化）；
-   gate7 magic 硬验收=0 侧归 `wrapper/gate7_probe.sh`（既有正典启动层）。
-4. **选件面**（tools/select_audit.py·本轮新件②）：六件批属多席共享 work 世界实录
-   （迁移账 §五.1）——批选前先对树 order.txt 全表审计剔重＋跨批撞名（enbig7 判例）。
+1. **ledger sanitize** (`wash/wash_engine.py` · frozen, in service): the three mappings are naturally
+   exact-string ledger entries — one entry per mapping,
+   `{"tag":"req2real_eq","old":"req ","new":"real_eq ","expect":N}`
+   (`expect` takes the measured count; word-boundary exceptions — comment lines, premise positions,
+   proof bodies — are pinned by sufficient context inside the entry's `old` string; a bare
+   whole-word replace-all is **forbidden**).
+2. **pre-compile world assertion** (`wash/world_hook.py` · new piece 1): `--world <dir> --manifest
+   <certified-generation-account>` asserts before the compile that the world equals the certified
+   generation (the `nw5` tripwire).
+3. **close-out verification**: the `gate6` side is `verify/verify_gate6.py`
+   (new piece 3; a thin caller over the canonical verifier, packaged for case checking);
+   the `gate7` magic=0 hard-acceptance side belongs to `wrapper/gate7_probe.sh`
+   (the existing canonical launch layer).
+4. **piece selection** (`tools/select_audit.py` · new piece 2): the six-piece batch is a
+   multi-agent shared `work`-world record (migration account, section 5.1) — before selecting a
+   batch, audit the full tree `order.txt` table for duplicates and cross-batch name collisions
+   (the `enbig7` precedent).
 
-## 四、何时不适用（处方边界·不硬凑）
+## 4. When the recipe does not apply (boundaries; no forced fit)
 
-- 语句面已走具体面、magic 仍非零 → 非 E5 病（查 gate7 探针的 missing/exclusions 面）。
-- 件有树内下游消费 → 迁移账不再是轻账：签名重锚牵连下游适配，须先勘定消费面
-  （`mac_stmt_names` cross-check against the reference＋Require 面全表 grep）再动刀。
-- Class 字段本体须改 → 越权：S07 正本在 Set 仓只读；升单走编排方，处方件不代行。
+- The statement surfaces already use concrete names, yet magic is non-zero → not an E5 defect
+  (inspect the missing/exclusions faces of the `gate7` probe).
+- The piece has in-tree downstream consumers → the migration account is no longer a light account:
+  a signature re-anchor drags downstream adaptation with it; first establish the consumer faces
+  (a `mac_stmt_names` cross-check against the reference plus a full-table `Require`-face grep)
+  before editing.
+- The `Class` field bodies themselves need changes → out of authority: the S07 original is
+  read-only inside the Set repository; raise the change through orchestration — the recipe face
+  does not act in its place.

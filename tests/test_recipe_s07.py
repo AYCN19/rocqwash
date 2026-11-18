@@ -36,9 +36,9 @@ ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # 更新账.md §三在�
 
 RECIPE_ANCHORS = [
     "E5", "S07_RealSetoidExpLog.v:8075", "S07_RealSetoidExpLog.v:8740",
-    "S02_CauchyComplete.v", "293", "96 行", "118",
+    "S02_CauchyComplete.v", "293", "96 lines", "118",
     "real_eq", "real_lt", "real_le",
-    "436f7121", "UpReqSampling", "治",  # 验收四证段词
+    "436f7121", "UpReqSampling", "cure",  # 验收四证段词 (anchor migrated to the English face token, unit u8)
 ]
 
 # 语句面命令词（处方刀面：签名面语句含 Variable/Hypothesis 槽·E5 判例 51 条口径）
