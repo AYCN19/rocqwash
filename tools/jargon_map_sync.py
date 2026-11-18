@@ -9,10 +9,11 @@ Purpose.  Deterministic one-way sync from docs/jargon-to-standard-mapping-v1.md
   set.  A md row is admitted only when its standard cell derives to a single
   form - parenthetical annotations stripped (the fullwidth RE_FW_PAREN rule,
   then the md tool track's ASCII-paren English-cell convention), an em-dash
-  head integration as rewrite_or_delete, and a derived form containing " / " or
-  "／" rejected as an alternation guard - and its context note carries none of
-  the six guard markers ("guarded row", "per-row handling", "sense split",
-  "splits the sense", "rules the face out", "narrative sense only").  The md
+  head integration as rewrite_or_delete, and a derived form containing " / "
+  or "U+FF0F" rejected as an alternation guard - and its context note carries
+  none of the six guard markers ("guarded row", "per-row handling",
+  "sense split", "splits the sense", "rules the face out",
+  "narrative sense only").  The md
   tool track's em-dash standard cells ("- (delete ...)") are its
   rewrite-or-delete convention: they land as disposition rewrite_or_delete
   with no fixed standard (never machine-applied), the same bucket the seed
@@ -51,7 +52,7 @@ Dependencies.  Python 3 standard library only; tools/norm_lint.py is loaded
   by path as the same-source RE_FW_PAREN and loader-grammar provider (absent
   module exits 9); seeds/jargon/SPEC.md is the schema contract text.  The
   row grammar mirrors tools/norm_lint.py:load_jargon_map (face cell: fullwidth
-  parentheticals stripped, then split on "/" and "／"; header/dash rows
+  parentheticals stripped, then split on "/" and "U+FF0F"; header/dash rows
   skipped; malformed rows fail loud).  Zero network face.
 
 Evidence.  --selftest: filter vectors on fixture tables (single-form admit
@@ -166,8 +167,8 @@ def derive_standard(cell):
     guards, sense qualifiers and process instructions, never literal
     replacement text).  On the stripped form: an em-dash head is the md's
     rewrite-or-delete convention and lands in the never-applied bucket; a
-    surviving " / " or fullwidth "／" is an alternation guard and the row is
-    rejected (the alternation guard of tools/jargon_apply.py:derive_after).
+    surviving " / " or fullwidth "U+FF0F" is an alternation guard and the row
+    is rejected (the alternation guard of tools/jargon_apply.py:derive_after).
     """
     fw = norm_lint_module().RE_FW_PAREN
     bare = fw.sub("", cell or "")
@@ -185,7 +186,7 @@ def parse_md_rows(path):
     """Loader-grammar rows of the md table: one record per derived face.
 
     Row shape mirrors tools/norm_lint.py:load_jargon_map: the face cell is
-    fullwidth-parenthetical-stripped then split on "/" and "／"; rows whose
+    fullwidth-parenthetical-stripped then split on "/" and "U+FF0F"; rows whose
     first cell is empty, carries the CJK header marker, or is a dash run are
     skipped; a data row needs three cells (face, standard, note).  Each
     record: {face, standard_cell, note, line}.  Duplicate derived faces fail
