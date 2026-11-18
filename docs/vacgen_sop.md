@@ -1,224 +1,226 @@
-# SOP · vacuity 探针工具化与判读分档规程 / SOP: Vacuity Probe Tooling and Verdict Grading (vacgen)
+# SOP: Vacuity Probe Tooling and Verdict Grading (vacgen)
 
-> **Header note (English)**
-> **Job ID**: vacgen-20261112 · work-order phase 1 · spec-agent deliverable · zero-compile (this scroll regulates; it fires no build itself).
-> **Statement face**: this scroll turns the five generalization crafts measured effective in the vacmain v2 four-fold-convergence audit (source receipt §四) into executable steps, each with a machine-checkable verdict surface; it fixes the five-grade verdict law for probe results and the limited-form, three-bounds statement template; it drafts the independent-repo candidate README skeleton.
-> **Verdict semantics**: strong red = statement-face break, form registration only; weak red = nonempty evidence; refutation green = vacuity alert (highest level); boundary green = positive machine check; absence = pending (a formalization-gap record, not an alert).
-> **Command lines**: every verdict surface below cites an exact command shape; the wording self-check of §五 was executed in the casting session with first-hand output recorded in the scroll (36 registered faces = 0; em-dash count = 0).
+> Purpose.  Turn the five generalization crafts measured effective in the vacmain v2 four-fold-convergence audit (source execution record §4) into executable steps, each with a machine-checkable verdict surface; fix the five-grade verdict law for probe results and the limited-form, three-bounds statement template; draft the independent-repo candidate README skeleton. Zero-compile: this scroll regulates; it fires no build itself.
+> Interface.  Document face only (a regulation scroll). Consumed by the self-check agent (phase 2: the shape regression cross-check plus compile adjudication of the filled pieces) and the assembly agent (phase 3: independent-repo candidate registration) per this scroll's §1/§2/§3; the top-level verdict semantics it fixes are stated in §0.3. The wording self-check instrument ships beside this scroll as `ai_flavor_selfcheck.sh` in the same directory.
+> Dependencies.  The source execution record `D:/ComplexAnalysis/attn/_vacmain_audit_20261112/回执-vacmain完备审计v2-20261112.md`, the shape originals under `D:/ComplexAnalysis/attn/_vacmain_audit_20261112/sbx_v2/`, the two mechanical tools `_tools/scan_boundary_tokens.py` and `_tools/judge_census_completed.py`, and the wording register `D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md`, all listed under Sources below; the cited instruments are python -I, pure standard library; no build and no network dependency.
+> Evidence.  Every verdict surface below cites an exact command shape; the wording self-check of §5 was executed in the casting session with first-hand output recorded in the scroll (36 registered faces = 0; em-dash count = 0); the §4 md5 manifest cross-check closed 14/14 MATCH against the source execution record §5.
+> Exit-codes.  Not applicable to a document face; the rc values quoted in the command shapes are the documented tools' observed exit codes (0 = passing compile or clean scan; 1 = an expected-fail probe staying quiet, or a failing scan; 2 = a usage or IO error, rerun and do not pass, per §1.3).
 
-- **日期 Date**: 2026-11-12（工单日 Job date）· 铸卷收笔时戳 Casting finalized 2026-11-13 00:04 local（跨午夜如实登记 midnight crossing registered）
-- **单号 Job ID**: vacgen-20261112 · 道B 规格席（SOP 铸造·零编译）
-- **正本输入 Sources**（全部本会话亲读 first-hand read this session）:
-  1. `D:/ComplexAnalysis/attn/_vacmain_audit_20261112/回执-vacmain完备审计v2-20261112.md`（§三 限定式三不越·§四 泛化工艺五条·§五 md5 manifest＝形状对表正本）；
-  2. 形状正本八件 shape originals：`D:/ComplexAnalysis/attn/_vacmain_audit_20261112/sbx_v2/` 八个探针件与四卷判读卷（§四 manifest 表）；
-  3. 机械工具两件 mechanical tools：`_tools/scan_boundary_tokens.py`、`_tools/judge_census_completed.py`；
-  4. 词面登记册 wording register：`D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md` §4.6 与 §5。
-- **消费面 Consumers**: 自检席（相2·形状回归对表＋填充件编译判读）与汇编席（相3·独立仓候选登记）按本卷 §一/§二/§三 执行；词面自查仪器随卷存放于同目录 `ai_flavor_selfcheck.sh`。
-- **文档体例 Conventions**: 标题双语（中/英）；表头英文化（table headers in English）；新铸探针件头注英文，四字段（审计单号 audit ID / 语句面 statement face / 判定语义 verdict semantics / 编译命令行 build command line）为最低配置。
-
----
-
-## 〇、适用域、前置闸与总判定语义 Scope, Pre-Flight Gates, and Top-Level Verdict Semantics
-
-### 0.1 适用域与输入输出面 Scope and I/O Surface
-
-**适用域**: 对任意 Lean 工件的头部定理（challenge `main` 形语句）做 vacuity 审计，即判定其前提合取是否空真（vacuously true：前提不可满足，使被 sorry 证明的语句平凡为真）。本规程是 Rocq 侧 gate8 空真哨兵到 Lean/mathlib 语境的同构迁移（源回执 §四条①实测有效形的成文化）。
-
-**输入面 / Input surface**:
-
-| # | Input | Form（形态） | Gate（闸） |
-|---|---|---|---|
-| 1 | 工件语句面 artifact statement face | 靶件路径＋sha256（双点对表 two-point match） | sha 不符即 UPGRADE，禁带病开炮 |
-| 2 | 工具链 pin toolchain pin | `lean-toolchain` 文件值＋`lake env lean --version` 实测 | 三连恰等，任一漂移即 UPGRADE |
-| 3 | mathlib 快照 mathlib snapshot | 快照根路径＋`.lean` 文件数＋登记日期 | 窗口四元组（path, count, date, pin）入卷 |
-
-**输出面 / Output surface**（四账 four accounts，由生成器铸骨架、填充后按 §二 分档判读）:
-
-| # | Account（账） | Expected verdict（预期判定） | Content（内容） |
-|---|---|---|---|
-| 1 | witness 面 | 预期绿 expected-green | 存在实例信封定理（构造性 witness·两锚拼合） |
-| 2 | 否证谱 refutation spectrum | 预期红 expected-fail | 多形态否证探针（全形/特化/语境/纪律面/战术谱） |
-| 3 | 边界机检 boundary machine check | 预期绿 expected-green | 闭式实数序分离定理组 |
-| 4 | 缺位定谳 absence verdict | 预期缺位 expected-absent | 名族普查＋四股合取定谳（§1.4） |
-
-### 0.2 前置闸 Pre-Flight Gates（fail-loud·任一失守即停工升格）
-
-| # | Gate | Command shape（命令形） | PASS criterion |
-|---|---|---|---|
-| G1 | 工具链恰等 toolchain equality | `cat lean-toolchain` ＋ `lake env lean --version` | 输出与 pin 逐字恰等 |
-| G2 | 靶件指纹 target fingerprint | `sha256sum <artifact>`（随包副本与正本两点各一发） | 双点同值 |
-| G3 | 形状正本在盘 shape originals on disk | `md5sum <八件>` cross-check against the reference §四 manifest | 逐件同值 |
-| G4 | python 可用 python availability | `python -I -c "print('ok')"` | exit 0·生成器与扫描器均 python -I 纯 stdlib |
-
-### 0.3 总判定语义 Top-Level Verdict Semantics
-
-**否证面绿＝空真实锤＝最高级警报。** 一条否证探针（预期红件）编译 rc=0，即：该前提合取不可满足，被审计的 sorry 证明语句平凡为真（vacuously true），此为空真（vacuity）实锤，立即冻结、升格上报、审计判定置 `ok = false`。预期红哨兵保持安静（rc=1）＝健康态。其余各面判定按 §二 五档律执行。本语义在源审计四重收敛中实测兑现（否证谱 5/5 rc=1·警报零）。
+- **Date**: November 12, 2026 (job date); casting finalized November 13, 2026, 00:04 local (midnight crossing registered as it happened)
+- **Job ID**: `vacgen-20261112`; track B spec agent (SOP casting, zero compile)
+- **Sources** (all read first-hand in the casting session):
+  1. the source execution record `D:/ComplexAnalysis/attn/_vacmain_audit_20261112/回执-vacmain完备审计v2-20261112.md` (§3 the limited-form three bounds; §4 the five generalization crafts; §5 the md5 manifest, the shape cross-check reference);
+  2. the eight shape originals under `D:/ComplexAnalysis/attn/_vacmain_audit_20261112/sbx_v2/` (eight probe files plus four adjudication scrolls; the manifest table in §4);
+  3. two mechanical tools: `_tools/scan_boundary_tokens.py`, `_tools/judge_census_completed.py`;
+  4. the wording register: `D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md` §4.6 and §5.
+- **Consumers**: the self-check agent (phase 2) and the assembly agent (phase 3) execute per this scroll's §1/§2/§3; the wording self-check instrument is stored beside this scroll in the same directory as `ai_flavor_selfcheck.sh`.
+- **Conventions**: headings and table headers in English (the bilingual as-cast text is preserved verbatim in the sibling `vacgen_sop.md.zh.md` archive); newly cast probe files carry an English header comment whose four fields (audit ID / statement face / verdict semantics / build command line) are the minimum configuration.
 
 ---
 
-## 一、泛化工艺五条·规程化 The Five Generalization Crafts, Codified
+## 0. Scope, Pre-Flight Gates, and Top-Level Verdict Semantics
 
-> 每条工艺＝可执行步骤（S 系列）＋判定面（V 系列·机检表）。步骤为操作规程，判定面为验收口径；判定面每行的 PASS/RED 判据均可由命令形机械复核。
+### 0.1 Scope and I/O Surface
 
-### 1.1 工艺一：哨兵语义（预期红制）Craft 1: Sentinel Semantics (Expected-Red Discipline)
+**Scope**: a vacuity audit of the headline theorem (a challenge-`main`-form statement) of any Lean artifact: deciding whether its premise conjunction is vacuously true (vacuously true: the premises are unsatisfiable, which makes the sorry-proven statement true vacuously). This SOP is the isomorphic migration of the Rocq-side gate8 vacuity watcher into the Lean/mathlib context (the codification of the measured-effective form, item 1 of the source execution record §4).
 
-**工艺一句话**: 每个探针件在开炮前必须已声明预期判定；否证面是 COMPILE-MUST-FAIL watcher：编译绿即警报，红保持即健康。
+**Input surface**:
 
-**步骤 Steps**:
-
-- **S1-1 预期判定前置声明**: 每个探针件头注在开炮前写明预期判定。否证面标 `EXPECTED-FAIL`（含预期落点：written-form 收尾读点或残余目标）；witness/边界/骨架面标预期绿。占位 sorry 以 `EXPECTED-FAIL`/`TODO-SEAT` 注释显式声明并计数。
-- **S1-2 骨架验证炮先行**: 先发骨架验证件（与五否证面共享 module 头、import 面、探针点引理、bites 与 `#print axioms` 命令·但不含任何必败定理），要求 rc=0 passing。骨架未先证健全前，任何否证红不可读作证据（红可能系骨架缺陷而非判定）。源审计例：`_vacsmoke.lean` rc=0 先行，五形态红方为预期判定（源回执 §一·重2）。
-- **S1-3 否证面开炮与落点登记**: 逐否证面发射，逐面记 rc 与判读落点（编译器报错 `file:line`）。落点必须落在声明的收尾读点；落点漂移＝勘形事件，如实登记。
-- **S1-4 警报规则**: 任一 `EXPECTED-FAIL` 面 rc=0 ＝空真警报：冻结一切后续炮、升格上报、`ok = false`。警报判定以本面编译日志为唯一凭据。
-
-**判定面 V1（机检表）**:
-
-| Check | Command shape（命令形） | PASS | RED |
+| # | Input | Form | Gate |
 |---|---|---|---|
-| 预期判定标记在位 | `command grep -c "EXPECTED-FAIL" <probe.lean>` | 否证面 ≥1；预期绿面 =0 | 缺标记开炮 |
-| 骨架炮先行绿 | guard 包裹编译 smoke 件·`echo RC=$?` 无管道直取 | 否证判读前已有 rc=0 记录 | smoke rc=1＝骨架缺陷·禁读否证红为证据 |
-| 否证面红且落点在读点 | guard 包裹编译·逐面 `echo RC=$?`＋日志归档 | rc=1 且报错落点＝声明读点 | rc=0＝空真警报（S1-4）；落点漂移＝勘形 |
-| 占位计数单调 | 填充轮次间 `command grep -c "TODO-SEAT" <file>` 对照 | 计数单调不增（monotone non-increasing） | 对活计数器写精确等式不变式（禁·见 §2.2 注） |
+| 1 | Artifact statement face | target path + sha256 (two-point cross-check) | a sha mismatch means UPGRADE; never issue the run in a known-bad state |
+| 2 | Toolchain pin | the `lean-toolchain` file value + a measured `lake env lean --version` | all three exactly equal; any drift means UPGRADE |
+| 3 | mathlib snapshot | snapshot root path + `.lean` file count + registration date | the window quadruple (path, count, date, pin) is registered in the scroll |
 
-### 1.2 工艺二：探针铸形四件套 Craft 2: Probe Casting, Four-Piece Set
+**Output surface** (the four accounts; the generator casts the skeletons, and after filling, grading follows §2):
 
-**工艺一句话**: 每个探针件由四件构成：英文头注、逐字转录机检、machine bites、PA 逐定理报数；四件齐备，红绿判定才可归属。
-
-**步骤 Steps**:
-
-- **S2-1（a）英文头注**: 探针件头部注释块全英文，最低四字段：审计单号（audit ID）、语句面（statement face：转录自哪个靶件哪段前提界面）、判定语义（verdict semantics：预期判定＋passing/红各自含义）、编译命令行（build command line：含温控包裹全形）；另附纪律行（no sorry / no admit / no native_decide / no new axioms）。参照形：`sbx_v2/` 八件头注。
-- **S2-2（b）逐字转录机检**: 被审计前提界面逐字转录进探针假设位；转录文本与靶件原文作机械比对（字符串/token 级等值），比对输出留痕。**靶件本体永不入 import 面**（其 sorry 证明件会污染公理审计）；探针以重声明方式承载界面（源回执 §一·重2「转录逐字机检」行）。
-- **S2-3（c）machine bites**: 在具体探针点实例化界面词汇的小定理组，故意编译绿，证明转录界面相对靶件声明的同一 import 面可类型化。bites 全绿是否证红可读作证据的前置条件（界面咬合验证）。
-- **S2-4（d）PA 逐定理报数**: 文件尾对每个可编译声明逐一发 `#print axioms`；预期谱＝`[propext, Classical.choice, Quot.sound]` 子集；命中 `sorryAx` 即红；新增 axiom 声明即红。
-
-**判定面 V2（机检表）**:
-
-| Check | Command shape（命令形） | PASS | RED |
+| # | Account | Expected verdict | Content |
 |---|---|---|---|
-| 头注四字段齐备 | `command grep -c -E "Audit|Statement|Verdict|Build" <probe.lean>` 头注区逐字段 | 四字段各 ≥1 | 缺任一字段 |
-| 转录等值机检 | `python -I` 比对脚本（转录文本 × 靶件原文） | 输出 PASS 留痕 | 任一不等值 |
-| 靶件零导入 | `command grep -n "<artifact-module>" <probe.lean>` 扫 import 面 | 0 命中 | ≥1（污染源在） |
-| bites 全绿 | 编译日志逐 bite 定理查 rc 与 PA 行 | 全部 rc=0＋PA 三标准 | 任一红＝界面咬合失败·禁读否证红为证据 |
-| PA 三标准 | `command grep -c "sorryAx" <log>` | 0 | ≥1（failing·UPGRADE） |
+| 1 | witness face | expected-green | an existence-instance envelope theorem (constructive witness, two anchors spliced) |
+| 2 | refutation spectrum | expected-fail | multi-form refutation probes (full form / specialization / context / discipline face / tactic spectrum) |
+| 3 | boundary machine check | expected-green | the closed-form real-order separation theorem group |
+| 4 | absence verdict | expected-absent | the name-family census plus the four-strand joint verdict (§1.4) |
 
-### 1.3 工艺三：防波堤扫描器 Craft 3: Token Breakwater Scanner
+### 0.2 Pre-Flight Gates (fail-loud: any failed gate halts work and escalates)
 
-**工艺一句话**: 承认式 token（sorry/admit/native_decide/axiom 族）在语句/证明面必须零命中；扫描器剥嵌套块注释与字符串字面量，代码面与注释面分账：注释面命中如实报告但不构成违规。
-
-**工具 Tool**: `_tools/scan_boundary_tokens.py`（python -I·纯 stdlib·单遍扫描；md5 见 §四 manifest·行 15 token 表：`\b(sorry|admit|native_decide|sorryAx|axiom|axiomX|Admitted|Abort)\b`）。
-
-**步骤 Steps**:
-
-- **S3-1 逐件扫描**: 每个探针件一发：`python -I scan_boundary_tokens.py <probe.lean>`；`echo RC=$?` 直取退出码。
-- **S3-2 双面分账读数**: 读 `CODE_FACE_HITS`（剥注释后语句/证明面）与 `RAW_FACE_HITS`（含注释全文）两账。判据只在代码面：注释面命中（如头注纪律行自述 no sorry）如实列示、不作违规。
-- **S3-3 机制边界（防误伤两条）**: 扫描器剥 `/- -/`（含 `/-- -/` docstring）与 `--` 行注释及字符串字面量；Rocq 形 `(* *)` 刻意不剥：使用它的 `.lean` 件本身不可解析（源审计边界件 attempt-1 判例：Rocq 形定界符进 Lean 头注＝编译红·fail-loud 勘形登记·语句面零触碰）。
-
-**判定面 V3（机检表）**:
-
-| Check | Command shape（命令形） | PASS | RED |
+| # | Gate | Command shape | PASS criterion |
 |---|---|---|---|
-| 扫描器指纹 | `md5sum _tools/scan_boundary_tokens.py` | 与 §四 manifest 同值 | 漂移即 UPGRADE（禁带病扫描） |
-| 逐件代码面零命中 | `python -I scan_boundary_tokens.py <probe.lean>` | `VERDICT CLEAN`＋RC=0 | `VERDICT RED`（RC=1＝fail-loud）；RC=2＝用法/IO 错·重跑非放行 |
-| 双面账齐报 | 读输出 `CODE_FACE_HITS`/`RAW_FACE_HITS` 两行 | 两行俱在 | 只报单面＝分账失守 |
+| G1 | Toolchain equality | `cat lean-toolchain` + `lake env lean --version` | the output equals the pin exactly, verbatim |
+| G2 | Target fingerprint | `sha256sum <artifact>` (fired once at each of the two points: the shipped copy and the original) | both points agree on the value |
+| G3 | Shape originals on disk | `md5sum <the eight files>` cross-checked against the reference manifest in §4 | every file's value agrees |
+| G4 | python availability | `python -I -c "print('ok')"` | exit 0; generator and scanners are python -I, pure stdlib |
 
-### 1.4 工艺四：全树名族普查器 Craft 4: Full-Tree Name-Family Census
+### 0.3 Top-Level Verdict Semantics
 
-**工艺一句话**: 缺位定谳＝名族普查零命中＋三股旁证合取；单一名族零命中只是名级负发现，不构成缺位定谳。
-
-**工具 Tool**: `_tools/judge_census_completed.py`（python -I·walk 全部 `.lean`·逐变体计数并报文件数；md5 见 §四 manifest）。泛化使用时按靶面改写 `VARIANTS` 名族与普查根，仪器形制不变。
-
-**步骤 Steps**:
-
-- **S4-1 快照窗口钉定**: 先钉普查根（mathlib 快照路径＋本地资产根）并登记窗口四元组（path, file count, date, toolchain pin）。文件数是快照登记值，不是活不变式，每次审计运行重新实测并按日期登记。
-- **S4-2 名族定义**: 目标构造的候选名族 ≥3 变体（CamelCase 正名/snake_case 变体/模块限定形）；变体集写入普查脚本并随卷登记。
-- **S4-3 普查发射**: `python -I judge_census_completed.py`；读每树 `lean files scanned: N`、逐变体命中数、`JOINT VERDICT` 行。
-- **S4-4 四股合取定谳**: 缺位定谳要求四股证据**合取**（源审计四股·源回执 §一·重4 与缺位定谳卷 §六）：(a) 名族三变体 0 命中；(b) 属主模块自身 TODO/路线面在场；(c) 既有定义面为级数/junk 形（域外取值见证在场）；(d) 模块全定理清单无延拓型语句。任一股单独只是名级/局部证据；四股齐＝缺位定谳。
-- **S4-5 负发现边界自划**: 缺位语句按 §2.4 四要素自划边界（扫了什么/没扫什么/非绝对主张/别名未穷尽）。
-
-**判定面 V4（机检表）**:
-
-| Check | Command shape（命令形） | PASS | RED |
-|---|---|---|---|
-| 窗口四元组在卷 | 读审计卷登记行 | (path, count, date, pin) 四项齐 | 缺任一项＝窗口未钉·禁下缺位判 |
-| 普查输出完整 | `python -I judge_census_completed.py` 输出 | 每树 scanned N＋逐变体计数＋JOINT 行 | `READ_FAIL` 行＝fail-loud 登记 |
-| 四股合取 | 四股逐行登记（a/b/c/d·各附第一手凭据路径） | 四股俱在 | 缺任一股→降级为「名级负发现」·不得写「缺位定谳」 |
-| JOINT 判读 | 读 `JOINT VERDICT ... = 0` | =0→ABSENT（挂起档）；>0→PRESENT（缺位档撤销·witness 面重跑） | 混读（0 命中直写「不存在」）＝越权主张 |
-
-### 1.5 工艺五：炮序登记制 Craft 5: Shot-Order Registration
-
-**工艺一句话**: 记录面炮与判读凭据炮分账：工作流脚本层的记录面炮（可零费重放、可能先于探针件存在）不构成判读凭据；判读只引用铸后、guard 包裹、无管道直取 rc 的凭据炮。
-
-**步骤 Steps**:
-
-- **S5-1 两账分立**: 每次编译发射时即归账：**记录面炮**（脚本层记录面发射·Resume/Amend 重放零费·发射时探针件可能尚不存在·其 rc 不可归属判定）与**凭据炮**（探针件在盘后发射·guard 包裹·rc 无管道直取·日志归档 md5 钉定）。每炮恰入一账，禁账外编译。
-- **S5-2 凭据炮四要件**: 判读引用的每发凭据炮须四要件齐：(a) guard trace 行在卷（core pin / 授权 / 档位 / done exit）；(b) 日志文件入 manifest；(c) rc 无管道直取（`echo RC=$?`·禁 `cmd | tail` 后取码）；(d) 发射时戳登记。源审计例：记录面五炮铸前发射、其 rc=1 不可归属；判读凭据＝铸后 guard 编译＋Judge 逐发重放（源回执 §一·重2「炮序登记」行）。
-- **S5-3 独立重放**: 收口前对全部凭据炮做一轮独立重放（逐发重编译·逐面对表席位账）；零分歧方收口；分歧即 fail-loud 勘形。
-- **S5-4 温控包裹正形**: 一切编译必经温控 guard 包裹（本机正形 `cpu_guard_v3.ps1 -TempLimit 98 -CoreN <N> -AllowG3 -GearForce 0`·禁裸 lake）；跨机按派发协议换本机等价包裹，禁裸跑。
-
-**判定面 V5（机检表）**:
-
-| Check | Command shape（命令形） | PASS | RED |
-|---|---|---|---|
-| 两账齐备 | 炮序台账逐行 label | 每炮恰一账·记录面炮显式标 non-evidence | 账外编译或混账 |
-| 凭据四要件 | 逐引用日志 `command grep -c -E "pinned to core|done exit" <log>`＋rc 行 | 四要件全在 | 缺任一件＝该炮不得作判读凭据 |
-| 独立重放零分歧 | 重放日志逐发对表席位账 | rc 与落点逐发同值 | 任一分歧＝fail-loud 勘形 |
-| 重放件钉定 | `md5sum <replay logs>` 入 manifest | 全数在卷 | 缺卷 |
+**A passing compile on a refutation face is the vacuity alert, the highest level.** If an expected-fail probe (an expected-fail piece) compiles with rc=0, then the premise conjunction is unsatisfiable and the audited sorry-proven statement is vacuously true; this confirms vacuity: freeze all further runs, escalate and report, and set the audit verdict `ok = false`. An expected-fail watcher that stays quiet (rc=1) is the healthy state. All other faces grade per the five-grade law in §2. This semantics was measured effective in the source audit's four-fold convergence (refutation spectrum 5/5 rc=1, zero alerts).
 
 ---
 
-## 二、判读分档律 Verdict Grading Law
+## 1. The Five Generalization Crafts, Codified
 
-### 2.1 五档表 The Five Grades
+> Each craft = executable steps (the S series) plus a verdict surface (the V series, a machine-check table). The steps are the operating procedure; the verdict surfaces are the acceptance criteria; every PASS/RED row in a verdict surface is mechanically re-checkable from its command shape.
 
-| Grade（档） | Mechanical trigger（机械触发） | Reading（判读） | Mandatory action（必做动作） |
+### 1.1 Craft 1: Sentinel Semantics (Expected-Red Discipline)
+
+**Craft in one sentence**: every probe file must have declared its expected verdict before the run is issued; the refutation face is a COMPILE-MUST-FAIL watcher: a passing compile is the alert, a staying-failing compile is health.
+
+**Steps**:
+
+- **S1-1 Expected-verdict declaration first**: every probe file's header comment states the expected verdict before the run is issued. Refutation faces are marked `EXPECTED-FAIL` (including the expected locus: the written-form closing read locus or the residual goal); witness/boundary/skeleton faces are marked expected-green. Placeholder sorry positions are explicitly declared and counted with `EXPECTED-FAIL`/`TODO-SEAT` comments.
+- **S1-2 The skeleton verification run goes first**: fire the skeleton verification file first (it shares the module header, the import face, the probe-point lemma, the bites, and the `#print axioms` command with the five refutation faces, but carries no must-fail theorem) and require rc=0 passing. Until the skeleton is proven sound, any refutation failing result must not be read as evidence (the failing result may come from a skeleton defect rather than the verdict). Source-audit example: `_vacsmoke.lean` ran rc=0 first, and only then were the five forms' failing results the expected verdict (source execution record §1 entry 2).
+- **S1-3 Refutation faces fire and register their loci**: fire the refutation faces one by one, recording rc and the adjudication locus (the compiler error's `file:line`) per face. The locus must fall inside the declared closing read locus; a drifted locus is a shape-discrepancy event and is registered as observed.
+- **S1-4 Alert rule**: any `EXPECTED-FAIL` face with rc=0 is the vacuity alert: freeze all further runs, escalate and report, and set `ok = false`. The alert verdict takes this face's compile log as its only evidence.
+
+**Verdict surface V1 (machine-check table)**:
+
+| Check | Command shape | PASS | RED |
 |---|---|---|---|
-| **强红 strong red** | 语句面断裂：探针自身语句相对界面不成立（转录位 Unknown identifier / 构造不可用 / Cannot find witness 形） | **只作形态登记（form registration only）·无证据效力**（探针未咬合界面·既不证空也不证非空） | 登记形态；修探针；重发炮 |
-| **弱红 weak red** | 机械红非语句面断裂·落点在声明读点（automation exhausted / unsolved goals 形） | **非空证据**：该前提界面在此谱面强度下抗拒了本次否证尝试 | 逐面登记 rc＋落点；入收敛账 |
-| **passing（否证面）refutation green** | `EXPECTED-FAIL` 面编译 rc=0 | **空真警报（vacuity alert）＝最高级**：前提合取不可满足·被审语句平凡为真 | 冻结＋升格上报＋`ok = false` |
-| **边界绿 boundary green** | 边界机检面（预期绿）编译 rc=0 | **正面机检**：闭式分离计算成立 | 登记·限定式陈述（只对该闭式事实下判） |
-| **缺位 absence** | §1.4 四股合取在钉定快照内成立 | **挂起（pending）**：形式化缺口记录·非警报·非判空·非判可证 | 按 §2.4 四要素登记；复审条件＝上游形式化落地 |
+| Expected-verdict markers in place | `command grep -c "EXPECTED-FAIL" <probe.lean>` per face in the header region | refutation faces >=1; expected-green faces =0 | a face fired with its marker missing |
+| Skeleton run passing first | guard-wrapped compile of the smoke file, `echo RC=$?` taken directly without a pipe | an rc=0 record exists before any refutation adjudication | smoke rc=1 means a skeleton defect; a refutation failing result must not be read as evidence |
+| Refutation face failing with the locus inside the read locus | guard-wrapped compile per face, `echo RC=$?` plus the archived log | rc=1 and the error locus equals the declared read locus | rc=0 means the vacuity alert (S1-4); a drifted locus means shape discrepancy |
+| Placeholder count monotone | `command grep -c "TODO-SEAT" <file>` compared between fill rounds | the count is monotone non-increasing | write no exact-equality invariant against a live counter (forbidden; see the §2.2 note) |
 
-**预期绿面转红的补充档位**: witness/边界/骨架面（预期绿）编译红＝探针侧缺陷或拼合面断裂（如 witness 拼合锚失配），按强红同法处理：fail-loud 勘形登记、修探针、重发炮；不得读作对被审计工件的任何判定（源回执升级通道③同形）。
+### 1.2 Craft 2: Probe Casting, Four-Piece Set
 
-### 2.2 分档适用边界与活计数器注记 Scoping Note and Live-Counter Note
+**Craft in one sentence**: every probe file consists of four pieces: the English header comment, the verbatim-transcription machine check, machine bites, and the per-theorem `#print axioms` report; only with all four pieces can a passing or failing verdict be attributed.
 
-- **适用域**: 本五档律适用于 vacuity 探针族（转录界面＋否证/边界/witness 面）。其它探针族（如对修正形的反转探针）在铸形时按工艺一 S1-1 自行声明预期判定映射，档位语义随映射走；未声明预期判定的炮不进分档判读。
-- **活计数器禁精确等式不变式**: 探针计数、骨架填充计数、快照文件数等随时间演进的量，其不变式只取单调边界（如「TODO-SEAT 计数单调不增」「EXPECTED-FAIL 面不得转绿」）；**禁写精确等式不变式**（如「恒为 N 件」「success 恰 K 个」）；快照数值一律带日期登记、不作活检验定界（工件核验器设计律条 1）。
+**Steps**:
 
-### 2.3 限定式三不越模板 Limited-Form, Three-Bounds Template
+- **S2-1 (a) English header comment**: the probe file's header comment block is all English, with the four minimum fields: audit ID, statement face (which target artifact and which premise interface the transcription came from), verdict semantics (the expected verdict plus what passing and failing each mean), and build command line (the full thermal-guard-wrapped form); plus a discipline line (no sorry / no admit / no native_decide / no new axioms). Reference form: the header comments of the eight `sbx_v2/` files.
+- **S2-2 (b) Verbatim-transcription machine check**: the audited premise interface is transcribed verbatim into the probe's hypothesis positions; the transcribed text is mechanically compared against the target artifact's original text (string/token-level equality) and the comparison output is kept on record. **The target artifact itself never enters the import face** (its sorry-proven piece would pollute the axiom audit); the probe carries the interface by re-declaration (source execution record §1 entry 2, the "verbatim-transcription machine check" row).
+- **S2-3 (c) Machine bites**: a group of small theorems instantiating the interface vocabulary at concrete probe points, intentionally compiling passing, proving that the transcribed interface is typeable against the same import face the target artifact declares. All bites passing is the precondition for reading a refutation failing result as evidence (the interface-engagement check).
+- **S2-4 (d) Per-theorem `#print axioms` report**: at the end of the file, issue `#print axioms` for every compilable declaration; the expected profile is a subset of `[propext, Classical.choice, Quot.sound]`; a `sorryAx` hit is failing; a newly declared axiom is failing.
 
-审计结论/升格语句一律限定式；三界之外的外推一律无效。模板（槽位以尖括号标注）：
+**Verdict surface V2 (machine-check table)**:
+
+| Check | Command shape | PASS | RED |
+|---|---|---|---|
+| Header four fields complete | `command grep -c -E "Audit|Statement|Verdict|Build" <probe.lean>` field by field over the header region | each of the four fields >=1 | any field missing |
+| Transcription-equality machine check | the `python -I` comparison script (transcribed text against the target artifact's original text) | a PASS output kept on record | any inequality |
+| Target artifact zero-imported | `command grep -n "<artifact-module>" <probe.lean>` over the import face | 0 hits | >=1 (the pollution source is present) |
+| All bites passing | per bite theorem in the compile log, check rc and the `#print axioms` line | all rc=0 plus the three standard axioms | any one failing means the interface failed to engage; a refutation failing result must not be read as evidence |
+| Three-standard axiom profile | `command grep -c "sorryAx" <log>` | 0 | >=1 (failing; UPGRADE) |
+
+### 1.3 Craft 3: Token Breakwater Scanner
+
+**Craft in one sentence**: admission tokens (the sorry/admit/native_decide/axiom family) must have zero hits on the statement/proof faces; the scanner strips nested block comments and string literals, and the code face and the comment face are accounted separately: a comment-face hit is reported as observed but is not a violation.
+
+**Tool**: `_tools/scan_boundary_tokens.py` (python -I, pure stdlib, single-pass scan; md5 in the §4 manifest; the line-15 token table is `\b(sorry|admit|native_decide|sorryAx|axiom|axiomX|Admitted|Abort)\b`).
+
+**Steps**:
+
+- **S3-1 Scan per file**: one shot per probe file: `python -I scan_boundary_tokens.py <probe.lean>`; `echo RC=$?` takes the exit code directly.
+- **S3-2 Two-account reading**: read both accounts, `CODE_FACE_HITS` (the statement/proof faces after comment stripping) and `RAW_FACE_HITS` (the full text including comments). The criterion applies to the code face only: a comment-face hit (for example the header discipline line's own "no sorry") is listed as observed and is not a violation.
+- **S3-3 Mechanism boundary (two no-false-positive rules)**: the scanner strips `/- -/` (including the `/-- -/` docstring form) and `--` line comments and string literals; the Rocq-form `(* *)` is deliberately not stripped: a `.lean` file using it is itself unparseable (source-audit boundary-file precedent, attempt 1: Rocq-form delimiters inside a Lean header comment meant a failing compile, a fail-loud shape-discrepancy registration, and a statement face left untouched).
+
+**Verdict surface V3 (machine-check table)**:
+
+| Check | Command shape | PASS | RED |
+|---|---|---|---|
+| Scanner fingerprint | `md5sum _tools/scan_boundary_tokens.py` | the same value as in the §4 manifest | any drift means UPGRADE (never scan in a known-bad state) |
+| Per-file code face zero hits | `python -I scan_boundary_tokens.py <probe.lean>` | `VERDICT CLEAN` and RC=0 | `VERDICT RED` (RC=1 is fail-loud); RC=2 is a usage/IO error, rerun and do not pass |
+| Both accounts reported | read the two output lines `CODE_FACE_HITS`/`RAW_FACE_HITS` | both lines present | a single account only means the split accounting failed |
+
+### 1.4 Craft 4: Full-Tree Name-Family Census
+
+**Craft in one sentence**: the absence verdict = zero hits in the name-family census plus the three collateral strands conjoined; a zero hit on a single name family is only a name-level negative finding and does not constitute the absence verdict.
+
+**Tool**: `_tools/judge_census_completed.py` (python -I; walks all `.lean` files, counts per variant and reports file counts; md5 in the §4 manifest). For generalized use, rewrite the `VARIANTS` name family and the census roots for the target face; the instrument's form stays unchanged.
+
+**Steps**:
+
+- **S4-1 Pin the snapshot window**: pin the census roots first (the mathlib snapshot path plus the local asset root) and register the window quadruple (path, file count, date, toolchain pin). The file count is the snapshot's registered value, not a live invariant; re-measure it at every audit run and register it with its date.
+- **S4-2 Define the name family**: the target construction's candidate name family has >=3 variants (the CamelCase proper name / a snake_case variant / a module-qualified form); the variant set is written into the census script and registered with the scroll.
+- **S4-3 Fire the census**: run `python -I judge_census_completed.py`; read per tree the `lean files scanned: N` line, the per-variant hit counts, and the `JOINT VERDICT` line.
+- **S4-4 The four-strand joint verdict**: the absence verdict requires the four strands of evidence **conjoined** (the source audit's four strands; source execution record §1 entry 4 and the absence-verdict scroll §6): (a) zero hits for all three name-family variants; (b) the owner module's own TODO/roadmap face is present; (c) the existing definition face is a series/junk-value form (an out-of-domain value witness is present); (d) the module's full theorem list carries no extension-form statement. Any single strand is only name-level or local evidence; all four together are the absence verdict.
+- **S4-5 The negative finding draws its own boundary**: the absence statement draws its boundary by itself per the §2.4 four elements (what was scanned / what was not scanned / the non-absolute form / aliases not exhausted).
+
+**Verdict surface V4 (machine-check table)**:
+
+| Check | Command shape | PASS | RED |
+|---|---|---|---|
+| Window quadruple on record | read the audit scroll's registration line | all four of (path, count, date, pin) present | any one missing means the window is unpinned; no absence verdict may be issued |
+| Census output complete | the output of `python -I judge_census_completed.py` | per tree the scanned N line, the per-variant counts, and the JOINT line | a `READ_FAIL` line means a fail-loud registration |
+| Four strands conjoined | the four strands registered line by line (a/b/c/d, each with its first-hand evidence path) | all four present | any one missing downgrades the statement to a "name-level negative finding"; writing "absence verdict" is forbidden |
+| JOINT verdict reading | read `JOINT VERDICT ... = 0` | =0 means ABSENT (the pending grade); >0 means PRESENT (the absence grade withdrawn and the witness face rerun) | mixing the readings (writing "does not exist" directly from zero hits) is an overreach claim |
+
+### 1.5 Craft 5: Shot-Order Registration
+
+**Craft in one sentence**: record-face runs and adjudication-evidence runs are accounted separately: record-face runs at the script layer (zero-cost to replay, possibly predating the probe files) do not constitute adjudication evidence; adjudication cites only post-cast, guard-wrapped evidence runs whose rc was taken directly without a pipe.
+
+**Steps**:
+
+- **S5-1 Two accounts kept apart**: account every compile launch at launch time: a **record-face run** (launched by the script layer's record face; Resume/Amend replays are zero-cost; the probe files may not exist yet at launch; its rc cannot be attributed to a verdict) versus an **evidence run** (launched after the probe files are in the tree, guard-wrapped, rc taken directly without a pipe, the log archived and pinned by md5). Every run enters exactly one account; compiling outside the accounts is forbidden.
+- **S5-2 Four requirements per evidence run**: every evidence run cited for adjudication carries all four requirements: (a) the guard trace line on record (core pin / authorization / gear / done exit); (b) the log file in the manifest; (c) rc taken directly without a pipe (`echo RC=$?`; taking the code after `cmd | tail` is forbidden); (d) the launch timestamp registered. Source-audit example: the five record-face runs launched before casting, their rc=1 not attributable; the adjudication evidence = the post-cast guard-wrapped compiles plus the Judge's per-run replay (source execution record §1 entry 2, the "shot-order registration" row).
+- **S5-3 Independent replay**: before close-out, replay every evidence run once independently (recompile run by run; cross-check each face against the recorded run account); close out only on zero divergence; any divergence is a fail-loud shape discrepancy.
+- **S5-4 The thermal guard canonical form**: every compile goes through the thermal guard wrap (the local canonical form is `cpu_guard_v3.ps1 -TempLimit 98 -CoreN <N> -AllowG3 -GearForce 0`; bare `lake` is forbidden); on another machine substitute the local equivalent wrap per the assignment protocol; bare runs are forbidden.
+
+**Verdict surface V5 (machine-check table)**:
+
+| Check | Command shape | PASS | RED |
+|---|---|---|---|
+| Both accounts complete | the run-order ledger labeled line by line | every run in exactly one account; record-face runs explicitly marked non-evidence | a compile outside the accounts, or mixed accounts |
+| Four evidence requirements | per cited log, `command grep -c -E "pinned to core|done exit" <log>` plus the rc line | all four requirements present | any one missing disqualifies that run as adjudication evidence |
+| Independent replay, zero divergence | per replay log, cross-check against the recorded run account | rc and locus equal per run | any divergence is a fail-loud shape discrepancy |
+| Replay artifacts pinned | `md5sum <replay logs>` into the manifest | all present | an artifact missing from the manifest |
+
+---
+
+## 2. Verdict Grading Law
+
+### 2.1 The Five Grades
+
+| Grade | Mechanical trigger | Reading | Mandatory action |
+|---|---|---|---|
+| **strong red** | statement-face break: the probe's own statement fails against the interface (an Unknown identifier at the transcription position, an unusable constructor, a Cannot find witness form) | **form registration only, no evidential force** (the probe never engaged the interface; it proves neither vacuity nor non-vacuity) | register the form; repair the probe; re-issue the run |
+| **weak red** | a mechanical failing result that is not a statement-face break, with the locus inside the declared read locus (an automation exhausted or unsolved goals form) | **nonempty evidence**: the premise interface resisted this refutation attempt at this spectrum strength | register rc and locus per face; enter the convergence account |
+| **refutation green** | an `EXPECTED-FAIL` face compiles with rc=0 | **the vacuity alert, the highest level**: the premise conjunction is unsatisfiable and the audited statement is vacuously true | freeze, escalate and report, and set `ok = false` |
+| **boundary green** | the boundary machine-check face (expected-green) compiles with rc=0 | **a positive machine check**: the closed-form separation computation holds | register; state it in limited form (judge only that closed-form fact) |
+| **absence** | the §1.4 four-strand conjunction holds inside the pinned snapshot | **pending**: a formalization-gap record; not an alert, not a vacuity claim, not a provability claim | register per the §2.4 four elements; re-audit condition = the upstream formalization lands |
+
+**Supplementary grade for an expected-green face turning failing**: a compile failing on a witness/boundary/skeleton face (all expected-green) is a probe-side defect or a broken splice face (for example a witness splice-anchor mismatch) and is handled the same way as strong red: fail-loud shape-discrepancy registration, repair the probe, re-issue the run; it must never be read as any judgment about the audited artifact (same form as the source execution record's escalation channel 3).
+
+### 2.2 Scoping Note and Live-Counter Note
+
+- **Scope**: this five-grade law applies to the vacuity probe family (the transcribed interface plus the refutation/boundary/witness faces). Other probe families (for example inversion probes against a corrected form) declare their own expected-verdict mapping at casting time per Craft 1 S1-1, and the grade semantics follow that mapping; a run without a declared expected verdict does not enter grade adjudication.
+- **No exact-equality invariants against live counters**: quantities that evolve over time, such as probe counts, skeleton fill counts, and snapshot file counts, take only monotone bounds as their invariants (for example "the TODO-SEAT count is monotone non-increasing" and "an EXPECTED-FAIL face must not turn passing"); **exact-equality invariants are forbidden** (for example "always exactly N files", "exactly K successes"); snapshot numbers are always registered with their date and never serve as live-check bounds (artifact-verifier design law, rule 1).
+
+### 2.3 Limited-Form, Three-Bounds Template
+
+Audit conclusions and escalation statements are always in limited form; any extrapolation beyond the three bounds is invalid. Template (slots marked with angle brackets):
 
 ```text
-升格/结论语句（限定式）:
-  "<工件>（<路径>，sha256 <64位十六进制>）通过 vacuity 审计（<UTC 日期>）：
-   <逐面一行结论：witness 面/否证谱/边界机检/缺位定谳>。"
-三不越限定 / Three bounds:
-  ① 对象界 Object bound: 只适用该工件本件（sha 锁定）；
-    不外推至同工件的其它件、其它版本。
-  ② 谱面界 Spectrum bound: 只适用本探针谱面（manifest 锁定）；
-    不外推至其它探针形态、未来新增形态。
-  ③ 时点界 Window bound: 只适用该工具链 pin 与该 mathlib 快照窗口；
-    上游推进后判定须复审，不作永久主张。
-  越界外推（「全库已审」「永久有效」「零点自由命题真假」类全称表述）一律无效。
+Escalation / conclusion statement (limited form):
+  "<artifact> (<path>, sha256 <64 hex chars>) passed the vacuity audit (<UTC date>):
+   <one-line conclusion per face: witness face / refutation spectrum / boundary machine check / absence verdict>."
+Three bounds:
+  1. Object bound: applies to this artifact instance only (sha-locked);
+     no extrapolation to other pieces or other versions of the same artifact.
+  2. Spectrum bound: applies to this probe spectrum only (manifest-locked);
+     no extrapolation to other probe forms or to forms added later.
+  3. Window bound: applies to this toolchain pin and this mathlib snapshot window only;
+     the verdict must be re-audited once upstream advances; no permanent claim.
+  Out-of-bound extrapolation (universal statements such as "the whole repository is
+  audited", "valid forever", or the truth value of the zero-point freeness
+  proposition) is invalid.
 ```
 
-**worked example（源审计实测形·节录）**: 「Axiom 挑战面 `main`（`DedekindZetaChallenge.lean`·sha256 `dd2562c8…62be`）通过公理闭包＋vacuity 双审计（2026-11-12）：ℚ 特化面构造性 witness 编译绿；否证谱五形态全红（非空证据·零空真警报）；边界机检绿；泛型延拓面形式化缺位如实挂起。」三界逐字绑定见源回执 §三。
+**Worked example (measured form from the source audit, excerpt)**: "The axiom-challenge face `main` (`DedekindZetaChallenge.lean`, sha256 `dd2562c8…62be`) passed the axiom-closure + vacuity double audit (November 12, 2026): the ℚ specialization face's constructive witness compiled passing; all five refutation forms stayed failing (nonempty evidence, zero vacuity alerts); the boundary machine check passed; the generic-extension face's formalization absence is honestly recorded as pending." The verbatim three-bound binding is in the source execution record §3.
 
-### 2.4 负发现边界四要素（缺位档配套）Negative-Finding Boundary, Four Elements
+### 2.4 Negative-Finding Boundary, Four Elements
 
-凡「未检出/零命中/扫描面无先例」类语句（负发现），必须同句自带四要素；缺任一要素即降格为「本次工具面未检出」：
+Any statement of the "not detected / zero hits / no precedent on the scanned face" kind (a negative finding) must carry the four elements in the same sentence; missing any element downgrades it to "not detected by this tool face on this run":
 
-| # | Element（要素） | Content（内容） |
+| # | Element | Content |
 |---|---|---|
-| 1 | 扫了什么 what was scanned | 面/方法/时点逐项（哪些树·何种口径·文件级或名级·UTC 时点） |
-| 2 | 没扫什么 what was not scanned | 显式声明未覆盖面（如「按名检索而非逐件通读」） |
-| 3 | 非绝对主张 non-absolute | 表述为「该扫描面的负发现」，禁写「不存在/从未有人做过」 |
-| 4 | 别名未穷尽 aliases not exhausted | 同名异形、翻译变体、语义等价实现可能在本扫描面之外 |
+| 1 | what was scanned | per item: the face, the method, the point in time (which trees, which criterion, file-level or name-level, the UTC point) |
+| 2 | what was not scanned | explicitly declare the uncovered faces (for example "a name search, not a file-by-file full read") |
+| 3 | non-absolute | phrase it as "a negative finding on this scanned face"; writing "does not exist / has never been done" is forbidden |
+| 4 | aliases not exhausted | same-name different forms, translation variants, and semantically equivalent implementations may lie outside this scanned face |
 
-每条缺位判词还须附**复审条件**（扫描面何时重扫：上游快照推进即重跑普查）；无复审条件的挂起不予收口。
+Every absence conclusion must also carry a **re-audit condition** (when the scanned face is rescanned: a census rerun whenever the upstream snapshot advances); a pending item without a re-audit condition is not closed out.
 
-### 2.5 Erratum (2026-11-14): as-cast envelope malformed-shape registration (registered engine debt)
+### 2.5 Erratum (November 14, 2026): as-cast envelope malformed-shape registration (registered engine debt)
 
 **Defect statement (first-hand evidence on record)**: for artifacts whose
 headline theorem declares *implicit binders* (e.g. `{K : Set (Fin n → ℝ)}`),
@@ -233,9 +235,10 @@ segment of its own). Root cause (engine-side, two cooperating faces):
 (b) `envelope_statement` splicing (`tools/vacgen.py:640-650` at revision
 2.0.1) joins `S2_assumps` types verbatim into the `∧` chain and prefixes only
 `S1_vars`. First-hand evidence: batch-1 item-16 verdict (MahlerConjecture.lean,
-sha256 `40718172…20ea0`, §三 账 1 — malformed signature transcribed there) and
-the rqw11 round-1 replay (`recast/16` cast log + witness fire rc=1 with
-`SMul ℝ ℤ` synthesis failure and `unknown constant …_premises_witness`).
+sha256 `40718172…20ea0`, source execution record §3 account 1 — malformed
+signature transcribed there) and the rqw11 round-1 replay (`recast/16` cast
+log + witness fire rc=1 with `SMul ℝ ℤ` synthesis failure and
+`unknown constant …_premises_witness`).
 
 **Checker blind spot (registered alongside)**: the cast's own bound-form
 invariant `envelope_free_vars_zero` reports PASS on the malformed envelope
@@ -246,7 +249,8 @@ body, not the type-as-conjunct ill-typedness) — a bound-form PASS is therefore
 **Handling (same grade as §2.1 expected-green-face-red)**: an expected-green
 witness face failing on the malformed envelope is a probe-side defect, never a
 judgment about the audited artifact. Canonical hand-cast repair form (zero
-premise weakening; transcribed from the batch-1 item-16 verdict §三 账 1):
+premise weakening; transcribed from the batch-1 item-16 verdict, source
+execution record §3 account 1):
 
 ```text
 ∃ n : ℕ, ∃ K : Set (Fin n → ℝ),
@@ -255,8 +259,8 @@ premise weakening; transcribed from the batch-1 item-16 verdict §三 账 1):
 
 with the registered fill precedent `K := Metric.closedBall (0 : Fin 1 → ℝ) 1`
 (compact, convex, symmetric, nonempty interior; repair round 2 of the ≤2
-budget, rc=0, PA 3-standard, `sorryAx` 0). Anchor set measured first-hand
-2026-11-14: `isCompact_closedBall`
+budget, rc=0, PA 3-standard, `sorryAx` 0). Anchor set measured first-hand on
+November 14, 2026: `isCompact_closedBall`
 (`Mathlib/Analysis/InnerProductSpace/EuclideanDist.lean:79`), `convex_closedBall`
 (`Mathlib/Analysis/Normed/Module/Convex.lean:70`), `interior_closedBall`
 (`Mathlib/Analysis/Normed/Module/RCLike/Real.lean:76`) — the batch-1 verdict's
@@ -272,7 +276,7 @@ cast under this erratum and re-run `tests/t_vacgen_envelope_shape.py`; until
 then every implicit-binder artifact requires the hand-cast repair above.
 
 **Registered self-healing surfaces (this work stream, all verified)**:
-1. **Shape-table row**: `tools/taxonomy.json` landed 2026-11-14 (builtin
+1. **Shape-table row**: `tools/taxonomy.json` landed on November 14, 2026 (builtin
    starter row carried verbatim + `geo.symmetric-set-premise` row matching the
    `∀ v ∈ S, -v ∈ S` premise face). Measured effect on the Mahler-family
    artifact: L3 coverage 0/5 → 1/5 (top family `geo.symmetric-set-premise`);
@@ -286,30 +290,31 @@ then every implicit-binder artifact requires the hand-cast repair above.
    loud known-debt vector — red there means the engine debt was FIXED and the
    pin must be updated with the engine repair registration). The two existing
    vacgen tests (`tests/t_vacgen_shape.py`, `tests/t_vacgen_expectedred.py`)
-   were **unwired** in `tests/run_tests.sh` (zero mentions found by grep
-   2026-11-14) and are wired by this work stream; `tests/t_vacgen_shape.py`'s
-   subprocess read face additionally lacked `encoding="utf-8"` (GBK-locale
-   reader-thread decode failure on cast reports with math symbols) and was
-   aligned with the `t_vacgen_expectedred.py` read face.
+   were **unwired** in `tests/run_tests.sh` (zero mentions found by grep on
+   November 14, 2026) and are wired by this work stream;
+   `tests/t_vacgen_shape.py`'s subprocess read face additionally lacked
+   `encoding="utf-8"` (GBK-locale reader-thread decode failure on cast reports
+   with math symbols) and was aligned with the `t_vacgen_expectedred.py` read
+   face.
 
 ---
 
-## 三、独立仓候选 README 骨架 Independent-Repo Candidate README Skeleton
+## 3. Independent-Repo Candidate README Skeleton
 
-### 3.1 零先斩声明 Zero-Preemption Declaration
+### 3.1 Zero-Preemption Declaration
 
-**独立仓候选＝登记不建仓（零先斩）**: 本节只登记候选骨架文本，未创建任何仓库、未注册任何名称、未对外发布、未向上游提交任何件；骨架文本系草案，后续候令另单处理。本节文本为目标对外面（发布体），已按对外语域书写：只写做了什么与测得什么、零内部编号、零优先权主张。
+**Independent-repo candidate = registration only, no repository created (zero-preemption)**: this section registers candidate skeleton text only; no repository has been created, no name registered, nothing published, and nothing submitted upstream. The skeleton text is a draft; any follow-up is handled as a separate task instruction. This section's text is the target outward face (the publication body) and is written in the outward register: it states only what was done and what was measured, with zero internal numbering and zero priority claims.
 
-### 3.2 README 骨架正文 README Skeleton Draft
+### 3.2 README Skeleton Draft
 
 ```markdown
-# vacgen · Vacuity Probe Generator for Lean Artifacts（候选工具 / candidate tool）
+# vacgen · Vacuity Probe Generator for Lean Artifacts (candidate tool)
 
-**Status / 状态**: candidate registration only: no repository has been created,
+**Status**: candidate registration only: no repository has been created,
 no name registered, nothing published, nothing submitted upstream. This page is
 a draft skeleton for a possible future standalone repository.
 
-## What it does / 工具做什么
+## What it does
 
 Given a Lean artifact's headline theorem, vacgen generates a four-account
 vacuity probe package and grades the results:
@@ -327,21 +332,21 @@ vacuity probe package and grades the results:
    deciding whether the formalization face of the needed background theory is
    present or absent (absence is recorded as pending, never as an alert).
 
-## Input surface / 输入面
+## Input surface
 
 - the artifact statement face (target file + sha256, verified at two points);
 - the toolchain pin (`lean-toolchain` value, verified against the running
   toolchain);
 - the pinned mathlib snapshot (path + `.lean` file count + registration date).
 
-## Output surface / 输出面
+## Output surface
 
 Four accounts (witness / refutation spectrum / boundary / absence), each with
 per-probe exit codes, verdict loci, `#print axioms` profiles
 (`propext`/`Classical.choice`/`Quot.sound` tolerated; `sorryAx` is a red
 finding), and an md5 manifest of every probe and log.
 
-## Dependency boundary / 上游依赖划界
+## Dependency boundary
 
 - The generator itself: Python 3 standard library only; zero network; zero
   compilation.
@@ -353,7 +358,7 @@ finding), and an md5 manifest of every probe and log.
   verdict); splice anchors are re-verified against the new snapshot before
   any reuse.
 
-## Non-goals / 不做什么
+## Non-goals
 
 - It does not judge the mathematical truth of open clauses inside the
   artifact (a refutation red records that the interface resisted the attempted
@@ -362,24 +367,24 @@ finding), and an md5 manifest of every probe and log.
 - It registers no priority claims of any kind.
 ```
 
-**骨架四要件对表**（本席自检·行级核对）:
+**Skeleton four-element cross-check** (self-check by this agent, line-level verification):
 
-| Required element（要件） | Location in skeleton（落位） |
+| Required element | Location in skeleton |
 |---|---|
-| tool 名 tool name | 标题行 `vacgen · Vacuity Probe Generator for Lean Artifacts` |
-| 输入输出面 I/O surface | `Input surface` / `Output surface` 两节 |
-| 零先斩声明 zero-preemption | `Status / 状态` 首段 |
-| 上游 mathlib 快照依赖划界 snapshot boundary | `Dependency boundary` 全节（窗口绑定＋复审条件） |
+| tool name | the title line `vacgen · Vacuity Probe Generator for Lean Artifacts` |
+| I/O surface | the `Input surface` / `Output surface` sections |
+| zero-preemption declaration | the first `Status` paragraph |
+| snapshot boundary | the whole `Dependency boundary` section (window binding + re-audit condition) |
 
 ---
 
-## 四、形状正本 manifest 与对表 Shape-Original Manifest and Cross-Check
+## 4. Shape-Original Manifest and Cross-Check
 
-**口径**: 下表 md5 系本席本会话 `md5sum` 第一手实测（2026-11-13 00:0x local）；对表正本＝源回执 §五 manifest；十件加四卷全数同值＝同一实体（对表律：判定正本一律 md5/sha cross-check against the reference，不凭文件名或尺寸直觉）。
+**Measurement basis**: the md5 values below were measured first-hand with `md5sum` in the casting session (November 13, 2026, 00:0x local); the cross-check reference is the manifest in the source execution record §5; all ten files plus four scrolls agreeing value-for-value establishes the same entities (the cross-check law: a verdict reference is always md5/sha cross-checked against the reference, never trusted by filename or size intuition).
 
-**探针件与工具 Probes and tools（10 件）**:
+**Probes and tools (10 files)**:
 
-| File | md5 (measured) | vs 源回执 §五 manifest |
+| File | md5 (measured) | vs source execution record §5 manifest |
 |---|---|---|
 | `sbx_v2/_vacmain_q_witness.lean` | `451a796ecdb700305cc35bdc0e5e6f5e` | MATCH |
 | `sbx_v2/_vacmain_boundary.lean` | `91b2c094295261ce4d25be94df80316b` | MATCH |
@@ -392,38 +397,35 @@ finding), and an md5 manifest of every probe and log.
 | `_tools/scan_boundary_tokens.py` | `5e8b308f8c3c8201c27afabf73ec1d77` | MATCH |
 | `_tools/judge_census_completed.py` | `8d8ca9feaf3fe83c6c7df4d2c389755c` | MATCH |
 
-**判读卷 Adjudication scrolls（4 卷）**:
+**Adjudication scrolls (4)**:
 
-| File | md5 (measured) | vs 源回执 §五 manifest |
+| File | md5 (measured) | vs source execution record §5 manifest |
 |---|---|---|
 | `sbx_v2/witness判读-20261112.md` | `c49f89f52193692e55fc88cb6917fdef` | MATCH |
 | `sbx_v2/否证谱判读-20261112.md` | `6ae392743bc2cac2ddca31faeed84c51` | MATCH |
 | `sbx_v2/边界机检判读-20261112.md` | `2807832ac2d721807078e5e32aaa227a` | MATCH |
 | `sbx_v2/延拓缺位定谳-20261112.md` | `31851ad7d1210bc1945c76f0651ec6e7` | MATCH |
 
-**对表结论**: 14/14 逐字节 MATCH，形状正本在盘未漂移，相2 形状回归对表可以此表为基准。
+**Cross-check conclusion**: 14/14 byte-for-byte MATCH; the shape originals are present in the tree without drift, and the phase-2 shape regression cross-check may take this table as its baseline.
 
 ---
 
-## 五、AI 味词面自查（断言随卷）AI-Flavor Wording Self-Check (Assertion on Record)
+## 5. AI-Flavor Wording Self-Check (Assertion on Record)
 
-### 5.1 登记册与仪器 Register and Instrument
+### 5.1 Register and Instrument
 
-- **登记册 Register**: `D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md` §4.6（AI 味词面登记册·中文词语 A 行与表述模式 C 行）＋§5（英文词面/句式/结构三族）；操作形镜像＝`C:/Users/Live/.zcode/skills/cw-wf-dispatch/references/constraint-blocks.md` §十三。
-- **自查面 Battery**: 中文三族 10 词面（公文黑话动词族/伪抽象名词族/口号压缩族·族名与词面全表以登记册 §4.6 A 行与仪器内嵌正则为准·词面字面量不入本卷，防自证命中）＋英文 26 模（15 词干＋8 句式＋3 段首过渡）＋em-dash（U+2014）计数。
-- **仪器 Instrument**: 本卷同目录 `ai_flavor_selfcheck.sh`（词面字面量内嵌于仪器·仪器不在自身断言域内·`command grep` 实测·禁 ugrep shim 单发）。
-- **仪器两向验效（本席第一手）**: 阳性对照件（内嵌四电池各一枚已知命中面＋一枚 em-dash）实测 `VERDICT RED`·exit 1·四电池计数逐面精确为 1、em-dash 计数精确为 1；阴性对照（本卷）`VERDICT CLEAN`·exit 0。两向过方用于 §5.2 断言（审计工具先以已知真值验效再出数）。
+- **Register**: `D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md` §4.6 (the AI-flavor wording register, Chinese word row A and expression-pattern row C) plus §5 (the three English families: word faces, sentence patterns, structures); the operational mirror is `C:/Users/Live/.zcode/skills/cw-wf-dispatch/references/constraint-blocks.md` §13.
+- **Battery**: the Chinese battery, three families and 10 faces (the officialese-verb family, the pseudo-abstract-noun family, the slogan-compression family; the family names and the full face list are governed by register §4.6 row A and the instrument's embedded regexes; the face literals stay out of this scroll to avoid self-contamination hits), plus the English battery, 26 patterns (15 word stems + 8 sentence patterns + 3 paragraph-initial transitions), plus the em-dash (U+2014) count.
+- **Instrument**: `ai_flavor_selfcheck.sh` in this scroll's directory (the face literals are embedded in the instrument; the instrument is outside its own assertion domain; measured with `command grep`; a single-shot ugrep shim run is forbidden).
+- **Two-way validation of the instrument (first-hand, this agent)**: the positive-control fixture (embedding one known hit face per battery plus one em-dash) measured `VERDICT RED`, exit 1, with each of the four battery counts exactly 1 and the em-dash count exactly 1; the negative control (this scroll) measured `VERDICT CLEAN`, exit 0. Only a two-way pass feeds the §5.2 assertion (an audit instrument is validated against known truth before it produces numbers).
 
-### 5.2 实测输出 Measured Output（本席第一手·2026-11-13 00:0x local）
+### 5.2 Measured Output (first-hand in the casting session, November 13, 2026, 00:0x local)
 
-命令（逐字）:
+Command (verbatim, one shell line; the as-cast two-line continuation form is preserved in the sibling `.zh.md` archive):
 
-```bash
-sh "D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/ai_flavor_selfcheck.sh" \
-   "D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/SOP-vacuity探针工具化-20261112.md"
-```
+`sh "D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/ai_flavor_selfcheck.sh" "D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/SOP-vacuity探针工具化-20261112.md"`
 
-实测输出（逐字）:
+Measured output (verbatim):
 
 ```text
 CH_3FAMILIES_10FACES lines=0
@@ -435,24 +437,26 @@ TOTAL_WORDING_LINES=0
 VERDICT CLEAN (36 faces = 0; em-dash = 0)
 ```
 
-（仪器 exit 0·终测时戳 2026-11-13 00:11 local。铸卷过程如实注记：首轮实测 `EM_DASH_U2014 count=45`（RED·草稿含中文破折号与 README 英文破折号），逐处清改后终测如上；词面电池首轮即全零。终测绑定收卷态，时效见 §5.3。）
+(Instrument exit 0; final-measurement timestamp November 13, 2026, 00:11 local. Honest process note: the first measurement round read `EM_DASH_U2014 count=45` (RED; the draft contained Chinese dashes and README English dashes); after clearing each occurrence, the final measurement is as above; the wording batteries were already all-zero in the first round. The final measurement is bound to the scroll-closing state; validity is governed by §5.3.)
 
-### 5.3 断言与时效 Assertion and Validity
+### 5.3 Assertion and Validity
 
-**断言**: 本卷（`SOP-vacuity探针工具化-20261112.md`）在铸卷收笔时点对 36 词面电池 grep=0、em-dash=0，系**该文件该时点静态内容的闭窗扫描断言**（快照断言·带日期登记），非活不变式；文件任何后续改动即时失效本断言，改动方须重跑仪器并重新登记。此系「文意与实现同闸」的文档版：本卷 §五声称的自查与仪器实际执行的检查逐字对应（仪器正则即登记册词面全表·无省略无扩权）。
+**Assertion**: at the scroll-closing point, this scroll (as-cast title `SOP-vacuity探针工具化-20261112.md`) measured grep=0 over the 36-face wording battery and em-dash=0. This is a **closed-window scan assertion over that file's static content at that point in time** (a snapshot assertion, registered with its date), not a live invariant; any later change to the file voids the assertion immediately, and the changing agent must rerun the instrument and register the new measurement. This is the documentation version of "the wording face and the implementation pass the same gate": the self-check claimed in §5 and the checks the instrument actually executes correspond token for token (the instrument's regexes are the register's full face list, with no omissions and no extensions).
+
+Translation note (registered by this translation): this English face is itself a later change in the sense above, so the as-cast assertion does not carry over to the translated text; the instrument is not present in this repository, so no re-registration is possible here, and the as-cast measurement remains on record in the `.zh.md` archive. The §6 checklist likewise records the as-cast state.
 
 ---
 
-## 六、验收清单（本 SOP 五项交付）Acceptance Checklist (Five Deliverables of This Scroll)
+## 6. Acceptance Checklist (Five Deliverables of This Scroll, recorded at the as-cast closing)
 
-| # | Deliverable（交付项） | Verdict surface（判定面） | Status |
+| # | Deliverable | Verdict surface | Status |
 |---|---|---|---|
-| ① | 泛化工艺五条规程化（每条＝可执行步骤＋判定面） | §一：五工艺各有 S 系列步骤＋V 系列机检表（步骤 20 条·判定面行 20 行·实数点验） | DONE |
-| ② | 判读分档律（五档）＋限定式三不越模板 | §二：五档表（§2.1）＋适用边界与活计数器注记（§2.2）＋三不越模板（§2.3）＋负发现四要素（§2.4） | DONE |
-| ③ | 独立仓候选 README 骨架（四要件） | §三：零先斩声明（§3.1）＋骨架正文（§3.2）＋四要件对表（tool 名/输入输出面/零先斩/快照划界全落位） | DONE |
-| ④ | AI 味词面自查 grep=0 断言随卷 | §五：登记册＋仪器＋第一手实测输出（36 faces=0·em-dash=0·exit 0）＋时效条款 | DONE |
-| ⑤ | 双语标题＋表头英文化 | 全卷 `#`/`##`/`###` 标题双语；全部表格表头列名均英文（铸卷时逐表枚举复核） | DONE |
+| 1 | The five generalization crafts codified (each craft = executable steps + a verdict surface) | §1: each of the five crafts carries an S-series step list plus a V-series machine-check table (20 steps and 20 verdict-table rows, counted and verified) | DONE |
+| 2 | The verdict grading law (five grades) + the limited-form three-bounds template | §2: the five-grade table (§2.1) + the scoping and live-counter notes (§2.2) + the three-bounds template (§2.3) + the negative-finding four elements (§2.4) | DONE |
+| 3 | The independent-repo candidate README skeleton (four elements) | §3: the zero-preemption declaration (§3.1) + the skeleton body (§3.2) + the four-element cross-check (tool name / I/O surface / zero-preemption / snapshot boundary all in place) | DONE |
+| 4 | The AI-flavor wording self-check grep=0 assertion on record | §5: the register + the instrument + the first-hand measured output (36 faces=0, em-dash=0, exit 0) + the validity clause | DONE |
+| 5 | Bilingual headings + English table headers | across the scroll, every `#`/`##`/`###` heading bilingual and every table header column in English (re-verified by enumerating every table at casting) | DONE |
 
-**边界如实（本卷未做之事 What this scroll does not cover）**: vacgen 生成器实体、双工件端到端自检、OAI 边界件填充编译、全役 md5 manifest close out，分别属铸造席/自检席/汇编席职权面，本卷只供其规程与判读律；本卷零编译零发炮（SOP 系文书件·零编译纪律适用）。
+**Honest boundary (what this scroll does not cover)**: the vacgen generator entity, the two-artifact end-to-end self-check, the OAI boundary-file fill compile, and the whole-effort md5 manifest close-out belong to the casting, self-check, and assembly agents' authority faces; this scroll supplies only their regulation and grading law. The scroll itself is zero-compile and fired no run (an SOP is a document file; the zero-compile discipline applies).
 
-*本卷不写自身 md5（自引悖论防波·同源回执例），收卷方 md5sum 对表即可。*
+*This scroll does not state its own md5 (a self-reference paradox guard, same-pattern precedent in the source execution record); the scroll recipient md5sums it and cross-checks.*
