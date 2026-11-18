@@ -1808,7 +1808,9 @@
       "standard_source": "rocqwash docs/jargon-to-standard-mapping-v1.md (in-repo-md-v1)",
       "source_line": 173,
       "disposition": "replace",
-      "exempts": [],
+      "exempts": [
+        "^#?\\s*dispatch\\s+red-event router"
+      ],
       "cross_track_note": null,
       "note": "`red_dispatch.py` identifier stays."
     },

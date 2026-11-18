@@ -170,7 +170,7 @@
 | seat | agent | M-wave campaign-organization family; seat numbers never enter prose; the one-worker-per-seat topology wording (seat-worker) stays on ledger and identifier surfaces. |
 | seat-worker | agent | Compound residue of the earlier agent / seat-worker hybrid; prose uses agent. |
 | campaign | effort / work stream | M-wave campaign-organization family; preset name `campaign_set_diamond` (tests/fixtures/header_map_v1.json) is data and stays. |
-| dispatch（叙述义） | route | `red_dispatch.py` identifier stays. |
+| dispatch（叙述义） | route | `red_dispatch.py` identifier stays. | ^#?\s*dispatch\s+red-event router |
 | handover | — (delete the narration) | Process narration; state facts instead. |
 | landing | integration | M-wave campaign-organization family. |
 | retrofit | adaptation | M-wave campaign-organization family. |

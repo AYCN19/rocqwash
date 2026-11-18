@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# cw.sh — unified entry for the rocqwash tool suite: the v29-v32 seven-tool
-#         release plus the v35-v39 five-tool release plus the v37 three-tool
-#         release plus the v38 aggregate doctor plus the v39 trio (doc-lint,
-#         netname-normalize, select-audit) plus the v40 baseline-diff plus
-#         the v45 render-events ledger renderer plus the v46
-#         `red-dispatch`/`registry-audit` pair plus the v47 registry-fix
-#         prescription applier plus the annotation-face normalization
-#         linter (norm-lint) plus the contribution registration-row
-#         regenerator (registry-regen) plus the contribution intake
-#         inspector (contrib-intake) plus the autonomous evolution engine
-#         (evolve) plus the cross-repository experience bus (symbiosis-bus)
-#         plus the external return-package intake gate (uplink)
-#         — thirty-two tools in total
-#         (repository root, bash 3.2 compatible)
+# cw.sh — unified entry for the rocqwash tool suite
+#         (repository root; bash 3.2 compatible).
 #
-# Usage: bash cw.sh <tool> [args...]
+# Purpose.  Routes the suite's tools by explicit tool name: one usage line and one target script per tool.
+#   Arguments and exit codes pass through unchanged (direct exec, fail-loud, never rewritten).
+#   The pre-v29 modules keep their dedicated cli/rocqwash router; this entry covers the newer tools/ faces.
 #
-# 工具表 Tools (one usage line + target script per tool; args and exit codes pass through 1:1):
+# Interface.  bash cw.sh <tool> [args...]; bash cw.sh help [tool].
+#   A bare cw.sh call prints the full help; cw.sh help <tool> prints the tool's one-line usage hint.
+#
+# Dependencies.  bash 3.2 (no associative arrays, no bash-4+ features); python3 runs every routed target.
+#   ROOT derives from this script's own directory, so all paths stay repository-relative and the repository can be relocated freely.
+#
+# Evidence.  tests/test_cw_entry.sh exercises this entry end to end: help table, hints, passthrough, the zero-hardcoding proof, the bash 3.2 syntax check.
+#   tools/doc_lint.py cross-checks the four tool-table places against the case routes on every suite run.
+#
+# Exit-codes.  0 pass; 2 unknown tool; 9 target script missing.
+#   Any other code is the routed tool's own convention, passed through.
+#
+# Tool table (one usage line + target script per tool; args and exit codes pass through 1:1):
 #   scan4       token-level qualified-identifier census -> scan/scan_v4_token.py
 #               cw.sh scan4 --file <f.v> [--json out.json] [--ids S] [--text]
 #   cure        consumer-cure canonical pack (dry-run by default) -> wash/cure_applier.py
@@ -72,7 +74,7 @@
 #               cw.sh render-events --events F.jsonl [--dir DIR] [--md out.md] [--json out] [--top N]
 #   dispatch    red-event router (sentinel red events -> action presets; three tiers report-only/suggest/auto)
 #                                                    -> tools/red_dispatch.py
-#               cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
+#               cw.sh `dispatch` --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
 #   audit       registry hygiene auditor (dual-book read-only four-account output + deterministic prescription; --apply does not exist)
 #                                                    -> tools/registry_audit.py
 #               cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
@@ -157,93 +159,36 @@
 #               cw.sh selfevolve-round [--dry-run]
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
-# 路由契约 Routing contract:
-#   1. All paths resolve relative to the repository root (ROOT is derived from
-#      this script's own directory) — zero hardcoded absolute paths; the repo
-#      can be relocated freely.
-#   2. Arguments and exit codes pass through 1:1 (direct exec; fail-loud,
-#      never rewritten); same contract as cli/rocqwash.
-#   3. Exit codes: 0=pass; 2=unknown tool; 9=target script missing; anything
-#      else follows each tool's own convention and passes through
-#      (per-tool conventions: --help/--selftest=0; argparse usage errors /
-#      FAIL-LOUD assertion failures=2; missing target files=9).
-#      pushci passes through its verdict seal (success/dry-run=0;
-#      heal-exhausted/unstable/toolchain=1; fix-content/gate4-block=2;
-#      9=target missing). The v37 trio follows the same shape: 0=green /
-#      inspection complete / unclogged; 1=data-side incomplete (shaping
-#      partial / plan-miss; wall / rounds-exhausted — red is data, not tool
-#      failure; reported loudly on stdout); 2=usage error; 9=missing /
-#      fail-loud.
-#      cw-doctor, same shape: 0=healthy (aggregate score >= 90); 1=degraded
-#      (red is data, not tool failure; reported loudly on stdout);
-#      2=usage error; 9=missing / fail-loud.
-#      doc-lint, same shape: 0=consistent (all three checks drift-free);
-#      1=drift (any check drifted; red is data, not tool failure; reported
-#      loudly on stdout); 2=usage error (--help-cap<1); 9=missing (required
-#      input absent / tool --help red or timed out, fail-loud).
-#      baseline-diff, same shape: 0=improved/stable (reds fewer or equal);
-#      1=degraded/incomparable (reds increased, or honest refusal on a
-#      changed candidate set; red is data, not tool failure; reported loudly
-#      on stdout); 2=usage error / malformed input (schema mismatch / ledger
-#      self-consistency broken); 9=path missing.
-#      route, same shape: 0=processing complete (red is data, not tool
-#      failure; a dispatched rc!=0 / timeout / dedup skip is recorded without
-#      touching the exit code); 2=usage error (--param guard / --dry-run
-#      tier mismatch / negative --cooldown); 9=missing input (event file
-#      absent / missing fields listed item by item / unresolvable parameter /
-#      metacharacter refused at construction / malformed state refused).
-#      audit, same shape: 0=report emitted (findings are data; count>0
-#      still exits 0; reported loudly on stdout); 2=usage error (parameter
-#      mismatch / no input surface / only one of the two books given);
-#      9=missing input (book files / git show / live-src / anchor-src
-#      absent).
-#      registry-fix, same shape: 0=dry-run report emitted, or --apply
-#      written plus all three assertions passed; 2=usage error (schema
-#      mismatch / missing fix_plan / same-parameter breach / entry key
-#      missing / AssertBlast assertion failure — the report carries evidence
-#      after a rollback); 9=missing input (audit JSON / the two books / the
-#      audit tool / anchor-src directory absent).
-#      norm-lint, same shape: 0=accounted (report-only: findings are data,
-#      the exit code never escalates on them); 1=selftest red (an assertion
-#      in the five selftest vectors failed); 2=usage error (no scan face /
-#      both --tree and --file / --gate or --strict reserved / negative
-#      --cjk-threshold); 9=missing input (tree or file absent / jargon map
-#      unreadable / CJK whitelist unreadable).
-#      registry-regen, same shape: 0=draft produced (BLOCK pieces are
-#      data, reported loudly); 1=selftest red; 2=usage error (apply
-#      without out / empty pieces / negative seq) or assertion failure
-#      (key collision / new anchor-text collision / dependency cycle /
-#      entity ambiguity / entity-blob divergence / write integrity -
-#      failure means zero writes); 9=missing input (repo / ref / book /
-#      anchor-src directory absent, coqdep absent when selected).
-#      contrib-intake, same shape: 0=verdict issued (a BLOCK verdict is
-#      data, reported loudly; gates never short-circuit); 1=instrument
-#      failure (no verdict can be issued); 2=usage error; 9=missing input
-#      (face path absent / ref unresolvable / instrument missing).
-#   4. bash 3.2 compatible (no associative arrays, no bash-4+ features);
-#      read-only routing layer — itself writes nothing.
+# Routing contract:
+#   1. All paths resolve relative to the repository root (ROOT derives from this script's own directory); zero hardcoded absolute paths, so the repository can be relocated freely.
+#   2. Arguments and exit codes pass through 1:1 (direct exec, fail-loud, never rewritten); same contract as cli/rocqwash.
+#   3. Exit codes: 0=pass; 2=unknown tool; 9=target script missing; anything else follows each tool's own convention and passes through (per-tool conventions: --help/--selftest=0; argparse usage errors / FAIL-LOUD assertion failures=2; missing target files=9).
+#      (pushci) verdict seal: success/dry-run=0; heal-exhausted/unstable/toolchain=1; fix-content/gate4-block=2; 9=target missing.
+#      (v37 trio) same shape: 0=green / inspection complete / unclogged; 1=data-side incomplete (shaping partial / plan-miss; wall / rounds-exhausted — a failing result is data, not a tool failure, reported loudly on stdout); 2=usage error; 9=missing / fail-loud.
+#      (cw-doctor) same shape: 0=healthy (aggregate score >= 90); 1=degraded (a failing result is data, not a tool failure, reported loudly on stdout); 2=usage error; 9=missing / fail-loud.
+#      (doc-lint) same shape: 0=consistent (all three checks drift-free); 1=drift (a check drifted; a failing result is data, not a tool failure, reported loudly on stdout); 2=usage error (--help-cap<1); 9=missing (required input absent / a failing or timed-out tool --help run, fail-loud).
+#      (baseline-diff) same shape: 0=improved/stable (failing blocks fewer or equal); 1=degraded/incomparable (failing blocks increased, or an honest refusal on a changed candidate set; a failing result is data, not a tool failure, reported loudly on stdout); 2=usage error / malformed input (schema mismatch / ledger self-consistency broken); 9=path missing.
+#      (route) same shape: 0=processing complete (a failing result is data, not a tool failure; a dispatched rc!=0 / timeout / dedup skip is recorded without touching the exit code); 2=usage error (--param guard / --dry-run tier mismatch / negative --cooldown); 9=missing input (event file absent / missing fields listed item by item / unresolvable parameter / metacharacter refused at construction / malformed state refused).
+#      (audit) same shape: 0=report emitted (findings are data; count>0 still exits 0, reported loudly on stdout); 2=usage error (parameter mismatch / no input surface / only one of the two books given); 9=missing input (book files / git show / live-src / anchor-src absent).
+#      (registry-fix) same shape: 0=dry-run report emitted, or --apply written plus all three assertions passed; 2=usage error (schema mismatch / missing fix_plan / same-parameter breach / entry key missing / AssertBlast assertion failure — the report carries evidence after a rollback); 9=missing input (audit JSON / the two books / the audit tool / anchor-src directory absent).
+#      (norm-lint) same shape: 0=accounted (report-only: findings are data, the exit code never escalates on them); 1=selftest red (an assertion in the five selftest vectors failed); 2=usage error (no scan face / both --tree and --file / --gate or --strict reserved / negative --cjk-threshold); 9=missing input (tree or file absent / jargon map unreadable / CJK whitelist unreadable).
+#      (registry-regen) same shape: 0=draft produced (BLOCK pieces are data, reported loudly); 1=selftest red; 2=usage error (apply without out / empty pieces / negative seq) or assertion failure (key collision / new anchor-text collision / dependency cycle / entity ambiguity / entity-blob divergence / write integrity - failure means zero writes); 9=missing input (repo / ref / book / anchor-src directory absent, coqdep absent when selected).
+#      (contrib-intake) same shape: 0=verdict issued (a BLOCK verdict is data, reported loudly; gates never short-circuit); 1=instrument failure (no verdict can be issued); 2=usage error; 9=missing input (face path absent / ref unresolvable / instrument missing).
+#   4. bash 3.2 compatible (no associative arrays, no bash-4+ features); the routing layer is read-only and itself writes nothing.
+# Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/ wash/verify/seam/certify/watch); the v29-v32 tools, the v35-v39 five tools (doctor/net-probe/triage/union/pushci), the v37 trio (cw_sentinel/wash_shape/unclog) and the v38 aggregate doctor (cw_doctor) live in module directories holding several generic entries each, where the auto-router's ambiguity guard (exit 4) deliberately declines to guess; this entry fills the gap by explicit tool name, so the two entries are complementary.
 #
-# 覆盖面注 Coverage note: cli/rocqwash routes the pre-v29 modules (scan/names/
-# wash/verify/seam/certify/watch). The v29-v32 tools and the v35-v39 five tools
-# (doctor/net-probe/triage/union/pushci in tools/) plus the v37 three tools
-# (cw_sentinel/wash_shape/unclog) plus the v38 aggregate doctor (cw_doctor)
-# live in module directories that now
-# hold several generic entries each, where the auto-router's ambiguity guard
-# (exit 4) deliberately declines to guess — this entry fills that gap by
-# explicit tool name. The two entries are complementary.
 
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-usage() {
-  cat <<'EOF'
+usage() { cat <<'EOF'
 cw.sh — unified entry for the rocqwash tool suite (32 tools · bash 3.2 compatible)
-（中文过渡注 zh transition note: this help is English-first; the full original Chinese quick reference is archived in README-cw.zh.md）
+(zh transition note: this help is English-first; the full original Chinese quick reference is archived in README-cw.zh.md)
 
 Usage: bash cw.sh <tool> [args...]
 
-工具 Tools:
+Tools:
   scan4       token-level qualified-identifier census -> scan/scan_v4_token.py
               cw.sh scan4 --file <f.v> [--json out.json] [--ids S] [--text]
   cure        consumer-cure canonical pack (dry-run by default) -> wash/cure_applier.py
@@ -299,7 +244,7 @@ Usage: bash cw.sh <tool> [args...]
               cw.sh render-events --events F.jsonl [--dir DIR] [--md out.md] [--json out] [--top N]
   dispatch    red-event router (sentinel red events -> action presets; three tiers report-only/suggest/auto)
                                                    -> tools/red_dispatch.py
-              cw.sh dispatch --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
+              cw.sh `dispatch` --event-file <json> [--preset report-only|suggest|auto] [--json OUT] [--state-file F] [--cooldown S] [--repo-path DIR] [--param K=V] [--dry-run]
   audit       registry hygiene auditor (dual-book read-only four-account output + deterministic prescription; --apply does not exist)
                                                    -> tools/registry_audit.py
               cw.sh audit --order ORDER --project _CoqProject | --git REPO --ref REF [--live-src DIR] [--anchor-src DIR] [--fix-plan] [--json out] [--md out]
@@ -386,8 +331,8 @@ Usage: bash cw.sh <tool> [args...]
 
   help        this help (help <tool> = the tool's one-line usage hint)
 
-退出码 Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
-路由说明 Routing notes:
+Exit codes: 0=pass  2=unknown-tool  9=target-script-missing  others = each tool's own convention, passed through
+Routing notes:
   - Arguments and exit codes pass through 1:1 (direct exec; fail-loud, never rewritten); same contract as cli/rocqwash.
   - All paths resolve relative to the repository root (ROOT is derived from this script's own directory) — the repo can be relocated freely; zero hardcoded absolute paths.
   - `cw.sh <tool>` with no args prints the tool's one-line hint to stderr, then passes through; `cw.sh help <tool>` prints the hint only.
@@ -542,7 +487,7 @@ case "${1:-}" in
       if hint_for "$2"; then
         exit 0
       else
-        echo "cw.sh help: unknown tool: $2（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve）" >&2
+        echo "cw.sh help: unknown tool: $2 (legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve)" >&2
         exit 2
       fi
     fi
@@ -550,7 +495,7 @@ case "${1:-}" in
     exit 0 ;;
   "") usage; exit 0 ;;
   *)
-    echo "cw.sh: unknown tool: $1（未知工具·legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve|help）" >&2
+    echo "cw.sh: unknown tool: $1 (legal: scan4|cure|probe|chain|sync-ledger|erasure|dual-scan|doctor|net-probe|triage|union|pushci|sentinel|wash-shape|unclog|cw-doctor|doc-lint|netname-normalize|select-audit|baseline-diff|render-events|dispatch|audit|registry-fix|norm-lint|registry-regen|contrib-intake|evolve|help)" >&2
     usage >&2
     exit 2 ;;
 esac
