@@ -17,8 +17,8 @@ heal-leg guards (.github/scripts/selfheal_rocqwash.py).
       all skip; a still-completed run dispatches exactly one
       rerun-failed-jobs POST behind exactly one GET); the transient-only
       family whitelist; the reconcile intent recording with zero POSTs.
-    Dependencies.  Python 3 stdlib only (argparse, importlib.util, json,
-      os, sys); the driver module loads by path and its gh_api/time
+    Dependencies.  Python 3 stdlib only (argparse, datetime, importlib.util,
+      json, os, sys); the driver module loads by path and its gh_api/time
       symbols are replaced with an in-process recording stub; tmp-free,
       zero network, zero real sleep, zero repository writes.
     Evidence.  Every check asserts on the stub's recorded (method, path)
@@ -231,14 +231,24 @@ def main():
           "family gate precedes every fetch: %r" % api.calls)
 
     # ---- vector 5: reconcile records cancelled as intent (:204-206) ----
+    # fixture dates are computed relative to now so the canned cancelled
+    # runs always sit inside the 48h RECONCILE_WINDOW_H (absolute stamps
+    # aged out of the window and silently emptied the intent list)
+    import datetime
+    _now = datetime.datetime.now(datetime.timezone.utc)
+
+    def _stamp(age_h):
+        return (_now - datetime.timedelta(hours=age_h)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ")
+
     api = ApiStub(live_run=None)
     api.runs_list = {"total_count": 3, "workflow_runs": [
         {"id": 201, "run_number": 10, "status": "queued",
-         "conclusion": None, "created_at": "2026-11-16T00:00:00Z"},
+         "conclusion": None, "created_at": _stamp(3)},
         {"id": 178, "run_number": 9, "status": "completed",
-         "conclusion": "cancelled", "created_at": "2026-11-16T01:00:00Z"},
+         "conclusion": "cancelled", "created_at": _stamp(1)},
         {"id": 155, "run_number": 8, "status": "completed",
-         "conclusion": "cancelled", "created_at": "2026-11-16T02:00:00Z"},
+         "conclusion": "cancelled", "created_at": _stamp(2)},
     ]}
     mod.gh_api = api
     token_saved = os.environ.pop("GITHUB_TOKEN", None)
