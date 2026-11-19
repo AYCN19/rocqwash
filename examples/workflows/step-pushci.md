@@ -1,40 +1,40 @@
-# step-pushci.md — 工作流嵌段②：单步推 CI（--dry-run 先行→真发→verdict 分流）
+# step-pushci.md — workflow block ②: single-step push CI (dry-run first → the real run → verdict branching) / `工作流嵌段②：单步推 CI（--dry-run 先行→真发→verdict 分流）`
 
-> rocqwash v37 嵌段正典样例三件之二。把 `README-cw.md:124-126`「pushci 嵌段」
-> 展开为可整段复制执行的命令块＋真实输出样例＋verdict 分支表＋dynamic-workflow
-> 嵌段伪码。器实况正本：`tools/pushci.py` docstring（v36 flagship·五段管线
-> preflight→push→watch→heal→verdict±merge·pushci.py:5）与 `--help`。
-> schema `rocqwash-pushci/1`·verdict 七态
-> `success|fix-content|toolchain|unstable|heal-exhausted|gate4-block|dry-run`
-> （README-cw.md:33 同册）。
+> Purpose.  Expand the `README-cw.md:124-126` "pushci embed block" into a whole-block copyable command form + real output samples + the verdict branch table + dynamic-workflow embed pseudocode; one of the three canonical workflow-block samples of rocqwash v37.
+> Interface.  Document face. It documents `cw.sh pushci` (`tools/pushci.py`; schema `rocqwash-pushci/1`; seven-state verdict `success|fix-content|toolchain|unstable|heal-exhausted|gate4-block|dry-run` — README-cw.md:33, same register). The normative tool face: the `tools/pushci.py` docstring (v36 flagship · five-stage pipeline preflight→push→watch→heal→verdict±merge · pushci.py:5) and `--help`. Citations bind to the v37 capture state (commit `41e74b0`); working-tree line numbers drift. The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  `tools/pushci.py` routed through `cw.sh`; a GitHub API token via `~/.netrc` for the push/watch stages; `tools/ci_triage.py` for the heal stage; the whitepaper `docs/workflow-integration-whitepaper-v1.0-20261111.md` §4 for the dual-door discipline. No runtime dependency of this document face itself.
+> Evidence.  The §1 dry-run plan and report samples are a real-run record (rc=0) captured on November 11, 2026 by the authoring session; the §2 real-run block was not exercised (real credentials belong to the user side) and its flags were reconciled against the `tools/pushci.py --help` output captured the same day.
+> Exit-codes.  Not applicable to a document face; the documented pipeline keeps its implemented exit-code semantics (§3, tools/pushci.py:91-93) unchanged.
 >
-> **纪律红线**：
-> - **--dry-run 先行是嵌段正典序**——`--dry-run=只打计划零副作用 exit 0
->   （零 git 零 API 零工具子进程）`（tools/pushci.py:87）：真发前人审计划，
->   计划不对不开闸。
-> - **verdict 是封册**——七态与退出码 0/1/2/9 一一封册（tools/pushci.py:91-93）；
->   分流动作见 §3 表。a failing result is data, not a tool failure：fix-content 是**内容红**数据，器面照常出账。
-> - **离线演练须成对**——`--injector DIR` 与 `--git-caller FILE` 必须成对给出，
->   单边给出＝用法错 exit 2（injector 无 canned git＝真 push 危险，tools/pushci.py
->   docstring「--git-caller」条）。
-> - pushci 的 preflight 发射闸只复跑 doctor＋net-probe 两闸（可选
->   `--pre-scan-gate4`）；套件绿/behind=0 等**推窗四判据不在此册**，双门并立见
->   `docs/workflow-integration-whitepaper-v1.0-20261111.md` §4（README-cw.md:57-60 同口径）。
+> Discipline constraints (read before use):
+> - **the --dry-run-first order is the canonical embed order** — `--dry-run` prints the plan only with zero side
+>   effects, exit 0 (zero git, zero API calls, zero tool subprocesses; tools/pushci.py:87): a human reviews the
+>   plan before the real run; a wrong plan does not open the gate.
+> - **the verdict is a pinned roster** — the seven states and the exit codes 0/1/2/9 map one-to-one
+>   (tools/pushci.py:91-93); branch actions in the §3 table. a failing result is data, not a tool failure:
+>   fix-content is content-level failing data, and the tool face still reports normally.
+> - **offline drills must come in pairs** — `--injector DIR` and `--git-caller FILE` must be given together;
+>   one-sided = usage error exit 2 (an injector without canned git would silently reach a real push;
+>   tools/pushci.py docstring "--git-caller" entry).
+> - pushci's preflight check reruns only the doctor and net-probe checks (optionally `--pre-scan-gate4`);
+>   the push-window four criteria such as suite passing / behind=0 are not in that roster; the two gates stand
+>   side by side and neither substitutes for the other — see
+>   `docs/workflow-integration-whitepaper-v1.0-20261111.md` §4 (same account at README-cw.md:57-60).
 
-## 1. 第一步：--dry-run 先行（零副作用·真发前人审）
+## 1. Step 1: --dry-run first (zero side effects · human review before the real run)
 
 ```bash
-# ── step-pushci 嵌段·第 1 步：干跑出计划（在 rocqwash 仓根执行）──────
-BRANCH=feature/x                 # 要推送与观测的分支（按需改）
-REPO_PATH=.                      # 目标仓库目录（零硬编码·全参数化）
+# ── step-pushci block · step 1: dry-run the plan (run at the rocqwash repository root) ──────
+BRANCH=feature/x                 # the branch to push and watch (edit as needed)
+REPO_PATH=.                      # target repository directory (zero hardcoding · fully parameterized)
 
 bash cw.sh pushci --repo-path "$REPO_PATH" --branch "$BRANCH" \
   --json pushci-dry.json --dry-run
-echo "DRYRUN_RC=$?"              # 正典判据：0=计划已出·计划文本看 stdout
+echo "DRYRUN_RC=$?"              # canonical criterion: 0 = plan produced · the plan text goes to stdout
 ```
 
-**实测样例**（2026-11-11 铸席真跑 `python3 tools/pushci.py --repo-path . --branch
-main --dry-run --json …`，rc=0；stdout 计划原文）：
+**Measured sample** (a live run of `python3 tools/pushci.py --repo-path . --branch main --dry-run --json …` on November 11, 2026
+by the authoring session, rc=0; the stdout plan verbatim):
 
 ```text
 === ROCQWASH PUSHCI (post-fix push-CI one-shot pipeline) ===
@@ -49,7 +49,7 @@ PLAN [5] verdict: report schema rocqwash-pushci/1, exit codes 0/1/2/9
 === FINAL VERDICT: dry-run (exit 0) ===
 ```
 
-对应 `--json` report（实测·rocqwash-pushci/1·计划入 `plan` 数组·零 stages 副作用）：
+The corresponding `--json` report (measured · rocqwash-pushci/1 · the plan goes into the `plan` array · zero `stages` side effects):
 
 ```json
 {
@@ -60,7 +60,7 @@ PLAN [5] verdict: report schema rocqwash-pushci/1, exit codes 0/1/2/9
  "evidence": [],
  "final": { "conclusion": null, "verdict": "dry-run" },
  "mode": "dry-run",
- "plan": [ "[1] preflight.toolchain: …", "[2] push: …", "…（与 stdout 计划逐行同文）" ],
+ "plan": [ "[1] preflight.toolchain: …", "[2] push: …", "… (same text line-for-line as the stdout plan)" ],
  "schema": "rocqwash-pushci/1",
  "stages": {},
  "steps": [ "preflight", "push", "watch", "heal", "verdict" ],
@@ -68,102 +68,102 @@ PLAN [5] verdict: report schema rocqwash-pushci/1, exit codes 0/1/2/9
 }
 ```
 
-## 2. 第二步：真发（dry-run 计划人审过才走这步）
+## 2. Step 2: the real run (take this step only after the dry-run plan passes human review)
 
 ```bash
-# ── step-pushci 嵌段·第 2 步：真发（五段全跑）────────────────────────
-# 可选追加：--pre-scan-gate4（preflight 加做 gate4 头注守卫预扫·FAIL=0 才放行）
-#           --merge / --merge-method squash（绿后并 PR·无 open PR→9 目标缺失）
-#           --watch-max-rounds N（watch 轮帽安全阀·超帽 fail-loud 9·长 watch 工作流建议给）
+# ── step-pushci block · step 2: the real run (all five stages) ────────────────────────
+# optional additions: --pre-scan-gate4 (preflight adds the gate4 header-annotation guard pre-scan · passes only at FAIL=0)
+#           --merge / --merge-method squash (merge the PR after passing · no open PR → 9 target-missing)
+#           --watch-max-rounds N (watch round-cap safety valve · over the cap is fail-loud 9 · recommended for long-watch workflows)
 bash cw.sh pushci --repo-path "$REPO_PATH" --branch "$BRANCH" \
   --json pushci-report.json
-echo "PUSHCI_RC=$?"              # 七态封册按 §3 分流
+echo "PUSHCI_RC=$?"              # branch on the seven-state roster per §3
 ```
 
-诚实注记：**真发段本席未实跑**（需真远端凭据与真 push 权限，属用户面；本席只
-实测了 `--dry-run` rc 0 与 `--selftest` 挂接面）。上块的旗标全部对账自
-`tools/pushci.py --help`（2026-11-11 实取）。
+Honesty note: **the real-run stage was not exercised here** (it needs real remote credentials and real push
+permission, which belong to the user side; what was measured here is the `--dry-run` rc 0 and the `--selftest`
+wiring face). Every flag in the block above was reconciled against `tools/pushci.py --help` (captured November 11, 2026).
 
-## 3. verdict 分支表（七态×退出码×工作流动作）
+## 3. verdict branch table (seven states × exit codes × workflow actions)
 
-verdict 与退出码封册正本：tools/pushci.py:91-93（README-cw.md:33、69 同册）。
+Normative source of the verdict/exit-code roster: tools/pushci.py:91-93 (same register at README-cw.md:33 and 69).
 
-| 退出码 | verdict | 含义 | 工作流动作 |
+| Exit code | verdict | Meaning | Workflow action |
 |---|---|---|---|
-| 0 | `success` | 五段全绿（watch 到 completed 成功·heal 未耗帽） | 收尾；若带 `--merge` 此时 PR 已并 |
-| 0 | `dry-run` | 只打了计划（§1 正典形） | 读 plan 人审·不视为真发 |
-| 1 | `unstable` | net-probe 稳窗不过（push 或 heal 阶段双探不稳）→禁发射 | 网络修复后重跑；读 report.stages |
-| 1 | `toolchain` | doctor verdict≠healthy（环境件） | 按器附带的 doctor 重跑建议处置环境 |
-| 1 | `heal-exhausted` | 观测红·B/E 族重跑 `--max-heal`（默认 3）轮未绿 | 读 `stages.heal.last_triage`（family/action/evidence 全量在册）人工定夺 |
-| 2 | `fix-content` | classification A 内容红（heal 分派停·**禁代修**——修复是席/人职责）或 merge 409 冲突（内容活） | 交修复席/人；family 原值响亮在册 |
-| 2 | `gate4-block` | `--pre-scan-gate4` 预扫 FAIL≠0 | 读 report.stages.preflight.gate4.fail_files 逐件修头注 |
-| 2 | （无 verdict） | argparse 用法错（段依赖 watch⇒push·heal⇒watch·--merge⇒watch 等） | 修命令行；对照 `bash cw.sh help pushci` |
-| 9 | （无 verdict） | 目标缺失 fail-loud（repo/remote/分支/PR/工具链件缺失·netrc 缺·API 不可达·API 4xx/5xx 硬错·watch 轮帽达） | 人工补目标/凭据后重跑 |
+| 0 | `success` | all five stages passing (watch reached completed success · heal did not exhaust its cap) | close out; with `--merge` the PR is already merged at this point |
+| 0 | `dry-run` | printed the plan only (the §1 canonical form) | read the plan for human review · not counted as a real run |
+| 1 | `unstable` | the net-probe stability window did not hold (both probes unstable in the push or heal stage) → must not initiate | rerun after the network is repaired; read report.stages |
+| 1 | `toolchain` | doctor verdict≠healthy (environment piece) | remediate the environment per the doctor rerun advice the tool ships |
+| 1 | `heal-exhausted` | the watch reported failing · the family B/E reruns did not turn passing within `--max-heal` (default 3) rounds | read `stages.heal.last_triage` (family/action/evidence recorded in full) and decide manually |
+| 2 | `fix-content` | classification A content failing (the heal stage stops · **no proxy repair** — repairing is the repair agent's or a human's job) or a merge 409 conflict (live content) | hand to the repair agent or a human; the family is recorded loud with its original value |
+| 2 | `gate4-block` | the `--pre-scan-gate4` pre-scan found FAIL≠0 | read report.stages.preflight.gate4.fail_files and fix each file's header annotations |
+| 2 | (no verdict) | argparse usage error (stage dependencies watch⇒push · heal⇒watch · --merge⇒watch and the like) | fix the command line; compare `bash cw.sh help pushci` |
+| 9 | (no verdict) | fail-loud target missing (repo/remote/branch/PR/toolchain piece missing · netrc missing · API unreachable · API 4xx/5xx hard error · watch round cap reached) | supply the targets/credentials manually and rerun |
 
-README-cw.md:54 注记的同款快查：`pushci 透传 verdict 封册（success/dry-run=0·
-heal-exhausted/unstable/toolchain=1·fix-content/gate4-block=2·9=目标缺失）`。
+The same quick reference as the note at README-cw.md:54 — pushci passes the verdict roster through:
+success/dry-run=0 · heal-exhausted/unstable/toolchain=1 · fix-content/gate4-block=2 · 9 = target missing.
 
-## 4. 离线演练形（工作流自测用·零真网络零真 push）
+## 4. Offline drill form (for workflow self-test · zero real network, zero real push)
 
 ```bash
-# injector（canned API+tools）与 git-caller（canned git 响应）必须成对——
-# 单边给出即用法错 exit 2（防「injector 无 canned git」静默走真 push）
+# injector (canned API + tools) and git-caller (canned git responses) must come as a pair —
+# one-sided = usage error exit 2 (prevents an injector without canned git from silently reaching a real push)
 bash cw.sh pushci --repo-path "$REPO_PATH" --branch "$BRANCH" \
   --injector /path/to/injdir --git-caller /path/to/git-canned.json \
   --sleep-scale 0 --json pushci-inj.json
 ```
 
-场景形与六场景 15 案正本见 `tests/test_pushci.py` 与 pushci docstring「离线可测」
-节（steps 形／flat 形双通吃·API 调用流水落 `<injector>/api_calls.json` 供实证）。
+The scenario shapes and the six-scenario 15-case normative source: `tests/test_pushci.py` and the pushci docstring "offline-testable"
+section (both the steps form and the flat form · the API call stream lands in `<injector>/api_calls.json` as evidence).
 
-## 5. dynamic-workflow 嵌段伪码
+## 5. dynamic-workflow embed pseudocode
 
 ```text
-// 嵌段②单步推 CI：dry-run 门→真发→verdict 分流（器：cw.sh pushci）
+// block ② single-step push CI: dry-run gate → real run → verdict branching (tool: cw.sh pushci)
 phase "pushci-step" {
-  // 1) 干跑门：计划人审前的机械预检（退出码即确认·§10）
+  // 1) dry-run gate: the mechanical pre-check before human plan review (the exit code is the confirmation · §10)
   const dry = await world.run("bash", ["cw.sh", "pushci",
       "--repo-path", ".", "--branch", "feature/x",
       "--json", "pushci-dry.json", "--dry-run"]);
   if (dry.exitCode !== 0) return { verdict: "plan-unusable", rc: dry.exitCode };
 
-  // 2) 计划人审：子代理读 pushci-dry.json 的 plan 数组，只判「开不开闸」
+  // 2) plan review: a subagent reads the plan array of pushci-dry.json and judges only open-gate or hold
   const review = await agent({ role: "gate-reviewer",
-    ask: "读 pushci-dry.json plan 数组，答 开闸|不开闸 与理由（不修改任何文件）" });
-  if (review.answer !== "开闸") return { verdict: "held", why: review.reason };
+    ask: "Read the plan array in pushci-dry.json and answer gate-open|gate-hold with a reason (modify no files)" });
+  if (review.answer !== "gate-open") return { verdict: "held", why: review.reason };
 
-  // 3) 真发：世界已裁决的检查不叫子代理复述——退出码就是 verdict 封册索引
+  // 3) real run: a check the world has already adjudicated is not re-asked to a subagent — the exit code is the verdict-roster index
   const real = await world.run("bash", ["cw.sh", "pushci",
       "--repo-path", ".", "--branch", "feature/x",
       "--pre-scan-gate4", "--watch-max-rounds", "20",
       "--json", "pushci-report.json"]);
   switch (real.exitCode) {
-    case 0: return { verdict: "success-or-dryrun" };            // 读 report.verdict 细分
+    case 0: return { verdict: "success-or-dryrun" };            // read report.verdict for the split
     case 1: return { verdict: "env-red",                        // unstable/toolchain/heal-exhausted
-                     next: "读 report.stages 人工定夺" };
-    case 2: return { verdict: "content-red",                    // fix-content/gate4-block/用法错
-                     next: "交修复席；gate4-block 读 fail_files 逐件修" };
+                     next: "read report.stages and decide manually" };
+    case 2: return { verdict: "content-red",                    // fix-content/gate4-block/usage error
+                     next: "hand to the repair agent; for gate4-block read fail_files and fix each file" };
     case 9: return { verdict: "target-missing",                 // fail-loud
-                     next: "补目标/凭据后重跑" };
+                     next: "supply the targets/credentials and rerun" };
   }
 }
 ```
 
-## 6. 诚实注记
+## 6. Honesty notes
 
-- §1 两份样例为 2026-11-11 铸席实跑 `--dry-run` 所产（rc=0·tmp 出账路径）；
-  §2 真发块未实跑（凭据属用户面），其旗标对账自 `tools/pushci.py --help` 实取输出。
-- verdict 分支表逐格锚 pushci docstring 退出码节（tools/pushci.py:91-93）与五段
-  管线节（pushci.py:5-46）；未锚处（如「用法错归 2」）锚 argparse 段依赖条文
-  （docstring「段依赖（用法错 2）」）。
-- 推窗四判据（certify/push_gate.py window：c1 ci-idle／c2 local≥remote／
-  c3 fetch-clean／c4 cert-green）与 pushci 发射闸是**两扇门**，互不替代——
-  并立说明见白皮书 §4。
+- The two §1 samples were produced by a live `--dry-run` run of the authoring session on November 11, 2026 (rc=0 · tmp report
+  path); the §2 real-run block was not exercised (credentials belong to the user side), its flags reconciled against the captured `tools/pushci.py --help` output.
+- Every verdict-branch-table cell anchors the pushci docstring exit-code section (tools/pushci.py:91-93) and the five-stage
+  pipeline section (pushci.py:5-46); unanchored cells (such as "usage errors map to 2") anchor the argparse stage-dependency
+  clauses (docstring "stage dependencies (usage error 2)").
+- The push-window four criteria (certify/push_gate.py window: c1 ci-idle / c2 local≥remote /
+  c3 fetch-clean / c4 cert-green) and the pushci preflight check are **two doors**, neither substitutes for the other —
+  the side-by-side account is in the whitepaper §4.
 
-（English brief) Workflow block ②: single-step push-CI via `cw.sh pushci`.
+(English brief) Workflow block ②: single-step push-CI via `cw.sh pushci`.
 Canonical order: `--dry-run` first (zero side effects, exit 0, plan printed +
 report), human review of the plan, then the real run; branch on the seven-state
-verdict封册 (success/dry-run=0, heal-exhausted/unstable/toolchain=1,
+verdict roster (success/dry-run=0, heal-exhausted/unstable/toolchain=1,
 fix-content/gate4-block=2, target-missing=9). Offline drills require
 `--injector` + `--git-caller` as a pair (single-sided = usage error exit 2).
 pushci's preflight gate (doctor + net-probe ± gate4 pre-scan) is deliberately

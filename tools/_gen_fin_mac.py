@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""_gen_fin_mac.py — censusFIN 模板 Mac 适配生成器（S 系 Prop 清除战役·工具链 Mac 适配席·20261022）
-
-模板血统：censusFIN/SortAlive_Probe_FIN1640.v（_set1640_S10FIN_sbx·S10 五证第④关 censusFIN
-对表器）——SortAlive __-census 检验：语句名清单→具名透明别名→**单命令多名一轮全提**
-Separate Extraction（§1·E 律 1 单命令多名全提律：逐命令重置输出 last-write-wins，多目标
-必须单命令全提）→解析 `(** val alive_N : ... **)` 型注与 let 体——RED iff "__"（提取擦除
-语义·词表无关内核级判定，non-negotiable constraint②第六关）。
-
-Mac 适配三件：
-  ①本生成器——模块名/世界路径/依赖链全参数化（FIN1640 模板系 S10 专用死形，本器改活形）；
-  ②驱动 _fire_fin_<W>.sh——cpu_guard v3 Mac 形包裹（bash guard·-Front 1 -Mid 0）＋SW2 全字面
-    双 export COQLIB/ROCQLIB（Mac 形）＋cmd/exit/log 三件落箱（箱册纪律）；
-  ③解析 _parse_fin_mac.py——ann 正则 `:\\s*` 冒号-空格/换行双形容忍（§1·E 律 3 ann 正则
-    双形律·1572 伤），vo 魔数 436f712100015ff4 咬合＋新鲜度并查（绿判四件套复用）。
-
-用法：
-  python3 _gen_fin_mac.py --source <Module.v> --module <ModuleName> \
-      --world <worldT_dir> --world-name <W> --outdir <dir> [--requires S01_BaseRing,...]
-  # 缺省 --requires＝梯世界链 S01_BaseRing..S09_EntropyReal（至 --module 为止）
-
-干跑验证（S10.vo 未绿·禁实跑 S10——用 worldT_mac S09 dry run，census 100/100 已证为期望底）：
-  cd <outdir> && bash _fire_fin_<W>.sh && python3 _parse_fin_mac.py \
-      SortAlive_Probe_<W>.ml --manifest manifest_<W>.json \
-      --vo SortAlive_Probe_<W>.vo --source-v <source.v> --transcript _fin_<W>_build.log
-"""
+"""_gen_fin_mac.py — Mac adaptation generator for the censusFIN probe template (S-series
+    Prop-elimination effort · toolchain Mac-adaptation lane).
+    Purpose.  Emit the Mac-form censusFIN probe triple from a source .v module: the probe skeleton
+      (statement-name list → named transparent aliases → single-command multi-name Separate
+      Extraction), the manifest, and the guard-wrapped fire driver. Lineage
+      censusFIN/SortAlive_Probe_FIN1640.v — the SortAlive __-census check: statement names →
+      named aliases → one-command Separate Extraction (per-command output reset is
+      last-write-wins, so multi-target must be one command) → parse `(** val alive_N : ... **)`
+      annotations and let bodies; `RED` iff `"__"` (extraction-erasure semantics; the
+      lexicon-independent kernel-level judgment of non-negotiable-constraint ② gate 6).
+    Interface.  python3 _gen_fin_mac.py --source <Module.v> --module <ModuleName> \
+      --world <worldT_dir> --world-name <W> --outdir <dir> [--requires S01_BaseRing,...];
+      default --requires = the ladder world chain S01_BaseRing..S09_EntropyReal up to --module;
+      emits SortAlive_Probe_<W>.v, manifest_<W>.json, _fire_fin_<W>.sh (mode 0755). Dry-run
+      verification: cd <outdir> && bash _fire_fin_<W>.sh && python3 _parse_fin_mac.py
+      SortAlive_Probe_<W>.ml --manifest manifest_<W>.json --vo SortAlive_Probe_<W>.vo
+      --source-v <source.v> --transcript _fin_<W>_build.log (verify on worldT_mac S09 while
+      S10.vo is not passing; S10 live runs excluded; census 100/100 is the recorded expected baseline).
+    Dependencies.  mac_stmt_names.py (repository root, sys.path-injected; its extraction core is
+      reused so the statement list shares the census grain — same token walk, same list);
+      Python 3 standard library only; bash for the emitted driver.
+    Evidence.  Field-verified at the October 22, 2026 Mac-adaptation pass (worldT_mac S09 dry run,
+      census 100/100 recorded expected baseline; anomalies and the zero-statement case fail loud in main(), never silent).
+    Exit-codes.  0 = probe, manifest and driver written; 9 = fail-loud (missing source or world
+      dir, zero statements)."""
 import argparse
 import io
 import json
@@ -33,8 +33,8 @@ import sys
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)
-sys.path.insert(0, os.path.dirname(_HERE))  # mac_stmt_names.py 在箱根
-# mac_stmt_names.py 的提取核（同一 token 走法＝census 口径语句清单）复用：清单一致性由同器保证
+sys.path.insert(0, os.path.dirname(_HERE))  # mac_stmt_names.py sits at the repository root
+# reuse mac_stmt_names.py's extraction core (same token walk = the census-grain statement list): list consistency is guaranteed by the shared tool
 import mac_stmt_names  # noqa: E402
 
 LADDER = ["S01_BaseRing", "S02_CauchyComplete", "S03_QExp", "S04_RealExpLogConv",
@@ -44,18 +44,18 @@ LADDER = ["S01_BaseRing", "S02_CauchyComplete", "S03_QExp", "S04_RealExpLogConv"
 
 COQC_MAC_DEFAULT = "/Users/apple/Desktop/ConstructiveWorld/Live/toolchain/opam/live/bin/rocq"
 OPAM_ENV_MAC_DEFAULT = "/Users/apple/Desktop/ConstructiveWorld/Live/toolchain/bin/opam env --switch live --root /Users/apple/Desktop/ConstructiveWorld/Live/toolchain/opam --set-root"
-COQ_ARG = "c"  # rocq c = coqc 相容子命令（Rocq 9.1）
+COQ_ARG = "c"  # rocq c = the coqc-compatible subcommand (Rocq 9.1)
 COQLIB_MAC_DEFAULT = "/Users/apple/actions-runner/mac_rocq/lib/coq"
 GUARD_MAC_DEFAULT = "/Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh"
 
 DRIVER_TMPL = r"""#!/bin/bash
 # censusFIN_mac fire driver — world <WNAME> (Mac form, guard-wrapped, SW2 double export)
-# 箱册纪律：cmd(本件)+exit+log 三件落箱；exit 码＝coqc 真码（guard 透传·无管道真取）。
+# box-ledger discipline: cmd (this file) + exit + log, three records per box; the exit code is coqc's real code (guard pass-through, no pipe).
 #
-# Mac 坑位注记（20261022 本席实测）：mac_rocq/bin/coqc 系 shim——内部 `source env.sh` 重跑
-# `opam env`（0.2s CPU·常规档瞬时·nice19 拥挤窗即冻）再 exec rocq——把环境解析带进 guard
-# nice19 进程＝饥饿陷阱。本驱动改：env 预解析在驱动壳（常规档·非编译）＋guard 包真身
-# `rocq c`。编译本体仍全 guard 包裹（§R2 铁律不变）。
+# Mac pitfall note (measured at the October 22, 2026 Mac-adaptation pass): mac_rocq/bin/coqc is a shim — internally it
+# re-runs `source env.sh` -> `opam env` (0.2s CPU, transient at normal priority, frozen in a nice19 crowded window) then
+# exec rocq — environment resolution inside a guard nice19 process is a starvation trap. This driver pre-resolves the
+# env in the driver shell (normal priority, not a compile) and lets the guard wrap the real `rocq c`; the compile body stays fully guard-wrapped (the §R2 invariant is unchanged).
 set -u
 COQC="${{COQC:-{coqc}}}"
 COQARG="{coqarg}"
@@ -66,14 +66,14 @@ WORLD="{world}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE"
 echo "[fin-mac] guard=$GUARD world=$WORLD coqc=$COQC $COQARG" >&2
-# 环境预解析（非编译·常规档·~0.2s；失败 fail-loud）
+# env pre-resolve (not a compile · normal priority · ~0.2s; failure is fail-loud)
 if [ -x /Users/apple/Desktop/ConstructiveWorld/Live/toolchain/bin/opam ]; then
   eval "$({opam_env} 2>/dev/null)" || {{ echo "FAIL-LOUD: opam env pre-resolve failed" >&2; exit 9; }}
 fi
-# 拥挤窗注记（20261022 二次修正）：nice19 BACK 档对 rocq c 本体可用（piu_zz 判例 worker
-# 实得 24-33% CPU）——真坑是 shim 内 opam env 根锁（已由 env 预解析根治）。MaxWaitSec 维持
-# guard 默认 900s：候窗 15 min 后 BACK 发炮约 1-2 min 完成。勿拉长 MaxWaitSec——前有长件
-# 占位时候格队永不推进（slots 随命令全程持有·seq1 巨件＋seq3 冻结 coqchk 占位判例）。
+# crowded-window note (second correction, October 22, 2026): nice19 BACK tier is usable for the rocq c body itself (the
+# piu_zz precedent worker measured 24-33% CPU); the real pitfall was the shim's opam env root lock, cured by the env
+# pre-resolve. MaxWaitSec stays at the guard default 900s: after a 15 min window wait a BACK run finishes in 1-2 min.
+# Never lengthen MaxWaitSec — a long item holding a slot blocks the queue (slots held for the whole command; the seq1 giant-item + seq3 frozen-coqchk placeholder precedent).
 "$GUARD" -Front "${{FRONT:-{front}}}" -Mid "${{MID:-{mid}}}" -MaxWaitSec "${{MAXWAIT:-900}}" -- \
   "$COQC" "$COQARG" -native-compiler no -q -Q "$WORLD" "" SortAlive_Probe_{wname}.v \
   > _fin_{wname}_build.log 2>&1
@@ -86,12 +86,12 @@ exit $rc
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--source", required=True, help="目标模块 .v 源（语句清单提取底）")
-    ap.add_argument("--module", required=True, help="目标模块名（如 S09_EntropyReal）")
-    ap.add_argument("--world", required=True, help="世界目录（-Q <world> \"\"）")
-    ap.add_argument("--world-name", required=True, help="探针件后缀（如 S09DRT）")
+    ap.add_argument("--source", required=True, help="target module .v source (the statement-list extraction base)")
+    ap.add_argument("--module", required=True, help="target module name (e.g. S09_EntropyReal)")
+    ap.add_argument("--world", required=True, help="world directory (-Q <world> \"\")")
+    ap.add_argument("--world-name", required=True, help="probe-file suffix (e.g. S09DRT)")
     ap.add_argument("--outdir", required=True)
-    ap.add_argument("--requires", help="逗号分 Require 链；缺省＝梯世界链至 --module 为止")
+    ap.add_argument("--requires", help="comma-separated Require chain; default = the ladder world chain up to --module")
     args = ap.parse_args()
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -111,7 +111,7 @@ def main():
     inv = mac_stmt_names.extract_statements(args.source, include_let=False)
     stmts = inv["statements"]
     if inv["anomalies"]:
-        print("ANOMALIES（fail-loud 逐笔·禁静默）:", inv["anomalies"])
+        print("ANOMALIES (fail-loud, itemized; never silent):", inv["anomalies"])
     if not stmts:
         print("FAIL-LOUD: zero statements extracted from", args.source)
         sys.exit(9)
@@ -157,8 +157,8 @@ def main():
                       "statements": len(stmts), "requires": requires,
                       "let_skipped": inv["let_skipped"],
                       "anomalies_n": len(inv["anomalies"]),
-                      "note": "编译必经驱动内 cpu_guard 包裹（-Front 1 -Mid 0）；"
-                              "解析用 _parse_fin_mac.py（ann :\\s* 双形律）"},
+                      "note": "compilation must run through the driver's cpu_guard wrap (-Front 1 -Mid 0);"
+                              "parse with _parse_fin_mac.py (the ann :\\s* dual-form tolerance)"},
                      ensure_ascii=False, indent=1))
 
 

@@ -1,5 +1,20 @@
 # vacgen environment constants note (deployment wiring, annotation only)
 
+> Purpose.  Annotation-only note: it documents three deployment-time environment constants, their
+>   expected form, and their reading contract, so that integrators wire the constants against one
+>   stated contract instead of reverse-reading the generator source. It changes no executable code.
+> Interface.  Document face (annotation only); no program in this repository reads any line of this
+>   file. It documents `ROCWASH_LEAN_WORKTREE` / `LAKE` / `MATHLIB_PIN` with the precedence chain
+>   CLI flag > environment constant > built-in default.
+> Dependencies.  Documents `tools/vacgen.py` (the constant defaults and taxonomy chain cited by
+>   line) and `docs/vacgen_sop.md` (the toolchain-equality pre-flight gate G1, the thermal-guard
+>   step S5-4); no runtime dependency of this note itself.
+> Evidence.  The line citations (`tools/vacgen.py:66-72,67,68,70,784-795,789`) were read in full at
+>   this revision; `tests/t_vacgen_expectedred.py` observes and reports `ROCWASH_LEAN_WORKTREE`
+>   without acting on it, which keeps the one-constant honesty machine-visible.
+> Exit-codes.  Not applicable (annotation face); the documented engine keeps its implemented
+>   exit-code semantics unchanged.
+
 **Status**: annotation file. It documents three deployment-time environment
 constants, their expected form, and their reading contract. It changes no
 executable code: `tools/vacgen.py` is untouched by this note, and no line of
