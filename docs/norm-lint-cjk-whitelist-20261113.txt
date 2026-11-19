@@ -16,7 +16,6 @@ docs/en/architecture.md
 docs/jargon-to-standard-mapping-v1.md
 docs/ops-live-run-log-20261111.md
 docs/ops-realtime-service-v1.0-20261111.md
-docs/ops-sentinel-长驻手册-v1.0-20261112.md
 docs/perf-profile-v1.0-20261111.md
 docs/push-gate-dual-door-assessment-v1.0-20261111.md
 docs/retro-triage-Main仓全史-20261112.md
