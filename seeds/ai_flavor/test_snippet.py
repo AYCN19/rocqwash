@@ -1,32 +1,32 @@
-"""Seed completeness tests: ai_flavor word-map (engine E1, seed wave RQW12).
+"""test_snippet.py: seed completeness checks for the ai_flavor word map.
 
-Segment deliverable: the tests-integration seat merges this segment into
-tests/t_engines_seeds.py. It also runs standalone:
+Purpose.  Asserts the data contract of seeds/ai_flavor/word-map.json (engine
+  E1, seed work stream RQW12, 36 faces) and the transcription of the four
+  battery pattern literals: structure, coverage (face set equals the 36
+  instrument faces, both directions), battery mix (10 zh + 15 en stems + 8
+  en sentence + 3 en paragraph-initial), candidate presence and typing, the
+  per-battery no-coinage kind rules, English-only JSON keys at any depth,
+  and the soft instrument anchor.  This file embeds the face constants by
+  design (it is the assertion corpus for them), so the wording batteries
+  fire on this file itself and the em-dash count must stay 0.  Provenance
+  and the replacement-closure gap: the adjacent SPEC.md.
 
-    python -I test_snippet.py
+Interface.  Standalone: python -I test_snippet.py.  Module surface:
+  load_word_map(path=None), the test_* functions, run_all(), main(argv=None);
+  the suite integrator merges this segment into tests/t_engines_seeds.py,
+  pointing WORD_MAP_PATH at seeds/ai_flavor/word-map.json in-tree and
+  keeping DETECTOR_PATH as a skip-if-missing anchor (the instrument lives
+  in the attn workspace and may be absent on other machines;
+  test_detector_anchor then skips with a printed notice).
 
-Merge note: when merged, point WORD_MAP_PATH at seeds/ai_flavor/word-map.json
-relative to the rocqwash tree, and keep DETECTOR_PATH as a skip-if-missing
-anchor (the instrument lives in the attn workspace and may be absent on other
-machines; test_detector_anchor_then skips with a printed notice).
+Dependencies.  Python 3 standard library only (json, re, sys, pathlib); reads
+  word-map.json and, when reachable, the instrument source at DETECTOR_PATH.
 
-Asserted (seed charter E1):
-  1. structure   : schema fields present; face_count == len(faces) == 36
-  2. coverage    : the face set equals the 36 instrument faces, both directions
-  3. battery mix : 10 zh + 15 en stems + 8 en sentence + 3 en paragraph-initial
-  4. candidates  : every face has a non-empty candidate list; every candidate
-                   carries an allowed kind, a non-empty value, a non-empty basis
-  5. no coinage  : zh faces carry only ban-remediation entries; en stems carry
-                   exactly the register-enumerated neutral forms; sentence and
-                   paragraph faces carry only delete-or-restate entries
-  6. key language: every JSON key at any depth is English (ASCII pattern)
-  7. anchor      : when reachable, the instrument source contains the four
-                   battery pattern literals verbatim
+Evidence.  run_all() prints one PASS/FAIL line per check with a detail line,
+  so failures are itemized, not aggregated.
 
-This file embeds the face constants by design (it is the assertion corpus for
-them), so the wording batteries fire on this file itself; the em-dash count
-must stay 0. Provenance and the replacement-closure gap: see SPEC.md next to
-this file.
+Exit-codes.  0 = no FAIL; 1 = at least one FAIL (listed, fail-loud); a missing
+  instrument yields a loud SKIP line, never a silent pass.
 """
 
 import json
