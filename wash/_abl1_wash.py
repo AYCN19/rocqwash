@@ -1,9 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""_abl1_wash.py — agent abl1 批洗工装（exact-string + count 断言 + 幂等·20261027）
+"""_abl1_wash.py - batch exact-string patch applier for the abl1 ablation proof tree.
 
-工装形制（cw-tail-supply §12.4）：嵌套括号感知（站文逐字采集）·断言必开（count 断言
-fail-loud）·幂等（new 已在盘=skip）·编辑恒前台。逐站 old/new 见账/station_ledger.md。
+Purpose.  Applies the fixed per-file patch ledger in `PATCHES` to the hardcoded
+  absolute `ROOT` tree: each entry is a (tag, old, new, expect) tuple, applied
+  only when the file holds exactly `expect` occurrences of `old`; after the
+  replace the count of `new` must reach `expect` (assertion on, fail loud).
+  Idempotent: an entry whose `new` is already present at least `expect` times
+  while `old` occurs zero times is skipped; per file, one failed entry leaves
+  the whole file unwritten.
+
+Interface.  `python3 wash/_abl1_wash.py` - no flags, no arguments; `ROOT` is
+  hardcoded by design and `main()` runs only under `__main__`.  Output: one
+  line per entry (`APPLY` / `SKIP` / `FAIL` with file, tag and counts) plus
+  one summary line `--- applied=N skipped=N fail=YES|NO`.  Per-entry old/new
+  strings are recorded in `station_ledger.md` beside the target tree;
+  `tests/test_wash_fixture.py` imports this module, points `ROOT` at a temp
+  fixture and asserts on this exact output.
+
+Dependencies.  Python 3 standard library only (`sys`, `os`, `re`); run as a script
+  it rewrites the target files in place under `ROOT`; no network, no compiler.
+
+Evidence.  `tests/run_tests.sh:336` runs `tests/test_wash_fixture.py`, which seeds
+  a temp fixture from `PATCHES` and asserts the positive / idempotent-replay /
+  negative triple: all-apply with on-disk count checks, replay skips,
+  corrupted `old` failing loud, file left byte-identical.
+
+Exit-codes.  0 = every entry applied or skipped; 1 = at least one entry failed
+  its count assertion (fail loud; the failing file is not written).
 """
 import sys, os, re
 
@@ -15,12 +39,13 @@ POW = [("abl_archpa04_step_calc", "ap4"), ("abl_attniter_step_calc", "aic"),
 def patches_for_pow(fname, P):
     com = f"{P}_pow_iter_comm"
     base = [
-        # 站1 语句面: 裸 = → Id（结论位）
+        # statement rewrite: bare = -> Id (conclusion position)
         (f"stmt",
          f"  {P}_pow_iter p q ({P}_iter p q x) k = {P}_iter p q ({P}_pow_iter p q x k).\n",
          f"  Id ({P}_pow_iter p q ({P}_iter p q x) k)\n     ({P}_iter p q ({P}_pow_iter p q x k)).\n",
          1),
-        # 站2 证明体: reflexivity→apply id_refl；rewrite IH→id_cong 同余（Id 非 setoid）
+        # proof body: reflexivity -> apply `id_refl`; rewrite IH -> `id_cong`
+        # congruence (Id is not a setoid)
         (f"proof",
          "  intros p q x k. induction k as [| k IH].\n"
          "  - simpl. reflexivity.\n"
@@ -29,29 +54,31 @@ def patches_for_pow(fname, P):
          "  - simpl. apply id_refl.\n"
          f"  - simpl. exact (id_cong ({P}_iter p q) IH).\n",
          1),
-        # 消费位×2（in-hyp）: rewrite <- … in Hbound → revert+destruct（Id 索引抽象）
+        # consumer sites x2 (in-hypothesis): `rewrite <- ... in Hbound` ->
+        # revert + destruct (`Id` indexed abstraction)
         (f"inhyp",
          f"rewrite <- ({com} p q x k') in Hbound.",
          f"revert Hbound. destruct ({com} p q x k'). intros Hbound.",
          2),
-        # 消费位（goal·两行形）: rewrite <- → destruct
+        # consumer site (goal, two-line form): rewrite <- -> destruct
         (f"goal2l",
          f"        rewrite <- ({com} p q x\n                      ({P}_k_enum f p q ({P}_iter p q x) e)).\n",
          f"        destruct ({com} p q x\n                    ({P}_k_enum f p q ({P}_iter p q x) e)).\n",
          1),
-        # 消费位（goal·j'）
+        # consumer site (goal, j')
         (f"goalj",
          f"simpl. rewrite <- ({com} p q x j'). exact IH.",
          f"simpl. destruct ({com} p q x j'). exact IH.",
          1),
-        # 消费位（goal·k0）
+        # consumer site (goal, k0)
         (f"goalk0",
          f"* simpl. rewrite <- ({com} p q x k0). exact Hb0.",
          f"* simpl. destruct ({com} p q x k0). exact Hb0.",
          1),
     ]
     if P == "mtc2":
-        # mixchain 形异：inhyp 仅 1 站；goal 站单行形；无 goalj 站（实测 L167/L175/L320）
+        # mixchain shape differs: one in-hypothesis site only; goal site in
+        # single-line form; no goal-j site (verified at L167/L175/L320)
         base[3] = ("goal1l",
                    f"        rewrite <- ({com} p q x ({P}_k_enum f p q ({P}_iter p q x) e)).\n",
                    f"        destruct ({com} p q x ({P}_k_enum f p q ({P}_iter p q x) e)).\n",
@@ -147,7 +174,7 @@ def main():
             with open(path, "w", encoding="utf-8") as fh:
                 fh.write(content)
         else:
-            print(f"!!!   {fname}  NOT WRITTEN (fail-loud·修账后重跑)")
+            print(f"!!!   {fname}  NOT WRITTEN (fail-loud; correct the ledger entry, then rerun)")
     print(f"--- applied={total_applied} skipped={total_skipped} fail={'YES' if any_fail else 'NO'}")
     sys.exit(1 if any_fail else 0)
 
