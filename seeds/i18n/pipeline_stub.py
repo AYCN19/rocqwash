@@ -1,19 +1,32 @@
 #!/usr/bin/env python3
-"""rocqwash seed E4: i18n translation-pipeline interface stub.
+"""pipeline_stub.py - i18n translation-pipeline interface stub (E4 seed).
 
-Status: STUB. This file carries the interface shape of the zh<->en
-bidirectional four-linkage pipeline (normalization / standardization /
-internationalization / de-AI-flavor) and ZERO implementation. The engine
-body grows later on rocqwash's own wash_shape / norm_lint / evolve faces.
-
-Contract: the SPEC markdown file in this same directory (sections 2, 3, 5,
-9, 10); its filename is the one fixed by the seed ask and is discoverable
-by directory listing.
-Seed line: RQW12 seed landing, 2026-11-14.
-
-Environment face: pure stdlib, zero network, zero writes, zero side effects.
-Any invocation other than --selftest prints the STUB banner and exits 2
-(usage). The stub never fakes a pipeline result.
+Purpose.  Carry the interface shape of the zh<->en bidirectional
+  four-linkage pipeline (normalization / standardization /
+  internationalization / de-AI-flavor) with zero implementation: every
+  operation raises `PipelineStub`; the stub never fakes a pipeline result.
+  The engine body lives in `tools/i18n_pipeline.py` (`i18n_translate`,
+  `i18n_verify` companions).
+Interface.  `python3 seeds/i18n/pipeline_stub.py --selftest` verifies the
+  interface shape and prints a STUB banner; any other invocation prints
+  the STUB banner plus usage.  Six operations with fixed signatures:
+  `segment_document(text, direction)`, `translate_segments(segments,
+  model_id, prompt_template_ref)`, `apply_linkages(segments, linkage_ids)`,
+  `verify_faces(run_manifest)`, `tenpoint_review(target_artifact)`,
+  `sync_ledger_append(ledger_path, rows)`.  Data contract: the SPEC
+  markdown file in this directory (sections 2, 3, 5, 9, 10), discoverable
+  by directory listing.
+Dependencies.  Python 3 standard library only (`argparse`, `inspect`,
+  `sys`); zero network, zero writes, zero side effects on every face.
+Evidence.  `--selftest` probes every operation in `OPERATIONS` with
+  signature-counted `None` placeholders and passes only when each raises
+  `PipelineStub`; sibling `seeds/i18n/test_snippet.py` runs this stub
+  under `-I` asserting exit 0 with a STUB marker; suite segment
+  `tests/t_engines_seeds.py` drives the same check
+  (`test_i18n_pipeline_stub_selftest`).
+Exit-codes.  0 = `--selftest` passed, interface shape intact; 1 =
+  `--selftest` found interface drift (constant or raise behavior); 2 =
+  usage error (any invocation other than `--selftest`).
 """
 
 import argparse
@@ -21,6 +34,10 @@ import inspect
 import sys
 
 PIPELINE_ID = "rocqwash-i18n/0.0.0-stub"
+
+# Seed provenance record, kept as a module metadata line (historical fact;
+# the prose face carries no date stamps).
+SEED_LINE = "RQW12 seed integration, 2026-11-14"
 
 DIRECTIONS = ("zh2en", "en2zh")
 
