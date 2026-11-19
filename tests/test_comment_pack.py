@@ -1,23 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_comment_pack.py — wash/comment_pack.json + wash/comment_sweep.py 自测
-（tests/·v31 工具化·承 W39/W44/W52/W54 四席注释英化 sweep 工法判例工具化）
+"""test_comment_pack.py — selftest for wash/comment_pack.json and
+wash/comment_sweep.py (rocqwash tests/; v31 toolification of the
+W39/W44/W52/W54 comment-Englishization sweep precedent).
 
-六节判：
-  1 工具自证    comment_sweep --selftest 四判全过（rc 0）——注释域旗词换形/
-                字符串与嵌套注释免疫/头注换代/w7 code 行全等投影/幂等
-  2 pack 完整   comment_pack.json 解析：engine=comment-state-machine、旗词表
-                （载体→carrier 单词现役）、header_spec 五字段英形＋行上界
-  3 fixture 流程  干跑零写→--apply（旗词换形 2 处·字符串内 1 处禁换·嵌套
-                注释深处换形）→code 行全等断言（w7 口径）→重跑零变更
-  4 头注换代    --header-map 数据驱动换代（fixture 旧头注→五字段英形）→
-                code 行全等→重跑零变更（换代幂等）
-  5 头注形校验  五字段缺一报 problem（report-only 不硬红）＋header_end_line
-                口径（尾空行不计）
-  6 负例        字符串字面量与 code 域零触碰逐字断言
+Purpose.  Six sections over the comment-domain sweep sidecar: 1 the
+  sweep's --selftest (four checks, rc 0: flag-word exchange, string and
+  nested-comment immunity, header regeneration, w7 code-line identity,
+  idempotence); 2 pack integrity (engine=comment-state-machine, the
+  flag-word table (`载体` -> `carrier`, in force), header_spec five-field
+  English form with the line cap); 3 the fixture arc (dry run zero-write,
+  --apply with the string-literal place exempt and a deep nested comment
+  reached, w7 code-line identity, zero-change re-run); 4 header
+  regeneration (--header-map data-driven, code-line identity, idempotent
+  re-run); 5 header shape (a missing field is a problem, report-only,
+  header_end_line convention); 6 negatives (string-literal and code-domain zero-touch, verbatim).
 
-零触律：夹具临时目录副本驱动·零真编译零网络零触真仓。
-退出码：0=六节全过；1=任一红。
+Interface.  python3 -B tests/test_comment_pack.py; also the suite lane
+  `t_comment_pack` (tests/run_tests.sh).  No flags.
+
+Dependencies.  Python 3 standard library only; wash/comment_sweep.py,
+  wash/comment_pack.json, tests/fixtures/comment_sweep_fixture.v; every
+  arc runs on fixture temp-directory copies; zero real compile, zero
+  network, zero real-repository touch.
+
+Evidence.  Each check prints an ok/FAIL line; the final TEST-COMMENT-PACK line sums
+  them; dry-run byte equality and the w7 code-line equality re-assert zero touch.
+
+Exit-codes.  0 = all six sections pass; 1 = at least one FAIL (names on
+  the final TEST-COMMENT-PACK line).
 """
 import io
 import json
@@ -75,7 +86,7 @@ check("sweep --selftest rc=0", r.returncode == 0,
 pack = json.load(io.open(PACK, encoding="utf-8"))
 check("engine is comment-state-machine",
       pack.get("engine") == "comment-state-machine")
-check("flag word 载体→carrier",
+check("flag-word table source->carrier",
       pack.get("flag_words") == {"载体": "carrier"})
 spec = pack.get("header_spec", {})
 check("header spec five dotted fields",
