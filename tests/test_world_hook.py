@@ -1,21 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_world_hook.py — wash/world_hook.py 自测（tests/·五课反馈轮·agent rqsupport·20261101）
+"""test_world_hook.py — selftest for `wash/world_hook.py` (rocqwash tests/).
 
-五课负例①【nw5 世界偏斜】：born 世界必须=RUNTREE 认证代 cp·禁自带旧代。
-判例源：seat_nw5ver/账/world_md5_assert_npw.txt ASSERT4（自带 world 副本 WDIFF×14/
-WMISS×2 实录）。本件在套件层独立复现该雷的机检负例（与工具 --selftest 互为旁证）：
+Purpose.  The world born into a sanitize run must equal the RUNTREE certified-generation copy;
+  a self-carried stale generation is forbidden.  This face reproduces the recorded failure case
+  (ASSERT4 in `sandbox/seat_nw5ver/账/world_md5_assert_npw.txt`: a self-carried world copy
+  differing from the tree copy by WDIFF x14 / WMISS x2) as five suite-level checks, a parallel
+  witness to the tool's --selftest:
+  1 selftest — the tool --selftest twelve vectors pass (rc 0)
+  2 stale-world neg — skewed world (stale-generation .vo) + engine passthrough -> rc 9, WDIFF
+    on stdout, --out never written (the pre-born assertion intercepts; the engine never runs)
+  3 WMISS neg — a certified base file missing -> rc 9, WMISS on stdout
+  4 pos passthrough — certified-generation world (fixture anchors re-measured) -> rc 0, the
+    engine runs, the artifact lands
+  5 frozen side-evidence — md5 of `wash/wash_engine.py` equals the frozen record
+    664446bc717395d8496c8c30a5af9ccf (read-only reuse; zero bytes touched)
 
-  1 自证       工具 --selftest 十二判全过（rc 0）
-  2 nw5 负例   偏斜世界（旧代 .vo）＋透传洗刀 → rc 9·WDIFF 词面·--out 零落盘
-               （born 前断言拦下·引擎一步未跑）
-  3 WMISS 负例 认证代基座缺件 → rc 9·WMISS 词面
-  4 pos 正判   认证代世界（夹具锚现拍）→ rc 0·引擎真跑·产物落盘
-  5 冻结旁证   wash/wash_engine.py md5 == 在册冻结值 664446bc…（钩子只读复用·
-               零字节触伴——在役八组件冻结禁改的机检旁证）
+Interface.  python3 tests/test_world_hook.py; no flags; drives the hook via subprocess
+  (sys.executable -B) and asserts on exit codes, stdout tokens (PASS, WDIFF, WMISS,
+  WORLD-BASE-OK) and on-disk effects.
 
-幂等：临时目录即写即清·不触两仓正本/各 agent 域·零编译零网络。
-退出码：0=五判全过；1=任一红。
+Dependencies.  Python 3 standard library only (hashlib, io, json, os, shutil, subprocess, sys,
+  tempfile); writes only under a mkdtemp directory removed in a finally block; zero repository
+  writes, zero compile, zero network; deterministic.
+
+Evidence.  Five named checks with the name and detail printed on failure; the TEST-WORLD-HOOK
+  PASS line is the conclusion; roster row: `t_world_hook` (tests/run_tests.sh, README row 26);
+  the tool's --selftest is the parallel witness (check 1).
+
+Exit-codes.  0 = all five checks passing; 1 = any check failing.
 """
 import hashlib
 import io
@@ -29,7 +42,7 @@ import shutil
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOOK = os.path.join(REPO, "wash", "world_hook.py")
 ENGINE = os.path.join(REPO, "wash", "wash_engine.py")
-ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # 更新账.md §三在册值
+ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # frozen record in `更新账.md` §3
 
 ANCHOR_NAMES = ["S01_BaseRing", "S02_CauchyComplete", "S03_QExp",
                 "UpReqLpoEquiv", "EntropyUnsatMark"]
@@ -51,7 +64,8 @@ def run(args):
 
 
 def make_world(root, stale_first=False):
-    """夹具世界：五锚名各一 .vo；stale_first=True 时首件写旧代内容。"""
+    """Fixture world: one .vo per anchor name; with stale_first=True the first file gets
+    stale-generation content."""
     world = os.path.join(root, "world")
     os.makedirs(world)
     mds = {}
@@ -84,11 +98,11 @@ def main():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_tworldhook_")
     try:
-        # 1 工具自证
+        # 1: the tool's own selftest
         p = run(["--selftest"])
         check("selftest", p.returncode == 0 and "PASS" in p.stdout, p.stdout[-400:])
 
-        # 2【nw5 负例】世界偏斜：born 前断言拦下·引擎零落盘
+        # 2: stale-world neg — the pre-born assertion intercepts; the engine writes nothing
         stale_root = os.path.join(tmp, "stale")
         os.makedirs(stale_root)
         world_s, _ = make_world(stale_root, stale_first=True)
@@ -97,41 +111,42 @@ def main():
         fresh_root = os.path.join(tmp, "fresh")
         os.makedirs(fresh_root)
         world_f, mds = make_world(fresh_root)
-        # 认证代锚 manifest（套件夹具·形承 world_md5_assert.txt 表列形·对 fresh 现拍）
+        # certified-generation anchor manifest (suite fixture; world_md5_assert.txt table
+        # form; re-measured against the fresh world)
         man = os.path.join(stale_root, "man.txt")
         with io.open(man, "w", encoding="utf-8") as fh:
             for n in sorted(mds):
                 fh.write("%s  %s.vo  OK\n" % (mds[n], n))
         p = run(["--world", world_s, "--manifest", man, "--",
                  "--file", src_v, "--patch", lp, "--out", out_v])
-        check("nw5_WDIFF_负例", p.returncode == 9 and "WDIFF" in p.stdout
+        check("stale_world_WDIFF_neg", p.returncode == 9 and "WDIFF" in p.stdout
               and not os.path.exists(out_v),
               "rc=%d out_exists=%s" % (p.returncode, os.path.exists(out_v)))
 
-        # 3 WMISS 负例
+        # 3: WMISS neg
         p = run(["--world", world_f, "--anchor", "Absent_Mod=%s" % ("0" * 32)])
-        check("WMISS_负例", p.returncode == 9 and "WMISS" in p.stdout,
+        check("WMISS_neg", p.returncode == 9 and "WMISS" in p.stdout,
               "rc=%d" % p.returncode)
 
-        # 4 pos：认证代世界＋透传洗刀 → rc 0·产物落盘
+        # 4: pos — certified-generation world + engine passthrough -> rc 0, artifact lands
         out_v2 = os.path.join(fresh_root, "vec_washed.v")
         p = run(["--world", world_f, "--manifest", man, "--",
                  "--file", src_v, "--patch", lp, "--out", out_v2])
-        check("pos_透传", p.returncode == 0 and os.path.isfile(out_v2)
+        check("pos_passthrough", p.returncode == 0 and os.path.isfile(out_v2)
               and "WORLD-BASE-OK" in p.stdout, "rc=%d" % p.returncode)
 
-        # 5 冻结旁证：引擎 md5 仍=在册冻结值
-        check("冻结件零触", md5_of(ENGINE) == ENGINE_FROZEN_MD5,
+        # 5: frozen side-evidence — the engine md5 still equals the frozen record
+        check("frozen_engine_untouched", md5_of(ENGINE) == ENGINE_FROZEN_MD5,
               "md5=%s" % md5_of(ENGINE))
 
         fails = [c for c in checks if not c[1]]
         for name, ok, detail in checks:
-            print("  %-14s %s %s" % (name, "PASS" if ok else "FAIL", detail if not ok else ""))
+            print("  %-22s %s %s" % (name, "PASS" if ok else "FAIL", detail if not ok else ""))
         if fails:
-            print("TEST-WORLD-HOOK FAIL: %d/%d 红" % (len(fails), len(checks)))
+            print("TEST-WORLD-HOOK FAIL: %d/%d failing" % (len(fails), len(checks)))
             return 1
-        print("TEST-WORLD-HOOK PASS: selftest/nw5偏斜负例/WMISS负例/pos透传/冻结旁证 五判全过"
-              "（五课负例①nw5·世界基）")
+        print("TEST-WORLD-HOOK PASS: selftest / stale-world WDIFF neg / WMISS neg / "
+              "pos passthrough / frozen side-evidence — all five checks passed")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
