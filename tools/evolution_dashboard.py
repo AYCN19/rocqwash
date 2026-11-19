@@ -10,7 +10,8 @@ Purpose.  Aggregate the experience ledger (docs/exp-ledger.jsonl, schema
   and the per-run gap thermometer reading.  Absent standing ledgers and
   zero rows are data, loudly marked, never errors; every reading is a
   dated snapshot taken from input content only.  A fourth face, the
-  scheduling feedback reading, is aggregated as well (absent is data).
+  scheduling feedback reading (with its optional calibration reading),
+  is aggregated as well (absent is data).
 Interface.  `python -I tools/evolution_dashboard.py [--repo ROOT]
   [--exp-ledger P] [--rounds P] [--reports P]... [--json-out P]
   [--md-out P] [--stdout markdown|json] [--selftest]`.  Defaults resolve
@@ -21,15 +22,14 @@ Interface.  `python -I tools/evolution_dashboard.py [--repo ROOT]
   the caller-named --json-out / --md-out files are written; stdout carries
   the summary line plus the selected face.
 Dependencies.  Python 3 stdlib only (argparse/json/os/shutil/sys/tempfile);
-  zero network (no socket face; NETRED: no network by design); zero
-  eval/exec; deterministic: the runtime clock never enters the logic.
+  zero network (no socket face); zero eval/exec; no runtime clock in the logic.
 Evidence.  --selftest on tmp fixtures: happy-path math and curve order,
   byte-identical reruns, absent-defaults-as-data, corrupt-input exit 9
-  zero writes, the rise flag, both faces byte-equal to --stdout.
+  zero writes, the rise flag, both faces byte-equal to --stdout, and the
+  calibration reading (present and section-absent forms).
 Exit-codes.  0 = dashboard produced (absent inputs / zero rows are data);
-  1 = selftest red; 2 = usage error (bad --stdout choice); 9 = missing or
-  corrupt input (an explicitly named path absent, invalid JSON, no vacgen
-  face, or a write failure; nothing written).
+  1 = selftest red; 2 = usage error; 9 = missing or corrupt input (named
+  path absent, invalid JSON, no vacgen face, write failure; nothing written).
 """
 
 import argparse
@@ -62,6 +62,14 @@ FEEDBACK_SCHEMA = "rocqwash.scheduling-feedback/1"
 #   to be monotone non-increasing, so a rise is a signal, reported as data).
 # - thermometer: the latest curve point (largest time point, then runId) is
 #   the current reading: its TODO-SEAT gap count and coverageLowerPct.
+# - calibration readings: the optional calibration section of the
+#   scheduling feedback document (cast by tools/learning_feedback.py from
+#   the calibration rows of the experience ledger), read live from the
+#   document on every run.  A feedback document without the section is a
+#   data state (readings None, stated in the markdown face); a field
+#   missing inside the section stays None and renders as the dash cell,
+#   never an invented value.  A feedback file absent at the standing path
+#   carries no calibration reading either (the same absent-is-data rule).
 
 MD_TITLE = ("# \u81ea\u6f14\u8fdb\u4eea\u8868\u76d8 / Evolution Dashboard "
             "(schema %s)" % SCHEMA)
@@ -244,6 +252,14 @@ def feedback_face(inputs):
                 "unrecorded": repair.get("unrecorded"),
                 "repairActionRate": repair.get("repair_action_rate"),
                 "feedbackEdgeStatus": edge.get("status")}
+    cal_doc = doc.get("calibration")
+    calibration = None
+    if isinstance(cal_doc, dict):
+        calibration = {"ledgerPresent": cal_doc.get("ledger_present"),
+                       "entries": cal_doc.get("entries"),
+                       "agreementRate": cal_doc.get("agreement_rate"),
+                       "byClass": cal_doc.get("by_class")}
+    readings["calibration"] = calibration
     return {"path": path, "present": True, "readings": readings}
 
 
@@ -258,6 +274,9 @@ def feedback_lines(dash):
         lines.append("feedback: absent (tool not run); no feedback file "
                      "at the standing path %s (data, not an error)."
                      % fb["path"])
+        lines.append("The calibration reading rides the same document: no "
+                     "calibration reading is available (data, not an "
+                     "error).")
         return lines
     readings = fb["readings"]
     lines.append("| Metric | Value |")
@@ -286,6 +305,37 @@ def feedback_lines(dash):
                                 fmt(entry.get("rounds")),
                                 fmt(entry.get("gear")),
                                 fmt(entry.get("confidence"))))
+    calibration = readings.get("calibration")
+    lines.append("")
+    if not isinstance(calibration, dict):
+        lines.append("Calibration: the feedback document carries no "
+                     "calibration section (data, not an error); the "
+                     "producer predates the section or has not run.")
+    else:
+        lines.append("Calibration reading (the optional calibration "
+                     "section of the feedback document):")
+        lines.append("")
+        lines.append("| Metric | Value |")
+        lines.append("|---|---|")
+        for name, value in (("calibrationLedgerPresent",
+                             calibration.get("ledgerPresent")),
+                            ("calibrationEntries",
+                             calibration.get("entries")),
+                            ("calibrationAgreementRate",
+                             calibration.get("agreementRate"))):
+            lines.append("| %s | %s |" % (name, fmt(value)))
+        by_class = calibration.get("byClass")
+        if isinstance(by_class, list) and by_class:
+            lines.append("")
+            lines.append("| Grade | Entries | Agreeing | Agreement rate |")
+            lines.append("|---|---|---|---|")
+            for entry in by_class:
+                if isinstance(entry, dict):
+                    lines.append("| %s | %s | %s | %s |"
+                                 % (fmt(entry.get("class")),
+                                    fmt(entry.get("entries")),
+                                    fmt(entry.get("agreeing")),
+                                    fmt(entry.get("agreement_rate"))))
     lines.append("")
     lines.append("Feedback edge status: %s; the approval-rate reading is "
                  "computed by the producer tool, and scheduling does not "
@@ -948,6 +998,10 @@ def selftest():
                     and "watchOnlyGuardCorrect" in md_fb1
                     and "| c1 | 1 | auto | 1.0 |" in md_fb1,
                     "V10 markdown readings carry the three faces")
+        assert_true(dash_fb1["schedulingFeedback"]["readings"]["calibration"]
+                    is None, "V10 section absent reads as None")
+        assert_true("carries no calibration section" in md_fb1,
+                    "V10 section absence stated loudly")
 
         # V11 feedback present but invalid stops loudly (exit 9, no
         # output claimed): foreign schema and broken JSON both.
@@ -961,6 +1015,55 @@ def selftest():
         code_fb2 = main(["--repo", repo2])
         assert_true(code_fb2 == 9, "V11 broken JSON exits 9, got %r"
                     % code_fb2)
+
+        # V12 calibration readings: a feedback document carrying the
+        # optional calibration section is read live into both faces; the
+        # markdown face carries the ledger-present, entries, and
+        # agreement-rate cells plus the per-grade table, and the JSON
+        # face carries the same readings (dual form).
+        seed(os.path.join(repo1, "docs", "scheduling-feedback.json"),
+             json.dumps({
+                 "schema": FEEDBACK_SCHEMA,
+                 "rounds": {"total": 2, "auto": 1, "human_approved": 1,
+                            "approval_rate_auto": 0.5, "by_class": []},
+                 "repair_outcomes": {"repaired": 3, "escalated": 1,
+                                     "watch_only_guard_correct": 1,
+                                     "unrecorded": 2,
+                                     "repair_action_rate": 0.5},
+                 "feedback_edge": {"status": "open", "note": "note"},
+                 "calibration": {"section": "calibration",
+                                 "ledger_present": True, "entries": 3,
+                                 "agreement_rate": 0.3333,
+                                 "by_class": [
+                                     {"class": "HIGH", "entries": 2,
+                                      "agreeing": 1, "agreement_rate": 0.5},
+                                     {"class": "MID", "entries": 1,
+                                      "agreeing": 0,
+                                      "agreement_rate": 0.0}]}},
+                 sort_keys=True) + "\n")
+        exp_rows, round_rows, points, inputs = collect(repo1, None, None,
+                                                       None)
+        dash_cal = build_dashboard(exp_rows, round_rows, points, inputs)
+        cal = dash_cal["schedulingFeedback"]["readings"]["calibration"]
+        assert_true(cal == {"ledgerPresent": True, "entries": 3,
+                            "agreementRate": 0.3333,
+                            "byClass": [
+                                {"class": "HIGH", "entries": 2,
+                                 "agreeing": 1, "agreement_rate": 0.5},
+                                {"class": "MID", "entries": 1,
+                                 "agreeing": 0, "agreement_rate": 0.0}]},
+                    "V12 calibration readings: %r" % cal)
+        md_cal = render_markdown(dash_cal)
+        assert_true("calibrationLedgerPresent" in md_cal
+                    and "calibrationEntries" in md_cal
+                    and "calibrationAgreementRate" in md_cal
+                    and "| HIGH | 2 | 1 | 0.5 |" in md_cal
+                    and "| MID | 1 | 0 | 0.0 |" in md_cal,
+                    "V12 markdown calibration face")
+        json_doc = json.loads(render_json(dash_cal))
+        cal_json = json_doc["schedulingFeedback"]["readings"]["calibration"]
+        assert_true(cal_json == cal,
+                    "V12 json face readings equal: %r" % cal_json)
     except AssertionError as exc:
         fails.append(str(exc))
     finally:
@@ -969,7 +1072,7 @@ def selftest():
         for line in fails:
             sys.stderr.write("EVOLUTION-DASHBOARD SELFTEST FAIL %s\n" % line)
         return 1
-    sys.stdout.write("EVOLUTION-DASHBOARD SELFTEST PASS (11 vectors)\n")
+    sys.stdout.write("EVOLUTION-DASHBOARD SELFTEST PASS (12 vectors)\n")
     return 0
 
 

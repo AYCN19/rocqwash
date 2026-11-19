@@ -17,7 +17,7 @@
         "self_declared_version": "v1.8 (header revision chain)",
         "pin": {
           "kind": "md5",
-          "value": "bb0d07b316eb0937848672cdf5860fe0"
+          "value": "8876e13f52e4fdc37b89ab13fac5885d"
         }
       },
       {
@@ -36,7 +36,7 @@
         "role": "paper-track authority: cross-track row quotes only (no standard cell taken from it in this seed)",
         "pin": {
           "kind": "md5",
-          "value": "f61e4c44d4b1e203483ee45166f0fb6d"
+          "value": "0eb8bf56fcad91cddb3a08c1be3eb22e"
         }
       }
     ],

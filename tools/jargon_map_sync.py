@@ -5,12 +5,12 @@
 Purpose.  One-way sync of docs/jargon-to-standard-mapping-v1.md (detector
   map) into seeds/jargon/jargon-map.json (apply map), plus
   contract-prov-v2 S1 provenance: --apply re-signs v2 pins (repo to the
-  blob sha of current bytes, external to a refreshed snapshot md5) and
-  refuses a v1-shaped seed; --migrate flips v1 path+md5 sources to
-  locator/pin sources in one pass, writes snapshots byte-for-byte into
-  seeds/jargon/_snapshots/, then runs the consumer suite as the exit
-  gate (byte-identical rollback when red).  Admission, upsert, zh
-  authority and count-exact rules live in the comment block below.
+  blob sha of current bytes, external to the md5 of LF-normalized
+  snapshot bytes) and refuses a v1-shaped seed; --migrate flips v1
+  path+md5 sources to locator/pin in one pass, writes snapshots as
+  LF-normalized bytes into seeds/jargon/_snapshots/, then runs the
+  consumer suite as the exit gate (rollback when red).  Admission,
+  upsert, zh authority and count-exact rules: see the comment block.
 Interface.  --md P | --map P | --json P | --apply | --migrate |
   --selftest; plan is the default and zero-write; the VERDICT
   IN-SYNC/PENDING/SYNCED tail lines are the gate surface of
@@ -25,7 +25,8 @@ Evidence.  --selftest on temporary fixtures: filter admits and rejects,
   duplicate-face exit 1, CLI plan zero-write, apply idempotence,
   missing input exit 9, v2 plan/apply/migrate (re-sign all-PASS,
   off-canonical keep, v1 refusal, red-smoke rollback), blob sha
-  agrees with git, consistency FAIL forms, declared freshness-SKIP.
+  agrees with git, consistency FAIL forms, declared freshness-SKIP,
+  EOL vectors (CRLF upstream pinned normalized, CRLF snapshot to LF).
 Exit-codes.  0 green; 1 findings or refusal; 2 usage; 9 missing input;
   5 migrate rolled back after a red consumer smoke.
 """
@@ -84,6 +85,20 @@ Exit-codes.  0 green; 1 findings or refusal; 2 usage; 9 missing input;
 # consumer suite as the exit gate and rolls the seed back
 # byte-identically when the gate is red.  The md table is never a write
 # target of this tool.
+#
+# EOL normalization (contract-eol).  The external md5 pin is an
+# EOL-independent fingerprint: the pin value is the md5 of the
+# CRLF-to-LF-normalized bytes (the net normalization of this
+# repository's .gitattributes, "* text=auto eol=lf"), the snapshot is
+# stored in the repository as LF bytes, the consistency layer hashes
+# the normalized snapshot bytes, and the freshness layer hashes the
+# normalized upstream bytes.  A snapshot re-saved by git (or any
+# checkout/smudge shape) therefore cannot move the md5, and an upstream
+# that flips line endings alone cannot either.  Upstream originals are
+# never rewritten: normalization is applied to the bytes this tool
+# hashes and writes into the repository, not to the authority files
+# themselves.  Repository sources keep the git blob sha pin, which is
+# already byte-committed and outside this law.
 
 import argparse
 import contextlib
@@ -438,6 +453,18 @@ def md5_hex(data):
     return hashlib.md5(data).hexdigest()
 
 
+def normalize_eol(data):
+    """CRLF to LF, the net normalization of this repository's
+    .gitattributes ("* text=auto eol=lf").
+
+    The external md5 pin is an EOL-independent fingerprint: pins are
+    computed over normalized bytes and snapshots are stored as LF
+    bytes, so a git re-save or a checkout/smudge shape cannot move the
+    fingerprint.  Upstream originals are never rewritten by callers of
+    this function; only the hashed and stored bytes are."""
+    return data.replace(b"\r\n", b"\n")
+
+
 def read_bytes(path):
     """File bytes, or None when the file is missing or unreadable."""
     try:
@@ -468,7 +495,8 @@ def posix_rel(repo_root, abs_path):
 
 
 def write_snapshot(path, data):
-    """Write snapshot bytes verbatim, creating the snapshots directory."""
+    """Write snapshot bytes verbatim (callers pass LF-normalized bytes
+    per contract-eol), creating the snapshots directory."""
     parent = os.path.dirname(path)
     if parent and not os.path.isdir(parent):
         os.makedirs(parent)
@@ -506,19 +534,21 @@ def judge_repo_blob(repo_root, rel, pin):
 
 
 def judge_snapshot_md5(repo_root, rel, pin):
-    """External-source consistency layer: snapshot bytes md5 against the pin."""
+    """External-source consistency layer: normalized snapshot bytes md5
+    against the pin (CRLF to LF before hashing, contract-eol)."""
     if pin.get("kind") != PIN_MD5:
         return "FAIL", "pin kind %r is not %s" % (pin.get("kind"), PIN_MD5)
     data = read_bytes(repo_join(repo_root, rel))
     if data is None:
         return "FAIL", "snapshot absent (consistency unverifiable)"
-    if md5_hex(data) == pin.get("value"):
-        return "PASS", "snapshot bytes match the pinned md5"
+    if md5_hex(normalize_eol(data)) == pin.get("value"):
+        return "PASS", "normalized snapshot bytes match the pinned md5"
     return "FAIL", "snapshot bytes differ from the pinned md5"
 
 
 def judge_freshness(upstream_path, pin):
-    """External-source freshness layer: upstream md5 against the pin.
+    """External-source freshness layer: normalized upstream bytes md5
+    against the pin (CRLF to LF before hashing, contract-eol).
 
     Canonical only: an absent upstream is a declared SKIP (the exact
     contract text), never a silent one; a present upstream whose bytes
@@ -528,8 +558,9 @@ def judge_freshness(upstream_path, pin):
     data = read_bytes(upstream_path)
     if data is None:
         return "FAIL", "upstream present but unreadable"
-    if md5_hex(data) == pin.get("value"):
-        return "PASS", "freshness verified against upstream on canonical"
+    if md5_hex(normalize_eol(data)) == pin.get("value"):
+        return "PASS", "freshness verified against normalized upstream" \
+                       " bytes on canonical"
     return "FAIL", "upstream drifted from the pinned md5 (freshness red)"
 
 
@@ -572,10 +603,13 @@ def resign_sources(sources, repo_root):
 
     Repo sources pin the blob sha of the file's current bytes (the new
     content this sync just read).  External sources refresh the snapshot
-    from upstream bytes when upstream is present (canonical machine);
-    off-canonical, a standing snapshot keeps its pin and the freshness
-    layer reports the declared SKIP.  A source with neither an upstream
-    nor a snapshot fails loud: a pin nobody can ground is not written."""
+    from the LF-normalized upstream bytes when upstream is present (a
+    canonical machine stores the snapshot as LF bytes and pins their
+    md5, contract-eol); off-canonical, a standing snapshot keeps its pin
+    and the freshness layer reports the declared SKIP.  A source with
+    neither an upstream nor a snapshot fails loud: a pin nobody can
+    ground is not written.  Upstream originals are read, never
+    rewritten."""
     rows = []
     for src in sources:
         if source_shape(src) != "v2":
@@ -604,7 +638,8 @@ def resign_sources(sources, repo_root):
             upstream = src.get("upstream_path")
             snapshot = repo_join(repo_root, rel)
             if upstream and os.path.exists(upstream):
-                data = read_bytes_loud(upstream, "external upstream")
+                data = normalize_eol(read_bytes_loud(upstream,
+                                                     "external upstream"))
                 changed = read_bytes(snapshot) != data
                 if changed:
                     write_snapshot(snapshot, data)
@@ -617,7 +652,7 @@ def resign_sources(sources, repo_root):
                     action = "current"
                 pin["kind"] = PIN_MD5
                 pin["value"] = value
-                detail = "snapshot bytes equal the upstream bytes"
+                detail = "snapshot holds the LF-normalized upstream bytes"
             elif os.path.isfile(snapshot):
                 action = "kept"
                 value = pin.get("value")
@@ -665,11 +700,13 @@ def migrate_source(src, repo_root, snapshot_dir):
     path or None, bytes).
 
     A source inside the repository becomes a repo locator pinned to the
-    blob sha of its current bytes.  An external source is snapshotted: the
-    caller copies its bytes verbatim into the snapshots directory and the
-    pin is the md5 of those bytes, with the v1 absolute path kept as the
+    blob sha of its current bytes.  An external source is snapshotted:
+    the caller stores the LF-normalized bytes (contract-eol: snapshots
+    live in the repository as LF bytes) and the pin is the md5 of those
+    normalized bytes, with the v1 absolute path kept as the
     informational upstream_path.  Role text and the whitepaper's
-    self-declared version ride along unchanged; the v1 md5 key does not."""
+    self-declared version ride along unchanged; the v1 md5 key does
+    not.  The upstream original is read, never rewritten."""
     path = src.get("path")
     if not isinstance(path, str) or not path:
         fail("v1 source without a usable path: %r" % (src,), 1)
@@ -697,6 +734,7 @@ def migrate_source(src, repo_root, snapshot_dir):
              % (os.path.basename(abs_path),
                 ", ".join(sorted(SNAPSHOT_NAMES.values()))), 1)
     snapshot_abs = os.path.join(snapshot_dir, name)
+    data = normalize_eol(data)
     out["locator"] = LOCATOR_EXTERNAL
     out["path"] = posix_rel(repo_root, snapshot_abs)
     out["upstream_path"] = path
@@ -1572,6 +1610,84 @@ def run_selftest(args):
              "freshness layer reports exactly %r while consistency stays"
              " PASS" % SKIP_FRESHNESS_DECL
              if ok else "rows=%r" % rows)
+
+        # --- EOL normalization vectors (contract-eol) ---
+        up_crlf = b"authority bytes v1\r\nsecond authority line\r\n"
+        up_norm = normalize_eol(up_crlf)
+
+        # vector 19: a CRLF upstream is pinned by its normalized md5 and
+        # stored as an LF snapshot
+        reset_v2(md_bytes_1, up_crlf, snap_data=None)
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = run_sync(ns, repo_root=repo_root)
+        doc = load_map(map_v2)
+        s_ext = doc["provenance"]["sources"][1]
+        snap_data = read_bytes(snap_v2)
+        rows = check_sources_v2(doc["provenance"]["sources"], repo_root)
+        ok = (rc == 0
+              and s_ext["pin"]["value"] == md5_hex(up_norm)
+              and snap_data == up_norm
+              and b"\r\n" not in snap_data
+              and len(rows) == 3
+              and all(r["status"] == "PASS" for r in rows))
+        _vec(results, "eol-crlf-upstream-pinned-normalized", ok,
+             "a CRLF upstream re-signs the pin to the normalized md5 and"
+             " the snapshot is stored as LF bytes; the v2 judgment is"
+             " all-PASS"
+             if ok else "rc=%d pin=%s rows=%r"
+             % (rc, s_ext["pin"]["value"], rows))
+
+        # vector 20: a standing CRLF snapshot is rewritten to LF bytes on
+        # apply, and a git-style re-save back to CRLF cannot move the
+        # consistency verdict
+        reset_v2(md_bytes_1, up_crlf, snap_data=up_crlf)
+        doc = _v2_doc(md_bytes_1, up_crlf, upstream,
+                      pin_md=md5_hex(up_norm))
+        _write_bytes(map_v2, (json.dumps(doc, ensure_ascii=False,
+                                         indent=2) + "\n").encode("utf-8"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = run_sync(ns, repo_root=repo_root)
+        snap_after = read_bytes(snap_v2)
+        digest0 = read_bytes(map_v2)
+        # simulate a checkout/smudge shape that re-saves the snapshot
+        # with CRLF line endings
+        _write_bytes(snap_v2, up_crlf)
+        doc2 = load_map(map_v2)
+        rows = check_sources_v2(doc2["provenance"]["sources"], repo_root)
+        cons = [r for r in rows if r["layer"] == "external-consistency"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc2 = run_sync(ns, repo_root=repo_root)
+        ok = (rc == 0
+              and snap_after == up_norm
+              and b"\r\n" not in snap_after
+              and cons and cons[0]["status"] == "PASS"
+              and rc2 == 0
+              and read_bytes(snap_v2) == up_norm
+              and read_bytes(map_v2) == digest0)
+        _vec(results, "eol-crlf-snapshot-rewritten-to-lf", ok,
+             "a CRLF snapshot is rewritten to LF bytes on apply; a re-save"
+             " back to CRLF still passes the consistency layer and the"
+             " next apply restores LF with the map unchanged"
+             if ok else "rc=%d/%d cons=%r" % (rc, rc2, cons))
+
+        # vector 21: the EOL pass is idempotent - a second apply over the
+        # normalized tree is byte-identical on both the map and snapshot
+        reset_v2(md_bytes_1, up_crlf, snap_data=None)
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc = run_sync(ns, repo_root=repo_root)
+        digest_map = read_bytes(map_v2)
+        digest_snap = read_bytes(snap_v2)
+        with contextlib.redirect_stdout(io.StringIO()):
+            rc2 = run_sync(ns, repo_root=repo_root)
+        ok = (rc == 0 and rc2 == 0
+              and read_bytes(map_v2) == digest_map
+              and read_bytes(snap_v2) == digest_snap)
+        _vec(results, "eol-normalized-apply-idempotent", ok,
+             "a second apply over the normalized tree writes zero bytes:"
+             " map and snapshot stay byte-identical"
+             if ok else "rc=%d/%d map_stable=%s snap_stable=%s"
+             % (rc, rc2, read_bytes(map_v2) == digest_map,
+                read_bytes(snap_v2) == digest_snap))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

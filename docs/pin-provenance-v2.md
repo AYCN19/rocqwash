@@ -54,6 +54,19 @@ Per-source judgment is fail-loud and names its layer in the result line.
    a declared skip carrying the exact text
    `SKIP (declared, freshness unverifiable off-canonical: upstream absent)`.
 
+## EOL-agnostic fingerprinting
+
+The pin anchors content identity, not line endings. The fingerprint rule is
+normalize-then-hash: bytes are normalized CRLF to LF before the md5 is taken,
+the same law the repository's `.gitattributes` applies to the checkout
+(`* text=auto eol=lf`: every platform checks out LF, so a checkout shape can
+never flip a judgment). Both comparison layers judge the same fingerprint:
+the consistency layer takes the md5 of the normalized snapshot bytes against
+pin.value, and the freshness layer takes the md5 of the normalized upstream
+bytes the same way. A pin value is the md5 of normalized bytes, taken at sign
+time, so signing and verifying share one rule and no layer depends on the
+line endings of the tree it runs in.
+
 ## Verification
 
 The seed suite keeps its snapshot-md5 segment name and FAIL/SKIP/PASS count shape, so

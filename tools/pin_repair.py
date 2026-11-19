@@ -5,15 +5,15 @@
 Purpose.  R15 auto-repair executor over the provenance v2 pins.  Judgment
   is per pin kind: a repo source by its committed blob sha (git
   rev-parse HEAD:<path>); an external source by its in-repo snapshot
-  md5 (consistency layer) plus the upstream original's md5 where this
-  machine carries it (freshness layer).  Re-sign only from bytes this
-  tool has read; an absent upstream is recorded, never fatal.
+  md5 over CRLF-to-LF-normalized bytes (consistency layer) plus the
+  upstream original's normalized md5 (freshness layer).  Re-sign only
+  from bytes this tool has read; an absent upstream is never fatal.
 
 Interface.  python3 tools/pin_repair.py --selftest | --plan | --apply
   [--seed P] (default seeds/jargon/jargon-map.json).  One JSON result
   line on stdout, narrative on stderr; --plan writes nothing; --apply
   rewrites pin values in provenance.sources and refreshes external
-  sources' in-repo snapshot bytes from their upstream originals.
+  sources' in-repo snapshot bytes with LF-normalized upstream bytes.
 
 Dependencies.  Standard library only; zero network face.  Subprocesses:
   git rev-parse / git hash-object, tools/jargon_map_sync.py (plan gate,
@@ -95,11 +95,23 @@ def resolve_against(root, rel):
     return os.path.join(root, rel.replace("\\", "/"))
 
 
-def file_md5(path):
-    """Current md5 of a file's bytes; None when the file cannot be read."""
+def normalize_eol(data):
+    """CRLF to LF, the net normalization of this repository's
+    .gitattributes ("* text=auto eol=lf").
+
+    The external md5 pin is an EOL-independent fingerprint (contract-eol):
+    judgments and re-signs hash normalized bytes, and refreshed snapshots
+    are stored as LF bytes.  Upstream originals are read, never
+    rewritten."""
+    return data.replace(b"\r\n", b"\n")
+
+
+def file_normalized_md5(path):
+    """md5 of a file's CRLF-to-LF-normalized bytes; None when the file
+    cannot be read (contract-eol pin layers)."""
     try:
         with io.open(path, "rb") as fh:
-            return hashlib.md5(fh.read()).hexdigest()
+            return hashlib.md5(normalize_eol(fh.read())).hexdigest()
     except OSError:
         return None
 
@@ -208,11 +220,11 @@ def survey_sources(sources, root):
 
     repo row: blob judgment -- the committed blob sha of the path (git
     rev-parse HEAD:<path>) against pin.value; state matched / drifted /
-    not-in-head.  external row: consistency layer (in-repo snapshot
-    bytes vs pin.value; matched / drifted / snapshot-absent) plus
-    freshness layer (upstream bytes vs pin.value where this machine
-    carries the original; fresh / drifted / upstream-absent /
-    upstream-unreadable)."""
+    not-in-head.  external row: consistency layer (CRLF-to-LF-normalized
+    in-repo snapshot bytes vs pin.value; matched / drifted /
+    snapshot-absent) plus freshness layer (CRLF-to-LF-normalized upstream
+    bytes vs pin.value where this machine carries the original; fresh /
+    drifted / upstream-absent / upstream-unreadable)."""
     rows = []
     for src in sources:
         loc = src["locator"]
@@ -231,7 +243,7 @@ def survey_sources(sources, root):
                          "head_blob_sha": head, "state": state})
             continue
         snap_abs = resolve_against(root, path)
-        snap_md5 = file_md5(snap_abs)
+        snap_md5 = file_normalized_md5(snap_abs)
         if snap_md5 is None:
             consistency = "snapshot-absent"
         elif snap_md5 == value.lower():
@@ -243,7 +255,7 @@ def survey_sources(sources, root):
             freshness = "upstream-absent"
             up_md5 = None
         else:
-            up_md5 = file_md5(upstream)
+            up_md5 = file_normalized_md5(upstream)
             if up_md5 is None:
                 freshness = "upstream-unreadable"
             elif up_md5 == value.lower():
@@ -485,7 +497,7 @@ def flow(mode, seed_path, gate_cmd, verify=None, root=None):
             upstream = row["upstream_path"]
             try:
                 with io.open(upstream, "rb") as fh:
-                    up_bytes = fh.read()
+                    up_bytes = normalize_eol(fh.read())
             except OSError as exc:
                 return {"ok": False, "stage": "apply",
                         "reason": ("a pin is only re-signed from bytes"

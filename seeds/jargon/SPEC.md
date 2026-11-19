@@ -14,11 +14,12 @@ Interface.  `jargon-map.json` (schema `rocqwash-jargon-map/1`; keys: schema, eng
   the JSON per section 2 and run `norm_lint --jargon-map` on the projection; raw
   JSON input fails loud.  Application: `wash_shape --apply` has no jargon face yet.
 
-Dependencies.  `tools/norm_lint.py`, `tools/wash_shape.py` (absence probe), the pinned provenance
-  faces in the v2 form (the committed mapping-table blob by its git blob sha; the two external
-  authorities as in-repo snapshot copies under `seeds/jargon/_snapshots/` judged by md5, each
-  upstream original an informational locator only a canonical machine can hash), the mapping
-  table `docs/jargon-to-standard-mapping-v1.md`; Python 3 standard library only.
+Dependencies.  `tools/norm_lint.py`, `tools/wash_shape.py` (absence probe), the pinned provenance faces
+  in the v2 form (the committed mapping-table blob by its git blob sha; the two external authorities as
+  in-repo snapshot copies under `seeds/jargon/_snapshots/` judged by md5 over CRLF-to-LF normalized bytes
+  (EOL-agnostic fingerprint: content identity, not line endings; the `.gitattributes` normalization law),
+  each upstream original an informational locator only a canonical machine can hash), the mapping table
+  `docs/jargon-to-standard-mapping-v1.md`; Python 3 standard library only.
 
 Evidence.  `test_snippet.py` asserts the data contract (provenance v2), the two-source
   transcription containment (snapshot verbatim; in-repo-md-v1 vs the md table), the v2

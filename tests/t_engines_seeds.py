@@ -336,10 +336,21 @@ def git_head_blob(root, rel):
     return proc.stdout.strip(), ""
 
 
-def md5_of(path):
-    """md5 of a file's bytes; raises OSError when it cannot be read."""
+def normalize_eol(data):
+    """CRLF to LF, the net normalization of this repository's
+    .gitattributes ("* text=auto eol=lf").
+
+    The provenance md5 layers hash normalized bytes (contract-eol), so a
+    line-ending flip alone cannot move a pin verdict.  This helper never
+    rewrites any file; callers apply it to bytes they hash or compare."""
+    return data.replace(b"\r\n", b"\n")
+
+
+def normalized_md5_of(path):
+    """md5 of a file's CRLF-to-LF-normalized bytes; raises OSError when
+    the file cannot be read (contract-eol pin layers)."""
     with io.open(path, "rb") as fh:
-        return hashlib.md5(fh.read()).hexdigest()
+        return hashlib.md5(normalize_eol(fh.read())).hexdigest()
 
 
 def load_norm_lint(root):
@@ -436,12 +447,14 @@ def check_transcription(seed, root, res):
     """Containment check over the pinned in-repo faces (provenance v2).
 
     The annotation-track source is read from its in-repo snapshot copy
-    under seeds/jargon/_snapshots/ and the tool-track mapping table from
-    its committed repository path, so the whole check is a repository
-    face: it runs identically on every machine and consumes no
-    authoring-machine path.  A pinned face that cannot be read fails
-    loud: the v2 pin contract guarantees a readable in-repo copy of
-    every source this check consumes."""
+    under seeds/jargon/_snapshots/ (bytes read then CRLF-to-LF
+    normalized before decoding, the same contract-eol law the pin
+    layers apply) and the tool-track mapping table from its committed
+    repository path, so the whole check is a repository face: it runs
+    identically on every machine and consumes no authoring-machine
+    path.  A pinned face that cannot be read fails loud: the v2 pin
+    contract guarantees a readable in-repo copy of every source this
+    check consumes."""
     if root is None:
         res.append(("transcription", False,
                     "repository root not found; the pinned faces are not"
@@ -456,8 +469,8 @@ def check_transcription(seed, root, res):
                     " provenance sources"))
         return
     try:
-        wp_text = io.open(repo_rel(root, wp_src[0]["path"]),
-                          encoding="utf-8").read()
+        with io.open(repo_rel(root, wp_src[0]["path"]), "rb") as fh:
+            wp_text = normalize_eol(fh.read()).decode("utf-8")
     except OSError as exc:
         res.append(("transcription", False,
                     "annotation-track snapshot unreadable: %s" % exc))
@@ -588,11 +601,13 @@ def check_snapshot_md5(seed, root, res):
     equal pin.value, a pure git query that answers identically on every
     machine holding the repository, so the content-red class is now
     verifiable on hosted runners too.  external source: the consistency
-    layer hashes the in-repo snapshot bytes against pin.value; the
-    freshness layer re-hashes the upstream original when this machine
-    carries it and skips with a declared notice when it does not (an
-    honest skip, never a silent one).  A source not in the v2 form fails
-    loud: the pin contract has no legacy reading."""
+    layer hashes the CRLF-to-LF-normalized in-repo snapshot bytes against
+    pin.value (contract-eol: the pin is an EOL-independent fingerprint,
+    so a git re-save of the snapshot cannot move the verdict); the
+    freshness layer re-hashes the CRLF-to-LF-normalized upstream original
+    when this machine carries it and skips with a declared notice when it
+    does not (an honest skip, never a silent one).  A source not in the
+    v2 form fails loud: the pin contract has no legacy reading."""
     if root is None:
         res.append(("snapshot-md5", False,
                     "repository root not found; the provenance pins are"
@@ -637,20 +652,21 @@ def check_snapshot_md5(seed, root, res):
                 continue
             snap = repo_rel(root, path)
             try:
-                cur = md5_of(snap)
+                cur = normalized_md5_of(snap)
             except OSError:
                 fails.append("external consistency %s: snapshot absent"
                              " from the repository" % path)
                 continue
             if cur != value.lower():
-                fails.append("external consistency %s: snapshot md5 %s"
-                             " != pinned %s" % (path, cur[:8], value[:8]))
+                fails.append("external consistency %s: normalized snapshot"
+                             " md5 %s != pinned %s"
+                             % (path, cur[:8], value[:8]))
             else:
                 notes.append("external consistency %s md5==pin" % path)
             upstream = s.get("upstream_path") or ""
             if os.path.exists(upstream):
                 try:
-                    up_md5 = md5_of(upstream)
+                    up_md5 = normalized_md5_of(upstream)
                 except OSError as exc:
                     fails.append("external freshness %s: upstream"
                                  " unreadable (%s)" % (path, exc))
