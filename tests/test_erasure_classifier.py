@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
 """test_erasure_classifier.py — regression coverage for
-verify/erasure_classifier.py.
+verify/erasure_classifier.py (tests/).
 
-Vectors:
-  1. classifier selftest (in-memory vectors: six clusters, coq_ prefix
-     forms, premise positions, multi-line inner-component stations) — rc 0.
-  2. synthetic interface: conclusion clusters fire only on whole-conclusion
-     erasures; inner-component positions stay advisory "other" with a
-     name-pattern hint; a typed val is never a station.
-  3. CAPTURE cross-check: classifier membership cluster agrees with a
-     scanner capture_stations report on the synthetic interface.
-  4. optional replay (env ROCWASH_ERASURE_MLI + ROCWASH_ERASURE_SCAN): on a
-     real extraction interface with its scanner report, the permutation /
-     membership / neq conclusion clusters and the capture agreement
-     reproduce; --resolve names report resolved.  Skipped silently when the
-     variables are unset, so external clones pass without local artifacts.
+Purpose.  Regression suite for the erasure classifier: four vectors — the
+  classifier --selftest (six clusters, coq_ prefix forms, premise positions,
+  multi-line inner-component stations), a synthetic .mli interface with
+  per-name cluster/kind expectations, a CAPTURE cross-check against a
+  scanner report, and an optional real-interface replay.
+Interface.  Runs `verify/erasure_classifier.py` as a python3 -B subprocess
+  with --selftest, --mli/--json-out/--resolve, and --json (CAPTURE report);
+  the replay is env-gated by ROCWASH_ERASURE_MLI and ROCWASH_ERASURE_SCAN
+  and is skipped when the variables are unset, so external clones pass
+  without local artifacts.
+Dependencies.  Python 3 standard library only; the classifier is located
+  relative to this file's parent directory; fixtures are built in a temp
+  directory removed in finally.
+Evidence.  A vector passes only on concrete outcomes: selftest rc 0;
+  conclusion clusters firing only on whole-conclusion erasures while
+  inner-component positions stay advisory "other" with a name-pattern hint
+  and a typed val never a station; capture agreement on the membership
+  cluster with a scanner capture_stations report; the replay reproducing
+  the recorded totals with --resolve names reported resolved.
+Exit-codes.  0 = all checks pass; 1 = at least one check FAILed (the
+  failing check names are listed on the summary line).
 """
 import io, json, os, subprocess, sys, tempfile
 

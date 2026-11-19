@@ -1,32 +1,76 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_probe_engine.py — wash/probe_engine.py 自测（tests/·v30 实战判例工具化·
-承 W13 probe_batch.py 工具化轮·20261103）
+"""test_probe_engine.py — selftest for wash/probe_engine.py, the batch
+closure-compatibility probe engine (tests/; eleven sections, numbered by
+execution order).
 
-批量闭包相容探针引擎十一节判（编号＝执行序）：
-  1 工具自证    --selftest 四判全过（rc 0）
-  2 stub 全链   桩探针三分：WASHABLE（rc0+RED>0）／BORN-CLEAN（rc0+RED=0）／
-                RED-MISSING_LIB（rc1·missing 库名捕获·red_count/md5_match 回填）
-  3 NO-SRC      清单有名源树无件 → rc=NO_SRC verdict=NO-SRC（不编译如实出账）
-  4 TIMEOUT     桩 sleep→--timeout 2 → rc=124 verdict=TIMEOUT
-  5 resume 幂等 重跑同候选集 → SKIP(done) 行＋台账字节级恒同（--fresh 同账）
-  6 guard 包裹  --guard tools/cpu_guard.sh（队列制）＋桩 rc=7 → 记录 rc=7
-                真取（退出码透传无改写·无管道）
-  7 RED 缺列    候选清单无 RED 列 → rc0 verdict=RC0（三分不可判如实出）
-  8 CLI 四码    --help 0／未知形参 2／缺参数 2／路径缺失 9
-  9 盘符路径归一 --rocq-cmd 模板里的 Windows 盘符路径须转正斜杠（bash -c 文本里
-                反斜杠是转义符·会把命令词折叠成 127·回归向量）
- 10 TIMEOUT 树收割 超时须收割整棵进程树（编译器是孙进程·仍握管道写端·
-                只杀直接子进程会把 2s 超时拖到 30s·回归向量）
- 11 真 rocq 门控节（ROCWASH_ROCQ 环境门控·缺省 SKIP 不充红）：repository fixtures
-     probe_pass_sample.v（passing）＋probe_red_sample.v（缺库红）全链——guard 包裹
-     ＋世界纯度（探针后五件产物移出·世界零残留）＋logdir 留证
-
-零触律：全部夹具在临时目录自造（桩脚本＋迷你源树/世界）＋repository fixtures 只读复制；
-stub 节零真编译零网络；真 rocq 节仅在 ROCWASH_ROCZ...ROCWASH_ROCQ 在卷时跑且
-一切编译经 tools/cpu_guard.sh 包裹（温控铁律）。幂等：python3 -B 禁 __pycache__·
-临时目录即写即清。退出码：0=十一节全过；1=任一红。
+Purpose.  Machine-checks the batch probe engine end to end: tool selftest;
+  the stubbed full-chain three-way split; NO-SRC; TIMEOUT; resume
+  idempotence; guard wrapping with exit-code pass-through; a candidates
+  list without the RED column; the four CLI exit codes; Windows
+  drive-letter path normalization; whole-process-tree reaping on timeout;
+  and the environment-gated real-rocq section.
+Interface.  Drives `wash/probe_engine.py` as a python3 -B subprocess with
+  --selftest and --candidates/--src/--world/--out/--logdir/--rocq-cmd/
+  --timeout/--fresh/--guard/--guard-reg/--guard-maxwait; the real-rocq
+  section runs only when ROCWASH_ROCQ is set and wraps every compile in
+  `tools/cpu_guard.sh`; unset means the section SKIPs by default and adds
+  no failure.
+Dependencies.  Python 3 standard library only; every fixture (stub probe
+  scripts plus mini source trees/worlds) is built in a temp directory and
+  removed in finally; the repository fixtures probe_pass_sample.v and
+  probe_red_sample.v are copied read-only; the stub sections perform zero
+  real compilation and zero network.
+Evidence.  Each section asserts concrete ledger outcomes; the per-section
+  roster with expectations is the extended contract comment below; key
+  vectors: byte-identical ledgers across resume and --fresh, the rc=7
+  guard pass-through read back from the captured log banner, RC0 on a
+  missing RED column, the 127-regression path-normalization vector with
+  its keep-list, timeout truncation under 20s and tree reaping under 15s,
+  and world purity (five products moved to logdir, zero residue).
+Exit-codes.  0 = all eleven sections pass; 1 = any section failed (AssertionError printed).
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).  Section roster,
+# numbered by execution order:
+#    1 tool selftest        --selftest four vectors all pass (rc 0)
+#    2 stub full chain      the stub probe splits three ways: WASHABLE
+#                           (rc 0, RED>0), BORN-CLEAN (rc 0, RED=0),
+#                           RED-MISSING_LIB (rc 1, missing-library name
+#                           captured, red_count/md5_match recorded)
+#    3 NO-SRC               a listed name without a source file ->
+#                           rc=NO_SRC verdict=NO-SRC (reported honestly
+#                           without compiling)
+#    4 TIMEOUT              stub sleeps -> --timeout 2 -> rc=124
+#                           verdict=TIMEOUT
+#    5 resume idempotence   rerunning the same candidate set -> SKIP(done)
+#                           lines and a byte-identical ledger (--fresh
+#                           agrees byte for byte)
+#    6 guard wrapping       --guard tools/cpu_guard.sh (queue discipline)
+#                           plus a stub exiting rc 7 -> rc 7 recorded
+#                           verbatim (exit-code pass-through, no rewrite,
+#                           no pipe)
+#    7 RED column missing   a candidates list without the RED column ->
+#                           rc 0 verdict=RC0 (the three-way split cannot
+#                           judge, reported honestly)
+#    8 the four CLI codes   --help 0 / unknown arg 2 / missing arg 2 /
+#                           missing path 9
+#    9 drive-letter paths   drive-letter paths in the --rocq-cmd template
+#                           must become forward slashes (backslash is an
+#                           escape inside bash -c text and folds the command
+#                           word to exit 127 -- regression vector)
+#   10 TIMEOUT tree reap    the timeout must reap the whole process tree
+#                           (the compiler is a grandchild still holding the
+#                           pipe write end; killing only the direct child
+#                           drags the 2s timeout to 30s -- regression vector)
+#   11 real rocq, gated     ROCWASH_ROCQ-gated, SKIP by default and no
+#                           failure added: repository fixtures
+#                           probe_pass_sample.v (passing) and
+#                           probe_red_sample.v (missing-library red) run the
+#                           full chain -- guard wrapping plus world purity
+#                           (the five products move out after the probe,
+#                           zero world residue) plus logdir evidence
 import importlib.util
 import io
 import json
@@ -74,7 +118,8 @@ def md5_of(path):
 
 
 def make_stage(tmp, tag, files, red_names, cands_md5_real=True):
-    """桩探针舞台：迷你源树＋按名分流桩（red_names→缺库红 rc1·余 rc0）。"""
+    """Stub-probe stage: mini source tree plus a name-routed stub (names in
+    red_names exit 1 with a missing-library error, the rest exit 0)."""
     stage = os.path.join(tmp, tag)
     src = os.path.join(stage, "src")
     world = os.path.join(stage, "world")
@@ -132,7 +177,8 @@ def sec2_stub_pipeline(tmp):
     assert r_r["red"].startswith("Error: Unable to locate library"), r_r
     assert acc["n_washable"] == 1 and acc["n_born_clean"] == 1 \
         and acc["n_rc1"] == 1, acc
-    # 清场：五件产物入 logdir·世界零候选残留
+    # cleanup: the five products go to logdir, zero candidate residue in
+    # the world
     assert not os.path.exists(os.path.join(world, "WashCand.v")), "清场违例"
     assert os.path.exists(os.path.join(logdir, "RedCand.stderr.log")), "留证缺"
     return "stub 三分 WASHABLE/BORN-CLEAN/RED-MISSING_LIB＋missing 捕获＋清场留证"
@@ -142,9 +188,10 @@ def sec3_no_src(tmp):
     stage, src, world, logdir, stub, cands = make_stage(
         tmp, "s3", files=[("GhostCand", "0")], red_names=set())
     led = os.path.join(stage, "ledger.json")
-    # 删源件制造 NO-SRC
+    # remove the source file to produce NO-SRC
     os.remove(os.path.join(src, "GhostCand.v"))
-    # 桩对其余名 exit 0——清单仅含 GhostCand（无源）
+    # the stub exits 0 for every other name -- the list contains only
+    # GhostCand (no source)
     rc, out = run(["--candidates", cands, "--src", src, "--world", world,
                    "--out", led, "--logdir", logdir,
                    "--rocq-cmd", stub + " {name}.v"])
@@ -187,7 +234,8 @@ def sec5_resume_idempotent(tmp):
     rc2, out2 = run(tpl)
     assert rc2 == 0 and "SKIP(done)" in out2, out2
     assert io.open(led, "rb").read() == before, "resume 重跑台账字节漂移＝违例"
-    # --fresh 推倒重探：结果确定性→字节仍恒同
+    # --fresh re-probes from scratch: results are deterministic, so the
+    # ledger bytes still agree
     rc3, out3 = run(tpl + ["--fresh"])
     assert rc3 == 0 and "SKIP(done)" not in out3 and "PROBE" in out3, out3
     assert io.open(led, "rb").read() == before, "fresh 重探台账字节漂移＝违例"
@@ -197,7 +245,8 @@ def sec5_resume_idempotent(tmp):
 def sec6_guard_wrap(tmp):
     stage, src, world, logdir, stub, cands = make_stage(
         tmp, "s6", files=[("GuardCand", "0")], red_names=set())
-    # 桩 rc=7：guard 队列制包裹→退出码透传无改写（真取）
+    # stub rc=7: the guard queue wraps it, so the exit code passes through
+    # unrewritten (read back as 7)
     with io.open(stub, "w", encoding="utf-8") as fh:
         fh.write("#!/bin/bash\nexit 7\n")
     os.chmod(stub, 0o755)
@@ -211,7 +260,8 @@ def sec6_guard_wrap(tmp):
     acc = json.load(io.open(led, encoding="utf-8"))
     r = acc["records"]["GuardCand"]
     assert r["rc"] == 7, "guard 透传 rc 应真取 7·实测 %r" % r["rc"]
-    # guard 横幅在被捕获的探针流（引擎写入 logdir 留证）——读留证日志验证包裹
+    # the guard banner sits in the captured probe stream (the engine writes
+    # it to logdir) -- read the evidence log to verify the wrapping
     with io.open(os.path.join(logdir, "GuardCand.stderr.log"),
                  encoding="utf-8") as fh:
         plog = fh.read()
@@ -223,7 +273,7 @@ def sec6_guard_wrap(tmp):
 def sec7_no_red_col(tmp):
     stage, src, world, logdir, stub, _ = make_stage(
         tmp, "s7", files=[("NoRedCand", "0")], red_names=set())
-    # 清单无 RED 列
+    # the candidates list has no RED column
     cands = os.path.join(stage, "cands2.tsv")
     wf(stage, "cands2.tsv", "件名\tmd5\nNoRedCand\t%s\n"
        % md5_of(os.path.join(src, "NoRedCand.v")))
@@ -239,26 +289,31 @@ def sec7_no_red_col(tmp):
 
 
 def sec8_win_path_normalized(tmp):
-    """Windows 路径归一：--rocq-cmd 模板里的盘符路径须转成正斜杠。
+    """Windows path normalization: drive-letter paths in the --rocq-cmd
+    template must become forward slashes.
 
-    回归向量（缺陷根因）：bash -c 的文本里反斜杠是转义符，MSYS bash 会把
-    命令词 C:\\a\\b.sh 折叠成 C:ab.sh，命令找不到（127），探针把每个候选都
-    记成 RED-UNKNOWN。工具须在交给 shell 前把盘符路径转成正斜杠（MSYS 的
-    argv 路径本就会被自动转，文本里的不会）。
+    Regression vector (defect root cause): backslash is an escape character
+    inside bash -c text, so MSYS bash folds the command word C:\\a\\b.sh into
+    C:ab.sh, the command is not found (exit 127), and the probe records
+    every candidate as RED-UNKNOWN.  The tool must convert drive-letter
+    paths to forward slashes before handing the template to the shell
+    (MSYS converts argv paths automatically, text arguments it does not).
     """
     bs = chr(92)
     win = "C:" + bs + "dir" + bs + "sub" + bs + "stub.sh {name}.v"
     posix = "C:/dir/sub/stub.sh {name}.v"
     got = pe.win_path_to_posix(win)
     assert got == posix, "盘符路径须转正斜杠·实测 %r" % got
-    # 不误伤：POSIX 路径、shell 转义、非路径的 "C:" 文本一律不动
+    # no collateral damage: POSIX paths, shell escapes, and non-path "C:"
+    # text all stay untouched
     for keep in ("/usr/bin/rocq {name}.v",
                  "echo " + bs + "n",
                  '"C: is a drive"',
                  "ABC:" + bs + "x"):
         assert pe.win_path_to_posix(keep) == keep, \
             "归一误伤 %r -> %r" % (keep, pe.win_path_to_posix(keep))
-    # 端到端：模板里放盘符路径，桩须真被找到（rc=0），不是 127
+    # end to end: put a drive-letter path in the template, the stub must
+    # really be found (rc=0), not exit 127
     stage, src, world, logdir, stub, cands = make_stage(
         tmp, "s10", files=[("WinPathCand", "0")], red_names=set())
     tpl = stub.replace("/", bs) if os.name == "nt" else stub
@@ -275,11 +330,14 @@ def sec8_win_path_normalized(tmp):
 
 
 def sec9_timeout_reaps_tree(tmp):
-    """TIMEOUT 到点可见：超时须收割整棵进程树，不能等孙进程放手管道。
+    """TIMEOUT visibility at the deadline: a timeout must reap the whole
+    process tree, not wait for the grandchild to release the pipe.
 
-    回归向量（缺陷根因）：探针命令是 shell 行，编译器是孙进程；只杀直接子
-    进程时孙进程仍握住捕获管道的写端，Windows 上解释器要等管道 EOF 才能返
-    回超时，于是 2s 超时被拖到孙进程自己的寿命（30s）才报出来。
+    Regression vector (defect root cause): the probe command is a shell
+    line, so the compiler is a grandchild; killing only the direct child
+    leaves the grandchild holding the write end of the capture pipe, and on
+    Windows the interpreter waits for pipe EOF before returning, so the 2s
+    timeout was dragged out to the grandchild's own lifetime (30s).
     """
     stage, src, world, logdir, stub, cands = make_stage(
         tmp, "s11", files=[("SlowCand", "0")], red_names=set())
@@ -310,7 +368,7 @@ def sec8_cli_codes(tmp):
     rc, out = run(["--candidates", os.path.join(tmp, "no.tsv"), "--src", tmp,
                    "--world", tmp, "--out", os.path.join(tmp, "x.json")])
     assert rc == 9, "缺清单应 rc=9 实测 %d" % rc
-    # 坏清单（缺必需列 md5）→ rc2 fail-loud
+    # broken list (missing the required md5 column) -> rc 2 fail-loud
     stage, src, world, logdir, stub, _ = make_stage(
         tmp, "s8", files=[("BadCand", "0")], red_names=set())
     bad = wf(stage, "bad.tsv", "件名\nBadCand\n")
@@ -355,7 +413,8 @@ def sec9_real_rocq(tmp):
     assert r_p["rc"] == 0 and r_p["verdict"] == "BORN-CLEAN", r_p
     assert r_r["rc"] == 1 and r_r["verdict"] == "RED-MISSING_LIB", r_r
     assert r_r["missing"] == "RocqwashDeliberatelyAbsentLib", r_r
-    # 世界纯度：五件产物移出·世界零残留（世界仅余播种件＝本例为零）
+    # world purity: the five products are moved out, zero residue (the world
+    # keeps only seeded files, zero in this case)
     leftovers = [f for f in os.listdir(world)
                  if f.startswith((stem_pass, stem_red))]
     assert not leftovers, "世界残留 %r＝清场违例" % leftovers

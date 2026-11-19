@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_extract_magic.py — verify/extract_magic_check.py 自测（tests/·本轮实战判例
-工具化③·gate7 涨账工具化轮·20261101；v15 增第十一节·首战判例盲区补全·20261102）
+"""test_extract_magic.py — selftest for verify/extract_magic_check.py, the
+per-file Obj.magic check of the gate7 extraction face (tests/; eleven
+sections, numbered by execution order).
 
-gate7 提取面 Obj.magic 逐件机检闸（坑账第十笔工具化·run97/98 三件涨账 28/4/1 承
-工单给料）十一节判：
-  1 工具自证    --selftest 十二判全过（rc 0）
-  2 E2E 红判    假 rocq/ocamlc 桩全链：魔数 2 > max 0 → rc 1·上下文逐行·VERDICT: FAIL
-  3 E2E 绿判    --max 2 → rc 0·VERDICT: PASS·--json 台账咬合（verdict/magic_ml/
-                mode/targets/md5_v）
-  4 inline 形   .v 自带 Separate Extraction 命令 → mode=inline·目标逐名咬合
-  5 driver 形   无命令 → 本仓自带极简样例件 fixtures/names_sample.v 兜底收全部
-                主定义（census 口径 7 名·含 Unicode 名道）→ driver 稿词面在盘
-  6 提取红      假 rocq rc=1 → rc 1 fail-loud·rocq_tail 随账
-  7 ml 未产出   假 rocq rc=0 而无 .ml → rc 1（不可计数≠passing）
-  8 ocamlc 面   在卷实跑红 → rc 1·status=fail 随账；缺卷 → NOT-RUN 让席不计红
-                （魔数面独立判）
-  9 CLI 四码    --help 0／未知形参 2／缺 --world 2／缺件 9×2（--v 缺／world .vo
-                未编译缺）
-  10 计数口径   grep -c 语义（行计数·一行多魔数计一）模块级咬合
-  11 盲区补全   v15 首战判例（gate7 四件 2 PASS/2 Class 盲区 fail-loud）：
-                Class 声明夹具 census 不再误判异常（声明/命令不入目标·唯真主
-                定义入账）／DECL_SKIP_EXT 十五 token 在册／G13 `Extraction` 命令
-                形同治／未知 vernacular 仍 fail-loud rc=9（盲区收窄≠静默扩容）
-
-零触律：全部夹具在临时目录自造（假桩脚本＋迷你世界）＋本仓自带 fixtures 只读；
-零真编译（真链 E2E 归席位沙箱不入套件·承 precedent_station 判例口径）·零网络·
-零触外部仓。幂等：python3 -B 禁 __pycache__·临时目录即写即清。
-退出码：0=十一节全过；1=任一红。
+Purpose.  Machine-checks the Obj.magic extraction gate end to end on
+  stubbed toolchains: tool selftest; E2E failing/passing runs with ledger
+  agreement; the inline and driver target-collection modes; the extraction
+  failure and missing-.ml fail-loud paths; the ocamlc face; the four CLI
+  exit codes; the grep -c counting rule; and the blind-spot completions
+  (Class-declaration fixtures, the DECL_SKIP_EXT roster, bare `Extraction`
+  commands, unknown vernacular).
+Interface.  Drives `verify/extract_magic_check.py` as a python3 -B
+  subprocess with --selftest and the full E2E flag set (--v, --world,
+  --workdir, --json, --max, --rocq, --ocamlc) against fake rocq/ocamlc
+  stub scripts and mini worlds written under a temp directory; the
+  in-repo fixture tests/fixtures/names_sample.v is used read-only for
+  the driver-mode fallback.
+Dependencies.  Python 3 standard library only; zero real compilation (the
+  real-toolchain E2E stays outside the suite, the `test_precedent_station`
+  scope), zero network, zero touches of external repositories; python3 -B
+  keeps __pycache__ off and the temp stage is removed in finally.
+Evidence.  Each section asserts concrete outcomes: rc plus VERDICT lines
+  with per-line magic context; the --json ledger fields
+  verdict/magic_ml/mode/targets/md5_v; the driver source text on disk;
+  the module-level grep_count_magic pair (2 lines, hits [1, 3]); the
+  fifteen-token DECL_SKIP_EXT roster inside mac_stmt_names.SKIP_KINDS;
+  fail-loud rc 9 on unknown vernacular (blind-spot narrowing is not
+  silent widening).
+Exit-codes.  0 = all eleven sections pass; 1 = any section failed (checks listed).
 """
 import importlib.util
 import io
@@ -70,7 +71,8 @@ def wf(dirpath, name, text):
 
 
 def make_stage(tmp, tag, v_text):
-    """迷你世界（Probe.v＋占位 .vo）＋假 rocq/ocamlc 桩（零真编译全链驱动）。"""
+    """Mini world (Probe.v plus a placeholder .vo) plus fake rocq/ocamlc
+    stubs (drives the full chain with zero real compilation)."""
     stage = os.path.join(tmp, tag)
     world = os.path.join(stage, "world")
     os.makedirs(world)
@@ -103,11 +105,12 @@ def main():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_textractmagic_")
     try:
-        # 1 工具自证（十一判）
+        # 1. tool selftest (the tool's own check battery)
         rc, out = run(["--selftest"])
         check("selftest", rc == 0 and "PASS" in out, "rc=%d %s" % (rc, out[-300:]))
 
-        # 2+3+4 E2E 三态：failing／passing＋json 咬合／inline 形（假桩全链·零真编译）
+        # 2+3+4. E2E three states: failing / passing with ledger agreement /
+        # inline mode (stubbed full chain, zero real compilation)
         stage, world, v_path, canned, frocq, foc = make_stage(
             tmp, "s1", "Definition p_one := 1.\nDefinition p_two := 2.\n")
         wd = os.path.join(stage, "wd")
@@ -134,7 +137,8 @@ def main():
               "rc=%d" % rc)
         check("md5_v_在账", os.path.isfile(v_path)
               and g_j["md5_v"] == emc.md5_of(v_path), g_j["md5_v"])
-        # 4 inline 形：.v 自带 Separate Extraction（带 Extraction Require 行）
+        # 4. inline mode: the .v carries its own Separate Extraction
+        # (with the Extraction Require line)
         stage2, world2, v_inline, canned2, frocq2, foc2 = make_stage(
             tmp, "s2",
             "From Stdlib Require Import Extraction.\n"
@@ -149,7 +153,8 @@ def main():
               and i_j["targets"] == ["i_a", "i_b"]
               and i_j["commands"] == [["i_a", "i_b"]], "rc=%d" % rc)
 
-        # 5 driver 形兜底：本仓自带极简样例件 names_sample.v（census 7 名·含 Unicode）
+        # 5. driver-mode fallback: the in-repo minimal sample names_sample.v
+        # (7 names in the census, Unicode names included)
         stage3 = os.path.join(tmp, "s3")
         world3 = os.path.join(stage3, "world")
         os.makedirs(world3)
@@ -172,7 +177,8 @@ def main():
               and "Separate Extraction " + " ".join(SAMPLE_NAMES) + "." in drv_txt,
               drv_txt)
 
-        # 6 提取红：假 rocq rc=1 → fail-loud rc 1·rocq_tail 随账
+        # 6. extraction failure: fake rocq rc=1 -> fail-loud rc 1,
+        # rocq_tail recorded in the ledger
         acc5 = os.path.join(tmp, "acc_rocqred.json")
         rc, out = run(["--v", v_path, "--world", world, "--json", acc5,
                        "--rocq", frocq, "--ocamlc", foc],
@@ -181,12 +187,14 @@ def main():
         check("提取红", rc == 1 and "提取面红" in out
               and r_j["rocq_rc"] == 1 and r_j["rocq_tail"], "rc=%d" % rc)
 
-        # 7 ml 未产出：假 rocq rc=0 而无 .ml → rc 1（不可计数≠passing）
+        # 7. no .ml produced: fake rocq rc=0 without an .ml -> rc 1
+        # (uncountable is not passing)
         rc, out = run(["--v", v_path, "--world", world, "--rocq", frocq,
                        "--ocamlc", foc], env={"EMC_FAKE_ML": ""})
         check("ml未产出红", rc == 1 and "未产出" in out, "rc=%d" % rc)
 
-        # 8 ocamlc 面：实跑红 → rc 1；缺卷 → NOT-RUN 让席（魔数面独立判）
+        # 8. ocamlc face: a real failing run -> rc 1; missing binary ->
+        # NOT-RUN, the judge abstains (the magic face is judged independently)
         acc6 = os.path.join(tmp, "acc_ocred.json")
         rc, out = run(["--v", v_path, "--world", world, "--max", "9",
                        "--json", acc6, "--rocq", frocq, "--ocamlc", foc],
@@ -200,7 +208,8 @@ def main():
                       env={"EMC_FAKE_ML": canned})
         check("ocamlc缺卷让席", rc == 0 and "NOT-RUN" in out, "rc=%d" % rc)
 
-        # 9 CLI 四码：--help 0／未知形参 2／缺 --world 2／缺件 9×2
+        # 9. the four CLI codes: --help 0 / unknown arg 2 / missing --world 2
+        # / missing input 9 x2
         rc, out = run(["--help"])
         check("cli_help0", rc == 0 and "usage" in out, "rc=%d" % rc)
         rc, out = run(["--bogus"])
@@ -214,16 +223,19 @@ def main():
         rc, out = run(["--v", v_path, "--world", empty_world])
         check("cli_vo未编译9", rc == 9 and "先编后检" in out, "rc=%d" % rc)
 
-        # 10 计数口径：grep -c 语义（行计数·一行多魔数计一）模块级咬合
+        # 10. counting rule: grep -c semantics (line count; one line with
+        # several magics counts once), checked at module level
         mlf = os.path.join(tmp, "M.ml")
         wf(tmp, "M.ml", "let a = Obj.magic x\nlet b = 1\n"
                         "let c = f (Obj.magic y) (Obj.magic z)\n")
         n, hits = emc.grep_count_magic(mlf)
         check("grep_c口径", (n, hits) == (2, [1, 3]), "%s %s" % (n, hits))
 
-        # 11 v15 盲区补全（首战判例·gate7 四件 2 PASS/2 Class 盲区 fail-loud）：
-        #    Class 声明夹具 census 不再误判异常——声明/命令 vernacular 不入目标·
-        #    唯真主定义入账；DECL_SKIP_EXT 在册；未知 vernacular 仍 fail-loud rc=9
+        # 11. blind-spot completion (the Class-declaration blind spot): the
+        #    census no longer misjudges the Class fixture as an anomaly --
+        #    declaration/command vernacular stays out of the targets, only
+        #    real main definitions enter; DECL_SKIP_EXT is registered;
+        #    unknown vernacular still fails loud with rc=9
         cls_fixture = (
             "Declare Scope req_scope.\n"
             "Class reqord (R : Set) : Set := mk {\n"
@@ -259,12 +271,14 @@ def main():
         check("盲区在册_十五token", len(emc.DECL_SKIP_EXT) == 15
               and all(t in emc.mac_stmt_names.SKIP_KINDS for t in emc.DECL_SKIP_EXT),
               sorted(emc.DECL_SKIP_EXT))
-        # G13 形（首战第二红 token）：裸 Extraction 命令 census 不再异常
+        # G13 shape (the second blind-spot token): a bare Extraction command
+        # no longer trips the census
         g13 = wf(tmp, "g13.v", "Definition g_a := 1.\nExtraction g_a.\n")
         m5, t5, _ = emc.collect_targets(g13)
         check("G13形_Extraction命令", m5 == "driver" and t5 == ["g_a"],
               "%s %s" % (m5, t5))
-        # 盲区收窄≠静默扩容：未知 vernacular 仍 fail-loud rc=9
+        # blind-spot narrowing is not silent widening: unknown vernacular
+        # still fails loud with rc=9
         unk = wf(tmp, "unk.v", "Bogonize widget.\nDefinition unk_ok := 1.\n")
         try:
             emc.collect_targets(unk)

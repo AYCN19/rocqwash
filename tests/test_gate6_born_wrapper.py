@@ -1,40 +1,72 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_gate6_born_wrapper.py — wrapper/gate6_census.sh ＋ wrapper/born_world.sh 自测
-（tests/·Mac 适配席 rqadapt·20261031）
+"""test_gate6_born_wrapper.py — selftest for wrapper/gate6_census.sh and
+wrapper/born_world.sh (tests/; 21 subprocess judges, positive/negative
+pairs first).
 
-二十一判 subprocess 实跑（每例正/负判优先·零编译零网络零仓库写盘·临时目录即写即清）：
-  gate6_census.sh：
-  1  语法              bash -n → rc=0
-  2  子帮助            -h → rc=0 且含用法头注
-  3  未知形参          --bogus → rc=2
-  4  缺 --tree         → rc=2
-  5  tree 缺失         --tree <不存在> → rc=9
-  6  正本缺失          GATE6_CENSUS_SCRIPT=<不存在> --tree <tmp> → rc=9
-  7  gate 无 baseline  --gate 无 --baseline → rc=2（前置 fail-loud·正本 GATE6-USAGE 同律）
-  8  baseline 缺失     --baseline <不存在> → rc=9
-  9  --dry-run         → rc=0；stdout 含 guard 档位正典形＋python3 -B＋--tree 透传
-                        （零写盘：tmp 内事后无新增文件）
-  born_world.sh：
-  10 语法              bash -n → rc=0
-  11 子帮助            -h → rc=0 且含用法头注
-  12 未知形参          --bogus → rc=2
-  13 缺 --world        → rc=2
-  14 order/module 同给（二义）→ rc=2
-  15 runtree 缺失      --runtree <不存在> --world <tmp> --module A → rc=9
-  16 模块名带路径      --module sub/A → rc=2
-  17 源缺失            runtree/tmp 无 A.v（dry-run 前置面过·cp 环 fail-loud）→ rc=9
-  18 --dry-run         → rc=0；stdout 含 BORN-WORLD-DRYRUN＋guard 档位正典形＋
-                        `-Q . ""` 正形（零写盘）
-  19 order 注释剥离    order 文件 #注释/空行 → dry-run 只列有效名
-  20 代际雷 md5 败     --assert-md5 错值 manifest → rc=9＋stderr「代际断言败」
-                        且零编译零产物（world 无 .vo）
-  21 manifest 只认 .v 源行：仅 .vo 行账 → rc=9「无 A.v 源断言行」
-
-幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 agent 域；
-     不真正调 rocq/guard（全部 fail-loud 路径先于任何编译行为拦截）。
-退出码：0=二十一判全过；1=任一红。
+Purpose.  Exercises both wrapper scripts through their real CLI contracts
+  by subprocess: exit codes (0/2/9), usage faces, missing inputs, order/
+  module mutual exclusion, md5-manifest assertions, and the zero-write
+  --dry-run canonical forms.
+Interface.  Invokes `wrapper/gate6_census.sh` (bash -n, -h, --bogus,
+  --tree, --gate, --baseline, --dry-run, GATE6_CENSUS_SCRIPT override)
+  and `wrapper/born_world.sh` (bash -n, -h, --bogus, --world, --module,
+  --order, --runtree, --dry-run, --assert-md5); each judge prints
+  "judge<n> <desc>: PASS|FAIL" and asserts exit codes plus verbatim
+  stderr markers of the scripts' output.
+Dependencies.  bash 3.2-compatible scripts plus Python 3 standard library
+  only; every fixture lives in a tempfile directory cleaned in finally;
+  neither canonical wrapper is touched and no agent domain is entered;
+  rocq/guard binaries are never actually invoked (every fail-loud path
+  fires before any compilation step).
+Evidence.  The full judge roster with per-judge expectations is the
+  extended contract comment below; judges 9 and 18 additionally assert
+  the stage snapshot is unchanged behind the dry runs (zero writes),
+  judges 17 and 20 assert no .vo product exists after the rc 9 paths,
+  judge 19 asserts the order dry run lists exactly A.v and B.v from a
+  commented order file, and judge 21 asserts the manifest refusal on
+  .vo-only lines.
+Exit-codes.  0 = all 21 judges pass; 1 = any judge failed (printed as
+  judge<n> ... FAIL).
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).  Judge roster,
+# positive/negative pairs first, zero compilation / zero network / zero
+# repository writes, temp stage written and cleaned per case:
+#   wrapper/gate6_census.sh:
+#    1 syntax              bash -n -> rc 0
+#    2 help                -h -> rc 0 with the usage header
+#    3 unknown arg         --bogus -> rc 2
+#    4 missing --tree      -> rc 2
+#    5 tree missing        --tree <missing> -> rc 9
+#    6 script missing      GATE6_CENSUS_SCRIPT=<missing> --tree <tmp> -> rc 9
+#    7 gate no baseline    --gate without --baseline -> rc 2 (fail-loud
+#                          precondition, same rule as the GATE6-USAGE face)
+#    8 baseline missing    --baseline <missing> -> rc 9
+#    9 --dry-run           -> rc 0; stdout carries the guard-knob canonical
+#                          form plus python3 -B plus --tree pass-through
+#                          (zero writes: no new file in the stage afterwards)
+#   wrapper/born_world.sh:
+#   10 syntax              bash -n -> rc 0
+#   11 help                -h -> rc 0 with the usage header
+#   12 unknown arg         --bogus -> rc 2
+#   13 missing --world     -> rc 2
+#   14 order/module both given (ambiguous) -> rc 2
+#   15 runtree missing     --runtree <missing> --world <tmp> --module A -> rc 9
+#   16 module with path    --module sub/A -> rc 2
+#   17 source missing      no A.v under runtree (the dry-run precondition
+#                          passes, the copy step fails loud) -> rc 9
+#   18 --dry-run           -> rc 0; stdout carries BORN-WORLD-DRYRUN plus the
+#                          guard-knob canonical form plus the `-Q . ""` form
+#                          (zero writes)
+#   19 order stripping     order-file comments and blank lines -> the dry run
+#                          lists only the valid names
+#   20 md5 mismatch        --assert-md5 with a wrong-value manifest -> rc 9
+#                          with the assertion-failure marker on stderr and
+#                          zero compile products (no .vo in the world)
+#   21 manifest .v-only    a .vo-only manifest line -> rc 9 with the
+#                          missing-source-line marker
 import os
 import subprocess
 import sys

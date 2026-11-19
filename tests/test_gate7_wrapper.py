@@ -1,29 +1,56 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_gate7_wrapper.py — wrapper/gate7_probe.sh ＋ wrapper/coqc_shim.sh 自测
-（tests/·Mac 适配席 rqadapt·20261031）
+"""test_gate7_wrapper.py — selftest for wrapper/gate7_probe.sh and
+wrapper/coqc_shim.sh (tests/; 13 subprocess judges, positive/negative
+pairs first).
 
-十三判 subprocess 实跑（每例正/负判优先·零编译零网络零仓库写盘）：
-  1  shim 语法            bash -n wrapper/coqc_shim.sh → rc=0
-  2  probe 语法           bash -n wrapper/gate7_probe.sh → rc=0
-  3  shim argv 契约       GATE7_PROBE_ROCQ=/bin/echo shim A B → stdout≡"c A B\\n"
-                          （证 coqc <args> → `c` 子命令注入＋其余逐字透传）
-  4  shim fail-loud       GATE7_PROBE_ROCQ=<不存在> → rc=9＋stderr 响亮
-  5  probe 子帮助         -h → rc=0 且含 Usage 面头注
-  6  probe 未知形参       --bogus → rc=2
-  7  probe 缺 --tree      （无 --tree）→ rc=2
-  8  probe tree 缺失      --tree <不存在> --module M → rc=9
-  9  probe order/module 缺一 → rc=2
- 10  probe order/module 同给（二义）→ rc=2
- 11  probe module .v 不在世界副本 → rc=9
- 12  probe gate7 正本缺失 GATE7_PROBE_SCRIPT=<不存在> → rc=9
- 13  probe --dry-run      → rc=0；stdout 含 guard 档位正典形与 python3 -B/
-                          --tree/--coqc 透传面；order 文件装配在 workdir 内
-                          （临时目录·即写即清）
-
-幂等：临时面全在 tempfile 目录并 finally 清理；不触两仓正本、不触各 agent 域。
-退出码：0=十三判全过；1=任一红。
+Purpose.  Exercises the coqc shim and the gate7 probe wrapper through
+  their real CLI contracts by subprocess: syntax, help, unknown-argument
+  and missing-required-flag failures, missing inputs, order/module mutual
+  exclusion and absence cases, the shim argv contract, fail-loud on a
+  missing rocq target, and the zero-write --dry-run canonical form.
+Interface.  Invokes `wrapper/coqc_shim.sh` under GATE7_PROBE_ROCQ (set to
+  /bin/echo and to a missing path) and `wrapper/gate7_probe.sh` with
+  bash -n, -h, --bogus, --tree, --module, --order, --workdir, --json,
+  --gate-script and --dry-run; each judge prints "judge<n> <desc>:
+  PASS|FAIL" and asserts exit codes plus stdout/stderr markers.
+Dependencies.  bash 3.2-compatible scripts plus Python 3 standard library
+  only; every fixture lives in a tempfile directory cleaned in finally;
+  neither canonical wrapper is touched and no agent domain is entered;
+  no rocq binary is actually invoked.
+Evidence.  The judge roster with per-judge expectations is the extended
+  contract comment below; judge 3 pins the shim argv contract byte-exactly
+  (subcommand injection plus verbatim pass-through, stdout == "c A B --x\\n"),
+  and judge 13 pins the GATE7-PROBE-DRYRUN banner with the guard knobs
+  "-Front 0 -Mid 1 -MaxWaitSec 600", the python3 -B / --tree / --coqc
+  pass-through, and the order file staged in the workdir with content
+  "DemoMod\\n".
+Exit-codes.  0 = all 13 judges pass; 1 = any judge failed (printed as
+  judge<n> ... FAIL).
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).  Judge roster,
+# positive/negative pairs first, zero compilation / zero network / zero
+# repository writes, temp stage cleaned in finally:
+#    1 shim syntax          bash -n wrapper/coqc_shim.sh -> rc 0
+#    2 probe syntax         bash -n wrapper/gate7_probe.sh -> rc 0
+#    3 shim argv contract   GATE7_PROBE_ROCQ=/bin/echo shim A B -> stdout
+#                           identical to "c A B\n" (coqc <args> gets the `c`
+#                           subcommand injected and every other arg verbatim)
+#    4 shim fail-loud       GATE7_PROBE_ROCQ=<missing> -> rc 9, loud stderr
+#    5 probe help           -h -> rc 0 with the Usage header
+#    6 probe unknown arg    --bogus -> rc 2
+#    7 probe missing --tree -> rc 2
+#    8 probe tree missing   --tree <missing> --module M -> rc 9
+#    9 probe one of order/module missing -> rc 2
+#   10 probe order/module both given (ambiguous) -> rc 2
+#   11 probe module .v not in the world copy -> rc 9
+#   12 probe canonical script missing GATE7_PROBE_SCRIPT=<missing> -> rc 9
+#   13 probe --dry-run     -> rc 0; stdout carries the guard-knob canonical
+#                           form with the python3 -B / --tree / --coqc
+#                           pass-through; the order file is assembled inside
+#                           the workdir (temp stage, cleaned in finally)
 import os
 import subprocess
 import sys
