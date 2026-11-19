@@ -1,10 +1,25 @@
 # SPEC: ai_flavor seed package (engine E1, wording register)
 
-Package: seed wave RQW12, engine E1 of the five-engine growth design volume
-(`D:/ComplexAnalysis/attn/跨线资产/分析与工单/rocqwash五引擎生长设计卷-20261114.md`, section 3, entry 1).
-This package is data plus specification only: it carries **no executable engine
-body**. The engine faces (selfcheck / norm_lint / wash_shape / evolve) grow from
-this data in later waves per the design volume's two-leg growth path.
+Purpose.  Package: seed work stream RQW12, engine E1 of the five-engine
+  growth design volume
+  (`D:/ComplexAnalysis/attn/跨线资产/分析与工单/rocqwash五引擎生长设计卷-20261114.md`, section 3, entry 1).
+  The package is data plus specification only: it carries **no executable
+  engine body**. The engine faces (selfcheck / norm_lint / wash_shape /
+  evolve) grow from this data in later work streams per the design
+  volume's two-leg growth path.
+
+Interface.  `word-map.json` (schema `rocqwash.seeds.ai-flavor.word-map/1`),
+  this SPEC, `test_snippet.py` (merged into `tests/t_engines_seeds.py` by the
+  tests-integration agent); consumers `tools/ai_flavor.py`, `tools/ai_flavor_apply.py`.
+
+Dependencies.  Python 3 standard library only; the register canon and
+  secondary sources of section 2; detector facts of section 1.
+
+Evidence.  `test_snippet.py` completeness and candidate-set assertions
+  (the section 3 invariant) and the section 8 verification log.
+
+Exit-codes.  `test_snippet.py`: 0 no FAIL, 1 any FAIL (fail-loud);
+  detector instrument: 0 CLEAN, 1 RED, 2 usage error (section 1).
 
 Files in this directory:
 
@@ -12,14 +27,14 @@ Files in this directory:
 |---|---|
 | `word-map.json` | 36 wording faces mapped to register-sourced replacement candidates |
 | `SPEC.md` | this document |
-| `test_snippet.py` | completeness assertions; segment to be merged into `tests/t_engines_seeds.py` by the tests-integration seat |
+| `test_snippet.py` | completeness assertions; segment to be merged into `tests/t_engines_seeds.py` by the tests-integration agent |
 
 ## 1. Detection face status (selfcheck instrument)
 
 The working detector is a shell instrument:
 
 - Path: `D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/ai_flavor_selfcheck.sh`
-  (58 lines, cast 2026-11-12).
+  (58 lines, cast on 12 November 2026).
 - Batteries (one `command grep -c -E` pass each; counts are matching **lines**,
   not occurrences):
 
@@ -39,10 +54,10 @@ The working detector is a shell instrument:
   wording batteries fire on them; the em-dash count must stay 0 everywhere).
 - Location note: the instrument lives in the attn workspace, not in the
   rocqwash tree. The rocqwash tree carries document references only, verified
-  2026-11-14 by `command grep -rn "ai_flavor" docs/ tools/`:
+  on 14 November 2026 by `command grep -rn "ai_flavor" docs/ tools/`:
   `docs/CAPABILITY-INDEX.md:395,396,413`, `docs/mcp.md:120`,
   `docs/vacgen_sop.md:16,340,348`.
-- Live runs this session (2026-11-14): a two-line plain-text probe gave
+- Live runs this session (14 November 2026): a two-line plain-text probe gave
   `VERDICT CLEAN`, exit 0; a probe containing one zh face and one en stem gave
   `TOTAL_WORDING_LINES=2`, `VERDICT RED`, exit 1.
 
@@ -50,7 +65,7 @@ The working detector is a shell instrument:
 
 - Primary canon (sole maintenance point, self-declared in its header):
   `D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md`
-  - section 4.6 (heading line 292 at snapshot 2026-11-14): row A (line 294)
+  - section 4.6 (heading line 292 at the 14 November 2026 snapshot): row A (line 294)
     registers the 10 zh faces; row C (line 296) carries the false-positive
     boundary.
   - section 5 (heading line 381): the en face paragraph (line 402) registers
@@ -110,7 +125,7 @@ enumerated set exactly (machine guard against coined words).
 
 ## 4. Replacement closure gap (wash_shape wiring, to grow)
 
-Current state, verified first-hand 2026-11-14:
+Current state, verified first-hand on 14 November 2026:
 
 - `tools/norm_lint.py` is report-only for wording faces; its parameterized
   jargon face is the E2 surface.
@@ -156,7 +171,7 @@ The original section text stands unchanged as the pre-integration record.
   battery hits as review items, not verdicts.
 - em-dash: the register quota is at most 1 per 1000 characters; the
   instrument target is 0. Both are recorded, neither altered; the instrument
-  target governs authored files in this campaign.
+  target governs authored files in this effort.
 - Register row A also lists one zh face (C-level sourcing, use with care)
   that is outside the instrument battery; it appears only inside the verbatim
   row A quote, not as a mapped face.
@@ -192,7 +207,7 @@ NF3. The rocqwash tree has no ai-flavor wiring in the two tools and no
   - Scanned: `command grep -n "jargon" tools/wash_shape.py` (exit 1, no
     output); ai-flavor and word-map probes over both tools (zero hits, exit
     1); `ls -d seeds` (exit 2). Document references only, at the lines listed
-    in section 1. Date 2026-11-14.
+    in section 1. Dated 14 November 2026.
   - Not scanned: rocqwash git history objects; binary files; files outside
     the four text extensions probed by the earlier survey.
   - Scope: a negative finding of that scan, not an absolute claim.
@@ -217,10 +232,10 @@ NF4. No executable replacement closure for ai-flavor faces exists anywhere in
   package lands exclusively in the staged seed area.
 - JSON keys and SPEC prose in English; canon quotes stay verbatim in the data.
 - The test segment is mergeable: standalone entry point plus import-safe
-  functions; the integration seat points `WORD_MAP_PATH` at the merged tree
+  functions; the integration agent points `WORD_MAP_PATH` at the merged tree
   layout (see the module docstring).
 
-## 8. Verification log (all commands run this session, 2026-11-14)
+## 8. Verification log (all commands run on 14 November 2026)
 
 | check | command | result |
 |---|---|---|
