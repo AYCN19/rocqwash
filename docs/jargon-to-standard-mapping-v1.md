@@ -2,23 +2,28 @@
 
 # jargon-to-standard-mapping-v1.md — project-jargon-to-standard-expression mapping table for the rocqwash tool repository, v1.
 > Normative authority: `docs/annotation-standard-v1.0-20261113.md` (rocqwash Annotation Standard Card v1.0). This table is **Appendix A of that card**: every jargon face banned by the card is mapped here to its standard replacement, with a per-row context note that is the disambiguation authority for context-sensitive faces. Replacement applies to prose surfaces only (comments, docstrings, help text, documentation); see §6 for identifier positions, which are exempt.
+> Purpose.  The repository's canonical term-standard table, Appendix A of the Annotation Standard Card: every jargon face the card bans on prose surfaces, mapped to its standard replacement, with the per-row context note as the disambiguation authority for context-sensitive faces.
+> Interface.  Data face (not executable). The pipe tables in sections 2-5b carry three columns (jargon face | standard expression | context note), read by `tools/norm_lint.py` (this file is its default `--jargon-map`), `tools/jargon_apply.py`, and `tools/jargon_map_sync.py`; section 6 registers the identifier-position exemptions.
+> Dependencies.  `tools/norm_lint.py`, `tools/jargon_apply.py`, `tools/jargon_map_sync.py`, and the machine-readable transcription `seeds/jargon/jargon-map.json`, which pins this file by md5 under its sync discipline.
+> Evidence.  Every `norm_lint --tree` census loads this table as the default map (143 active faces); `seeds/jargon/test_snippet.py` re-asserts the in-repo transcription containment against this table's standard cells on every machine (`check_md_containment`); `tools/jargon_apply.py --plan` reads it for the repository residue census.
+> Exit-codes.  Not applicable (data face); consumers keep their own contracts (`norm_lint` 0/1/2/9).
 
 ## 0. Status and provenance
 
-- Repository state at issue: rocqwash v52, commit `79a766c`, working tree clean (reconciled 2026-11-13 via `git log --oneline -3` and `git status --porcelain` before this document cited any version).
+- Repository state at issue: rocqwash v52, commit `79a766c`, working tree clean (reconciled November 13, 2026 via `git log --oneline -3` and `git status --porcelain` before this document cited any version).
 - Base assets (cited, all read in full at issue time):
-  1. **JARGON filter list v0.9→v1.1** — 从零论文构建方法论白皮书 v1.0 §9.1 (ConstructiveWorld `经验/docs/从零论文构建方法论白皮书-v1.0-20260927.md`), paper-track filter list; revision chain v0.9 (nine user-named words) → v1.0 (JARGON full survey merge) → v1.1 (DICT precedent entries).
+  1. **JARGON filter list v0.9→v1.1** — the From-Zero Paper-Construction Methodology Whitepaper v1.0 §9.1 (ConstructiveWorld `经验/docs/从零论文构建方法论白皮书-v1.0-20260927.md`), paper-track filter list; revision chain v0.9 (nine user-named words) → v1.0 (JARGON full survey merge) → v1.1 (DICT precedent entries).
   2. **Annotation whitepaper §4 mapping table v1.0→v1.8** (ConstructiveWorld `注释规范白皮书-v1.0-20260921.md`), .v-comment-track mapping, including the 65-face consolidated banned-word list enforced by `verify/gate4_comment_guard.py` (`BANNED_WORDS`, gate4_comment_guard.py:71-76).
-  3. **M-wave Annotation Card 2026-10-25** (ConstructiveWorld archive `收包-20261112-路线2TierA/_live_check_2f1ffbaf/docs/注释规范卡-M波-20261025.md` §四), whose forbidden-face families this table extends into the tool-repository domain.
-- Inventory method ("on-the-ground full sweep"): per-term `grep -rl <term> --include="*.py" --include="*.sh" --include="*.md"` over this repository on 2026-11-13, excluding `更新账.md` (frozen ledger) and the two canonical documents of this wave; the count in each context note is the number of files containing the term (presence count, not occurrence count). Runs executed before this document existed, so the counts are free of self-contamination.
-- Row grammar: each row has exactly three columns — 〔jargon face | standard expression | context note〕.
+  3. **M-wave Annotation Card, October 25, 2026** (ConstructiveWorld archive `收包-20261112-路线2TierA/_live_check_2f1ffbaf/docs/注释规范卡-M波-20261025.md`, section 4), whose forbidden-face families this table extends into the tool-repository domain.
+- Inventory method ("on-the-ground full sweep"): per-term `grep -rl <term> --include="*.py" --include="*.sh" --include="*.md"` over this repository on November 13, 2026, excluding `更新账.md` (frozen ledger) and the two canonical documents of this wave; the count in each context note is the number of files containing the term (presence count, not occurrence count). Runs executed before this document existed, so the counts are free of self-contamination.
+- Row grammar: each row has exactly three columns — [jargon face | standard expression | context note].
 
 ## 1. Reading rules
 
 1. **Prose positions only.** Code identifiers, CLI flags, JSON schema field names, file-format names, and exit-code tokens are never rewritten (interface-stability boundary; Annotation Standard Card §5). When prose must refer to a tool whose name contains a banned-family word, cite the tool name verbatim in backticks — that is an identifier citation, not a jargon hit (§6).
-2. **Word-boundary discipline.** Mechanical scanning must judge whole words/compounds, not substrings (JARGON v1.1 precedent 3: 「入库」 as an independent word is cleaned, 「并入库内」 is not triggered). The context note column states the sense in which each face is banned.
+2. **Word-boundary discipline.** Mechanical scanning must judge whole words/compounds, not substrings (JARGON v1.1 precedent 3: `入库` as an independent word is cleaned, `并入库内` is not triggered). The context note column states the sense in which each face is banned.
 3. **Replacement is mandatory, not advisory**, on all canonical faces (new files, translated files) covered by the Annotation Standard Card §4. In not-yet-translated legacy Chinese content the hit is still reported at error level by the card's grading; the Chinese-only presence itself is warn-level during the transition window.
-4. **No re-translation into fresh jargon.** The standard column is the target form; do not substitute a different metaphor (JARGON v1.1 precedent 1: narrative 「收口」 maps to close out, never to a different internal word).
+4. **No re-translation into fresh jargon.** The standard column is the target form; do not substitute a different metaphor (JARGON v1.1 precedent 1: narrative `收口` maps to close out, never to a different internal word).
 
 ## 2. Table A — core mappings (named in the issue, sixteen rows)
 
@@ -162,7 +167,7 @@
 | 洗形器 | shape-normalizing tool | `wash-shape` identifier stays. |
 | 红炉分诊 | failing-build triage | `triage` identifier stays. |
 
-## 5b. Table D — English colloquial / hyperbole / slang family (M-wave §四 extension)
+## 5b. Table D — English colloquial / hyperbole / slang family (M-wave section 4 extension)
 
 | 黑话 (jargon face) | 标准 (standard expression) | 语境注记 (context note) |
 |---|---|---|
