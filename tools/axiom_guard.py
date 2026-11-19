@@ -71,7 +71,7 @@
       stay inside the guard's process tree (the
       verify/extract_magic_check.py contract form).
 
-    Exit codes.  0 = PASS (zero red files; compile-broken files recorded as
+    Exit-codes.  0 = PASS (zero red files; compile-broken files recorded as
       debt); 1 = red (axiom found outside the whitelist, or an unjudgeable
       heavy face); 2 = usage error; 9 = fail-loud environment (a configured
       binary path does not exist, or --repo is missing); 111 = honest skip

@@ -1,18 +1,26 @@
 # -*- coding: utf-8 -*-
 """test_dual_scan.py — regression coverage for scan/dual_scan.py (v32).
 
-Vectors (all on temp-dir fixtures — zero real-repo touches):
-  1. clean fixture: both scanners run rc=0 at zero stations, the diff is
-     empty on both sides, exit code 0, and the report JSON is written.
-  2. statement-face fixture: mac_stmt_scan reports a station scan_v4_token
-     cannot see -> diff.only_stmt nonempty (the one-sided case, reported
-     not resolved — scanner consensus is not a completeness certificate).
-  3. token-face fixture: scan_v4_token reports an unqualified-global
-     station mac_stmt_scan does not -> diff.only_v4 nonempty.
-  4. determinism: two runs over the same targets produce byte-identical
-     report JSONs (no timestamps, no environment noise).
-  5. CLI contract: help rc=0; unknown flag rc=2; missing --dir rc=2;
-     missing --file rc=9; missing scanner tool rc=9.
+Purpose.  Pin the dual-scanner differential contract of `scan/dual_scan.py`:
+  mac_stmt_scan and scan_v4_token run over the same targets, and a one-sided
+  station is reported, not resolved (scanner consensus is not a completeness
+  certificate).
+Interface.  Suite case t_dual_scan (tests/run_tests.sh) or direct:
+  python3 -B tests/test_dual_scan.py.  Drives the dual_scan CLI over temp-dir
+  fixtures (zero real-repo touches) via --dir/--out/--file/--scan-v4; the CLI
+  contract rows pin --help rc=0, unknown flag rc=2, missing --dir rc=2,
+  missing --file rc=9, missing scanner tool rc=9.
+Dependencies.  Python 3 standard library only; `scan/dual_scan.py` and the
+  scanners it drives.
+Evidence.  Five vectors: (1) clean fixture, both scanners at rc=0 with zero
+  stations, the diff empty on both sides, exit code 0, report JSON written;
+  (2) statement-face fixture, mac_stmt_scan reports a station scan_v4_token
+  cannot see, diff.only_stmt nonempty; (3) token-face fixture, scan_v4_token
+  reports an unqualified-global station mac_stmt_scan does not,
+  diff.only_v4 nonempty; (4) determinism, two runs over the same targets
+  produce byte-identical report JSONs (no timestamps, no environment noise);
+  (5) the CLI contract rows above.
+Exit-codes.  0 = all vectors pass; 1 = at least one vector fails.
 """
 import io, json, os, shutil, subprocess, sys, tempfile
 

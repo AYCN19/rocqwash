@@ -1,240 +1,347 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_destructive_matrix.py — 破坏面复核矩阵·一行一拒写判据（tests/·工装席·破坏面·20261111）
+"""test_destructive_matrix.py — cross-tool destructive-surface review matrix,
+one refuse-to-write criterion per row (tests/).
 
-对全部「会写盘的器与路径」做系统化复核：先盘点（器×写面×护栏锚），再逐条断言其
-拒写护栏——一行一判据，矩阵失败＝任一护栏破，exit 1 响亮列破口 file:line。
-
-盘点表（会写盘的器 × 本矩阵行 × 护栏锚）：
-  ① tools/unclog.py（落刀器·写面＝链根件 <src>/<根>.v）
-     U1 缺 --apply 零写盘：tmp 源树 md5 恒同·无落刀账·cures_applied=0
-        锚 tools/unclog.py:42（安全律 --apply 缺省关＝全干跑零写盘）＋:583/:607
-        （cure dry run/落刀唯一两调用口·:607 if a.apply 总闸）
-     U2 --audit 零写盘＋与 --apply 互斥：audit 只读基线（--src 全文件 md5 前后
-        自证·:762）＋同给 rc=2（:827）
-     U3 frozen 红拒：根名/根件撞 frozen8 在册→wall frozen-in-service·零落刀
-        锚 tools/unclog.py:506（pick_root frozen_hit 预检）
-     U4 非链根件零被动：--apply 落刀后受治根件已正典化而其余件 md5 恒同——
-        落刀对象恒为链根件（:43-44「pick 之外无 cure 调用路径」结构性保证）
-  ② tools/wash_shape.py（shape-normalizing tool·写面＝--file/--dir 收件面）
-     W1 plan 缺省零写盘：真实脏件（CRLF＋禁词）plan 出 would-fix 而树 md5 恒同
-        锚 tools/wash_shape.py:1254（one_pass if self.args.apply 落刀总闸）
-     W2 --apply 后 rescan partial 不谎报 shaped：apply「成功」而复扫仍有
-        would-fix → verdict=partial exit 1（禁把未净谎报成 shaped）
-        锚 tools/wash_shape.py:1192-1205（verdict_of：rescan 未净不给 shaped）
-     W3 冻结名红拒：显式 --file 指认 frozen8 在册件 → rc=2 红拒（收件即拒·
-        零引擎零写盘；在册件只递路径不触内容）
-        锚 tools/wash_shape.py:759-761（collect_files is_forbidden → UsageError）
-     W4 --header-map 与 --header-map-preset 同槽互斥 rc=2
-        锚 tools/wash_shape.py:1887-1890（main 前置互斥闸）
-  ③ tools/pushci.py（推送流水线·写面＝git push／API POST rerun／PR merge）
-     P1 --dry-run 零副作用：api_calls/git-caller 双流水皆空（零 git 调零 API 调
-        零工具子进程）·stages 全空
-        锚 tools/pushci.py:1163-1164（run() dry_run → run_dry 短路）＋:1116
-     P2 内容红零 rerun：family=A-content-red → fix-content 裁停·heal.rounds 空
-        ＝零 rerun 实证（api 流水零 POST）
-        锚 tools/pushci.py:983-987（heal_round A 族禁代修先于 rerun）
-     P3 heal 帽尽停：--max-heal 3 恰 3 发 POST 后 heal-exhausted exit 1——
-        帽尽即停无第 4 发
-        锚 tools/pushci.py:966-969（stage_watch heal 帽闸）
-  ④ tools/cw_sentinel.py（实时哨·写面＝--on-red 旁路动作子进程）
-     S1 缺省 report-only：无 --on-red 无 --on-red-preset 时零子进程动作
-        （actions 账空·见红出事件而不动手）
-        锚 tools/cw_sentinel.py:713-715（fire_on_red 门在 sentry["on_red"]）
-     S2 on-red 双路同守卫：plain --on-red 与 --on-red-preset 缺 --emit 皆
-        rc=2（旁路动作必伴随事件流落盘·触发证据与动作账可审计；{emit_dir}
-        系 --emit 派生缺盘即拒）——v40 登记缺口（plain 路径缺同款守卫）v41
-        补齐转正
-        锚 tools/cw_sentinel.py:722-723（expand_on_red_preset）＋:884-886
-        （build_sentry plain 守卫）
-  ⑤ tools/registry_union.py（注册册手术器·写面＝--out union 稿）
-     R1 干跑缺省零写盘：--out 已给而缺省不落盘
-        锚 tools/registry_union.py:881-885（mode 总闸·if args.apply 才写）
-     R2 --apply 才落刀（＋--apply 无 --out → rc=2 禁隐式覆写）
-        锚 tools/registry_union.py:826＋:883-885
-  ⑥ wash/cure_applier.py（正典包落刀器·写面＝--file 目标件）
-     C1 干跑缺省零写盘：缺省只出报告·目标件 md5 恒同
-        锚 wash/cure_applier.py:1272/:1338（if args.apply 写闸）
-     C2 --apply 才落刀＋幂等断言拒写：--apply 落刀且二遍零残才写盘；幂等断言
-        败（自定义非幂等包）→ rc=1 file NOT written
-        锚 wash/cure_applier.py:1282-1285（IDEMPOTENCE-FAIL 拒写）
-     C3 write-face byte contract: after --apply on an LF fixture the on-disk
-        bytes md5 equals the reported md5_after and no \r\n ever lands on
-        disk (io.open newline="" pin; without it Windows text mode wrote
-        CRLF while the report md5 was LF-caliber — the T0-5 md5-caliber
-        defect; second pass must stay byte-identical)
-        anchor wash/cure_applier.py:1338-1341 (pinned write face)
-     C4 compile-leg write face (T0-2/T0-3 S1 sync): the --apply compile
-        leg compiles temp-only copies (.vo never lands in the repo tree);
-        env unset -> honest not-run record with the write proceeding
-        unchanged; env set but binary missing -> rc=9 fail-loud with the
-        file NOT written (never a simulated green)
-        锚 wash/cure_applier.py:660（compile_leg）＋:1286-1336（leg 总闸）＋
-        :1300-1306（rc=9 fail-loud 面）
-  ⑦ certify/frozen8.py（冻结名单器·写面＝freeze 显式 --out/--tier2 两径＋
-     timestamp 显式 --out 回执一径）
-     F1 freeze 只落显式两径＋账载漂移 fail-closed 拒出名单（rc=1 零写）：
-        scratch git skeleton 十件冻结面 freeze 后仓树 md5 恒同；verify_vo.py
-        一字节篡改 → 拒出名单且 --out 零字节
-        锚 certify/frozen8.py:357,366（显式两写口）＋:334（拒出名单 fail-closed）
-     F2 timestamp 唯一写面＝显式 --out 回执且绑定复验后才落：--out 缺席
-        rc=2 零写；TSA 不可达（闭合回环指认 ROCWASH_TSA_URL）rc=9 零写
-        ——回执只在 digest 绑定本地复验通过后落盘
-        锚 certify/frozen8.py:806（唯一写口·:799-803 绑定闸前置）＋:772
-        （可达性自勘失败 rc=9）
-  ⑧ tools/axiom_guard.py (axiom guard; write face = the caller-named --out
-     report volume plus one private temp workdir path; the .vo output face
-     is temp-only, zero bytes into the repository tree)
-     G1 compile-leg write face temp-only + honest skip: toolchain
-        unconfigured (no env, no flags) -> rc=111 honest skip, zero
-        judgment, the watched scratch tree md5-constant, no --out created;
-        configured binaries missing -> rc=9 fail-loud before any work
-        (zero writes, zero compiles)
-        锚 tools/axiom_guard.py:main env gate (rc 111 / rc 9 ahead of
-        guard()) + :guard private mkdtemp (write faces = workdir and the
-        caller-named --out only)
-  ⑨ tools/jargon_apply.py (wash-map applier; write face = the .py/.sh/.md
-     prose faces under --tree, or the one --file target)
-     J1 self-reference guard: the wash map's own source table
-        (--a2-table, default docs/jargon-to-standard-mapping-v1.md) is never
-        a wash target — --tree excludes it from the target set and --file on
-        it is refused rc=1 loud (a tool never washes its own map; the
-        e04f2f6 round washed it and stripped 11 of the 13 contract rows the
-        seed pins by md5)
-        锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484
-        （--file 红拒面）
-  ⑩ tools/scheduler_lite.py（排程 lite·X2 面·写面＝显式 --out 一径）
-     SL1 plan 缺省零写盘：全旗标 tmp fixture 罐装下 plan 出 due 判面而
-        tmp 树 md5 恒同·无 --out 即无任何落盘（dryRun=true 恒钉）
-        锚 tools/scheduler_lite.py:364-366（run_plan if args.out 唯一写闸）
-        ＋:309（build_plan dryRun=True 恒真）
-     SL2 唯一写面＝显式 --out 且字节确定：给 --out 恰落一文件（plan 文档）
-        ·输入树 md5 恒同·两跑字节恒同（plan_bytes sort_keys 确定性字节形）
-        锚 tools/scheduler_lite.py:364-366＋:328-331（plan_bytes 确定性字节）
-  ⑪ tools/auto_merge.py（自动合并门·X5 面·写面＝--apply 合并账 append 一径）
-     AM1 缺 --apply 零写盘：merge-ok＋supply/* 白名单内（rail 裁 allowed）
-        而台账不落盘不创建（report --json 显式另计）
-        锚 tools/auto_merge.py:244-247（run_rail if apply_mode append 总闸）
-     AM2 hold 永不授权＋越权分支红拒：hold-red 判定 --apply 亦零写（rail
-        not-eligible 先于合并账）；非 supply/* 头 rc=1 白名单红拒零写
-        锚 tools/auto_merge.py:220-221（verdict!=merge-ok 先决）＋:225-228
-        （branch 白名单闸）
-     AM3 日预算帽＋重复拒：--daily-cap 3 恰 3 行 authorize 后第 4 拒
-        rc=1·同日同 PR 重复拒 rc=1·合并账恰 3 行不增
-        锚 tools/auto_merge.py:229-233（日帽闸）＋:234-239（重复闸）
-  ⑫ tools/repair_scope.py（共享排除名册·F1/E2 单源）＋E 波四守卫类
-     RS1 --check 查询面零写盘＋排除判词咬合：共享 full_frozen_files（运行
-        LEDGER8 AST 读·缺件退化快照 loud）＋FROZEN_DIR_FAMILIES＋
-        LEGAL_DATA_DIR_FAMILIES＋docs/zh＋.zh.md 档案镜像全 EXCLUDED；
-        class-2 三可修面（tests/README.md·README.md·账面）REPAIRABLE；
-        查询零写盘
-        锚 tools/repair_scope.py:140-160（exclusion_roster/full_frozen_files）
-        ＋:556-576（RosterResyncScope.refusal_reason）＋:590-620（check_faces）
-     E2A class-1 lane-extract（--lane-detect/--lane-apply）：缺省零写零账；
-        排除账面（seeds/ 族）rc=2 红拒且零创建；预算帽（2 前科）rc=2
-        拒写·套件字节恒同·只落 escalated(budget-cap) 账行
-        锚 tools/repair_scope.py:477-482（excluded face 拒）＋:400-411
-        （_lane_ledger_gate 账面同闸）＋:487-493（预算帽）
-     E2B class-2 roster-resync（tools/roster_resync.py）：缺省零写零账；
-        --apply 单向派生（roster 文件字节恒同·计数面修至=名册值·一
-        修复一账行）；预算帽 rc=1 拒写·面字节恒同·只落 escalated 行
-        锚 tools/roster_resync.py:246-248（缺省零写盘闸）＋:256-265（预算帽）
-        ＋:327-334（frozen 面升格不落刀）＋tools/repair_scope.py:556-576
-     E2C class-3 flaky-quarantine（tools/flaky_guard.py --move）：冻结靶
-        （seeds/ 族名册）rc=1 红拒零写零账（scope 闸先于探针）；预算帽
-        rc=1 拒写·名册字节恒同·只落 escalated 账行
-        锚 tools/flaky_guard.py:390-396（_scope_check 单源消费·先于一切
-        计划）＋:514-523（预算帽）
-     E2D class-4 doc-count（--doc-count-detect/--doc-count-apply）：缺省
-        零写零账；--apply 修至 face=source 且幂等（二遍零字节）；预算帽
-        rc=2 拒写·目标面字节恒同·只落 escalated(budget-cap) 行
-        锚 tools/repair_scope.py:917-926（apply 写面前置闸）＋:975-994
-        （预算帽）＋:997-1009（post-assertion 拒写）
-  ⑩ .github/scripts/selfheal_heartbeat.py (heartbeat tick writer; write face
-     = the caller-named --file JSONL volume, strictly append-only)
-     H1 default dry run zero-write; --apply appends exactly one tick line
-        per run and prior ledger bytes stay byte-identical (content pins,
-        never mtime pins: back-to-back writes can land on one mtime tick)
-        anchor .github/scripts/selfheal_heartbeat.py (run gate + append face)
-     H2 loss-of-contact rule: a gap strictly over 90 minutes appends an ALERT
-        line ahead of the tick; exactly 90 minutes stays silent; an ALERT
-        line is never a tick source
-        anchor .github/scripts/selfheal_heartbeat.py (planned_records gap gate)
-     H3 fail-loud: a corrupt or schema-mismatched last ledger line refuses
-        the append with rc=9 and zero bytes written; bad --now, nonpositive
-        --alert-minutes and an empty --file are usage errors rc=2
-        anchor .github/scripts/selfheal_heartbeat.py (last_tick raises + run
-        validation)
-     H4 yml wiring line-scan (stdlib only, no YAML parser dependency): the
-        heartbeat input defaults to false, HEARTBEAT=1 is exported only
-        under workflow_dispatch, the step invokes the writer with --apply
-        against docs/heartbeat.jsonl, checkout covers HEARTBEAT, the
-        rollback line names the new script
-        anchor .github/workflows/selfheal.yml (input block, guard block,
-        heartbeat step, checkout condition, rollback line)
-  ⑪ tools/repair_weekly.py (repair-outcome weekly distribution face; write
-     faces = the caller-named --out markdown face + --json report + the
-     ledger append through --record --apply; the aggregate face is
-     read-only over the ledger)
-     K1 aggregate write face: dry-run default zero-write (no --out ->
-        stdout only, tree manifest constant); with --out the face file is
-        the only write and reruns are byte-identical; the ledger input
-        never gains a byte
-        anchor tools/repair_weekly.py:main aggregate branch +
-        :render_markdown caller-named write face
-     K2 record write face: --record without --apply is plan-only (zero
-        bytes); --record --apply appends exactly one
-        rocqwash-repair-ledger/2 row; the vocabulary refusals (escalated
-        without an evidence package, a watch-only reason outside the enum,
-        a value outside the vocabulary) refuse before any byte moves
-        anchor tools/repair_weekly.py:record_row (vocabulary gate) +
-        :ledger_append (the only append face)
-     K3 fail-loud input faces: a malformed ledger row rc=2 and an
-        explicitly named absent ledger rc=9, both with zero writes
-        anchor tools/repair_weekly.py:ledger_rows (fail-loud parse) +
-        :main explicit-ledger gate
-  ⑫ wording-face honesty rows (honest-degradation wording alignment; read-only
-     line-scans: zero writes, zero subprocesses, zero tmp fixtures)
-     N1 README evolve wording alignment: the v55 snapshot line states the
-        tool in substance as a signal-to-task-brief generator, the
-        "autonomous evolution engine" label survives only as the cited
-        module-title face pending rename adjudication, and the draft-only
-        spawn-gate fact tokens stay on the line
-        anchor README.md:19 (v55 snapshot line)
-     N2 evolve.py docstring honesty note: the Purpose block carries the
-        draft-only token and the selection-not-implemented-in-this-code
-        clause while keeping the no-execution and no-repository-write
-        facts, the module title keeps its name, and the five-field doc
-        block stays within the 30-line budget
-        anchor tools/evolve.py:13-14 (docstring Purpose note lines)
-     N3 CAPABILITY-INDEX evolution_dashboard positioning note: the entry
-        carries the KPI-aggregation positioning line, the rename candidate
-        is declared but not applied, and the entry name, path, invocation
-        form, and route tokens stay untouched
-        anchor docs/CAPABILITY-INDEX.md:209 (evolution_dashboard note line)
-
-离线纪律（硬要求）：全判据走 tmp fixture＋--injector 罐装（unclog probe/resprobe
-canned·wash_shape 引擎键 canned·pushci steps/jobs/git-caller canned·sentinel
-canned API）——零真网络零真仓零真编译；真子进程仅限纯 stdlib 离线引擎
-（chain_graph/cure_applier/scan_v4_token/frozen8 --ledger/--selftest/freeze
-（scratch skeleton）/gate4/ci_triage --offline·判例：各器自带 --selftest
-同款；E2C 预算帽面经 flaky_guard 探针跑 tmp 内三行 bash 夹具套件，
-flaky_guard --selftest 同款先例）。唯一例外 W3 递真在册件**路径**：
-（scratch skeleton）/gate4/ci_triage --offline/selfheal_heartbeat --apply·
-判例：各器自带 --selftest 同款）。唯一例外 W3 递真在册件**路径**——
-工具在 collect_files 即红拒·零读零写（wash_shape 自身判8 同款先例）。
-
-自体纪律：python3 -B 禁 __pycache__；零仓写盘（全部工件在 tempfile.mkdtemp）；
-输出确定性（零墙钟零绝对仓路径）；env 兜底清洗（ROCWASH_HEADER_MAP／
-ROCWASH_ROCQ／ROCWASH_COQCHK 剥除·防环境渗判防真编译渗阵）；fail-loud——
-任一行炸（含环境异常）按破计不静默。
-
-退出码：0=33 行判据全过；1=任一护栏破（响亮列破口 file:line＋违据）。
-
-用法：
-  python3 tests/test_destructive_matrix.py          # 套件内经 run_tests.sh 调
-  python3 -B tests/test_destructive_matrix.py       # 手动
+Purpose.  Systematic refuse-to-write review of every tool and path that can
+  write to disk: the inventory (tool x write face x guard anchor) and one
+  asserted refusal criterion per row live in the extended contract comment
+  block below and in the ROWS table; a matrix failure means a guard broke,
+  and exit 1 lists the broken file:line loudly.
+Interface.  Suite case t_destructive_matrix (tests/run_tests.sh) or manual:
+  python3 -B tests/test_destructive_matrix.py.  43 rows in ROWS, each
+  (row id, tool, criterion, anchor, row function), each row running in its
+  own temp dir.
+Dependencies.  Python 3 standard library only; the tools under review run
+  as python3 -B subprocesses with canned injectors; git only for the
+  scratch freeze skeleton (f8_skeleton).
+Evidence.  Offline discipline: every criterion runs on tmp fixtures with
+  injector canned responses (zero real network, zero real repository,
+  zero real compile); the environment is sanitized (ROCWASH_HEADER_MAP /
+  ROCWASH_ROCQ / ROCWASH_COQCHK stripped so no caller environment leaks
+  into a verdict); output is deterministic (no wall clock, no absolute
+  repo paths); any row failure, including an environment exception,
+  counts as a broken guard, never silent.
+Exit-codes.  0 = all 43 refuse-to-write criteria pass; 1 = at least one
+  guard broke (the broken file:line and the violating evidence are
+  listed).
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).
+#
+# Systematic refuse-to-write review of every tool and path that can write to
+# disk: first the inventory (tool x write face x guard anchor), then one
+# asserted refusal criterion per row; a matrix failure means a guard broke,
+# and exit 1 lists the broken file:line loudly.
+#
+# Inventory (tools that write to disk x matrix rows x guard anchors):
+#   ① tools/unclog.py (the applying tool; write face = the chain-root file
+#      <src>/<root>.v)
+#      U1 no --apply writes nothing: the tmp source tree md5 stays constant,
+#         no apply ledger, cures_applied=0
+#         anchor tools/unclog.py:42 (safety rule: --apply defaults to off = a
+#         full dry run writes nothing) + :583/:607 (the cure dry run and the
+#         apply are the only two call sites; :607 if a.apply is the master
+#         switch)
+#      U2 --audit writes nothing and is mutually exclusive with --apply:
+#         audit is a read-only baseline (the --src full-file md5s self-attest
+#         before and after, :762) and giving both exits rc=2 (:827)
+#      U3 frozen refusal: a root name/file hitting the frozen8 roster -> wall
+#         frozen-in-service, zero apply
+#         anchor tools/unclog.py:506 (pick_root frozen_hit precheck)
+#      U4 non-root files are never touched: after --apply the treated root
+#         file is canonicalized while every other file's md5 stays constant
+#         (the apply target is always the chain-root file; :43-44 "no cure
+#         call path outside pick", a structural guarantee)
+#   ② tools/wash_shape.py (shape-normalizing tool; write face = the
+#      --file/--dir intake set)
+#      W1 plan defaults to zero writes: a genuinely dirty file (CRLF plus a
+#         banned word) plans would-fix while the tree md5 stays constant
+#         anchor tools/wash_shape.py:1254 (one_pass if self.args.apply, the
+#         apply master switch)
+#      W2 after --apply a partial rescan is never reported as shaped: the
+#         apply "succeeds" while the rescan still finds would-fix ->
+#         verdict=partial exit 1 (an unclean face is never reported as
+#         shaped)
+#         anchor tools/wash_shape.py:1192-1205 (verdict_of: an unclean
+#         rescan never grants shaped)
+#      W3 frozen-name refusal: an explicit --file naming a frozen8 roster
+#         member -> rc=2 refusal (refused at intake, zero engine, zero
+#         writes; the roster member is only handed over as a path)
+#         anchor tools/wash_shape.py:759-761 (collect_files is_forbidden ->
+#         UsageError)
+#      W4 --header-map and --header-map-preset are same-slot exclusive rc=2
+#         anchor tools/wash_shape.py:1887-1890 (the exclusivity preflight in
+#         main)
+#   ③ tools/pushci.py (push pipeline; write faces = git push / API POST
+#      rerun / PR merge)
+#      P1 --dry-run zero side effects: both the api_calls and git-caller
+#         pipelines stay empty (zero git calls, zero API calls, zero tool
+#         subprocesses), all stages empty
+#         anchor tools/pushci.py:1163-1164 (run() dry_run -> run_dry
+#         short-circuit) + :1116
+#      P2 a content red never reruns: family=A-content-red -> fix-content
+#         stops, heal.rounds empty = zero-rerun evidence (zero POST on the
+#         api pipeline)
+#         anchor tools/pushci.py:983-987 (the heal_round A-family
+#         no-automatic-repair rule precedes the rerun)
+#      P3 the heal cap stops the loop: --max-heal 3 issues exactly 3 POSTs,
+#         then heal-exhausted exit 1 (the cap stops it; no fourth issue)
+#         anchor tools/pushci.py:966-969 (the stage_watch heal cap gate)
+#   ④ tools/cw_sentinel.py (live watcher; write face = the --on-red bypass
+#      action subprocess)
+#      S1 report-only by default: without --on-red and without
+#         --on-red-preset there is zero subprocess action (the actions
+#         ledger stays empty; a red is seen and emitted as an event, no
+#         action taken)
+#         anchor tools/cw_sentinel.py:713-715 (the fire_on_red check sits on
+#         sentry["on_red"])
+#      S2 both on-red paths share the guard: plain --on-red and
+#         --on-red-preset without --emit both rc=2 (a bypass action must be
+#         accompanied by an event stream on disk; the trigger evidence and
+#         the actions ledger stay auditable; {emit_dir} is derived from
+#         --emit and a missing stream is refused) — the v40 matrix
+#         registered the gap (the plain path lacked the same guard) and v41
+#         closed it
+#         anchor tools/cw_sentinel.py:722-723 (expand_on_red_preset) +
+#         :884-886 (the build_sentry plain guard)
+#   ⑤ tools/registry_union.py (roster union operation tool; write face = the
+#      --out union draft)
+#      R1 dry run defaults to zero writes: --out given yet nothing lands by
+#         default
+#         anchor tools/registry_union.py:881-885 (the mode master switch,
+#         written only if args.apply)
+#      R2 applies only under --apply (plus --apply without --out -> rc=2, no
+#         implicit overwrite)
+#         anchor tools/registry_union.py:826 + :883-885
+#   ⑥ wash/cure_applier.py (canonical-pack applying tool; write face = the
+#      --file target)
+#      C1 dry run defaults to zero writes: by default only the report is
+#         produced, the target file md5 stays constant
+#         anchor wash/cure_applier.py:1272/:1338 (if args.apply write gate)
+#      C2 applies only under --apply plus the idempotence assertion refuses
+#         the write: --apply lands the change and writes only after a second
+#         pass with zero residue; a failed idempotence assertion (a custom
+#         non-idempotent pack) -> rc=1 file NOT written
+#         anchor wash/cure_applier.py:1282-1285 (the IDEMPOTENCE-FAIL
+#         refusal)
+#      C3 write-face byte contract: after --apply on an LF fixture the on-disk
+#         bytes md5 equals the reported md5_after and no \r\n ever lands on
+#         disk (io.open newline="" pin; without it Windows text mode wrote
+#         CRLF while the report md5 was LF-caliber — the T0-5 md5-caliber
+#         defect; second pass must stay byte-identical)
+#         anchor wash/cure_applier.py:1338-1341 (pinned write face)
+#      C4 compile-leg write face (T0-2/T0-3 S1 sync): the --apply compile
+#         leg compiles temp-only copies (.vo never lands in the repo tree);
+#         env unset -> honest not-run record with the write proceeding
+#         unchanged; env set but binary missing -> rc=9 fail-loud with the
+#         file NOT written (never a simulated green)
+#         anchor wash/cure_applier.py:660 (compile_leg) + :1286-1336 (the
+#         leg master switch) + :1300-1306 (the rc=9 fail-loud face)
+#   ⑦ certify/frozen8.py (frozen-roster tool; write faces = the freeze
+#      explicit --out/--tier2 pair plus the timestamp explicit --out record
+#      path)
+#      F1 freeze lands only the explicit two paths, and a ledger-content
+#         drift refuses the roster fail-closed (rc=1, zero writes): a scratch
+#         git skeleton with the ten frozen files stays tree-md5-constant
+#         after freeze; a one-byte tamper of verify_vo.py -> the roster is
+#         refused and --out stays zero-byte
+#         anchor certify/frozen8.py:357,366 (the two explicit write sites) +
+#         :334 (the fail-closed roster refusal)
+#      F2 the timestamp's only write face = the explicit --out record,
+#         landed only after the binding recheck passes: --out absent rc=2
+#         zero-write; TSA unreachable (a closed loopback naming
+#         ROCWASH_TSA_URL) rc=9 zero-write — the record lands only after the
+#         digest binding recheck passes locally
+#         anchor certify/frozen8.py:806 (the only write site, :799-803 the
+#         binding gate ahead of it) + :772 (the reachability self-check
+#         failure rc=9)
+#   ⑧ tools/axiom_guard.py (axiom guard; write face = the caller-named --out
+#      report volume plus one private temp workdir path; the .vo output face
+#      is temp-only, zero bytes into the repository tree)
+#      G1 compile-leg write face temp-only + honest skip: toolchain
+#         unconfigured (no env, no flags) -> rc=111 honest skip, zero
+#         judgment, the watched scratch tree md5-constant, no --out created;
+#         configured binaries missing -> rc=9 fail-loud before any work
+#         (zero writes, zero compiles)
+#         anchor tools/axiom_guard.py:main env gate (rc 111 / rc 9 ahead of
+#         guard()) + :guard private mkdtemp (write faces = workdir and the
+#         caller-named --out only)
+#   ⑨ tools/jargon_apply.py (wash-map applier; write face = the .py/.sh/.md
+#      prose faces under --tree, or the one --file target)
+#      J1 self-reference guard: the wash map's own source table
+#         (--a2-table, default docs/jargon-to-standard-mapping-v1.md) is never
+#         a wash target — --tree excludes it from the target set and --file on
+#         it is refused rc=1 loud (a tool never washes its own map; the
+#         e04f2f6 round washed it and stripped 11 of the 13 contract rows the
+#         seed pins by md5)
+#         anchor tools/jargon_apply.py:550-560 (skip_abs self-reference
+#         exclusion) + :471-484 (--file refusal)
+#   ⑩ tools/scheduler_lite.py (lite scheduler, X2 face; write face = the
+#      explicit --out path only)
+#      SL1 plan defaults to zero writes: with all flags canned on tmp
+#         fixtures, plan produces a due verdict while the tmp tree md5 stays
+#         constant; without --out nothing lands at all (dryRun=true stays
+#         pinned)
+#         anchor tools/scheduler_lite.py:364-366 (run_plan if args.out, the
+#         only write gate) + :309 (build_plan dryRun=True always)
+#      SL2 the only write face = the explicit --out, byte-deterministic: with
+#         --out exactly one file lands (the plan document), the input tree
+#         md5 stays constant, two runs are byte-identical (the plan_bytes
+#         sort_keys deterministic byte form)
+#         anchor tools/scheduler_lite.py:364-366 + :328-331 (plan_bytes
+#         deterministic bytes)
+#   ⑪ tools/auto_merge.py (automatic merge gate, X5 face; write face = the
+#      --apply merge-ledger append path only)
+#      AM1 no --apply writes nothing: merge-ok plus a supply/* whitelist
+#         member (the rail rules allowed) yet the ledger is not written and
+#         not created (a report --json is an explicit extra)
+#         anchor tools/auto_merge.py:244-247 (run_rail if apply_mode append
+#         master switch)
+#      AM2 hold never authorizes plus out-of-scope branch refusal: a hold-red
+#         verdict writes nothing even under --apply (rail not-eligible
+#         precedes the merge ledger); a non-supply/* head rc=1 whitelist
+#         refusal with zero writes
+#         anchor tools/auto_merge.py:220-221 (verdict != merge-ok
+#         precondition) + :225-228 (the branch whitelist gate)
+#      AM3 daily budget cap plus duplicate refusal: --daily-cap 3 authorizes
+#         exactly 3 rows, the 4th is refused rc=1; a same-day same-PR
+#         duplicate is refused rc=1; the merge ledger stays at exactly 3
+#         rows
+#         anchor tools/auto_merge.py:229-233 (the daily cap gate) + :234-239
+#         (the duplicate gate)
+#   ⑫ tools/repair_scope.py (shared exclusion roster, F1/E2 single source)
+#      plus the four E2 guard classes
+#      RS1 the --check query face writes nothing and the exclusion
+#         conclusions bite: shared full_frozen_files (read from the running
+#         LEDGER8 AST, a missing file degrades to a loud snapshot) +
+#         FROZEN_DIR_FAMILIES + LEGAL_DATA_DIR_FAMILIES + docs/zh + .zh.md
+#         archive mirrors all EXCLUDED; the three class-2 repairable faces
+#         (tests/README.md, README.md, the ledger) REPAIRABLE; the query
+#         writes nothing
+#         anchor tools/repair_scope.py:140-160
+#         (exclusion_roster/full_frozen_files) + :556-576
+#         (RosterResyncScope.refusal_reason) + :590-620 (check_faces)
+#      E2A class-1 lane-extract (--lane-detect/--lane-apply): default
+#         zero-write zero-record; an excluded ledger face (the seeds/
+#         family) rc=2 refusal with zero creation; the budget cap (2 prior
+#         records) rc=2 write refusal, suite bytes constant, only an
+#         escalated(budget-cap) ledger row lands
+#         anchor tools/repair_scope.py:477-482 (excluded-face refusal) +
+#         :400-411 (_lane_ledger_gate, the ledger face under the same gate)
+#         + :487-493 (the budget cap)
+#      E2B class-2 roster-resync (tools/roster_resync.py): default zero-write
+#         zero-record; --apply is a one-way derivation (roster bytes
+#         constant, count faces repaired to the roster value, one repair one
+#         ledger row); budget cap rc=1 write refusal, face bytes constant,
+#         only an escalated row lands
+#         anchor tools/roster_resync.py:246-248 (the default zero-write
+#         gate) + :256-265 (the budget cap) + :327-334 (a frozen face is
+#         escalated, never applied) + tools/repair_scope.py:556-576
+#      E2C class-3 flaky-quarantine (tools/flaky_guard.py --move): a frozen
+#         target (a seeds/-family roster) rc=1 refusal with zero writes and
+#         zero records (the scope check precedes the probe); budget cap rc=1
+#         write refusal, roster bytes constant, only an escalated ledger row
+#         lands
+#         anchor tools/flaky_guard.py:390-396 (_scope_check single-source
+#         consumption, ahead of every plan) + :514-523 (the budget cap)
+#      E2D class-4 doc-count (--doc-count-detect/--doc-count-apply): default
+#         zero-write zero-record; --apply repairs to face=source and is
+#         idempotent (a second pass moves zero bytes); budget cap rc=2 write
+#         refusal, target-face bytes constant, only an escalated(budget-cap)
+#         row lands
+#         anchor tools/repair_scope.py:917-926 (the apply write-face
+#         precheck) + :975-994 (the budget cap) + :997-1009 (the
+#         post-assertion refusal)
+#   ⑩ .github/scripts/selfheal_heartbeat.py (heartbeat tick writer; write face
+#      = the caller-named --file JSONL volume, strictly append-only)
+#      H1 default dry run zero-write; --apply appends exactly one tick line
+#         per run and prior ledger bytes stay byte-identical (content pins,
+#         never mtime pins: back-to-back writes can land on one mtime tick)
+#         anchor .github/scripts/selfheal_heartbeat.py (run gate + append face)
+#      H2 loss-of-contact rule: a gap strictly over 90 minutes appends an ALERT
+#         line ahead of the tick; exactly 90 minutes stays silent; an ALERT
+#         line is never a tick source
+#         anchor .github/scripts/selfheal_heartbeat.py (planned_records gap gate)
+#      H3 fail-loud: a corrupt or schema-mismatched last ledger line refuses
+#         the append with rc=9 and zero bytes written; bad --now, nonpositive
+#         --alert-minutes and an empty --file are usage errors rc=2
+#         anchor .github/scripts/selfheal_heartbeat.py (last_tick raises + run
+#         validation)
+#      H4 yml wiring line-scan (stdlib only, no YAML parser dependency): the
+#         heartbeat input defaults to false, HEARTBEAT=1 is exported only
+#         under workflow_dispatch, the step invokes the writer with --apply
+#         against docs/heartbeat.jsonl, checkout covers HEARTBEAT, the
+#         rollback line names the new script
+#         anchor .github/workflows/selfheal.yml (input block, guard block,
+#         heartbeat step, checkout condition, rollback line)
+#   ⑪ tools/repair_weekly.py (repair-outcome weekly distribution face; write
+#      faces = the caller-named --out markdown face + --json report + the
+#      ledger append through --record --apply; the aggregate face is
+#      read-only over the ledger)
+#      K1 aggregate write face: dry-run default zero-write (no --out ->
+#         stdout only, tree manifest constant); with --out the face file is
+#         the only write and reruns are byte-identical; the ledger input
+#         never gains a byte
+#         anchor tools/repair_weekly.py:main aggregate branch +
+#         :render_markdown caller-named write face
+#      K2 record write face: --record without --apply is plan-only (zero
+#         bytes); --record --apply appends exactly one
+#         rocqwash-repair-ledger/2 row; the vocabulary refusals (escalated
+#         without an evidence package, a watch-only reason outside the enum,
+#         a value outside the vocabulary) refuse before any byte moves
+#         anchor tools/repair_weekly.py:record_row (vocabulary gate) +
+#         :ledger_append (the only append face)
+#      K3 fail-loud input faces: a malformed ledger row rc=2 and an
+#         explicitly named absent ledger rc=9, both with zero writes
+#         anchor tools/repair_weekly.py:ledger_rows (fail-loud parse) +
+#         :main explicit-ledger gate
+#   ⑫ wording-face honesty rows (honest-degradation wording alignment; read-only
+#      line-scans: zero writes, zero subprocesses, zero tmp fixtures)
+#      N1 README evolve wording alignment: the v55 snapshot line states the
+#         tool in substance as a signal-to-task-brief generator, the
+#         "autonomous evolution engine" label survives only as the cited
+#         module-title face pending rename adjudication, and the draft-only
+#         spawn-gate fact tokens stay on the line
+#         anchor README.md:19 (v55 snapshot line)
+#      N2 evolve.py docstring honesty note: the Purpose block carries the
+#         draft-only token and the selection-not-implemented-in-this-code
+#         clause while keeping the no-execution and no-repository-write
+#         facts, the module title keeps its name, and the five-field doc
+#         block stays within the 30-line budget
+#         anchor tools/evolve.py:13-14 (docstring Purpose note lines)
+#      N3 CAPABILITY-INDEX evolution_dashboard positioning note: the entry
+#         carries the KPI-aggregation positioning line, the rename candidate
+#         is declared but not applied, and the entry name, path, invocation
+#         form, and route tokens stay untouched
+#         anchor docs/CAPABILITY-INDEX.md:209 (evolution_dashboard note line)
+#
+# Offline discipline (hard requirement): every criterion runs on tmp fixtures
+# with --injector canned responses (unclog probe/resprobe canned, wash_shape
+# engine keys canned, pushci steps/jobs/git-caller canned, sentinel canned
+# API) — zero real network, zero real repository, zero real compile; the only
+# real subprocesses are pure-stdlib offline engines (chain_graph,
+# cure_applier, scan_v4_token, frozen8 --ledger/--selftest, freeze on a
+# scratch skeleton, gate4, ci_triage --offline, selfheal_heartbeat --apply;
+# precedent: each tool's own --selftest; the E2C budget-cap face drives a
+# three-line bash fixture suite inside tmp through the flaky_guard probe,
+# same as the flaky_guard --selftest precedent).  The single exception W3
+# hands over a real roster member's PATH only: the tool refuses at
+# collect_files, zero reads zero writes (the wash_shape same-tool
+# precedent).
+#
+# Self discipline: python3 -B bans __pycache__; zero repository writes (every
+# artifact lives in tempfile.mkdtemp); deterministic output (no wall clock,
+# no absolute repo paths); environment sanitation (ROCWASH_HEADER_MAP /
+# ROCWASH_ROCQ / ROCWASH_COQCHK stripped, so no caller environment leaks into
+# a verdict and no real compile leaks into the matrix); fail-loud — any row
+# failure (including an environment exception) counts as broken, never
+# silent.
+#
+# Usage:
+#   python3 tests/test_destructive_matrix.py          # via run_tests.sh in the suite
+#   python3 -B tests/test_destructive_matrix.py       # manual
 import json
 import hashlib
 import io
@@ -280,7 +387,8 @@ def md5_of(path):
 
 
 def tree_manifest(root, skip_dirs=(".git",)):
-    """目录全文件 {rel(POSIX): md5} 清单（增删改一字节即现形·unclog 同款口径）。
+    """{rel(POSIX): md5} manifest of every file under the directory (one
+    byte added, removed or changed shows up; same accounting as unclog).
 
     The .git directory is skipped by default: git legitimately rewrites its
     own metadata (reflog, index, gc.log) when it resolves HEAD or refreshes
@@ -368,8 +476,9 @@ def u_rec1(f, lib):
 
 
 def u_fixture(tmp, tag, extra_v=None):
-    """unclog tmp 夹具：src 树（A 可洗链根＋B 消费者〔＋附加件〕）＋cands.tsv
-    ＋injector 目录骨架。→ (src, cands, wd, injdir)。"""
+    """unclog tmp fixture: a src tree (A, a sanitizable chain root, plus B,
+    its consumer, and any extra files) with cands.tsv and the injector
+    directory skeleton.  -> (src, cands, wd, injdir)."""
     d = os.path.join(tmp, tag)
     src, wd, injdir = (os.path.join(d, x) for x in ("src", "wd", "inj"))
     for p in (src, wd, injdir):
@@ -397,56 +506,61 @@ def u_scenario(injdir, probes, resprobes=None):
     return injdir
 
 
-L1 = None    # 模块级懒建（dict 不可哈希默认参）——见 rows()
+L1 = None    # module-level lazy build (a dict is unhashable as a default
+             # argument); assigned before rows() runs
 
 
-# ---- ① unclog 四行 ------------------------------------------------------------
+# ---- ① unclog, four rows ------------------------------------------------------------
 
 def row_u1(tmp):
-    """缺 --apply 零写盘：有方案（cures_planned=1）而 tmp 源树 md5 恒同·
-    无落刀账。"""
+    """Without --apply nothing is written: a plan exists (cures_planned=1)
+    while the tmp source tree md5 stays constant, and no apply ledger
+    lands."""
     src, cands, wd, injdir = u_fixture(tmp, "u1")
     u_scenario(injdir, [L1, L1], [u_led({"A": u_rec0("A")})])
     before = tree_manifest(src)
     rc, out = sh(UNCLOG, ["--src", src, "--candidates", cands, "--rounds", "1",
                           "--injector", injdir, "--workdir", wd,
                           "--json", os.path.join(wd, "rep.json")])
-    assert rc == 1, "缺 --apply 应 rounds-exhausted rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "without --apply expected rounds-exhausted rc=1, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(wd, "rep.json"))
     assert rep["schema"] == SCHEMA_UNCLOG and rep["verdict"] == "rounds-exhausted"
     assert rep["mode"]["apply"] is False, rep["mode"]
-    assert rep["final"]["cures_planned_total"] == 1, "干跑应有方案"
+    assert rep["final"]["cures_planned_total"] == 1, "a dry run should still produce a plan"
     assert rep["final"]["cures_applied_total"] == 0, rep["final"]
-    assert tree_manifest(src) == before, "缺 --apply 下源树字节被动＝护栏破"
+    assert tree_manifest(src) == before, "source tree bytes moved without --apply = guard broken"
     assert not os.path.exists(os.path.join(wd, "round-1.apply.json")), \
-        "无 --apply 不得有落刀账"
+        "no apply ledger may land without --apply"
 
 
 def row_u2(tmp):
-    """--audit 零写盘＋与 --apply 互斥：audit 只读基线（cures 恒空·树恒同）；
-    --audit --apply 同给 rc=2。"""
+    """--audit writes nothing and is mutually exclusive with --apply: audit
+    is a read-only baseline (cures stay empty, tree constant);
+    --audit --apply given together exits rc=2."""
     src, cands, wd, injdir = u_fixture(tmp, "u2")
     u_scenario(injdir, [L1])
     before = tree_manifest(src)
     rc, out = sh(UNCLOG, ["--src", src, "--candidates", cands, "--audit",
                           "--injector", injdir, "--workdir", wd,
                           "--json", os.path.join(wd, "rep.json")])
-    assert rc == 0, "audit 只读基线应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "read-only audit baseline should exit 0, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(wd, "rep.json"))
     assert rep["verdict"] == "audit" and rep["mode"]["audit"] is True
     assert rep["final"]["cures_planned_total"] == 0 \
         and rep["final"]["cures_applied_total"] == 0, rep["final"]
-    assert rep["rounds"][0]["cure"] is None, "audit 不得有落刀判面"
-    assert tree_manifest(src) == before, "audit 下源树字节被动＝护栏破"
+    assert rep["rounds"][0]["cure"] is None, "audit must carry no apply verdict"
+    assert tree_manifest(src) == before, "source tree bytes moved under audit = guard broken"
     rc2, out2 = sh(UNCLOG, ["--src", src, "--candidates", cands, "--audit",
                             "--apply"])
-    assert rc2 == 2, "--audit --apply 同给应 rc=2 实测 %d\n%s" % (rc2, out2[-300:])
+    assert rc2 == 2, "--audit --apply given together should rc=2, got %d\n%s" % (rc2, out2[-300:])
     assert "mutually exclusive" in out2, out2[-300:]  # synced to the translated unclog mutex message
 
 
 def row_u3(tmp):
-    """frozen 红拒：根名 wash_engine 撞 frozen8 在册（certify/frozen8.py --ledger
-    真实取册）→ wall frozen-in-service·零落刀·在册同名夹具件字节恒同。"""
+    """frozen refusal: the root name wash_engine hits the frozen8 roster
+    (certify/frozen8.py --ledger reads the real roster) -> wall
+    frozen-in-service, zero apply, and the roster-named fixture file stays
+    byte-identical."""
     src, cands, wd, injdir = u_fixture(
         tmp, "u3", extra_v=[("wash_engine.v", CURE13_BODY)])
     LF = u_led({"wash_engine": u_rec0("wash_engine"),
@@ -457,18 +571,20 @@ def row_u3(tmp):
     rc, out = sh(UNCLOG, ["--src", src, "--candidates", cands, "--apply",
                           "--injector", injdir, "--workdir", wd,
                           "--json", os.path.join(wd, "rep.json")])
-    assert rc == 1, "frozen 红拒应 wall rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "a frozen refusal should wall rc=1, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(wd, "rep.json"))
     assert rep["verdict"] == "wall", rep["verdict"]
     assert rep["wall"]["wash_engine"]["reason"] == "frozen-in-service", rep["wall"]
-    assert rep["rounds"][0]["cure"] is None, "frozen 红拒后不得有落刀判面"
+    assert rep["rounds"][0]["cure"] is None, "no apply verdict may follow a frozen refusal"
     assert rep["final"]["cures_applied_total"] == 0, rep["final"]
-    assert md5_of(frozen_v) == before, "frozen 在册件被落刀＝护栏破"
+    assert md5_of(frozen_v) == before, "the roster-named file was applied to = guard broken"
 
 
 def row_u4(tmp):
-    """非链根件零被动：--apply 落刀受治根件 A.v 正典化，而消费者 B.v md5 恒同
-    （落刀对象恒为链根件·pick 之外无 cure 调用路径）。"""
+    """Non-root files are never touched: under --apply the treated root file
+    A.v is canonicalized while the consumer B.v md5 stays constant (the
+    apply target is always the chain-root file; no cure call path exists
+    outside pick)."""
     src, cands, wd, injdir = u_fixture(tmp, "u4")
     u_scenario(injdir, [L1, u_led({"A": u_rec0("A"), "B": u_rec0("B")})],
                [u_led({"A": u_rec0("A")})])
@@ -476,18 +592,18 @@ def row_u4(tmp):
     rc, out = sh(UNCLOG, ["--src", src, "--candidates", cands, "--apply",
                           "--injector", injdir, "--workdir", wd,
                           "--json", os.path.join(wd, "rep.json")])
-    assert rc == 0, "绿径落刀应 unclogged rc=0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "the green-path apply should unclogged rc=0, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(wd, "rep.json"))
     assert rep["verdict"] == "unclogged"
     assert rep["final"]["cures_applied_total"] == 1, rep["final"]
     a_text = io.open(os.path.join(src, "A.v"), encoding="utf-8").read()
-    assert "S01_BaseRing.NatLe (gnPrf f pf) k" in a_text, "链根件未被正典落刀"
+    assert "S01_BaseRing.NatLe (gnPrf f pf) k" in a_text, "the chain-root file was not canonicalized"
     assert rep["rounds"][0]["cure"]["on_disk_md5_match"] is True, rep["rounds"][0]
     assert md5_of(os.path.join(src, "B.v")) == b_before, \
-        "非链根件被动＝护栏破（落刀面越界）"
+        "a non-root file moved = guard broken (apply face out of bounds)"
 
 
-# ---- ② wash_shape 四行 --------------------------------------------------------
+# ---- ② wash_shape, four rows --------------------------------------------------------
 
 SHAPE_HEADER = ("(* 使命：破坏面矩阵夹具。\n"
                 "   依赖：无。\n"
@@ -497,8 +613,9 @@ SHAPE_HEADER = ("(* 使命：破坏面矩阵夹具。\n"
 
 
 def row_w1(tmp):
-    """plan 缺省零写盘：真实脏件（CRLF＋禁词 载体·真 gate4 判面）plan 出
-    would-fix≥1（看见可洗面）而树 md5 恒同。"""
+    """plan defaults to zero writes: a genuinely dirty file (CRLF plus a
+    banned-word carrier, a real gate4 verdict) plans would-fix >= 1 (a
+    sanitizable face is seen) while the tree md5 stays constant."""
     d = os.path.join(tmp, "w1")
     tree, outd = os.path.join(d, "tree"), os.path.join(d, "out")
     os.makedirs(tree)
@@ -510,21 +627,22 @@ def row_w1(tmp):
     before = tree_manifest(tree)
     rc, out = sh(WASH_SHAPE, ["--file", dirty, "--json",
                               os.path.join(outd, "rep.json")])
-    assert rc == 1, "脏件 plan 应 partial rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "the dirty-file plan should partial rc=1, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(outd, "rep.json"))
     assert rep["schema"] == "rocqwash-shape/1"
     assert rep["mode"] == "plan", rep["mode"]
     assert rep["verdict"] == "partial", rep["verdict"]
-    assert rep["plan"]["stats"]["would_fix"] >= 1, "plan 应看见可洗面"
-    assert tree_manifest(tree) == before, "plan 缺省下树字节被动＝护栏破"
+    assert rep["plan"]["stats"]["would_fix"] >= 1, "plan should see the sanitizable face"
+    assert tree_manifest(tree) == before, "tree bytes moved under the default plan = guard broken"
     assert not os.path.exists(os.path.join(tree, ".wash_shape_json_0")), \
-        "plan 落盘残留在收件面＝护栏破"
+        "plan left a residue file on the intake face = guard broken"
 
 
 def row_w2(tmp):
-    """--apply 后 rescan partial 不谎报 shaped：gate4/sweep 罐装——apply 账面
-    成功而复扫仍 would-fix → verdict=partial exit 1（verdict_of 未净不给
-    shaped）。"""
+    """After --apply a partial rescan is never reported as shaped: gate4/
+    sweep canned, the apply record succeeds while the rescan still finds
+    would-fix -> verdict=partial exit 1 (verdict_of never grants shaped
+    when the rescan is not clean)."""
     d = os.path.join(tmp, "w2")
     outd = os.path.join(d, "out")
     os.makedirs(outd)
@@ -539,32 +657,34 @@ def row_w2(tmp):
                   "report": {"report": {"flag_swaps": 1}}}})
     rc, out = sh(WASH_SHAPE, ["--file", dirty, "--apply", "--injector", inj,
                               "--json", os.path.join(outd, "rep.json")])
-    assert rc == 1, "rescan 未净应 partial rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "an unclean rescan should partial rc=1, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(outd, "rep.json"))
     assert rep["verdict"] == "partial", \
-        "rescan 未净谎报 shaped＝护栏破 实测 %r" % rep["verdict"]
+        "an unclean rescan reported as shaped = guard broken, got %r" % rep["verdict"]
     assert rep["apply"]["rescan"]["stats"]["would_fix"] == 1, rep["apply"]
     assert "RESCAN: would_fix=1" in out, out[-400:]
 
 
 def row_w3(tmp):
-    """冻结名红拒：显式 --file 指认 frozen8 真在册件（verify/gate4_comment_guard.py
-    ·先验在册前提）→ rc=2 红拒·收件即拒零引擎（在册件只递路径不触内容）。"""
+    """Frozen-name refusal: an explicit --file naming a real frozen8 roster
+    member (verify/gate4_comment_guard.py; the roster premise is asserted
+    first) -> rc=2 refusal at intake, zero engine (the roster member is
+    only handed over as a path, its content is never touched)."""
     rc, out = sh(FROZEN8, ["--ledger"])
-    assert rc == 0, "frozen8 --ledger 应 rc=0（红拒前提·离线账载）"
+    assert rc == 0, "frozen8 --ledger should rc=0 (the refusal premise, offline ledger)"
     roster = [ln.split()[1] for ln in out.splitlines()
               if len(ln.split()) == 2]
     target = os.path.join(REPO, "verify", "gate4_comment_guard.py")
     assert "verify/gate4_comment_guard.py" in roster, \
-        "红拒前提破：目标件不在 frozen8 在册: %s" % roster
+        "refusal premise broken: the target file is not on the frozen8 roster: %s" % roster
     rc, out = sh(WASH_SHAPE, ["--file", target, "--only", "eol"])
-    assert rc == 2, "显式指认冻结件应红拒 rc=2 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 2, "an explicitly named frozen file should be refused rc=2, got %d\n%s" % (rc, out[-400:])
     assert "rejection" in out, out[-300:]  # synced to the translated wash_shape frozen-surface rejection message
 
 
 def row_w4(tmp):
-    """--header-map 与 --header-map-preset 同槽互斥 rc=2（main 前置闸·先于
-    引擎装载）。"""
+    """--header-map and --header-map-preset are same-slot exclusive rc=2
+    (the preflight check sits ahead of engine loading in main)."""
     d = os.path.join(tmp, "w4")
     os.makedirs(d)
     clean = wf(os.path.join(d, "clean.v"),
@@ -572,11 +692,11 @@ def row_w4(tmp):
     mp = wj(os.path.join(d, "map.json"), {})
     rc, out = sh(WASH_SHAPE, ["--file", clean, "--header-map", mp,
                               "--header-map-preset", "campaign_set_diamond"])
-    assert rc == 2, "同槽双旗应 rc=2 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 2, "same-slot double flags should rc=2, got %d\n%s" % (rc, out[-400:])
     assert "same-slot" in out, out[-300:]  # synced to the translated wash_shape same-slot exclusivity message
 
 
-# ---- ③ pushci 三行 ------------------------------------------------------------
+# ---- ③ pushci, three rows ------------------------------------------------------------
 
 SHA40 = "5f1e2d3c4b5a69788796a5b4c3d2e1f0a9b8c7d6"
 RUN_ID = 9026111201
@@ -590,8 +710,9 @@ def p_runs_body(conclusion):
 
 
 def p_setup(tmp, tag, api_steps, jobs=None, tools=None):
-    """pushci steps 形注入场＋git-caller 场（get-url→rev-parse→push→ls-remote
-    实调序）。→ (repo, injdir, gitjson, api_calls_path, git_calls_path)。"""
+    """pushci injection setting with the steps form plus the git-caller
+    form (the real call order get-url -> rev-parse -> push -> ls-remote).
+    -> (repo, injdir, gitjson, api_calls_path, git_calls_path)."""
     d = os.path.join(tmp, tag)
     repo, injdir = os.path.join(d, "repo"), os.path.join(d, "inj")
     os.makedirs(repo)
@@ -632,26 +753,28 @@ def p_fire(repo, injdir, gitjson, extra):
 
 
 def row_p1(tmp):
-    """--dry-run 零副作用：rc=0 verdict=dry-run·stages 全空·api_calls 与
-    git-caller 双流水皆空（零 git 调零 API 调零工具子进程）。"""
+    """--dry-run has zero side effects: rc=0 verdict=dry-run, stages all
+    empty, and both the api_calls and git-caller pipelines empty (zero git
+    calls, zero API calls, zero tool subprocesses)."""
     repo, injdir, gitjson, api_calls, git_calls = p_setup(tmp, "p1", [])
     rep_path = os.path.join(tmp, "p1", "out.json")
     rc, out = p_fire(repo, injdir, gitjson,
                      ["--dry-run", "--pre-scan-gate4", "--json", rep_path])
-    assert rc == 0, "dry-run 应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "a dry run should exit 0, got %d\n%s" % (rc, out[-400:])
     rep = jl(rep_path)
     assert rep["verdict"] == "dry-run" and rep["mode"] == "dry-run", rep["verdict"]
-    assert rep["stages"] == {}, "dry-run 不得有段执行账: %s" % list(rep["stages"])
-    assert rep.get("plan"), "dry-run 应出计划"
+    assert rep["stages"] == {}, "a dry run must carry no stage execution record: %s" % list(rep["stages"])
+    assert rep.get("plan"), "a dry run should produce a plan"
     assert os.path.isfile(api_calls) and os.path.isfile(git_calls), \
-        "双流水出账件应在位（注入模式实证面）"
-    assert jl(api_calls) == [], "dry-run 零 API 调用实证失守＝护栏破"
-    assert jl(git_calls) == [], "dry-run 零 git 调用实证失守＝护栏破"
+        "both pipeline record files must exist (the injection-mode evidence face)"
+    assert jl(api_calls) == [], "dry-run zero-API-call evidence lost = guard broken"
+    assert jl(git_calls) == [], "dry-run zero-git-call evidence lost = guard broken"
 
 
 def row_p2(tmp):
-    """内容红零 rerun：family=A-content-red → fix-content exit 2·heal.rounds
-    空＝零 rerun 实证（api 流水零 POST）·证据含 禁代修。"""
+    """A content red never reruns: family=A-content-red -> fix-content
+    exit 2, heal.rounds empty = zero-rerun evidence (zero POST on the api
+    pipeline); the evidence carries the no-automatic-repair clause."""
     jobs_a = jl(JOBS_A)
     steps = [{"at_round": 1, "responses": [
         {"method": "GET", "path": "/actions/runs?per_page=30", "status": 200,
@@ -660,22 +783,23 @@ def row_p2(tmp):
                                                           jobs=jobs_a)
     rep_path = os.path.join(tmp, "p2", "out.json")
     rc, out = p_fire(repo, injdir, gitjson, ["--json", rep_path])
-    assert rc == 2, "内容红应 fix-content exit 2 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 2, "a content red should fix-content exit 2, got %d\n%s" % (rc, out[-400:])
     rep = jl(rep_path)
     assert rep["verdict"] == "fix-content", rep["verdict"]
     h = rep["stages"]["heal"]
     assert h["rounds"] == [] and h["fired_total"] == 0, \
-        "内容红零 rerun 实证失守＝护栏破: %r" % h
+        "content-red zero-rerun evidence lost = guard broken: %r" % h
     assert h["last_triage"]["family"] == "A-content-red", h["last_triage"]
     calls = jl(api_calls)
     assert all(c["method"] != "POST" for c in calls), \
-        "内容红下出现 POST rerun＝护栏破: %r" % calls
+        "a POST rerun under a content red = guard broken: %r" % calls
     assert any("no automatic repair" in e for e in rep["evidence"]), rep["evidence"]
 
 
 def row_p3(tmp):
-    """heal 帽尽停：--max-heal 3·NETRED 四轮 failure——恰 3 发 POST rerun 后
-    heal-exhausted exit 1（帽尽即停·无第 4 发）。"""
+    """The heal cap stops the loop: --max-heal 3 with four NETRED failure
+    rounds issues exactly 3 POST reruns, then heal-exhausted exit 1 (the
+    cap stops it; no fourth issue)."""
     jobs_b = jl(JOBS_B)
     steps = []
     for i in range(1, 5):
@@ -690,7 +814,7 @@ def row_p3(tmp):
     rep_path = os.path.join(tmp, "p3", "out.json")
     rc, out = p_fire(repo, injdir, gitjson,
                      ["--max-heal", "3", "--json", rep_path])
-    assert rc == 1, "heal 帽尽应 heal-exhausted exit 1 实测 %d\n%s" \
+    assert rc == 1, "an exhausted heal cap should heal-exhausted exit 1, got %d\n%s" \
         % (rc, out[-400:])
     rep = jl(rep_path)
     assert rep["verdict"] == "heal-exhausted", rep["verdict"]
@@ -699,14 +823,15 @@ def row_p3(tmp):
     calls = jl(api_calls)
     n_post = sum(1 for c in calls if c["method"] == "POST")
     n_get = sum(1 for c in calls if c["method"] == "GET")
-    assert n_post == 3, "帽 3 应恰 3 发 rerun（多发行/少发行均破）实测 %d" % n_post
-    assert n_get == 4, "四轮 poll 应 4 GET 实测 %d" % n_get
+    assert n_post == 3, "cap 3 must issue exactly 3 reruns (more or fewer is broken), got %d" % n_post
+    assert n_get == 4, "four poll rounds should be 4 GETs, got %d" % n_get
 
 
-# ---- ④ cw_sentinel 两行 -------------------------------------------------------
+# ---- ④ cw_sentinel, two rows -------------------------------------------------------
 
 def s_canned(tmp, tag):
-    """sentinel canned API（runs 红件 178＋jobs A 形红步）→ injector 路径。"""
+    """Sentinel canned API (runs red record 178 plus a jobs A-form red
+    step) -> injector path."""
     d = os.path.join(tmp, tag)
     os.makedirs(d)
     runs_body = {"total_count": 1, "workflow_runs": [
@@ -731,8 +856,10 @@ def s_canned(tmp, tag):
 
 
 def row_s1(tmp):
-    """缺省 report-only：无 --on-red 无 --on-red-preset 时零子进程动作——
-    CI 红件出 ci-red 事件（见红）而 actions 账全空（不动手）。"""
+    """report-only by default: with neither --on-red nor --on-red-preset
+    there is zero subprocess action; a CI red record emits a ci-red event
+    (the red is seen) while the actions ledger stays empty (no action is
+    taken)."""
     inj = s_canned(tmp, "s1")
     d = os.path.join(tmp, "s1")
     state = os.path.join(d, "state.json")
@@ -742,37 +869,40 @@ def row_s1(tmp):
                             "--injector", inj, "--state-file", state,
                             "--emit", emit, "--json", rep_path,
                             "--sleep-scale", "0"])
-    assert rc == 0, "report-only 巡检应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "a report-only watch should exit 0, got %d\n%s" % (rc, out[-400:])
     rep = jl(rep_path)
     assert rep["schema"] == "rocqwash-sentinel/1"
     evs = [json.loads(ln) for ln in io.open(emit, encoding="utf-8")
            if ln.strip()]
     assert any(e["kind"] == "ci-red" for e in evs), \
-        "应见红出事件（ci-red 在流）: %r" % evs
+        "the red must be seen as an event (ci-red on the stream): %r" % evs
     assert rep["actions"] == [], \
-        "缺省 report-only 下出现动作账＝护栏破（零子进程动作失守）: %r" \
+        "an actions record under default report-only = guard broken (zero-subprocess-action lost): %r" \
         % rep["actions"]
     assert "on-red" not in out.replace("on-red-preset", ""), out[-300:]
 
 
 def row_s2(tmp):
-    """on-red 双路同守卫：plain --on-red 与 --on-red-preset 缺 --emit 皆
-    → rc=2（旁路动作必伴随事件流落盘·触发证据与动作账可审计；{emit_dir} 系
-    --emit 派生缺盘即拒）——v40 矩阵登记缺口（plain 路径缺同款守卫）v41 补齐
-    转正·build_sentry 前置·零巡检零动作。"""
+    """Both on-red paths carry the same guard: plain --on-red and
+    --on-red-preset without --emit both exit rc=2 (a bypass action must be
+    accompanied by an event stream on disk; the trigger evidence and the
+    actions ledger stay auditable; {emit_dir} is derived from --emit and a
+    missing stream is refused).  The v40 matrix registered the gap (the
+    plain path lacked the same guard) and v41 closed it; the check sits
+    ahead of build_sentry, zero watch and zero action."""
     rc, out = sh(SENTINEL, ["--once", "--watch-repo", "org/repo",
                             "--on-red", "echo x", "--sleep-scale", "0"])
-    assert rc == 2, "plain 缺 --emit 应 rc=2 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 2, "plain without --emit should rc=2, got %d\n%s" % (rc, out[-400:])
     assert "--emit" in out, out[-300:]
     rc2, out2 = sh(SENTINEL, ["--once", "--watch-repo", "org/repo",
                               "--on-red-preset", "unclog",
                               "--on-red-arg", "src=" + os.path.join(tmp, "s2"),
                               "--sleep-scale", "0"])
-    assert rc2 == 2, "preset 缺 --emit 应 rc=2 实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 2, "preset without --emit should rc=2, got %d\n%s" % (rc2, out2[-400:])
     assert "--emit" in out2, out2[-300:]
 
 
-# ---- ⑤ registry_union／cure_applier 五行 --------------------------------------
+# ---- ⑤ registry_union / cure_applier, five rows --------------------------------------
 
 def r_fixture(tmp, tag):
     d = os.path.join(tmp, tag)
@@ -784,72 +914,78 @@ def r_fixture(tmp, tag):
 
 
 def row_r1(tmp):
-    """registry_union 干跑缺省零写盘：--out 已给而缺省不落盘。"""
+    """registry_union dry run defaults to zero writes: --out is given yet
+    nothing lands by default."""
     d, base, main, branch = r_fixture(tmp, "r1")
     outp = os.path.join(d, "union.txt")
     rep = os.path.join(d, "rep.json")
     rc, out = sh(REGISTRY_UNION, ["--base", base, "--main", main,
                                   "--branch", branch, "--kind", "order",
                                   "--out", outp, "--json", rep])
-    assert rc == 0, "干跑应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "a dry run should exit 0, got %d\n%s" % (rc, out[-400:])
     assert not os.path.exists(outp), \
-        "缺 --apply 时 --out 落盘＝护栏破（干跑零写盘失守）"
+        "--out landed without --apply = guard broken (dry-run zero-write lost)"
     assert "DRY-RUN" in out, out[-300:]
 
 
 def row_r2(tmp):
-    """registry_union --apply 才落刀：--apply 后 --out 在位含 union 行；且
-    --apply 无 --out → rc=2 禁隐式覆写。"""
+    """registry_union applies only under --apply: after --apply the --out
+    file exists with the union rows; --apply without --out exits rc=2 (no
+    implicit overwrite)."""
     d, base, main, branch = r_fixture(tmp, "r2")
     outp = os.path.join(d, "union.txt")
     rc, out = sh(REGISTRY_UNION, ["--base", base, "--main", main,
                                   "--branch", branch, "--kind", "order",
                                   "--out", outp, "--apply"])
-    assert rc == 0, "--apply 应 exit 0 实测 %d\n%s" % (rc, out[-400:])
-    assert os.path.isfile(outp), "--apply 后 --out 未落盘＝护栏破"
+    assert rc == 0, "--apply should exit 0, got %d\n%s" % (rc, out[-400:])
+    assert os.path.isfile(outp), "--out did not land after --apply = guard broken"
     assert io.open(outp, encoding="utf-8").read() == "A.v\nB.v\nC.v\n", \
-        "union 稿内容非预期: %r" % io.open(outp, encoding="utf-8").read()
+        "unexpected union file content: %r" % io.open(outp, encoding="utf-8").read()
     rc2, out2 = sh(REGISTRY_UNION, ["--base", base, "--main", main,
                                     "--branch", branch, "--kind", "order",
                                     "--apply"])
-    assert rc2 == 2, "--apply 无 --out 应 rc=2 实测 %d\n%s" % (rc2, out2[-300:])
+    assert rc2 == 2, "--apply without --out should rc=2, got %d\n%s" % (rc2, out2[-300:])
     assert "须配 --out" in out2, out2[-300:]
 
 
 def row_c1(tmp):
-    """cure_applier 干跑缺省零写盘：缺省（无 --apply）只出报告·目标件 md5
-    恒同。"""
+    """cure_applier dry run defaults to zero writes: by default (no
+    --apply) only the report is produced and the target file md5 stays
+    constant."""
     d = os.path.join(tmp, "c1")
     os.makedirs(d)
     f = wf(os.path.join(d, "t.v"), CURE13_BODY)
     rep = os.path.join(d, "rep.json")
     before = md5_of(f)
     rc, out = sh(CURE_APPLIER, ["--file", f, "--json", rep])
-    assert rc == 0, "干跑应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "a dry run should exit 0, got %d\n%s" % (rc, out[-400:])
     r = jl(rep)
     assert r["mode"] == "DRY-RUN", r["mode"]
     assert sum(v["matches"] for v in r["report"].values()) >= 1, \
-        "干跑应有命中（有刀可落而未落）"
-    assert md5_of(f) == before, "干跑下目标件字节被动＝护栏破"
+        "a dry run should carry matches (an applicable change seen but not applied)"
+    assert md5_of(f) == before, "target file bytes moved under a dry run = guard broken"
 
 
 def row_c2(tmp):
-    """cure_applier --apply 才落刀＋幂等断言拒写：正典包 --apply apply（件正典
-    化·md5 变·二遍幂等 rc=0）；自定义非幂等包 --apply → IDEMPOTENCE-FAIL
-    rc=1 且件零字节动（拒写）。"""
+    """cure_applier applies only under --apply, and the idempotence
+    assertion refuses the write: the canonical pack --apply canonicalizes
+    the file (md5 changes, the second pass is idempotent rc=0); a custom
+    non-idempotent pack under --apply exits IDEMPOTENCE-FAIL rc=1 with the
+    file byte-untouched (write refused)."""
     d = os.path.join(tmp, "c2")
     os.makedirs(d)
     f = wf(os.path.join(d, "t.v"), CURE13_BODY)
     before = md5_of(f)
     rc, out = sh(CURE_APPLIER, ["--file", f, "--apply",
                                 "--json", os.path.join(d, "rep.json")])
-    assert rc == 0, "--apply 正典落刀应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "--apply canonical write should exit 0, got %d\n%s" % (rc, out[-400:])
     text = io.open(f, encoding="utf-8").read()
-    assert "S01_BaseRing.NatLe (gnPrf f pf) k" in text, "落刀未正典化"
-    assert md5_of(f) != before, "--apply 后件未动＝落刀失守"
+    assert "S01_BaseRing.NatLe (gnPrf f pf) k" in text, "the apply did not canonicalize"
+    assert md5_of(f) != before, "the file did not move after --apply = apply face lost"
     rc2, out2 = sh(CURE_APPLIER, ["--file", f, "--apply"])
-    assert rc2 == 0, "二遍幂等应 rc=0 实测 %d\n%s" % (rc2, out2[-300:])
-    # 非幂等包：trigger "a"→template "aa"（输出再中触发）→ 幂等断言败拒写
+    assert rc2 == 0, "the second idempotent pass should rc=0, got %d\n%s" % (rc2, out2[-300:])
+    # non-idempotent pack: trigger "a" -> template "aa" (the output hits
+    # the trigger again) -> the idempotence assertion fails and refuses the write
     d2 = os.path.join(tmp, "c2b")
     os.makedirs(d2)
     g = wf(os.path.join(d2, "g.v"), "Lemma a : True.\n")
@@ -860,9 +996,9 @@ def row_c2(tmp):
                       "template": "aa"}]})
     g_before = md5_of(g)
     rc3, out3 = sh(CURE_APPLIER, ["--file", g, "--pack", pack, "--apply"])
-    assert rc3 == 1, "幂等断言败应 rc=1 实测 %d\n%s" % (rc3, out3[-400:])
+    assert rc3 == 1, "a failed idempotence assertion should rc=1, got %d\n%s" % (rc3, out3[-400:])
     assert "IDEMPOTENCE-FAIL" in out3, out3[-300:]
-    assert md5_of(g) == g_before, "幂等断言败后件被写＝护栏破（file NOT written 失守）"
+    assert md5_of(g) == g_before, "the file was written after a failed idempotence assertion = guard broken (file NOT written lost)"
 
 
 def row_c3(tmp):
@@ -991,7 +1127,7 @@ def row_c4(tmp):
         % r3.get("compile_check")
 
 
-# ---- ⑦ frozen8 two rows (S1 hardening law 20261115: whoever writes a write face enters this matrix) --------------------
+# ---- ⑦ frozen8 two rows (S1 hardening law: whoever writes a write face enters this matrix) --------------------
 
 F8_ROSTER = [
     "certify/freeze_manifest.py",
@@ -1023,17 +1159,18 @@ def f8_skeleton(root):
 
 
 def row_f1(tmp):
-    """freeze 写面：只落显式 --out/--tier2 两径；账载漂移 fail-closed 拒出
-    名单（rc=1·--out 零字节）。锚 certify/frozen8.py:357,366＋:334。"""
+    """freeze write face: only the explicit --out/--tier2 paths land; a
+    ledger-content drift refuses the roster fail-closed (rc=1, zero bytes
+    at --out).  anchor certify/frozen8.py:357,366 + :334."""
     skel = os.path.join(tmp, "skel")
     f8_skeleton(skel)
     before = tree_manifest(skel)
     rc, out = sh(FROZEN8, ["freeze", "--repo", skel,
                            "--out", os.path.join(tmp, "m.json"),
                            "--tier2", os.path.join(tmp, "t2.md5")])
-    assert rc == 0, "freeze 绿径应 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "the freeze green path should exit 0, got %d\n%s" % (rc, out[-400:])
     assert tree_manifest(skel) == before, \
-        "freeze 越界写仓树＝护栏破（写面仅显式 --out/--tier2）"
+        "freeze wrote outside its bounds into the repository tree = guard broken (the write face is only the explicit --out/--tier2)"
     vo = os.path.join(skel, "verify", "verify_vo.py")
     with open(vo, "rb") as fh:
         data = bytearray(fh.read())
@@ -1042,18 +1179,20 @@ def row_f1(tmp):
         fh.write(bytes(data))
     out2 = os.path.join(tmp, "m2.json")
     rc2, o2 = sh(FROZEN8, ["freeze", "--repo", skel, "--out", out2])
-    assert rc2 == 1, "账载漂移 freeze 应 rc=1 实测 %d\n%s" % (rc2, o2[-400:])
-    assert not os.path.exists(out2), "拒出名单仍落 --out＝护栏破（零写）"
+    assert rc2 == 1, "a ledger-content-drift freeze should rc=1, got %d\n%s" % (rc2, o2[-400:])
+    assert not os.path.exists(out2), "the refused roster still landed at --out = guard broken (zero writes)"
     assert "拒出名单" in o2, o2[-400:]
 
 
 def row_f2(tmp):
-    """timestamp 写面：唯一写面＝显式 --out 回执且绑定复验后才落；--out 缺席
-    rc=2 零写；TSA 不可达 rc=9 零写。锚 certify/frozen8.py:806＋:772。"""
+    """timestamp write face: the only write face is the explicit --out
+    execution record, landed only after the binding recheck passes; --out
+    missing rc=2 zero-write; TSA unreachable rc=9 zero-write.  anchor
+    certify/frozen8.py:806 + :772."""
     before = tree_manifest(tmp)
     man = os.path.join(REPO, "certify", "frozen8_manifest.json")
     rc, out = sh(FROZEN8, ["timestamp", "--list", man])
-    assert rc == 2, "--out 缺席应 rc=2 实测 %d\n%s" % (rc, out[-300:])
+    assert rc == 2, "a missing --out should rc=2, got %d\n%s" % (rc, out[-300:])
     assert "需 --out" in out, out[-300:]
     tsr = os.path.join(tmp, "x.tsr")
     os.environ["ROCWASH_TSA_URL"] = "http://127.0.0.1:1/tsr"  # closed loopback
@@ -1061,16 +1200,19 @@ def row_f2(tmp):
         rc9, o9 = sh(FROZEN8, ["timestamp", "--list", man, "--out", tsr])
     finally:
         os.environ.pop("ROCWASH_TSA_URL", None)
-    assert rc9 == 9, "TSA 不可达应 rc=9 实测 %d\n%s" % (rc9, o9[-300:])
+    assert rc9 == 9, "an unreachable TSA should rc=9, got %d\n%s" % (rc9, o9[-300:])
     assert "可达性自勘失败" in o9, o9[-300:]
-    assert not os.path.exists(tsr), "不可达仍落回执＝护栏破（零写）"
-    assert tree_manifest(tmp) == before, "timestamp 失败路径越界写盘＝护栏破"
+    assert not os.path.exists(tsr), "the record still landed while unreachable = guard broken (zero writes)"
+    assert tree_manifest(tmp) == before, "the timestamp failure path wrote out of bounds = guard broken"
 
 
 def row_j1(tmp):
-    """洗面器自引用护栏：映射源表（--a2-table）永不进洗面目标面——--tree 目标面
-    排除它（--plan 零写盘·报告面可查），--file 显式指认则 rc=1 红拒。
-    锚 tools/jargon_apply.py:550-560（skip_abs 自引用排除）＋:471-484（--file 红拒）。"""
+    """The sanitizing tool's self-reference guard: the mapping source table
+    (--a2-table) never enters the sanitize target set; the --tree target
+    set excludes it (--plan zero-write, visible on the report face) and an
+    explicit --file naming it is refused rc=1.  anchor
+    tools/jargon_apply.py:550-560 (skip_abs self-reference exclusion) +
+    :471-484 (--file refusal)."""
     d = os.path.join(tmp, "j1")
     os.makedirs(d)
     mapdoc = wf(os.path.join(d, "jargon-to-standard-mapping-v1.md"),
@@ -1080,21 +1222,21 @@ def row_j1(tmp):
     before = tree_manifest(d)
     rc, out = sh(JARGON_APPLY, ["--tree", d, "--plan", "--a2-table", mapdoc,
                                 "--json", rep])
-    assert rc == 0, "plan 应 rc=0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "plan should rc=0, got %d\n%s" % (rc, out[-400:])
     paths = [f["path"] for f in jl(rep)["files"]]
     assert "jargon-to-standard-mapping-v1.md" not in paths, \
-        "映射源表不得进洗面目标面（器不洗自己的地图）: %s" % paths
+        "the mapping source table must never enter the sanitize target set (a tool never washes its own map): %s" % paths
     assert "victim.md" in paths, \
-        "同目录普通件应仍在目标面（排除不得过宽）: %s" % paths
-    assert tree_manifest(d) == before, "plan 路径越界写盘＝护栏破"
+        "an ordinary file in the same directory must stay in the target set (the exclusion must not be too wide): %s" % paths
+    assert tree_manifest(d) == before, "the plan path wrote out of bounds = guard broken"
     rc, out = sh(JARGON_APPLY, ["--file", mapdoc, "--plan",
                                 "--a2-table", mapdoc])
-    assert rc == 1, "显式指认映射源表应红拒 rc=1 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "an explicit naming of the mapping source table should be refused rc=1, got %d\n%s" % (rc, out[-400:])
     assert "never washes its own map" in out, out[-300:]
-    assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
+    assert tree_manifest(d) == before, "the refusal path wrote out of bounds = guard broken"
 
 
-# ---- ⑩ scheduler_lite 两行（X6 波·谁写谁进阵）--------------------------------
+# ---- ⑩ scheduler_lite, two rows (X6 work stream: whoever writes a write face enters this matrix)--------------------------------
 
 SL_GAP = json.dumps({
     "schema": "rocqwash-exp/1", "id": "fix-001", "ts": "T0",
@@ -1133,40 +1275,44 @@ def sl_run(argv, now="2026-11-17T00:00:00Z"):
 
 
 def row_sl1(tmp):
-    """排程 plan 缺省零写盘：全旗标 tmp 罐装（gap/rounds/marker/gear 全绿）
-    plan 出 due 判面而 tmp 树 md5 恒同：无 --out 即无任何落盘；dryRun=true
-    恒钉（ignition 面只 informational，此面永不点火）。"""
+    """The scheduler plan defaults to zero writes: fully flagged tmp canned
+    inputs (gap/rounds/marker/gear all passing) plan a due verdict while
+    the tmp tree md5 stays constant; without --out nothing lands at all;
+    dryRun=true stays pinned (the ignition face is informational only and
+    never initiates here)."""
     ledger, rounds, marker, autonomy, state = sl_fixture(tmp, "sl1")
     before = tree_manifest(tmp)
     rc, out = sl_run(["plan", "--gap-ledger", ledger, "--rounds", rounds,
                       "--ef-marker", marker, "--autonomy", autonomy,
                       "--state", state, "--json"])
-    assert rc == 0, "plan 数据态应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "the plan on the data state should exit 0, got %d\n%s" % (rc, out[-400:])
     plan = json.loads(out)
     assert plan["schema"] == "rocqwash.scheduler-lite.plan/1", plan["schema"]
     assert plan["verdict"] == "due" and plan["fireReady"] is True, plan
-    assert plan["dryRun"] is True, "dryRun 恒真失守＝护栏破: %r" % plan["dryRun"]
+    assert plan["dryRun"] is True, "dryRun no longer always true = guard broken: %r" % plan["dryRun"]
     assert plan["ignitePipeline"] and all(s.startswith("py -I")
                                           for s in plan["ignitePipeline"]), \
-        "点火管线只 informational"
+        "the ignition pipeline is informational only"
     assert tree_manifest(tmp) == before, \
-        "plan 缺 --out 下 tmp 树字节被动＝护栏破（零写盘失守）"
+        "tmp tree bytes moved under plan without --out = guard broken (zero-write lost)"
 
 
 def row_sl2(tmp):
-    """排程唯一写面＝显式 --out：给 --out 恰落一文件（确定性 plan 文档）·
-    输入树 md5 恒同·两跑字节恒同（sort_keys 确定性形）。"""
+    """The scheduler's only write face is the explicit --out: with --out
+    exactly one file lands (a deterministic plan document), the input tree
+    md5 stays constant, and two runs are byte-identical (the sort_keys
+    deterministic form)."""
     ledger, rounds, marker, autonomy, state = sl_fixture(tmp, "sl2")
     outp = os.path.join(tmp, "sl2", "plan.json")
     before = tree_manifest(tmp)
     rc, out = sl_run(["plan", "--gap-ledger", ledger, "--rounds", rounds,
                       "--ef-marker", marker, "--autonomy", autonomy,
                       "--state", state, "--out", outp])
-    assert rc == 0, "plan --out 应 exit 0 实测 %d\n%s" % (rc, out[-400:])
-    assert os.path.isfile(outp), "--out 未落盘＝写面失守"
+    assert rc == 0, "plan --out should exit 0, got %d\n%s" % (rc, out[-400:])
+    assert os.path.isfile(outp), "--out did not land = write face lost"
     assert tree_manifest(tmp) == before | {
         os.path.relpath(outp, tmp).replace(os.sep, "/"): md5_of(outp)}, \
-        "--out 之外出现写面＝护栏破（写面越界）"
+        "a write face beyond --out appeared = guard broken (write face out of bounds)"
     plan = jl(outp)
     assert plan["dryRun"] is True and plan["verdict"] == "due", plan
     first = io.open(outp, "rb").read()
@@ -1175,10 +1321,10 @@ def row_sl2(tmp):
                      "--state", state, "--out", outp])
     assert rc2 == 0, rc2
     assert io.open(outp, "rb").read() == first, \
-        "两跑 plan 字节漂移＝确定性形破（字节失守）"
+        "plan bytes drifted between runs = deterministic form broken (bytes lost)"
 
 
-# ---- ⑪ auto_merge 三行（X6 波·谁写谁进阵）------------------------------------
+# ---- ⑪ auto_merge, three rows (X6 work stream: whoever writes a write face enters this matrix)------------------------------------
 
 AM_SHA = "1befa2798beef00112233445566778899aabbccd"
 
@@ -1202,8 +1348,10 @@ def am_run(base, facts, extra):
 
 
 def row_am1(tmp):
-    """缺 --apply 零写盘：merge-ok＋supply/* 白名单内（rail 裁 allowed）而
-    合并账不落盘不创建：allowed 判面只走报告面（--json 显式另计）。"""
+    """Without --apply nothing is written: merge-ok plus a supply/* branch
+    inside the whitelist (the rail rules allowed) yet the merge ledger is
+    not written and not created; the allowed verdict goes to the report
+    face only (--json is an explicit extra)."""
     d = os.path.join(tmp, "am1")
     os.makedirs(d)
     facts = am_facts(os.path.join(d, "facts.json"), 7)
@@ -1211,22 +1359,24 @@ def row_am1(tmp):
     before = tree_manifest(d)
     rc, out = am_run(d, facts, ["--head-branch", "supply/seat-pack",
                                 "--json", rep])
-    assert rc == 0, "allowed 干跑应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "an allowed dry run should exit 0, got %d\n%s" % (rc, out[-400:])
     assert "AUTO-MERGE-VERDICT: merge-ok" in out, out[-300:]
     assert "AUTO-MERGE-RAIL: allowed" in out, out[-300:]
-    assert "dry run, row not written" in out, "allowed 干跑应响亮出干跑账"
+    assert "dry run, row not written" in out, "an allowed dry run must state its dry-run record loudly"
     assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
-        "缺 --apply 时合并账落盘＝护栏破（零写盘失守）"
+        "the merge ledger landed without --apply = guard broken (zero-write lost)"
     r = jl(rep)
     assert r["rail"]["ledger_row_written"] is False, r["rail"]
     assert tree_manifest(d) == before | {
         os.path.relpath(rep, d).replace(os.sep, "/"): md5_of(rep)}, \
-        "--json 报告面之外出现写盘＝护栏破"
+        "a write beyond the --json report face appeared = guard broken"
 
 
 def row_am2(tmp):
-    """hold 永不授权＋越权分支红拒：hold-red 判定 --apply 亦零写（rail
-    not-eligible 先于合并账）；非 supply/* 头 rc=1 白名单红拒零写。"""
+    """hold never authorizes, and an out-of-scope branch is refused: a
+    hold-red verdict writes nothing even under --apply (rail not-eligible
+    precedes the merge ledger); a non-supply/* head exits rc=1 with a
+    whitelist refusal and zero writes."""
     d = os.path.join(tmp, "am2")
     os.makedirs(d)
     hold = am_facts(os.path.join(d, "hold.json"), 15, family="content",
@@ -1235,41 +1385,43 @@ def row_am2(tmp):
     before = tree_manifest(d)
     rc, out = am_run(d, hold, ["--head-branch", "supply/old-head",
                                "--apply"])
-    assert rc == 0, "hold 判定是数据应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "a hold verdict is data and should exit 0, got %d\n%s" % (rc, out[-400:])
     assert "AUTO-MERGE-VERDICT: hold-red" in out, out[-300:]
     assert "AUTO-MERGE-RAIL: not-eligible:hold-red" in out, out[-300:]
     assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
-        "hold 裁定 --apply 落合并账＝护栏破（hold 永不授权失守）"
+        "a hold ruling landed a merge-ledger row under --apply = guard broken (hold never authorizes)"
     rc2, out2 = am_run(d, foreign, ["--head-branch", "feature/quick-fix",
                                     "--apply"])
-    assert rc2 == 1, "越权分支应 rc=1 红拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 1, "an out-of-scope branch should be refused rc=1, got %d\n%s" % (rc2, out2[-400:])
     assert "refused:branch-whitelist" in out2, out2[-300:]
     assert not os.path.exists(os.path.join(d, "am-ledger.jsonl")), \
-        "白名单红拒仍落合并账＝护栏破（零写失守）"
-    assert tree_manifest(d) == before, "红拒路径越界写盘＝护栏破"
+        "the whitelist refusal still landed a merge-ledger row = guard broken (zero-write lost)"
+    assert tree_manifest(d) == before, "the refusal path wrote out of bounds = guard broken"
 
 
 def row_am3(tmp):
-    """日预算帽＋重复拒：--daily-cap 3 恰 3 行 authorize 后第 4 拒 rc=1；
-    同日同 PR 重复拒 rc=1；合并账恰 3 行不增（帽尽即停无第 4 行）。"""
+    """Daily budget cap plus duplicate refusal: --daily-cap 3 authorizes
+    exactly 3 rows, the 4th is refused rc=1; a same-day same-PR duplicate
+    is refused rc=1; the merge ledger stays at exactly 3 rows (the cap
+    stops it; no fourth row)."""
     d = os.path.join(tmp, "am3")
     os.makedirs(d)
     ledger = os.path.join(d, "am-ledger.jsonl")
     f1 = am_facts(os.path.join(d, "f1.json"), 101, branch="supply/seat-1")
     rc, out = am_run(d, f1, ["--head-branch", "supply/seat-1", "--apply",
                              "--ledger", ledger])
-    assert rc == 0, "首发应 allowed exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "the first issue should be allowed exit 0, got %d\n%s" % (rc, out[-400:])
     dup = am_facts(os.path.join(d, "dup.json"), 101, branch="supply/seat-1b")
     rc2, out2 = am_run(d, dup, ["--head-branch", "supply/seat-1b", "--apply",
                                 "--ledger", ledger])
-    assert rc2 == 1, "同日重复应 rc=1 拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 1, "a same-day duplicate should be refused rc=1, got %d\n%s" % (rc2, out2[-400:])
     assert "refused:duplicate-authorization" in out2, out2[-300:]
     for i in (2, 3):
         f = am_facts(os.path.join(d, "f%d.json" % i), 100 + i,
                      branch="supply/seat-%d" % i)
         rc, out = am_run(d, f, ["--head-branch", "supply/seat-%d" % i,
                                 "--apply", "--ledger", ledger])
-        assert rc == 0, "第 %d 发应 allowed exit 0 实测 %d\n%s" \
+        assert rc == 0, "issue %d should be allowed exit 0, got %d\n%s" \
             % (i, rc, out[-300:])
     rows = [json.loads(ln) for ln in io.open(ledger, encoding="utf-8")
             if ln.strip()]
@@ -1279,14 +1431,14 @@ def row_am3(tmp):
     f4 = am_facts(os.path.join(d, "f4.json"), 104, branch="supply/seat-4")
     rc, out = am_run(d, f4, ["--head-branch", "supply/seat-4", "--apply",
                              "--ledger", ledger])
-    assert rc == 1, "帽尽第 4 发应 rc=1 拒实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "the 4th issue past the cap should be refused rc=1, got %d\n%s" % (rc, out[-400:])
     assert "refused:daily-budget" in out, out[-300:]
     rows2 = [json.loads(ln) for ln in io.open(ledger, encoding="utf-8")
              if ln.strip()]
-    assert len(rows2) == 3, "帽尽/重复后合并账不增（恰 3 行）实测 %d" % len(rows2)
+    assert len(rows2) == 3, "the merge ledger must not grow past the cap or a duplicate (exactly 3 rows), got %d" % len(rows2)
 
 
-# ---- ⑫ repair_scope 共享名册一行＋E 波四守卫类四行（X6 波·谁写谁进阵）--------
+# ---- ⑫ repair_scope, the shared-roster row plus the four E2 guard classes (X6 work stream: whoever writes a write face enters this matrix)--------
 
 LANE_SUITE = (
     '#!/bin/bash\n'
@@ -1306,10 +1458,12 @@ LANE_SUITE = (
 
 
 def row_rs1(tmp):
-    """repair_scope --check 查询面零写盘＋排除判词咬合：快照退化场（沙箱无
-    frozen8.py·fallback loud）下，append-only 账面/frozen 行/family 目录/
-    legal-data 面/zh 档案全 EXCLUDED，class-2 三可修面 REPAIRABLE；查询
-    零写盘。"""
+    """repair_scope --check query face writes nothing and the exclusion
+    conclusions bite: in the snapshot-degraded setting (a sandbox without
+    frozen8.py, the fallback is loud) the append-only ledger faces, frozen
+    rows, family directories, legal-data faces and zh archives all come
+    back EXCLUDED, the three class-2 repairable faces come back
+    REPAIRABLE, and the query writes nothing."""
     d = os.path.join(tmp, "rs1")
     os.makedirs(d)
     before = tree_manifest(d)
@@ -1317,7 +1471,7 @@ def row_rs1(tmp):
                  ["--repo", d, "--check", "更新账.md", "wash/wash_engine.py",
                   "certify/x.py", "README-cw.zh.md", "docs/mcp.md",
                   "tests/README.md", "README.md", "docs/repair-ledger.jsonl"])
-    assert rc == 1, "有排除面查询应 exit 1（判词是数据）实测 %d\n%s" \
+    assert rc == 1, "a query with excluded faces should exit 1 (the conclusion is data), got %d\n%s" \
         % (rc, out[-400:])
     excluded = {ln.split()[1] for ln in out.splitlines()
                 if ln.startswith("EXCLUDED ")}
@@ -1327,13 +1481,14 @@ def row_rs1(tmp):
                         "README-cw.zh.md", "docs/mcp.md"}, excluded
     assert repairable == {"tests/README.md", "README.md",
                           "docs/repair-ledger.jsonl"}, repairable
-    assert tree_manifest(d) == before, "查询路径越界写盘＝护栏破"
+    assert tree_manifest(d) == before, "the query path wrote out of bounds = guard broken"
 
 
 def lane_repo(tmp, tag):
-    """lane-extract 夹具仓：套件（CASES 两车道）＋真件在位（$REPO/tests/
-    引用形）·幽灵件缺席（tests/t_ghost_lane.py 不落盘＝R1 ENOENT 形）。
-    → (repo, suite_path)。"""
+    """lane-extract fixture repository: a suite (CASES with two lanes) with
+    the real file in place (the $REPO/tests/ reference form) and the ghost
+    file absent (tests/t_ghost_lane.py never lands, the R1 ENOENT form).
+    -> (repo, suite_path)."""
     d = os.path.join(tmp, tag)
     os.makedirs(os.path.join(d, "tests"))
     sp = wf(os.path.join(d, "run_tests.sh"), LANE_SUITE)
@@ -1342,28 +1497,30 @@ def lane_repo(tmp, tag):
 
 
 def row_e2a(tmp):
-    """E2-1 lane-extract（--lane-detect/--lane-apply）：干跑零写零账；排除
-    账面（seeds/ 族）rc=2 红拒且零创建；预算帽（2 前科）rc=2 拒写·
-    套件字节恒同·只落 escalated(budget-cap) 账行。"""
+    """E2-1 lane-extract (--lane-detect/--lane-apply): the dry run writes
+    nothing and records nothing; an excluded ledger face (the seeds/
+    family) is refused rc=2 with zero creation; the budget cap (2 prior
+    records) refuses the write rc=2, the suite bytes stay constant, and
+    only an escalated(budget-cap) ledger row lands."""
     d, sp = lane_repo(tmp, "e2a")
     before = md5_of(sp)
     rc, out = sh(REPAIR_SCOPE, ["--repo", d, "--suite", "run_tests.sh",
                                 "--lane-detect", "--json-out",
                                 os.path.join(tmp, "e2a-rep.json")])
-    assert rc == 0, "干跑侦应 exit 0 实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 0, "the dry-run detection should exit 0, got %d\n%s" % (rc, out[-400:])
     rep = jl(os.path.join(tmp, "e2a-rep.json"))
     assert [g["lane"] for g in rep["ghosts"]] == ["t_ghost_lane"], rep["ghosts"]
     assert rep["applied"] is False, rep
-    assert md5_of(sp) == before, "干落下套件字节被动＝护栏破"
+    assert md5_of(sp) == before, "suite bytes moved under a dry run = guard broken"
     assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
-        "干跑建账＝护栏破"
+        "a dry run created the ledger = guard broken"
     rc2, out2 = sh(REPAIR_SCOPE, ["--repo", d, "--suite", "run_tests.sh",
                                   "--lane-detect", "--lane-apply",
                                   "--ledger", "seeds/ledger.jsonl"])
-    assert rc2 == 2, "排除账面应 rc=2 红拒实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 2, "an excluded ledger face should be refused rc=2, got %d\n%s" % (rc2, out2[-400:])
     assert "REFUSED" in out2 and "excluded ledger face" in out2, out2[-300:]
     assert not os.path.isfile(os.path.join(d, "seeds", "ledger.jsonl")), \
-        "排除面红拒仍建账＝护栏破（零写失守）"
+        "the excluded-face refusal still created the ledger = guard broken (zero-write lost)"
     d4 = os.path.join(tmp, "e2a-budget")
     os.makedirs(os.path.join(d4, "tests"))
     sp4 = wf(os.path.join(d4, "run_tests.sh"), LANE_SUITE)
@@ -1379,19 +1536,21 @@ def row_e2a(tmp):
     rc3, out3 = sh(REPAIR_SCOPE, ["--repo", d4, "--suite", "run_tests.sh",
                                   "--lane-detect", "--lane-apply",
                                   "--ledger", led])
-    assert rc3 == 2, "预算帽应 rc=2 拒写实测 %d\n%s" % (rc3, out3[-400:])
+    assert rc3 == 2, "the budget cap should refuse the write rc=2, got %d\n%s" % (rc3, out3[-400:])
     assert "budget exhausted" in out3, out3[-300:]
-    assert md5_of(sp4) == md5_4, "帽尽落刀＝护栏破（套件字节恒同失守）"
+    assert md5_of(sp4) == md5_4, "an exhausted cap applied = guard broken (suite-bytes-constant lost)"
     rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
             if ln.strip()]
     assert len(rows) == 3 and rows[-1]["outcome"] == "escalated(budget-cap)", \
-        "帽面只落升格账行: %r" % rows[-1]
+        "the capped face lands only the escalated ledger row: %r" % rows[-1]
 
 
 def row_e2b(tmp):
-    """E2-2 roster-resync（tools/roster_resync.py）：干跑零写零账；--apply
-    单向派生（roster 字节恒同·计数面修至名册值·一修复一账行）；预算帽
-    rc=1 拒写·面字节恒同·只落 escalated 行。"""
+    """E2-2 roster-resync (tools/roster_resync.py): the dry run writes
+    nothing and records nothing; --apply is a one-way derivation (the
+    roster bytes stay constant, the count face is repaired to the roster
+    value, one repair one ledger row); the budget cap refuses the write
+    rc=1, the face bytes stay constant, and only an escalated row lands."""
     MINI = ('#!/bin/bash\nCASES="\\\nt_a \\\nt_b"\n'
             'for c in $CASES; do :; done\n')
     d = os.path.join(tmp, "e2b")
@@ -1404,19 +1563,19 @@ def row_e2b(tmp):
     md5_rt = md5_of(rt)
     before_cov = md5_of(cov)
     rc, out = sh(ROSTER_RESYNC, ["--repo", d])
-    assert rc == 1, "漂移干跑应 exit 1（漂移是数据）实测 %d\n%s" \
+    assert rc == 1, "a drifted dry run should exit 1 (drift is data), got %d\n%s" \
         % (rc, out[-400:])
     assert "drift=1" in out, out[-300:]
-    assert md5_of(cov) == before_cov, "干跑写计数面＝护栏破"
-    assert md5_of(rt) == md5_rt, "干跑写名册＝护栏破（roster 单向失守）"
+    assert md5_of(cov) == before_cov, "the dry run wrote the count face = guard broken"
+    assert md5_of(rt) == md5_rt, "the dry run wrote the roster = guard broken (roster one-way lost)"
     assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
-        "干跑建账＝护栏破"
+        "a dry run created the ledger = guard broken"
     rc2, out2 = sh(ROSTER_RESYNC, ["--repo", d, "--apply"])
-    assert rc2 == 0, "apply 应修复至净实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 0, "apply should repair to clean, got %d\n%s" % (rc2, out2[-400:])
     assert "applied=1" in out2 and "escalated=0" in out2, out2[-300:]
-    assert md5_of(rt) == md5_rt, "apply 越界写名册＝护栏破（单向失守）"
+    assert md5_of(rt) == md5_rt, "apply wrote the roster out of bounds = guard broken (one-way lost)"
     assert "覆盖面（2 例）" in io.open(cov, encoding="utf-8").read(), \
-        "计数面未修至名册值"
+        "the count face was not repaired to the roster value"
     led = os.path.join(d, "docs", "repair-ledger.jsonl")
     rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
             if ln.strip()]
@@ -1439,18 +1598,19 @@ def row_e2b(tmp):
     md5_cov4 = md5_of(cov4)
     rc3, out3 = sh(ROSTER_RESYNC, ["--repo", d4, "--apply",
                                    "--ledger", led4])
-    assert rc3 == 1, "预算帽应 rc=1 拒写实测 %d\n%s" % (rc3, out3[-400:])
+    assert rc3 == 1, "the budget cap should refuse the write rc=1, got %d\n%s" % (rc3, out3[-400:])
     assert "escalated(budget-cap)" in out3, out3[-300:]
-    assert md5_of(cov4) == md5_cov4, "帽尽落刀＝护栏破（面字节恒同失守）"
+    assert md5_of(cov4) == md5_cov4, "an exhausted cap applied = guard broken (face-bytes-constant lost)"
     rows4 = [json.loads(ln) for ln in io.open(led4, encoding="utf-8")
              if ln.strip()]
     assert len(rows4) == 3 and rows4[-1]["outcome"] == "escalated(budget-cap)", \
-        "帽面只落升格账行: %r" % rows4[-1]
+        "the capped face lands only the escalated ledger row: %r" % rows4[-1]
 
 
 def flaky_repo(tmp, tag):
-    """flaky-quarantine 夹具仓：套件（CASES 一车道·ONLY 探针单独跑绿）
-    ＋空名册。→ (repo, suite_path, roster_path)。"""
+    """flaky-quarantine fixture repository: a suite (CASES with one lane,
+    the ONLY probe passes when run alone) plus an empty roster.
+    -> (repo, suite_path, roster_path)."""
     d = os.path.join(tmp, tag)
     os.makedirs(d)
     suite = ('#!/bin/bash\n'
@@ -1464,9 +1624,11 @@ def flaky_repo(tmp, tag):
 
 
 def row_e2c(tmp):
-    """E2-3 flaky-quarantine（tools/flaky_guard.py --move）：冻结靶（seeds/
-    族名册）rc=1 红拒零写零账（scope 闸先于探针）；预算帽 rc=1 拒写·名册
-    字节恒同·只落 escalated 账行。"""
+    """E2-3 flaky-quarantine (tools/flaky_guard.py --move): a frozen target
+    (a seeds/-family roster) is refused rc=1 with zero writes and zero
+    records (the scope check precedes the probe); the budget cap refuses
+    the write rc=1, the roster bytes stay constant, and only an escalated
+    ledger row lands."""
     d, sp, roster = flaky_repo(tmp, "e2c")
     before = tree_manifest(d)
     rc, out = sh(FLAKY_GUARD, ["--repo", d, "--suite",
@@ -1474,10 +1636,10 @@ def row_e2c(tmp):
                                "--roster", os.path.join(d, "seeds", "adv.txt"),
                                "--ledger", os.path.join(d, "led.jsonl"),
                                "--move", "t_a", "--apply"])
-    assert rc == 1, "冻结靶应 rc=1 红拒实测 %d\n%s" % (rc, out[-400:])
+    assert rc == 1, "a frozen target should be refused rc=1, got %d\n%s" % (rc, out[-400:])
     assert "REFUSED" in out and "outside the repair scope" in out, out[-300:]
     assert tree_manifest(d) == before, \
-        "冻结靶红拒越界写盘＝护栏破（零写零账失守）"
+        "the frozen-target refusal wrote out of bounds = guard broken (zero-write zero-record lost)"
     d2, _sp2, roster2 = flaky_repo(tmp, "e2c-budget")
     led = os.path.join(d2, "led.jsonl")
     prior = {"schema": "rocqwash-repair-ledger/1", "kind": "repair",
@@ -1492,19 +1654,21 @@ def row_e2c(tmp):
                                  os.path.join(d2, "run_tests.sh"),
                                  "--roster", roster2, "--ledger", led,
                                  "--move", "t_a", "--apply"])
-    assert rc2 == 1, "预算帽应 rc=1 拒写实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 1, "the budget cap should refuse the write rc=1, got %d\n%s" % (rc2, out2[-400:])
     assert "budget exhausted" in out2, out2[-300:]
-    assert md5_of(roster2) == md5_r2, "帽尽落刀＝护栏破（名册字节恒同失守）"
+    assert md5_of(roster2) == md5_r2, "an exhausted cap applied = guard broken (roster-bytes-constant lost)"
     rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
             if ln.strip()]
     assert len(rows) == 3 and rows[-1]["outcome"] == "escalated", \
-        "帽面只落升格账行: %r" % rows[-1]
+        "the capped face lands only the escalated ledger row: %r" % rows[-1]
 
 
 def row_e2d(tmp):
-    """E2-4 doc-count（--doc-count-detect/--doc-count-apply）：干跑零写零
-    账；--apply 修至 face=source 且幂等（二遍零字节）；预算帽 rc=2 拒写·
-    目标面字节恒同·只落 escalated(budget-cap) 行。"""
+    """E2-4 doc-count (--doc-count-detect/--doc-count-apply): the dry run
+    writes nothing and records nothing; --apply repairs to face=source and
+    is idempotent (the second pass moves zero bytes); the budget cap
+    refuses the write rc=2, the target-face bytes stay constant, and only
+    an escalated(budget-cap) row lands."""
     CW = ("#!/usr/bin/env bash\nset -u\nusage() {\ncat <<'EOF'\n"
           "alpha   tools/alpha.py\nbeta    tools/beta.py\nEOF\n}\n"
           "hint_for() {\n  case \"$1\" in\n"
@@ -1533,20 +1697,20 @@ def row_e2d(tmp):
     readme = os.path.join(d, "README-cw.md")
     before = md5_of(readme)
     rc, out = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-detect"])
-    assert rc == 1, "漂移侦应 exit 1（漂移是数据）实测 %d\n%s" \
+    assert rc == 1, "drift detection should exit 1 (drift is data), got %d\n%s" \
         % (rc, out[-400:])
     assert "drift" in out and "doc={'routes': 3, 'tools': 4}" in out, \
         out[-400:]
-    assert md5_of(readme) == before, "干跑写目标面＝护栏破"
+    assert md5_of(readme) == before, "the dry run wrote the target face = guard broken"
     assert not os.path.isfile(os.path.join(d, "docs", "repair-ledger.jsonl")), \
-        "干跑建账＝护栏破"
+        "a dry run created the ledger = guard broken"
     rc2, out2 = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-apply"])
-    assert rc2 == 0, "apply 应修复至净实测 %d\n%s" % (rc2, out2[-400:])
+    assert rc2 == 0, "apply should repair to clean, got %d\n%s" % (rc2, out2[-400:])
     assert "outcome=repaired" in out2, out2[-300:]
     assert io.open(readme, encoding="utf-8").read() == \
         ("# cw.sh - unified entry quick reference (rocqos (rocqwash) tool"
          " suite | 2 routes over 2 tools)\n"), \
-        "face 未修至 source 值"
+        "the face was not repaired to the source value"
     md5_mid = md5_of(readme)
     led = os.path.join(d, "docs", "repair-ledger.jsonl")
     rows = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
@@ -1555,10 +1719,10 @@ def row_e2d(tmp):
         and rows[0]["outcome"] == "repaired(doc-count-sync)", rows
     rc3, _ = sh(REPAIR_SCOPE, ["--repo", d, "--doc-count-apply"])
     assert rc3 == 0 and md5_of(readme) == md5_mid, \
-        "二遍非幂等＝护栏破（零字节失守）"
+        "a non-idempotent second pass = guard broken (zero-byte lost)"
     rows3 = [json.loads(ln) for ln in io.open(led, encoding="utf-8")
              if ln.strip()]
-    assert len(rows3) == 1, "幂等遍不得加账行实测 %d" % len(rows3)
+    assert len(rows3) == 1, "an idempotent pass must not add a ledger row, got %d" % len(rows3)
     d4 = mk_repo("e2d-budget", 9, 9)
     readme4 = os.path.join(d4, "README-cw.md")
     led4 = os.path.join(tmp, "e2d-ledger4.jsonl")
@@ -1571,16 +1735,16 @@ def row_e2d(tmp):
     md5_r4 = md5_of(readme4)
     rc4, out4 = sh(REPAIR_SCOPE, ["--repo", d4, "--doc-count-apply",
                                   "--ledger", led4])
-    assert rc4 == 2, "预算帽应 rc=2 拒写实测 %d\n%s" % (rc4, out4[-400:])
+    assert rc4 == 2, "the budget cap should refuse the write rc=2, got %d\n%s" % (rc4, out4[-400:])
     assert "budget exhausted" in out4, out4[-300:]
-    assert md5_of(readme4) == md5_r4, "帽尽落刀＝护栏破（目标面恒同失守）"
+    assert md5_of(readme4) == md5_r4, "an exhausted cap applied = guard broken (target-face-constant lost)"
     rows4 = [json.loads(ln) for ln in io.open(led4, encoding="utf-8")
              if ln.strip()]
     assert len(rows4) == 3 and rows4[-1]["outcome"] == "escalated(budget-cap)", \
-        "帽面只落升格账行: %r" % rows4[-1]
+        "the capped face lands only the escalated ledger row: %r" % rows4[-1]
 
 
-# ---- 矩阵总装 -----------------------------------------------------------------
+# ---- matrix assembly -----------------------------------------------------------------
 # ---- ⑩ selfheal_heartbeat rows (new-face section; English only) ---------------
 
 def row_h1(tmp):
@@ -1969,74 +2133,74 @@ def row_n3(tmp):
 
 # ---- matrix assembly -----------------------------------------------------------------
 
-L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A 可洗链根·B 缺 A
+L1 = u_led({"A": u_rec0("A"), "B": u_rec1("B", "A")})   # A is a sanitizable chain root; B lacks A
 
 ROWS = [
-    ("U1", "unclog", "缺 --apply 零写盘（tmp 树 md5 恒同·无落刀账）",
+    ("U1", "unclog", "no --apply zero-write (tmp tree md5 constant, no apply ledger)",
      "tools/unclog.py:42,583,607", row_u1),
-    ("U2", "unclog", "--audit 零写盘（树自证）＋与 --apply 互斥 rc=2",
+    ("U2", "unclog", "--audit zero-write (tree self-attested) plus mutual exclusion with --apply rc=2",
      "tools/unclog.py:827,762", row_u2),
-    ("U3", "unclog", "frozen 在册红拒（frozen8 实取·零落刀）",
+    ("U3", "unclog", "frozen-roster refusal (read from frozen8 for real, zero apply)",
      "tools/unclog.py:506", row_u3),
-    ("U4", "unclog", "非链根件零被动（落刀面恒为链根件）",
+    ("U4", "unclog", "non-root files never move (the apply face is always the chain-root file)",
      "tools/unclog.py:43,583,607", row_u4),
-    ("W1", "wash_shape", "plan 缺省零写盘（看见 would-fix 而树恒同）",
+    ("W1", "wash_shape", "plan defaults to zero-write (would-fix seen while the tree stays constant)",
      "tools/wash_shape.py:1254", row_w1),
-    ("W2", "wash_shape", "--apply 后 rescan partial 不谎报 shaped",
+    ("W2", "wash_shape", "a partial rescan after --apply is never reported as shaped",
      "tools/wash_shape.py:1192-1205", row_w2),
-    ("W3", "wash_shape", "冻结名显式指认红拒 rc=2（收件即拒）",
+    ("W3", "wash_shape", "an explicitly named frozen name refused rc=2 (refused at intake)",
      "tools/wash_shape.py:759-761", row_w3),
-    ("W4", "wash_shape", "--header-map 与 --header-map-preset 同槽互斥 rc=2",
+    ("W4", "wash_shape", "--header-map and --header-map-preset same-slot exclusive rc=2",
      "tools/wash_shape.py:1887-1890", row_w4),
-    ("P1", "pushci", "--dry-run 零副作用（api_calls/git-caller 双流水空）",
+    ("P1", "pushci", "--dry-run zero side effects (api_calls/git-caller pipelines both empty)",
      "tools/pushci.py:1163-1164,1116", row_p1),
-    ("P2", "pushci", "内容红零 rerun（heal.rounds 空·api 零 POST）",
+    ("P2", "pushci", "a content red never reruns (heal.rounds empty, zero POST on api)",
      "tools/pushci.py:983-987", row_p2),
-    ("P3", "pushci", "heal 帽尽停（--max-heal 3 恰 3 发后裁停）",
+    ("P3", "pushci", "the heal cap stops the loop (--max-heal 3 stops after exactly 3 issues)",
      "tools/pushci.py:966-969", row_p3),
-    ("S1", "cw_sentinel", "缺省 report-only（无 on-red 旗零子进程动作）",
+    ("S1", "cw_sentinel", "report-only by default (zero subprocess action without an on-red flag)",
      "tools/cw_sentinel.py:713-715", row_s1),
-    ("S2", "cw_sentinel", "on-red 双路同守卫（plain/preset 缺 --emit 皆 rc=2）",
+    ("S2", "cw_sentinel", "both on-red paths share the guard (plain/preset without --emit both rc=2)",
      "tools/cw_sentinel.py:722-723,884-886", row_s2),
-    ("R1", "registry_union", "干跑缺省零写盘（--out 给而不落）",
+    ("R1", "registry_union", "dry run defaults to zero-write (--out given yet nothing lands)",
      "tools/registry_union.py:881-885", row_r1),
-    ("R2", "registry_union", "--apply 才落刀（＋无 --out rc=2 禁隐式覆写）",
+    ("R2", "registry_union", "applies only under --apply (plus no --out rc=2, no implicit overwrite)",
      "tools/registry_union.py:826,883-885", row_r2),
-    ("C1", "cure_applier", "干跑缺省零写盘（目标件 md5 恒同）",
+    ("C1", "cure_applier", "dry run defaults to zero-write (target file md5 constant)",
      "wash/cure_applier.py:1272,1338", row_c1),
-    ("C2", "cure_applier", "--apply 才落刀＋幂等断言败拒写（rc=1 零字节动）",
+    ("C2", "cure_applier", "applies only under --apply plus idempotence-assertion write refusal (rc=1, zero bytes moved)",
      "wash/cure_applier.py:1282-1285", row_c2),
     ("C3", "cure_applier", "write-face byte contract: on-disk md5 == report md5_after, no CRLF, second pass byte-stable",
      "wash/cure_applier.py:1338-1341", row_c3),
     ("C4", "cure_applier", "compile-leg write face: temp-only copies, honest skip record, missing-binary rc=9 refuses the write, no-change pass compiles nothing",
      "wash/cure_applier.py:660,1286-1336,1300-1306", row_c4),
-    ("F1", "frozen8", "freeze 只落显式 --out/--tier2（账载漂移拒出名单 rc=1 零写）",
+    ("F1", "frozen8", "freeze lands only the explicit --out/--tier2 (ledger drift refuses the roster rc=1 zero-write)",
      "certify/frozen8.py:357,366,334", row_f1),
-    ("F2", "frozen8", "timestamp 唯一写面=显式 --out 回执绑定复验后落（缺参 rc=2/不可达 rc=9 皆零写）",
+    ("F2", "frozen8", "timestamp's only write face = the explicit --out record landed after the binding recheck (missing arg rc=2 / unreachable rc=9, both zero-write)",
      "certify/frozen8.py:806,772", row_f2),
     ("G1", "axiom_guard", "compile-leg write face temp-only: rc 111 honest skip with zero judgment and no --out / missing binaries rc=9 ahead of every work face",
      "tools/axiom_guard.py:main env gate, guard mkdtemp", row_g1),
-    ("J1", "jargon_apply", "洗面器自引用护栏：映射源表永不入目标面（--tree 排除·--file rc=1 红拒）",
+    ("J1", "jargon_apply", "the sanitizing tool's self-reference guard: the mapping source table never enters the target set (--tree excludes it, --file refused rc=1)",
      "tools/jargon_apply.py:550-560,471-484", row_j1),
-    ("SL1", "scheduler_lite", "plan 缺省零写盘（全旗标罐装出 due 判面·树恒同·dryRun 恒真）",
+    ("SL1", "scheduler_lite", "plan defaults to zero-write (fully flagged canned inputs plan a due verdict, tree constant, dryRun always true)",
      "tools/scheduler_lite.py:364-366,309", row_sl1),
-    ("SL2", "scheduler_lite", "唯一写面=显式 --out（恰落一文件·输入树恒同·两跑字节恒同）",
+    ("SL2", "scheduler_lite", "only write face = explicit --out (exactly one file lands, input tree constant, two runs byte-identical)",
      "tools/scheduler_lite.py:364-366,328-331", row_sl2),
-    ("AM1", "auto_merge", "缺 --apply 零写盘（rail allowed 而合并账不创建）",
+    ("AM1", "auto_merge", "no --apply zero-write (rail rules allowed yet the merge ledger is not created)",
      "tools/auto_merge.py:244-247", row_am1),
-    ("AM2", "auto_merge", "hold 永不授权（--apply 亦零写）＋越权分支 rc=1 白名单红拒零写",
+    ("AM2", "auto_merge", "hold never authorizes (zero writes even under --apply) plus out-of-scope branch refused rc=1 by the whitelist with zero writes",
      "tools/auto_merge.py:220-221,225-228", row_am2),
-    ("AM3", "auto_merge", "日预算帽＋重复拒（恰 3 行 authorize 后第 4/同 PR 拒·合并账不增）",
+    ("AM3", "auto_merge", "daily budget cap plus duplicate refusal (exactly 3 authorize rows, the 4th/same-PR refused, the ledger does not grow)",
      "tools/auto_merge.py:229-233,234-239", row_am3),
-    ("RS1", "repair_scope", "--check 查询面零写盘（共享名册判词咬合·快照退化 loud）",
+    ("RS1", "repair_scope", "--check query face zero-write (shared-roster conclusions bite, snapshot degradation is loud)",
      "tools/repair_scope.py:140-160,556-576,590-620", row_rs1),
-    ("E2A", "repair_scope", "class-1 lane-extract：缺省零写零账／排除账面 rc=2 零创建／预算帽拒写只落升格行",
+    ("E2A", "repair_scope", "class-1 lane-extract: default zero-write zero-record / excluded ledger face rc=2 zero creation / budget cap refuses the write, only the escalated row lands",
      "tools/repair_scope.py:477-482,400-411,487-493", row_e2a),
-    ("E2B", "roster_resync", "class-2 roster-resync：缺省零写零账／roster 单向＋一修复一行／预算帽拒写只落升格行",
+    ("E2B", "roster_resync", "class-2 roster-resync: default zero-write zero-record / roster one-way plus one repair one row / budget cap refuses the write, only the escalated row lands",
      "tools/roster_resync.py:246-248,256-265,327-334", row_e2b),
-    ("E2C", "flaky_guard", "class-3 flaky-quarantine：冻结靶 rc=1 零写零账（scope 闸先于探针）／预算帽拒写只落升格行",
+    ("E2C", "flaky_guard", "class-3 flaky-quarantine: frozen target rc=1 zero-write zero-record (the scope check precedes the probe) / budget cap refuses the write, only the escalated row lands",
      "tools/flaky_guard.py:390-396,514-523", row_e2c),
-    ("E2D", "repair_scope", "class-4 doc-count：干跑零写零账／apply 修至 face=source 幂等二遍零字节／预算帽 rc=2 拒写",
+    ("E2D", "repair_scope", "class-4 doc-count: dry run zero-write zero-record / apply repairs to face=source idempotently, second pass zero bytes / budget cap refuses the write rc=2",
      "tools/repair_scope.py:917-926,975-994,997-1009", row_e2d),
     ("H1", "selfheal_heartbeat", "default dry run zero-write; --apply appends exactly one tick line, prior ledger bytes byte-identical (content pins, never mtimes)",
      ".github/scripts/selfheal_heartbeat.py:run gate, append_records", row_h1),
@@ -2074,25 +2238,28 @@ def main():
             except AssertionError as e:
                 fails.append((rid, anchor, guard, str(e)))
                 print("FAIL %s %-14s %s" % (rid, tool, guard))
-            except Exception as e:   # 行内环境炸亦按破计（fail-loud 不静默）
-                fails.append((rid, anchor, guard, "行炸（环境/夹具）: %r" % e))
-                print("FAIL %s %-14s %s（行炸）" % (rid, tool, guard))
+            except Exception as e:   # a row-level environment crash also counts as
+                             # broken (fail-loud, never silent)
+                fails.append((rid, anchor, guard, "row crashed (environment/fixture): %r" % e))
+                print("FAIL %s %-14s %s (row crashed)" % (rid, tool, guard))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    print("== destructive-matrix: %d 行过 / %d 行破 ==" % (len(ROWS) - len(fails),
+    print("== destructive-matrix: %d rows pass / %d rows broken ==" % (len(ROWS) - len(fails),
                                                           len(fails)))
     if fails:
-        print("MATRIX 破口清单（护栏破 file:line）:")
+        print("MATRIX broken-guard list (guard broken file:line):")
         for rid, anchor, guard, detail in fails:
-            print("  破口 %s @ %s — %s\n    违据: %s" % (rid, anchor, guard,
+            print("  broken %s @ %s — %s\n    violating evidence: %s" % (rid, anchor, guard,
                                                         detail))
         return 1
-    print("DESTRUCTIVE-MATRIX PASS: 43 行拒写判据全过（unclog×4/wash_shape×4/"
-          "cure_applier×4/selfheal_heartbeat×4/pushci×3/auto_merge×3/"
-          "repair_scope×3/repair_weekly×3/cw_sentinel×2/registry_union×2/"
-          "scheduler_lite×2/wash_engine×1/axiom_guard×1/jargon_apply×1/"
-          "roster_resync×1/flaky_guard×1/其余合并行；全 tmp fixture＋injector 罐装零真网络"
-          "零真仓零真编译）")
+    print("DESTRUCTIVE-MATRIX PASS: all 43 refuse-to-write criteria pass "
+          "(unclog x4/wash_shape x4/cure_applier x4/selfheal_heartbeat x4/"
+          "pushci x3/auto_merge x3/repair_scope x3/repair_weekly x3/"
+          "cw_sentinel x2/registry_union x2/scheduler_lite x2/wash_engine x1/"
+          "axiom_guard x1/jargon_apply x1/roster_resync x1/flaky_guard x1 "
+          "plus the combined rows; all tmp fixtures with injector canned "
+          "responses, zero real network, zero real repository, zero real "
+          "compile)")
     return 0
 
 

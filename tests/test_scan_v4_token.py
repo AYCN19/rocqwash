@@ -1,19 +1,26 @@
 # -*- coding: utf-8 -*-
 """test_scan_v4_token.py — regression coverage for scan/scan_v4_token.py.
 
-Vectors:
-  1. fixture stations: the historic mixed-line masking pattern reproduces —
-     the scanner reports exactly the fixture's three shadow-hazard stations,
-     each flagged mixed_line=True (the qualified form sits on the same line).
-  2. masking blindness: the legacy line-level method (bare-id lines minus
-     qualified-carrying lines) misses exactly those three stations on the
-     same fixture — the blind spot the v4 scanner closes.
-  3. binder tracking: binder-local references and binding sites in the
-     fixture are not stations.
-  4. optional tree check (env ROCWASH_TREE_SAMPLES=<dir>): zero stations on
-     *.v samples in that directory (post-wash canonical tree).  Skipped
-     silently when the variable is unset, so external clones pass without
-     any local tree.
+Purpose.  Pin the v4 token-level scanner contract: the scanner must see the
+  shadow-hazard stations that the historic line-level masking method misses.
+Interface.  Suite case t_scan_v4_token (tests/run_tests.sh) or direct:
+  python3 -B tests/test_scan_v4_token.py.  Imports scan_text from the scan/
+  directory (sys.path injection) and runs it over
+  tests/fixtures/scan_v4_shadow_fixture.v with the tracked token S; the
+  optional tree check reads env ROCWASH_TREE_SAMPLES=<dir>.
+Dependencies.  Python 3 standard library only; `scan/scan_v4_token.py` and
+  the fixture file.
+Evidence.  Four vectors: (1) fixture stations, the scanner reports exactly
+  the fixture's three shadow-hazard stations, each flagged mixed_line=True
+  (the qualified form sits on the same line); (2) masking blindness, the
+  legacy line-level method (bare-id lines minus qualified-carrying lines)
+  misses exactly those three stations on the same fixture, the blind spot
+  the v4 scanner closes; (3) binder tracking, binder-local references and
+  binding sites in the fixture are not stations; (4) optional tree check,
+  zero stations on *.v samples of the named post-wash canonical pieces in
+  that directory, skipped silently when the variable is unset so external
+  clones pass without any local tree.
+Exit-codes.  0 = all vectors pass; 1 = at least one vector fails.
 """
 import io, os, re, sys
 
