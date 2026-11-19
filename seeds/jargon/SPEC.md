@@ -1,37 +1,36 @@
-# seeds/jargon — E2 banned-face-to-standard mapping seed (rocqwash-jargon-map/1)
+# seeds/jargon: E2 banned-face-to-standard mapping seed (rocqwash-jargon-map/1)
 
 Purpose.  Data seed for the jargon engine (E2): the machine-readable
   banned-face-to-standard mapping `jargon-map.json` plus this SPEC,
-  transcribed read-only from the ConstructiveWorld annotation-standard
-  sources; no engine body ships here (wiring = section 3 growth work).
+  transcribed read-only from the ConstructiveWorld annotation-standard sources.
 
-Interface.  `jargon-map.json` (schema `rocqwash-jargon-map/1`; keys:
-  schema, engine, seed_role, face_language, count, selection_rule,
-  boundary_note, provenance, entries; per entry: id, face, standard,
-  standard_language, standard_source, source_line, disposition, exempts,
-  cross_track_note, note), `SPEC.md`, and `test_snippet.py` (the suite
-  integrator merges it into `tests/t_engines_seeds.py`).  Detection today:
-  project the JSON per section 2, run `norm_lint --jargon-map` on the
-  projection; raw JSON input fails loud (section 2).  Application:
-  `wash_shape --apply` has no jargon face yet (section 3).
+Interface.  `jargon-map.json` (schema `rocqwash-jargon-map/1`; keys: schema, engine,
+  seed_role, face_language, count, selection_rule, boundary_note, provenance (the
+  v2 pin form: per source a locator, a repository-relative path, a pin object whose
+  kind matches the locator, the informational upstream_path on external sources),
+  entries; per entry: id, face, standard, standard_language, standard_source,
+  source_line, disposition, exempts, cross_track_note, note), `SPEC.md`,
+  `test_snippet.py` (merged into `tests/t_engines_seeds.py`).  Detection: project
+  the JSON per section 2 and run `norm_lint --jargon-map` on the projection; raw
+  JSON input fails loud.  Application: `wash_shape --apply` has no jargon face yet.
 
-Dependencies.  `tools/norm_lint.py`, `tools/wash_shape.py` (absence probe),
-  the pinned source originals (paths and md5 values in the JSON
-  `provenance`; `RQW_SOURCE_ROOT` overrides the root in the tests), and
-  `docs/jargon-to-standard-mapping-v1.md`; Python 3 standard library only.
+Dependencies.  `tools/norm_lint.py`, `tools/wash_shape.py` (absence probe), the pinned provenance
+  faces in the v2 form (the committed mapping-table blob by its git blob sha; the two external
+  authorities as in-repo snapshot copies under `seeds/jargon/_snapshots/` judged by md5, each
+  upstream original an informational locator only a canonical machine can hash), the mapping
+  table `docs/jargon-to-standard-mapping-v1.md`; Python 3 standard library only.
 
-Evidence.  `test_snippet.py` asserts the data contract, the two-source
-  transcription containment (pinned sources verbatim; in-repo-md-v1 against
-  the in-repo md table on every machine), md5 pinning, the detection
-  round-trip, and the exemption, silence, and fail-loud loader faces.
+Evidence.  `test_snippet.py` asserts the data contract (provenance v2), the two-source
+  transcription containment (snapshot verbatim; in-repo-md-v1 vs the md table), the v2
+  pin checks (repo blob sha vs HEAD; snapshot md5; upstream freshness or declared skip),
+  the detection round-trip, and the exemption, silence, fail-loud loader faces.
 
-Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
-  fail-loud); missing externals yield loud SKIP lines, never silent passes;
-  `norm_lint` keeps its own contract (0/1/2/9).
+Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed, fail-loud); missing
+  externals yield loud SKIP lines; `norm_lint` keeps its own contract (0/1/2/9).
 
 ## 1. Scope and engine slot
 
-- Five-engine slot: E2 (jargon). The seed fills the data-face gap — the
+- Five-engine slot: E2 (jargon). The seed fills the data-face gap: the
   annotation-track banned-face base and its standard replacements did not
   exist as machine-readable data inside this repository.
 - The seed is data plus a testable contract only. The detection entry point
@@ -39,7 +38,7 @@ Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
   entry point exists without a jargon face (`wash_shape --apply`); both
   engine faces grow on the engine side, fed by this seed.
 
-## 2. Detection face — ready to use through a fixed projection
+## 2. Detection face: ready to use through a fixed projection
 
 - Loader contract (`tools/norm_lint.py:154-188`): the jargon map is a
   pipe-table file; data rows carry at least three cells (face, standard,
@@ -52,7 +51,7 @@ Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
   faces alike; the loaded table itself is exempt from its own check
   (`tools/norm_lint.py:413-414`).
 - Projection rule (deterministic, defined here, exercised by the tests):
-  one data row per entry — face cell = `face`; standard cell = `standard`
+  one data row per entry: face cell = `face`; standard cell = `standard`
   when `disposition` is `replace`, otherwise the fixed suggestion string
   `rewrite per context or delete (no fixed standard recorded)`; note cell =
   a short source tag; exempt cell = `;`.join(`exempts`) when non-empty.
@@ -63,11 +62,11 @@ Exit-codes.  `test_snippet.py`: 0 no FAIL; 1 at least one FAIL (listed,
   <projected-table.md>` (report-only form; findings are data, the exit code
   never escalates on them).
 - Registered gap (grow phase, engine side): the loader has no JSON input.
-  Handing the raw JSON path to `--jargon-map` exits 1 with "no active rows"
-  — fail-loud by design, asserted by the tests.  A JSON-native loader is
-  engine work; this seed deliberately ships none.
+  Handing the raw JSON path to `--jargon-map` exits 1 with "no active rows",
+  which is fail-loud by design and asserted by the tests.  A JSON-native
+  loader is engine work; this seed deliberately ships none.
 
-## 3. Application face — wiring pending (`wash_shape --apply`)
+## 3. Application face: wiring pending (`wash_shape --apply`)
 
 - Verified absence at casting time: `jargon` does not occur in
   `tools/wash_shape.py` (first-hand probe, section 5).  `wash_shape` is the
@@ -103,7 +102,7 @@ above stands unchanged as the pre-integration record.
 
 - Mandated count: 62 entries.  Fill rule: the document-order prefix of the
   consolidated banned-word list in the annotation whitepaper snapshot
-  (in-repo copy self-declares v1.8) — faces 1 through 62.  The snapshot's
+  (in-repo copy self-declares v1.8): faces 1 through 62.  The snapshot's
   consolidated list carries 115 faces; the list continues beyond the prefix
   and those faces remain banned by the source.  The prefix boundary is a
   seed-size decision, printed in the JSON itself (`selection_rule`,
@@ -140,14 +139,14 @@ above stands unchanged as the pre-integration record.
 All runs executed during this seed's casting session, on the casting
 machine, against the sources pinned in the JSON `provenance`:
 
-- `python -I tools/norm_lint.py --selftest` — rc 0, six vectors PASS
+- `python -I tools/norm_lint.py --selftest`: rc 0, six vectors PASS
   (map-load, jargon-hit, fields-missing, substring-exemption,
   whitelist-exemption, english-clean).
-- `python -I tools/wash_shape.py --help` — rc 0; plan/apply usage face
+- `python -I tools/wash_shape.py --help`: rc 0; plan/apply usage face
   present as described in section 3.
-- `grep jargon tools/wash_shape.py` — no match (absence probe).
+- `grep jargon tools/wash_shape.py`: no match (absence probe).
 - Mechanical counts of section 4 (consolidated list split, gate4 string
-  counts, scan-list line count) — each produced by a standard-library
+  counts, scan-list line count): each produced by a standard-library
   Python one-off over the pinned files.
 - The seed JSON was written by a throwaway generator that copied the face
   list and the standard cells by program and asserted per-entry containment
@@ -172,7 +171,7 @@ machine, against the sources pinned in the JSON `provenance`:
   row quotes and boundary statements only; its own additional deprecated
   faces (the screening, review-round numbering and similar families) lie
   outside the 62-face prefix and are enumerable from that source; they are
-  not silently dropped — this boundary statement is their register here.
+  not silently dropped; this boundary statement is their register here.
 
 ## 7. Transcription containment sources (the in-repo-md-v1 contract)
 
@@ -184,7 +183,7 @@ machine, against the sources pinned in the JSON `provenance`:
   source is the whitepaper.  Source 2 is the in-repo derivation: entries
   the sync admitted from `docs/jargon-to-standard-mapping-v1.md` carry the
   tag `(in-repo-md-v1)` (it extends the tool-track prefix so the applier's
-  A2 gate keeps scoping them), and their containment is that table itself —
+  A2 gate keeps scoping them), and their containment is that table itself:
   the entry's standard must equal the paren-stripped standard cell of the
   face's single md row, derived by the same rule the sync uses (fullwidth
   and ASCII parenthetical annotations stripped, em-dash head as
@@ -207,7 +206,7 @@ machine, against the sources pinned in the JSON `provenance`:
 - Sync provenance rules under the same contract: every row the sync writes
   or already owns carries the in-repo source; an admitted row whose
   existing entry has an equal standard is retagged from the legacy
-  tool-track style to the in-repo source (action `retagged` — the
+  tool-track style to the in-repo source (action `retagged`, the
   re-admission mark of this contract; 122 rows at this contract); an
   admitted row whose existing entry has a zh standard is a whitepaper-track
   transcription and is never machine-superseded (action `authority-kept`).

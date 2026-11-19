@@ -10,20 +10,34 @@
     "transcription": "standard cells and face list copied by program from the source files; containment asserted per entry at cast time and re-asserted by the seed tests",
     "sources": [
       {
-        "path": "D:/ComplexAnalysis/规范术语/注释规范白皮书-v1.0-20260921.md",
+        "locator": "external",
+        "path": "seeds/jargon/_snapshots/annotation-whitepaper-v1.0-20260921.md",
+        "upstream_path": "D:/ComplexAnalysis/规范术语/注释规范白皮书-v1.0-20260921.md",
         "role": "annotation-track authority: consolidated banned-word list (document order) and section 4 mapping-table standard cells",
-        "md5": "bb0d07b316eb0937848672cdf5860fe0",
-        "self_declared_version": "v1.8 (header revision chain)"
+        "self_declared_version": "v1.8 (header revision chain)",
+        "pin": {
+          "kind": "md5",
+          "value": "bb0d07b316eb0937848672cdf5860fe0"
+        }
       },
       {
-        "path": "D:/ComplexAnalysis/rocqwash/docs/jargon-to-standard-mapping-v1.md",
+        "locator": "repo",
+        "path": "docs/jargon-to-standard-mapping-v1.md",
         "role": "tool-repository track: standard cells for faces absent from the annotation-track mapping table",
-        "md5": "a82eb4d5f4fa0c60533c6d84ab81e005"
+        "pin": {
+          "kind": "git-blob-sha",
+          "value": "d27b64028811d6696463cddb2e33747fc09d2d68"
+        }
       },
       {
-        "path": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md",
+        "locator": "external",
+        "path": "seeds/jargon/_snapshots/terminology-general-project-20260921.md",
+        "upstream_path": "D:/ComplexAnalysis/规范术语/术语表-通用-项目级-20260921.md",
         "role": "paper-track authority: cross-track row quotes only (no standard cell taken from it in this seed)",
-        "md5": "f61e4c44d4b1e203483ee45166f0fb6d"
+        "pin": {
+          "kind": "md5",
+          "value": "f61e4c44d4b1e203483ee45166f0fb6d"
+        }
       }
     ],
     "composition": {

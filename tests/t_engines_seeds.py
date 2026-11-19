@@ -1,34 +1,32 @@
 """tests/t_engines_seeds.py -- five-engine seed assertions (E1..E5, RQW12).
 
-Assembled suite for the RQW12 seed integration: one segment per engine plus a
-total selftest. Segment bodies are transplanted verbatim from the staged
-snippet files (seeds/<engine>/test_snippet.py); their module docstrings,
-import lines and standalone-runner tails are not carried. Documented
-adaptations (merge agent, 2026-11-14):
-
-  A1 entry points: each segment exposes run_segment_<name>() returning
-     (passed, failed, lines), per the E5 merge contract (EXPECTED_SEGMENTS
-     and run_total_selftest in the engines segment below). Lines start
-     with "PASS " or "FAIL "; loud SKIP lines carry their reason.
-  A2 rename: the termbase segment's KEY_PATTERN is renamed
-     TERMBASE_KEY_PATTERN so it cannot shadow the ai_flavor segment's.
-  A3 layout: seeds are located relative to this file (<repo>/seeds). The
-     ai_flavor WORD_MAP_PATH and jargon SEED_JSON anchors are repointed
-     from sibling-of-__file__ to <repo>/seeds/<engine>/ as their own
-     merge notes instruct; the ai_flavor detector anchor and the
-     source-original checks stay skip-if-missing: off-machine runs
-     report SKIP with a reason, never a silent pass.
-  A4 the jargon segment's main() orchestration becomes
-     run_segment_jargon() with identical check order and semantics.
-
-Interface: `python -I tests/t_engines_seeds.py` runs the total selftest
-(all five segments; EXPECTED_SEGMENTS accounting with loud SKIP lines for
-any absent segment) and exits 0 when no FAIL line was produced, 1
-otherwise. Python 3 standard library only; zero network; writes only
-inside temporary directories (jargon and termbase fixture faces). The
-seeds/ tree itself is data and SPEC faces -- zero executable engine body;
-the engines grow later on rocqwash's own wash_shape / norm_lint / evolve
-faces.
+Purpose.  Assembled suite for the RQW12 seed integration: one segment per
+  engine plus a total selftest.  Segment bodies are transplanted verbatim
+  from the staged snippet files (seeds/<engine>/test_snippet.py); their
+  module docstrings, import lines and standalone-runner tails are not
+  carried.
+Interface.  `python -I tests/t_engines_seeds.py` runs the total selftest
+  (all five segments; EXPECTED_SEGMENTS accounting with loud SKIP lines
+  for any absent segment) and exits 0 when no FAIL line was produced, 1
+  otherwise.  Merge adaptations: A1 each segment exposes
+  run_segment_<name>() returning (passed, failed, lines) per the E5 merge
+  contract (lines start "PASS " / "FAIL "; loud SKIP lines carry their
+  reason); A2 the termbase KEY_PATTERN is renamed TERMBASE_KEY_PATTERN
+  (it cannot shadow the ai_flavor segment's); A4 the jargon segment's
+  main() orchestration becomes run_segment_jargon() with identical check
+  order and semantics.
+Dependencies.  Python 3 standard library only; zero network; writes only
+  inside temporary directories (jargon and termbase fixture faces).  A3
+  layout: seeds live relative to this file (<repo>/seeds); the
+  WORD_MAP_PATH and SEED_JSON anchors point at <repo>/seeds/<engine>/
+  per their merge notes; the detector anchor stays skip-if-missing
+  (off-machine runs report SKIP with a reason, never a silent pass); the
+  jargon pin and transcription checks consume only repository faces under
+  provenance v2 (the committed mapping-table blob, the in-repo snapshot
+  copies) and fail loud when a pinned face is unreadable.
+Evidence.  The seeds/ tree is data and SPEC faces (zero executable engine
+  body); the engines grow on the wash_shape / norm_lint / evolve faces.
+Exit-codes.  0 = no FAIL line produced; 1 = at least one FAIL.
 """
 
 import hashlib
@@ -309,15 +307,39 @@ def repo_root():
     return None
 
 
-def source_root(seed):
-    env = os.environ.get("RQW_SOURCE_ROOT")
-    cands = [env] if env else []
-    for s in seed.get("provenance", {}).get("sources", []):
-        cands.append(os.path.dirname(s["path"]))
-    for c in cands:
-        if c and os.path.isdir(c):
-            return c
-    return None
+def repo_rel(root, rel):
+    """Resolve a provenance path against the repository root.  Provenance
+    v2 paths are repository-relative; an absolute path is accepted only
+    as a legacy fixture shape and resolves as itself."""
+    if os.path.isabs(rel):
+        return rel
+    return os.path.join(root, rel.replace("\\", "/"))
+
+
+def git_head_blob(root, rel):
+    """The committed blob sha of a repository path, or (None, reason).
+
+    A pure git object-database query: it reads the committed bytes, so
+    it answers identically on every machine that holds the repository,
+    which is what makes the repo-source pin check real on hosted
+    runners instead of structurally blind."""
+    try:
+        proc = subprocess.run(
+            ["git", "rev-parse", "HEAD:" + rel.replace("\\", "/")],
+            cwd=root, capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=30)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, "%s: %s" % (type(exc).__name__, exc)
+    if proc.returncode != 0:
+        return None, (proc.stderr or proc.stdout
+                      or "git rev-parse failed").strip()
+    return proc.stdout.strip(), ""
+
+
+def md5_of(path):
+    """md5 of a file's bytes; raises OSError when it cannot be read."""
+    with io.open(path, "rb") as fh:
+        return hashlib.md5(fh.read()).hexdigest()
 
 
 def load_norm_lint(root):
@@ -377,49 +399,96 @@ def check_json_contract(seed, res):
             ok = False
             det.append("%s exempts not a list" % e["id"])
     srcs = seed.get("provenance", {}).get("sources", [])
-    if len(srcs) != 3 or any(not s.get("md5") or not s.get("path") for s in srcs):
+
+    def source_v2(s):
+        """One provenance v2 source: locator, repository-relative path,
+        and a pin object whose kind matches the locator (git-blob-sha
+        for repo, md5 for external, the external one carrying the
+        informational upstream_path)."""
+        pin = s.get("pin")
+        if not (isinstance(pin, dict) and isinstance(pin.get("kind"), str)
+                and isinstance(pin.get("value"), str)
+                and isinstance(s.get("path"), str) and s["path"]
+                and not os.path.isabs(s["path"])):
+            return False
+        if s.get("locator") == "repo":
+            return (pin["kind"] == "git-blob-sha"
+                    and re.match(r"^[0-9a-f]{40}$", pin["value"]) is not None)
+        if s.get("locator") == "external":
+            return (pin["kind"] == "md5"
+                    and re.match(r"^[0-9a-f]{32}$", pin["value"]) is not None
+                    and isinstance(s.get("upstream_path"), str)
+                    and bool(s["upstream_path"]))
+        return False
+
+    if len(srcs) != 3 or any(not source_v2(s) for s in srcs):
         ok = False
-        det.append("provenance sources incomplete: %d" % len(srcs))
+        det.append("provenance sources not in the v2 form (locator,"
+                   " repository-relative path, matching pin): %d"
+                   % len(srcs))
     res.append(("json-contract", ok, "; ".join(det) or "159 entries with the"
                 " 62-entry seed prefix preserved, unique ids/faces, exact"
-                " count label, disposition rules hold, provenance pinned"))
+                " count label, disposition rules hold, provenance pinned"
+                " in the v2 form"))
 
 
-def check_transcription(seed, sroot, res):
-    if sroot is None:
-        res.append(("transcription", None,
-                    "SKIP — source originals not on this machine (set RQW_SOURCE_ROOT)"))
+def check_transcription(seed, root, res):
+    """Containment check over the pinned in-repo faces (provenance v2).
+
+    The annotation-track source is read from its in-repo snapshot copy
+    under seeds/jargon/_snapshots/ and the tool-track mapping table from
+    its committed repository path, so the whole check is a repository
+    face: it runs identically on every machine and consumes no
+    authoring-machine path.  A pinned face that cannot be read fails
+    loud: the v2 pin contract guarantees a readable in-repo copy of
+    every source this check consumes."""
+    if root is None:
+        res.append(("transcription", False,
+                    "repository root not found; the pinned faces are not"
+                    " readable from here"))
         return
-    wp_name = [s["path"] for s in seed["provenance"]["sources"]
-               if s["role"].startswith("annotation-track")]
-    if not wp_name:
-        res.append(("transcription", False, "whitepaper not pinned in provenance"))
+    sources = seed.get("provenance", {}).get("sources", [])
+    wp_src = [s for s in sources if s.get("locator") == "external"
+              and "annotation-whitepaper" in (s.get("path") or "")]
+    if not wp_src:
+        res.append(("transcription", False,
+                    "annotation-track snapshot not pinned in the"
+                    " provenance sources"))
         return
-    wp_path = os.path.join(sroot, os.path.basename(wp_name[0]))
     try:
-        wp_text = io.open(wp_path, encoding="utf-8").read()
+        wp_text = io.open(repo_rel(root, wp_src[0]["path"]),
+                          encoding="utf-8").read()
     except OSError as exc:
-        res.append(("transcription", None, "SKIP — whitepaper unreadable: %s" % exc))
+        res.append(("transcription", False,
+                    "annotation-track snapshot unreadable: %s" % exc))
         return
-    mv_src = [s for s in seed["provenance"]["sources"] if s["path"].endswith("jargon-to-standard-mapping-v1.md")]
+    mv_src = [s for s in sources
+              if (s.get("path") or "")
+              .endswith("jargon-to-standard-mapping-v1.md")]
     mv_text = ""
+    mv_bad = None
     if mv_src:
         try:
-            mv_text = io.open(mv_src[0]["path"], encoding="utf-8").read()
-        except OSError:
+            mv_text = io.open(repo_rel(root, mv_src[0]["path"]),
+                              encoding="utf-8").read()
+        except OSError as exc:
+            mv_bad = "tool-track mapping table unreadable: %s" % exc
             mv_text = ""
+    bad = []
+    if mv_bad is not None:
+        bad.append(mv_bad)
     bad = []
     inrepo = 0
     for e in seed["entries"]:
         src = e.get("standard_source") or ""
         if IN_REPO_TAG in src:
             # the sync's own product: its containment is the in-repo md
-            # table by the derivation rule — a separate check that runs on
+            # table by the derivation rule: a separate check that runs on
             # every machine (check_md_containment)
             inrepo += 1
             continue
         # Dual-source presence: the seed legitimately
-        # draws faces from BOTH pinned tracks — an annotation-whitepaper face
+        # draws faces from BOTH pinned tracks: an annotation-whitepaper face
         # or a tool-track mapping-table face both count as transcribed.
         # Requiring the whitepaper alone broke on the 62->159 tool-track
         # expansion (73 faces live only in the mapping table).
@@ -433,7 +502,7 @@ def check_transcription(seed, sroot, res):
                 bad.append("%s standard not verbatim in whitepaper" % e["id"])
         elif src.endswith("(tool-repository track)"):
             # original tool-track transcriptions (the in-repo-md-v1 contract):
-            # their containment source is the whitepaper — these rows carry
+            # their containment source is the whitepaper; these rows carry
             # whitepaper-verbatim standards on the original tag
             if e["standard"] not in wp_text:
                 bad.append("%s standard not verbatim in whitepaper" % e["id"])
@@ -450,18 +519,18 @@ def check_transcription(seed, sroot, res):
 def check_md_containment(seed, root, res):
     """Second containment source (the in-repo-md-v1 contract): entries the sync
     tagged as in-repo derivations are checked against the in-repo md table
-    by the sync's own derivation rule — the paren-stripped standard cell.
+    by the sync's own derivation rule (the paren-stripped standard cell).
     The table and the sync tool are repository faces, so this check runs on
     every machine; it never depends on the pinned originals."""
     if root is None:
         res.append(("md-containment", None,
-                    "SKIP — repository root not found (set ROCWASH_ROOT)"))
+                    "SKIP: repository root not found (set ROCWASH_ROOT)"))
         return
     md_path = os.path.join(root, "docs", "jargon-to-standard-mapping-v1.md")
     sync_path = os.path.join(root, "tools", "jargon_map_sync.py")
     if not os.path.isfile(md_path) or not os.path.isfile(sync_path):
         res.append(("md-containment", None,
-                    "SKIP — in-repo md table or sync tool absent (%s)"
+                    "SKIP: in-repo md table or sync tool absent (%s)"
                     % md_path))
         return
     try:
@@ -469,7 +538,7 @@ def check_md_containment(seed, root, res):
             "rqw_jargon_sync_seed", sync_path)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-    except Exception as exc:  # noqa: BLE001 — reported loud below
+    except Exception as exc:  # noqa: BLE001 (reported loud below)
         res.append(("md-containment", False,
                     "cannot load tools/jargon_map_sync.py: %r" % (exc,)))
         return
@@ -487,7 +556,7 @@ def check_md_containment(seed, root, res):
                if IN_REPO_TAG in (e.get("standard_source") or "")]
     if not targets:
         res.append(("md-containment", False,
-                    "no entry carries the %s tag — the second containment"
+                    "no entry carries the %s tag: the second containment"
                     " source is not exercised" % IN_REPO_TAG))
         return
     bad = []
@@ -511,25 +580,101 @@ def check_md_containment(seed, root, res):
                 if not bad else "; ".join(bad[:8])))
 
 
-def check_snapshot_md5(seed, res):
-    drifted, missing = [], []
-    for s in seed["provenance"]["sources"]:
-        try:
-            import hashlib
-            cur = hashlib.md5(io.open(s["path"], "rb").read()).hexdigest()
-        except OSError:
-            missing.append(s["path"])
-            continue
-        if cur != s["md5"]:
-            drifted.append("%s (pinned %s / current %s)" % (s["path"], s["md5"][:8], cur[:8]))
-    if missing:
-        res.append(("snapshot-md5", None,
-                    "SKIP — %d of 3 pinned sources absent: %s" % (len(missing), missing[0])))
-    elif drifted:
+def check_snapshot_md5(seed, root, res):
+    """Provenance v2 pin check: one verdict line, every source and layer
+    named in it.
+
+    repo source: the committed blob sha (git rev-parse HEAD:<path>) must
+    equal pin.value, a pure git query that answers identically on every
+    machine holding the repository, so the content-red class is now
+    verifiable on hosted runners too.  external source: the consistency
+    layer hashes the in-repo snapshot bytes against pin.value; the
+    freshness layer re-hashes the upstream original when this machine
+    carries it and skips with a declared notice when it does not (an
+    honest skip, never a silent one).  A source not in the v2 form fails
+    loud: the pin contract has no legacy reading."""
+    if root is None:
         res.append(("snapshot-md5", False,
-                    "source drifted from the pinned snapshot; re-transcribe the seed per the sync discipline: " + "; ".join(drifted)))
+                    "repository root not found; the provenance pins are"
+                    " not verifiable from here"))
+        return
+    sources = seed.get("provenance", {}).get("sources", [])
+    if not sources:
+        res.append(("snapshot-md5", False, "no provenance sources pinned"))
+        return
+    fails = []
+    notes = []
+    for s in sources:
+        loc = s.get("locator")
+        pin = s.get("pin") if isinstance(s.get("pin"), dict) else {}
+        value = pin.get("value") or ""
+        path = s.get("path") or ""
+        label = os.path.basename(path) or "<unnamed>"
+        if loc not in ("repo", "external") or not pin.get("kind"):
+            fails.append("source %s not in provenance v2 form"
+                         " (locator/pin required)" % label)
+            continue
+        if loc == "repo":
+            if pin.get("kind") != "git-blob-sha" or \
+                    re.match(r"^[0-9a-f]{40}$", value) is None:
+                fails.append("repo %s pin is not a 40-hex git-blob-sha"
+                             % path)
+                continue
+            head, err = git_head_blob(root, path)
+            if head is None:
+                fails.append("repo %s not in HEAD (%s)"
+                             % (path, (err or "unknown")[:80]))
+            elif head.lower() != value.lower():
+                fails.append("repo %s content drifted: HEAD blob %s !="
+                             " pinned %s (re-sign the pin in the same"
+                             " commit)" % (path, head[:8], value[:8]))
+            else:
+                notes.append("repo %s blob==pin" % path)
+        else:
+            if pin.get("kind") != "md5" or \
+                    re.match(r"^[0-9a-f]{32}$", value) is None:
+                fails.append("external %s pin is not a 32-hex md5" % path)
+                continue
+            snap = repo_rel(root, path)
+            try:
+                cur = md5_of(snap)
+            except OSError:
+                fails.append("external consistency %s: snapshot absent"
+                             " from the repository" % path)
+                continue
+            if cur != value.lower():
+                fails.append("external consistency %s: snapshot md5 %s"
+                             " != pinned %s" % (path, cur[:8], value[:8]))
+            else:
+                notes.append("external consistency %s md5==pin" % path)
+            upstream = s.get("upstream_path") or ""
+            if os.path.exists(upstream):
+                try:
+                    up_md5 = md5_of(upstream)
+                except OSError as exc:
+                    fails.append("external freshness %s: upstream"
+                                 " unreadable (%s)" % (path, exc))
+                    continue
+                if up_md5 != value.lower():
+                    fails.append("external freshness %s: upstream"
+                                 " drifted, md5 %s != pinned %s (R15"
+                                 " content drift, canonical only)"
+                                 % (path, up_md5[:8], value[:8]))
+                else:
+                    notes.append("external freshness %s md5==pin" % path)
+            else:
+                notes.append("external freshness %s SKIP (declared,"
+                             " freshness unverifiable off-canonical:"
+                             " upstream absent)" % path)
+    if fails:
+        detail = "provenance pins red: " + "; ".join(fails)
+        if notes:
+            detail += "; verified layers: " + "; ".join(notes)
+        res.append(("snapshot-md5", False, detail))
     else:
-        res.append(("snapshot-md5", True, "all 3 pinned sources match their md5 snapshots"))
+        res.append(("snapshot-md5", True,
+                    "all %d pinned sources verified per provenance v2: %s"
+                    % (len(sources), "; ".join(notes))))
 
 
 def check_projection_roundtrip(seed, root, res):
@@ -676,7 +821,7 @@ def check_wash_shape_gap(root, res):
     # wash stage, and the sentinel fails if the wiring is removed.
     if root is None:
         res.append(("washshape-gap-probe", None,
-                    "SKIP — repository root not found (set ROCWASH_ROOT)"))
+                    "SKIP: repository root not found (set ROCWASH_ROOT)"))
         return
     text = io.open(os.path.join(root, "tools", "wash_shape.py"), encoding="utf-8").read()
     if "jargon" in text and "KIND_JARGON" in text:
@@ -696,12 +841,12 @@ def _norm_lint(root, res):
         return _NL_CACHE[root]
     if root is None:
         res.append(("norm-lint", None,
-                    "SKIP — repository root not found; loader-dependent checks skipped (set ROCWASH_ROOT)"))
+                    "SKIP: repository root not found; loader-dependent checks skipped (set ROCWASH_ROOT)"))
         _NL_CACHE[root] = None
         return None
     try:
         mod = load_norm_lint(root)
-    except Exception as exc:  # noqa: BLE001 — fail-loud below
+    except Exception as exc:  # noqa: BLE001 (fail-loud below)
         res.append(("norm-lint", False, "cannot load tools/norm_lint.py: %r" % (exc,)))
         _NL_CACHE[root] = None
         return None
@@ -719,10 +864,9 @@ def run_segment_jargon():
     seed = load_seed()
     res = []
     check_json_contract(seed, res)
-    sroot = source_root(seed)
-    check_transcription(seed, sroot, res)
+    check_transcription(seed, root, res)
     check_md_containment(seed, root, res)
-    check_snapshot_md5(seed, res)
+    check_snapshot_md5(seed, root, res)
     check_projection_roundtrip(seed, root, res)
     check_detection_coverage(seed, root, res)
     check_wash_shape_gap(root, res)

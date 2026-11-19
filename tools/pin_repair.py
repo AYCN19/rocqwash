@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""pin_repair.py - re-sign drifted provenance md5 pins in the jargon seed.
+"""pin_repair.py - re-sign drifted provenance v2 pins in the jargon seed.
 
-Purpose.  R15 auto-repair executor.  A jargon-seed provenance pin
-  drifts when a pinned source is edited without re-signing its snapshot
-  md5 in the same commit.  Flow: gate IN-SYNC verdict, re-sign drifted
-  md5 values from current source bytes, verify, roll back
-  byte-identically on red.  Unreadable sources block; gates escalate.
+Purpose.  R15 auto-repair executor over the provenance v2 pins.  Judgment
+  is per pin kind: a repo source by its committed blob sha (git
+  rev-parse HEAD:<path>); an external source by its in-repo snapshot
+  md5 (consistency layer) plus the upstream original's md5 where this
+  machine carries it (freshness layer).  Re-sign only from bytes this
+  tool has read; an absent upstream is recorded, never fatal.
 
 Interface.  python3 tools/pin_repair.py --selftest | --plan | --apply
   [--seed P] (default seeds/jargon/jargon-map.json).  One JSON result
-  line on stdout, narrative on stderr; --plan writes nothing, --apply
-  touches only md5 values in provenance.sources.
+  line on stdout, narrative on stderr; --plan writes nothing; --apply
+  rewrites pin values in provenance.sources and refreshes external
+  sources' in-repo snapshot bytes from their upstream originals.
 
-Dependencies.  Standard library only; zero network face.  Subprocesses
-  run tools/jargon_map_sync.py (plan gate, cwd = repository root, the
-  seed under test forwarded on --map; the default seed forwards its own
-  default path, so the repository-wide judgment is unchanged) and
-  tests/t_engines_seeds.py (post-apply verification).  The selftest
-  rides the same gate form on fixture seeds (temp directories only).
+Dependencies.  Standard library only; zero network face.  Subprocesses:
+  git rev-parse / git hash-object, tools/jargon_map_sync.py (plan gate,
+  seed forwarded on --map), tests/t_engines_seeds.py (post-apply
+  verification); the selftest rides a fixture git repository in temp.
 
-Evidence.  --selftest vectors: standing-entry copies, pins matched
-  (none); drift (plan reports pinned vs current; apply re-signs only
-  the md5 value, other bytes survive); absent source (listed, apply
-  refused); synthetic single entry, gate PENDING (exit 3, zero write);
-  red verify (exit 4, rollback); usage (2).
+Evidence.  --selftest vectors: matched pins (none); repo pin drift (plan
+  reports head vs pinned blob, apply re-signs the working bytes');
+  snapshot corruption refreshed from upstream; upstream drift re-signed;
+  upstream absence recorded while the rest applies; blocked red in plan;
+  gate PENDING (exit 3, zero write); red verify rolls the seed and snapshots back (exit 4); usage (2).
 
 Exit-codes.  0 green / plan / none / apply verified; 1 red named
   (unreadable seed, apply refused, rewrite refused, selftest red);
-  2 usage; 3 gate not IN-SYNC; 4 red verification, seed rolled back.
+  2 usage; 3 gate not IN-SYNC; 4 red verify rolled back.
 """
 
 import argparse
@@ -55,10 +55,21 @@ SEED_SUITE_PATH = os.path.join(REPO_ROOT, "tests", "t_engines_seeds.py")
 # verdict prefix (tools/jargon_map_sync.py, plan mode tail line)
 SYNC_VERDICT_OK = "VERDICT IN-SYNC"
 
+# the declared-skip notice an external source carries when this machine
+# does not hold its upstream original (the honest-skip contract text)
+UPSTREAM_ABSENT_NOTICE = ("SKIP (declared, freshness unverifiable"
+                          " off-canonical: upstream absent)")
+
 GATE_TIMEOUT_S = 120
 SUITE_TIMEOUT_S = 300
+GIT_TIMEOUT_S = 30
 
 SEGMENT_RE = re.compile(r"^SEGMENT jargon: (\d+) checks, (\d+) FAIL")
+
+REPO_PIN_KIND = "git-blob-sha"
+EXTERNAL_PIN_KIND = "md5"
+_HEX40 = re.compile(r"^[0-9a-f]{40}$")
+_HEX32 = re.compile(r"^[0-9a-f]{32}$")
 
 
 def fail(msg, code):
@@ -77,6 +88,13 @@ def resolve_path(path):
     return os.path.join(REPO_ROOT, path)
 
 
+def resolve_against(root, rel):
+    """A provenance v2 path is repository-relative; resolve it against
+    the judgment root (the tool's repository in production, a fixture
+    repository in the selftest)."""
+    return os.path.join(root, rel.replace("\\", "/"))
+
+
 def file_md5(path):
     """Current md5 of a file's bytes; None when the file cannot be read."""
     try:
@@ -86,11 +104,55 @@ def file_md5(path):
         return None
 
 
+def file_bytes(path):
+    """Raw bytes of a file; raises OSError when it cannot be read."""
+    with io.open(path, "rb") as fh:
+        return fh.read()
+
+
+def git_out(root, args):
+    """One read-only git query over the object database; returns
+    (rc, stdout, stderr) with rc None when git could not be launched."""
+    try:
+        proc = subprocess.run(["git"] + list(args), cwd=root,
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace",
+                              timeout=GIT_TIMEOUT_S)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, "", "%s: %s" % (type(exc).__name__, exc)
+    return proc.returncode, proc.stdout.strip(), (proc.stderr or "").strip()
+
+
+def head_blob_sha(root, rel):
+    """The committed blob sha of a repository path, or (None, reason).
+
+    A pure object-database query: it reads the committed bytes, so it
+    answers identically on every machine that holds the repository,
+    which is what makes the repo-source judgment real on hosted
+    runners instead of structurally blind."""
+    rc, out, err = git_out(root, ["rev-parse",
+                                  "HEAD:" + rel.replace("\\", "/")])
+    if rc != 0:
+        return None, err or out or "git rev-parse failed"
+    return out, ""
+
+
+def work_blob_sha(root, abs_path):
+    """The blob sha of a working-tree file's bytes (git hash-object)."""
+    rc, out, err = git_out(root, ["hash-object", "--", abs_path])
+    if rc != 0:
+        return None, err or out or "git hash-object failed"
+    return out, ""
+
+
 def load_seed(seed_path):
     """Read the seed JSON; return (raw bytes, dict, provenance sources).
 
-    Fails loud on an unreadable file, invalid JSON, or a provenance block
-    without a usable sources list; a repair executor never guesses."""
+    Fails loud on an unreadable file, invalid JSON, or a provenance
+    block not in the provenance v2 form (locator, repository-relative
+    path, a pin object whose kind matches the locator); a repair
+    executor never guesses, and the v2 pin contract has no legacy
+    reading."""
     try:
         with io.open(seed_path, "rb") as fh:
             raw = fh.read()
@@ -108,34 +170,141 @@ def load_seed(seed_path):
     for src in sources:
         if not isinstance(src, dict) \
                 or not isinstance(src.get("path"), str) \
-                or not isinstance(src.get("md5"), str):
-            fail("provenance source without path/md5 strings in "
+                or not src["path"]:
+            fail("provenance source without a path string in "
                  + seed_path, 1)
+        if os.path.isabs(src["path"]):
+            fail("provenance source path must be repository relative: "
+                 + src["path"], 1)
+        loc = src.get("locator")
+        pin = src.get("pin")
+        if loc not in ("repo", "external"):
+            fail("provenance source %s is not in the v2 form (locator"
+                 " must be repo or external)" % src["path"], 1)
+        if not isinstance(pin, dict) \
+                or not isinstance(pin.get("kind"), str) \
+                or not isinstance(pin.get("value"), str):
+            fail("provenance source %s carries no pin object"
+                 % src["path"], 1)
+        if loc == "repo":
+            if pin["kind"] != REPO_PIN_KIND \
+                    or _HEX40.match(pin["value"]) is None:
+                fail("repo source %s pin must be a 40-hex git-blob-sha"
+                     % src["path"], 1)
+        else:
+            if pin["kind"] != EXTERNAL_PIN_KIND \
+                    or _HEX32.match(pin["value"]) is None:
+                fail("external source %s pin must be a 32-hex md5"
+                     % src["path"], 1)
+            if not isinstance(src.get("upstream_path"), str) \
+                    or not src["upstream_path"]:
+                fail("external source %s carries no upstream_path"
+                     % src["path"], 1)
     return raw, doc, sources
 
 
-def survey_sources(sources):
-    """Classify each pinned source: matched / drifted / absent."""
+def survey_sources(sources, root):
+    """Per-source provenance v2 judgment.
+
+    repo row: blob judgment -- the committed blob sha of the path (git
+    rev-parse HEAD:<path>) against pin.value; state matched / drifted /
+    not-in-head.  external row: consistency layer (in-repo snapshot
+    bytes vs pin.value; matched / drifted / snapshot-absent) plus
+    freshness layer (upstream bytes vs pin.value where this machine
+    carries the original; fresh / drifted / upstream-absent /
+    upstream-unreadable)."""
     rows = []
     for src in sources:
-        current = file_md5(resolve_path(src["path"]))
-        if current is None:
-            state = "absent"
-        elif current == src["md5"]:
-            state = "matched"
+        loc = src["locator"]
+        path = src["path"]
+        value = src["pin"]["value"]
+        if loc == "repo":
+            head, _err = head_blob_sha(root, path)
+            if head is None:
+                state = "not-in-head"
+            elif head.lower() == value.lower():
+                state = "matched"
+            else:
+                state = "drifted"
+            rows.append({"locator": "repo", "path": path,
+                         "kind": REPO_PIN_KIND, "pinned_blob_sha": value,
+                         "head_blob_sha": head, "state": state})
+            continue
+        snap_abs = resolve_against(root, path)
+        snap_md5 = file_md5(snap_abs)
+        if snap_md5 is None:
+            consistency = "snapshot-absent"
+        elif snap_md5 == value.lower():
+            consistency = "matched"
         else:
-            state = "drifted"
-        rows.append({"path": src["path"], "pinned_md5": src["md5"],
-                     "current_md5": current, "state": state})
+            consistency = "drifted"
+        upstream = src.get("upstream_path") or ""
+        if not os.path.exists(upstream):
+            freshness = "upstream-absent"
+            up_md5 = None
+        else:
+            up_md5 = file_md5(upstream)
+            if up_md5 is None:
+                freshness = "upstream-unreadable"
+            elif up_md5 == value.lower():
+                freshness = "fresh"
+            else:
+                freshness = "drifted"
+        rows.append({"locator": "external", "path": path,
+                     "kind": EXTERNAL_PIN_KIND, "upstream_path": upstream,
+                     "pinned_md5": value, "snapshot_md5": snap_md5,
+                     "upstream_md5": up_md5, "consistency": consistency,
+                     "freshness": freshness})
     return rows
+
+
+def needs_repair(row):
+    """Whether this tool can re-sign the source from bytes it can read
+    here.  A repo pin re-signs from the working tree; an external pin
+    re-signs from the upstream original.  A consistency red whose
+    upstream is absent (or unreadable) is not repairable here and is
+    reported as a blocked red instead."""
+    if row["locator"] == "repo":
+        return row["state"] in ("drifted", "not-in-head")
+    if row["freshness"] in ("upstream-absent", "upstream-unreadable"):
+        return False
+    return (row["consistency"] in ("drifted", "snapshot-absent")
+            or row["freshness"] == "drifted")
+
+
+def blocked_red(row):
+    """A red this machine cannot re-sign: the snapshot disagrees with
+    the pin while the upstream original is absent, or the upstream
+    exists but its bytes cannot be read."""
+    if row["locator"] != "external":
+        return False
+    if row["freshness"] == "upstream-unreadable":
+        return True
+    if row["freshness"] == "upstream-absent":
+        return row["consistency"] in ("drifted", "snapshot-absent")
+    return False
+
+
+def absent_row(row):
+    """The report face of an upstream-absent source: recorded with the
+    declared notice, never fatal."""
+    return {"locator": "external", "path": row["path"],
+            "pinned_md5": row["pinned_md5"],
+            "consistency": row["consistency"],
+            "declared": UPSTREAM_ABSENT_NOTICE}
 
 
 def run_gate(gate_cmd):
     """Run the sync tool's zero-write plan; return (verdict line, detail).
 
-    verdict is the last VERDICT line of stdout, or None when the gate could
-    not be established (launch failure, timeout, no verdict line); detail
-    then carries the failure text for the escalation report."""
+    A callable gate (the selftest's stub form) is invoked directly and
+    returns the same (verdict, detail) pair; a command list runs as one
+    subprocess.  verdict is the last VERDICT line of stdout, or None
+    when the gate could not be established (launch failure, timeout, no
+    verdict line); detail then carries the failure text for the
+    escalation report."""
+    if callable(gate_cmd):
+        return gate_cmd()
     try:
         proc = subprocess.run(gate_cmd, cwd=REPO_ROOT, capture_output=True,
                               text=True, encoding="utf-8", errors="replace",
@@ -212,10 +381,33 @@ def dumps_seed(doc):
         "utf-8")
 
 
-def flow(mode, seed_path, gate_cmd, verify=None):
-    """Shared front for --plan and --apply; returns (report, exit code)."""
+def restore_snapshots(backups):
+    """Restore pre-apply snapshot bytes; returns (restored, failed) as
+    named lists -- a failed restore is reported, never swallowed."""
+    done, failed = [], []
+    for path, data in backups.items():
+        try:
+            if data is None:
+                os.remove(path)
+            else:
+                with io.open(path, "wb") as fh:
+                    fh.write(data)
+            done.append(path)
+        except OSError as exc:
+            failed.append("%s: %s" % (path, exc))
+    return done, failed
+
+
+def flow(mode, seed_path, gate_cmd, verify=None, root=None):
+    """Shared front for --plan and --apply; returns (report, exit code).
+
+    root is the repository the sources resolve against and the working
+    directory of the git blob queries; production passes the tool's own
+    repository root, the selftest passes a fixture repository."""
     if verify is None:
         verify = real_verify
+    if root is None:
+        root = REPO_ROOT
     raw, doc, sources = load_seed(seed_path)
     verdict, gate_detail = run_gate(gate_cmd)
     sys.stderr.write("%s: seed=%s sources=%d\n"
@@ -225,54 +417,105 @@ def flow(mode, seed_path, gate_cmd, verify=None):
         shown = verdict if verdict else gate_detail
         return {"ok": False, "stage": "plan", "verdict": shown,
                 "seed": seed_path}, 3
-    rows = survey_sources(sources)
-    drifted = [r for r in rows if r["state"] == "drifted"]
-    absent = [r for r in rows if r["state"] == "absent"]
-    sys.stderr.write("%s: matched=%d drifted=%d absent=%d\n"
-                     % (TOOL, len(rows) - len(drifted) - len(absent),
-                        len(drifted), len(absent)))
-    if not drifted and not absent:
-        return {"ok": True, "action": "none", "drifted": [],
-                "seed": seed_path, "verdict": verdict}, 0
+    rows = survey_sources(sources, root)
+    drifted = [r for r in rows if needs_repair(r)]
+    blocked = [r for r in rows if blocked_red(r)]
+    absent = [r for r in rows if r["locator"] == "external"
+              and r["freshness"] == "upstream-absent"]
+    sys.stderr.write("%s: repairs=%d blocked=%d upstream-absent=%d\n"
+                     % (TOOL, len(drifted), len(blocked), len(absent)))
     if mode == "plan":
-        return {"ok": True, "action": "plan",
-                "drifted": [{"path": r["path"], "pinned_md5": r["pinned_md5"],
-                             "current_md5": r["current_md5"]}
-                            for r in drifted],
-                "absent": [{"path": r["path"], "pinned_md5": r["pinned_md5"],
-                            "current_md5": None} for r in absent],
-                "seed": seed_path, "verdict": verdict}, 0
-    # --apply: an absent source cannot be re-signed from bytes nobody can
-    # read; refuse the whole apply instead of guessing the missing value
-    if absent:
+        action = "plan" if (drifted or blocked) else "none"
+        return {"ok": True, "action": action,
+                "drifted": drifted, "blocked": blocked,
+                "absent": [absent_row(r) for r in absent],
+                "sources": rows, "seed": seed_path,
+                "verdict": verdict}, 0
+    if not drifted and not blocked:
+        return {"ok": True, "action": "none", "drifted": [],
+                "blocked": blocked,
+                "absent": [absent_row(r) for r in absent],
+                "sources": rows, "seed": seed_path,
+                "verdict": verdict}, 0
+    # --apply: refuse before any write when a repo pin would have to be
+    # re-signed from bytes nobody can read
+    refused = []
+    for row in drifted:
+        if row["locator"] != "repo":
+            continue
+        abs_path = resolve_against(root, row["path"])
+        if not os.path.isfile(abs_path):
+            refused.append("repo %s: no working-tree bytes to hash"
+                           % row["path"])
+            continue
+        sha, err = work_blob_sha(root, abs_path)
+        if sha is None:
+            refused.append("repo %s: git hash-object failed (%s)"
+                           % (row["path"], (err or "unknown")[:80]))
+    if refused:
         return {"ok": False, "stage": "apply",
-                "reason": ("absent pinned sources block the rewrite; a pin"
-                           " is only re-signed from bytes this tool has"
-                           " actually read"),
-                "absent": [{"path": r["path"], "pinned_md5": r["pinned_md5"],
-                            "current_md5": None} for r in absent],
-                "seed": seed_path}, 1
+                "reason": ("a pin is only re-signed from bytes this tool"
+                           " has actually read"),
+                "refused": refused, "seed": seed_path}, 1
+    # byte-stability is judged on the seed as read, before any pin value
+    # is mutated: the rewrite may touch the pin values and nothing else
     if dumps_seed(doc) != raw:
         return {"ok": False, "stage": "apply",
                 "reason": ("seed is not byte-stable under the key-order"
                            " indent-2 rewrite; refusing a write that could"
-                           " touch more than the md5 values"),
+                           " touch more than the pin values"),
                 "seed": seed_path}, 1
+    snapshot_backups = {}
+    plan_writes = []
     resigned = []
     for idx, row in enumerate(rows):
-        if row["state"] == "drifted":
-            doc["provenance"]["sources"][idx]["md5"] = row["current_md5"]
-            resigned.append({"path": row["path"],
-                             "pinned_md5": row["pinned_md5"],
-                             "resigned_md5": row["current_md5"]})
-    new_bytes = dumps_seed(doc)
+        if not needs_repair(row):
+            continue
+        src = doc["provenance"]["sources"][idx]
+        old = src["pin"]["value"]
+        if row["locator"] == "repo":
+            sha, _err = work_blob_sha(root, resolve_against(root,
+                                                            row["path"]))
+            src["pin"]["value"] = sha
+            resigned.append({"locator": "repo", "path": row["path"],
+                             "kind": REPO_PIN_KIND,
+                             "pinned_blob_sha": old,
+                             "resigned_blob_sha": sha})
+        else:
+            upstream = row["upstream_path"]
+            try:
+                with io.open(upstream, "rb") as fh:
+                    up_bytes = fh.read()
+            except OSError as exc:
+                return {"ok": False, "stage": "apply",
+                        "reason": ("a pin is only re-signed from bytes"
+                                   " this tool has actually read"),
+                        "refused": ["external %s: upstream unreadable"
+                                    " (%s)" % (row["path"], exc)],
+                        "seed": seed_path}, 1
+            snap_abs = resolve_against(root, row["path"])
+            snapshot_backups[snap_abs] = (
+                file_bytes(snap_abs) if os.path.exists(snap_abs) else None)
+            plan_writes.append((snap_abs, up_bytes))
+            new_md5 = hashlib.md5(up_bytes).hexdigest()
+            src["pin"]["value"] = new_md5
+            resigned.append({"locator": "external", "path": row["path"],
+                             "kind": EXTERNAL_PIN_KIND,
+                             "pinned_md5": old, "resigned_md5": new_md5,
+                             "snapshot_refreshed": True})
+    for snap_abs, up_bytes in plan_writes:
+        with io.open(snap_abs, "wb") as fh:
+            fh.write(up_bytes)
     with io.open(seed_path, "wb") as fh:
-        fh.write(new_bytes)
+        fh.write(dumps_seed(doc))
     sys.stderr.write("%s: re-signed %d pin(s); verifying\n"
                      % (TOOL, len(resigned)))
     ok, verify_detail = verify()
     if ok:
         return {"ok": True, "action": "apply", "resigned": resigned,
+                "absent": [absent_row(r) for r in absent],
+                "snapshots_refreshed": [os.path.relpath(p, root)
+                                        for p, _b in plan_writes],
                 "verify": "seeds-suite-green", "seed": seed_path,
                 "verdict": verdict}, 0
     with io.open(seed_path, "wb") as fh:
@@ -283,12 +526,19 @@ def flow(mode, seed_path, gate_cmd, verify=None):
             restored = fh.read() == raw
     except OSError:
         restored = False
-    sys.stderr.write("%s: verification red (%s); seed rollback %s\n"
-                     % (TOOL, verify_detail,
-                        "byte-identical" if restored else "FAILED"))
+    snap_done, snap_failed = restore_snapshots(snapshot_backups)
+    rollback = ("byte-identical"
+                if (restored and not snap_failed) else "FAILED")
+    sys.stderr.write("%s: verification red (%s); rollback %s (seed %s,"
+                     " snapshots restored %d, failed %d)\n"
+                     % (TOOL, verify_detail, rollback,
+                        "byte-identical" if restored else "FAILED",
+                        len(snap_done), len(snap_failed)))
     return {"ok": False, "stage": "verify", "action": "apply-rolled-back",
             "verify": verify_detail, "resigned": resigned,
-            "rollback": "byte-identical" if restored else "FAILED",
+            "rollback": rollback,
+            "rollback_snapshots": {"restored": len(snap_done),
+                                   "failed": snap_failed},
             "seed": seed_path, "verdict": verdict}, 4
 
 
@@ -296,12 +546,14 @@ def emit(report):
     print(json.dumps(report, ensure_ascii=False))
 
 
-# --- selftest (offline, temporary fixtures; reads the standing seed
-# entries, writes nothing outside the temp directory) ---
+# --- selftest (offline, temporary fixtures; a fixture git repository
+# holds the repo-pin faces, stub gates stand in for the sync tool so the
+# vectors isolate this tool's pin semantics, and nothing outside the
+# temp directory is written) ---
 
-# synthetic single entry: no admitted face of the repository md table
-# lives in this map, so the gate reports PENDING for it - the fixture
-# shape of the exit-3 vector
+# synthetic single entry: a shape-realistic entry body for the fixture
+# seed (the stub gate does not judge entries, so no standing-seed
+# coupling is needed)
 FX_ENTRY = {
     "id": "J001", "face": "alpha", "standard": "one",
     "standard_language": "en",
@@ -324,49 +576,79 @@ FX_SEED_DOC = {
 }
 
 
-def fixture_entries():
-    """Deep copies of the standing seed's entry list, read-only.
+def _fixture_repo(tmp):
+    """A throwaway git repository inside the temp directory: the sandbox
+    the repo-pin vectors judge against.  git init/add/commit are local
+    object-database operations; the whole fixture stays offline."""
+    repo = os.path.join(tmp, "pinrepo")
+    os.makedirs(repo)
 
-    The gate judges a seed's entries against the repository's own md
-    table, and the standing seed is in sync with that table, so a
-    fixture seed carrying these entries verbatim is IN-SYNC by
-    construction, while a synthetic single entry is PENDING (every
-    admitted md face is missing from it)."""
-    _raw, doc, _sources = load_seed(DEFAULT_SEED_PATH)
-    return json.loads(json.dumps(doc["entries"]))
+    def git(*args):
+        proc = subprocess.run(["git"] + list(args), cwd=repo,
+                              capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=60)
+        if proc.returncode != 0:
+            raise AssertionError("fixture git %s failed: %s"
+                                 % (args[0], (proc.stderr or "").strip()))
+        return proc.stdout.strip()
+
+    git("init", "-q")
+    git("config", "core.autocrlf", "false")
+    git("config", "user.email", "fixture@example.invalid")
+    git("config", "user.name", "fixture")
+    return repo, git
 
 
 def run_selftest(args):
     results = []
     tmp = tempfile.mkdtemp(prefix="rqw_pin_repair_")
     try:
-        src_a = os.path.join(tmp, "src_a.txt")
-        src_b = os.path.join(tmp, "src_b.txt")
+        repo, git = _fixture_repo(tmp)
         seed_path = os.path.join(tmp, "seed.json")
+        repo_rel_path = "mapping-fixture.md"
+        repo_file = os.path.join(repo, repo_rel_path)
+        upstream = os.path.join(tmp, "upstream-original.md")
+        snapshot_rel = "snapshot-fixture-source.md"
+        snapshot_abs = os.path.join(repo, snapshot_rel)
 
         def write_bytes(path, data):
             with io.open(path, "wb") as fh:
                 fh.write(data)
 
-        def md5_of(path):
-            return file_md5(path)
+        def read_bytes(path):
+            with io.open(path, "rb") as fh:
+                return fh.read()
 
-        def make_seed(entries, md5_a, md5_b):
+        def md5_bytes(data):
+            return hashlib.md5(data).hexdigest()
+
+        def repo_source(sha):
+            return {"locator": "repo", "path": repo_rel_path,
+                    "role": "fixture repo source",
+                    "pin": {"kind": REPO_PIN_KIND, "value": sha}}
+
+        def external_source(md5v):
+            return {"locator": "external", "path": snapshot_rel,
+                    "role": "fixture external source",
+                    "upstream_path": upstream,
+                    "pin": {"kind": EXTERNAL_PIN_KIND, "value": md5v}}
+
+        def make_seed(repo_sha, snap_bytes, ext_md5):
+            write_bytes(snapshot_abs, snap_bytes)
             doc = json.loads(json.dumps(FX_SEED_DOC))
-            doc["count"] = len(entries)
-            doc["entries"] = json.loads(json.dumps(entries))
-            doc["provenance"]["sources"] = [
-                {"path": src_a, "role": "fixture source one",
-                 "md5": md5_a},
-                {"path": src_b, "role": "fixture source two",
-                 "md5": md5_b},
-            ]
+            doc["count"] = 1
+            doc["entries"] = json.loads(json.dumps([FX_ENTRY]))
+            doc["provenance"]["sources"] = [repo_source(repo_sha),
+                                            external_source(ext_md5)]
             write_bytes(seed_path, dumps_seed(doc))
 
-        def gate_cmd():
-            # the production gate form: the real sync tool, zero-write
-            # plan, the seed under test forwarded on --map
-            return default_gate_cmd(seed_path)
+        def in_sync_gate():
+            return ("VERDICT IN-SYNC (fixture stub)",
+                    "VERDICT IN-SYNC (fixture stub)")
+
+        def pending_gate():
+            return ("VERDICT PENDING (fixture stub)",
+                    "VERDICT PENDING (fixture stub)")
 
         def green_verify():
             return True, "stub verification pass (fixture)"
@@ -374,111 +656,176 @@ def run_selftest(args):
         def red_verify():
             return False, "stub verification failure (fixture)"
 
-        entries = fixture_entries()
+        def plan():
+            return flow("plan", seed_path, in_sync_gate, root=repo)
 
-        write_bytes(src_a, b"alpha source bytes v1\n")
-        write_bytes(src_b, b"beta source bytes v1\n")
+        def apply(verify=green_verify):
+            return flow("apply", seed_path, in_sync_gate,
+                        verify=verify, root=repo)
 
-        # vector 1: standing-entry copies (gate IN-SYNC by construction),
-        # every pin matches -> action none
-        make_seed(entries, md5_of(src_a), md5_of(src_b))
-        rep, code = flow("plan", seed_path, gate_cmd())
-        rep2, code2 = flow("apply", seed_path, gate_cmd(),
-                           verify=green_verify)
+        # fixture content, committed so the blob judgment has a HEAD face
+        repo_v1 = b"repo fixture bytes v1\n"
+        write_bytes(repo_file, repo_v1)
+        git("add", repo_rel_path)
+        git("commit", "-q", "-m", "fixture content v1")
+        head_sha = git("rev-parse", "HEAD:" + repo_rel_path)
+        wrong_sha = "0123456789abcdef0123456789abcdef01234567"
+        upstream_v1 = b"upstream original bytes v1\n"
+        write_bytes(upstream, upstream_v1)
+        md5_v1 = md5_bytes(upstream_v1)
+        corrupt = b"corrupted snapshot bytes\n"
+
+        # vector 1: every pin matches its judged face -> action none
+        make_seed(head_sha, upstream_v1, md5_v1)
+        rep, code = plan()
+        rep2, code2 = apply()
         ok = (code == 0 and rep.get("action") == "none"
               and rep.get("drifted") == []
               and code2 == 0 and rep2.get("action") == "none")
         _vec(results, "insync-matching-pins-none", ok,
-             "IN-SYNC gate over standing-entry copies plus matching pins"
+             "IN-SYNC gate over matching repo blob and snapshot md5 pins"
              " reports action none in both modes"
              if ok else "plan=%r apply=%r" % (rep, rep2))
 
-        # vector 2: drifted pin, plan face reports pinned vs current
-        write_bytes(src_a, b"alpha source bytes v2\n")
-        current_a = md5_of(src_a)
-        rep, code = flow("plan", seed_path, gate_cmd())
+        # vector 2: repo pin drift; plan reports head vs pinned blob sha
+        make_seed(wrong_sha, upstream_v1, md5_v1)
+        rep, code = plan()
         drift = rep.get("drifted") or []
         ok = (code == 0 and rep.get("action") == "plan" and len(drift) == 1
-              and drift[0]["path"] == src_a
-              and drift[0]["current_md5"] == current_a
-              and drift[0]["pinned_md5"] != current_a
-              and rep.get("absent") == [])
-        _vec(results, "drift-plan-reports-pinned-vs-current", ok,
-             "plan lists the drifted source with its pinned and current md5"
+              and drift[0]["locator"] == "repo"
+              and drift[0]["state"] == "drifted"
+              and drift[0]["head_blob_sha"] == head_sha
+              and drift[0]["pinned_blob_sha"] == wrong_sha)
+        _vec(results, "repo-drift-plan-reports-blob-judgment", ok,
+             "plan lists the drifted repo pin with its committed and"
+             " pinned blob shas"
              if ok else "rc=%d report=%r" % (code, rep))
 
-        # vector 3: apply re-signs only the md5 value, every other byte
-        # of the seed file survives
-        raw_before = io.open(seed_path, "rb").read()
-        rep, code = flow("apply", seed_path, gate_cmd(),
-                         verify=green_verify)
-        raw_after = io.open(seed_path, "rb").read()
-        pinned_old = drift[0]["pinned_md5"].encode("utf-8")
-        expected = (raw_before.replace(pinned_old, current_a.encode("utf-8"))
-                    if raw_before.count(pinned_old) == 1 else None)
-        doc_after = json.loads(raw_after.decode("utf-8"))
+        # vector 3: apply re-signs the repo pin to the working bytes'
+        # blob sha; every other byte of the seed file survives
+        raw_before = read_bytes(seed_path)
+        rep, code = apply()
+        raw_after = read_bytes(seed_path)
+        expected = (raw_before.replace(wrong_sha.encode("ascii"),
+                                       head_sha.encode("ascii"))
+                    if raw_before.count(wrong_sha.encode("ascii")) == 1
+                    else None)
         ok = (code == 0 and rep.get("action") == "apply"
               and rep.get("verify") == "seeds-suite-green"
-              and expected is not None and raw_after == expected
-              and doc_after["provenance"]["sources"][0]["md5"] == current_a
-              and doc_after["provenance"]["sources"][1]["md5"]
-              == md5_of(src_b))
-        _vec(results, "drift-apply-resigns-value-only", ok,
-             "apply rewrote exactly the drifted md5 value; all other bytes"
-             " survived; verification green"
+              and expected is not None and raw_after == expected)
+        _vec(results, "repo-drift-apply-resigns-blob-sha", ok,
+             "apply rewrote exactly the drifted pin value to the working"
+             " bytes' blob sha; all other bytes survived; verification"
+             " green"
              if ok else "rc=%d report=%r" % (code, rep))
 
-        # vector 4: absent source is listed; apply refuses without writing
-        os.remove(src_b)
-        raw_before = io.open(seed_path, "rb").read()
-        rep, code = flow("plan", seed_path, gate_cmd())
-        absent = rep.get("absent") or []
+        # vector 4: corrupted snapshot; consistency red, freshness green;
+        # apply refreshes the snapshot from the upstream bytes
+        make_seed(head_sha, corrupt, md5_v1)
+        rep, code = plan()
+        drift = rep.get("drifted") or []
         ok_plan = (code == 0 and rep.get("action") == "plan"
-                   and len(absent) == 1 and absent[0]["path"] == src_b
-                   and absent[0]["current_md5"] is None)
-        rep, code = flow("apply", seed_path, gate_cmd(),
-                         verify=green_verify)
-        raw_after = io.open(seed_path, "rb").read()
-        ok = (ok_plan and code == 1 and rep.get("ok") is False
-              and rep.get("stage") == "apply" and raw_after == raw_before)
-        _vec(results, "absent-source-listed-apply-refused", ok,
-             "absent source listed with a null current md5; apply refused"
-             " exit 1 and the seed stayed byte-identical"
-             if ok else "plan=%r apply=%r" % (rep, absent))
+                   and len(drift) == 1
+                   and drift[0]["locator"] == "external"
+                   and drift[0]["consistency"] == "drifted"
+                   and drift[0]["freshness"] == "fresh")
+        rep, code = apply()
+        ok = (ok_plan and code == 0 and rep.get("action") == "apply"
+              and read_bytes(snapshot_abs) == upstream_v1)
+        _vec(results, "snapshot-corruption-refreshed-from-upstream", ok,
+             "consistency drift with a fresh upstream refreshes the"
+             " snapshot bytes from the upstream original"
+             if ok else "plan=%r apply=%r" % (rep, ok_plan))
 
-        # vector 5: a synthetic single entry is PENDING at the gate (no
-        # admitted md face lives in it) -> exit 3, zero write
-        make_seed([FX_ENTRY], md5_of(src_a),
-                  "not-a-real-md5-value-but-32-chars-ok00")
-        write_bytes(src_b, b"beta source bytes v1\n")
-        raw_before = io.open(seed_path, "rb").read()
-        rep, code = flow("plan", seed_path, gate_cmd())
-        raw_after = io.open(seed_path, "rb").read()
+        # vector 5: upstream drift; apply re-signs the md5 from the
+        # upstream bytes and refreshes the snapshot to them
+        upstream_v2 = b"upstream original bytes v2\n"
+        write_bytes(upstream, upstream_v2)
+        md5_v2 = md5_bytes(upstream_v2)
+        make_seed(head_sha, upstream_v1, md5_v1)
+        rep, code = plan()
+        drift = rep.get("drifted") or []
+        ok_plan = (code == 0 and rep.get("action") == "plan"
+                   and len(drift) == 1
+                   and drift[0]["consistency"] == "matched"
+                   and drift[0]["freshness"] == "drifted")
+        rep, code = apply()
+        doc_after = json.loads(read_bytes(seed_path).decode("utf-8"))
+        ok = (ok_plan and code == 0 and rep.get("action") == "apply"
+              and read_bytes(snapshot_abs) == upstream_v2
+              and doc_after["provenance"]["sources"][1]["pin"]["value"]
+              == md5_v2)
+        _vec(results, "upstream-drift-resigned-from-upstream-bytes", ok,
+             "freshness drift re-signs the pin from the upstream bytes"
+             " and refreshes the snapshot to them"
+             if ok else "plan=%r apply=%r" % (rep, ok_plan))
+
+        # vector 6: upstream absent; the source is recorded absent with
+        # the declared notice while the drifted repo pin still applies
+        os.remove(upstream)
+        make_seed(wrong_sha, upstream_v2, md5_v2)
+        rep, code = apply()
+        doc_after = json.loads(read_bytes(seed_path).decode("utf-8"))
+        absent = rep.get("absent") or []
+        ok = (code == 0 and rep.get("action") == "apply"
+              and len(absent) == 1
+              and absent[0].get("declared") == UPSTREAM_ABSENT_NOTICE
+              and doc_after["provenance"]["sources"][0]["pin"]["value"]
+              == head_sha
+              and doc_after["provenance"]["sources"][1]["pin"]["value"]
+              == md5_v2)
+        _vec(results, "upstream-absent-recorded-apply-continues", ok,
+             "an upstream-absent source is recorded absent with the"
+             " declared notice while the repo pin still re-signs; apply"
+             " does not refuse"
+             if ok else "rc=%d report=%r" % (code, rep))
+
+        # vector 7: snapshot red with the upstream gone is a blocked red
+        # the plan names without crashing
+        make_seed(head_sha, corrupt, md5_v2)
+        rep, code = plan()
+        blocked = rep.get("blocked") or []
+        ok = (code == 0 and rep.get("action") == "plan"
+              and len(blocked) == 1
+              and blocked[0]["consistency"] == "drifted"
+              and blocked[0]["freshness"] == "upstream-absent")
+        _vec(results, "blocked-red-named-by-plan", ok,
+             "a consistency red whose upstream is absent is reported as"
+             " a blocked red, not silently dropped"
+             if ok else "rc=%d report=%r" % (code, rep))
+
+        # vector 8: a PENDING gate verdict escalates exit 3, zero write
+        make_seed(head_sha, upstream_v2, md5_v2)
+        raw_before = read_bytes(seed_path)
+        rep, code = flow("plan", seed_path, pending_gate, root=repo)
         ok = (code == 3 and rep.get("ok") is False
               and rep.get("stage") == "plan"
               and (rep.get("verdict") or "").startswith("VERDICT PENDING")
-              and raw_after == raw_before)
-        _vec(results, "synthetic-entry-pending-exit-3", ok,
-             "PENDING gate verdict over the synthetic single entry"
-             " escalates exit 3 with the raw verdict line and the seed"
-             " untouched"
+              and read_bytes(seed_path) == raw_before)
+        _vec(results, "gate-pending-exit-3-zero-write", ok,
+             "PENDING gate verdict escalates exit 3 with the raw verdict"
+             " line and the seed untouched"
              if ok else "rc=%d report=%r" % (code, rep))
 
-        # vector 6: red post-apply verification rolls the seed back
-        make_seed(entries, md5_of(src_a), md5_of(src_b))
-        write_bytes(src_a, b"alpha source bytes v3\n")
-        raw_before = io.open(seed_path, "rb").read()
-        rep, code = flow("apply", seed_path, gate_cmd(),
-                         verify=red_verify)
-        raw_after = io.open(seed_path, "rb").read()
+        # vector 9: a red verification rolls the seed and every refreshed
+        # snapshot back byte-identically
+        upstream_v3 = b"upstream original bytes v3\n"
+        write_bytes(upstream, upstream_v3)
+        md5_v3 = md5_bytes(upstream_v3)
+        make_seed(wrong_sha, corrupt, md5_v3)
+        raw_before = read_bytes(seed_path)
+        snap_before = read_bytes(snapshot_abs)
+        rep, code = apply(verify=red_verify)
         ok = (code == 4 and rep.get("action") == "apply-rolled-back"
               and rep.get("rollback") == "byte-identical"
-              and raw_after == raw_before)
+              and read_bytes(seed_path) == raw_before
+              and read_bytes(snapshot_abs) == snap_before)
         _vec(results, "verify-red-rolls-back-byte-identical", ok,
-             "a red verification restored the seed bytes exactly, exit 4"
+             "a red verification restored the seed bytes and the"
+             " refreshed snapshot bytes exactly, exit 4"
              if ok else "rc=%d report=%r" % (code, rep))
 
-        # vector 7: CLI usage conflicts exit 2 before any file is read
+        # vector 10: CLI usage conflicts exit 2 before any file is read
         proc = subprocess.run(
             [sys.executable, "-I", os.path.abspath(__file__),
              "--plan", "--apply", "--seed", seed_path],
@@ -513,9 +860,12 @@ def main(argv=None):
     ap.add_argument("--selftest", action="store_true",
                     help="run the selftest vectors; standalone")
     ap.add_argument("--plan", action="store_true",
-                    help="report drifted pins; writes nothing")
+                    help="report drifted pins per provenance v2;"
+                         " writes nothing")
     ap.add_argument("--apply", action="store_true",
-                    help="re-sign drifted pins, then verify and roll back"
+                    help="re-sign drifted pins (blob sha for repo"
+                         " sources, snapshot refresh plus md5 for"
+                         " external sources), then verify and roll back"
                          " on a red verification")
     ap.add_argument("--seed", metavar="P", default=DEFAULT_SEED_PATH,
                     help="seed map JSON (default: seeds/jargon/jargon-map"
