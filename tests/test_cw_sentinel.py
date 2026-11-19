@@ -1,25 +1,31 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_cw_sentinel.py — tools/cw_sentinel.py 最小自测壳（tests/·20261111 v37
-实时动态哨挂接）
+"""test_cw_sentinel.py - suite hookup shell for tools/cw_sentinel.py (tests/).
 
-实时动态哨挂接件：哨自带 --selftest 冻结矢量组（①once ci-red＋二跑 seen 幂等
-零事件／②ledger 新件 blocking＋幂等／③buildlog 增量 grep＋半行不误报／④
---on-red 占位替换执行实证＋缺省零动作／⑤loop 三轮 JSONL 序贯／⑥--emit JSONL
-逐行合法 sort_keys＋seq 事件流内序贯＋确定性字节恒同＋CLI 四码＋CI 401→9＋
-injector canned 未覆盖→9＋ledgers 目录缺→9——全 --injector canned＋tmp
-fixture·零真网络零编译）已由铸席自证，本壳只把它接进套件总入口并加 --help
-冒烟：
-  1 --selftest rc=0 且 stdout 含 "CW-SENTINEL-SELFTEST PASS" 冻结标记
-  2 --help rc=0（argparse 用法面在位）
+Purpose.  The sentinel already attests itself: its own --selftest carries
+  the frozen vector set (the thirteen canned-injection vectors, all over
+  the --injector canned path with tmp fixtures: zero real network, zero
+  compile).  This shell only connects that selftest into the suite entry
+  and adds a --help smoke check:
+  1 --selftest rc=0 and stdout carries the frozen "CW-SENTINEL-SELFTEST
+    PASS" marker;
+  2 --help rc=0 (the argparse usage face is in place).
 
-用法：
-  python3 tests/test_cw_sentinel.py       # 套件内经 run_tests.sh 调
-  python3 -B tests/test_cw_sentinel.py    # 手动（-B 禁 __pycache__）
+Interface.  python3 tests/test_cw_sentinel.py       # from run_tests.sh in
+    the suite;  python3 -B tests/test_cw_sentinel.py  # manual (-B disables
+    __pycache__).
 
-零触律：零网络零写盘零触真仓（真 API 面不挂套件·canned 注入面由铸席
-selftest 自证）；python3 -B 禁 __pycache__。
-退出码：0=两判全过；1=任一红（fail-loud 响亮列红·禁静默）。
+Dependencies.  Python 3 standard library only (os, subprocess, sys); the
+  tool face tools/cw_sentinel.py on disk.  Zero-touch rule: zero network,
+  zero writes, zero touches of the real repository (the real API face is
+  never hooked into the suite; the canned injection face is attested by the
+  sentinel's own selftest); python3 -B disables __pycache__.
+
+Evidence.  Both checks fail loud: any red prints the captured sentinel
+  output and the failing condition, then exits 1 (never silent).  Suite
+  hookup: t_cw_sentinel in tests/run_tests.sh.
+
+Exit-codes.  0 = both checks pass; 1 = either check red.
 """
 import os
 import subprocess
@@ -31,7 +37,8 @@ MARK = "CW-SENTINEL-SELFTEST PASS"
 
 
 def run(args):
-    """子进程跑哨（stdout+stderr 合流·零写盘零网络）。"""
+    """Run the sentinel in a subprocess (stdout+stderr merged; zero writes,
+    zero network)."""
     p = subprocess.run([sys.executable, "-B", TOOL] + args,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return p.returncode, p.stdout.decode("utf-8", errors="replace")
@@ -41,13 +48,15 @@ def main():
     fails = []
     rc, out = run(["--selftest"])
     if rc != 0 or MARK not in out:
-        fails.append("判1 --selftest 应 rc=0 且含 %r（实测 rc=%d）" % (MARK, rc))
+        fails.append("check 1: --selftest must exit 0 and print %r (got rc=%d)"
+                     % (MARK, rc))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:
-        fails.append("判2 --help 应 rc=0（实测 rc=%d）" % rc)
+        fails.append("check 2: --help must exit 0 (got rc=%d)" % rc)
         print(out)
-    print("== test_cw_sentinel: %d 过 / %d 红 ==" % (2 - len(fails), len(fails)))
+    print("== test_cw_sentinel: %d pass / %d red ==" % (2 - len(fails),
+                                                        len(fails)))
     for f in fails:
         print("FAIL:", f)
     return 1 if fails else 0

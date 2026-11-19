@@ -1,248 +1,280 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""cw_sentinel.py: real-time dynamic sentinel for rocqwash (tools/): a live
-companion for workflows that performs cleaning, shape washing, troubleshooting,
-and blockage clearing: the sentinel is an inspection event stream over three
-signal sources; classification and chain-root selection are always delegated
-to the existing engines (zero new engines, zero reimplementation).
+"""cw_sentinel.py - real-time dynamic sentinel for rocqwash (tools/): a live
+workflow companion emitting an inspection event stream (zero new engines).
 
-Three signal sources (combinable; at least one required):
-  ① CI path = --watch-repo ORG/REPO [--branch B]... (repeatable, multiple
-     groups):
-       GET /repos/{repo}/actions/runs?per_page=30 (RUNS_QUERY, same convention
-       as pushci.py; the token comes from the ~/.netrc machine github.com
-       line's 6th-column password; netrc_token is a same-convention copy of
-       ci_triage.py's; tools/ has no package layout, so following the pushci
-       precedent each tool carries its own copy; --netrc parameterized) →
-       each new completed run (seen run ids recorded in --state-file,
-       idempotent) → the sentinel fetches the jobs (GET
-       .../runs/{id}/jobs?per_page=100&page=1, written to a tmp file) →
-       subprocess ci_triage --offline (the same "real subprocess, real
-       classification, zero network" pattern as pushci's run_triage injector
-       mode) → run-level family/action taken from the rocqwash-ci-triage/1
-       report → family≠none emits the event
-       {kind:ci-red, repo, run, family, action}. The full classification
-       authority (five families plus the all-passing state) lives in
-       ci_triage (classification order: the ci_triage.py module docstring);
-       the sentinel does not classify.
-  ② Local ledger path = --watch-ledgers DIR:
-       new probe/ledger JSON files on disk (seen by mtime+name; a changed
-       mtime/size on the same file also counts as new) → subprocess
-       chain_graph.py on the new file --json tmp → the first name in
-       top_order is the TOP chain root → event {kind:blocking, top_root,
-       dependents} (with n and the three-way self-washability; per chain_graph
-       build_graph).
-  ③ Local build path = --watch-buildlog FILE:
-       tail incremental grep (byte offset recorded in state; only complete
-       lines are matched, to avoid half-line false positives) → tokens
-       BUILD-FAIL / EXIT=134 (family-C toolchain-break token, ci_triage.py) /
-       Error: (family-A content-failure token, ci_triage.py) → event
-       {kind:build-signal, hits[]}. A missing log file = compilation has not
-       started writing; zero events, not a failure (the report notes
-       present=false explicitly, never silently).
+Purpose.  Three combinable signal sources (at least one required): (1)
+  --watch-repo: new completed GitHub Actions runs -> ci_triage --offline
+  -> {kind:ci-red, repo, run, family, action}; (2) --watch-ledgers: new
+  ledger/probe JSON -> chain_graph.py -> {kind:blocking, top_root, dependents};
+  (3) --watch-buildlog: incremental tail grep -> {kind:build-signal, hits[]}.
 
-Event stream: --emit FILE (JSONL append, per-line flush+fsync) + stdout mirror
-(explicit). Event-line schema = rocqwash-sentinel-event/1; keys sort_keys;
-line order = production order; seq is monotonic within the event stream (with
---emit, the baseline for cross-process continuation is the file itself plus
-its rotated generations; by default it is monotonic within the process); a
-consumer sorting by seq recovers the global order. ts comes from the time
-clock; with --sleep-scale 0, ts is disabled (--selftest determinism
-dependency) and events carry the note "ts=off".
-JSONL rotation (--emit-max-bytes N; bounds the on-disk footprint for
-long-lived runs): checked before each append; if the file's current bytes
-plus the new line's bytes exceed N → rotate first, then append:
-FILE.1→FILE.2 (an existing FILE.2 is overwritten and discarded; two
-generations are kept) →FILE→FILE.1→new FILE empty. A single line longer than
-N = the line cannot be split; it is written into the gap anyway (after
-rotation a single line may still exceed the cap; the next append pre-check
-rotates again); rotation is noted explicitly on stdout and counted in the
-report's emit_rotations; a rename failure → 9. seq continues across
-generations (baseline = the file plus the line counts of .1/.2; rotated
-generations belong to the same event stream; sorting by seq recovers the
-global order across generations).
+Interface.  --once | --loop --interval S [--max-rounds N]; --emit FILE
+  (rocqwash-sentinel-event/1 JSONL, sort_keys, monotonic seq, rotation);
+  --on-red 'CMD' / repeatable --on-red-preset NAME (60s cap, requires
+  --emit, failures never change the exit code) + --on-red-arg K=V;
+  --state-file/--rebuild-state; --injector table; --json report; --selftest.
 
---on-red 'CMD template': the {family}/{run}/{repo} placeholders are
-substituted from event fields (missing fields become the empty string) →
-executed via a subprocess shell (60s timeout cap; rc≠0/timeout is recorded
-explicitly in the actions log and stdout, and does not change the sentinel's
-exit code; on-red is a side action, outside the tool's own verdict surface).
-Requires --emit (side actions must accompany an on-disk event stream;
-trigger evidence and the action log stay auditable; without --emit → 2; the
-same guard as --on-red-preset). Default: none = report-only; **zero action is
-the default** (same discipline as cure_applier's dry-run default).
+Dependencies.  Python 3 stdlib only; ci_triage/chain_graph/unclog/pushci/
+  wash_shape/cw_doctor as TOOLS_DIR-relative subprocesses; tools/_http_backoff.py
+  via sys.path injection; GitHub token from ~/.netrc (--netrc parameterized).
 
---on-red-preset NAME: preset actions for failing events (**repeatable =
-chained**; see below); presets are template sugar: expanded into internal
-command templates, they run through the same executor as --on-red (60s cap;
-rc≠0/timeout recorded explicitly in the actions log; the sentinel's exit
-code unchanged; placeholder substitution reuses the existing --on-red path;
-zero new execution paths). Mutually exclusive with --on-red (both given →
-rc=2 fail-loud, no silent choice; "preset wins" means a preset occupies the
-on-red action slot; giving both is an ambiguous-usage error). Five presets
-(ON_RED_PRESETS table; program paths located relative to the sentinel itself,
-following the TOOLS_DIR precedent):
-  unclog = python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json
-    (**--apply not included by default = unclog only dry-runs; a human
-    reviews, then applies; the default-dry-run rule for automatic hookups**)
-  pushci = python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch}
-    --json {emit_dir}/pushci_{run}.json --dry-run (--dry-run default = print
-    the plan only, zero side effects)
-  wash-shape = python3 -B tools/wash_shape.py --dir {src} --json
-    {emit_dir}/wash_shape_{run}.json (**--apply not in the template = shape
-    washing only produces a plan; the plan writes nothing to disk; a human
-    reviews, then applies; the same default-dry-run rule**)
-  triage = python3 -B tools/ci_triage.py --repo {repo} --run {run} --json
-    {emit_dir}/triage_{run}.json (failing events carry repo/run, substituted
-    directly into the template = re-diagnose and re-classify the same red
-    run)
-  cw-doctor = python3 -B tools/cw_doctor.py --json {emit_dir}/doctor_{run}.json
-    (no arguments = full default checkup)
-Required-argument table (PRESET_REQUIRED_ARGS, declarative):
-  {unclog:[src] · pushci:[repo_path,branch] · wash-shape:[src] ·
-  triage:[repo,run] · cw-doctor:[]}. Two placeholder families: the static
-  {src}/{repo_path}/{branch} are substituted at expansion time from
-  --on-red-arg K=V; the dynamic {family}/{run}/{repo} (= fire_on_red direct
-  event-field substitution over existing keys) are left for event
-  substitution (missing fields become the empty string, existing semantics).
-  The required-argument guard checks key by key (same fail-loud): if
-  --on-red-arg is given, the static value substitutes; if not given and the
-  key belongs to the dynamic family, event substitution applies (triage's
-  repo/run are exactly this: the failing event supplies the values; there is
-  nothing to look up at expansion time); anything else → missing, rc=2; no
-  '=' / empty K·V / duplicate keys / unknown keys (a key not in the parameter
-  surface; for a chain, the parameter surface is the union over the whole
-  chain) / an orphan --on-red-arg → 2; {emit_dir} resolves to the directory
-  of --emit (preset outputs share the disk with the event stream; --emit is
-  required, otherwise 2). A missing preset component → 9.
-Chaining: --on-red-preset is repeatable (e.g. --on-red-preset unclog
-  --on-red-preset triage) = chained, same trigger, expanded in the given
-  order; on a failing event each entry **executes in order, continue after one
-  fails** (an rc≠0/timeout on one entry is recorded explicitly but does not
-  halt later entries; side actions are not the tool's verdict surface; the
-  sentinel's exit code is unchanged); the actions log records one entry per
-  template (N chained entries = N records; same schema as a single entry);
-  --on-red-arg namespaces are shared across the chain (unknown-key checking
-  uses the union parameter surface; missing-required checks run per preset).
-  report on_red_preset = a single preset name string, or the chained name
-  list (in the given order).
+Evidence.  --selftest: thirteen canned-injection vectors + supervisor-shell
+  smoke (zero network, zero compile); suite hookup t_cw_sentinel ->
+  tests/test_cw_sentinel.py; honesty rules per CONTRIBUTING §0.
 
-Dual mode: --once (a single inspection round, then report and exit;
-workflow-step use) | --loop --interval S (long-lived; JSONL append; for
-workflow background bash tasks), --max-rounds N round cap (0 = unlimited;
---selftest vector ⑤ depends on a three-round sequence).
-
-Resilience layer: a real-urllib CI GET that meets 403/429/5xx retries with
-exponential backoff (--retry-max default 3, base 2s; a parseable Retry-After
-second count replaces the current delay; HTTP-date shapes are not guessed and
-fall back to exponential; exhausted → original error 9; 4xx semantic codes
-401/404 etc. are not retried; delay computation lives in the
-tools/_http_backoff.py pure functions shared by three tools, imported by
-same-directory sys.path injection, no __init__ package layout; injector
-canned paths never touch the real network and never retry; the
-offline-testability rule).
-Subprocess anti-hang = --subproc-timeout S (default 120s): ci_triage /
-chain_graph run_py calls kill the subprocess on timeout + fail-loud 9 naming
-the call (--timeout separately covers single HTTP requests, default 30; two
-different clocks, not merged); on-red side actions (including
---on-red-preset expansions, same executor) remain under the ON_RED_TIMEOUT
-60s cap and do not change the sentinel's exit code (the previously agreed
-convention is unchanged).
-
-Resilience layer, transport guard (protects long-lived sentinel runs against
-transport-layer crashes): ① transient transport classes
-(TRANSIENT_TRANSPORT_ERRORS = IncompleteRead / RemoteDisconnected /
-BadStatusLine / the full ConnectionError family / socket.timeout, distinct
-from the HTTPError status-code class) → bounded retry (--net-retries default
-3 attempts, backoff 5s/15s/45s = the net_backoff_delays pure function,
-inheriting the bounded-backoff semantics = a bounded table indexed by
-attempt; each attempt builds a fresh Request+urlopen and discards the
-half-read body); retries are exhausted before raising 9 (fail-loud
-preserved; after raising, ② provides the fallback); non-transient errors
-(HTTPError status-code semantics / URLError connection-establishment / other
-unknown exceptions) are never retried and propagate as-is; swallowing
-non-transient errors is forbidden.
-② loop-level fallback (skip a round rather than crash a long-lived run):
-each poll_round signal source is wrapped by poll_source_guarded exception
-handling (loop mode only) → that source skips this round + the event stream
-records {kind:source-error} (explicit, not silent); the next round retries;
-the exception path leaves the seen idempotence ledger unwritten, so the next
-round naturally re-reports (the prefer-duplicates-over-lost-events
-convention); once mode has no fallback and propagates through run_sentry
-fail-loud rc 9 (the workflow-step semantics are preserved).
-
-Exit codes: 0 = inspection completed (a failing result is data, not a tool
-  failure;
-  explicit stdout); 2 = usage error (missing mode / both modes given / all
-  three sources missing / --branch before --watch-repo / malformed repo /
-  negative arguments / once with loop-only arguments / --on-red-preset with
-  --on-red / unrecognized preset / preset arguments missing, duplicated, or
-  malformed [for a chain, unknown keys are judged on the chain-wide union
-  surface] / --emit missing / --on-red without --emit (both the plain and
-  preset paths guard this) / an orphan --on-red-arg / --emit-max-bytes must
-  be given with --emit or N<1 / --rebuild-state without --state-file);
-  9 = signal source unreachable (CI HTTP 4xx/5xx · transport-layer transient
-  retry exhaustion [--net-retries] · netrc missing · empty token · runs/jobs
-  shape errors · missing preset component · injector missing / malformed /
-  canned coverage incomplete · ledgers directory missing · state shape
-  errors · ci_triage/chain_graph subprocess rc≠0 · subprocess killed on
-  timeout [--subproc-timeout] · event-stream rotation rename failure).
-  --selftest: 0 = all pass / 2 = assertion failure.
-
-Report schema (--json; overwritten each round; rocqwash-sentinel/1):
-  {"schema","mode","round","sources"{ci[],ledgers{},buildlog{}},"events"[],
-   "actions"[] (on-red execution log),"state_file"?,"state_rebuilt"?,
-   "interval"?,"sleep_scale","ts_enabled","injector"?,"on_red_preset"?
-   (single-preset string · chained list),"emit_max_bytes"?,"emit_rotations"?}
-  events/actions elements are byte-identical to the event stream
-  (deterministic: with --sleep-scale 0, reruns on the same input are
-  byte-identical).
-
-Injector file (--injector; schema=rocqwash-sentinel-injector/1) = a canned
-API response table, offline-testable (zero real network):
-  {"schema":"rocqwash-sentinel-injector/1","responses":[
-     {"url_contains":"/actions/runs?","status":200,"body":{...workflow_runs...}},
-     {"url_contains":"/runs/178/jobs","status":200,"body":{...jobs...}}]}
-  First match in order wins; entries may be reused cyclically (the sentinel's
-  polling is idempotent, unlike pushci's steps shape, which is consumed in
-  order); a miss fails loudly with 9; the canned table must fully cover the
-  run; **never silently fall through to the real network**. The runs body
-  uses the real GitHub API shape {"total_count":N,"workflow_runs":[...]}
-  (the "runs" key is also accepted, following pushci's watch evidence shape).
-
-State file (--state-file; schema=rocqwash-sentinel-state/1): the seen
-idempotence persistence layer
-  {"repos":{"ORG/REPO":{"seen_runs":{"<id>":{conclusion,run_number,family}}}},
-   "ledgers":{"<name>":{"mtime_ns","size"}},"buildlogs":{"<path>":{"offset"}}}
-  Default None = in-memory state (a single --once round has no cross-round
-  idempotence; --loop requires it).
-Crash-recovery semantics (no silent rebuild): a corrupted state (JSON parse
-failure / malformed keys) → fail-loud 9, hard refusal; the tool neither
-swallows nor rebuilds (seen is an idempotence ledger; a silent rebuild would
-break the duplicate-event protection and re-report failing events; the original
-file is left untouched); recovery has exactly two paths: delete the file
-manually (the next round starts from zero state) or --rebuild-state explicit
-rebuild (discard the existing seen and start from zero; an explicit
-STATE-REBUILD note on stdout + report state_rebuilt=true; must be given with
---state-file, otherwise rc=2; with no state there is nothing to rebuild).
-
-Orchestration rule: ci_triage / chain_graph are always invoked as direct
-subprocesses (the same pattern as pushci's _run_py, pure logic with zero
-compilation, so cpu_guard is not applied; only real compilation needs the
-guard wrapper, per probe_engine.py); the sentinel itself does zero
-compilation and zero network (except online mode without an injector, where
-the CI path is real).
-
-Honesty rules (per CONTRIBUTING §0): accept only mechanical evidence;
-a failing result is data, not a tool failure (inspection exits 0); fail-loud, no
-silent degradation (unreachable source 9 · injector without coverage 9 ·
-subprocess rc≠0 9); zero third-party dependencies (pure stdlib); --json
-written with sort_keys; with --sleep-scale 0, reruns on the same input are
-byte-identical; zero hardcoded absolute paths
-(--netrc/--state-file/--emit/--injector all parameterized; engine components
-located relative to the sentinel itself, following the pushci TOOLS_DIR
-precedent).
+Exit-codes.  0 = inspection completed (a failing result is data, not a tool
+  failure); 2 = usage error (mode/source/argument-shape violations, --on-red
+  without --emit, orphan --on-red-arg); 9 = signal source unreachable or
+  malformed (HTTP 4xx/5xx, transport-retry exhaustion, netrc/token, shape
+  errors, injector coverage, ledgers directory missing, subprocess rc!=0 or
+  timeout, rotation rename).  --selftest: 0 = all pass, 2 = assertion fail.
 """
+
+# Extended contract (help face; kept outside the five-field block so the
+# header stays within the 30-line budget of the annotation standard):
+# companion for workflows that performs cleaning, shape washing, troubleshooting,
+# and blockage clearing: the sentinel is an inspection event stream over three
+# signal sources; classification and chain-root selection are always delegated
+# to the existing engines (zero new engines, zero reimplementation).
+#
+# Three signal sources (combinable; at least one required):
+#   ① CI path = --watch-repo ORG/REPO [--branch B]... (repeatable, multiple
+#      groups):
+#        GET /repos/{repo}/actions/runs?per_page=30 (RUNS_QUERY, same convention
+#        as pushci.py; the token comes from the ~/.netrc machine github.com
+#        line's 6th-column password; netrc_token is a same-convention copy of
+#        ci_triage.py's; tools/ has no package layout, so following the pushci
+#        precedent each tool carries its own copy; --netrc parameterized) →
+#        each new completed run (seen run ids recorded in --state-file,
+#        idempotent) → the sentinel fetches the jobs (GET
+#        .../runs/{id}/jobs?per_page=100&page=1, written to a tmp file) →
+#        subprocess ci_triage --offline (the same "real subprocess, real
+#        classification, zero network" pattern as pushci's run_triage injector
+#        mode) → run-level family/action taken from the rocqwash-ci-triage/1
+#        report → family≠none emits the event
+#        {kind:ci-red, repo, run, family, action}. The full classification
+#        authority (five families plus the all-passing state) lives in
+#        ci_triage (classification order: the ci_triage.py module docstring);
+#        the sentinel does not classify.
+#   ② Local ledger path = --watch-ledgers DIR:
+#        new probe/ledger JSON files on disk (seen by mtime+name; a changed
+#        mtime/size on the same file also counts as new) → subprocess
+#        chain_graph.py on the new file --json tmp → the first name in
+#        top_order is the TOP chain root → event {kind:blocking, top_root,
+#        dependents} (with n and the three-way self-washability; per chain_graph
+#        build_graph).
+#   ③ Local build path = --watch-buildlog FILE:
+#        tail incremental grep (byte offset recorded in state; only complete
+#        lines are matched, to avoid half-line false positives) → tokens
+#        BUILD-FAIL / EXIT=134 (family-C toolchain-break token, ci_triage.py) /
+#        Error: (family-A content-failure token, ci_triage.py) → event
+#        {kind:build-signal, hits[]}. A missing log file = compilation has not
+#        started writing; zero events, not a failure (the report notes
+#        present=false explicitly, never silently).
+#
+# Event stream: --emit FILE (JSONL append, per-line flush+fsync) + stdout mirror
+# (explicit). Event-line schema = rocqwash-sentinel-event/1; keys sort_keys;
+# line order = production order; seq is monotonic within the event stream (with
+# --emit, the baseline for cross-process continuation is the file itself plus
+# its rotated generations; by default it is monotonic within the process); a
+# consumer sorting by seq recovers the global order. ts comes from the time
+# clock; with --sleep-scale 0, ts is disabled (--selftest determinism
+# dependency) and events carry the note "ts=off".
+# JSONL rotation (--emit-max-bytes N; bounds the on-disk footprint for
+# long-lived runs): checked before each append; if the file's current bytes
+# plus the new line's bytes exceed N → rotate first, then append:
+# FILE.1→FILE.2 (an existing FILE.2 is overwritten and discarded; two
+# generations are kept) →FILE→FILE.1→new FILE empty. A single line longer than
+# N = the line cannot be split; it is written into the gap anyway (after
+# rotation a single line may still exceed the cap; the next append pre-check
+# rotates again); rotation is noted explicitly on stdout and counted in the
+# report's emit_rotations; a rename failure → 9. seq continues across
+# generations (baseline = the file plus the line counts of .1/.2; rotated
+# generations belong to the same event stream; sorting by seq recovers the
+# global order across generations).
+#
+# --on-red 'CMD template': the {family}/{run}/{repo} placeholders are
+# substituted from event fields (missing fields become the empty string) →
+# executed via a subprocess shell (60s timeout cap; rc≠0/timeout is recorded
+# explicitly in the actions log and stdout, and does not change the sentinel's
+# exit code; on-red is a side action, outside the tool's own verdict surface).
+# Requires --emit (side actions must accompany an on-disk event stream;
+# trigger evidence and the action log stay auditable; without --emit → 2; the
+# same guard as --on-red-preset). Default: none = report-only; **zero action is
+# the default** (same discipline as cure_applier's dry-run default).
+#
+# --on-red-preset NAME: preset actions for failing events (**repeatable =
+# chained**; see below); presets are template sugar: expanded into internal
+# command templates, they run through the same executor as --on-red (60s cap;
+# rc≠0/timeout recorded explicitly in the actions log; the sentinel's exit
+# code unchanged; placeholder substitution reuses the existing --on-red path;
+# zero new execution paths). Mutually exclusive with --on-red (both given →
+# rc=2 fail-loud, no silent choice; "preset wins" means a preset occupies the
+# on-red action slot; giving both is an ambiguous-usage error). Five presets
+# (ON_RED_PRESETS table; program paths located relative to the sentinel itself,
+# following the TOOLS_DIR precedent):
+#   unclog = python3 -B tools/unclog.py --src {src} --json {emit_dir}/unclog_{run}.json
+#     (**--apply not included by default = unclog only dry-runs; a human
+#     reviews, then applies; the default-dry-run rule for automatic hookups**)
+#   pushci = python3 -B tools/pushci.py --repo-path {repo_path} --branch {branch}
+#     --json {emit_dir}/pushci_{run}.json --dry-run (--dry-run default = print
+#     the plan only, zero side effects)
+#   wash-shape = python3 -B tools/wash_shape.py --dir {src} --json
+#     {emit_dir}/wash_shape_{run}.json (**--apply not in the template = shape
+#     washing only produces a plan; the plan writes nothing to disk; a human
+#     reviews, then applies; the same default-dry-run rule**)
+#   triage = python3 -B tools/ci_triage.py --repo {repo} --run {run} --json
+#     {emit_dir}/triage_{run}.json (failing events carry repo/run, substituted
+#     directly into the template = re-diagnose and re-classify the same red
+#     run)
+#   cw-doctor = python3 -B tools/cw_doctor.py --json {emit_dir}/doctor_{run}.json
+#     (no arguments = full default checkup)
+# Required-argument table (PRESET_REQUIRED_ARGS, declarative):
+#   {unclog:[src] · pushci:[repo_path,branch] · wash-shape:[src] ·
+#   triage:[repo,run] · cw-doctor:[]}. Two placeholder families: the static
+#   {src}/{repo_path}/{branch} are substituted at expansion time from
+#   --on-red-arg K=V; the dynamic {family}/{run}/{repo} (= fire_on_red direct
+#   event-field substitution over existing keys) are left for event
+#   substitution (missing fields become the empty string, existing semantics).
+#   The required-argument guard checks key by key (same fail-loud): if
+#   --on-red-arg is given, the static value substitutes; if not given and the
+#   key belongs to the dynamic family, event substitution applies (triage's
+#   repo/run are exactly this: the failing event supplies the values; there is
+#   nothing to look up at expansion time); anything else → missing, rc=2; no
+#   '=' / empty K·V / duplicate keys / unknown keys (a key not in the parameter
+#   surface; for a chain, the parameter surface is the union over the whole
+#   chain) / an orphan --on-red-arg → 2; {emit_dir} resolves to the directory
+#   of --emit (preset outputs share the disk with the event stream; --emit is
+#   required, otherwise 2). A missing preset component → 9.
+# Chaining: --on-red-preset is repeatable (e.g. --on-red-preset unclog
+#   --on-red-preset triage) = chained, same trigger, expanded in the given
+#   order; on a failing event each entry **executes in order, continue after one
+#   fails** (an rc≠0/timeout on one entry is recorded explicitly but does not
+#   halt later entries; side actions are not the tool's verdict surface; the
+#   sentinel's exit code is unchanged); the actions log records one entry per
+#   template (N chained entries = N records; same schema as a single entry);
+#   --on-red-arg namespaces are shared across the chain (unknown-key checking
+#   uses the union parameter surface; missing-required checks run per preset).
+#   report on_red_preset = a single preset name string, or the chained name
+#   list (in the given order).
+#
+# Dual mode: --once (a single inspection round, then report and exit;
+# workflow-step use) | --loop --interval S (long-lived; JSONL append; for
+# workflow background bash tasks), --max-rounds N round cap (0 = unlimited;
+# --selftest vector ⑤ depends on a three-round sequence).
+#
+# Resilience layer: a real-urllib CI GET that meets 403/429/5xx retries with
+# exponential backoff (--retry-max default 3, base 2s; a parseable Retry-After
+# second count replaces the current delay; HTTP-date shapes are not guessed and
+# fall back to exponential; exhausted → original error 9; 4xx semantic codes
+# 401/404 etc. are not retried; delay computation lives in the
+# tools/_http_backoff.py pure functions shared by three tools, imported by
+# same-directory sys.path injection, no __init__ package layout; injector
+# canned paths never touch the real network and never retry; the
+# offline-testability rule).
+# Subprocess anti-hang = --subproc-timeout S (default 120s): ci_triage /
+# chain_graph run_py calls kill the subprocess on timeout + fail-loud 9 naming
+# the call (--timeout separately covers single HTTP requests, default 30; two
+# different clocks, not merged); on-red side actions (including
+# --on-red-preset expansions, same executor) remain under the ON_RED_TIMEOUT
+# 60s cap and do not change the sentinel's exit code (the previously agreed
+# convention is unchanged).
+#
+# Resilience layer, transport guard (protects long-lived sentinel runs against
+# transport-layer crashes): ① transient transport classes
+# (TRANSIENT_TRANSPORT_ERRORS = IncompleteRead / RemoteDisconnected /
+# BadStatusLine / the full ConnectionError family / socket.timeout, distinct
+# from the HTTPError status-code class) → bounded retry (--net-retries default
+# 3 attempts, backoff 5s/15s/45s = the net_backoff_delays pure function,
+# inheriting the bounded-backoff semantics = a bounded table indexed by
+# attempt; each attempt builds a fresh Request+urlopen and discards the
+# half-read body); retries are exhausted before raising 9 (fail-loud
+# preserved; after raising, ② provides the fallback); non-transient errors
+# (HTTPError status-code semantics / URLError connection-establishment / other
+# unknown exceptions) are never retried and propagate as-is; swallowing
+# non-transient errors is forbidden.
+# ② loop-level fallback (skip a round rather than crash a long-lived run):
+# each poll_round signal source is wrapped by poll_source_guarded exception
+# handling (loop mode only) → that source skips this round + the event stream
+# records {kind:source-error} (explicit, not silent); the next round retries;
+# the exception path leaves the seen idempotence ledger unwritten, so the next
+# round naturally re-reports (the prefer-duplicates-over-lost-events
+# convention); once mode has no fallback and propagates through run_sentry
+# fail-loud rc 9 (the workflow-step semantics are preserved).
+#
+# Exit codes: 0 = inspection completed (a failing result is data, not a tool
+#   failure;
+#   explicit stdout); 2 = usage error (missing mode / both modes given / all
+#   three sources missing / --branch before --watch-repo / malformed repo /
+#   negative arguments / once with loop-only arguments / --on-red-preset with
+#   --on-red / unrecognized preset / preset arguments missing, duplicated, or
+#   malformed [for a chain, unknown keys are judged on the chain-wide union
+#   surface] / --emit missing / --on-red without --emit (both the plain and
+#   preset paths guard this) / an orphan --on-red-arg / --emit-max-bytes must
+#   be given with --emit or N<1 / --rebuild-state without --state-file);
+#   9 = signal source unreachable (CI HTTP 4xx/5xx · transport-layer transient
+#   retry exhaustion [--net-retries] · netrc missing · empty token · runs/jobs
+#   shape errors · missing preset component · injector missing / malformed /
+#   canned coverage incomplete · ledgers directory missing · state shape
+#   errors · ci_triage/chain_graph subprocess rc≠0 · subprocess killed on
+#   timeout [--subproc-timeout] · event-stream rotation rename failure).
+#   --selftest: 0 = all pass / 2 = assertion failure.
+#
+# Report schema (--json; overwritten each round; rocqwash-sentinel/1):
+#   {"schema","mode","round","sources"{ci[],ledgers{},buildlog{}},"events"[],
+#    "actions"[] (on-red execution log),"state_file"?,"state_rebuilt"?,
+#    "interval"?,"sleep_scale","ts_enabled","injector"?,"on_red_preset"?
+#    (single-preset string · chained list),"emit_max_bytes"?,"emit_rotations"?}
+#   events/actions elements are byte-identical to the event stream
+#   (deterministic: with --sleep-scale 0, reruns on the same input are
+#   byte-identical).
+#
+# Injector file (--injector; schema=rocqwash-sentinel-injector/1) = a canned
+# API response table, offline-testable (zero real network):
+#   {"schema":"rocqwash-sentinel-injector/1","responses":[
+#      {"url_contains":"/actions/runs?","status":200,"body":{...workflow_runs...}},
+#      {"url_contains":"/runs/178/jobs","status":200,"body":{...jobs...}}]}
+#   First match in order wins; entries may be reused cyclically (the sentinel's
+#   polling is idempotent, unlike pushci's steps shape, which is consumed in
+#   order); a miss fails loudly with 9; the canned table must fully cover the
+#   run; **never silently fall through to the real network**. The runs body
+#   uses the real GitHub API shape {"total_count":N,"workflow_runs":[...]}
+#   (the "runs" key is also accepted, following pushci's watch evidence shape).
+#
+# State file (--state-file; schema=rocqwash-sentinel-state/1): the seen
+# idempotence persistence layer
+#   {"repos":{"ORG/REPO":{"seen_runs":{"<id>":{conclusion,run_number,family}}}},
+#    "ledgers":{"<name>":{"mtime_ns","size"}},"buildlogs":{"<path>":{"offset"}}}
+#   Default None = in-memory state (a single --once round has no cross-round
+#   idempotence; --loop requires it).
+# Crash-recovery semantics (no silent rebuild): a corrupted state (JSON parse
+# failure / malformed keys) → fail-loud 9, hard refusal; the tool neither
+# swallows nor rebuilds (seen is an idempotence ledger; a silent rebuild would
+# break the duplicate-event protection and re-report failing events; the original
+# file is left untouched); recovery has exactly two paths: delete the file
+# manually (the next round starts from zero state) or --rebuild-state explicit
+# rebuild (discard the existing seen and start from zero; an explicit
+# STATE-REBUILD note on stdout + report state_rebuilt=true; must be given with
+# --state-file, otherwise rc=2; with no state there is nothing to rebuild).
+#
+# Orchestration rule: ci_triage / chain_graph are always invoked as direct
+# subprocesses (the same pattern as pushci's _run_py, pure logic with zero
+# compilation, so cpu_guard is not applied; only real compilation needs the
+# guard wrapper, per probe_engine.py); the sentinel itself does zero
+# compilation and zero network (except online mode without an injector, where
+# the CI path is real).
+#
+# Honesty rules (per CONTRIBUTING §0): accept only mechanical evidence;
+# a failing result is data, not a tool failure (inspection exits 0); fail-loud, no
+# silent degradation (unreachable source 9 · injector without coverage 9 ·
+# subprocess rc≠0 9); zero third-party dependencies (pure stdlib); --json
+# written with sort_keys; with --sleep-scale 0, reruns on the same input are
+# byte-identical; zero hardcoded absolute paths
+# (--netrc/--state-file/--emit/--injector all parameterized; engine components
+# located relative to the sentinel itself, following the pushci TOOLS_DIR
+# precedent).
+
 import argparse
 import datetime
 import http.client
