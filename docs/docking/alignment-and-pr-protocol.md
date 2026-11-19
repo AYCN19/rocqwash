@@ -1,11 +1,25 @@
-# Alignment and PR protocol / 对齐与 PR 协议（双闸·判例版）
+# Alignment and PR protocol
 
-> Status: canonical protocol (20261116/17 user orders, encoded from five live work stream
-> executions on the receiver side). Quote; do not restate.
+> Purpose.  The canonical alignment and PR protocol for construction work
+>   streams on the receiver side: Gate A before PR assembly, Gate B when CI
+>   goes green on your integration, the red discipline, and the known
+>   structural gaps. Encoded from five live work stream executions per the
+>   user orders of November 16–17, 2026. Quote; do not restate.
+> Interface.  Markdown prose face for construction agents and reviewers;
+>   read together with `recursive-evolution-paradigm.md` (the enforced laws)
+>   and `../templates/pr-body-template.md` (the PR preamble).
+> Dependencies.  `git` (fetch, re-base, cherry-pick, merge-base),
+>   `certify/frozen8.py`, `tools/doc_lint.py`, `tools/axiom_guard.py`,
+>   `ci.yml`. No execution surface of its own.
+> Evidence.  Each gate step names its exact command form (fetch retry with
+>   backoff, `git rev-list --reverse <base>..<tip>` verification, anchor
+>   re-check); the structural-gap register carries its cure candidates.
+> Exit-codes.  Not applicable (prose face); the tools it cites keep their
+>   own 0/1/2/9 exit-code contracts.
 
-## Gate A — before PR assembly / 组装前对齐闸
+## Gate A — before PR assembly
 
-After your seats finish and before `git push`:
+After your agents finish and before `git push`:
 
 1. `git fetch origin main` (retry 4× with growing backoff; a connection reset is a
    transient window, not a verdict).
@@ -19,7 +33,7 @@ After your seats finish and before `git push`:
 Rationale: squash landings move main constantly (this repo's steward line lands in
 minutes), and a stale head produces a noise PR that re-reviews already-landed content.
 
-## Gate B — when CI goes green on your integration / CI 绿后对齐与校验闸
+## Gate B — when CI goes green on your integration
 
 When the CI on your PR head (or on main after a merge) goes green:
 
@@ -33,7 +47,7 @@ When the CI on your PR head (or on main after a merge) goes green:
    ancestor of main after any integration — judge by content relation, not sha ancestry, and
    re-base before a successor work stream so its PR carries only its own diff.
 
-## Red discipline / 红的纪律
+## Red discipline
 
 - Red on main = do not rush. The self-heal workflow repairs mechanical reds; its own
   green is the "repair in progress" signal.
@@ -43,7 +57,7 @@ When the CI on your PR head (or on main after a merge) goes green:
 - If the red is the frozen8 git-anchor DRIFT line with all four reconciliation faces
   green: it is the squash×freeze-commit structural gap (below), cure = re-sign per SOP.
 
-## Known structural gaps / 已登记结构间隙（候裁·不预决）
+## Known structural gaps (registered · under ruling)
 
 1. **Squash × freeze-commit**: every squash integration moves HEAD past `freeze_commit` and
    re-triggers the anchor check until a re-sign lands. Cure candidates: automerge-gate

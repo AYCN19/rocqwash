@@ -1,21 +1,32 @@
-# Recursive-evolution paradigm / 递归式演进范式（推导版·公理链）
+# Recursive-evolution paradigm
 
-> **Status / 状态**: canonical paradigm document (derived form · axioms → theorems →
-> components). Quote this file; do not restate it ad hoc. Canonical per the
-> single-source discipline (see `docs/license-protocol-v1.0-20261114.md` §7 for the
-> disclosure analogue).
+> Purpose.  The canonical paradigm document, derived form (axioms →
+>   theorems → components): the constitutional axioms S1–S5, the Φ/Φ\*
+>   structure, the derivation theorems, the laws enforced on every work
+>   stream, and the registered structural gaps. Quote this file; do not
+>   restate it ad hoc.
+> Interface.  Markdown prose face; the disclosure analogue follows the
+>   single-source discipline (`docs/license-protocol-v1.0-20261114.md` §7).
+> Dependencies.  `tools/axiom_guard.py` and `tools/norm_lint.py` (the
+>   fitness-law gates), `tests/test_destructive_matrix.py`,
+>   `certify/frozen8.py`, `ci.yml`; `alignment-and-pr-protocol.md` for the
+>   alignment law; `docs/license-protocol-v1.0-20261114.md` §7 for the
+>   disclosure wording. No execution surface of its own.
+> Evidence.  Each theorem and law names the component or face that realizes
+>   it; the axioms are constitutional and not amendable by any agent.
+> Exit-codes.  Not applicable (prose face).
 
-## Axioms (constitutional · not amendable by any agent) / 公理（宪法层）
+## Axioms (constitutional · not amendable by any agent)
 
 | # | Axiom | Meaning |
 |---|---|---|
-| S1 | Self-accounting / 自施律 | every state change is ledgered; "done but unrecorded" does not exist |
-| S2 | Layer law / 层律 | data-layer proposals auto-admit after one human first-admission per class (乙档); code-layer changes go through the gated round face (human point-order); certification faces are never auto-touched; the constitutional layer is human-only |
-| S3 | Gap law / 缺口律 | the throttle is the measured gap count; no measured gaps → no round opens (no padding, no invented work) |
-| S4 | Judge-executor separation / 判执分立 | the measurer never approves its own fix |
-| S5 | Inheritance law / 遗传律 | every landed face carries its provenance and constraints forward |
+| S1 | Self-accounting | every state change is ledgered; "done but unrecorded" does not exist |
+| S2 | Layer law | data-layer proposals auto-admit after one human first-admission per class (tier B); code-layer changes go through the gated round face (human point-order); certification faces are never auto-touched; the constitutional layer is human-only |
+| S3 | Gap law | the throttle is the measured gap count; no measured gaps → no round opens (no padding, no invented work) |
+| S4 | Judge-executor separation | the measurer never approves its own fix |
+| S5 | Inheritance law | every landed face carries its provenance and constraints forward |
 
-## Structure / 结构
+## Structure
 
 Φ (one pass) = cluster gaps → render candidate rows → [human point-order] → admit →
 verify (fitness gate) → land as a ledgered round. **Φ\* (recursion) = Φ re-entering
@@ -23,7 +34,7 @@ itself**, driven by: a trigger that opens rounds on measured gaps; fuel (interna
 bus feeding + external sweep); and a learning edge (calibration → render scheduling) so
 round N+1 makes better predictions than round N.
 
-## Theorems (the derivation that chose the components) / 定理
+## Theorems (the derivation that chose the components)
 
 - **A (re-enterability)**: Φ having run once is a one-shot event; recursion requires a
   trigger that re-opens rounds without a human re-ignition. The trigger (scheduler lite)
@@ -37,7 +48,7 @@ round N+1 makes better predictions than round N.
 - **E (domain boundary)**: recursion currently spans the Lean/Python world; the Coq-side
   survey defines the D-stage expansion quote.
 
-## Laws this repo enforces on every work stream / 全波强制法
+## Laws this repo enforces on every work stream
 
 1. **Alignment law**: align with origin/main before construction, again immediately
    before PR assembly, and after CI goes green on your integration (squash landings move main
@@ -54,7 +65,7 @@ round N+1 makes better predictions than round N.
 5. **Single-source wording**: disclosure and signature language quote
    `docs/license-protocol-v1.0-20261114.md` §7 verbatim (three sanctioned slots only).
 
-## Known structural gaps (registered · under ruling) / 已登记结构间隙
+## Known structural gaps (registered · under ruling)
 
 - **Squash × freeze-commit**: every squash integration moves HEAD past `freeze_commit` and
   re-triggers the git-anchor check until a re-sign lands (re-sign = canonical
