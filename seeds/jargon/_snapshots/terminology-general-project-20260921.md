@@ -1,5 +1,11 @@
 # 通用术语表（项目级 · **唯一维护点**）
 
+> Purpose.  In-repo byte snapshot of the external paper-track authority: the project-level glossary whose cross-track row quotes the jargon seed cites (no standard cell is taken from this source in the seed). Everything below this header block is the authority text itself (Chinese semantic data, quoting the banned faces by design); it is never edited in place.
+> Interface.  Data face, read-only. Consumed as provenance source 3 of `seeds/jargon/jargon-map.json` (md5 pin over CRLF-to-LF normalized bytes); no tool applies rewrites to this face.
+> Dependencies.  The external upstream original (its path is recorded in the seed JSON provenance; present only on the canonical machine), `seeds/jargon/jargon-map.json`, `tests/t_engines_seeds.py`, `tools/jargon_map_sync.py` (zero-write plan), and the `.gitattributes` EOL normalization law.
+> Evidence.  Consistency layer: `python3 -I tests/t_engines_seeds.py` verifies the normalized snapshot bytes against the pinned md5 (segment snapshot-md5). Freshness layer: canonical-only, a declared SKIP when the upstream original is absent off-canonical.
+> Exit-codes.  Defines none of its own (data face); consumers keep their own contracts (`tests/t_engines_seeds.py`: 0 no FAIL, 1 at least one FAIL; `tools/jargon_map_sync.py` plan mode: 0 IN-SYNC, 1 PENDING).
+
 **版本**：2026-09-21　**适用**：本项目全部论文（正式版／规范版）
 **维护规则**：**术语的新增与修订只改本文件**；各篇正文的术语表由本文件**派生**（公共项逐字复制 ＋ 该篇专属项），并在表下标注同源声明。**（20261109 降档：公共项派生模型对**新文**废止——新文术语表只收**自设记号与缩写**的索引·社区与工具链固有术语按标准含义直接使用不再定义·见 §1 规则 0；本表转为治理裁决与沿革记录面，存量各篇候批不追溯。）**
 
