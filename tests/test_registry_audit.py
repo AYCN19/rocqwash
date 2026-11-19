@@ -1,29 +1,48 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_registry_audit.py — tools/registry_audit.py 自测壳（tests/·20261112
-v46 集成席挂接·缺壳自补——器由铸席铸·总套挂接归集成席）
+"""test_registry_audit.py — minimal selftest shell for tools/registry_audit.py
+(rocqwash tests/).
 
-注册册卫生审计器（order.txt/_CoqProject 双册只读四账出账：重复行/锚撞文本/
-顺序号形/形怪/缺锚/孤儿/live 拓扑引用＋--fix-plan 确定性处方零写盘·--apply
-不存在·键式/锚正典直用 tools/registry_union.py 零重造·病灶是数据恒 exit 0·
-schema rocqwash-registry-audit/1）挂接件：器自带 --selftest tmp 合成 v35
-真账形态矢量组（四账判类全谱/处方保首＋77c2b9a8 md5 冻结向量＋占位/只读
-实证双册与 live 树前后 md5 恒同/确定性重跑字节恒同/--git 直读 tmp clone＋
-坏 ref 9/CLI 四码——registry_audit.py --selftest 矢量表自述·零触真仓零网络
-零编译）已由铸席自证，本壳接进套件总入口并加用法面冒烟：
-  1 --selftest rc=0 且 stdout 含 "REGISTRY-AUDIT-SELFTEST PASS" 冻结标记
-  2 --help rc=0（argparse 用法面在位）
-  3 退出码口径抽验：--bogus rc=2／无输入面 rc=2／半册 rc=2／缺册文件
-    rc=9（器口径 0=出账·病灶是数据 count>0 仍 0；2=用法错；9=输入缺）
+Purpose.  Wire the registry hygiene auditor `tools/registry_audit.py` into
+  the suite entry point (tests/run_tests.sh, lane `t_registry_audit`) and
+  smoke its usage faces; the auditor itself (four read-only audits over
+  the order.txt/_CoqProject book pair, findings are data) is attested by
+  its own --selftest, so this shell adds no vectors.
 
-用法：
-  python3 tests/test_registry_audit.py    # 套件内经 run_tests.sh 调
-  python3 -B tests/test_registry_audit.py # 手动（-B 禁 __pycache__）
+Interface.  python3 tests/test_registry_audit.py    # suite lane
+  (tests/run_tests.sh); python3 -B tests/test_registry_audit.py    # manual
+  (-B keeps __pycache__ off).  Check 1: --selftest exits 0 and stdout
+  carries the frozen marker "REGISTRY-AUDIT-SELFTEST PASS"; check 2:
+  --help exits 0 (the argparse usage face is present); check 3: exit-code
+  sampling -- --bogus rc=2, no input form rc=2, one book of the pair
+  missing rc=2, both book files missing rc=9.
 
-零触律：--selftest 全 mkdtemp 自写自清（tmp 合成双册＋tmp clone）；本壳三判
-零写盘零网络零编译零触真仓；python3 -B 禁 __pycache__。退出码：0=三判全过；
-1=任一红（fail-loud 响亮列红·禁静默）。
+Dependencies.  Python 3 standard library only (os, subprocess, sys); runs
+  tools/registry_audit.py as a subprocess; zero network, zero compilation,
+  zero repository writes (the selftest fixtures are synthetic tmp files
+  plus a tmp clone, self-cleaning).
+
+Evidence.  The auditor's --selftest vector group attests the audit behavior
+  (vector roster in the extended contract comment below); this shell
+  re-asserts the marker and usage faces every suite run (wired in
+  November 12, 2026).
+
+Exit-codes.  0 = all three checks pass; 1 = at least one check failing
+  (the failing checks are listed loudly, never silent).
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).  The auditor's
+# --selftest vector roster, run by the tool itself, offline, zero network,
+# zero compilation: the full finding-class spectrum (duplicate rows,
+# anchor-text collisions, seq-form and malformed anchors, missing anchors,
+# cross-book orphans, live topology) on tmp synthetic v35-ledger-shape
+# fixtures; the deterministic --fix-plan with keep-first rows; the frozen
+# registry_union md5 vector 77c2b9a8; placeholder and read-only proofs
+# (book pair and live tree md5 unchanged before/after); byte-identical
+# reruns; the --git form on a tmp clone (bad ref exits 9); CLI exit codes.
+# Report schema rocqwash-registry-audit/1.
+
 import os
 import subprocess
 import sys
@@ -34,7 +53,8 @@ MARK = "REGISTRY-AUDIT-SELFTEST PASS"
 
 
 def run(args):
-    """子进程跑审计器（stdout+stderr 合流·零写盘零网络零编译）。"""
+    """Run the auditor as a subprocess (merged stdout+stderr; zero writes,
+    zero network, zero compilation)."""
     p = subprocess.run([sys.executable, "-B", TOOL] + args,
                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     return p.returncode, p.stdout.decode("utf-8", errors="replace")
@@ -44,11 +64,11 @@ def main():
     fails = []
     rc, out = run(["--selftest"])
     if rc != 0 or MARK not in out:
-        fails.append("判1 --selftest 应 rc=0 且含 %r（实测 rc=%d）" % (MARK, rc))
+        fails.append("check 1: --selftest expected rc=0 with %r in stdout (observed rc=%d)" % (MARK, rc))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:
-        fails.append("判2 --help 应 rc=0（实测 rc=%d）" % rc)
+        fails.append("check 2: --help expected rc=0 (observed rc=%d)" % rc)
         print(out)
     rc_b, _o = run(["--bogus"])
     rc_e, _o = run([])
@@ -57,9 +77,8 @@ def main():
     rc_m, _o = run(["--order", os.path.join(REPO, "no-such-order.txt"),
                     "--project", os.path.join(REPO, "no-such-project.txt")])
     if not (rc_b == 2 and rc_e == 2 and rc_h == 2 and rc_m == 9):
-        fails.append("判3 退出码口径应 bogus=2/无输入面=2/半册=2/缺册=9"
-                     "（实测 %d/%d/%d/%d）" % (rc_b, rc_e, rc_h, rc_m))
-    print("== test_registry_audit: %d 过 / %d 红 ==" % (3 - len(fails), len(fails)))
+        fails.append("check 3: exit codes expected bogus=2 / no input form=2 / one book of the pair=2 / both books missing=9 (observed %d/%d/%d/%d)" % (rc_b, rc_e, rc_h, rc_m))
+    print("== test_registry_audit: %d passing / %d failing ==" % (3 - len(fails), len(fails)))
     for f in fails:
         print("FAIL:", f)
     return 1 if fails else 0

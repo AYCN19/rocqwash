@@ -1,28 +1,54 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""test_recipe_enbig7_pw1.py — recipes/ENBIG7_same_domain_collision_PW1.md 处方件自测
-（tests/·巡检打磨轮·agent rqsup4·20261101）
+"""test_recipe_enbig7_pw1.py — selftest for the recipe face
+recipes/ENBIG7_same_domain_collision_PW1.md (rocqwash tests/; five checks,
+precedent-anchored; check roster in the extended contract comment below).
 
-五课件③【dver2-enbig7 同域撞·私占世界重建 PW1】：越界席写穿他席独占写域→世界面
-置换/污染；处方＝仲裁收敛→待静（入侵期产物不采）→全量重审计→私占世界按 order.txt
-链序 born→三度 md5 复断。判例源：seat_dver2/账/collision_enbig7_20261031.md
-（主会话仲裁 36c35816·25/25 对源断言·24 链件链序 born 全 rc=0·三度复断零篡改）。
+Purpose.  Guard the ENBIG7 same-domain-collision recipe (PW1) in the tree:
+  the recipe face must stay present with its precedent anchor word face
+  complete, the collision-precursor machine check must keep failing a
+  duplicate module claim, and the world base assertions must keep their
+  judgment on the private-world rebuild — a substituted world intercepted,
+  a certified-generation world passing with the pass-through engine really
+  running — with the frozen engine md5 re-asserted against the registered
+  value.
 
-  1 处方件在册  recipes/ENBIG7_same_domain_collision_PW1.md 在盘且判例锚词面齐
-                （PW1／collision_enbig7_20261031／36c35816／wait for quiet／
-                 full re-audit／私占世界／chain order／three re-assertions／
-                 never adopted／anchor must move）
-  2 前兆负例    【判例 enbig7 形】同一模块名出现在 ≥2 份批选清单 → select_audit
-                DUP-CROSS failing rc 1（撞名前兆机检·tools/select_audit.py）
-  3 世界偏斜负例【入侵置换形】fixture 世界 .vo 被置换（≠认证代锚）→ world_hook
-                WDIFF→rc 9·洗引擎未跑零落盘（wash/world_hook.py·-- 透传形）
-  4 愈面正判    【私占重建后形】fixture 世界按现拍认证代锚全等 → WORLD-BASE-OK
-                rc 0·透传形引擎真跑落盘（锚=现拍 md5·锚必随代换的机械同构）
-  5 冻结旁证    wash/wash_engine.py md5 == 在册冻结值 664446bc…（只读 import 面零触）
+Interface.  python3 -B tests/test_recipe_enbig7_pw1.py; suite lane
+  `t_recipe_pw1` (tests/run_tests.sh).
 
-幂等：临时目录即写即清·零仓库写盘·零编译零网络（世界基断言为纯 md5 differential comparison）。
-退出码：0=五判全过；1=任一红。
+Dependencies.  Python 3 standard library only; zero network, zero
+  compilation, zero repository writes; fixtures live in a mkdtemp directory
+  removed in finally; the world base assertions are a pure md5 differential
+  comparison; the frozen engine is imported read-only.
+
+Evidence.  The guarded recipe face documents the dver2-enbig7 same-domain
+  collision: arbitration 36c35816; 25/25 md5 assertions; 24 chain pieces
+  born rc=0; three zero-tampering re-assertions; documented November 1,
+  2026, by agent `rqsup4` (the inspection polish round).  RECIPE_ANCHORS
+  moves in lockstep with the recipe face (the anchor-must-move rule).
+
+Exit-codes.  0 = all five checks pass; 1 = any check failing.
 """
+
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard).  The five checks,
+# in execution order:
+#   1 recipe present + RECIPE_ANCHORS anchor word face complete
+#   2 precursor negative (the enbig7 precedent shape): the same module name
+#     in two selection lists fails DUP-CROSS rc 1 (collision-precursor
+#     machine check, tools/select_audit.py)
+#   3 world-skew negative (the invasion-substitution shape): a fixture .vo
+#     substituted against its certified-generation anchor reports WDIFF
+#     rc 9 and the sanitize engine never runs, zero writes (wash/world_hook.py
+#     pass-through form)
+#   4 cured-face positive (the private-world-rebuilt shape): a fixture world
+#     md5-equal to its certified-generation anchors passes WORLD-BASE-OK
+#     rc 0 and the pass-through engine really runs and writes (anchors =
+#     current-snapshot md5; the anchor-must-move rule in mechanical form)
+#   5 frozen collateral: wash/wash_engine.py md5 equals the registered
+#     frozen value 664446bc... (read-only import, zero touch)
+# Idempotence: the temp directory is written and cleaned in the same run;
+# zero repository writes, zero compilation, zero network.
 import hashlib
 import io
 import json
@@ -36,7 +62,7 @@ RECIPE = os.path.join(REPO, "recipes", "ENBIG7_same_domain_collision_PW1.md")
 HOOK = os.path.join(REPO, "wash", "world_hook.py")
 AUDIT = os.path.join(REPO, "tools", "select_audit.py")
 ENGINE = os.path.join(REPO, "wash", "wash_engine.py")
-ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # 更新账.md §三在册值
+ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # registered frozen value (`更新账.md` section 3)
 
 RECIPE_ANCHORS = [
     "PW1", "collision_enbig7_20261031", "36c35816",
@@ -70,7 +96,7 @@ def main():
 
     tmp = tempfile.mkdtemp(prefix="rocqwash_trecipepw1_")
     try:
-        # 1 处方件在册＋判例锚词面齐
+        # check 1: recipe present + anchor word face complete
         ok1 = os.path.isfile(RECIPE)
         missing = []
         if ok1:
@@ -80,25 +106,28 @@ def main():
             ok1 = not missing
         else:
             missing = ["<处方件整缺>"]
-        check("处方件锚词面", ok1, "缺锚=%s" % missing)
+        check("处方件锚词面", ok1, "missing=%s" % missing)
 
-        # 2【前兆负例·enbig7 判例形】同件双认领 → DUP-CROSS failing rc 1
+        # check 2 (precursor negative, the enbig7 precedent shape): the same
+        # piece claimed twice -> DUP-CROSS failing rc 1
         order = os.path.join(tmp, "order.txt")
         with io.open(order, "w", encoding="utf-8") as fh:
             fh.write("S03_QExp.v#R0-d66910\nDver2_Target.v#R28-f09c39\n")
         b1 = os.path.join(tmp, "b_dver2.txt")
         b2 = os.path.join(tmp, "b_enbig7.txt")
         with io.open(b1, "w", encoding="utf-8") as fh:
-            fh.write("Dver2_Target.v\n")  # dver2 席批选
+            fh.write("Dver2_Target.v\n")  # the dver2 agent's selection
         with io.open(b2, "w", encoding="utf-8") as fh:
-            fh.write("Dver2_Target.v\n")  # enbig7 席同件认领（越界前兆）
+            fh.write("Dver2_Target.v\n")  # the enbig7 agent claims the same piece (out-of-bounds precursor)
         p = run([sys.executable, "-B", AUDIT, "--order", order,
                  "--select", b1, "--select", b2])
         check("前兆负例_DUP-CROSS", p.returncode == 1 and "DUP-CROSS" in p.stdout,
               "rc=%d out=%s" % (p.returncode, p.stdout[:200]))
 
-        # 3/4 共用夹具：私占世界（五锚现拍=认证代·world_hook 内置五锚名齐）
-        # 与入侵置换世界（同表 S01 被置换旧代体·余四锚同值）
+        # shared fixtures for checks 3/4: the private world (five anchors
+        # snapshotted = certified generation; the five world_hook
+        # BUILTIN_ANCHORS names) and the invaded world (same table, S01
+        # replaced by a stale-generation body, the other four anchors unchanged)
         src_v = os.path.join(tmp, "vec.v")
         with io.open(src_v, "w", encoding="utf-8", newline="") as fh:
             fh.write("Lemma vec_a : forall x : nat, x = x.\nProof.\n  intros x. reflexivity.\nQed.\n")
@@ -110,8 +139,8 @@ def main():
             json.dump(ledger, fh)
 
         ANCHOR_NAMES = ["EntropyUnsatMark", "S01_BaseRing", "S02_CauchyComplete",
-                        "S03_QExp", "UpReqLpoEquiv"]  # world_hook BUILTIN_ANCHORS 五名
-        world = os.path.join(tmp, "world_pw1")      # 私占重建后形：五锚现拍=认证代
+                        "S03_QExp", "UpReqLpoEquiv"]  # the five world_hook BUILTIN_ANCHORS names
+        world = os.path.join(tmp, "world_pw1")      # private-world-rebuilt shape: five anchors snapshotted = certified generation
         os.makedirs(world)
         anchor_args = []
         for k, name in enumerate(sorted(ANCHOR_NAMES)):
@@ -119,7 +148,7 @@ def main():
                 fh.write(("CERTIFIED-GEN-VO-%02d-%s\n" % (k, name)).encode())
             anchor_args += ["--anchor", "%s=%s" % (name, md5_of(os.path.join(world, name + ".vo")))]
 
-        world_inv = os.path.join(tmp, "world_invaded")  # 入侵置换形：S01 同件旧代体
+        world_inv = os.path.join(tmp, "world_invaded")  # invasion-substitution shape: S01 replaced by its stale-generation body
         os.makedirs(world_inv)
         for name in sorted(ANCHOR_NAMES):
             body = b"INVADER-STALE-VO\n" if name == "S01_BaseRing" \
@@ -129,7 +158,8 @@ def main():
 
         out_v = os.path.join(tmp, "vec_washed.v")
 
-        # 3【世界偏斜负例·入侵置换形】错代世界 → S01 WDIFF rc 9·引擎未跑零落盘
+        # check 3 (world-skew negative, the invasion-substitution shape): the
+        # wrong-generation world -> S01 WDIFF rc 9, engine not run, zero writes
         p = run([sys.executable, "-B", HOOK, "--world", world_inv]
                 + anchor_args + ["--",
                                  "--file", src_v, "--patch", ledger_p, "--out", out_v])
@@ -137,7 +167,8 @@ def main():
               p.returncode == 9 and "WDIFF" in p.stdout and not os.path.exists(out_v),
               "rc=%d out=%s" % (p.returncode, p.stdout[:200]))
 
-        # 4【愈面正判·私占重建后形】认证代世界 → WORLD-BASE-OK·透传引擎真跑
+        # check 4 (cured-face positive, the private-world-rebuilt shape): the
+        # certified-generation world -> WORLD-BASE-OK, the pass-through engine really runs
         p = run([sys.executable, "-B", HOOK, "--world", world]
                 + anchor_args + ["--",
                                  "--file", src_v, "--patch", ledger_p, "--out", out_v])
@@ -146,7 +177,8 @@ def main():
               and os.path.isfile(out_v),
               "rc=%d out=%s" % (p.returncode, p.stdout[:200]))
 
-        # 5 冻结旁证：引擎 md5 仍=在册冻结值（只读 import 面零触）
+        # check 5 (frozen collateral): engine md5 still equals the registered
+        # frozen value (read-only import, zero touch)
         check("冻结件零触", md5_of(ENGINE) == ENGINE_FROZEN_MD5,
               "md5=%s" % md5_of(ENGINE))
 
@@ -154,10 +186,12 @@ def main():
         for name, ok, detail in checks:
             print("  %-22s %s %s" % (name, "PASS" if ok else "FAIL", detail if not ok else ""))
         if fails:
-            print("TEST-RECIPE-PW1 FAIL: %d/%d 红" % (len(fails), len(checks)))
+            print("TEST-RECIPE-PW1 FAIL: %d/%d failing" % (len(fails), len(checks)))
             return 1
-        print("TEST-RECIPE-PW1 PASS: 处方件锚/前兆DUP-CROSS/偏斜WDIFF拦截/"
-              "愈面WORLD-BASE-OK/冻结旁证 五判全过（五课件③同域撞私占世界处方）")
+        print("TEST-RECIPE-PW1 PASS: recipe anchors / precursor DUP-CROSS / skew "
+              "WDIFF interception / cured WORLD-BASE-OK / frozen collateral — all "
+              "five checks pass (lesson 3 of the five-lesson ledger: same-domain "
+              "collision private-world rebuild PW1)")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
