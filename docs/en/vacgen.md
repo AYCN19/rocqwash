@@ -1,5 +1,11 @@
 # vacgen: Vacuity Probe Skeleton Generator
 
+> Purpose.  Documents `tools/vacgen.py`, the vacuity probe skeleton generator: the four-account probe package it casts for a Lean artifact's headline theorem, the expected-red contract of the refutation spectrum, the coverage lower-bound semantics, the taxonomy lookup chain, and the deployment environment constants.
+> Interface.  Document face. Documents the v1 CLI face `python -I tools/vacgen.py --in <statement-face.lean> --out <output-dir>` and the coverage preflight `python -I tools/vacgen.py --preflight-all --census <census.json> --root <clone> [--report <difficulty-map.json>]`; the taxonomy chain (`--taxonomy`, then `VACGEN_TAXONOMY`, then a `taxonomy.json` beside the tool, then the builtin starter row) and the three deployment constants `ROCWASH_LEAN_WORKTREE`, `LAKE`, `MATHLIB_PIN`.
+> Dependencies.  `tools/vacgen.py` (Python 3 standard library only, zero network, zero compile, runs under `python -I`), `docs/vacgen_sop.md` (the operating procedure and the five-grade verdict law), `tools/vacgen_env_note.md` (the deployment environment constants note), and the tests `tests/t_vacgen_shape.py`, `tests/t_vacgen_expectedred.py`.
+> Evidence.  The test-surface section pins the claims: `tests/t_vacgen_shape.py` asserts the four-account skeleton layout and `tests/t_vacgen_expectedred.py` pins the expected-red contract in three checks (its Lean compile leg is a design-SKIP and never compiles); the related documents are listed at the end of this page.
+> Exit-codes.  Not applicable to a document face; the rc semantics described here (a probe red on `falsify_*` faces is the expected verdict) are the implemented contract pinned by `tests/t_vacgen_expectedred.py`.
+
 `tools/vacgen.py` casts a four-account vacuity probe package for the headline
 theorem of a Lean artifact. It recognizes the shape of the statement's premise
 face, transcribes it verbatim into a set of probe skeletons, and grades what

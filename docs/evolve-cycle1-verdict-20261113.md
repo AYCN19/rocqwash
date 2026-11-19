@@ -1,4 +1,10 @@
-# evolve cycle-1 verdict (20261113)
+# evolve cycle-1 verdict
+
+> Purpose.  Verdict record of the evolve loop's cycle 1: the executed candidate C1, its split-lane diagnosis, the classification decision, and the cycle-2 guidance it produced.
+> Interface.  Document face (a record, not executable). Read alongside the cycle-1 candidate draft `docs/evolve-draft-cycle1-20261113.md`; the classification feeds back into the evolve engine's candidate scoring, and the cycle-2 guidance feeds the next draft round.
+> Dependencies.  The cycle-1 candidate draft cited in the Interface field, and the evolve engine `tools/evolve.py` (the harvest→derive→draft pipeline that produces such candidates); the CI evidence named in the Verdict heading.
+> Evidence.  The evidence sources are cited inline: the CI job log (job `131383951644`) and the CI run record (run `43275862117`); the split-lane facts are transcribed from that evidence (the macOS observation lane fully green, the Windows cold-build lane red with `COQCHK_EXIT=1`).
+> Exit-codes.  Not applicable to a document face.
 
 ## Executed candidate
 

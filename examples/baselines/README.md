@@ -1,101 +1,63 @@
-# examples/baselines/ — 堵账基线入仓规程 / Baseline intake protocol
+# examples/baselines/README.md — blockage-record baseline intake protocol
 
-（中文）本目录收 rocqwash **真树堵账基线**（`tools/unclog.py --audit` 产）及其
-对比规程。基线是**数据**不是器红：红账/墙账在册即战况实录，degraded 是回退
-信号不是工具故障。产账纪律、命名律、对比判读全在本页。
+> Purpose.  The intake and comparison protocol for this directory's real-tree blockage-record baselines (produced by `tools/unclog.py --audit`, schema `rocqwash-unclog/1` audit form): what a baseline is, the file-naming law, how a baseline is produced, the timing-segment caveat, the two-account comparison reading, and the discipline constraints.
+> Interface.  Document face (protocol, not executable). Governs the `audit-<domain>-<yyyymmdd>.json` naming law, the `python3 tools/unclog.py --src <source-tree-root> --audit` production command, and the `python3 tools/baseline_diff.py OLD.json NEW.json` comparison command with its `rocqwash-baseline-diff/1` schema and four-state verdict; the companion page [`perf-README.md`](perf-README.md) governs the speed axis (the probe profile).
+> Dependencies.  The documented tool faces `tools/unclog.py`, `tools/baseline_diff.py`, `wash/probe_engine.py` (probe collection), `tools/cpu_guard.sh` (thermal guard, per the companion profile protocol), and the baseline files of this directory; no runtime dependency of its own.
+> Evidence.  The audit form, the md5 zero-write self-check, the `no-chain-root` entry rule, the `excluded_fields=["timing"]` comparer rule, and the exit-code contract are transcribed from the documented tool faces (`tools/unclog.py`, `tools/baseline_diff.py`) and re-stated by the sibling [`perf-README.md`](perf-README.md) protocol. The original Chinese text is preserved in the sibling `README.md.zh.md` archive.
+> Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit codes unchanged (0 improved/stable, 1 degraded/incomparable, 2 form error, 9 missing path).
 
-## 1. 基线是什么
+This directory holds the rocqwash **real-tree blockage-record baselines** (produced by `tools/unclog.py --audit`) and their comparison protocol. A baseline is **data**, not a tool failure: a recorded failing-run/wall account is the run record as it happened, and `degraded` is a fallback signal, not a tool failure. The production discipline, the naming law, and the comparison reading all live on this page.
 
-`tools/unclog.py --audit`＝只读审计（单遍 probe 归集→chain_graph→堵账基线报告）：
+## 1. What a baseline is
 
-- schema `rocqwash-unclog/1` **audit 形**：`final.verdict="audit"`＋
-  `mode.audit=true`·rounds 单轮（probe_summary/chain_top 全在）·
-  cures_planned/cures_applied 恒 0＝零落刀零复核·exit 0（红是基线数据非器红）。
-- 零写盘硬保证：`--src` 全文件 md5 清单跑前跑后自证恒同（违即 fail-loud 9·
-  染污基线不出账）。
-- 墙账 graph 判例全记：unprobed／self-unwashable／frozen-in-service 逐根；
-  零链根红账补 no-chain-root 目（禁哑墙）。
+`tools/unclog.py --audit` is a read-only audit (single-pass probe collection → `chain_graph` → the blockage-record baseline report):
 
-## 2. 命名律（入仓唯一名形）
+- schema `rocqwash-unclog/1` **audit form**: `final.verdict="audit"` plus `mode.audit=true`, a single round (`probe_summary`/`chain_top` both present), `cures_planned`/`cures_applied` always 0 (= zero applies, zero re-checks), exit 0 (the failing runs are baseline data, not a tool failure).
+- Zero-write hard guarantee: the `--src` whole-file md5 manifest self-verifies as identical before and after the run (a violation fails loud with 9; a polluted baseline never leaves the tool).
+- The wall-account graph verdicts are recorded root by root: unprobed / self-unwashable / frozen-in-service, each chain root; failing runs with zero chain roots get a `no-chain-root` entry (walls are never left silent).
+
+## 2. The naming law (the only file-name form entering the repository)
 
 ```
-audit-<域>-<yyyymmdd>.json
+audit-<domain>-<yyyymmdd>.json
 ```
 
-- `<域>`＝`--src` 源树基名（如 `wash`）→ `audit-wash-20261101.json`；
-- `<yyyymmdd>`＝产账日；同域多基线按文件名排序即时间轴；
-- 对比只在**同域**内进行（跨域/跨候选面即 incomparable·见 §5）；
-- 文件名不带状态词（禁 `audit-wash-fixed.json` 形）——战况在账内
-  `final.red_files`/`wall`，不在文件名上。
+- `<domain>` = the `--src` source-tree basename (for example `wash`) → `audit-wash-20261101.json`;
+- `<yyyymmdd>` = the production date; several baselines in one domain sort into a time axis by file name;
+- comparison happens within **one domain** only (cross-domain / cross-candidate is incomparable · see §5);
+- file names carry no status words (the `audit-wash-fixed.json` shape is banned) — the run state lives in the account's `final.red_files`/`wall`, not in the file name.
 
-## 3. 产账（真树干跑·归主会话）
+## 3. Producing a baseline (real-tree runs belong to the main session)
 
 ```bash
-python3 tools/unclog.py --src <源树根> [--world <世界目录>] --audit \
-  --json examples/baselines/audit-<域>-<yyyymmdd>.json
+python3 tools/unclog.py --src <source-tree-root> [--world <world-dir>] --audit \
+  --json examples/baselines/audit-<domain>-<yyyymmdd>.json
 ```
 
-- 真树 audit 活跑归**主会话**（工装席只证器面 fixture 级——unclog docstring
-  同律）；本目录只收账与规程，不收产账脚本。
-- 离线演练用 `--injector DIR`（canned probe 罐装·零真编译零真网络），
-  产物仅作器面验证**不入仓**。
+- Real-tree audit live runs belong to **the main session** (the tooling agent proves the instrument face at fixture level only — the same rule in the `tools/unclog.py` docstring); this directory stores baselines and the protocol, not production scripts.
+- Offline drills use `--injector DIR` (canned probes, zero real compile, zero real network); the output is instrument-face verification only and **never enters the repository**.
 
-## 4. timing 段注记（唯一非确定段）
+## 4. The timing segment note (the single non-deterministic segment)
 
-`report["timing"]`（enumerate/manifest/probe+chain/total 耗时各段）＝**实测
-墙钟·逐跑必异**＝基线文件唯一非确定段。对比器 `tools/baseline_diff.py` 恒
-不入对比（报告 `excluded_fields=["timing"]` 在册）——「同输入重跑字节恒同」
-对 timing 段之外全成立。人工判读亦不得凭耗时断言战况。
+`report["timing"]` (per-phase wall-clock seconds: enumerate / manifest / probe+chain / total) is **measured wall clock and differs on every run** — the single non-deterministic segment of a baseline file. The comparer `tools/baseline_diff.py` never includes it in comparison (`excluded_fields=["timing"]` is recorded in the report) — "same-input reruns are byte-identical" holds for everything outside the timing segment. Human reading must not assert run state from timings either.
 
-## 5. 对比（堵账增减报告）
+## 5. Comparison (the blockage increase/decrease report)
 
 ```bash
 python3 tools/baseline_diff.py \
-  examples/baselines/audit-<域>-<旧日>.json \
-  examples/baselines/audit-<域>-<新日>.json \
-  --md /tmp/diff-<域>-<旧日>-<新日>.md     # diff 报告随手出·不入本目录
+  examples/baselines/audit-<domain>-<old-date>.json \
+  examples/baselines/audit-<domain>-<new-date>.json \
+  --md /tmp/diff-<domain>-<old-date>-<new-date>.md     # the diff report is a scratch output, never stored in this directory
 ```
 
-- schema `rocqwash-baseline-diff/1`：`new_blocks`／`resolved_blocks`／
-  `persistent`（按链根键·墙账逐因对齐——old/new 的 reason·detail 逐项＋
-  变化旗；红文件条目附 chain_top 链根归因，查无如实 null）／`score_delta`
-  ／`verdict`。
-- verdict 四态：`improved`（红减）｜`degraded`（红增）｜`stable`（同）｜
-  `incomparable`（候选集不同即如实拒判——delta 恒空·score_delta=null）。
-  候选面四元组＝`mode.source`＋`args.src`＋`args.candidates`＋
-  `args.chain_ledgers`（basename 面）；非 audit 形报告混入同判 incomparable。
-- verdict 只认红账 n_red 增减；墙账增减入三清单不驱动 verdict。
-- 退出码：0=improved/stable·1=degraded/incomparable（a failing result is data, not a tool failure·响亮
-  stdout）·2=输入形坏·9=路径缺失。
+- schema `rocqwash-baseline-diff/1`: `new_blocks` / `resolved_blocks` / `persistent` (keyed by chain root, wall reasons aligned factor by factor — old/new `reason`·`detail` per item plus the change flag; failing-file entries carry the `chain_top` chain-root attribution, honest null when absent) / `score_delta` / `verdict`.
+- four verdict states: `improved` (failures decreased) | `degraded` (failures increased) | `stable` (unchanged) | `incomparable` (different candidate sets refuse judgment honestly — deltas always empty, `score_delta=null`). The candidate-face quadruple = `mode.source` + `args.src` + `args.candidates` + `args.chain_ledgers` (basename form); a non-audit-form report mixed into the comparison judges `incomparable` the same way.
+- the verdict reads only the failing-run count `n_red`; wall-account changes enter the three lists but never drive the verdict.
+- exit codes: 0 = improved/stable · 1 = degraded/incomparable (a failing result is data, not a tool failure · loud stdout) · 2 = input form error · 9 = missing path.
 
-## 6. 纪律（红线路）
+## 6. Discipline (the non-negotiable constraints)
 
-- **禁手编基线**：对比器账面自洽校验（n_red=|red_files|·wall_count=|wall|·
-  probe_summary↔final 红账一致）违即 rc=2 拒判——染污对比不出账。
-- **同域同候选面对比**：候选面四元组两账不同 → incomparable 如实
-  （跨候选集的增减是伪信号·禁硬凑）。改了候选清单就换 `<域>` 名或明记
-  断代，不混轴对比。
-- **基线是数据**：degraded/incomparable exit 1 是判读面要接的响亮信号，
-  不是器故障——读 --md 定夺处置。
-- **timing 不入账判**：见 §4。
-
----
-
-(English) This directory holds **real-tree unclog baselines** (produced by
-`tools/unclog.py --audit`, schema `rocqwash-unclog/1` audit form:
-`final.verdict="audit"`, `mode.audit=true`, single round, zero cures, exit 0 —
-red is data, not tool failure) plus the intake protocol. Naming:
-`audit-<domain>-<yyyymmdd>.json` where `<domain>` is the `--src` tree basename
-and `<yyyymmdd>` the production date; compare only within one domain. Real-tree
-audit runs belong to the main session; this directory stores baselines and this
-protocol only. The `timing` block (wall-clock seconds per phase) is the single
-non-deterministic part of a baseline file and is **excluded from comparison**
-(`excluded_fields=["timing"]` in `tools/baseline_diff.py`). Comparison:
-`python3 tools/baseline_diff.py OLD.json NEW.json [--json out.json] [--md
-out.md]` → schema `rocqwash-baseline-diff/1` with `new_blocks` /
-`resolved_blocks` / `persistent` (keyed by chain root, wall reasons aligned
-factor-by-factor) / `score_delta` / `verdict` ∈ improved|degraded|stable|
-incomparable (candidate-set mismatch → incomparable, honest, empty deltas).
-Exit codes: 0=improved/stable, 1=degraded/incomparable (data, loud stdout),
-2=form error, 9=missing path. Hand-edited baselines are rejected by the
-account-consistency checks (rc=2).
+- **No hand-edited baselines**: the comparer's account-consistency checks (`n_red=|red_files|`, `wall_count=|wall|`, `probe_summary`↔`final` failing-run agreement) reject with rc=2 when violated — a polluted comparison never ships.
+- **Same-domain same-candidate comparison**: any difference in the candidate-face quadruple → honest `incomparable` (cross-candidate-set deltas are spurious signals; never forced). After changing the candidate list, change the `<domain>` name or record the break explicitly; never mix axes.
+- **A baseline is data**: `degraded`/`incomparable` exit 1 is the loud signal the reading face has to accept, not a tool failure — read the `--md` report and decide the handling.
+- **timing never enters verdict reading**: see §4.
