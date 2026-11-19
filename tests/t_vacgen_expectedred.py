@@ -1,45 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""t_vacgen_expectedred.py -- expected-red contract selftest for the vacgen
-cast (zero-network, zero-compile).
+"""t_vacgen_expectedred.py -- expected-red contract selftest for the vacgen cast (zero-network, zero-compile).
 
-The refutation spectrum of a vacgen cast is compile-must-fail BY DESIGN: a
-probe red (rc != 0) on a falsify face is the expected verdict (weak red =
-nonempty evidence: the premise interface resisted the refutation attempt),
-while a probe green (rc = 0) on the same face would be the vacuity alert
-(verdict ok = false, highest alert level).  This test pins that contract at
-the word-face level, so the by-design rc != 0 can never be misread as a
-suite failure.  Reading rule adopted from tools/baseline_diff.py: a red is
-data, not a tool failure; only unregistered reds are defects.
+Purpose.
+    The refutation spectrum of a vacgen cast is compile-must-fail BY DESIGN: a probe red (rc != 0) on a falsify
+    face is the expected verdict (weak red = nonempty evidence: the premise interface resisted the refutation
+    attempt), while a probe green (rc = 0) would be the vacuity alert (verdict ok = false, highest alert level).
+    This test pins that contract at the word-face level, so the by-design rc != 0 can never be misread as a suite
+    failure (reading rule from tools/baseline_diff.py: a red is data, not a tool failure; only unregistered reds
+    are defects).  Three checks pin the per-face EXPECTED-FAIL registration (marker, falsify theorem line,
+    grade=EXPECTED-FAIL ledger row), the inverted rc verdict contract in each face header (rc = 0 = vacuity
+    alert, rc != 0 = expected evidence; RC_CONTRACT below), and the red/green boundary (expected-green faces
+    carry zero EXPECTED-FAIL and >= 1 EXPECTED-GREEN-AFTER-FILL marker, verdict ok=true; a red there is a
+    probe-side defect, never evidence).
 
-Three checks, one per form of the by-design red:
-  check 1 (registration): each of the five refutation faces carries
-          >= 1 EXPECTED-FAIL marker, its falsify theorem line, and a
-          grade=EXPECTED-FAIL ledger row; the cast's own check
-          expected_fail_marker_present_per_refutation reports PASS;
-  check 2 (inverted verdict contract): each refutation face header states
-          the rc semantics (rc = 0 = vacuity alert, rc != 0 = expected
-          evidence), making "red healthy / green alarm" machine-visible;
-  check 3 (red/green boundary): the expected-green faces (witness.lean,
-          boundary.lean) carry zero EXPECTED-FAIL markers and
-          >= 1 EXPECTED-GREEN-AFTER-FILL marker instead, the cast's own
-          check expected_fail_marker_absent_per_green reports PASS, and the
-          cast verdict is ok=true; a red on an expected-green face would be
-          a probe-side defect, never evidence.
+Interface.
+    python -I tests/t_vacgen_expectedred.py   (no flags; PASS/SKIP/FAIL to stdout; manual: python3 -B ...)
 
-Lean compile leg: design-SKIP unconditionally (this suite never compiles;
-the rocqwash CI carries no Lean toolchain and mathlib caches are never
-pulled).  ROCWASH_LEAN_WORKTREE is observed and reported, not acted on (see
-tools/vacgen_env_note.md for the deployment wiring contract).
+Dependencies.
+    Python 3 stdlib only (os, re, subprocess, sys, tempfile); zero network, zero compile, zero writes outside
+    a mktemp directory; Lean compile leg design-SKIP unconditionally (suite never compiles; no Lean toolchain
+    on CI, mathlib caches never pulled); ROCWASH_LEAN_WORKTREE observed and reported, not acted on
+    (tools/vacgen_env_note.md); fixture casts through the builtin starter taxonomy row, independent of any taxonomy.json.
 
-Usage:
-  python -I tests/t_vacgen_expectedred.py
-  python3 -B tests/t_vacgen_expectedred.py   # manual (no __pycache__)
+Evidence.
+    Suite case t_vacgen_expectedred (tests/run_tests.sh); the frozen RC_CONTRACT vector below is the wording the
+    engine does not mechanically check - any rewording of the contract must re-register it.
 
-Exit codes: 0 = all checks pass (design-SKIP legs reported, never counted
-red); 1 = any red (fail-loud listing).  Zero network, zero compile, zero
-writes outside a mktemp directory.  The fixture casts through the builtin
-starter taxonomy row, so the test is independent of any taxonomy.json.
+Exit-codes.
+    0 = all checks pass (design-SKIP legs reported, never counted red); 1 = any red (fail-loud listing).
 """
 import os
 import re

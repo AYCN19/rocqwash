@@ -1,40 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""t_vacgen_envelope_shape.py -- witness-envelope word-face shape selftest
-(zero-network, zero-compile).
+"""t_vacgen_envelope_shape.py -- witness-envelope word-face shape selftest (zero-network, zero-compile).
 
-The witness envelope (the `..._premises_witness` theorem of the cast) must be
-well-typed Lean: every conjunct is a Prop, every referenced binder is bound by
-an existential prefix segment. A bare TYPE spliced into the conjunction chain
-(word-face signature `∧ Set (`) is always ill-typed (`Set X : Type`, never a
-Prop) and always leaves the binder unbound - the registered engine debt of
-2026-11-14 (docs/vacgen_sop.md section 2.5 erratum; root cause = L1 splitter
-classification + envelope_statement splicing, vacgen.py:640-650 at 2.0.1; the
-cast's own envelope_free_vars_zero check passes on the malformed envelope, so
-this test is the only machine guard for the contract today).
+Purpose.
+    The witness envelope (the `..._premises_witness` theorem of the cast) must be well-typed
+    Lean: every conjunct a Prop, every referenced binder bound by an existential prefix
+    segment.  A bare TYPE in the conjunction chain (word-face signature `∧ Set (`) is
+    always ill-typed (`Set X : Type`, never a Prop) and always leaves the binder unbound
+    - the registered engine debt (docs/vacgen_sop.md section 2.5 erratum, registered
+    November 14, 2026; root cause = L1 splitter classification + envelope_statement
+    splicing, vacgen.py:640-650 at 2.0.1; the cast's own envelope_free_vars_zero check
+    passes on the malformed envelope, so this test is the only machine guard today).
+    Fixture A (well-formed face) must yield a well-formed envelope: red = REGRESSION.
+    Fixture B (implicit-binder face) is the REGISTERED KNOWN DEBT PIN: red = the debt
+    WAS FIXED - update the pin per the erratum re-audit condition; full pin contract
+    beside DEBT_SIG below.
 
-Two fixtures:
-  fixture A (well-formed face: one implicit statement variable, one Prop
-             hypothesis) - the envelope MUST be well-formed: no bare-type
-             conjunct, the S1 variable bound by its prefix segment. Contract
-             pin: red here means a REGRESSION on well-formed faces.
-  fixture B (implicit-binder face: replica of the batch-1 item-16 shape,
-             implicit `{K : Set (Fin n → ℝ)}` binder) - the REGISTERED KNOWN
-             DEBT PIN: the debt signature `∧ Set (` must be PRESENT. This pin
-             tracks debt presence, not health: red here means the ENGINE DEBT
-             WAS FIXED - update this pin together with the engine repair
-             registration (re-audit condition of the SOP section 2.5
-             erratum); do not revert the engine to keep the pin green. The
-             companion face (explicit hypotheses existentialized as "vars",
-             e.g. `∃ (hK : IsCompact K)`) is documented in the erratum but not
-             pinned (formatting-sensitive word face).
+Interface.
+    python -I tests/t_vacgen_envelope_shape.py   (no flags; PASS/SKIP/FAIL to stdout)
 
-Lean compile leg: design-SKIP unconditionally (zero-compile suite).
+Dependencies.
+    Python 3 stdlib only (os, re, subprocess, sys, tempfile); zero network, zero compile; Lean compile leg
+    design-SKIP unconditionally (zero-compile suite); loud SKIP (rc 0) when tools/vacgen.py is absent.
 
-Usage:
-  python -I tests/t_vacgen_envelope_shape.py
+Evidence.
+    Suite case t_vacgen_envelope_shape (tests/run_tests.sh); contract vectors: DEBT_SIG and the pin comments below;
+    fixture B green state prints the flip instructions loud.
 
-Exit codes: 0 = all checks pass; 1 = any red (fail-loud listing).
+Exit-codes.
+    0 = all checks pass (design-SKIP legs reported, never counted red); 1 = any red (fail-loud listing).
 """
 import os
 import re
@@ -45,6 +39,21 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 VACGEN = os.path.normpath(os.path.join(HERE, "..", "tools", "vacgen.py"))
 
+# Contract pins (fixtures below):
+# - fixture A (well-formed face: one implicit statement variable, one Prop
+#   hypothesis): the envelope MUST be well-formed - no bare-type conjunct, the
+#   S1 variable bound by its prefix segment.  Red here means a REGRESSION on
+#   well-formed faces.
+# - fixture B (implicit-binder face: replica of the batch-1 item-16 shape,
+#   implicit `{K : Set (Fin n → ℝ)}` binder): the REGISTERED KNOWN DEBT PIN -
+#   the debt signature `∧ Set (` must be PRESENT.  This pin tracks debt
+#   presence, not health: red here means the ENGINE DEBT WAS FIXED - update
+#   this pin together with the engine repair registration (re-audit condition
+#   of the SOP section 2.5 erratum); do not revert the engine to keep the pin
+#   green.  The companion face (explicit hypotheses existentialized as "vars",
+#   e.g. `∃ (hK : IsCompact K)`) is documented in the erratum but not pinned
+#   (formatting-sensitive word face).
+#
 # Word-face debt signature: a bare `Set (...)` type as a conjunction member.
 # `Set X : Type` can never appear as a well-formed Prop conjunct, so this
 # signature has no false-positive face on well-formed envelopes.

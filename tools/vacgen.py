@@ -1,50 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-vacgen.py (v2) - vacuity probe skeleton generator with shape recognition
-(four-layer engine, taxonomy-as-data).
+"""vacgen.py (v2) - vacuity probe skeleton generator with shape recognition (four-layer engine, taxonomy-as-data).
 
-Mission.
-    Cast the four-account vacuity probe skeleton directory for a Lean
-    statement-face file (cast mode, v1 CLI face preserved verbatim), and run
-    a zero-compile coverage preflight over a census-qualified file set
-    (--preflight-all, difficulty map).  v2 adds: L1 premise decomposer
-    (three-segment split with the file-scope `variable` / instance-binder G1
-    fix), L2 taxonomy lookup (data rows in taxonomy.json - the engine contains
-    zero premise-family knowledge; adding a domain = adding rows), L3
-    confidence scoring with honest TODO-SEAT degradation (every unrecognized
-    face is counted, never silently degraded), and L4 harness modes.
+Purpose.
+    Cast the four-account vacuity probe skeleton directory for a Lean statement-face file (cast mode, v1 CLI face
+    preserved verbatim) and run a zero-compile coverage preflight over a census-qualified file set
+    (--preflight-all, difficulty map).  v2 layers: L1 premise decomposer (three-segment split, file-scope
+    `variable` / instance-binder G1 fix), L2 taxonomy lookup (rows in taxonomy.json; zero premise-family knowledge
+    in-engine), L3 confidence scoring with honest TODO-SEAT degradation (counted, never silent), L4 harness modes.
 
-Dependencies.
-    Python stdlib only: argparse, hashlib, os, re, sys, datetime, fractions
-    (v1 import face, vacgen.py:42-48) plus json (stdlib; required by the
-    taxonomy loader, arch-spec-v2.md section 3.3 pseudocode).  Zero network,
-    zero compile, python -I compatible.  This json addition is a registered
-    delta over the v1 import face - still zero third-party dependencies.
-
-References.
-    v1 tool: D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/_tools/vacgen.py
-    (helpers inherited verbatim where marked).  Architecture spec:
-    D:/ComplexAnalysis/attn/_vacgenv2_20261113/staging/arch-spec-v2.md
-    (contracts C2.x/C3.x/C4.x/C5.x/C6.x/C7.x).  Master work order:
-    task instruction-vacgenV2-20261113.md.  Discipline: artifact-verifier-design-law
-    (monotone bounds on live counters), negative-finding-boundary-law (four
-    elements on every coverage claim), taxonomy-as-data, TODO-SEAT honest
-    degradation, dry-run self-certification.
-
-Constructivity.
-    The tool casts skeletons and never asserts mathematics - every
-    artifact-facing proof obligation is a declared TODO-SEAT agent.  Coverage
-    scores are word-face (regex + bracket-balanced surgery) lower bounds;
-    elaboration-time semantics are invisible (declared honest boundary).
-    Counters in reports are closed-window snapshots with dates; cross-run
-    comparisons use monotone bounds only (never exact-equality invariants).
-
-Build.
+Interface.
     python -I vacgen.py --in <file.lean> --out <dir>            (cast, v1 face)
     python -I vacgen.py --preflight-all --census <census.json>  --root <clone>
             [--report <difficulty-map.json>] [--cluster-table <json>]
     python -I vacgen.py --verify-anchors --mathlib <root> --taxonomy <path>
+
+Dependencies.
+    Python stdlib only: argparse, hashlib, os, re, sys, datetime, fractions (v1 import face, vacgen.py:42-48) plus
+    json (stdlib; required by the taxonomy loader, arch-spec-v2.md section 3.3 pseudocode).  Zero network,
+    zero compile, python -I compatible.
+
+Evidence.
+    The tool casts skeletons and never asserts mathematics - every artifact-facing proof obligation is a declared
+    TODO-SEAT agent; coverage scores are word-face lower bounds; counters are closed-window dated snapshots,
+    cross-run comparisons use monotone bounds only (attestation: suite cases t_vacgen_shape,
+    t_vacgen_envelope_shape, t_vacgen_expectedred in tests/run_tests.sh).
+
+Exit-codes.
+    0 = verdict ok=true (all bound-form checks green); 1 = verdict ok=false (blocked checks,
+    taxonomy or anchor drift); 2 = usage error (mode exclusivity, missing --in).
 """
 
 import argparse
@@ -57,7 +41,15 @@ from datetime import datetime, timezone
 from fractions import Fraction
 
 TOOL_NAME = "vacgen"
-# 2.0.1 (repair ring 2026-11-13): C4.2 theorem-declaration front gate added in
+# Lineage.  v1 tool: D:/ComplexAnalysis/attn/_vacgen_20261112/selftest/_tools/vacgen.py
+#   (helpers inherited verbatim where marked).  Architecture spec:
+#   D:/ComplexAnalysis/attn/_vacgenv2_20261113/staging/arch-spec-v2.md (contracts
+#   C2.x/C3.x/C4.x/C5.x/C6.x/C7.x).  Master work order: the vacgenV2 task
+#   instruction dated November 13, 2026.  Discipline: artifact-verifier-design-law
+#   (monotone bounds on live counters), negative-finding-boundary-law (four
+#   elements on every coverage claim), taxonomy-as-data, TODO-SEAT honest
+#   degradation, dry-run self-certification.
+# 2.0.1 (repair ring, November 13, 2026): C4.2 theorem-declaration front gate added in
 # decompose_head (cast mode) - non-theorem-face heads (def/class/axiom/
 # structure/abbrev/opaque) front-reject with marker `non-theorem-declaration`,
 # never classified, never fire `recognized` (negative-sample piece D fix).
@@ -230,7 +222,7 @@ DECL_LINE_RE = re.compile(
 
 IMPORT_LINE_RE = re.compile(r"^[ \t]*(?:public\s+)?import\s+\S")
 
-# C4.2 theorem-declaration front gate (repair ring 2026-11-13, negative-sample
+# C4.2 theorem-declaration front gate (repair ring, November 13, 2026, negative-sample
 # piece D): only theorem-face heads may reach the L2 classifier.  def / class /
 # axiom / structure / abbrev / opaque (and any other non-theorem-face) heads
 # are FRONT-REJECTED in cast mode with the honest marker
@@ -601,7 +593,7 @@ def decompose_head(src):
     scope_binders = collect_variable_commands(code_lines)
     head_candidates = [d for d in decls if d["kw"] in ("theorem", "lemma")]
     head = (head_candidates[0] if head_candidates else decls[0])
-    # C4.2 theorem-declaration front gate (repair ring 2026-11-13): v1 head
+    # C4.2 theorem-declaration front gate (repair ring, November 13, 2026): v1 head
     # selection is preserved verbatim, but a non-theorem-face head (the
     # `decls[0]` fallback with no theorem/lemma candidate) no longer reaches
     # the L2 classifier - negative-sample piece D showed a def-only face whose

@@ -1,9 +1,27 @@
 #!/usr/bin/env python3
 """t_vacgen_shape.py -- vacgen CLI shape selftest (zero-network, zero-compile).
 
-Runs tools/vacgen.py --in <fixture> --out <tmp> on a tiny zeta-face fixture
-and asserts the four-account skeleton layout. Lean compile face is design-SKIP
-(rocqwash CI carries no Lean toolchain; see docs/vacgen_sop.md SKIP clause).
+Purpose.
+    Assert the four-account skeleton layout of a vacgen cast: run
+    tools/vacgen.py --in <fixture> --out <tmp> on a tiny zeta-face fixture
+    and require witness.lean, boundary.lean, gap_anchors.txt and >= 5
+    falsify faces in the output directory.
+
+Interface.
+    python -I tests/t_vacgen_shape.py   (no flags; one PASS/SKIP/FAIL line to stdout)
+
+Dependencies.
+    Python 3 stdlib only (glob, os, subprocess, sys, tempfile); zero network,
+    zero compile.  The Lean compile leg is design-SKIP (rocqwash CI carries
+    no Lean toolchain; docs/vacgen_sop.md SKIP clause).  Loud SKIP with rc 0
+    when tools/vacgen.py is absent; fixture is self-contained.
+
+Evidence.
+    Registered suite case t_vacgen_shape (tests/run_tests.sh); the check
+    vector is the four-account skeleton layout asserted in main().
+
+Exit-codes.
+    0 = PASS or design-SKIP; 1 = cast failure or any missing face (fail-loud).
 """
 import glob, os, subprocess, sys, tempfile
 
