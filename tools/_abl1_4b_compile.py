@@ -1,11 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""_abl1_4b_compile.py v2 — R4 4b ocamlc 编译器（不动点轮·mli 先行·cwd 显式·fail-loud）
+"""_abl1_4b_compile.py v2: R4 4b ocamlc compiler (fixpoint rounds, mli
+first, explicit cwd, fail-loud).
 
-用法: python3 _abl1_4b_compile.py <extract_dir> [driver.ml]
-前置: ocamlc/ocamldep 必须已在 PATH（opam env 激活或 export opam bin）——
-      shutil.which 探测，探测失败即 FATAL 退出，不做机器路径硬编码回退。
-依赖 ocamldep 续行拼接解析；逐轮编译 deps⊆done 的模；driver 链接+实跑。
+Purpose.  Compile the extracted OCaml module tree: module dependency order
+  comes from ocamldep (its continuation lines are joined back into single
+  records); modules are compiled in fixpoint rounds, a module compiling once
+  its dependency set is a subset of the compiled set, each .mli before its
+  .ml; the optional driver is linked last and executed.
+Interface.  python3 _abl1_4b_compile.py <extract_dir> [driver.ml]
+  <extract_dir> holds the .ml faces and any .mli faces; the optional second
+  argument names the driver module, linked against all compiled modules and
+  executed as ./runalive.exe inside that directory.
+Dependencies.  ocamlc/ocamldep must already be on PATH (opam env activated or
+  the opam bin exported); detected with shutil.which, detection failure is a
+  FATAL exit with no hardcoded machine-path fallback. Python 3 stdlib only.
+Evidence.  tests/test_clean_mode.py V16/V17 pin the ROCWASH_CLEAN=1
+  report-and-refuse contract (exit 1) and the default-mode contract; a full
+  compile prints COMPILED-ALL with the module count (mli-first, deps
+  fixpoint).
+Exit-codes.  0 = all modules compiled and the driver, when given, returned 0;
+  1 = toolchain missing (FATAL toolchain), MLI-FAIL or ML-FAIL compile
+  failure, DEP-STUCK dependency deadlock, or LINK-FAIL; when a driver runs,
+  its own return code is propagated.
 """
 import re, os, shutil, subprocess, sys
 

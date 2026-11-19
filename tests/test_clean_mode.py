@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
 """test_clean_mode.py: clean-mode switch selftest (rocqwash tests/).
 
-Mission. Verify the ROCWASH_CLEAN=1 contract end to end: canonical-dependency
+Purpose.  Verify the ROCWASH_CLEAN=1 contract end to end: canonical-dependency
          faces report "requires canonical environment: ..." and refuse
-         (exit 9; exit 1 for tools/_abl1_4b_compile.py, which keeps its own
+         (exit 9; exit 1 for `tools/_abl1_4b_compile.py`, which keeps its own
          standing toolchain contract); default mode (env unset) stays
          unchanged; clean-available faces (--selftest, --registry) still
          pass under the switch.
-Dependencies. Python 3 stdlib only (os, subprocess, sys, tempfile); drives
+Interface.  python3 -B tests/test_clean_mode.py   (suite case t_clean_mode).
+         No CLI flags; drives seven repo tools as subprocesses and prints one
+         ok/FAIL line per vector plus the final CLEAN-MODE-SELFTEST PASS line.
+Dependencies.  Python 3 stdlib only (os, subprocess, sys, tempfile); drives
          seven repo tools as subprocesses; zero compile, zero network, zero
          writes outside mkdtemp.
-References. docs/clean-mode-manual-20261114.md (census and semantics);
-         tests/run_tests.sh clean-mode gate (canonical auto-detection off).
-Constructivity. One deterministic vector per face, machine-independent:
-         no vector requires a canonical path to be present or absent, and
-         default-mode vectors assert message absence or standing usage
-         contracts rather than environment-dependent exit codes.
-Build.   python3 -B tests/test_clean_mode.py   (suite case t_clean_mode).
+Evidence.  The clean-mode census and semantics are documented in
+         `docs/clean-mode-manual-20261114.md`; tests/run_tests.sh carries the
+         clean-mode detection gate (canonical auto-detection off). One
+         deterministic vector per face, machine-independent: no vector
+         requires a canonical path to be present or absent, and default-mode
+         vectors assert message absence or standing usage contracts rather
+         than environment-dependent exit codes.
+Exit-codes.  0 = every vector ok (CLEAN-MODE-SELFTEST PASS printed); 1 = any
+         vector failed (named FAIL line, fail-loud).
 """
 import os
 import shutil
