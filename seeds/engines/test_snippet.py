@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""test_snippet.py — E5 segment for tests/t_engines_seeds.py (engines registry
+"""test_snippet.py: E5 segment for tests/t_engines_seeds.py (engines registry
 and total selftest).
 
-Merge contract (for the seat that assembles tests/t_engines_seeds.py).
-  The assembled file has five segments plus a total selftest:
-    1 run_segment_ai_flavor  (E1 seat)
-    2 run_segment_jargon     (E2 seat)
-    3 run_segment_termbase   (E3 seat)
-    4 run_segment_i18n       (E4 seat)
+Purpose.  Checks the engines-registry face seeds/engines/ENGINES.md and
+  carries the total selftest for the assembled suite
+  tests/t_engines_seeds.py; report-only, writes nothing.
+
+Interface.  Merge contract (for the agent that assembles
+  tests/t_engines_seeds.py).  The assembled file has five segments plus a
+  total selftest:
+    1 run_segment_ai_flavor  (E1 agent)
+    2 run_segment_jargon     (E2 agent)
+    3 run_segment_termbase   (E3 agent)
+    4 run_segment_i18n       (E4 agent)
     5 run_segment_engines    (this segment; also carries the total selftest)
   Each segment function takes no arguments and returns a tuple
     (passed, failed, lines)
@@ -17,26 +22,30 @@ Merge contract (for the seat that assembles tests/t_engines_seeds.py).
   whose name starts with "run_segment_", runs each one, aggregates the counts,
   and emits a SKIP line for every expected segment name listed in
   EXPECTED_SEGMENTS that is absent from the module namespace (honest absence,
-  not a silent pass).  Exit code: 0 when no FAIL line was produced, 1
-  otherwise.
+  not a silent pass).  Checks in this segment (prefix "engines."): ENGINES.md
+  present; exactly five entry headings; exactly the seven CAPABILITY-INDEX
+  fields per entry, non-empty; four roadmap steps each with acceptance
+  criteria; source-original markers in the verbatim path block; version
+  anchor present; register face (zero CJK outside fenced code blocks, zero
+  em-dash, zero AI-flavor battery hits); seed paths referenced by entries
+  exist (FAIL on absence in merged form, SKIP in snippet form while sibling
+  seeds are still staging).
 
-Layout handling (python -I safe, stdlib only, no sibling imports).
+Dependencies.  Python 3 standard library only (os, re, sys); no sibling
+  imports; python -I safe.  Layout handling:
   Merged form   <root>/tests/t_engines_seeds.py      seeds at <root>/seeds
   Snippet form  <root>/seeds/engines/test_snippet.py seeds at <root>/seeds
   The seeds root is derived from __file__; in snippet form the four engine
   segments are expected to be absent, so their SKIP lines are normal there.
 
-Checks in this segment (prefix "engines."): ENGINES.md present; exactly five
-entry headings; exactly the seven CAPABILITY-INDEX fields per entry, non-
-empty; four roadmap steps each with acceptance criteria; source-original
-markers in the verbatim path block; version anchor present; register face
-(zero CJK outside fenced code blocks, zero em-dash, zero AI-flavor battery
-hits); seed paths referenced by entries exist (FAIL on absence in merged
-form, SKIP in snippet form while sibling seeds are still staging).
+Evidence.  Source of truth: seeds/engines/ENGINES.md (same directory as this
+  snippet in snippet form; seeds/engines/ENGINES.md under the repository
+  root in merged form).  Evidence base: the current-state audit cited in
+  ENGINES.md section 0.  Suite membership: the segment body is transplanted
+  verbatim into tests/t_engines_seeds.py; its module docstring, import lines
+  and standalone-runner tail are not carried.
 
-Source of truth: seeds/engines/ENGINES.md (same directory as this snippet in
-snippet form; seeds/engines/ENGINES.md under the repository root in merged
-form).  Evidence base: the current-state audit cited in ENGINES.md section 0.
+Exit-codes.  main returns 0 when no FAIL line was produced, 1 otherwise.
 """
 import os
 import re
