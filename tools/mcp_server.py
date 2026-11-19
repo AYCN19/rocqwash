@@ -1,56 +1,32 @@
-"""rocqwash MCP stdio server.
+"""mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 
-Mission:
-    Expose the rocqwash tool capability surface over the Model Context
-    Protocol (MCP) stdio transport. Capability true names and call forms
-    follow the entry lines of docs/CAPABILITY-INDEX.md, the single tool
-    capability contract surface of this repository. Landing note: RQW08
-    (2026-11-14); the protocol and security face is documented in
-    docs/mcp.md. Expansion note: RQW13 batch 1 (2026-11-14) appends
-    thirteen zero-network capability specs in the expansion ticket order,
-    each transcribed from its docs/CAPABILITY-INDEX.md entry line; the
-    network-or-heavy candidates stay unregistered awaiting batch 2 (the
-    batch-2 register in docs/mcp.md section 3). Engine-body batch note:
-    the engine-body ticket appends three further zero-network
-    capability specs graduated from docs/drafts/mcp-tool-specs-engine-body.md
-    (tools/list carries 24 tools); the i18n http provider leg stays
-    default-deny and unregistered. Symbiosis batch note: the symbiosis
-    ticket's spec (section 1.1, named in docs/symbiosis_sop.md) appends one
-    read-only file capability, symbiosis_status over docs/symbiosis_sop.md,
-    on the capability_index wiring (tools/list carries 25 tools).
+Purpose.  Expose the repository tool capability surface over the Model
+  Context Protocol (MCP) stdio transport: 25 registered capabilities,
+  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
+  Default deny for network and heavy capabilities (`sentinel_status`,
+  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result
+  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.
+  Credential zero contact: no credential store, token file or netrc
+  path is read; child stdout and stderr are captured, never merged
+  into the protocol stream; every call runs under ROCQWASH_MCP_TIMEOUT
+  (default 300) and a timed-out child is reported as failed.
 
-Protocol:
-    Newline-delimited JSON-RPC 2.0 over stdin and stdout, hand written on
-    the Python standard library. Served methods: initialize, tools/list,
-    tools/call. Notifications carry no id and get no response. Each response
-    is one compact JSON line on stdout; diagnostics go to stderr only. The
-    process exits 0 when stdin reaches end of file.
+Interface.  `python -I mcp_server.py`; ROCQWASH_HOME must point at the
+  repository root. Newline-delimited JSON-RPC 2.0 over stdin and
+  stdout: methods `initialize`, `tools/list`, `tools/call`;
+  notifications get no response; one compact JSON line per response
+  on stdout, diagnostics on stderr only. Contract: docs/mcp.md.
 
-Dependencies:
-    Standard library only: json, os, subprocess, sys. No third-party
-    package, no MCP SDK, no transport import (zero-dependency law).
+Dependencies.  Python 3 standard library only (json, os, subprocess,
+  sys): no third-party package, no MCP SDK, no transport import
+  (zero-dependency law); registered CLIs resolve under ROCQWASH_HOME.
 
-Security face:
-    1. Default deny for network and heavy capabilities. net_probe,
-       ci_triage, pushci_status and sentinel_status return a failed tool
-       result naming ROCQWASH_MCP_ALLOW_NET=1 as the explicit opt-in until
-       that environment variable is set to 1. sentinel_status is gated
-       beyond the three the integration ticket names because
-       tools/cw_sentinel.py carries a non-zero network face in
-       CAPABILITY-INDEX (registration note in docs/mcp.md section 5).
-    2. Credential zero contact: this server reads no credential store, no
-       token file, no netrc path, and exposes no credential-shaped
-       argument; child environments pass through unchanged and credential
-       handling stays with the underlying command line tools.
-    3. Child stdout and stderr are captured and never merged into the
-       protocol stream. Every tool call runs under a hard timeout
-       (ROCQWASH_MCP_TIMEOUT seconds, default 300); a timed-out child is
-       killed and reported as a failed tool result.
+Evidence.  Suite lane tests/t_mcp_face.py asserts the 25-name tools/list
+  face, default deny, the error codes and exit 0 on stdin end of file.
 
-Build:
-    python -I mcp_server.py
-    Tool calls additionally require ROCQWASH_HOME to point at the rocqwash
-    repository root; see docs/mcp.md for the full face.
+Exit-codes.  Process exit 0 when stdin reaches end of file; JSON-RPC
+  error codes -32700, -32600, -32601, -32602, -32603 on the wire; a
+  tool result carries the child exit code with isError true on nonzero.
 """
 
 import json
@@ -318,10 +294,10 @@ TOOL_SPECS = [
             "contract surface, resolved from ROCQWASH_HOME. Zero network face, no side effects."
         ),
     },
-    # ---- RQW13 batch 1 (2026-11-14): thirteen zero-network capabilities,
-    # appended in expansion-ticket order; each spec is transcribed from its
-    # docs/CAPABILITY-INDEX.md section 2 entry line. baseline_diff was
-    # already on this face as baselinediff (above) and is not re-registered.
+    # ---- zero-network capabilities: thirteen specs, each transcribed
+    # from its docs/CAPABILITY-INDEX.md section 2 entry line.
+    # baseline_diff was already on this face as baselinediff (above) and
+    # is not re-registered.
     {
         "name": "chain_graph",
         "kind": "cli",
@@ -741,12 +717,10 @@ TOOL_SPECS = [
             "cw_sentinel and pushci. Zero network face."
         ),
     },
-    # ---- engine-body batch (the engine-body ticket): three
-    # zero-network capability specs graduated from the lane-8 draft
-    # docs/drafts/mcp-tool-specs-engine-body.md; additive after the RQW13
-    # batch-1 block (the 21 existing specs and schemas untouched); the
-    # ticket's only network face (the i18n http provider leg) is not part
-    # of this batch and stays unregistered.
+    # ---- three zero-network capability specs graduated from the draft
+    # docs/drafts/mcp-tool-specs-engine-body.md; additive after the block
+    # above (the existing specs and schemas untouched); the draft's only
+    # network face (the i18n http provider leg) stays unregistered.
     {
         "name": "ai_flavor_detect",
         "kind": "cli",
@@ -829,10 +803,10 @@ TOOL_SPECS = [
             "is never written at the exposed stages."
         ),
     },
-    # ---- symbiosis batch (the symbiosis ticket, section 1.1): one
-    # read-only capability registered on the capability_index wiring (a
-    # file-kind spec; no subprocess, no gate); additive after the
-    # engine-body block (the 24 existing specs and schemas untouched).
+    # ---- one read-only capability registered on the capability_index
+    # wiring (a file-kind spec over docs/symbiosis_sop.md section 1.1;
+    # no subprocess, no gate); additive after the block above (the
+    # existing specs and schemas untouched).
     {
         "name": "symbiosis_status",
         "kind": "file",
