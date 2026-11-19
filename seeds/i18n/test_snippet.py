@@ -1,23 +1,33 @@
 #!/usr/bin/env python3
-"""Test segment for the E4 i18n pipeline stub (RQW12 seed, 2026-11-14).
+"""test_snippet.py - standalone selftest segment for the E4 i18n
+pipeline stub (RQW12 seed).
 
-Named assertion (seed ask): `pipeline_stub.py --selftest` exits 0 and
-prints a STUB marker.
-
-Merge target: tests/t_engines_seeds.py (seat 5 merges this segment; keep
-the function name `test_i18n_pipeline_stub_selftest` stable and keep the
-`stub_path` parameter so the merged suite can repoint it at the landed
-seeds/i18n/pipeline_stub.py). Standalone run:
-
-    python -I test_snippet.py
-
-Environment face: pure stdlib, zero network, zero writes; the only child
-process it spawns is the stub itself under -I (isolated mode).
+Purpose.  Carry the seed ask's named assertion: `pipeline_stub.py
+  --selftest` exits 0 and prints a STUB marker; this face is the
+  standalone twin of the suite check and never fakes a result.
+Interface.  Standalone run: `python -I test_snippet.py`.  Callable as
+  `test_i18n_pipeline_stub_selftest(stub_path=None)` from the merged
+  suite (`tests/t_engines_seeds.py`); keep the function name and the
+  `stub_path` parameter stable so the merged suite can repoint it at
+  the landed `seeds/i18n/pipeline_stub.py`.
+Dependencies.  Python 3 standard library only (`subprocess`, `sys`,
+  `pathlib`); pure stdlib, zero network, zero writes; the only child
+  process it spawns is the stub itself under -I (isolated mode).
+Evidence.  A passing standalone run prints the `PASS` line carrying the
+  stub rc and stdout head; the same assertion ships in
+  `tests/t_engines_seeds.py` as `test_i18n_pipeline_stub_selftest`.
+Exit-codes.  0 = the assertion held (standalone runner path); any
+  failure raises `AssertionError` carrying the rc / stderr head /
+  stdout head (fail loud, no silent downgrade).
 """
 
 import subprocess
 import sys
 from pathlib import Path
+
+# Seed provenance record, kept as a module metadata line (historical fact;
+# the prose face carries no date stamps).
+SEED_LINE = "RQW12 seed integration, 2026-11-14"
 
 SELFTEST_TIMEOUT_S = 60
 
