@@ -1,73 +1,91 @@
-# 处方件 — 同域双席撞·私占世界重建（PW1·dver2-enbig7 判例文档化）
+# ENBIG7_same_domain_collision_PW1.md — recipe face: same-domain twin-agent collision, private-world rebuild (PW1, the dver2-enbig7 case documented) · original title: `处方件 — 同域双席撞·私占世界重建（PW1·dver2-enbig7 判例文档化）`
 
-> rocqwash recipes/·20261101 agent rqsup4（巡检打磨轮·五课件③）。
-> 判例源（只读已核在盘）：`sandbox/seat_dver2/账/collision_enbig7_20261031.md`
-> （同域双席撞录当日实录·主会话仲裁 `36c35816`）＋`world_md5_assert.txt`／
-> `world_md5_assert_close.txt`（pre-born／收窗两拍对源断言 manifest）＋
-> `world_refresh_race_note.txt`（Live refresh 竞态实录）。
-> 五课台账③「dver2-enbig7 同域撞」的第二面：前兆机检已由
-> `tools/select_audit.py`（DUP-CROSS）工具化（打磨件②）；本件落**处置面**——
-> 撞已发生后的世界收复处方。
+> Purpose.  Recipe PW1 handles the same-domain twin-agent collision: an out-of-bounds agent wrote through another agent's exclusive write domain, and the world face was displaced or polluted. Lesson 3 of the five-lesson ledger ("the dver2-enbig7 same-domain collision") carries two faces: the precursor machine check already exists as a tool check (`tools/select_audit.py`, DUP-CROSS; polishing piece 2); this face lands the **disposition side**, the world-recovery recipe for after a collision has happened, under the exclusive write-domain invariant.
+>
+> Interface.  Document face only; no runtime interface. The recovery steps ride the wired tools: `tools/select_audit.py` (DUP-CROSS / DUP-ORDER / NOT-IN-ORDER), `wash/world_hook.py` (`--world <private world> --manifest <certified-generation account>`), `wrapper/quad8_reconcile.py` + `wrapper/frozen_call.py` (copy-group reconciliation), `wash/wash_engine.py` (frozen) with the `wash/world_hook.py --` pass-through form, and `certify/freeze_manifest.py` (two-layer freeze). The original Chinese text is preserved in the sibling `.zh.md` archive.
+>
+> Dependencies.  Read-only precedent sources, verified present in the tree at documentation time: `sandbox/seat_dver2/账/collision_enbig7_20261031.md` (the same-day verbatim record of the collision; arbitration `36c35816`), `world_md5_assert.txt` / `world_md5_assert_close.txt` (the two-snapshot against-source assertion manifests: pre-born and close-out window), and `world_refresh_race_note.txt` (the Live-refresh race record); the roster tables `ConstructiveWorld_Live/order.txt` and `scripts/order.txt` cited in section 3.
+>
+> Evidence.  Documented November 1, 2026, in `recipes/`, by agent `rqsup4` (the inspection polishing round; the third piece of the five-lesson feedback round). The case measurements in the tables below come from the case record: arbitration `36c35816`; 25/25 md5 assertions OK; 24 chain pieces born rc=0 (14:00:09-14:34:46) and the product born rc=0 (14:35); three zero-tampering re-assertions during the intrusion window.
+>
+> Exit-codes.  Not applicable to a document face; the referenced tools keep their implemented exit-code semantics unchanged (measured in the case: `world_hook.py` 3 WDIFF + 1 WMISS → RED rc 9; second-family copy refusal rc 8; `select_audit.py` NOT-IN-ORDER failing).
 
-## 〇、一符总纲
+## 0. At a glance
 
-| 项 | 值 |
+| item | value |
 |---|---|
-| 处方号 | **PW1**（Private-world rebuild·私占世界重建） |
-| 病名 | 同域双席并行写——越界席写穿他席独占写域，世界面遭置换/污染 |
-| 判例 | 20261031 enbig7 英化补批席越界写 seat_dver2（13:31 起）：`tree/` 世界 .vo 置换、born 残屑（.vok/.vos/.aux/.glob）、`logs/` born_dv*.rc/.log、`gate4_itg_tree.json`/`gate6_itg_*.json`、`_dvtree/`、`work/` 部署 |
-| 仲裁 | 主会话 `36c35816`：seat_dver2 归本席；入侵者收敛 seat_enbig7；处置＝待静→全量重审计→私占世界 |
-| 铁律位 | **写域独占制**（每席独占写域·域界即宪法）；入侵期产物一律不采；他席域只读不代清 |
+| recipe number | **PW1** (private-world rebuild) |
+| defect name | same-domain twin-agent parallel write: the out-of-bounds agent writes through another agent's exclusive write domain, and the world face is displaced or polluted |
+| case | October 31, 2026, the enbig7 English-batch agent wrote out of bounds into `seat_dver2` (from 13:31): the `tree/` world .vo displaced; born debris (.vok/.vos/.aux/.glob); `logs/` born_dv*.rc/.log; `gate4_itg_tree.json`/`gate6_itg_*.json`; `_dvtree/`; the `work/` deployment |
+| arbitration | arbitration `36c35816`: `seat_dver2` stays with this agent; the intruder converges back to `seat_enbig7`; disposition = wait for quiet → full re-audit → private world |
+| governing invariant | **the exclusive write-domain rule** (each agent owns an exclusive write domain; the domain boundary is binding on all agents); products from the intrusion window are never adopted; another agent's domain is read-only and never cleaned by proxy |
 
-## 一、病灶（根因链·判例转录）
+## 1. The defect (root-cause chain, transcribed from the case record)
 
-1. **域界失守**：入侵者持 reg 车道（`/tmp/cw_reg_enbig7`·pid 94466/94468/94481）
-   越界写他席独占域——席位调度面缺陷，非工具面缺陷。
-2. **世界规格残缺仍 born**：入侵者两次 born 失败（r1 13:33 缺 `S12_B5RecycleSF`；
-   r2 13:42 缺 `UpReqQExpTail`）＝链件未齐即 born 之工序缺陷。PW1 不赦免此缺陷：
-   入侵者收敛回自域后须自修世界规格（链件对账齐全方 born），处方不代行。
-3. **Live refresh 竞态**（`world_refresh_race_note.txt`）：13:31:30 cp 播世界时
-   Live 侧 runner refresh 中飞行——瞬态多出 `abl_dmw2_sharpen_decay.v`
-   （md5 `c5e43ba4…`），cp 后 Live 定格回 140 代。处置＝自 tree/ 移除（本席写位内）
-   留档；世界=Live 140 代不变式，非目标依赖闭包成员不入世界。
+1. **The domain boundary was breached**: the intruder held the reg lane (`/tmp/cw_reg_enbig7`,
+   pids 94466/94468/94481) and wrote out of bounds into another agent's exclusive domain:
+   a scheduling-plane defect, not a tooling-plane defect.
+2. **The world spec was incomplete yet born anyway**: the intruder's two born attempts failed
+   (r1 13:33 missing `S12_B5RecycleSF`; r2 13:42 missing `UpReqQExpTail`): the process defect of
+   born with the chain pieces not yet complete. PW1 does not excuse this defect: after the
+   intruder converges back to its own domain it must repair its own world spec (born only after
+   the chain-piece reconciliation is complete); the recipe does not perform this on its behalf.
+3. **The Live-refresh race** (`world_refresh_race_note.txt`): at 13:31:30, while the cp broadcast
+   the world, the Live-side runner refresh was in flight: a transient extra
+   `abl_dmw2_sharpen_decay.v` (md5 `c5e43ba4…`) appeared, and after the cp the Live side settled
+   back at generation 140. Disposition: remove it from `tree/` (inside this agent's write
+   position) and archive it; the world is the Live generation-140 invariant, and members outside
+   the target dependency closure do not enter the world.
 
-## 二、处方（PW1 五步·固定序·可记不可跳）
+## 2. The recipe (PW1 five steps: fixed order, memorized, never skipped)
 
-| 步 | 动作 | 判例实测（seat_dver2·20261031） |
+| step | action | measured in the case (`seat_dver2`, October 31, 2026) |
 |---|---|---|
-| 1 | **仲裁与域收敛**：主会话裁权（归属裁定＋入侵者收敛回自域）；处方不代行仲裁 | 仲裁 `36c35816`：seat_dver2 归本席·enbig7 收敛 seat_enbig7 |
-| 2 | **待静**：入侵停止前不动刀；入侵期产物一律不采（logs/候选/work 部署全部弃用） | 「未采任何入侵期产物」在卷 |
-| 3 | **全量重审计**：对源 md5 断言——世界 .v 件对源（Live 现文/账钉代）＋链件对冻结账 md5，逐件出断言行；非目标闭包成员剔除留档 | `world_md5_assert.txt`：25/25 OK（20 Live .v 对源＋4 链件对 digcure 冻结账·BL/PI/PEI/truncfam 四源同值实录） |
-| 4 | **私占世界全量重播**：自建私有世界目录（`work/<私有>/`），按 order.txt 链序逐件 born（全 rc=0），成品 born close out | 24 链件按 order.txt 链序 born 全 rc=0（14:00:09–14:34:46）·成品 born rc=0（14:35） |
-| 5 | **三度全量 md5 复断**：pre-born／gates 后／freeze 前三拍逐件 md5 断言，零篡改方收口 | 入侵期间三度复断 world_dig 均 0 篡改（manifest 三拍在卷） |
+| 1 | **Arbitration and domain convergence**: orchestration exercises the ruling authority (the ownership ruling plus the intruder converging back to its own domain); the recipe does not perform arbitration | arbitration `36c35816`: `seat_dver2` stays with this agent; enbig7 converges to `seat_enbig7` |
+| 2 | **Wait for quiet**: no cuts before the intrusion stops; products from the intrusion window are never adopted (the `logs/` candidates and the `work/` deployment all discarded) | "no intrusion-window product was adopted" is on record |
+| 3 | **Full re-audit**: against-source md5 assertion: each world `.v` piece asserted against its source (the Live current text / the ledger-pinned generation), plus the chain pieces asserted against the frozen-ledger md5, one assertion line per piece; non-target closure members removed and archived | `world_md5_assert.txt`: 25/25 OK (20 Live .v pieces against sources + 4 chain pieces against the digcure frozen ledger, the BL/PI/PEI/truncfam four-source equal-value record) |
+| 4 | **Full replay of the private world**: build the private world directory (`work/<private>/`), born each piece in `order.txt` chain order (all rc=0), and close out with the product born | 24 chain pieces born in `order.txt` chain order, all rc=0 (14:00:09-14:34:46); the product born rc=0 (14:35) |
+| 5 | **Three-round full md5 re-assertion**: per-piece md5 assertions at the three snapshots (pre-born / after gates / before freeze); close out only at zero tampering | during the intrusion window all three re-assertions read world_dig at 0 tampering (the manifest's three snapshots are on record) |
 
-## 三、rocqwash 工装接线（本仓六件各就各位）
+## 3. Wiring into the rocqwash tooling (the six pieces in this repository, each in place)
 
-1. **前兆面**（撞前）：`tools/select_audit.py`——DUP-CROSS（同件双认领＝同域双席
-   撞名前兆）＋DUP-ORDER（注册表同名多行）。实表判例（20261101 巡检实测）：
-   `ConstructiveWorld_Live/order.txt` 199 行表含 DUP-ORDER×2
-   （`UpReqBanachExpAdd`/`abl_normconv_real` 各 R28+R29 两行·代签同值）——
-   全表 grep 方能现形，只录不判（外部仓·如实记不代修）。
-2. **选件面**：同器 NOT-IN-ORDER——选件必对**树侧** order.txt 实读全表
-   （判例：EntropyUnsatMark 在册于 Live 表、不在 `scripts/order.txt` 671 行表
-   ——错表即红，正是「读对表」纪律的机械演示）。
-3. **born 前世界基断言**：`wash/world_hook.py`——`--world <私占世界> --manifest
-   <认证代账>` 断言 world=认证代；**锚必随代换**（禁拿旧代锚冒充认证代）。
-   实表判例（20261101 巡检实测）：内置 nw5ver 五锚对 `seat_nw5ver/tree` 5/5 MATCH；
-   同锚对 `seat_dver2/tree`（14:35 重建新代）3 WDIFF＋1 WMISS→RED rc 9。
-4. **工具副本群面**：`wrapper/quad8_reconcile.py`＋`wrapper/frozen_call.py`——
-   四仓同 md5 副本群对账＋逐调断言，防工具层串写（第二家族副本拒执 rc 8）。
-5. **洗刀 born 面**：`wash/wash_engine.py`（冻结）＋`wash/world_hook.py --` 透传形
-   ——私占世界绿方放行洗产物落盘。
-6. **收口面**：`certify/freeze_manifest.py`（两层冻结）＋收窗复断 manifest
-   （步5 第三拍即其入账形）。
+1. **Precursor face** (before the collision): `tools/select_audit.py`: DUP-CROSS (one piece
+   double-claimed: the precursor of a same-domain twin-agent name collision) + DUP-ORDER
+   (same-name duplicate roster rows). Measured table case (November 1, 2026, inspection run):
+   the `ConstructiveWorld_Live/order.txt` 199-row table carries DUP-ORDER×2
+   (`UpReqBanachExpAdd`/`abl_normconv_real`, each with two rows R28+R29, equal generation
+   signatures); only a full-table grep reveals it; record-only, no ruling (external repository:
+   recorded faithfully, not repaired on its behalf).
+2. **Piece-selection face**: the same tool's NOT-IN-ORDER: piece selection must read the
+   **tree-side** `order.txt` table in full (case: EntropyUnsatMark is on the Live table, absent
+   from the `scripts/order.txt` 671-row table; the wrong table fails the check, the mechanical
+   demonstration of the read-the-right-table discipline).
+3. **Pre-born world assertion**: `wash/world_hook.py`: `--world <private world> --manifest
+   <certified-generation account>` asserts world = certified generation; **the anchor must move
+   with the generation** (never pass an old-generation anchor off as the certified generation).
+   Measured case (November 1, 2026, inspection run): the built-in nw5ver five anchors against
+   `seat_nw5ver/tree` read 5/5 MATCH; the same anchors against `seat_dver2/tree` (the new
+   generation rebuilt at 14:35) read 3 WDIFF + 1 WMISS → RED rc 9.
+4. **Tool-copy-group face**: `wrapper/quad8_reconcile.py` + `wrapper/frozen_call.py`:
+   four-repository same-md5 copy-group reconciliation plus per-call assertion, guarding against
+   tool-layer cross-writes (second-family copies refuse execution, rc 8).
+5. **Sanitize-born face**: `wash/wash_engine.py` (frozen) plus the `wash/world_hook.py --`
+   pass-through form: with the private world's passing verdict, the sanitized products are
+   released to disk.
+6. **Close-out face**: `certify/freeze_manifest.py` (two-layer freeze) plus the close-out-window
+   re-assertion manifest (step 5's third snapshot is its on-record form).
 
-## 四、边界（处方不硬凑）
+## 4. Boundaries (the recipe does not force-fit)
 
-- **仲裁权在主会话**：本处方是仲裁后的**执行面**；席间争议不自行处置、不互清域。
-- **他席域只读**：即便被入侵，处置动作（移除残屑/重建）只在**本席写位内**；
-   入侵者域内缺陷由入侵者自修。
-- **PW1 不替代门闸**：born 前断言（world_hook）与收口冻结（freeze_manifest）
-  各自独立在岗；私占重建不豁免任何一关。
-- **锚代纪律**：私占世界若按新代重建，认证代锚必须随代换新拍——禁复用旧代
-  manifest 冒充认证代（nw5 雷同源）。
+- **Arbitration authority rests with orchestration**: this recipe is the **execution face** after
+  arbitration; inter-agent disputes are not handled unilaterally, and domains are not cleaned for
+  one another.
+- **Another agent's domain is read-only**: even under intrusion, the disposition actions (debris
+  removal / rebuild) happen only **inside this agent's write position**; defects inside the
+  intruder's domain are repaired by the intruder itself.
+- **PW1 does not replace the acceptance checks**: the pre-born assertion (`world_hook`) and the
+  close-out freeze (`freeze_manifest`) stand on duty independently; a private-world rebuild
+  exempts none of the checks.
+- **Anchor-generation discipline**: if the private world is rebuilt on a new generation, the
+  certified-generation anchor must be re-snapped at the generation change; never reuse an
+  old-generation manifest as the certified generation (the nw5 lookalike-source trap).

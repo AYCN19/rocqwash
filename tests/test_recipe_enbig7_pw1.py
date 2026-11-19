@@ -9,8 +9,9 @@
 （主会话仲裁 36c35816·25/25 对源断言·24 链件链序 born 全 rc=0·三度复断零篡改）。
 
   1 处方件在册  recipes/ENBIG7_same_domain_collision_PW1.md 在盘且判例锚词面齐
-                （PW1／collision_enbig7_20261031／36c35816／待静／全量重审计／
-                 私占世界／order.txt 链序／三度／未采／锚必随代换）
+                （PW1／collision_enbig7_20261031／36c35816／wait for quiet／
+                 full re-audit／私占世界／chain order／three re-assertions／
+                 never adopted／anchor must move）
   2 前兆负例    【判例 enbig7 形】同一模块名出现在 ≥2 份批选清单 → select_audit
                 DUP-CROSS failing rc 1（撞名前兆机检·tools/select_audit.py）
   3 世界偏斜负例【入侵置换形】fixture 世界 .vo 被置换（≠认证代锚）→ world_hook
@@ -39,8 +40,9 @@ ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # 更新账.md §三在�
 
 RECIPE_ANCHORS = [
     "PW1", "collision_enbig7_20261031", "36c35816",
-    "待静", "全量重审计", "私占世界", "order.txt 链序", "三度", "未采",
-    "锚必随代换", "world_hook", "select_audit", "DUP-CROSS",
+    "wait for quiet", "full re-audit", "私占世界", "chain order",
+    "three re-assertions", "never adopted", "anchor must move",
+    "world_hook", "select_audit", "DUP-CROSS",
 ]
 
 
