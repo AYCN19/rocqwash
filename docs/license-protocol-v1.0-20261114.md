@@ -1,49 +1,33 @@
-# license-protocol-v1.0-20261114.md — rocqwash usage and authorization protocol, v1.0.
-
-> **LicenseProtocolCard**: the usage and authorization protocol that accompanies
-> the AGPL-3.0-or-later license of the rocqwash repository, v1.0 (2026-11-14). It
-> states what the tools do on the operator's behalf, what the operator
-> authorizes, and the terms contributors accept. It does not replace the
-> AGPL license; it operates within it.
-
-## Purpose.
-
-State, in one place and in plain language, the authorization surface of the
-rocqwash toolset: which actions the tools perform on repositories and
-continuous-integration systems, what credentials and scopes they require,
-the autonomy boundaries (budget caps, fail-loud rules), and the terms under
-which contributions are accepted.
-
-## Interface.
-
-This card binds three faces: (1) every tool under `tools/` and `wrapper/`
-and the MCP server face (`tools/mcp_server.py`), whose capability contract
-is `docs/CAPABILITY-INDEX.md`; (2) the repository workflow faces under
-`.github/workflows/`; (3) the contributor flow described in
-`CONTRIBUTING.md`. Where this card and the License differ, the License
-governs.
-
-## Dependencies.
-
-AGPL-3.0-or-later (`LICENSE`), `NOTICE`, `docs/CAPABILITY-INDEX.md`,
-`docs/contrib-isolation-protocol-v1.0-20261113.md`, the capability
-register (net-gated tools require `ROCQWASH_MCP_ALLOW_NET=1`).
-
-## Evidence.
-
-Grounded in the repository's own operating rules as landed: default-deny
-network gating for tools with a non-zero network face; budget-capped
-self-heal and auto-repair legs (one auto-retry per run, two repair rounds
-per branch, one backfill per cancelled run) with every outcome recorded in
-the experience ledger; fail-loud exit conventions across the toolset.
-
-## Exit-codes.
-
-Not applicable (documentation card). The exit-code semantics of every tool
-remain exactly as documented in each tool's own header; this card never
-alters them.
-
----
+# license-protocol — rocqwash usage and authorization protocol, v1.0 (issued November 14, 2026).
+>
+> **LicenseProtocolCard**: the usage and authorization protocol that accompanies the
+> AGPL-3.0-or-later license of the rocqwash repository, v1.0 (issued November 14, 2026):
+> what the tools do on the operator's behalf, what the operator authorizes, and the
+> terms contributors accept. It does not replace the AGPL license; it operates within it.
+>
+> Purpose.  State, in one place and in plain language, the authorization surface of the
+> rocqwash toolset: which actions the tools perform on repositories and continuous-
+> integration systems, what credentials and scopes they require, the autonomy boundaries
+> (budget caps, fail-loud rules), and the terms under which contributions are accepted.
+>
+> Interface.  This card binds three faces: (1) every tool under `tools/` and `wrapper/`
+> and the MCP server face (`tools/mcp_server.py`), whose capability contract is
+> `docs/CAPABILITY-INDEX.md`; (2) the repository workflow faces under
+> `.github/workflows/`; (3) the contributor flow described in `CONTRIBUTING.md`.
+> Where this card and the License differ, the License governs.
+>
+> Dependencies.  AGPL-3.0-or-later (`LICENSE`), `NOTICE`, `docs/CAPABILITY-INDEX.md`,
+> `docs/contrib-isolation-protocol-v1.0-20261113.md`, the capability register
+> (net-gated tools require `ROCQWASH_MCP_ALLOW_NET=1`).
+>
+> Evidence.  Grounded in the repository's own operating rules as landed: default-deny
+> network gating for tools with a non-zero network face; budget-capped self-heal and
+> auto-repair legs (one auto-retry per run, two repair rounds per branch, one backfill
+> per cancelled run) with every outcome recorded in the experience ledger; fail-loud
+> exit conventions across the toolset.
+>
+> Exit-codes.  Not applicable (documentation card); the exit-code semantics of every
+> tool remain exactly as documented in each tool's own header; this card never alters them.
 
 ## 1. What the tools do on your behalf
 
@@ -130,14 +114,10 @@ order; the bracketed parts are filled per change):
 > Authorship Statement and ICLA §5.2 (AI as instrument — human
 > authorship).
 
-Chinese mirror (for bilingual descriptions):
-
-> AI 辅助披露（标准形）：本变更经本项目自带的递归式演进管线产出——AI
-> 智能体在人类工程师［姓名］（［Steward／贡献者］）的方向指导下执行构
-> 筑、复核与组装；该工程师复核验收结果并对内容负全责。实质设计决策沿
-> 工单规格与仓既有正典形落位；边界与未决项登记于［节］。本声明依
-> NOTICE Authorship Statement 与 ICLA §5.2（AI as instrument — human
-> authorship）作出。
+Chinese mirror (for bilingual descriptions): the Chinese wording of the
+disclosure above is preserved in the sibling `.zh.md` archive of this
+file (section 7 there); use that wording when a bilingual pull-request
+description needs the Chinese form.
 
 Rules: (a) the human principal is named with their project role —
 internal agent, work stream, or line labels are not part of the public
