@@ -33,6 +33,13 @@ set -u
 REPO=$(cd "$(dirname "$0")/.." && pwd)
 FIX="$REPO/tests/fixtures"
 PY=${ROCWASH_PY:-python3}
+# Fail loud when the selected interpreter is a non-working stub (the Windows
+# Store python3 alias silently exits rc=49 on some hosts and produced the
+# unexplained rc=49 family); one probe, zero output, actionable hint.
+if ! "$PY" -c "import sys" >/dev/null 2>&1; then
+  echo "FAIL-LOUD: PY=$PY does not run on this host (store alias or broken shim?) - set ROCWASH_PY=<a working python> and retry" >&2
+  exit 49
+fi
 # Force UTF-8 I/O for every case and every child process they spawn: on a
 # Windows host the default stdout codepage (charmap on the hosted runner
 # image, gbk on a zh-CN host) makes a tool that prints Chinese prose or math
