@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""_parse_fin_mac.py — censusFIN_mac 解析道（Mac 形·S 系 Prop 清除战役·20261022）
+"""_parse_fin_mac.py — censusFIN_mac extraction parser (macOS form, Prop-erasure verification).
 
-判读语义＝_sortalive.py 席 1489 parse 通道（提取擦除语义·词表无关）＋1572 ann 双形律：
-  - ann 正则 `\\(\\*\\* val alive_N :\\s*(.+?) \\*\\*\\)` —— `:\\s*` 冒号-空格/换行双形容忍
-    （§1·E 律 3：单形正则遇型注首行断行即整块漏捕＝假 CLEAN 假绿通道·1572 伤）；
-  - RED iff "__" 出现于 let 体或型注（Prop 擦除真判据·含 Set-cloaked Prop 通道
-    E-STAGING-1251）；CLEAN＝全无 "__"；
-  - 缺席方＝真判据（§1·E 律 1：单命令全提结果中缺席＝Prop 擦除）——missing 逐名出账 fail-loud。
+Purpose.  Classify each statement of a censusFIN_mac `.ml` extraction by
+erasure semantics alone, vocabulary-independent: `red` iff "__" appears in
+the let body or the value annotation (the Prop-erasure criterion;
+Set-cloaked Prop included), `clean` iff no "__" occurs, and per-name
+`missing` reported fail-loud when neither a let body nor a type alias
+matches, since absence from a full extraction is itself the erasure
+criterion.  A `--vo` run adds the four-point pass criterion on the probe
+artifacts (exit file, transcript error scan, `.vo` magic, `.vo` freshness).
 
-绿判四件套并查（本探针炮自身）：
-  ①exit 码（驱动透传真码）②log 零 Error＋尾段无异常 ③.vo 魔数 436f712100015ff4
-  ④.vo mtime 新于探针 .v——任一不齐即 fail-loud 拒判（探针红≠模块红·探针自身须先绿）。
-
-用法：
-  python3 _parse_fin_mac.py SortAlive_Probe_<W>.ml --manifest manifest_<W>.json \
+Interface.  python3 _parse_fin_mac.py SortAlive_Probe_<W>.ml --manifest manifest_<W>.json \
       [--vo SortAlive_Probe_<W>.vo --probe-v SortAlive_Probe_<W>.v \
        --transcript _fin_<W>_build.log --exit-file _fin_<W>.exit --json out.json]
+Prints one JSON verdict object on stdout; `--json PATH` also writes the full
+result record.  `--vo` requires `--probe-v` for the freshness check.
+
+Dependencies.  Python 3 standard library only; inputs are the `.ml`
+extraction and a manifest JSON carrying a `statements` list, plus the
+optional build transcript, exit file and `.vo`/`.v` probe artifacts.
+
+Evidence.  The annotation regex tolerates the colon-newline layout because a
+single-shape regex drops the whole block when the type annotation breaks
+after the colon, reporting a false CLEAN.  The type-alias alternative also
+matches the parameterized form `type 'a alive_N = ...`.
+
+Exit-codes.  0 = verdict PASS (four-point criterion holds, any
+`--expect-red` assertion holds, no missing names); 2 = verdict FAIL;
+9 = `--vo` given without `--probe-v`.
 """
 import argparse
 import io
@@ -35,11 +47,11 @@ def parse_census(ml_path, manifest, transcript=None):
     type_ledger = {"set": [], "type": []}
     for e in entries:
         aid = "alive_%d" % e["idx"]
-        # ann 双形律：`:\s*` 容忍「冒号+空格」与「冒号+换行」两排版（1572）
+        # two-shape annotation rule: `:\s*` tolerates both the colon-plus-space and the colon-plus-newline layouts
         ann = re.search(r"\(\*\* val %s :\s*(.+?) \*\*\)" % re.escape(aid), ml, re.S)
         body = re.search(r"^let (?:rec )?%s[^=]*=\n(.*?)(?=\n\n|\n\(\*\*|\Z)" % re.escape(aid),
                          ml, re.M | re.S)
-        # 20261023 S12 席修正（ann/type 双形律同族第三形）：参数化 type 别名形 type 'a alive_N = ...（sf_conscious 判例·双面在卷 ml:2616/mli:1215·备份 bak-20261023-s12typeparam）
+        # third shape of the annotation/type rule family: the parameterized type alias form `type 'a alive_N = ...`
         talias = re.search(r"^type (?:\'[A-Za-z0-9_]+ +)*%s = (.+)$" % re.escape(aid), ml, re.M)
         if body is None and talias is None:
             missing.append(e)
@@ -80,7 +92,7 @@ def parse_census(ml_path, manifest, transcript=None):
 
 
 def check_four_piece(probe_v, vo, exit_file=None):
-    """绿判四件套并查（探针炮自身）——vo 魔数＋新鲜度＋exit。"""
+    """Four-point pass criterion check on the probe artifacts: vo magic, freshness, exit."""
     chk = {"probe_v": probe_v, "vo": vo}
     ok = True
     if not os.path.exists(vo):
