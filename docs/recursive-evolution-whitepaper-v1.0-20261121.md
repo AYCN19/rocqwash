@@ -1,170 +1,170 @@
-# 递归式演进技术白皮书 v1.0
+# Recursive Evolution Technical Whitepaper v1.0 (RE-WP-v1.0-20261121), documented November 21, 2026.
 
-> **单号**：RE-WP-v1.0-20261121
-> **来源**：rocqwash 递归链 20261119-21 九飞实战沉淀（四 P0＋元验证层＋三缺口＋R18＋波浪 1/2 全链）
-> **地位**：递归式演进的方法论正本——描述递归链如何建、如何转、如何自纠、如何安全推进
-> **配套技能**：`cw-recursive-sop`（执行级 SOP·操作面浓缩）
-> **关联**：CI 白皮书（`ci-whitepaper-recursive-era-v1-*.md`·CI 红案分类）＋`docs/ci-triage-table.json`（分诊表）＋`docs/pin-provenance-v2.md`（provenance v2 契约）
-
----
-
-## 〇、递归式演进的定义
-
-**递归式演进＝一个系统在运行中改进自己的验证网、修复自己的红案、扩展自己的能力面，并将每轮的经验与判据回写到自身正典（白皮书/分诊表/经验卡），使下一轮的起点高于上一轮。**
-
-三个必要条件（缺一退化为普通自动化）：
-1. **元验证层**：存在验证器的验证器（枚举全部工具的自证面并 fail-loud）——没有它，红藏于观测盲区永不揭露；
-2. **递归链自裁决**：每轮收队后自动重铸下一轮（免候令），裁决边界由层律明文圈定；
-3. **经验回写正典**：每轮的教训/判据/处方必须同轮写入白皮书＋分诊表＋经验卡——不写则下一轮起点不升高。
+> Purpose.  The methodology canon of recursive evolution: it states how the recursive chain is built, how it turns, how it self-corrects, and how it advances safely. Source: the rocqwash recursive chain of November 19-21, 2026, distilled from the nine-run effort (the four-P0 package + the meta-verification layer + the three gaps + R18 + work streams 1/2 end to end). The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Interface.  Document face; no runtime interface. Section map: section 0 states the definition and the three necessary conditions; sections 1-3 state the seven laws, the seven pillars and the layer-tier invariants; sections 4-6 state the meta-layer exposure curve, the repair-round autopsy law and the recursive-output format; section 7 records the November 19-21, 2026 chain as a live walk-through. Every round's wrap-up scroll must carry the recursive-output block of section 6.
+> Dependencies.  Companion faces and skills cited read-only: the execution-level SOP skill `cw-recursive-sop` (the condensed operations face); the CI whitepaper `ci-whitepaper-recursive-era-v1-*.md` (CI failing-case classification); the triage table `docs/ci-triage-table.json`; the provenance-v2 contract `docs/pin-provenance-v2.md`. No runtime dependency.
+> Evidence.  Every claim anchors on the recorded chain of section 7, whose leaps cite their commit SHAs (3f781a1, 6998c40, 3a56b854, 0765d671, c48a548a, 13cefb0, a07403e3); the precedents inside sections 1-5 name their source packages and rule-institution dates; the version-history table pins the v1.0 scope. No selftest: document face.
+> Exit-codes.  Not applicable to a document face; the rc values quoted in the body (rc=0, rc=49, fail=N) are observed outputs of the named tools, described as implemented.
 
 ---
 
-## 一、递归链的七律
+## 0. The definition of recursive evolution
 
-| 律 | 内容 |
+**Recursive evolution = a system improving its own verification net, repairing its own failing cases, and extending its own capability faces while running, and writing each round's experience and precedents back into its own canon (whitepaper / triage table / experience cards), so that the next round starts higher than the last.**
+
+Three necessary conditions (missing any one degrades it into ordinary automation):
+1. **The meta-verification layer**: a verifier of verifiers exists (it enumerates every tool's selftest face and fails loudly); without it, failures hide in observation blind spots and never surface;
+2. **Self-adjudication of the recursive chain**: after each round wraps up, the next round is re-cast automatically (no waiting for orders), and the adjudication boundary is drawn in plain text by the layer law;
+3. **Experience written back into the canon**: each round's lessons / precedents / prescriptions must be written, in the same round, into the whitepaper + the triage table + the experience cards; unwritten, the next round's starting point does not rise.
+
+---
+
+## 1. The seven laws of the recursive chain
+
+| Law | Content |
 |---|---|
-| **1 完成即续律** | 任一票收官→回执落盘→台账更新→**自动取下一票·禁停**——"完成一个就停下"违规 |
-| **2 升格拦截律** | 五类拦截自动收队挂起：①代码类树写②预算超帽③网络硬红×3④语义歧义⑤越出队列授权面。挂起=诚实收队非故障 |
-| **3 帽控律** | 单 run 递归帽（通常 4-8 票）；清空队列=正常收队；帽满=回执登记剩余队列·按常驻授权自动续环 |
-| **4 收队回执律** | 无论何种收队必出收队卷：本轮台账逐票/下一轮候选/候令状态/升格项 |
-| **5 回传律** | 每票经验入 exp 卡→回传包预铸件逐票累积（三向并集纪律） |
-| **6 值守律** | 收队后值守哨可选续——与驱动器独立 |
-| **7 自续环律** | 收队≠停机：收队卷落盘→主会话按 STANDING-ROLE 自动重铸下一轮→循环往复。停机仅限三类 |
+| **1 Completion-continuation law** | Any ticket wrapping up → execution record written to disk → ledger updated → **the next ticket is taken automatically; stopping is forbidden**; "finish one and stop" violates the law |
+| **2 Escalation-interception law** | Five interception classes suspend and wrap up the run automatically: (1) code-class tree writes (2) budget over cap (3) hard network failures x3 (4) semantic ambiguity (5) exceeding the queue's authorized scope. Suspension = an honest wrap-up, not a malfunction |
+| **3 Cap law** | The per-run recursion cap (usually 4-8 tickets); an emptied queue = a normal wrap-up; a full cap = the execution record registers the remaining queue and the standing authorization continues the loop automatically |
+| **4 Wrap-up-record law** | Whatever ends the round, the wrap-up scroll must come out: this round's per-ticket ledger / next-round candidates / pending-execution state / escalated items |
+| **5 Return law** | Each ticket's experience enters the exp card → the return package's pre-cast pieces accumulate per ticket (the three-way union discipline) |
+| **6 Watch law** | After wrap-up, the standing watcher may continue optionally, independent of the driver |
+| **7 Self-continuation law** | Wrap-up ≠ shutdown: the wrap-up scroll is persisted to disk → the driver session re-casts the next round automatically per STANDING-ROLE → the loop repeats. Shutdown is limited to three classes |
 
-## 二、递归链七支柱（方法论骨架）
+## 2. The seven pillars of the recursive chain (the methodology skeleton)
 
-### 支柱 1 · 契约先行并行法
+### Pillar 1 - the contract-first parallel method
 
-多席位并行施工前，**接口先冻结在契约面**（数据/contract-*.md·CLI 签名/exit 码/输出 schema/文件帽全写死）——席位互不等零文件交叠，测试席照契约铸禁读半成品。
+Before multi-agent parallel construction starts, the interfaces are frozen first on contract faces (data / `contract-*.md`, CLI signatures, exit codes, output schemas, file caps, all written down); agents never wait on each other and zero files overlap, and the test agent casts the not-yet-readable half-products strictly against the contracts.
 
-- 好处：并行席零冲突；接口变更=契约版本化·非即兴；测试席可先行铸造。
-- 判例源：第 12 包三缺口闭环八席（`contract-pin-repair.md` 等八份契约面先行冻结→八席并行零冲突）。
+- Benefit: zero conflicts between parallel agents; an interface change is a contract version bump, never an improvisation; the test agent can cast first.
+- Precedent source: the package-12 three-gap closure ran eight agents (eight contract faces such as `contract-pin-repair.md` were frozen first → eight agents in parallel with zero conflicts).
 
-### 支柱 2 · 多飞谱系（失败→裁决→修正→续飞）
+### Pillar 2 - the multi-run lineage (failure → adjudication → fix → follow-up run)
 
-一票不是一次 run——是**谱系**：首飞→诚实升级→裁决→修正→续飞→…→绿收官。每次红不是失败，是**闸/席位纪律抓到真问题**的信号。
+A ticket is not one run; it is a **lineage**: first run → honest escalation → adjudication → fix → follow-up run → ... → wrap-up all passing. Each failing result is not a failure; it is the signal that the check/agent discipline caught a real problem.
 
-- 谱系记录格式：飞号→根因→裁决→修正。
-- 典型九飞谱系（四 P0 包）：首飞 B1 诚实升级→二飞裁决收口补丁→三飞元层三红→…→九飞 CI FULL 绿。
-- **升级通道五类**（升格=挂起候裁·禁带病续工）：①代码类树写②预算超帽③网络硬红×3④语义歧义⑤越出授权面。
+- Lineage record format: run number → root cause → adjudication → fix.
+- Typical nine-run lineage (the four-P0 package): first run B1 escalates honestly → second run adjudicates and closes out the patch → third run three meta-layer failures → ... → ninth run CI FULL all passing.
+- **Five escalation channels** (escalation = suspended pending adjudication; carrying a defect into further work is forbidden): (1) code-class tree writes (2) budget over cap (3) hard network failures x3 (4) semantic ambiguity (5) exceeding the authorized scope.
 
-### 支柱 3 · 元验证层（验证器的验证器）
+### Pillar 3 - the meta-verification layer (the verifier of verifiers)
 
-一个枚举全部工具 `--selftest` 面的元测试（`tests/test_tool_selftests.py`），将全部工具的自证纳入统一网——红/缺/未登记豁免 → fail-loud 列名。
+A meta-test (`tests/test_tool_selftests.py`) enumerates every tool's `--selftest` face and folds every tool's self-attestation into one net: failing / missing / unregistered exemption → fail-loud with the names listed.
 
-- **价值曲线**：建网→揭露存量红→逐个机测闭合。元层建网首日即抓 symbiosis TMP 真红＋G1 hang＋V18 误报＋三红收口——**红不是回归，是观测盲区闭合的信号**。
-- **纪律**：元层自身的红也须回应（不能只建网不修网揭露的红）；元层的 timeout 判据须负载韧性（一次重试·两连才红——120s cap 在负载下假阳）。
+- **Value curve**: build the net → expose the standing failures → close each one with a machine test. The meta layer's first day caught the real symbiosis TMP failure, the G1 hang, the V18 false positive and the three-failure close-out: **a failing result is not a regression; it is the signal of an observation blind spot closing**.
+- **Discipline**: the meta layer's own failures must be answered too (building the net without repairing the failures it exposes does not count); the meta layer's timeout criterion needs load resilience (one retry, two consecutive hits before failing: the 120 s cap false-positives under load).
 
-### 支柱 4 · 红必吐（可观测性）
+### Pillar 4 - failure output must surface (observability)
 
-失败 case 的输出**禁止被裁剪窗口吞掉**——`run_tests.sh` 失败时印**首 40 行＋尾 20 行**；元测试印 **fail-first 摘要行**（失败先列名·行级细节殿后）。
+The output of a failing case **must not be swallowed by a truncation window**: `run_tests.sh` prints **the first 40 lines plus the last 20 lines** on failure; the meta-test prints the **fail-first summary line** (failures listed first, line-level details after).
 
-- 判例：Linux 元层红案——失败行全在字母序后段，被 first-40 裁剪吞掉——红必吐尾 20 行修后一炮钓出 symbiosis TMP 真红。
-- **审计原话**：「红输出不可观测」＝与「假绿」同级的验证面缺陷。
+- Precedent: the Linux meta-layer failing case: the failing lines all sat in the late alphabetical segment and were swallowed by the first-40 truncation; after the tail-20-lines rule landed, one rerun fished out the real symbiosis TMP failure.
+- **Audit quote**: "failure output that cannot be observed" ranks as a verification-surface defect on the same level as a "spurious pass".
 
-### 支柱 5 · 双盲互证（两独立诊断收敛）
+### Pillar 5 - double-blind mutual corroboration (two independent diagnoses converging)
 
-同一根因由两条**互不知情**的诊断路径独立定谳——两条路径收敛到同一结论＝根因实锤。
+The same root cause is finally established independently by two diagnostic paths that know nothing of each other; two paths converging on one conclusion = the root cause is confirmed beyond doubt.
 
-- 判例：R18 红案——MCP 判定席与桌面修复席独立诊断，均收敛到「59ef077 重签错靶 f390121c」。
-- 价值：单人诊断可能错（噪声/盲区），双人独立收敛＝错误率乘法下降。
+- Precedent: the R18 failing case: the MCP adjudication agent and the desk repair agent diagnosed independently, and both converged on "59ef077 re-signed against the wrong target f390121c".
+- Value: a single diagnosis can be wrong (noise / blind spots); two independent converging diagnoses multiply the error rate down.
 
-### 支柱 6 · 帽对表复核
+### Pillar 6 - the cap cross-check
 
-每席 declared cap（文件数帽）vs 实际 git diff 文件集——**超帽=blocker**（第 15 包 E1 席帽超取判例后新律）。复核席逐席对表，防席位自扩射程。
+Each agent's declared cap (the file-count cap) versus the actual `git diff` file set: **over cap = blocker** (the new law instituted after the package-15 E1 agent over-cap precedent). The reviewing agent cross-checks each agent against the declared caps, preventing an agent from widening its own range.
 
-### 支柱 7 · 自续环常驻岗位书
+### Pillar 7 - the standing charter of the self-continuation loop
 
-STANDING-ROLE 常驻岗位书＝主会话的**循环执行正形**——每轮收队后自动重铸下一轮，停机仅限三类（升格五类/用户明示停止/队列真空+census 零增长两轮）。
+The STANDING-ROLE standing charter = the driver session's **canonical loop-execution form**: after each round's wrap-up the next round is re-cast automatically; shutdown is limited to three classes (the five escalation classes / the user explicitly stopping / an empty queue plus two rounds of zero census growth).
 
-- 正形：`data/STANDING-ROLE.md`（祖光照 B1 包判例·「跑一票就停」根因＝收队候令设计→自续环修订废止候令）。
+- Canonical form: `data/STANDING-ROLE.md` (the B1-package precedent illuminated the origin: the root cause of "run one ticket and stop" was the wrap-up design that waits for orders → the self-continuation revision abolished the wait-for-orders design).
 
-## 三、递归链的不变量（层律三档·并行安全的前提）
+## 3. The invariants of the recursive chain (the three-tier layer law: the premise of parallel safety)
 
-| 层 | 规则 | 并行安全性 |
+| Tier | Rule | Parallel safety |
 |---|---|---|
-| 数据层 | 自动（乙档·round admissions/calibration 读数） | ✅ 多执行者安全（台账追加走重试循环） |
-| 代码层 | gated（自裁决限于机械可判项·语义歧义/越权面升格） | ⚠️ PR＋review 闸（多执行者经 PR 合流） |
-| 宪法层 | 永不自动（零触达） | N/A |
+| Data tier | automatic (class B: round admissions / calibration readings) | ✅ safe for multiple executors (ledger appends go through the retry loop) |
+| Code tier | gated (self-adjudication limited to mechanically decidable items; semantic ambiguity / over-scope escalates) | ⚠️ PR + review check (multiple executors merge through PRs) |
+| Constitution tier | never automatic (zero reach) | N/A |
 
-**并行安全五规则**（多执行者冲突点及护栏）：
+**The five parallel-safety rules** (the conflict points of multiple executors and their guardrails):
 
-| # | 冲突点 | 护栏 |
+| # | Conflict point | Guardrail |
 |---|---|---|
-| 1 | 台账追加丢行竞态 | 追加器统一走「读头→重放行→PATCH 失败即重读」循环 |
-| 2 | B 闸双计 | actor 字段＋去重键（类，语义内容指纹） |
-| 3 | plan 状态文件撞写 | 每执行者自己的 plan 状态文件（actor 命名空间） |
-| 4 | 同票双修 | 认领制——PR 标题即认领（`[actor] topic date`）·撞题即停火 |
-| 5 | canonical 专属层 | plan-only 默认（非 canonical 执行者天然做不了·声明式跳过非伪造） |
+| 1 | dropped-row race on ledger appends | every appender goes through the "read head → replay rows → re-read on PATCH failure" loop |
+| 2 | double counting on the B check | the actor field plus a deduplication key (the class's semantic content fingerprint) |
+| 3 | colliding writes to the plan state file | each executor keeps its own plan state file (actor namespace) |
+| 4 | double repair of one ticket | the claim system: the PR title is the claim (`[actor] topic date`); a title collision stops the work at once |
+| 5 | the canonical-only tier | plan-only by default (a non-canonical executor structurally cannot do it; a declared skip is not a forgery) |
 
-## 四、元验证层的揭露期曲线
-
-```
-建网前：红藏于观测盲区（四 P0 跨 84 提交未动·cap 下不可见·rc=49 哑桩族无人解）
-   ↓ 建网
-揭露期：元层首跑即 fail=N（存量红全浮出·含 G1 hang/V18 误报/symbiosis TMP/三红收口）
-   ↓ 逐个机测闭
-稳态：元层绿·新红=回归信号·立即抓立即修
-```
-
-**审计原话引用**：「问题面从『4 P0＋漂移』收敛为『元测试 fail=2＋mcp hang』——显著收窄且更可机测。」这正是元层的价值曲线：**建网→揭露存量红→逐个机测闭**。
-
-**纪律**：揭露期的红不能假装不存在——每一个都必须逐个机测闭，禁降级黄档换绿，禁 rebaseline 冻结。
-
-## 五、修复轮的自愈尸检律
-
-每次修 CI 必须做两件事（用户令 20261120 立律）：
-
-1. **自愈尸检**：分析「自愈为何没修上」——根因必须是第一手实证（triage marker 匹配/环境差异/沙箱伪影），不是猜测。
-2. **经验/数据修订进白皮书**：修复完成后，同轮将教训/判据/处方写入白皮书类节＋分诊表行＋经验卡（三处同轮·缺一=违规）。
-
-**尸检产出的典型判据族**：
-- 同词两病判别器（v1 措辞 vs v2 措辞→分诊表数据面让自愈分流）
-- 沙箱窄 PATH→忠实壳形（Git Bash 全路径＋/usr/bin 前置·免引号赋值）
-- 红必吐尾 N 行＋fail-first 摘要（破裁剪盲区）
-- 元层 timeout 一次重试（负载假阳除名）
-- 帽对表（席位射程自扩防）
-
-## 六、递归输出的格式（下一轮队列）
-
-每轮收队卷**必载递归输出节**，格式：
+## 4. The exposure-period curve of the meta-verification layer
 
 ```
-递归输出（下一轮队列）：
-①<候选 1：来源/依据/预计帽>
-②<候选 2：...>
-③跨席对账项（如 annotation 副本 divergence·王小雪侧）
-④层律 gated 项（阈值自适应等·校准读数已就位）
+Before the net: failures hide in observation blind spots (the four-P0 cases crossed 84 commits untouched; invisible under the cap; the rc=49 stub family had no solver)
+   ↓ build the net
+Exposure period: the meta layer's first run reports fail=N (all standing failures surface: the G1 hang, the V18 false positive, the symbiosis TMP, the three-failure close-out)
+   ↓ close each with a machine test
+Steady state: the meta layer all passing; a new failure = a regression signal; caught and repaired at once
 ```
 
-下一轮由桌面常驻授权驱动：读递归输出→组队→派发→循环。**免候令**（用户令 20261121：「递归式演进，不需要等待我的审核，都要自行裁决」）。**边界**：升格五类（语义歧义/越权面等）仍挂起候裁——自裁决限于机械可判项。
+**Audit quote**: "the problem surface converged from '4 P0 + drift' to 'meta-test fail=2 + mcp hang', significantly narrower and far more machine-testable." This is exactly the meta layer's value curve: **build the net → expose the standing failures → close each with a machine test**.
 
-## 七、 today's chain（实证活体展示·20261119-21）
+**Discipline**: the failures of the exposure period must not be pretended away: each one must be closed with its own machine test; downgrading to a yellow class to buy a passing state is forbidden, and rebaseline-and-freeze is forbidden.
+
+## 5. The automatic-recovery autopsy law of repair rounds
+
+Every CI repair must do two things (the desk order of November 20, 2026, instituting the law):
+
+1. **The automatic-recovery autopsy**: analyze "why the automatic recovery did not repair it": the root cause must be first-hand evidence (a triage-marker match / an environment difference / a sandbox artifact), never a guess.
+2. **Experience/data revisions enter the whitepaper**: after the repair completes, the same round writes the lesson / precedent / prescription into the whitepaper-class section + the triage-table row + the experience card (all three in the same round; missing one = a violation).
+
+**Typical precedent families produced by autopsies**:
+- the same-word-two-diseases discriminator (v1 wording vs v2 wording → the triage-table data face lets the automatic-recovery routing separate them)
+- the narrow sandbox PATH → the faithful shell form (Git Bash full paths + a `/usr/bin` prefix; quote-free assignments)
+- the failure-output tail-N-lines rule + the fail-first summary (breaking the truncation blind spot)
+- one retry for the meta-layer timeout (removes the load-induced false positive)
+- the cap cross-check (prevents an agent from widening its own range)
+
+## 6. The format of the recursive output (the next round's queue)
+
+Every round's wrap-up scroll **must carry the recursive-output section**, in this format:
 
 ```
-第四评（审计卷打脸：撤「清零」）
-  ↓
-四P0修复＋元层建网（九飞·3f781a1）
-  ↓ 元层首战抓 symbiosis 真红
-红必吐＋哑桩探针（6998c40·3a56b854·0765d671）
-  ↓
-R18 证据语义＋triage v1.4（c48a548a）
-  ↓
-MCP 换代 44→54（13cefb0·判定席双盲互证）
-  ↓
-递归两票：波浪1 roster 31＋cap 派生＋元层 fail=2 闭（a07403e3）
-  ↓
-递归第三轮：波浪2 roster 42＋G11 断言＋元层韧性（在飞）
-  ↓
-下一轮队列（回执自动驱动·自裁决续推）
+Recursive output (the next round's queue):
+①<candidate 1: source / basis / expected cap>
+②<candidate 2: ...>
+③cross-agent reconciliation items (e.g. the annotation-copy divergence, on the Wang Xiaoxue side)
+④layer-law gated items (threshold self-adaptation etc.; the calibration readings are in place)
 ```
 
-**关键跃迁**：修复不再靠「看到红→人工分析→人工修」——元层建网后红自动浮出，分诊表自动归类，处方自动分流，桌面只裁决「语义判断」和「版本权威」两类真正的判断题。
+The next round is driven by the desk's standing authorization: read the recursive output → form the agent team → assign the tickets → loop. **No waiting for orders** (desk order of November 21, 2026: "recursive evolution does not need to wait for my review; every decision is made on its own"). **Boundary**: the five escalation classes (semantic ambiguity / over-scope etc.) still suspend pending adjudication; self-adjudication is limited to mechanically decidable items.
+
+## 7. Today's chain (a live walk-through, November 19-21, 2026)
+
+```
+Fourth review (the audit scroll overturned itself: the "clean zero" claim retracted)
+  ↓
+Four-P0 repairs + the meta-layer net built (nine runs, 3f781a1)
+  ↓ the meta layer's first engagement caught the real symbiosis failure
+Failure-output-must-surface + the stub probes (6998c40, 3a56b854, 0765d671)
+  ↓
+R18 evidence semantics + triage v1.4 (c48a548a)
+  ↓
+The MCP generation change 44→54 (13cefb0; the adjudication agent corroborated double-blind)
+  ↓
+The recursive ticket pair: work stream 1 roster 31 + cap derivation + meta-layer fail=2 closed (a07403e3)
+  ↓
+The recursive third round: work stream 2 roster 42 + the G11 assertion + meta-layer resilience (in flight)
+  ↓
+The next round's queue (driven automatically by the execution record; self-adjudication keeps the push going)
+```
+
+**The key transition**: repair no longer relies on "see a failure → human analysis → human fix": after the meta layer's net is built, failures surface automatically, the triage table classifies them automatically, prescriptions route them automatically, and the desk adjudicates only the two classes of genuine judgment calls: "semantic judgment" and "version authority".
 
 ---
 
-## 版本史
+## Version history
 
-| 版本 | 日期 | 内容 |
+| Version | Date | Content |
 |---|---|---|
-| v1.0 | 2026-11-21 | 初版——四 P0＋元验证层＋三缺口＋R18＋波浪 1/2 全链沉淀（九飞＋三飞递归两票） |
+| v1.0 | 2026-11-21 | Initial version: full-chain distillation of the four P0s + the meta-verification layer + the three gaps + R18 + work streams 1/2 (nine runs + the recursive ticket pair over three runs) |
