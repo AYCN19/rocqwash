@@ -763,7 +763,7 @@ t_doclint() {
   # docs-vs-implementation consistency three-check tool (tools/doc_lint.py;
   # tooling-agent cast; schema rocqwash-doclint/1; tests/test_doc_lint.py
   # minimal shell three checks: --selftest frozen marker DOC-LINT-SELFTEST
-  # PASS (tmp mini-repo six vectors V1-V6 self-attested by the casting
+  # PASS (tmp mini-repo seven vectors V1-V7 self-attested by the casting
   # agent's --selftest) + --help smoke + exit-code spot checks 2/2/9 (bogus /
   # --help-cap 0 / missing repo, verified by this integration agent's real
   # runs); zero network, zero writes, zero real-repo touch)
