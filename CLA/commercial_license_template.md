@@ -1,5 +1,27 @@
 # rocqwash Commercial License — Negotiation Template (v1.0, 20261114)
 
+> **CommercialLicense**: the commercial license negotiation template of the
+> rocqwash project: module scope, grant, restrictions, audit ledger, and
+> signature block for negotiating an alternative to AGPL-3.0-or-later obligations.
+>
+> Purpose.  State the negotiation starting point under which the Licensor may
+> grant a licensee alternative rights to the AGPL obligations, module by
+> module (M1-M5), with every bracketed item left as a negotiation variable.
+>
+> Interface.  Read-and-negotiate document face: pick modules in the section-2
+> matrix, fill the bracketed variables of sections 3-8, and return the
+> section-9 signature block to `168888@live.cn`.
+>
+> Dependencies.  None at runtime — a standalone document face paired with
+> `CLA/CCLA.md`, `CLA/ICLA.md`, and `CLA/README.md`; the AGPL boundary rule
+> is registered in `NOTICE`.
+>
+> Evidence.  Its module matrix matches the license protocol registered in
+> `NOTICE`; the pre-header original is preserved in the sibling archive
+> `CLA/commercial_license_template.md.zh.md`.
+>
+> Exit-codes.  Not applicable (document face; no executable interface).
+
 > Starting point for negotiating an alternative license to the
 > AGPL-3.0-or-later obligations of the rocqwash repository. All bracketed
 > items are negotiation variables. The final instrument supersedes this
