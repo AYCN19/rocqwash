@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-r"""scan_station.py — scan/mac_stmt_scan.py 正本指认包装（rocqwash wrapper/·Mac 适配席 rqadapt·20261031）
-
-在役组件 scan/mac_stmt_scan.py 冻结禁改（嵌记 md5 见 PINNED_MD5·各在飞席位实时引用）——
-本席适配一律新文件落 wrapper/，本包装即正本指认站（canonical identification station）：
-
-  1. 指认：定位并出示正本（绝对路径＋md5＋字节数＋嵌记 pin 比对）。指认只证「哪份是
-     正本」，不背书任何扫描判词——扫描口径仍以正本为准（报清单不报清白口径原样继承）。
-  2. 断言（可附）：--expect-md5 <hex>（外部附断言·可重复·全部须等）／--check-pin
-     （比对适配时嵌记 PINNED_MD5）。断言失败 exit 2，绝不带病透传。
-  3. 透传：站级旗标之外的一切参数逐字原序转发 `python3 -B scan/mac_stmt_scan.py`，
-     退出码原样传播（fail-loud，不改写——对齐 cli/rocqwash 路由契约）。
-
-站级旗标（本包装自留·不转发）：
-  --root DIR         正本仓根（默认＝本包装文件所在仓根；缺目录参数 exit 2）
-  --identify         只出指认卡不透传（断言过 exit 0／败 exit 2）
-  --expect-md5 HEX   外部 md5 断言（可重复·32 位 hex）
-  --check-pin        嵌记断言（PINNED_MD5·20261031 适配时实测）
-  --station-selftest 本包装自身自检（七判·零写盘·不动正本）
-  -h / --help        本站帮助（正本帮助经 `scan_station -- --help` 可达）
-
-正本自有旗标（--file/--json/--manifest/--hits-csv/--baseline/--selftest）全数透传；
-`--` 之后的参数（含站级字样）亦全数透传（显式转发边界）。
-裸调（零参数）＝出指认卡不透传。
-
-退出码：0=过；2=断言失败/站级用法错；9=正本缺失；其余＝正本口径透传
-（正本 --selftest 向量失败 exit 2、--file 靶缺失 exit 9 等原样可达）。
-
-幂等律：本包装零写盘——不写正本、不写仓、不写临时（run_tests.sh 幂等口径兼容；
-smoke 验证输出由调用者显式指定到自席沙箱）。
+"""scan_station.py - canonical identification station for the frozen scanner `scan/mac_stmt_scan.py` (rocqwash wrapper/).
+Purpose.  The in-service component `scan/mac_stmt_scan.py` is frozen against edits (pinned md5 in
+  PINNED_MD5); adaptations land as new files under `wrapper/`, so this wrapper is the canonical
+  identification station for the frozen scanner: (1) identify - locate the canonical copy and
+  present it (path, md5, byte count, pin comparison); identification proves which copy is canonical
+  only and endorses no scan verdict (scan semantics stay with the canonical tool); (2) assert
+  (optional) - `--expect-md5 <hex>` (repeatable, all must match) and `--check-pin` (the
+  adaptation-time pin); a failed assertion exits 2 and nothing is forwarded in a failing state;
+  (3) pass through - arguments beyond the station flags go verbatim in original order to
+  `python3 -B scan/mac_stmt_scan.py`, the child exit code propagating unchanged (fail-loud, never
+  rewritten; cli/rocqwash routing contract).
+Interface.  python3 wrapper/scan_station.py [station flags] [forwarded arguments...]
+  Station flags (kept by the wrapper, never forwarded): --root DIR (canonical repository root;
+  default = the repository root holding this wrapper; missing value exits 2) | --identify
+  (identification card only, no forwarding; exit 0 on pass, 2 on fail) | --expect-md5 HEX
+  (repeatable, 32 hex characters) | --check-pin | --station-selftest (seven in-process judgments,
+  zero writes, canonical untouched) | -h/--help (the canonical tool's help stays reachable through
+  `scan_station -- --help`).  The canonical flags --file/--json/--manifest/--hits-csv/--baseline/
+  --selftest pass through; arguments after `--` (station-flag spellings included) pass through
+  verbatim as the explicit forwarding boundary; a bare call prints the card without forwarding.
+Dependencies.  Python 3 standard library only (hashlib, io, os, subprocess, sys); assumes the canonical
+  copy at `scan/mac_stmt_scan.py` under the resolved repository root; the wrapper writes nothing
+  (run_tests.sh idempotence-compatible; smoke output paths belong to the caller's own sandbox).
+Evidence.  --station-selftest runs seven in-process judgments (md5 helper agreement, canonical location,
+  order-preserving flag stripping, inline-form stripping, `--` boundary verbatim forwarding, assertion
+  accept and reject, pin format); `tests/test_scan_station.py` adds nine subprocess checks.
+Exit-codes.  0 = pass; 2 = failed assertion or station usage error; 9 = canonical copy missing;
+  otherwise = the canonical tool's exit code passed through unchanged (its --selftest vector
+  failures exit 2 and a missing --file target exits 9, all reachable as is).
 """
 import hashlib
 import io
@@ -39,8 +39,10 @@ import sys
 WRAP_NAME = "wrapper/scan_station.py"
 CANONICAL_REL = "scan/mac_stmt_scan.py"
 
-# 嵌记（pin）＝20261031 适配席 rqadapt 对正本实测的 md5——正本若经冻终权威改版，
-# 须由适配席对实盘重嵌记，本包装不擅改正本也不擅改嵌记以外的任何在役件。
+# The pin is the md5 measured against the canonical copy at adaptation time (also printed on
+# the identification card through PINNED_NOTE).  If the canonical copy is ever revised under the
+# freeze authority, the pin must be re-measured against the live copy; this wrapper never edits
+# the canonical copy, nor any in-service file beyond the pin itself.
 PINNED_MD5 = "56ff0fb371f9684cc865023f6f5d0f4a"
 PINNED_NOTE = "20261031 rqadapt 适配时嵌记"
 
@@ -90,12 +92,14 @@ def md5_of(path):
 
 
 def default_root():
-    """默认正本仓根＝本包装文件的上上级目录（wrapper/ 的父目录）。"""
+    """Default canonical repository root: the grandparent directory of this wrapper file (the
+    parent of `wrapper/`)."""
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def find_canonical(root):
-    """指认正本：root/scan/mac_stmt_scan.py 存在则返回绝对路径，否则 None。"""
+    """Locate the canonical copy: return the absolute path of `scan/mac_stmt_scan.py` under
+    `root` when the file exists, else None."""
     if not root:
         return None
     p = os.path.join(os.path.abspath(root), *CANONICAL_REL.split("/"))
@@ -103,9 +107,11 @@ def find_canonical(root):
 
 
 def split_station_args(argv):
-    """站级旗标剥离；其余逐字原序保留（1:1 透传 faithfulness）。
+    """Strip the station flags; keep every other argument verbatim in original order
+    (1:1 forwarding faithfulness).
 
-    返回 (station, forwarded)。--root/--expect-md5 缺值 raise ValueError（站级用法错）。
+    Returns (station, forwarded).  A value-less --root/--expect-md5 raises ValueError
+    (station usage error).
     """
     st = dict(root=None, identify=False, expect_md5=[], check_pin=False,
               help=False, selftest=False)
@@ -114,7 +120,7 @@ def split_station_args(argv):
     while i < n:
         a = argv[i]
         if a == "--":
-            fwd.extend(argv[i:])          # 显式转发边界：之后全数透传
+            fwd.extend(argv[i:])          # explicit forwarding boundary: everything after passes through
             break
         if a in ("-h", "--help"):
             st["help"] = True; i += 1; continue
@@ -147,7 +153,8 @@ def split_station_args(argv):
 
 
 def norm_hex(s):
-    """断言值形制核：剥空白/引号、小写；非 32 位 hex 回 None（断言形制非法）。"""
+    """Assertion-value format check: strip whitespace and quotes, lowercase; return None for
+    anything that is not 32 hex characters (invalid assertion format)."""
     t = s.strip().strip("'\"").lower()
     if len(t) == 32 and all(c in "0123456789abcdef" for c in t):
         return t
@@ -155,7 +162,8 @@ def norm_hex(s):
 
 
 def assert_md5(actual, expects, check_pin):
-    """md5 断言核：expects 全部须等（＋可选嵌记）；回 (ok, [(want, match), ...])。"""
+    """md5 assertion core: every expectation must match (plus the optional pin); returns
+    (ok, [(want, match), ...])."""
     wants = []
     for e in expects:
         v = norm_hex(e)
@@ -170,7 +178,8 @@ def assert_md5(actual, expects, check_pin):
 
 
 def station_card(canonical, actual, expects, check_pin, forward_argv=None):
-    """指认卡行列（纯文本·不落盘）。forward_argv=None 表未透传（--identify）。"""
+    """Identification card lines (plain text, nothing written to disk).  forward_argv=None
+    marks no forwarding (--identify)."""
     ok, wants = assert_md5(actual, expects, check_pin)
     lines = []
     lines.append("== scan_station 正本指认卡（%s）==" % WRAP_NAME)
@@ -194,11 +203,12 @@ def station_card(canonical, actual, expects, check_pin, forward_argv=None):
 
 
 def station_selftest():
-    """本包装自身自检（七判·零写盘·不动正本）。回 pass 布尔。"""
+    """This wrapper's own selftest (seven judgments, zero disk writes, canonical copy
+    untouched).  Returns the pass boolean."""
     ok = True
     root = default_root()
 
-    # 判1 md5_of 与 md5_bytes 同源一致（对象＝本包装自身·零写盘）
+    # judge1 md5_of and md5_bytes agree on the same source (object = this wrapper itself, zero writes)
     v1 = md5_of(os.path.abspath(__file__))
     with io.open(os.path.abspath(__file__), "rb") as f:
         v2 = md5_bytes(f.read())
@@ -206,34 +216,34 @@ def station_selftest():
     print("  judge1 md5_of==md5_bytes(__file__):", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判2 默认仓根指认正本在位
+    # judge2 the canonical copy is located under the default repository root
     c = find_canonical(root)
     j = (c is not None and os.path.isfile(c)
          and os.path.relpath(c, root).replace(os.sep, "/") == CANONICAL_REL)
     print("  judge2 find_canonical(default_root) 在位:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判3 混排转发保序：站级旗标剥离·余者逐字原序
+    # judge3 order preservation with interleaved flags: station flags stripped, the rest verbatim in order
     st, fwd = split_station_args(["--file", "x.v", "--check-pin", "--json", "o.json", "y"])
     j = (st["check_pin"] is True and st["identify"] is False
          and fwd == ["--file", "x.v", "--json", "o.json", "y"])
     print("  judge3 混排剥离保序:", "PASS" if j else "FAIL", fwd)
     ok = ok and j
 
-    # 判4 inline 形制 --root=X 不透传
+    # judge4 the inline form --root=X is stripped, not forwarded
     st, fwd = split_station_args(["--root=/tmp/x", "--file", "x.v"])
     j = (st["root"] == "/tmp/x" and fwd == ["--file", "x.v"])
     print("  judge4 --root=X inline 剥离:", "PASS" if j else "FAIL", fwd)
     ok = ok and j
 
-    # 判5 `--` 边界：其后（含站级字样）全数透传且逐字不增不减
+    # judge5 the -- boundary: everything after it (station-flag spellings included) passes through verbatim
     tail = ["--", "--identify", "--file", "x.v"]
     _, fwd = split_station_args(["--check-pin"] + tail)
     j = (fwd == tail)
     print("  judge5 `--` 边界全透传:", "PASS" if j else "FAIL", fwd)
     ok = ok and j
 
-    # 判6 断言核：正 md5 过、伪 md5 拒
+    # judge6 assertion core: a correct md5 passes, a fake md5 is rejected
     act = md5_of(os.path.abspath(__file__))
     ok_t, w_t = assert_md5(act, [act], False)
     ok_f, _ = assert_md5(act, ["0123456789abcdef0123456789abcdef"], False)
@@ -241,7 +251,8 @@ def station_selftest():
     print("  judge6 断言核正过伪拒:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判7 嵌记形制：32 位 hex（正本缺位时判6 已用 __file__ 代测·嵌记形制独立在判）
+    # judge7 pin format: 32 hex characters (judge6 substitutes __file__ when the canonical copy is
+    # absent; the pin format check stands alone)
     j = norm_hex(PINNED_MD5) == PINNED_MD5
     print("  judge7 PINNED_MD5 形制 32-hex:", "PASS" if j else "FAIL")
     ok = ok and j
@@ -258,7 +269,7 @@ def main(argv=None):
         pass
 
     if not argv:
-        # 裸调＝指认卡（不透传）
+        # bare call = identification card (no forwarding)
         canonical = find_canonical(default_root())
         if canonical is None:
             print("scan_station: 正本缺失: %s（于仓根 %s）" % (CANONICAL_REL, default_root()),
@@ -301,14 +312,14 @@ def main(argv=None):
         sys.exit(0 if ok2 else 2)
 
     if not ok:
-        # 断言失败：卡照出（stderr），绝不带病透传
+        # failed assertion: the card still prints (stderr); nothing is forwarded in a failing state
         lines, _ = station_card(canonical, actual, st["expect_md5"], st["check_pin"],
                                 forward_argv=fwd)
         print("\n".join(lines), file=sys.stderr)
         sys.exit(2)
 
-    # Clean mode: the --baseline face targets the canonical campaign
-    # workspace; report and refuse before dispatching the frozen scanner
+    # Clean mode: the --baseline face targets the canonical work-stream
+    # workspace; report and refuse before routing the frozen scanner
     # (the generic --file scan stays available).
     if _clean_mode() and "--baseline" in fwd:
         print("requires canonical environment: the campaign-workspace S09 "
@@ -316,7 +327,8 @@ def main(argv=None):
               "--file for a generic scan")
         sys.exit(9)
 
-    # 透传：站级横幅走 stderr（正本 stdout 独占·管道口径不污染）
+    # forwarding: the station banner goes to stderr (the canonical tool owns stdout exclusively;
+    # pipes stay clean)
     print("[scan_station] 正本指认 md5=%s（%s）→ 透传 %d 参" % (actual, PINNED_NOTE, len(fwd)),
           file=sys.stderr)
     cmd = [sys.executable or "python3", "-B", canonical] + fwd
