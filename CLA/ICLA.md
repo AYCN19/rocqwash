@@ -1,5 +1,23 @@
 # rocqwash Individual Contributor License Agreement
 
+> **IndividualCLA**: the individual contributor license agreement of rocqwash:
+> grants, dual-licensing authorization, and individual representations.
+>
+> Purpose.  State the legal terms under which an individual contributes to
+> rocqwash and authorizes the Steward to license them under alternative terms.
+>
+> Interface.  Read-and-sign document face: the contributor reviews sections
+> 1-8, completes the section-9 signature block, and sends the signed agreement
+> to `168888@live.cn` or attaches it to the first pull request.
+>
+> Dependencies.  None at runtime — a standalone document face paired with
+> `CLA/CCLA.md` and `CLA/README.md` under the AGPL-3.0-or-later protocol.
+>
+> Evidence.  Its signing flow matches `CLA/README.md`; the pre-header original
+> is preserved in the sibling archive `CLA/ICLA.md.zh.md`.
+>
+> Exit-codes.  Not applicable (document face; no executable interface).
+
 Thank you for your interest in contributing to rocqwash ("Project"). This
 Individual Contributor License Agreement ("Agreement") sets out the terms
 under which You submit Contributions to the Project. The Project is
