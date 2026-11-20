@@ -1,31 +1,33 @@
 #!/bin/bash
-# wrapper/guard.sh — 冻结件 tools/cpu_guard.sh 适配直通层（frozen-component adapter · pass-through）
-# 2026-10-31 席 rqadapt · 适配任务：组件 tools/cpu_guard.sh（在役冻结禁改）
-#
-# 定位 Positioning:
-#   tools/cpu_guard.sh 为在役冻结件（各在飞席位实时引用），禁改。本层为**新文件**
-#   适配面——不复制、不重实现任何温控/梯队列逻辑，仅将 argv 1:1 直通给**本仓正本**
-#   tools/cpu_guard.sh 并原样透传退出码。契约承 docs/zh/architecture.md §6：
-#   「退出码＝被包裹命令退出码」；一切编译/测试仍必经温控包裹，本层只是其新入口，
-#   不是第二套实现（防双源漂移——正本唯一，本层零逻辑）。
-#
-# 用法 Usage（与正本逐字同 · byte-identical interface）:
+# wrapper/guard.sh — pass-through adapter for the frozen component `tools/cpu_guard.sh`.
+# Purpose.  `tools/cpu_guard.sh` is frozen and in service (running agents reference
+#   it live) and is never modified.  This layer is a new adapter face: it copies and
+#   re-implements no thermal-control or tiered-queue logic; it forwards argv 1:1 to
+#   the repository's original `tools/cpu_guard.sh` and passes the exit code through
+#   unchanged (contract: `docs/zh/architecture.md` §6 — exit code = the wrapped
+#   command's exit code).  Compiles and tests still go through thermal-control
+#   wrapping; this layer is only their new entry point, not a second implementation
+#   (the original stays unique, this layer carries zero logic — no dual-source drift).
+# Interface.  Usage (byte-identical to the original):
 #   wrapper/guard.sh [-Front 2] [-Mid 2] [-MaxWaitSec 900] [-Direct]
-#                    [-ThrottleFloor 90] [-ThermalMaxWait 3600] [-Reg <dir>] [--] <命令...>
-#   例 Example:
-#     wrapper/guard.sh -Reg /tmp/cw_reg_x -Front 0 -Mid 1 -MaxWaitSec 600 -- <命令...>
-#     wrapper/guard.sh -Direct -- <小探针...>
-#
-# 直通律 Pass-through contract:
-#   1. 不拦截不解析任何参数——全部原样递给正本（含 `--`，解析权全在正本）；
-#   2. 不注入默认值/不代设 -Reg——缺省行为与直接调用 tools/cpu_guard.sh 逐字节同；
-#   3. 退出码＝正本退出码＝被包裹命令退出码（exec 透传，无改写）；
-#   4. fail-loud：正本缺失 exit 9（口径承 cli/rocqwash 退出码表「文件缺失=9」），
-#      不模拟温控/队列任何行为（禁假绿承 CONTRIBUTING §0 三诚实律）。
-#
-# 退出码 Exit codes:
-#   9   = 本仓正本 tools/cpu_guard.sh 缺失（fail-loud）
-#   其余 = 正本透传（即被包裹命令自身退出码）
+#                    [-ThrottleFloor 90] [-ThermalMaxWait 3600] [-Reg <dir>] [--] <command...>
+#   1. No argument is intercepted or parsed: everything, including `--`, reaches the
+#      original verbatim; parsing authority rests entirely with the original.
+#   2. No defaults are injected and no `-Reg` is set on the caller's behalf: default
+#      behavior is byte-identical to calling `tools/cpu_guard.sh` directly.
+#   3. Exit code = the original's exit code = the wrapped command's exit code (`exec`
+#      pass-through, no rewriting).
+#   4. Fail-loud: exit 9 when the original is missing (the `cli/rocqwash` exit-code
+#      table, file missing = 9); no thermal-control or queue behavior is simulated
+#      (no spurious pass; CONTRIBUTING §0 honesty laws).
+# Dependencies.  bash; the sibling frozen component `tools/cpu_guard.sh` (resolved
+#   from the repository root; the sole wrapped target).  Guard layer wired by
+#   `wrapper/gate6_census.sh`, `wrapper/gate7_probe.sh`, and `wrapper/born_world.sh`.
+# Evidence.  `bash -n wrapper/guard.sh` passes; delegation smoke `wrapper/guard.sh
+#   -Direct -- true` reaches the original and exits 0 (the one-shot probe shape
+#   `tests/run_tests.sh` runs against the original).
+# Exit-codes.  9 = the repository's original `tools/cpu_guard.sh` missing (fail-loud);
+#   otherwise pass-through from the original: the wrapped command's own exit code.
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
