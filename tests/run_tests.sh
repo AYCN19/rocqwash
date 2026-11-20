@@ -1,7 +1,7 @@
 #!/bin/bash
 # run_tests.sh — rocqwash tests/ self-test suite entry point
 #
-# Purpose.  Run the statically rostered 86-case suite one case at a time with a
+# Purpose.  Run the statically rostered 87-case suite one case at a time with a
 #   per-case PASS/FAIL/SKIP line and a final summary; all green exits 0, any red
 #   exits 1.  Idempotent: zero bytes written into the repository (python3 -B bans
 #   __pycache__; the temp log lives in mktemp under a trap; the wash and adaptation
@@ -21,7 +21,7 @@
 #   and the guarded compile-arc switch (ROCWASH_ROCQ / GATE7_PROBE_SCRIPT /
 #   GATE6_SCRIPT / BORN_WORLD_ROCQ), probed by default and overridable by env.
 #
-# Evidence.  One case per t_* function below; the per-case contract tables (86
+# Evidence.  One case per t_* function below; the per-case contract tables (87
 #   rows) live in tests/README.md; the CASES roster count is pinned by
 #   tools/doc_lint.py check 2 against the tests/README.md count lines; the roster
 #   is never written at run time.
@@ -203,7 +203,8 @@ t_dual_scan \
  t_roster_resync \
  t_auto_merge \
  t_selfheal_guards \
- t_jargon_map_sync"
+ t_jargon_map_sync \
+ t_tool_selftests"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -1186,6 +1187,19 @@ t_jargon_map_sync() {
   # second apply byte-identical); zero network, zero writes outside
   # mkdtemp, zero repository writes.
   "$PY" -B "$REPO/tests/test_jargon_map_sync.py"
+}
+
+t_tool_selftests() {
+  # the tools/ selftest meta enumerator (tests/test_tool_selftests.py).
+  # Enumerates every tools/*.py (leading-'_'
+  # names excluded) and requires each tool to either pass its declared
+  # --selftest face (rc=0; rc=111 SKIP by the suite contract) or carry the
+  # in-file "# selftest-exempt: <basis>" registration.  Any red, missing, or
+  # unregistered selftest fails with the tool names listed, so a tool
+  # self-proof absence stays visible on every suite run and on both CI
+  # faces.  Per-tool subprocess cap 120 seconds; zero network; zero writes
+  # (python -B child runs; offline vector faces only).
+  "$PY" -B "$REPO/tests/test_tool_selftests.py"
 }
 
 # ---------- summary execution ----------
