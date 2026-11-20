@@ -1,43 +1,33 @@
 # -*- coding: utf-8 -*-
 """scan_v4_token.py — token-level qualified-identifier census for .v sources.
 
-Purpose:
-    Statement-face scanners work on declaration segments only. Proof bodies and
-    mixed lines escape them: a line that contains BOTH a qualified constructor
-    reference (``Datatypes.S``) and a bare ``S`` token disappears under any
-    line-level ``grep -v``-style filter that drops lines carrying the qualified
-    form, so the bare token on that same line is never reported.  This scanner
-    closes that blind spot by working at token granularity:
+    Purpose.  Statement-face scanners see declaration segments only: a line
+      carrying BOTH a qualified constructor reference (``Datatypes.S``) and a
+      bare ``S`` token escapes any line-level ``grep -v``-style filter that drops
+      qualified-carrying lines, so the bare token on that line is never reported.
+      This scanner works at token granularity: strip nested comments and string
+      literals (line/col preserving); treat dotted qualified names as single
+      tokens; classify each bare occurrence of a configured identifier via binder
+      tracking (``forall x``, ``(x : T)``, ``{x : T}``, ``fun x``, ``let x :=``,
+      Section ``Variable/Context/Hypothesis``), so a locally re-bound short name
+      (e.g. a Class parameter named ``S``) is not flagged as a successor reference.
 
-        1. strip nested comments and string literals (line/col preserving);
-        2. tokenize, treating dotted qualified names as single tokens
-           (``Datatypes.S`` is one token; a bare ``S`` is another);
-        3. classify every bare occurrence of each configured identifier via
-           lightweight binder tracking (``forall x``, ``(x : T)``, ``{x : T}``,
-           ``fun x``, ``let x :=`` and Section ``Variable/Context/Hypothesis``),
-           so a locally re-bound short name (e.g. a Class parameter named ``S``)
-           is *not* flagged as a successor reference.
+    Interface.  ``python3 scan/scan_v4_token.py --file <f.v> [--json out.json]
+      [--ids S] [--text]`` (cw.sh route ``scan4``).  ``--json`` writes the census
+      report: ``stations`` list of {line, col, token, cls, grade, mixed_line,
+      context} (``cls`` shadow-hazard or unqualified-global; ``mixed_line`` = the
+      same line also carries the qualified form), ``context`` per-identifier
+      counters, ``shadow_sources`` record/class fields or constructors named like
+      a tracked identifier.  ``--text`` prints the station list.
 
-Inputs:
-    one Rocq/Coq source file (.v).
+    Dependencies.  Python 3 standard library only; one Rocq/Coq source file (.v) as input.
 
-Outputs:
-    ``--json out.json`` — census report:
-        ``stations``  list of {line, col, token, cls, grade, mixed_line, context}
-                      (cls ∈ shadow-hazard | unqualified-global;
-                       mixed_line = true when the same source line also carries
-                       the qualified form — the historic masking blind spot);
-        ``context``   per-identifier counters (qualified / binder-bound /
-                      binding-site / declaration-position occurrences);
-        ``shadow_sources`` declared record/class fields or constructors whose
-                      name equals a tracked identifier.
-    ``--text``        human-readable station list on stdout.
+    Evidence.  Suite case ``t_scan_v4_token`` (tests/run_tests.sh) runs
+      ``tests/test_scan_v4_token.py`` over ``tests/fixtures/scan_v4_shadow_fixture.v`` (station,
+      masking-blindness, binder vectors); ``tools/unclog.py`` uses it as its re-scan stage.
 
-Exit codes: 0 = ran clean (stations may exist; this tool reports, never
-blesses), 2 = CLI usage error, 9 = input file missing.
-
-Minimal usage:
-    python3 scan_v4_token.py --file path/to/file.v --json out.json
+    Exit-codes.  0 = ran clean (stations may exist; this tool reports, never
+      blesses), 2 = CLI usage error, 9 = input file missing.
 """
 import argparse, io, json, os, re, sys
 
