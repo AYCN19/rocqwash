@@ -134,6 +134,8 @@ def main(argv=None):
         return 2
     fails = []
     passed = skipped = exempted = failed = 0
+    print("[META] universe=%d tools, per-tool cap %ds (failures are re-listed"
+          " at the end; the per-tool log below is alphabetical)" % (len(names), args.timeout))
     for name in names:
         rel = "tools/" + name
         path = os.path.join(tools_dir, name)

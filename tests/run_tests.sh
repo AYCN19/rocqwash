@@ -1220,6 +1220,8 @@ for c in $CASES; do
       printf '[%d/%d] %-26s FAIL (rc=%s)\n' "$TOTAL" "$NCASES" "$c" "$rc"
       echo "-------- $c output (first 40 lines) --------"
       sed -n '1,40p' "$LOG"
+      echo "-------- $c output (last 20 lines) --------"
+      tail -20 "$LOG"
       echo "------------------------------------"
     fi
   fi
