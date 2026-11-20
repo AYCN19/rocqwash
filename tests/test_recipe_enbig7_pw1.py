@@ -46,7 +46,7 @@ Exit-codes.  0 = all five checks pass; 1 = any check failing.
 #     rc 0 and the pass-through engine really runs and writes (anchors =
 #     current-snapshot md5; the anchor-must-move rule in mechanical form)
 #   5 frozen collateral: wash/wash_engine.py md5 equals the registered
-#     frozen value 664446bc... (read-only import, zero touch)
+#     frozen value eed0699a... (read-only import, zero touch)
 # Idempotence: the temp directory is written and cleaned in the same run;
 # zero repository writes, zero compilation, zero network.
 import hashlib
@@ -62,7 +62,7 @@ RECIPE = os.path.join(REPO, "recipes", "ENBIG7_same_domain_collision_PW1.md")
 HOOK = os.path.join(REPO, "wash", "world_hook.py")
 AUDIT = os.path.join(REPO, "tools", "select_audit.py")
 ENGINE = os.path.join(REPO, "wash", "wash_engine.py")
-ENGINE_FROZEN_MD5 = "664446bc717395d8496c8c30a5af9ccf"  # registered frozen value (`更新账.md` section 3)
+ENGINE_FROZEN_MD5 = "eed0699addc3593368da5f5e993b382e"  # registered frozen value (`更新账.md` section 3)
 
 RECIPE_ANCHORS = [
     "PW1", "collision_enbig7_20261031", "36c35816",

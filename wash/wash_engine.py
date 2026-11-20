@@ -1,43 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""wash_engine.py — 通用逐件规范洗入口（rocqwash wash/·20261031 席 rqwash）
-
-把战役级批洗工装 wash/_abl1_wash.py（席 abl1·20261027）的应用循环 1:1 泛化为
-argv 驱动的逐件引擎：exact-string 替换 ＋ count 断言 ＋ 幂等（new 已在盘且 old
-绝迹=skip）＋ fail-loud（任一 FAIL 该文件整笔不落盘）＋ 嵌套括号感知（台账片段
-须括号自平衡·注释/字符串掩蔽后机检·承 abl1 站文逐字采集纪律）。
-
-血统与冻结继承：
-  - 应用循环（APPLY/SKIP/FAIL 三态账＋post-assert＋选择性落盘）与
-    wash/_abl1_wash.py:130-151 逐步 1:1（APPLY/SKIP/FAIL 判据逐字同）；
-  - 嵌套注释/字符串状态机 strip_comments_strings 与 scan/mac_stmt_scan.py:104
-    1:1 冻结继承（本文件本地重实现·不 import 冻结件——防冻结件漂移牵连；
-    等价性由 --selftest 内嵌嵌套注释向量机械背书）；
-  - 台账 JSON 形制＝_abl1_wash.py PATCHES 账本的逐字段直译（tag/old/new/expect）。
-
-七步规范中的位置：本引擎＝第③步「规范面映射洗」的执行器（洗什么由台账显式给）。
-引擎永不猜目标：无 --patch 即 exit 3（SKIP 语义·「无台账不洗」），绝不代填任何
-隐式映射——面映射目标（Qlt→QltT／Qle→QleT'／==→QeqT／裸=→Id+id_cong／nat≤→NatLe）
-须由人工/上游分诊产出台账后交本引擎机械执行（统一入口 cli/rocqwash wash 自动路由）。
-
-用法：
-  python3 wash/wash_engine.py --file <in.v> --patch <ledger.json> --out <out.v>
-                              [--dry-run] [--json out.json] [--selftest]
-  cli/rocqwash wash --file a.v --patch ledger.json --out b.v   # 统一入口自动路由
-
-台账 ledger.json 形制（两种皆收）：
-  {"file": "可选默认目标.v", "patches": [{"tag": "...", "old": "...", "new": "...",
-                                          "expect": 1}, ...]}
-  或裸数组 [{"tag": ..., "old": ..., "new": ..., "expect": ...}, ...]
-  - old/new 须括号自平衡（(*…*) 注释与 "…" 字符串内括号不计）；
-  - expect ≥ 1 整数；old ≠ new；old 若为 new 的子串（前缀补丁）幂等重放会再 APPLY
-    （_abl1_wash SKIP 判据 c_old==0 的实测行为·与战役工装一致，账面如实出）。
-
-退出码：0=全账 APPLY/SKIP（fail=NO）；1=任一 FAIL（该文件不落盘）；
-        2=台账畸形（JSON 坏/字段缺/括号失衡/old==new/expect<1）；
-        3=未给 --patch（无台账不洗——SKIP 语义，供 make demo / CLI 冒烟 SKIP 判）；
-        9=--file/--patch 路径缺失。
-写隔离：永不回写 --file；--out == --file 拒绝（exit 2）；源/产物 md5 双双出账。
+"""wash_engine.py — generic per-item norm sanitize engine (rocqwash wash/).
+Purpose.  Argv-driven per-item executor for the norm-surface mapping sanitize (step 3
+  of the seven-step standard): exact-string replace with count assertion, idempotent
+  replay (new present and old gone = SKIP), fail-loud (any FAIL leaves the file
+  unwritten), nesting-aware bracket checking of ledger fragments (after comment/string
+  masking).  It never guesses a target: with no --patch it exits 3 (SKIP semantics) and
+  never fills an implicit mapping; the mapping ledger comes from upstream triage and is
+  executed mechanically here (unified entry `cli/rocqwash wash`); in service October 31,
+  2026, generalizing `wash/_abl1_wash.py` (built October 27, 2026).
+Interface.  python3 wash/wash_engine.py --file <in.v> --patch <ledger.json> --out <out.v>
+  [--dry-run] [--json out.json] [--selftest].  Ledger JSON, both forms accepted:
+  {"file": "optional default target.v", "patches": [{"tag", "old", "new", "expect":
+  integer >= 1}, ...]} or a bare array; old/new bracket-balanced (comment/string
+  brackets excluded); old != new; a prefix patch (old inside new) replays APPLY on an
+  idempotent rerun: the measured SKIP-criterion behavior shared with the batch tool.
+Dependencies.  Python 3 standard library only.  The apply loop (APPLY/SKIP/FAIL rows,
+  post-assert, selective write) follows `wash/_abl1_wash.py:130-151` judgment for
+  judgment; strip_comments_strings re-implements `scan/mac_stmt_scan.py:104-125`
+  locally without importing the frozen file (drift cannot propagate), the equivalence
+  machine-attested by the --selftest nested-comment vectors; the ledger shape
+  transcribes the _abl1_wash.py PATCHES ledger field for field (tag/old/new/expect).
+Evidence.  --selftest: seven vectors on a temp directory (pos, idempotent byte-identity,
+  write isolation, corruption neg, bracket neg, ledger neg, no-ledger);
+  `tests/test_wash_engine.py` drives the same paths through the real argv CLI.
+Exit-codes.  0 all rows APPLY/SKIP; 1 any FAIL (file not written); 2 malformed ledger
+  (bad JSON, missing field, bracket imbalance, old == new, expect < 1) or --out ==
+  --file refused; 3 no --patch given (SKIP semantics); 9 --file/--patch path missing.
+  Write isolation: --file is never rewritten; source and output md5 both reported.
 """
 import argparse
 import hashlib
@@ -58,10 +48,12 @@ def md5_of(path):
 
 
 def strip_comments_strings(text):
-    """状态机剥嵌套注释与字符串字面量；被剥区域替换为空格保持行号。
+    """State machine stripping nested comments and string literals; stripped
+    regions become spaces so line numbers survive.
 
-    1:1 冻结继承 scan/mac_stmt_scan.py:104-125（词面核 v3·E364 T8/T3）——
-    本地重实现不 import，等价性由 --selftest 嵌套注释向量机械背书。
+    1:1 frozen inheritance from scan/mac_stmt_scan.py:104-125 (word-face
+    check v3, E364 T8/T3) — re-implemented locally without an import; the
+    equivalence is machine-attested by the --selftest nested-comment vectors.
     """
     out = []
     i, n = 0, len(text)
@@ -87,7 +79,8 @@ def strip_comments_strings(text):
 
 
 def bracket_report(fragment):
-    """嵌套括号感知：注释/字符串掩蔽后逐括号记深。返回 (ok, 定位描述)。"""
+    """Nesting-aware bracket check: per-bracket depth after comment/string
+    masking.  Returns (ok, locator)."""
     clean = strip_comments_strings(fragment)
     pairs = {")": "(", "]": "[", "}": "{"}
     depths = {"(": 0, "[": 0, "{": 0}
@@ -106,7 +99,8 @@ def bracket_report(fragment):
 
 
 def load_ledger(patch_path):
-    """读台账 JSON（裸数组或 {"patches":[...]} 双形）并逐项校验（fail-loud）。"""
+    """Read the ledger JSON (bare array or {"patches":[...]}, both forms) and
+    validate it row by row (fail-loud)."""
     try:
         with io.open(patch_path, encoding="utf-8") as fh:
             data = json.load(fh)
@@ -149,10 +143,11 @@ class LedgerError(Exception):
 
 
 def apply_patches(content, plist, fname="<mem>"):
-    """应用循环——与 wash/_abl1_wash.py:130-151 逐步 1:1。
+    """The apply loop — step-for-step 1:1 with wash/_abl1_wash.py:130-151.
 
-    返回 (new_content, rows, fail_flag)；rows=[(tag, state, detail)]，
-    state ∈ APPLY/SKIP/FAIL。fail=True 时 new_content 无效（调用方不得落盘）。
+    Returns (new_content, rows, fail_flag); rows=[(tag, state, detail)],
+    state in APPLY/SKIP/FAIL.  With fail=True new_content is invalid (the
+    caller must not write it to disk).
     """
     rows = []
     n_apply = n_skip = n_fail = 0
@@ -180,7 +175,8 @@ def apply_patches(content, plist, fname="<mem>"):
 
 
 def selftest():
-    """内嵌冻结向量组：正判/幂等/破坏反判/括号反判/台账畸形反判 五判（临时目录驱动）。"""
+    """Embedded frozen vector set: pos / idempotence / corruption neg /
+    bracket neg / ledger neg (temp-directory driven)."""
     import shutil
     import tempfile
     tmp = tempfile.mkdtemp(prefix="rocqwash_washeng_self_")
@@ -201,7 +197,7 @@ def selftest():
         with io.open(ledger_path, "w", encoding="utf-8") as fh:
             json.dump(ledger, fh)
 
-        # —— 正判 pos：全 APPLY＋落盘 count 断言＋嵌套注释未伤行号 ——
+        # -- pos: all APPLY, on-disk count assertions, nested comment intact --
         out_v = os.path.join(tmp, "vec_washed.v")
         rc = run_args(["--file", src_v, "--patch", ledger_path, "--out", out_v])
         assert rc == 0, "正判应 exit 0 实测 %d" % rc
@@ -211,25 +207,27 @@ def selftest():
         assert washed.count("x = x.") == 0 and washed.count("reflexivity") == 0
         assert "nest (* deep *) outer" in washed, "注释内容须原样保留"
 
-        # —— 幂等 idem：对洗后产物同账重放 → 全 SKIP、exit 0、产物逐字节恒等 ——
+        # -- idem: replay the same ledger on the sanitized product
+        #      -> all SKIP, exit 0, byte-identical product --
         before = open(out_v, "rb").read()
         out_v2 = os.path.join(tmp, "vec_washed2.v")
         rc = run_args(["--file", out_v, "--patch", ledger_path, "--out", out_v2])
         assert rc == 0, "幂等重放应 exit 0 实测 %d" % rc
         assert open(out_v2, "rb").read() == before, "幂等重放不得改字节"
 
-        # —— 写隔离：--out == --file 拒绝（exit 2）——
+        # -- write isolation: --out == --file refused (exit 2) --
         rc = run_args(["--file", out_v, "--patch", ledger_path, "--out", out_v])
         assert rc == 2, "--out==--file 应 exit 2 实测 %d" % rc
 
-        # —— 破坏反判 neg：old 精确串被破坏 → FAIL·exit 1·产物逐字节未动 ——
+        # -- corruption neg: the exact old string broken
+        #      -> FAIL, exit 1, product byte-untouched --
         with io.open(src_v, "w", encoding="utf-8", newline="") as fh:
             fh.write(body.replace("x = x.", "x = (x)."))
         rc = run_args(["--file", src_v, "--patch", ledger_path, "--out", out_v])
         assert rc == 1, "破坏反判应 exit 1 实测 %d" % rc
         assert open(out_v, "rb").read() == before, "fail-loud 失守：坏账竟落盘"
 
-        # —— 括号反判 bracket-neg：old 括号失衡 → exit 2·零写 ——
+        # -- bracket neg: unbalanced old -> exit 2, zero writes --
         bad = {"patches": [{"tag": "bad", "old": "f (x.", "new": "g (x).", "expect": 1}]}
         bad_path = os.path.join(tmp, "bad.json")
         with io.open(bad_path, "w", encoding="utf-8") as fh:
@@ -237,7 +235,7 @@ def selftest():
         rc = run_args(["--file", src_v, "--patch", bad_path, "--out", out_v])
         assert rc == 2, "括号失衡应 exit 2 实测 %d" % rc
 
-        # —— 畸形反判 ledger-neg：old==new → exit 2 ——
+        # -- ledger neg: old == new -> exit 2 --
         silly = {"patches": [{"tag": "s", "old": "a", "new": "a", "expect": 1}]}
         silly_path = os.path.join(tmp, "silly.json")
         with io.open(silly_path, "w", encoding="utf-8") as fh:
@@ -245,7 +243,7 @@ def selftest():
         rc = run_args(["--file", src_v, "--patch", silly_path, "--out", out_v])
         assert rc == 2, "old==new 应 exit 2 实测 %d" % rc
 
-        # —— 无台账 → exit 3（SKIP 语义·不猜）——
+        # -- no ledger -> exit 3 (SKIP semantics, never guesses) --
         rc = run_args(["--file", src_v])
         assert rc == 3, "无台账应 exit 3 实测 %d" % rc
 
@@ -256,7 +254,8 @@ def selftest():
 
 
 def run_args(argv):
-    """以 argv 驱动 main()（selftest 复用路径）；返回进程语义退出码。"""
+    """Drive main() from argv (the selftest reuse path); returns the
+    process-semantics exit code."""
     sys.argv = [PROG] + list(argv)
     try:
         main()
@@ -266,10 +265,13 @@ def run_args(argv):
 
 
 def main():
-    # 无台账前置分流：--patch/-p 均不在 argv 且非 --selftest → exit 3（SKIP 语义）。
-    # 先于 argparse：统一入口裸调/位置形（如 make demo 的 `cli/rocqwash wash demo.v`）
-    # 恒走此分支，demo 的 SKIP 判据（rc 3/4）保持成立；带台账时未知参数仍由
-    # argparse 硬拒（usage exit 2·fail-loud 不放水）。
+    # No-ledger pre-split: --patch/-p both absent from argv and not
+    # --selftest -> exit 3 (SKIP semantics).
+    # Before argparse: bare/positional calls through the unified entry (e.g.
+    # the make demo form `cli/rocqwash wash demo.v`) always take this branch,
+    # so the demo SKIP criterion (rc 3/4) keeps holding; with a ledger
+    # present, unknown arguments are still hard-refused by argparse
+    # (usage exit 2, fail-loud, no leaks).
     argv = sys.argv[1:]
     has_patch = any(a == "-p" or a == "--patch" or a.startswith("--patch=") for a in argv)
     has_selftest = any(a == "--selftest" for a in argv)

@@ -1,158 +1,32 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """frozen8.py — frozen-anchor list check + four-piece trust-anchor hardening.
-
-Header fields (annotation standard, five fields):
-  Ticket           GD-20261115-SUBSTRATE-01, task A1: T0-1 ring-4 repair plus
-                   T0-8 trust-anchor hardening (audit findings P0-1 and P1-5).
-  Statement faces  check ring 1 manifest tier2 self-consistency; ring 2 manifest
-                   equals ledger; ring 3 tier2 side roster; ring 4 disk equals
-                   manifest (drift assignment repaired per P0-1); ring 5 git
-                   history anchor; ring 6 detached GPG signature; ring 7 artifact
-                   attestation (opt-in); ring 8 RFC 3161 timestamp (opt-in);
-                   freeze face; roster listing face; RFC 3161 request face;
-                   four-judgment-plus selftest.
-  Source routing   the in-service eight-component constants stay sourced from
-                   the ledger document 更新账.md §三 (read-only harvest); the v1
-                   freeze functions are imported read-only from
-                   certify/freeze_manifest.py (frozen file, byte-untouched).
-  Run command      py -B certify/frozen8.py check --list
-                   certify/frozen8_manifest.json --tier2 certify/frozen8_tier2.md5
-  Registry         tests/test_destructive_matrix.py rows F1 and F2 (write
-                   faces); EVID/t0-8/ (demo logs, NETRED ledger, post-merge
-                   SOP); NETRED whitelist face: the RFC 3161 TSA fetch in the
-                   timestamp face (each use is ledgered).
-
-Purpose
--------
-Machine check of the frozen-component list, in two anchored families:
-
-  (1) In-service eight components (LEDGER8): ledger-anchored. The constants
-      must equal the 更新账.md §三 rows (judgment 1) and the disk bytes
-      (judgment 2). The roster is closed: exactly these eight.
-  (2) Checker family (CHECKERS, meta-freeze): manifest-anchored. certify
-      checkers cannot certify themselves out of their own roster — a checker
-      edit lands in tier1 at the next freeze, and any later edit diverges from
-      tier1, so ring 4 turns red. Sentinel immutability: the tool that judges
-      the tree is itself judged by the same list. freeze_manifest.py is
-      already anchored as LEDGER8 row 1 (frozen in service, byte-untouched
-      here); the checker family adds certify/frozen8.py and
-      certify/push_gate.py, so the manifest roster holds ten entries
-      (eight → ten per the work order).
-
-History of the ring-4 repair (audit P0-1)
------------------------------------------
-Rings used to print changed/removed lines without folding them into the
-drift flag, so a tampered verify/verify_vo.py printed "DRIFT changed" and
-still exited 0 (a fake green; CI's t_frozen8_check ran exactly this face).
-Ring 4 now ends with a mandatory assignment; selftest judgment 5 re-runs a
-one-byte disk tamper inside a scratch skeleton on every suite pass.
-
-Trust-anchor hardening (audit P1-5: three anchors shared one writable tree)
----------------------------------------------------------------------------
-  Ring 5  git history anchor. freeze records freeze_commit = HEAD at
-          generation time. check asserts the current HEAD descends from it
-          (git merge-base --is-ancestor), so rewriting history no longer
-          launders a washed roster.
-  Ring 6  detached GPG signature. The post-merge SOP signs the manifest
-          (gpg --detach-sign → <manifest>.asc) and the freeze commit
-          (annotated tag rocqwash-freeze-<date>, Steward key). check verifies
-          the signature when one is reachable. Auto-detected <manifest>.asc
-          that cannot be verified because the Steward public key is absent is
-          an honest downgrade (CI runners never hold the key); an explicitly
-          requested --gpg-sig that cannot be verified exits rc=9 honestly
-          (fail-loud, never a fake green), per the GPG RC=9 precedent. A
-          signature that verifies BAD is drift.
-  Ring 7  artifact attestation (opt-in --attest). gh attestation verify
-          against the origin repository; absent tooling or unreachable
-          service is a registered downgrade, not a hard fail.
-  Ring 8  external timestamp (opt-in --tsr PATH). RFC 3161 receipt from the
-          freetsa.org TSA (timestamp face, below). check re-derives the
-          manifest sha256 and compares it with the receipt's messageImprint
-          digest binding. A present-but-invalid receipt is drift (fail
-          closed); absence is a registered downgrade. Chain verification of
-          the TSA signature itself is a post-merge SOP step (openssl ts
-          -verify with the freetsa CA); this face pins the digest binding
-          only and says so.
-
-Determinism
------------
-freeze and check are offline and deterministic: no wall clock in the logic,
-same tree plus same HEAD reproduces a byte-identical manifest. The timestamp
-face touches the network once per explicit invocation (whitelisted face);
-its output is a receipt, never a logic input.
-
-Write-surface declaration
--------------------------
-freeze writes only the caller-named --out and --tier2 paths. timestamp writes
-only the caller-named --out path. check writes only the caller-named --json
-path. Nothing else in the repository tree is touched; selftest writes only a
-mkdtemp scratch directory and removes it. Matrix rows F1 and F2 in
-tests/test_destructive_matrix.py pin these surfaces (who writes, enters the
-matrix).
-
-Commands
---------
-  py -B certify/frozen8.py freeze [--repo DIR] --out LIST.json [--tier2 T2.md5]
-      Recompute the ten roster entries. The eight in-service entries must
-      equal the ledger constants and the disk bytes (any drift refuses the
-      manifest, fail-closed); the two checker entries are taken from disk and
-      must exist. freeze_commit = git HEAD is mandatory: without a usable git
-      anchor the manifest is refused (rc=9 honest exit — an unanchored roster
-      must not be issued). Idempotent replay: the same tree and HEAD produce
-      byte-identical output (self-asserted).
-  py -B certify/frozen8.py check [--repo DIR] --list LIST.json [--tier2 T2.md5]
-        [--json OUT] [--gpg-sig SIG.asc] [--attest [--attest-repo SLUG]]
-        [--tsr TSRC]
-      Rings 1–4 as before (ring 4 repaired), plus rings 5–8 above. Exit
-      precedence: any drift → 1; an honest-unavailable trust face reached via
-      an explicit request (git anchor unusable on this machine; explicit
-      --gpg-sig without a usable key or binary) → 9; otherwise 0. Malformed
-      manifest → 2. Downgrades are printed and recorded in --json, never
-      silent.
-  py -B certify/frozen8.py timestamp --list MANIFEST --out TSRC
-      RFC 3161 request face. sha256 of the manifest file, DER TimeStampReq to
-      the freetsa.org TSA (endpoint overridable via ROCWASH_TSA_URL for
-      offline tests), reachability self-check first, receipt written to the
-      explicit --out only after its digest binding re-verifies locally.
-      Unreachable TSA → rc=9 with a registered downgrade note (non-fatal per
-      contract). Each network use is ledgered (NETRED whitelist: trust-anchor
-      TSA fetch).
-  py -B certify/frozen8.py --ledger
-      Print the ten roster lines (`md5  relpath`); the eight ledger rows and
-      the two checker rows (checker md5 computed from disk). A missing
-      checker file is a loud rc=9, not a short list.
-  py -B certify/frozen8.py --selftest
-      Judgments 1–9 (all offline; scratch repos only):
-        1 ledger constants ≡ ledger document (harvest, no conflict, no gap)
-        2 disk ≡ ledger constants (8/8)
-        3 manifest ≡ ledger + checkers, freeze_commit ≡ HEAD, tier2 side
-          roster agrees, byte-identical replay
-        4 reconciliation closure: clean rc=0; tampered manifest tier2 FAIL
-          rc=1; tampered side roster FAIL rc=1
-        5 disk-tamper visibility (P0-1 regression): scratch skeleton, one
-          byte of verify/verify_vo.py flipped → ring 4 drives exit 1;
-          restored → exit 0
-        6 clean check shows every opt-in ring status visibly (no silent
-          faces)
-        7 present-but-corrupt .tsr receipt → rc=1 (fail closed)
-        8 manifest without/malformed freeze_commit → rc=2
-        9 history rewrite (git commit --amend under the anchor) → ring 5
-          drift rc=1
-
-Exit codes (per-face contract)
-------------------------------
-  freeze    0 issued / 1 roster drift, refuse to issue / 2 usage or output
-            path unusable / 9 repo dir missing or git anchor unavailable
-  check     0 all rings pass (downgrades registered on stdout and in --json) /
-            1 any ring reports drift / 2 manifest malformed / 9 honest
-            unavailable (git anchor unusable here; explicit --gpg-sig without
-            a usable key or gpg binary)
-  timestamp 0 receipt stored and binding verified / 1 TSA reply fails the
-            local binding check (no receipt written) / 2 usage / 9 TSA
-            unreachable or status not granted
-  --ledger  0 / 9 a roster file is missing from disk
-  --selftest 0 all judgments green / 1 any judgment red (loud assertion)
+Purpose.  Machine check of the frozen-component roster in two anchored families: the eight in-service components
+          (LEDGER8) are ledger-anchored (constants equal the ledger document `更新账.md` section 3 rows, judgment 1, and
+          the disk bytes, judgment 2; roster closed); the checker family (CHECKERS, meta-freeze) is manifest-anchored: a
+          checker edit re-enters tier1 at the next freeze, so the manifest holds ten entries (task A1: ring-4 repair
+          plus trust-anchor hardening; audit P0-1/P1-5).
+Interface.  freeze [--repo DIR] --out LIST.json [--tier2 T2.md5] recomputes the ten roster entries (ledger drift refuses
+            the manifest, fail-closed; freeze_commit = git HEAD is mandatory, rc=9 without an anchor; idempotent replay
+            byte-identical).  check --list LIST.json [--tier2 T2.md5] [--json OUT] [--gpg-sig SIG.asc] [--attest
+            [--attest-repo SLUG]] [--tsr TSRC] runs rings 1-8.  timestamp --list MANIFEST --out TSRC files an RFC 3161
+            request with freetsa.org (ROCWASH_TSA_URL overrides; receipt written only after local binding re-
+            verification).  --ledger prints the ten roster lines; --selftest runs judgments 1-9 offline; the timestamp
+            face is NETRED-whitelisted, ledgered per use.
+Dependencies.  Python 3 standard library only.  The v1 freeze functions are imported read-only from
+               certify/freeze_manifest.py; git reachable for the history anchor; the ledger document harvested read-
+               only.  Write surfaces: freeze/timestamp/check write only caller-named --out/--tier2/--json paths (matrix
+               rows F1/F2 in tests/test_destructive_matrix.py pin this; selftest writes only a removed scratch dir).
+Evidence.  Ring 1 manifest tier2 self-consistency; ring 2 manifest equals ledger constants plus checker set; ring 3
+           tier2 side roster; ring 4 disk equals manifest with a mandatory drift assignment (P0-1 repair, re-proven by
+           judgment 5 every suite pass); ring 5 git history anchor (HEAD descends from freeze_commit; squash-shape
+           content equivalence downgrades to a registration); ring 6 detached GPG signature (unverifiable explicit
+           request exits rc=9 honestly; a BAD signature is drift); ring 7 artifact attestation opt-in (absent tooling a
+           registered downgrade); ring 8 RFC 3161 digest binding opt-in (present-but-invalid receipt is drift, absence a
+           downgrade); freeze/check offline and deterministic.
+Exit-codes.  freeze 0 issued / 1 roster drift / 2 usage or output path unusable / 9 repo dir missing or git anchor
+             unavailable.  check 0 all rings pass (downgrades registered) / 1 any ring drift / 2 manifest malformed / 9
+             honest unavailable.  timestamp 0 receipt stored and binding verified / 1 reply fails the local binding
+             check / 2 usage / 9 TSA unreachable or status not granted.  --ledger 0 / 9 a roster file missing.
+             --selftest 0 all judgments green / 1 any judgment red.
 """
 import argparse
 import hashlib
@@ -183,7 +57,7 @@ LEDGER8 = (
     ("tools/cpu_guard.sh", "442be5a2cb24af0a6847036f8c0cf5c5"),
     ("verify/gate4_comment_guard.py", "3615027b14b63ce38d247da44957f145"),
     ("verify/verify_vo.py", "9d061d679dcceb0dcbbeb24e165eac7f"),
-    ("wash/wash_engine.py", "664446bc717395d8496c8c30a5af9ccf"),
+    ("wash/wash_engine.py", "eed0699addc3593368da5f5e993b382e"),
 )
 LEDGER_MAP = dict(LEDGER8)  # rel -> md5
 
@@ -494,7 +368,7 @@ def cmd_check(args):
             print("git 历史锚（HEAD 为 freeze_commit 后代）: PASS (%s)" % fc[:12])
             rings["git_anchor"] = "pass"
         elif rc == 1:
-            # S2 v2 (20261117 user order): squash landings carry no parent
+            # S2 v2 (user order of November 17, 2026): squash integrations carry no parent
             # chain, so a non-descendant HEAD with all four content faces green
             # is the squash shape, not a rewrite.  Content equivalence
             # (tier2/ledger/side/disk all green) downgrades to a registration;
@@ -1024,7 +898,7 @@ def selftest():
         # the anchor → current HEAD no longer descends from freeze_commit →
         # ring 5 drift rc=1.
         # Pin the amended commit's author date so the new commit SHA cannot
-        # collide with the original: an amend landing inside the same
+        # collide with the original: an amend committed inside the same
         # commit-timestamp granularity as the original reproduces the very
         # same SHA (same tree, same message, same author and committer
         # second), which reads as "no drift" and fails this judgment on fast
