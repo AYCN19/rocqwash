@@ -1,5 +1,25 @@
 # rocqwash Contributor License Agreement (CLA)
 
+> **CLAOverview**: the contributor license agreement overview of the rocqwash
+> project: file structure, signing process, and the dual-licensing rationale.
+>
+> Purpose.  Explain why rocqwash requires a Contributor License Agreement and
+> route each contributor class to the right agreement face (`CLA/ICLA.md`,
+> `CLA/CCLA.md`, or `CLA/commercial_license_template.md`).
+>
+> Interface.  Read-and-route document face: contributors read the file table,
+> follow the per-class signing steps, and send the signed agreement to
+> `168888@live.cn`; no executable interface.
+>
+> Dependencies.  None at runtime — a standalone document face paired with
+> `CLA/ICLA.md`, `CLA/CCLA.md`, and `CLA/commercial_license_template.md` under
+> the AGPL-3.0-or-later protocol.
+>
+> Evidence.  The file table matches the faces under `CLA/`; the pre-header
+> original is preserved in the sibling archive `CLA/README.md.zh.md`.
+>
+> Exit-codes.  Not applicable (document face; no executable interface).
+
 All contributors to rocqwash must sign a Contributor License Agreement
 before their contributions can be merged. This protects both the
 contributor and the project.
