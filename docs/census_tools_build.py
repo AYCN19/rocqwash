@@ -2,30 +2,44 @@
 # -*- coding: utf-8 -*-
 """census_tools_build.py -- word-face census builder for rocqwash tools/ .
 
-Method: pure lexical/AST analysis (ast.parse over source bytes). No tool
-listed in tools/ is executed, imported, or spawned by this script; only the
-Python standard library is used and the script itself is run with -I
-(isolated mode). Extraction faces per file:
+Purpose.  Builds a word-face census of the .py tools in a directory by pure
+  lexical/AST analysis (ast.parse over source bytes); no tool listed in
+  tools/ is executed, imported, or spawned, only the Python standard library
+  is used, and the script itself is run with -I (isolated mode).  Boundary:
+  everything here is word-face evidence; runtime behavior, real exit codes,
+  and help-text output are NOT measured by this census (that belongs to a
+  later light-probe pass); negative findings are recorded with their scan
+  boundary stated in census.md.
 
-  name / bytes / sha256 / line count
-  module docstring (verbatim head, bounded)
-  argparse face: imports, ArgumentParser descriptions, add_argument list
-    (flags + constant kwargs), add_parser subcommands, set_defaults(func=...)
-  usage string face: "usage:" / "python3 tools/X.py" lines
-  dependency face: import list, stdlib / third-party / local classification
-  network face: transport-capable imports, urllib-adjacent imports,
-    literal token scan (curl/wget/api hosts), subprocess bridge suspicion
-  special-environment (SKIP) face: lexical markers (ROCWASH_* env, Coq/Rocq,
-    Lean/lake/mathlib, macOS tooling, Windows guards, GPG, thermal wrapper,
-    self-hosted runner)
-  invocation form: reconstructed from argparse when present, else from
-    usage strings, else marked not reconstructed.
+Interface.  python3 docs/census_tools_build.py [--tools-dir DIR] [--out JSON]
+  [--head SHA]  (--head records the git HEAD sha of the scanned tree
+  verbatim).  Writes the census JSON (meta block plus one record per scanned
+  file) and prints a compact stdout digest for review.
 
-Boundary: everything here is word-face evidence. Runtime behavior, real exit
-codes, and help-text output are NOT measured by this census (that belongs to
-a later light-probe pass). Negative findings are recorded with their scan
-boundary stated in census.md.
+Dependencies.  Python 3 standard library only (argparse, ast, datetime,
+  hashlib, json, os, re, sys).
+
+Evidence.  No selftest face or suite lane is registered for this builder;
+  evidence is the generated census records, cross-checked against the
+  companion docs/census.md (instrument note, section 1).
+
+Exit-codes.  0 on completion (findings are data); 2 on argparse usage
+  error; 1 on an uncaught error (no explicit exits in the body).
 """
+# Extraction faces per file (detail supplement to the Purpose. field):
+#   name / bytes / sha256 / line count
+#   module docstring (verbatim head, bounded)
+#   argparse face: imports, ArgumentParser descriptions, add_argument list
+#     (flags + constant kwargs), add_parser subcommands, set_defaults(func=...)
+#   usage string face: "usage:" / "python3 tools/X.py" lines
+#   dependency face: import list, stdlib / third-party / local classification
+#   network face: transport-capable imports, urllib-adjacent imports,
+#     literal token scan (curl/wget/api hosts), subprocess bridge suspicion
+#   special-environment (SKIP) face: lexical markers (ROCWASH_* env, Coq/Rocq,
+#     Lean/lake/mathlib, macOS tooling, Windows guards, GPG, thermal wrapper,
+#     self-hosted runner)
+#   invocation form: reconstructed from argparse when present, else from
+#     usage strings, else marked not reconstructed.
 
 import argparse
 import ast
