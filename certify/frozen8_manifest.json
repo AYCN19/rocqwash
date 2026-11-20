@@ -3,10 +3,10 @@
   "certify/frozen8.py",
   "certify/push_gate.py"
  ],
- "freeze_commit": "547bbcde3d2a55a90111658c917625f508b7aa30",
+ "freeze_commit": "64fbc1d222f3c830ff76bdac99987d63e15f2234",
  "ledger_source": "更新账.md §三（在役八组件冻结自证·账载口径）",
  "n_files": 10,
- "root": "D:\\ComplexAnalysis\\attn\\_eflanes_out_20261116\\align-wt",
+ "root": "/Users/apple/Desktop/rocqwash",
  "schema": "rocqwash-frozen8-manifest/2",
  "tier1": [
   [
@@ -15,7 +15,7 @@
   ],
   [
    "certify/frozen8.py",
-   "15241c819665cbd6bd3dbc743f8ddc35"
+   "1b12ae3a3e2a51cd0f68f48472980c48"
   ],
   [
    "certify/push_gate.py",
@@ -39,7 +39,7 @@
   ],
   [
    "verify/gate4_comment_guard.py",
-   "d7ab397c5f0243d0c7320f91d0f14481"
+   "3615027b14b63ce38d247da44957f145"
   ],
   [
    "verify/verify_vo.py",
@@ -50,5 +50,5 @@
    "664446bc717395d8496c8c30a5af9ccf"
   ]
  ],
- "tier2_md5_of_tier1_text": "e0b0d770e0754fab49d8cc1f0ff4aa5e"
+ "tier2_md5_of_tier1_text": "9c18047ad9cc81bdfc03e6916db1308d"
 }

@@ -43,7 +43,7 @@ STATION = os.path.join(REPO, "wrapper", "precedent_station.py")
 NAMES = os.path.join(REPO, "names", "mac_stmt_names.py")
 GATE4 = os.path.join(REPO, "verify", "gate4_comment_guard.py")
 NAMES_FROZEN_MD5 = "9e26c0db2c60ced3629a13a821bdf615"   # frozen value registered in the update ledger section three
-GATE4_FROZEN_MD5 = "d7ab397c5f0243d0c7320f91d0f14481"   # frozen value registered in the update ledger section three
+GATE4_FROZEN_MD5 = "3615027b14b63ce38d247da44957f145"   # frozen value registered in the update ledger section three
 
 HEADER = """(* precedent_station_fixture.v — 三判例验收站夹具（rocqwash tests/自造·零外部素材）。
 

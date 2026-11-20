@@ -53,7 +53,7 @@ CANONICALS = {
     "names": {"rel": "names/mac_stmt_names.py",
               "pin": "9e26c0db2c60ced3629a13a821bdf615"},
     "gate4": {"rel": "verify/gate4_comment_guard.py",
-              "pin": "d7ab397c5f0243d0c7320f91d0f14481"},
+              "pin": "3615027b14b63ce38d247da44957f145"},
     "gate7": {"rel": "wrapper/gate7_probe.sh",
               "pin": None},  # not frozen: recorded, never judged
 }

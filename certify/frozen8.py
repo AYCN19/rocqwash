@@ -181,7 +181,7 @@ LEDGER8 = (
     ("scan/mac_stmt_scan.py", "56ff0fb371f9684cc865023f6f5d0f4a"),
     ("seam/seam_probe.py", "7a01359a22b8960b352191f1a4490b37"),
     ("tools/cpu_guard.sh", "442be5a2cb24af0a6847036f8c0cf5c5"),
-    ("verify/gate4_comment_guard.py", "d7ab397c5f0243d0c7320f91d0f14481"),
+    ("verify/gate4_comment_guard.py", "3615027b14b63ce38d247da44957f145"),
     ("verify/verify_vo.py", "9d061d679dcceb0dcbbeb24e165eac7f"),
     ("wash/wash_engine.py", "664446bc717395d8496c8c30a5af9ccf"),
 )
