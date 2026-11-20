@@ -1,72 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-r"""precedent_station.py — 三判例验收链组合器（rocqwash wrapper/·巡检打磨席 rqsup4·20261101）
-
-五课件⑤【三判例剧本 toolify】。三个已愈判例（提取面 Obj.magic 病·三刀各异）的
-验收链是同一条——各判例席曾各自 ad-hoc 手跑同一三连，本站把这条**共用验收链**
-1:1 组合为一条站命令（wash_station.py 同款组合器形·姊妹站）：
-
-  判例（刀面各异）                        验收链（三连共用）
-  ────────────────────────────────      ──────────────────────────────────────
-  E7 载体中继（fa56b_ext·seat_fa56re）    ①对表   names --compare 刀后件 vs 基件
-    证明体 Empty_set 载体→`__` 载体                → N=N 有序全等（18=18 判例）
-    ＋pre-map 内联 motive                    ②gate4 gate4_comment_guard --file
-  R23 记号重载（ToyR_UpAblP7·seat_toyr）         刀后件 → PASS=1 FAIL=0（五禁词 0）
-    非语句头区加 Notation 别名＋            ③gate7 gate7_probe.sh（可选步·重）
-    Extraction Inline 具体面                       → magic=0/0 missing=0（硬验收）
-  E5 投影重锚（UpReqSampling·seat_reanchor）      语句面零动判例 13=13／51=51 在卷
-    语句面投影→具体面三映射重锚
-    （处方件 recipes/S07_projection_reanchor_E5.md）
-
-判据零复制律：三步红绿唯一判据源＝各正本自身退出码（names rc／gate4 rc／gate7
-launcher 透传 rc）——本站只组合、出站账、聚合退出码。gate7 的 magic=0 硬验收由
-gate7 正本自身判（调用者经裸 `--` 透传闸形 `… -- --gate --baseline B`；report-only
-形 rc 0 不判 magic——站账只**如实录** magic 数，录词永不覆判）。
-
-三步位置与序：①对表→②gate4→③gate7，顺序固定；--steps 可减不可重排（组合器
-契约）。**缺省＝①②轻链**（零编译）；③gate7 为显式选入步（真编译重步——需世界
-副本 --gate7-tree＋--gate7-module，编译整经 wrapper/gate7_probe.sh 内建 guard）。
-
-用法：
-  python3 wrapper/precedent_station.py --cured work/X.v --baseline src/X.v [站级旗标]
-  # 追加提取执行硬验收（世界只读副本自备）：
-  python3 wrapper/precedent_station.py --cured work/X.v --baseline src/X.v \
-      --steps names,gate4,gate7 --gate7-tree <world> --gate7-module X \
-      --gate7-workdir <dir> -- --gate --baseline gate7_extract_baseline.json
-
-站级旗标：
-  --cured FILE             刀后件（①②③ 共同靶·必填）
-  --baseline FILE          基件（①对表基准·names 在步时必填）
-  --knife NAME             刀面记名（E7-carrier|R23-notation|E5-reanchor|custom·
-                           纯站账记录面·不影响任何判词）
-  --root DIR               正本仓根（默认＝本站文件所在仓根）
-  --steps LIST             步子集逗号分（names,gate4,gate7·缺省 names,gate4·
-                           可减不可重排；gate7 显式选入）
-  --include-let/--kinds/--expect-names   ①1:1 透传 names
-  --gate4-json/--gate4-no-principle/--gate4-length-fail/--gate4-length-cap
-                           ②1:1 透传 gate4
-  --gate7-tree DIR         ③世界只读副本（gate7 在步时必填）
-  --gate7-module NAME      ③模块名（可重复·gate7 在步时必填；须有 <tree>/<名>.v）
-  --gate7-workdir DIR      ③工件目录（缺省 <tmp>/precedent_station_g7）
-  --gate7-json PATH        ③gate7 --json 出账路径（站账读其 totals 录 magic）
-  --gate7-timeout SEC      ③透传 --timeout
-  -- <gate7 其余形参逐字透传>   ③首个裸 `--` 后形参全数透传 gate7 正本
-                           （world_hook 同款切分律·如 -- --gate --baseline B）
-  --check-pin              两冻结正本嵌记 md5 断言（gate7 launcher 非冻结件·只录不判）
-  --expect-names-md5 HEX / --expect-gate4-md5 HEX   外附 md5 断言（可并用）
-  --station-json PATH      站账 JSON（站唯一写面·缺省零写盘）
-  --station-selftest       本站自检（十判·零写盘·不执行任何正本）
-  -h / --help              本站帮助
-
-退出码（聚合律·硬者胜·承 wash_station 同款）：0=在步全绿（① rc=0 ∧ ② rc=0 ∧
-[③ rc=0]）；1=硬红（① rc≠0 名面 N≠N／② rc=1 硬违规／③ rc≠0 探针或闸红）；
-2=复核级或站级（② rc=2 REVIEW／站级用法错／md5 断言败——断言败绝不带病开步）；
-9=文件或正本缺失（cured/baseline/正本/gate7 树或模块 .v——预检不过零开步）。
-
-幂等律：本站自身零写盘（唯一写面＝用户显式 --station-json 及转交正本的用户显式
---gate4-json/--gate7-json/--gate7-workdir）；子进程一律 `python3 -B`（gate7 步经
-launcher 内建 `python3 -B`）；站内禁套 cpu_guard（嵌套死锁判例 seat_nw8——包裹
-义务在调用席；gate7 步的编译温控由 launcher 内建 guard 承担）。
+r"""precedent_station.py - three-precedent acceptance-chain combiner (rocqwash wrapper/).
+Purpose.  Three cured precedents (same `Obj.magic` extraction defect, three different
+  repairs) share one acceptance chain; this station composes that chain 1:1 into one command:
+  ① cross-check (`names --compare` cured vs baseline, N=N ordered equality), ②
+  `gate4_comment_guard --file` cured (PASS=1 FAIL=0), ③ `wrapper/gate7_probe.sh` (magic=0/0
+  missing=0; optional, true compile).  Each step's pass/fail source is the canonical tool's
+  own exit code only; the station composes steps, emits the ledger, never re-judges (the
+  `gate7` launcher judges its own magic=0 acceptance; the report-only form rc 0 does not
+  judge magic and the ledger records magic numbers as-is).  Order ①②③ is fixed (shrink
+  only, never reorder); default chain = ①② (zero compile).  Zero writes by default (only
+  the explicit `--station-json` and forwarded explicit `--gate4-json`/`--gate7-json`/
+  `--gate7-workdir`); children run under `python3 -B`; the station never nests `cpu_guard`
+  (wrapping duty sits with the caller; step ③ temperature control rides the launcher guard).
+Interface.  python3 wrapper/precedent_station.py --cured C.v --baseline B.v [station flags]
+  | --station-selftest.  Key flags: --cured FILE; --baseline FILE (with `names` in step);
+  --knife NAME (ledger record only); --steps LIST (names,gate4,gate7; default names,gate4);
+  --check-pin/--expect-names-md5/--expect-gate4-md5 HEX assert md5 values; --station-json
+  PATH writes the ledger; remaining flags and the bare `--` passthrough: see -h/--help.
+Dependencies.  Python 3 standard library only; step ③ shells out to bash.  Canonicals are
+  named in `CANONICALS` by repository-root-relative paths; the frozen `names`/`gate4` copies
+  carry embedded md5 pins and the `gate7` launcher is unfrozen (recorded, never pinned).
+Evidence.  --station-selftest runs the ten-judgment self-check with zero writes and no
+  canonical execution (canonical presence, pin shape, step parsing and fixed order, the
+  aggregation law, the verdict tables, command assembly and the bare `--` split, input
+  preflight, knife records, md5 assertion shape, ledger extraction).
+Exit-codes.  0 = every in-step verdict PASS; 1 = hard failing result (`names` ordered
+  inequality, `gate4` hard violation, `gate7` probe or gate failing); 2 = REVIEW-grade
+  (`gate4` rc 2) or station-level (usage error, failed md5 assertion; a failed assertion
+  never starts the chain); 9 = missing file or canonical (a failed preflight runs no step).
 """
 import argparse
 import datetime
@@ -82,23 +44,26 @@ import tempfile
 PROG = "precedent_station"
 WRAP_NAME = "wrapper/precedent_station.py"
 
-# —— 正本指认（相对仓根路径＋嵌记 md5）——
-# names/gate4 为在役冻结件（pin 断言面）；gate7_probe.sh 为仓内适配层（非冻结·
-# 在飞席位可持续改版）——其 md5 只录站账不设 pin（录词不判·防在飞误红）。
+# - Canonical tool registry (repository-root-relative paths plus embedded md5 pins) -
+# names/gate4 are in-service frozen components (pin assertion face); gate7_probe.sh is an
+# in-repo adapter layer (not frozen, revisable while in service), so its md5 is recorded
+# in the station ledger without a pin (recording never judges; an in-service edit cannot
+# trip the pin).
 CANONICALS = {
     "names": {"rel": "names/mac_stmt_names.py",
               "pin": "9e26c0db2c60ced3629a13a821bdf615"},
     "gate4": {"rel": "verify/gate4_comment_guard.py",
               "pin": "d7ab397c5f0243d0c7320f91d0f14481"},
     "gate7": {"rel": "wrapper/gate7_probe.sh",
-              "pin": None},  # 非冻结件·只录不判
+              "pin": None},  # not frozen: recorded, never judged
 }
 PIN_NOTE = "names/gate4=20261031 冻结在册值；gate7 launcher=非冻结只录（20261101 实测 3bbfadfde7e5578d27047a107643d97b）"
-STEP_ORDER = ("names", "gate4", "gate7")          # ①②③ 固定序（可减不可重排）
-STEP_DEFAULT = ("names", "gate4")                 # 缺省轻链（gate7 显式选入·真编译）
+STEP_ORDER = ("names", "gate4", "gate7")          # fixed ①②③ order (shrink only, never reorder)
+STEP_DEFAULT = ("names", "gate4")                 # default light chain (gate7 explicit opt-in, true compile)
 STEP_LABEL = {"names": "①对表", "gate4": "②gate4", "gate7": "③gate7"}
 
-# 三判例记名面（--knife 合法值·纯站账记录——判据零复制，刀面细节归各处方件/判例账）
+# Precedent knife records (legal --knife values; station-ledger record only - judgment
+# sources stay with the canonical tools, repair details live in the per-repair records)
 KNIVES = {
     "E7-carrier": "fa56b_ext 载体中继（证明体 Empty_set 载体→`__` 载体＋pre-map 内联 motive·对表判例 18=18·sandbox/seat_fa56re/账/R22锚换代包-fa56b.md）",
     "R23-notation": "ToyR_UpAblP7 记号重载（非语句头区 Notation 别名＋Extraction Inline 具体面·语句面 13=13 逐字守恒·sandbox/seat_toyr/账/R23锚换代包-toyr.md）",
@@ -106,15 +71,17 @@ KNIVES = {
     "custom": "自定刀面（站账只记名·处方与判例自附）",
 }
 
-# 各正本退出码→站内 verdict 判表（判据零复制：verdict 唯一源自正本自身 rc）
-NAMES_GATE = {0: "PASS"}                            # 2=不等 9=缺件 → FAIL
-GATE4_GATE = {0: "PASS", 1: "FAIL", 2: "REVIEW"}    # REVIEW=0 才算净（nw8 口径）
-GATE7_GATE = {0: "PASS", 1: "FAIL"}                 # 闸红/探针败→FAIL；表外 rc→FAIL
+# Canonical exit code -> station verdict tables (zero-judgment-copy: a verdict comes
+# only from the canonical tool's own rc)
+NAMES_GATE = {0: "PASS"}                            # rc 2 (inequality) and rc 9 (missing) -> FAIL
+GATE4_GATE = {0: "PASS", 1: "FAIL", 2: "REVIEW"}    # REVIEW is clean only at review count 0
+GATE7_GATE = {0: "PASS", 1: "FAIL"}                 # gate failing or probe failure -> FAIL; off-table rc -> FAIL
 
 VERDICT_RANK = {"PASS": 0, "REVIEW": 1, "FAIL": 2, "MISSING": 3}
 VERDICT_EXIT = {"PASS": 0, "REVIEW": 2, "FAIL": 1, "MISSING": 9}
 
-# 站账信息抽取（仅出账·永不覆判——verdict 唯一源自 rc；抽取失败=字段 null 如实出）
+# Station-ledger information extraction (ledger output only, never overrides judgment -
+# the verdict comes only from rc; extraction failure yields a null field, reported as-is)
 RE_NAMES_ASSERT = re.compile(r"断言 (\d+)=(\d+) 有序全等 : (PASS|FAIL)")
 RE_GATE4_SUM = re.compile(
     r"件数=(\d+)\s+PASS=(\d+)\s+FAIL=(\d+)\s+REVIEW\(人工复核\)=(\d+)\s+UNREADABLE=(\d+)")
@@ -180,8 +147,9 @@ def norm_hex(s):
 
 
 def parse_steps(spec_list):
-    """--steps 解析：逗号分＋重复旗标合并；未知步名 raise ValueError；
-    重排丢弃——恒归 ①②③ 固定序（可减不可重排）。"""
+    """Parse --steps: comma-separated with repeated flags merged; an unknown step name
+    raises ValueError; the requested order is discarded and the result always follows the
+    fixed ①②③ order (shrink only, never reorder)."""
     got = set()
     for spec in spec_list or []:
         for tok in spec.split(","):
@@ -197,7 +165,8 @@ def parse_steps(spec_list):
 
 
 def check_inputs(cured, baseline, steps, gate7_tree, gate7_modules):
-    """预检形制（组合形制面·文件存在性归 main 预检）。返回错误串或 None。"""
+    """Preflight the argument shape (composition-shape face; file existence belongs to
+    the main preflight). Returns an error string or None."""
     if not cured:
         return "--cured 必填（三步共同靶）"
     if "names" in steps and not baseline:
@@ -242,8 +211,9 @@ def gate4_cmd(canonical, cured, gate4_json, no_principle, length_fail, length_ca
 
 
 def gate7_cmd(launcher, tree, modules, workdir, jsonout, timeout, extra):
-    """③gate7 launcher 装配：bash launcher --tree T --module M… [--workdir W]
-    [--json J] [--timeout S] [-- extra…逐字尾透传]。"""
+    """Assemble the step-③ gate7 launcher command: bash launcher --tree T --module M...
+    [--workdir W] [--json J] [--timeout S] [-- extra... passed through verbatim at the
+    tail]."""
     cmd = ["bash", launcher, "--tree", tree]
     for m in modules:
         cmd += ["--module", m]
@@ -263,7 +233,7 @@ def gate_step(table, rc):
 
 
 def aggregate(verdicts):
-    """聚合律·硬者胜：MISSING(9) > FAIL(1) > REVIEW(2) > PASS(0)。"""
+    """Aggregation law, hardest verdict wins: MISSING(9) > FAIL(1) > REVIEW(2) > PASS(0)."""
     if not verdicts:
         return "PASS", 0
     worst = max(verdicts, key=lambda v: VERDICT_RANK[v])
@@ -283,7 +253,8 @@ def run_child(argv):
 
 
 def extract_info(stdout, gate7_json_path):
-    """站账信息抽取（出账用·永不覆判；抽不到=None 如实出）。"""
+    """Station-ledger information extraction (ledger output only, never overrides
+    judgment; an unmatchable field is reported as None)."""
     info = {}
     m = RE_NAMES_ASSERT.search(stdout)
     if m:
@@ -319,24 +290,25 @@ def extract_info(stdout, gate7_json_path):
 
 
 def station_selftest():
-    """本站自检十判（零写盘·不执行任何正本）。回 pass 布尔。"""
+    """Ten-judgment station self-check (zero writes, executes no canonical). Returns
+    the pass boolean."""
     ok = True
     root = default_root()
 
-    # 判1 三正本在位（默认仓根）
+    # judgment 1: the three canonicals are present (default repository root)
     found = {s: canonical_path(root, s) for s in STEP_ORDER}
     j = all(os.path.isfile(p) for p in found.values())
     print("  judge1 三正本在位(default root):", "PASS" if j else "FAIL", found)
     ok = ok and j
 
-    # 判2 冻结嵌记 32-hex 形制（names/gate4·gate7 launcher 无 pin）
+    # judgment 2: the frozen pins are 32-hex shape (names/gate4; the gate7 launcher has none)
     j = (all(norm_hex(CANONICALS[s]["pin"]) == CANONICALS[s]["pin"]
              for s in ("names", "gate4"))
          and CANONICALS["gate7"]["pin"] is None)
     print("  judge2 冻结嵌记形制（gate7 launcher 只录不判）:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判3 --steps 解析：子集固定序＋未知拒＋缺省轻链
+    # judgment 3: --steps parsing (subset in fixed order, unknown rejected, default light chain)
     try:
         got = parse_steps(["gate7,names"])
         j = got == ["names", "gate7"]
@@ -353,7 +325,7 @@ def station_selftest():
     print("  judge3c 缺省轻链（gate7 显式选入）:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判4 聚合律硬者胜
+    # judgment 4: aggregation law, hardest verdict wins
     v1, e1 = aggregate(["PASS", "PASS"])
     v2, e2 = aggregate(["PASS", "REVIEW"])
     v3, e3 = aggregate(["FAIL", "REVIEW"])
@@ -364,7 +336,7 @@ def station_selftest():
           (v1, e1), (v2, e2), (v3, e3), (v4, e4))
     ok = ok and j
 
-    # 判5 三判表
+    # judgment 5: the three verdict tables
     j = (gate_step(NAMES_GATE, 0) == "PASS" and gate_step(NAMES_GATE, 2) == "FAIL"
          and gate_step(GATE4_GATE, 0) == "PASS" and gate_step(GATE4_GATE, 1) == "FAIL"
          and gate_step(GATE4_GATE, 2) == "REVIEW" and gate_step(GATE4_GATE, 7) == "FAIL"
@@ -373,7 +345,7 @@ def station_selftest():
     print("  judge5 判表 names/gate4/gate7:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判6 三步 cmd 装配（gate7 extra 逐字尾透传）
+    # judgment 6: the three step command assemblies (gate7 extras pass through verbatim at the tail)
     c1 = names_cmd("/R/names.py", "c.v", "b.v", True, "Definition,Lemma", 5)
     c2 = gate4_cmd("/R/gate4.py", "c.v", "g.json", False, False, None)
     c3 = gate7_cmd("/R/gate7_probe.sh", "/W", ["Mod"], "/wd", "j.json", 600,
@@ -385,7 +357,7 @@ def station_selftest():
          and c3 == ["bash", "/R/gate7_probe.sh", "--tree", "/W", "--module", "Mod",
                     "--workdir", "/wd", "--json", "j.json", "--timeout", "600",
                     "--", "--gate", "--baseline", "B.json"])
-    # 判6b `--` 切分律：argparse 面与 gate7 透传面分离（world_hook 同款）
+    # judgment 6b: the bare `--` split separates the argparse face from the gate7 passthrough face
     s_a, s_x = split_extra_argv(["--cured", "c.v", "--", "--gate", "--baseline", "B"])
     s_b, s_y = split_extra_argv(["--cured", "c.v"])
     j = j and s_a == ["--cured", "c.v"] and s_x == ["--gate", "--baseline", "B"] \
@@ -393,7 +365,7 @@ def station_selftest():
     print("  judge6 cmd 装配＋`--`切分律:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判7 预检形制：baseline 依存＋同件拒绝＋gate7 依赖声明
+    # judgment 7: preflight shape (baseline dependency, same-file refusal, gate7 dependency declaration)
     j = (check_inputs(None, None, ["names"], None, []) is not None
          and check_inputs("c.v", None, ["gate4"], None, []) is None
          and check_inputs("c.v", None, ["names"], None, []) is not None
@@ -405,7 +377,8 @@ def station_selftest():
     print("  judge7 预检形制:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判8 三判例记名面：三刀齐＋各带判例锚（对表判例值与账源路径）
+    # judgment 8: precedent knife records (all three knives present, each with its record
+    # anchors: cross-check values and ledger source paths)
     j = (all(k in KNIVES for k in ("E7-carrier", "R23-notation", "E5-reanchor", "custom"))
          and "18=18" in KNIVES["E7-carrier"] and "13=13" in KNIVES["R23-notation"]
          and "51=51" in KNIVES["E5-reanchor"]
@@ -415,13 +388,14 @@ def station_selftest():
     print("  judge8 三判例记名面:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判9 断言形制核：32-hex 正过、伪值拒
+    # judgment 9: assertion shape (a valid 32-hex value passes, a bogus value is refused)
     j = (norm_hex(" 9e26c0db2c60ced3629a13a821bdf615 ") == "9e26c0db2c60ced3629a13a821bdf615"
          and norm_hex("zz") is None and norm_hex("01dc") is None)
     print("  judge9 断言形制核正过伪拒:", "PASS" if j else "FAIL")
     ok = ok and j
 
-    # 判10 站账抽取：三正本样例行各抽出＋gate7 gate 词面＋非匹配行如实缺
+    # judgment 10: ledger extraction (each canonical's sample lines extract, the gate7 gate
+    # wording extracts, non-matching lines stay absent)
     s1 = "file: x\ntotal: 7  let_skipped: 0\n断言 7=7 有序全等 : PASS"
     s2 = "[gate4ext] v2.1 扫描时点=T  件数=1  PASS=1  FAIL=0  REVIEW(人工复核)=0  " \
          "UNREADABLE=0  length_cap=30(review)  principle=on  deep_files=0"
@@ -448,8 +422,9 @@ def station_selftest():
 
 
 def split_extra_argv(argv):
-    """首个裸 `--` 切分：前段＝站形参（argparse 面），后段＝gate7 形参逐字透传
-    （world_hook 同款切分律——argparse 无法收 `--` 作旗标值）。"""
+    """Split at the first bare `--`: the head is the station parameters (the argparse
+    face) and the tail is the gate7 parameters passed through verbatim (argparse cannot
+    take a bare `--` as a flag value)."""
     if "--" in argv:
         i = argv.index("--")
         return argv[:i], argv[i + 1:]
@@ -517,7 +492,7 @@ def main(argv=None):
         print("precedent_station: 站级用法错: %s" % err, file=sys.stderr)
         sys.exit(2)
 
-    # —— 预检：正本/靶件存在性（不过零开步·exit 9）——
+    # - Preflight: canonical/target file existence (a failure runs no step, exit 9) -
     root = args.root if args.root else default_root()
     canon = {}
     for s in STEP_ORDER:
@@ -544,7 +519,8 @@ def main(argv=None):
                       % (args.gate7_tree, mv), file=sys.stderr)
                 sys.exit(9)
 
-    # —— 嵌记/外附 md5 断言（败→卡出 stderr·exit 2·绝不带病开步）——
+    # - Embedded/external md5 assertions (failure prints to stderr and exits 2; the chain
+    # never starts with a failed assertion) -
     actual = {s: md5_of(canon[s]) for s in STEP_ORDER}
     expects = {"names": args.expect_names_md5, "gate4": args.expect_gate4_md5}
     bad = []
@@ -563,7 +539,8 @@ def main(argv=None):
               file=sys.stderr)
         sys.exit(2)
 
-    # —— 开步：①→②→③ 固定序·全步出账（组合器＝全账聚合·不短路）——
+    # - Run the steps: fixed order ①->②->③, every step reports into the ledger (the
+    # combiner aggregates all steps, never short-circuits) -
     print("== precedent_station 三判例验收链（%s）==" % WRAP_NAME)
     print("cured:    %s" % args.cured)
     print("baseline: %s" % (args.baseline or "—（names 不在步）"))
@@ -598,7 +575,7 @@ def main(argv=None):
         step_rows[s] = {"rc": rc, "verdict": verdict}
         child_stdout[s] = out
 
-    # —— 站账信息抽取（出账·永不覆判）——
+    # - Station-ledger information extraction (ledger output, never overrides judgment) -
     info = {}
     if "names" in child_stdout:
         info.update(extract_info(child_stdout["names"], None))
