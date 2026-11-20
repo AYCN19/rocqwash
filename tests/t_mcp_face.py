@@ -5,16 +5,18 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  31-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  42-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
   capability_index-style file face over docs/symbiosis_sop.md, registered
-  from the symbiosis ticket's spec section 1.1), and the MCP
+  from the symbiosis ticket's spec section 1.1), the MCP
   roster-expansion work stream 1's six capabilities (the M1 ticket, five
   INDEX entries already standing plus the gap_cluster entry that lands with
   the
-  same increment), each new capability
+  same increment), and the MCP roster-expansion work stream 2's eleven
+  read/plan/partial capabilities (the M2 ticket, survey table 2 rows 7-17:
+  all eleven INDEX entries already standing), each new capability
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
   symbiosis INDEX entry line lands with the integration increment).
 
@@ -23,10 +25,11 @@ Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   derived one-way from the CASES block in tests/run_tests.sh by doc_lint's
   second check).
 
-Probes (one session, in order; zero network):
+Probes (zero network; probes 1-6 run one session in order, probe 7 is a
+  separate --help invocation of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 31 expected names in registration order,
+  3  tools/list -> exactly the 42 expected names in registration order,
      each with a description and a closed-object inputSchema
   4  live-call spot checks (three of the new batch, all zero network):
      4a http_backoff (no arguments; fixed --selftest) -> exit code: 0 with
@@ -41,7 +44,11 @@ Probes (one session, in order; zero network):
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child)
   6  error faces -> resources/list -32601; unknown tool -32602; unknown
      argument on a new capability -32602; an array item starting with "-"
-     -32602; a malformed line -32700 with id null
+     -32602; a withheld enum choice on a command-shaped capability (the
+     red_dispatch auto preset) -32602; a malformed line -32700 with id null
+  7  help gate -> the server's own --help invocation exits 0 with the
+     argparse usage face on stdout (the "usage" anchor word and the prog
+     name; locks the argparse flag gate against regression)
 
 Dependencies.  Python 3 stdlib only; the server and every called CLI are
   stdlib-only; probes 4a/4b/4c run selftest faces or temporary fixtures
@@ -86,14 +93,33 @@ EXPECTED_TOOLS = [
     # docs/CAPABILITY-INDEX.md section 2 entry line)
     "termbase", "verdict_diff", "learning_feedback", "b_gate_audit",
     "evolution_dashboard", "gap_cluster",
+    # the MCP roster-expansion work stream 2 (the M2 ticket's eleven
+    # read/plan/partial faces, survey table 2 rows 7-17: repair_weekly /
+    # roster_resync / scheduler_lite plan, axiom_guard read,
+    # symbiosis_bus_export / uplink_verify / i18n_translate_handoff /
+    # i18n_verify / red_dispatch_report / ai_flavor_apply_plan /
+    # row_render_check partial; the three http provider legs stay
+    # unregistered, and the apply, import, intake, ingest, and auto-tier
+    # faces stay CLI-side per the plan-first layer law; each spec
+    # transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line)
+    "repair_weekly", "roster_resync", "scheduler_lite", "axiom_guard",
+    "symbiosis_bus_export", "uplink_verify", "i18n_translate_handoff",
+    "i18n_verify", "red_dispatch_report", "ai_flavor_apply_plan",
+    "row_render_check",
 ]
+
+
+def _child_env():
+    """Child environment shared by every server invocation."""
+    env = dict(os.environ)
+    env["ROCQWASH_HOME"] = REPO
+    env.pop("ROCQWASH_MCP_ALLOW_NET", None)  # probe 5 exercises default deny
+    return env
 
 
 def _session(requests):
     """Run one stdio session; requests are dicts or raw (malformed) strings."""
-    env = dict(os.environ)
-    env["ROCQWASH_HOME"] = REPO
-    env.pop("ROCQWASH_MCP_ALLOW_NET", None)  # probe 5 exercises default deny
+    env = _child_env()
     payload = "".join(
         (r if isinstance(r, str) else json.dumps(r)) + "\n" for r in requests
     )
@@ -174,6 +200,9 @@ def main():
             {"jsonrpc": "2.0", "id": 10, "method": "tools/call",
              "params": {"name": "chain_graph",
                         "arguments": {"ledgers": ["-x"]}}},
+            {"jsonrpc": "2.0", "id": 11, "method": "tools/call",
+             "params": {"name": "red_dispatch_report",
+                        "arguments": {"preset": "auto"}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -198,7 +227,9 @@ def main():
             if l.get("method") == "notifications/initialized":
                 fails.append("probe2 notification echoed back")
 
-        # Probe 3: tools/list carries exactly the 25 expected names
+        # Probe 3: tools/list carries exactly the expected names in
+        # registration order (the count is the EXPECTED_TOOLS data, never a
+        # frozen literal)
         listing = _by_id(lines, 2)
         tools = (listing or {}).get("result", {}).get("tools", [])
         names = [t.get("name") for t in tools]
@@ -272,6 +303,11 @@ def main():
         if not r10 or r10.get("error", {}).get("code") != -32602:
             fails.append("probe6d array item starting with '-' should be "
                          "-32602")
+        r11 = _by_id(lines, 11)
+        if not r11 or r11.get("error", {}).get("code") != -32602:
+            fails.append("probe6f a withheld enum choice (the red_dispatch "
+                         "auto preset) should be refused at the guard "
+                         "-32602, never forwarded to the CLI")
         parse_errors = [l for l in lines
                         if l.get("error", {}).get("code") == -32700]
         if len(parse_errors) != 1 or parse_errors[0].get("id") is not None:
@@ -283,6 +319,21 @@ def main():
                          % rc)
         if err and "Traceback" in err:
             fails.append("server stderr carries a traceback\n%s" % err[-500:])
+
+        # Probe 7: --help gate (separate invocation, same child shape)
+        help_run = subprocess.run(
+            [sys.executable, "-I", "-X", "utf8", "-B", SERVER, "--help"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=REPO, env=_child_env(), timeout=120,
+        )
+        help_out = help_run.stdout.decode("utf-8", errors="replace")
+        if help_run.returncode != 0:
+            fails.append("probe7 --help should exit 0, got %d\n%s"
+                         % (help_run.returncode, help_out))
+        elif "usage" not in help_out or "mcp_server.py" not in help_out:
+            fails.append("probe7 --help output should carry the argparse "
+                         "usage face (usage anchor word plus prog name)\n%s"
+                         % help_out)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -290,7 +341,7 @@ def main():
         for line in fails:
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
-    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (6 probe groups, "
+    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (7 probe groups, "
                      "%d capabilities, 3 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0

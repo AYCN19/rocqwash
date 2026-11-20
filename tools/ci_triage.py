@@ -113,6 +113,16 @@ Exit-codes.  0 = triage completed (a failing verdict is data, not a tool
        auto-attached (the E gate2-only cascade variant does not hold for
        attested-red shapes).
     Both stay family=UNRECOGNIZED (manual identification first; no force-fit).
+  Evidence-annihilation candidate note (R19; docs/ci-triage-table.json v1.5
+    row; family unchanged, evidence enhanced only, fired on any family before
+    the family branches): a log capture channel that engaged (log text was
+    fetched/injected) and holds zero evidence bytes in its raw form (empty or
+    whitespace-only) while every step recorded its conclusion ("rc recorded,
+    log/output bytes = 0") - the capture mechanism is the disease, not the
+    tool; log_text=None (no fetch) never fires the note, a failed fetch is
+    the log_note channel (a different shape) and never fires it, and a log
+    holding only dump/telemetry lines has bytes, so it is the dump-filter
+    trap shape, not this note.
 
   Classification precedence (per job, first match wins): passing / in-progress /
     conditionally skipped → D (cancelled, zero steps) → B cascade (cancelled,
@@ -723,9 +733,9 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
     fetch_job_log failure note or an offline canned note; it enters the
     evidence face only and never judges a family — the logs-GET 404 criterion
     leg of the runner-lost-candidate shape).  The family-judging face is
-    unchanged: the two shape notes only enhance evidence (the two
-    maintained-UNREC shapes; see the module docstring's maintained-UNREC
-    section)."""
+    unchanged: the shape notes only enhance evidence (the two
+    maintained-UNREC shapes plus the evidence-annihilation candidate note
+    (R19); see the module docstring)."""
     ev = []
     status = str(job.get("status") or "")
     conclusion = job.get("conclusion")
@@ -735,6 +745,13 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
     red_names = [str(s.get("name") or "(unnamed)") for s in red_steps]
 
     dump_dropped = 0
+    # evidence-annihilation candidate (R19) leg 1, judged on the RAW log form
+    # before dump filtering: the capture channel engaged (log_text is not
+    # None) and holds zero evidence bytes (empty or whitespace-only).  A log
+    # holding only dump/telemetry lines has bytes, so it is the dump-filter
+    # trap shape (noted below), not annihilation; log_text=None (no fetch)
+    # never fires.
+    empty_log = log_text is not None and not log_text.strip()
     if log_text and dump_filter:
         _raw_lines = log_text.splitlines()
         log_text = filter_dump_lines(log_text)
@@ -761,6 +778,29 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
         ev.append("dump lines dropped=%d (cyan script echo/group directives;"
                   " not real execution lines; review-ledger evidence trap;"
                   " --no-dump-filter disables)" % dump_dropped)
+
+    # evidence-annihilation candidate note (R19; docs/ci-triage-table.json
+    # v1.5 row; family unchanged, evidence enhanced only, fired on any family
+    # before the family branches).  Two legs, both required:
+    #   1. log/output bytes = 0: the raw injected/fetched log holds zero
+    #      evidence bytes (empty_log, judged pre-filter);
+    #   2. rc recorded: the job has steps and every step recorded a
+    #      conclusion (the outcomes made it to the record while the output
+    #      did not).
+    # The note never reclassifies (the family branches below judge as usual)
+    # and never fires on a failed fetch (the log_note channel: the
+    # runner-lost shape, an unreachable log, not an annihilated one).
+    if empty_log and steps and all(
+            s.get("conclusion") is not None for s in steps):
+        ev.append(
+            "evidence annihilation candidate (R19): log/output bytes = 0 with"
+            " rc recorded (steps: %s) - the capture mechanism is the disease,"
+            " not the tool; a zero-byte output with rc recorded is a"
+            " structural silent red; fix the capture mechanism then"
+            " re-execute (re-running the original batch, not re-signing;"
+            " auto_repairable=false)" % ", ".join(
+                "%s=%s" % (s.get("name") or "(unnamed)",
+                           s.get("conclusion") or "-") for s in steps))
 
     # D: cancelled with zero steps (the logs-404 shape)
     if conclusion == "cancelled" and not steps:
@@ -1337,7 +1377,13 @@ def selftest():
     missing leg kills the note; auth-state-red-maintained: the fixture pair
     note assertion plus two single-token negatives — an incomplete pair keeps
     only the old note; the job_log_notes extension and malformed fail-loud
-    vectors).
+    vectors); and the evidence-annihilation candidate (R19) vectors (the
+    triage-table v1.5 row: a zero-byte injected log with every outcome
+    recorded fires the three-marker R19 note on evidence only, the family
+    face unchanged; the empty-string and whitespace-only positives; the
+    no-fetch / note-channel / non-empty-log / unrecorded-outcome negatives,
+    any one missing leg kills the note; the canned-fixture end-to-end run
+    carries the note in --json and stays byte-identical on rerun).
     All runs use --offline fixtures; zero real network, zero compiles."""
     import shutil
     import subprocess
@@ -2160,6 +2206,77 @@ def selftest():
         assert p.returncode == 9, "malformed job_log_notes should fail loud with 9, got %d" \
             % p.returncode
 
+        # part 13: the evidence-annihilation candidate (R19) vectors (the
+        # docs/ci-triage-table.json v1.5 row; family unchanged, evidence
+        # enhanced only): a zero-byte injected log with every outcome recorded
+        # ("rc recorded" + "log/output bytes = 0") fires the three-marker R19
+        # note; the note rides before the family branches, so a red Build
+        # step still judges A via the step name (no reclassification).
+        # Positives: the empty string and the whitespace-only form.
+        # Negatives (any one missing leg kills the note): no fetch
+        # (log_text=None); the note channel instead (a failed fetch = the
+        # runner-lost shape: an unreachable log, not an annihilated one); a
+        # non-empty log; an outcome not recorded (a step hung with
+        # conclusion=None: rc not recorded).  End-to-end: a canned fixture
+        # with job_logs {"<id>": ""} carries the note in --json and stays
+        # byte-identical on rerun.
+        steps_r19 = [mkstep(1, "Build (coqc batch)", "failure")]
+        c = classify(mkjob(id=101, steps=steps_r19), log_text="")
+        assert c["family"] == "A-content-red", \
+            ("the R19 note never reclassifies (the step-name A rule judges)",
+             c["family"])
+        note19 = [e for e in c["evidence"]
+                  if e.startswith("evidence annihilation candidate (R19)")]
+        assert len(note19) == 1, c["evidence"]
+        for marker in ("rc recorded", "log/output bytes = 0",
+                       "evidence annihilation"):
+            assert any(marker in e for e in note19), (marker, note19)
+        assert "the capture mechanism is the disease" in note19[0], note19
+        c = classify(mkjob(id=102, steps=steps_r19), log_text="\n  \n")
+        assert any("evidence annihilation candidate (R19)" in e
+                   for e in c["evidence"]), c
+        c = classify(mkjob(id=103, steps=steps_r19))
+        assert not any("evidence annihilation candidate (R19)" in e
+                       for e in c["evidence"]), \
+            ("no fetch (log_text=None) is not annihilation", c["evidence"])
+        c = classify(mkjob(id=104, steps=steps_r19), log_note=RL_NOTE_404)
+        assert not any("evidence annihilation candidate (R19)" in e
+                       for e in c["evidence"]), \
+            ("a failed fetch (the note channel) is a different shape, not"
+             " R19", c["evidence"])
+        c = classify(mkjob(id=105, steps=steps_r19),
+                     log_text="BUILD LOG\nsome real execution line\n")
+        assert not any("evidence annihilation candidate (R19)" in e
+                       for e in c["evidence"]), \
+            ("a non-empty log is not R19", c["evidence"])
+        c = classify(mkjob(id=106, steps=[
+            mkstep(1, "Build full tree (order topology, fingerprint skip,"
+                     " thermal-guarded)", None, status="in_progress",
+                   conclusion=None)]), log_text="")
+        assert not any("evidence annihilation candidate (R19)" in e
+                       for e in c["evidence"]), \
+            ("an outcome not recorded (rc not recorded) is not R19",
+             c["evidence"])
+        ann = os.path.join(tmp, "annihilated.json")
+        with io.open(ann, "w", encoding="utf-8") as fh:
+            json.dump({"total_count": 1,
+                       "jobs": [mkjob(id=107, steps=[
+                           mkstep(1, "Build (coqc batch)", "failure")])],
+                       "job_logs": {"107": ""}}, fh)
+        out = os.path.join(tmp, "annihilated.out.json")
+        p = run(["--offline", ann, "--json", out])
+        assert p.returncode == 0, p.stdout[-400:]
+        rep = json.load(io.open(out, encoding="utf-8"))
+        cj = rep["jobs"][0]["classification"]
+        assert cj["family"] == "A-content-red", cj
+        assert any("evidence annihilation candidate (R19)" in e
+                   for e in cj["evidence"]), cj
+        out2 = os.path.join(tmp, "annihilated.out.2.json")
+        p = run(["--offline", ann, "--json", out2])
+        assert p.returncode == 0, p.stdout[-400:]
+        assert io.open(out2, "rb").read() == io.open(out, "rb").read(), \
+            "annihilation-shape json byte drift = violation"
+
         print("CI-TRIAGE-SELFTEST PASS: the six family samples all hit / the"
               " 13.3x baseline example + the loud absent-step note / classifier"
               " units (regex positives-negatives; cascade; in-flight; E-shapes"
@@ -2183,7 +2300,12 @@ def selftest():
               " two-shape evidence-note vectors (runner-lost-candidate fixture"
               " four-legs pass + wall clock + canned 404 note + determinism +"
               " four negatives; the auth-state-red-maintained fixture pair note"
-              " + two single-token negatives; malformed job_log_notes -> 9)"
+              " + two single-token negatives; malformed job_log_notes -> 9) /"
+              " the evidence-annihilation candidate (R19) vectors (the"
+              " triage-table v1.5 row: a zero-byte log with rc recorded fires"
+              " the three-marker R19 note on evidence only, the family face"
+              " unchanged; two positives + four negatives + the canned-fixture"
+              " end-to-end run with determinism)"
               " — all pass")
         return 0
     finally:

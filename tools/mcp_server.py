@@ -1,7 +1,7 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 31 registered capabilities,
+  Context Protocol (MCP) stdio transport: 42 registered capabilities,
   each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
   Default deny for network and heavy capabilities (`sentinel_status`,
   `net_probe`, `ci_triage`, `pushci_status`): a failed tool result
@@ -21,7 +21,7 @@ Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
 Dependencies.  Python 3 standard library only (argparse, json, os,
   subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 31-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 42-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors.
 
 Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1
@@ -42,10 +42,10 @@ DEFAULT_TIMEOUT_S = 300
 ALLOW_NET_ENV = "ROCQWASH_MCP_ALLOW_NET"
 TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
-# Frozen selftest vector: the M1 roster (25 standing specs plus six
-# additions); a roster change re-freezes this value and EXPECTED_TOOLS
-# in tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 31
+# Frozen selftest vector: the M2 roster (25 standing specs, six M1
+# additions, eleven M2 ticket additions); a roster change re-freezes this
+# value and EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
+SELFTEST_ROSTER_COUNT = 42
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1020,6 +1020,458 @@ TOOL_SPECS = [
             "corrupt input exits 9 fail-loud. Zero network face."
         ),
     },
+    # ---- the MCP roster-expansion work stream 2 (the M2 ticket): eleven
+    # read/plan/partial faces over the repair and roster guards, the
+    # scheduler, the axiom guard, the cross-repository bus and uplink
+    # gates, the i18n handoff faces, the red dispatcher, and the row
+    # renderer.  Each spec is transcribed from its
+    # docs/CAPABILITY-INDEX.md section 2 entry line (the roster survey
+    # table 2 rows 7-17), additive after the block above: the existing
+    # specs and schemas untouched.  Layer law face by face: zero apply
+    # face, zero ledger-append face, zero credential face, zero network
+    # leg (the three http provider legs stay unregistered, the provider
+    # argument never enters the schemas, so the call forms carry the
+    # default zero-network providers).  The apply, import, intake,
+    # ingest, and auto-tier faces stay CLI-side per the plan-first layer
+    # law (the jargon_plan and i18n_pipeline_dryrun precedents);
+    # choice-pinned faces declare their withheld choices in the schema
+    # enum (the registered i18n_pipeline_dryrun stage form).
+    {
+        "name": "repair_weekly",
+        "kind": "cli",
+        "cli": os.path.join("tools", "repair_weekly.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("ledger", "--ledger"),
+            ("date", "--date"),
+            ("out", "--out"),
+            ("json_out", "--json"),
+            ("record", "--record"),
+            ("record_class", "--class"),
+            ("target", "--target"),
+            ("repair_outcome", "--repair-outcome"),
+            ("ticket", "--ticket"),
+            ("evidence_file", "--evidence-file"),
+            ("reason", "--reason"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "ledger": {"type": "string", "description": "repair-outcome ledger JSONL path (default docs/repair-ledger.jsonl under the repo root; an explicit path must exist); CLI flag --ledger"},
+                "date": {"type": "string", "description": "ISO date YYYY-MM-DD selecting the weekly window (required for the aggregate face); CLI flag --date"},
+                "out": {"type": "string", "description": "write the weekly markdown face to this caller-named file; CLI flag --out"},
+                "json_out": {"type": "string", "description": "write the weekly JSON face (schema rocqwash-repair-weekly/1) to this caller-named path; CLI flag --json"},
+                "record": {"type": "boolean", "description": "plan one per-red outcome row: the would-append row is printed with zero writes (needs --class, --target, --repair-outcome); CLI flag --record"},
+                "record_class": {"type": "string", "description": "repair class of the planned row (with --record); CLI flag --class"},
+                "target": {"type": "string", "description": "target of the planned row (with --record); CLI flag --target"},
+                "repair_outcome": {"type": "string", "description": "outcome token of the planned row (with --record); CLI flag --repair-outcome"},
+                "ticket": {"type": "string", "description": "optional ticket key of the planned row; CLI flag --ticket"},
+                "evidence_file": {"type": "string", "description": "optional evidence path of the planned row; CLI flag --evidence-file"},
+                "reason": {"type": "string", "description": "optional reason text of the planned row; CLI flag --reason"},
+                "selftest": {"type": "boolean", "description": "run the selftest vectors on temporary fixtures (takes no other flag); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Weekly distribution face over the repair-outcome ledger "
+            "(tools/repair_weekly.py, repair class E6): the aggregate face "
+            "reads the ledger strictly read-only and casts the per-red "
+            "outcome census under the E6 vocabulary plus the class and "
+            "ticket distributions for the ISO week of --date (an absent "
+            "default-path ledger is a zero-row report); --record plans one "
+            "row and prints the would-append JSON with zero writes. Zero "
+            "network face. The --apply append face is not exposed over "
+            "MCP (the ledger-append face stays CLI-side); outputs are "
+            "stdout and the caller-named --out/--json paths."
+        ),
+    },
+    {
+        "name": "roster_resync",
+        "kind": "cli",
+        "cli": os.path.join("tools", "roster_resync.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("repo", "--repo"),
+            ("ledger", "--ledger"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "repo": {"type": "string", "description": "audited repository root (default: the parent of tools/); CLI flag --repo"},
+                "ledger": {"type": "string", "description": "repair ledger path (default docs/repair-ledger.jsonl under the repo root; untouched on this face); CLI flag --ledger"},
+                "json_out": {"type": "string", "description": "write the drift plan report (schema rocqwash-roster-resync/1, sort_keys determinism) to this caller-named path; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Roster count drift guard recount face (tools/roster_resync.py, "
+            "E2 repair class 2): recounts the suite roster (the CASES "
+            "block of tests/run_tests.sh, the only count authority) "
+            "against the doc_lint count lines of tests/README.md and "
+            "README.md and reports the drift plan; dry-run by construction "
+            "on this face, the roster file bytes never change, and every "
+            "outcome is loud (a red is data, exit 1 on drift found). Zero "
+            "network face. The --apply rewrite face is not exposed over "
+            "MCP (the README count-line rewrite is an authorization face "
+            "owned by another lane); the pre-argparse --selftest route is "
+            "not exposed (the registered chain_graph precedent); the plan "
+            "report goes to stdout and the caller-named --json path."
+        ),
+    },
+    {
+        "name": "scheduler_lite",
+        "kind": "cli",
+        "cli": os.path.join("tools", "scheduler_lite.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("gap_ledger", "--gap-ledger"),
+            ("reports", "--reports"),
+            ("rounds", "--rounds"),
+            ("autonomy", "--autonomy"),
+            ("state", "--state"),
+            ("ef_marker", "--ef-marker"),
+            ("threshold", "--threshold"),
+            ("interval_seconds", "--interval-seconds"),
+            ("now_utc", "--now-utc"),
+            ("out", "--out"),
+            ("json", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "gap_ledger": {"type": "array", "description": "gap feed ledger JSONL paths, repeatable (default docs/gap-feed-ledger.jsonl under the repo root); CLI flag --gap-ledger"},
+                "reports": {"type": "array", "description": "vacgen report files or directories, repeatable (default docs/vacgen-reports); CLI flag --reports"},
+                "rounds": {"type": "string", "description": "round ledger path (default docs/round-ledger.jsonl under the repo root); CLI flag --rounds"},
+                "autonomy": {"type": "string", "description": "autonomy table path (default autonomy.json); CLI flag --autonomy"},
+                "state": {"type": "string", "description": "round state path (default docs/round-state.json); CLI flag --state"},
+                "ef_marker": {"type": "string", "description": "EF all-green marker path (the marker gate is reported, never fired); CLI flag --ef-marker"},
+                "threshold": {"type": "integer", "description": "TODO-SEAT threshold (default from the measured constant); CLI flag --threshold"},
+                "interval_seconds": {"type": "integer", "description": "round interval seconds (default: the measured backfill 40566); CLI flag --interval-seconds"},
+                "now_utc": {"type": "string", "description": "plan clock override ISO8601Z so equal inputs stay byte-identical; CLI flag --now-utc"},
+                "out": {"type": "string", "description": "write the plan document (schema rocqwash.scheduler-lite.plan/1) to this caller-named file; CLI flag --out"},
+                "json": {"type": "boolean", "description": "print the plan document on stdout; CLI flag --json"},
+            }
+        ),
+        "description": (
+            "TODO-SEAT threshold trigger plan face for the jargon tier-B "
+            "auto gear (tools/scheduler_lite.py): watches the gap account "
+            "and the round cadence and decides whether a jargon-class "
+            "auto round is due; the verdict quiet | due | blocked with "
+            "reason tokens is data, absent defaults are data, and corrupt "
+            "explicit input exits 9. The positional command takes only "
+            "plan and defaults to it, so the face is plan-only by "
+            "construction (the command itself is not exposed); ignition "
+            "stays behind the EF all-green marker gate and no ignition "
+            "face exists. Zero network face; the only write is the "
+            "caller-named --out plan file; the pre-argparse --selftest "
+            "route is not exposed (the registered chain_graph precedent)."
+        ),
+    },
+    {
+        "name": "axiom_guard",
+        "kind": "cli",
+        "cli": os.path.join("tools", "axiom_guard.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("repo", "--repo"),
+            ("out", "--out"),
+            ("allow_axiom", "--allow-axiom"),
+            ("timeout", "--timeout"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "repo": {"type": "string", "description": "repository root to guard (tool-required for the guard face; --selftest runs without it); CLI flag --repo"},
+                "out": {"type": "string", "description": "report directory (axiom-guard-report.json written under it; sorted inputs, byte-identical double run); CLI flag --out"},
+                "allow_axiom": {"type": "array", "description": "axiom names admitted by the whitelist, repeatable (default empty); CLI flag --allow-axiom"},
+                "timeout": {"type": "integer", "description": "per-file compile timeout seconds (default 600); CLI flag --timeout"},
+                "selftest": {"type": "boolean", "description": "run the offline selftest vectors (takes no repo); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Repo-wide axiom guard read face (tools/axiom_guard.py): "
+            "compiles every .v file under --repo in a private temp "
+            "workdir (the repository tree gains zero bytes) and judges "
+            "compile-ok files at two levels, the per-theorem Print "
+            "Assumptions light face and the coqchk -o heavy face as the "
+            "authority; the report JSON goes to the caller-named --out "
+            "directory. Zero network face (local rocq/coqchk subprocesses "
+            "only). The ROCWASH_ROCQ / ROCWASH_COQCHK environment "
+            "variables are the registered toolchain form: with neither "
+            "configured the tool exits 111 as an honest skip judging "
+            "nothing rather than simulating; the --rocq and --coqchk "
+            "binary-path flags and the temp-retention --keep flag are not "
+            "exposed over MCP (the binary faces stay CLI-side)."
+        ),
+    },
+    {
+        "name": "symbiosis_bus_export",
+        "kind": "cli",
+        "cli": os.path.join("tools", "symbiosis_bus.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("command", "@command"),
+            ("out", "--out"),
+            ("swap", "--swap"),
+            ("ledger", "--ledger"),
+            ("source_repo", "--source-repo"),
+            ("anchor", "--anchor"),
+            ("side_a", "--a"),
+            ("side_b", "--b"),
+            ("dry_run", "--dry-run"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "command": {"type": "string", "enum": ["export", "status", "diff"], "description": "bus face: export renders the local ledger as an offline swap package, status counts both directions from entry content, diff lists the entry-id difference of two ledgers (import is not part of this face); CLI positional"},
+                "out": {"type": "string", "description": "export: swap file to write, schema rocqwash-symbio/1 (required for a real export; a --dry-run export writes nothing); CLI flag --out"},
+                "swap": {"type": "array", "description": "status: swap file paths to count, repeatable; CLI flag --swap"},
+                "ledger": {"type": "string", "description": "ledger path override (default docs/exp-ledger.jsonl under the repo root); CLI flag --ledger"},
+                "source_repo": {"type": "string", "description": "export: source repository name (default: this checkout's directory name); CLI flag --source-repo"},
+                "anchor": {"type": "string", "description": "export: source HEAD anchor (default: the commit read from .git); CLI flag --anchor"},
+                "side_a": {"type": "string", "description": "diff: first ledger path; CLI flag --a"},
+                "side_b": {"type": "string", "description": "diff: second ledger path; CLI flag --b"},
+                "dry_run": {"type": "boolean", "description": "export: validate and report, write nothing; CLI flag --dry-run"},
+                "selftest": {"type": "boolean", "description": "run the temporary-fixture vector group (takes no command); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Cross-repository experience bus read/plan faces "
+            "(tools/symbiosis_bus.py): export renders the local ledger as "
+            "an offline swap package to the caller-named --out "
+            "(timestamps ride entry content, never a clock), status "
+            "counts bus rows from entry content, and diff lists the "
+            "entry-id difference of two ledgers. Zero network face by "
+            "design (exchange walks offline files). The import face (the "
+            "exp_port append leg) is not part of this face and is not "
+            "exposed over MCP (the ledger-append face stays CLI-side)."
+        ),
+    },
+    {
+        "name": "uplink_verify",
+        "kind": "cli",
+        "cli": os.path.join("tools", "uplink.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("command", "@command"),
+            ("package", "--package"),
+            ("digest", "--digest"),
+            ("manifest", "--manifest"),
+            ("register", "--register"),
+            ("out", "--out"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "command": {"type": "string", "enum": ["verify", "pr-prep"], "description": "gate face: verify checks one return package against its declared md5 face, pr-prep renders the pull-request description draft of one register row (intake is not part of this face; --selftest takes no command); CLI positional"},
+                "package": {"type": "string", "description": "return package zip path; CLI flag --package"},
+                "digest": {"type": "string", "description": "verify: md5 digest, a 32-hex string or a sidecar file path (verify needs --digest or --manifest); CLI flag --digest"},
+                "manifest": {"type": "string", "description": "verify: md5sum-line manifest path (verify needs --digest or --manifest); CLI flag --manifest"},
+                "register": {"type": "string", "description": "pr-prep: register file to read the row from (default docs/uplink-intake.jsonl; verified rows only); CLI flag --register"},
+                "out": {"type": "string", "description": "pr-prep: draft markdown path to write (required for pr-prep; zero git calls, never opens a pull request); CLI flag --out"},
+                "selftest": {"type": "boolean", "description": "run the 19 frozen vectors on temporary fixtures (takes no command); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Standard intake gate verify and draft faces (tools/uplink.py): "
+            "verify compares the package zip against its md5 sidecar or "
+            "manifest member by member and prints the per-file evidence "
+            "list to stdout (any mismatch or missing declared member is "
+            "fail-loud rc=1); pr-prep renders the pull-request "
+            "description draft of one verified register row to the "
+            "caller-named --out (zero git calls, deterministic "
+            "byte-identical output). Zero network face by design. The "
+            "intake face (the register-row append leg) is not part of "
+            "this face and is not exposed over MCP (the ledger-append "
+            "face stays CLI-side)."
+        ),
+    },
+    {
+        "name": "i18n_translate_handoff",
+        "kind": "cli",
+        "cli": os.path.join("tools", "i18n_translate.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("segments", "--segments"),
+            ("direction", "--direction"),
+            ("emit", "--emit"),
+            ("ingest", "--ingest"),
+            ("prompts", "--prompts"),
+            ("policy_ref", "--policy-ref"),
+            ("translated_out", "--translated-out"),
+            ("ledger_out", "--ledger-out"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "segments": {"type": "string", "description": "segments JSON file (array, or object with a segments key; required for the handoff faces); CLI flag --segments"},
+                "direction": {"type": "string", "enum": ["zh2en", "en2zh"], "description": "translation direction (required for the handoff faces); CLI flag --direction"},
+                "emit": {"type": "string", "description": "write the handoff packet as JSONL to this caller-named path (zero network); CLI flag --emit"},
+                "ingest": {"type": "string", "description": "validate a backfill JSONL file at this path (zero network; a missing model_id or missing annotation is a violation and the ingest refuses fail-loud); CLI flag --ingest"},
+                "prompts": {"type": "string", "description": "prompt template dir with <direction>*.txt/.md files (default: built-in constants); CLI flag --prompts"},
+                "policy_ref": {"type": "string", "description": "P0 policy pre-check pointer stamped into ingest rows; CLI flag --policy-ref"},
+                "translated_out": {"type": "string", "description": "write the translated segments JSON to this caller-named path; CLI flag --translated-out"},
+                "ledger_out": {"type": "string", "description": "write the segment ledger rows JSONL to this caller-named path; CLI flag --ledger-out"},
+                "json_out": {"type": "string", "description": "write a run report JSON to this caller-named path; CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the offline selftest and exit (takes no other action); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Model-site layer P2 handoff faces (tools/i18n_translate.py): "
+            "--emit writes the segment handoff packet as JSONL and "
+            "--ingest runs the ten-key backfill validation including "
+            "policy_precheck_ref (a missing model_id or missing "
+            "annotation is a violation and the ingest refuses fail-loud); "
+            "both faces are zero-network. The provider argument never "
+            "enters this schema, so the call form always carries the "
+            "default handoff provider: the http provider leg (the "
+            "ROCWASH_LLM_* environment gate and the NETRED ledger) is "
+            "not registered (the same graduation law as the registered "
+            "i18n_pipeline_dryrun face)."
+        ),
+    },
+    {
+        "name": "i18n_verify",
+        "kind": "cli",
+        "cli": os.path.join("tools", "i18n_verify.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("verify_target", "--verify-target"),
+            ("emit_tenpoint", "--emit-tenpoint"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "verify_target": {"type": "string", "description": "run the P4 mechanical verification faces over this target (the local ai_flavor / norm_lint / doc_lint instruments at their standing paths, merged into the verification matrix JSON rocqwash.i18n.verify/1); CLI flag --verify-target"},
+                "emit_tenpoint": {"type": "string", "description": "emit the P5 human ten-point review form for this target (a variant per target-face shape; the engine emits the form, it never produces a verdict); CLI flag --emit-tenpoint"},
+                "json_out": {"type": "string", "description": "write the run report JSON to this caller-named path; CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the offline selftest and exit; CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "E4 P4/P5 verification faces (tools/i18n_verify.py): the P4 "
+            "face runs the mechanical instruments over --verify-target in "
+            "read-only probe runs and the P5 face emits the human "
+            "ten-point review form for --emit-tenpoint. Zero network "
+            "face. The --ingest-tenpoint face (the verdict write-back "
+            "into the segment ledger) is not exposed over MCP, and the "
+            "instrument-path override flags stay CLI-side (the standing "
+            "sibling paths are the registered form)."
+        ),
+    },
+    {
+        "name": "red_dispatch_report",
+        "kind": "cli",
+        "cli": os.path.join("tools", "red_dispatch.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("event_file", "--event-file"),
+            ("preset", "--preset"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "event_file": {"type": "string", "description": "sentinel red-event JSONL path (the stdin face is not part of this registration); CLI flag --event-file"},
+                "preset": {"type": "string", "enum": ["report-only", "suggest"], "description": "route face: report-only routes with zero execution (default), suggest adds the copy blocks; the auto tier (which executes local commands) is not part of this face; CLI flag --preset"},
+                "json_out": {"type": "string", "description": "write the route report JSON (rocqwash-red-route/1, sort_keys) to this caller-named path; CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "vector self-check on temporary fixtures, offline, zero network; CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Red-event dispatcher report faces (tools/red_dispatch.py): "
+            "routes an event file to preset actions under report-only "
+            "(zero side effects) or suggest (plus copy blocks, still zero "
+            "side effects); only the auto tier executes and dedups, and "
+            "that tier is not part of this face (the preset choices are "
+            "limited to the two zero-execution faces). Zero network face; "
+            "the state-file, cooldown, repo-path, and parameter flags "
+            "parameterize the auto tier and stay CLI-side."
+        ),
+    },
+    {
+        "name": "ai_flavor_apply_plan",
+        "kind": "cli",
+        "cli": os.path.join("tools", "ai_flavor_apply.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("file", "--file"),
+            ("json_out", "--json"),
+            ("emit_handoff", "--emit-handoff"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "file": {"type": "string", "description": "target text file (read-only in plan and emit modes); CLI flag --file"},
+                "json_out": {"type": "string", "description": "write the run report JSON to this caller-named path; CLI flag --json"},
+                "emit_handoff": {"type": "string", "description": "emit the provider handoff package JSONL to this caller-named path (zero writes to the target); CLI flag --emit-handoff"},
+                "selftest": {"type": "boolean", "description": "run the built-in vector suite on temporary fixtures (takes no other flag); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Advisory rewrite planner and handoff emitter "
+            "(tools/ai_flavor_apply.py): the plan face scans the target "
+            "read-only and casts the zh ban faces, stem faces, and "
+            "sentence faces into suggestions (the 10 zh ban faces are "
+            "never machine-written, disposition=human), and "
+            "--emit-handoff writes the segment package for the human "
+            "backfill loop. Zero network face. The --apply-handoff apply "
+            "form and the http provider (the rewrite path and the "
+            "default-deny direct-apply path, with the budget-cap state "
+            "face) are not exposed over MCP; they stay CLI-side."
+        ),
+    },
+    {
+        "name": "row_render_check",
+        "kind": "cli",
+        "cli": os.path.join("tools", "row_render.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("gaps", "--gaps"),
+            ("emit", "--emit"),
+            ("check_draft", "--check-draft"),
+            ("vacgen", "--vacgen"),
+            ("prompts", "--prompts"),
+            ("policy_ref", "--policy-ref"),
+            ("ledger_out", "--ledger-out"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "gaps": {"type": "string", "description": "gap-cluster ledger JSON file (required for --emit); CLI flag --gaps"},
+                "emit": {"type": "string", "description": "write the render packet as JSONL to this caller-named path (zero network); CLI flag --emit"},
+                "check_draft": {"type": "string", "description": "re-run the vacgen admission gate over a draft JSON (the R6 re-acceptance face); CLI flag --check-draft"},
+                "vacgen": {"type": "string", "description": "admission host path (default: the ROW_RENDER_VACGEN env var, then the sibling tools/vacgen.py); CLI flag --vacgen"},
+                "prompts": {"type": "string", "description": "render prompt dir with render*.txt/.md files (default: built-in constant); CLI flag --prompts"},
+                "policy_ref": {"type": "string", "description": "layer-law first-admission reference stamped into gaps; CLI flag --policy-ref"},
+                "ledger_out": {"type": "string", "description": "write the nine-key render ledger rows JSONL to this caller-named path; CLI flag --ledger-out"},
+                "json_out": {"type": "string", "description": "write a run report JSON to this caller-named path; CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the offline selftest and exit; CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Refinery W2 row renderer emit and check faces "
+            "(tools/row_render.py): --emit renders a gap-cluster ledger "
+            "into a candidate-row render packet (zero network) and "
+            "--check-draft re-runs the vacgen admission gate over a "
+            "draft JSON. The ingest and tenpoint faces (the draft write "
+            "and the verdict write-back into "
+            "docs/drafts/taxonomy-candidates.json) and the http provider "
+            "leg are not exposed over MCP; they stay CLI-side under the "
+            "same graduation law as the i18n handoff faces."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -1102,6 +1554,18 @@ def _validate_arguments(spec, arguments):
             raise InvalidParams(
                 "Invalid params: array argument '{0}' must not contain "
                 "items starting with '-'".format(key)
+            )
+        choices = properties[key].get("enum")
+        if choices is not None and value not in choices:
+            # A value outside the declared enum is refused at the guard and
+            # never forwarded to the CLI: the enum is how a choice-pinned
+            # face declares its withheld choices (the auto tier of the
+            # red-event router, the import/intake append legs, the
+            # write-bearing i18n pipeline stages).
+            raise InvalidParams(
+                "Invalid params: argument '{0}' must be one of: {1}".format(
+                    key, ", ".join(str(item) for item in choices)
+                )
             )
     for key in spec["schema"]["required"]:
         if key not in arguments:
@@ -1286,9 +1750,10 @@ def _selftest():
     Zero network face, zero stdin read, zero writes: the vectors inspect
     module state only (the spec table, the name map and the schema
     validation behavior of _validate_arguments).  The roster count is a
-    frozen vector (the M1 roster: 25 standing specs plus six additions),
-    the same freeze discipline as EXPECTED_TOOLS in tests/t_mcp_face.py;
-    a roster change re-freezes both.
+    frozen vector (the M2 roster: 25 standing specs, six M1 additions,
+    eleven M2 ticket additions), the same freeze discipline as
+    EXPECTED_TOOLS in tests/t_mcp_face.py; a roster change re-freezes
+    both.
     """
     failures = []
 
@@ -1329,7 +1794,7 @@ def _selftest():
     # V3 schema validation shape: every spec carries a closed object
     # schema, and _validate_arguments enforces it (empty arguments are
     # accepted exactly when the required list is empty; an unknown
-    # argument is refused).
+    # argument is refused; a value outside a declared enum is refused).
     for spec in TOOL_SPECS:
         name = spec["name"]
         schema = spec.get("schema")
@@ -1369,6 +1834,25 @@ def _selftest():
                 False,
                 "an unknown argument was accepted",
             )
+        for key, prop in schema["properties"].items():
+            choices = prop.get("enum")
+            if not choices:
+                continue
+            outside = next(
+                (item for item in ("__no_such_choice__", -1)
+                 if item not in choices),
+                None,
+            )
+            try:
+                _validate_arguments(spec, {key: outside})
+            except InvalidParams:
+                check("V3 enum refusal {0}.{1}".format(name, key), True)
+            else:
+                check(
+                    "V3 enum refusal {0}.{1}".format(name, key),
+                    False,
+                    "a value outside the declared enum was accepted",
+                )
 
     if failures:
         for line in failures:

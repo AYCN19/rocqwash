@@ -1,7 +1,7 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
-  "version": "1.4",
-  "updated": "2026-11-19",
+  "version": "1.5",
+  "updated": "2026-11-21",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
   "classes": [
@@ -279,6 +279,20 @@
       "auto_repairable": false,
       "prescription": "Restore evidence semantics: the true bytes (desktop-authority md5, preserved by the wave in the .zh.md sibling) return to the primary snapshot slot; the re-laid face moves to a clearly-labeled non-evidence name (.docface-re-laid); pins re-sign to the normalized snapshot md5 (annotation 8876e13f..., terminology 0eb8bf56... - v2 standing values). The foreign pin registers as a reconciliation finding for the seat (annotation-copy divergence desktop vs Mac, live case f390121c). Verify with python -I tests/t_engines_seeds.py (jargon segment 9/0, all five layers green).",
       "guard": "_snapshots/ files are corpus, not prose: the five-gate sweep exempts them by registration (basis: byte-exact external evidence), and doc-face re-lays never touch them; upstream changes re-sign only from the DESKTOP authority through the sync tool (normalized md5), never from a foreign copy. The suite's snapshot-md5 check is the tripwire - it caught R15, R17 and R18 within one face run each."
+    },
+    {
+      "id": "R19",
+      "title": "evidence annihilation (zero-byte output with rc recorded)",
+      "markers": [
+        "rc recorded",
+        "log/output bytes = 0",
+        "evidence annihilation"
+      ],
+      "precedence": 19,
+      "family": "structural",
+      "auto_repairable": false,
+      "prescription": "fix capture mechanism then re-execute (auto_repairable=false - the fix requires re-running the original batch, not re-signing)",
+      "guard": "zero-byte output with rc recorded = structural silent red; the capture mechanism is the disease, not the tool"
     }
   ]
 }
