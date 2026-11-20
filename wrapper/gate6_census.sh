@@ -1,57 +1,33 @@
 #!/bin/bash
-# wrapper/gate6_census.sh — gate6 语句面 Prop 普查闸正典启动层（canonical gate6 census launcher）
-# 2026-10-31 席 rqadapt · 适配任务：组件 gate6 仓外件（
-#   ConstructiveWorld-Set/scripts/gates/gate6_statement_census.py · 在其仓只读禁改）
-#
-# gap（本轮补齐对象）：七席循环核心闸 gate6/gate7 正本全在 ConstructiveWorld-Set/
-#   scripts/gates/（仓外·本仓无任何入口）；各战役席要用只能裸调仓外路径。本件与
-#   wrapper/gate7_probe.sh 配对，把 gate6 也正典化为仓内唯一启动面。
-#
-# 定位 Positioning:
-#   gate6 正本＝红线律 II（白皮书 v2.4+）语句面 Prop 普查预筛闸（三通道 ch1 语句面/
-#   ch2 字段-节面/ch3 全局假设面；语义终审归 gate7 提取差——正本头注原文）。纯静态
-#   词面扫描：**零网络零编译**（正本全文件无 subprocess/无 socket·read-only 树扫描）。
-#   本层零判据零逻辑：census/gate 红绿、baseline 比对全归正本唯一出处，本件只是其
-#   仓内新入口（防双源漂移）。
-#
-# 用法 Usage:
-#   bash wrapper/gate6_census.sh --tree <.v 树目录>
-#        [--json <出账>] [--text]
-#        [--gate --baseline <B>] [--baseline-out <O>]
-#        [--gate-script <gate6.py>] [--dry-run]
-#        [-- <gate6 其余形参逐字透传（前向兼容）>]
-#   例 Example:
-#     bash wrapper/gate6_census.sh --tree "$WORLD" --json "$SB/logs/gate6.json"
-#     bash wrapper/gate6_census.sh --tree "$WORLD" --gate \
-#          --baseline gate6_baseline.json --baseline-out "$SB/logs/gate6_new_baseline.json"
-#
-# 环境旋钮 Env knobs:
-#   GATE6_CENSUS_SCRIPT  gate6 正本路径（缺省 ConstructiveWorld-Set 仓外正典路径）
-#   GATE6_CENSUS_REG     guard 登记表目录（缺省 /tmp/cw_reg_gate6_census；席位惯例
-#                        自设如 /tmp/cw_reg_<seat>，双车道与其它席位互不排队）
-#   GATE6_CENSUS_FRONT/-MID/-MAXWAIT  guard 档位（缺省 0/1/600＝战役正典形）
-#
-# 契约 Contract:
-#   1. guard 接线内建：`exec wrapper/guard.sh -Reg … -Front 0 -Mid 1 -MaxWaitSec 600
-#      -- python3 -B <gate6.py> …`（正本冻结件 tools/cpu_guard.sh 直通层·与本机
-#      ConstructiveWorld/cpu_guard.sh md5 全等 9c5392d6… 实测 20261031）。**调用者
-#      禁再外套 guard**（同注册表死锁判例·nw8 20261031）。
-#   2. python 一律 `python3 -B`——禁向只读正本仓（ConstructiveWorld-Set）落
-#      __pycache__（承 gate7_probe 同律）。
-#   3. 形参 1:1 对齐正本 argparse（--tree/--json/--text/--gate/--baseline/
-#      --baseline-out·正本 gate6_statement_census.py:158-163 实读）；本件不代设
-#      业务缺省值——census 报告-only 还是 --gate 闸判由调用者显式选择。
-#   4. 写盘面 ROOT 声明（CONTRIBUTING §3.5）：仅用户显式指定的 --json/--
-#      baseline-out 路径；**不写两仓正本与各 seat 域任何路径**；不指定＝纯报告
-#      stdout 零写盘。
-#   5. 退出码 1:1 透传：0=census 报告/闸绿；1=闸红（growth/new-file 回归·R15
-#      存量冻结只罚增长）；2=正本用法-IO 错（含 tree 缺失）。
-#
-# 退出码 Exit codes:
-#   0   = gate6 census 报告/闸绿（或 --dry-run 出账后）
-#   2   = 本层用法错（未知形参/缺 --tree）
-#   9   = 文件缺失（gate6 正本/--tree 目录/python3——fail-loud 不模拟任何行为）
-#   其余 = guard 透传＝gate6 自身退出码（含 1 闸红）
+# wrapper/gate6_census.sh — canonical gate6 statement-face Prop survey launcher
+# Purpose.  Canonical in-repo launcher for the gate6 statement-face Prop survey gate (whitepaper
+#   redline II, v2.4+; ch1 statement face, ch2 field-section face, ch3 global hypothesis face;
+#   semantic final judgment stays with the gate7 extraction run).  Pure static lexical scan:
+#   zero network, zero compilation, read-only tree scan.  No criteria and no logic here:
+#   verdicts and baselines stay with the upstream script alone, of which this file is the only
+#   in-repo entry point (no dual-source drift).
+# Interface.  用法 Usage: bash wrapper/gate6_census.sh --tree <.v tree dir>
+#   [--json <out>] [--text] [--gate --baseline <B>] [--baseline-out <O>]
+#   [--gate-script <gate6.py>] [--dry-run] [-- <gate6 native args, verbatim>]
+#   Env knobs: GATE6_CENSUS_SCRIPT (upstream gate6 path), GATE6_CENSUS_REG (guard registry
+#   dir; default /tmp/cw_reg_gate6_census; an agent may set its own, e.g. /tmp/cw_reg_<name>,
+#   so two lanes never queue on it), GATE6_CENSUS_FRONT/-MID/-MAXWAIT (guard tiers; default
+#   0/1/600).  The gate6 process runs as python3 -B (no __pycache__ into the read-only
+#   upstream repository) under built-in guard wiring; callers must not add an outer guard
+#   (same-registry deadlock).  Args map 1:1 to the upstream argparse (--tree/--json/--text/
+#   --gate/--baseline/--baseline-out; gate6_statement_census.py:158-163); no business
+#   defaults here — report-only vs --gate is the caller's explicit choice.  Writes go only
+#   to user-given --json/--baseline-out paths (CONTRIBUTING §3.5); otherwise stdout only.
+# Dependencies.  bash; python3 on PATH; wrapper/guard.sh (pass-through layer of the frozen
+#   tools/cpu_guard.sh; md5-equal 9c5392d6… to the local ConstructiveWorld/cpu_guard.sh);
+#   the upstream gate6 script, read-only.
+# Evidence.  tests/test_gate6_born_wrapper.py judges 1-9 subprocess-cover this face: bash -n
+#   syntax; -h usage face; rc 2 usage errors; rc 9 missing inputs; zero-write --dry-run form.
+# Exit-codes.  0 = census report / gate passing (or after --dry-run output); 2 = this layer's
+#   usage error (unknown argument, missing --tree); 9 = missing file (upstream gate6 script,
+#   --tree dir, python3 — fail-loud, nothing simulated); otherwise the guard pass-through =
+#   the gate6 exit code (1 = gate failing: growth/new-file regression, per R15 the stock is
+#   frozen and only growth is penalized; 2 = upstream usage-IO error incl. missing tree).
 set -u
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -90,7 +66,7 @@ done
 
 fail9() { echo "wrapper/gate6_census.sh: $1" >&2; echo "  (fail-loud exit 9：文件缺失不模拟任何行为)" >&2; exit 9; }
 
-# --- 用法/文件面 fail-loud（先于任何 guard 行为） ----------------------------
+# --- usage/file-face fail-loud checks (before any guard behavior) -----------
 [ -n "$TREE" ] || { echo "wrapper/gate6_census.sh: 缺 --tree <.v 树目录>" >&2; exit 2; }
 [ -d "$TREE" ] || fail9 "--tree 目录缺失: $TREE"
 [ -f "$GATE6_SCRIPT" ] || fail9 "gate6 正本缺失: $GATE6_SCRIPT (可用 GATE6_CENSUS_SCRIPT/--gate-script 覆写)"
@@ -102,7 +78,7 @@ if [ "$GATE" = "1" ] && [ -z "$BASELINE" ]; then
 fi
 [ -z "$BASELINE" ] || [ -f "$BASELINE" ] || fail9 "--baseline 文件缺失: $BASELINE"
 
-# -- gate6 形参装配（判据零复制·形参 1:1 对齐正本 argparse:158-163） -----------
+# -- gate6 argument assembly (zero criterion copying; args 1:1 with the upstream argparse:158-163) ---
 CMD=(python3 -B "$GATE6_SCRIPT"
      --tree "$TREE")
 [ "$TEXT" = "1" ] && CMD+=(--text)
@@ -121,5 +97,5 @@ if [ "$DRYRUN" = "1" ]; then
   exit 0
 fi
 
-# -- guard 接线（退出码 exec 透传·无改写） ------------------------------------
+# -- guard wiring (exit code passes through exec unchanged) ------------------
 exec bash "$GUARD" -Reg "$REG" -Front "$FRONT" -Mid "$MID" -MaxWaitSec "$MAXWAIT" -- "${CMD[@]}"
