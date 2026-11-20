@@ -1,5 +1,23 @@
 # rocqwash Corporate Contributor License Agreement
 
+> **CorporateCLA**: the corporate contributor license agreement of the rocqwash
+> project: grants, dual-licensing authorization, and entity representations.
+>
+> Purpose.  State the legal terms under which an entity contributes to rocqwash
+> and authorizes the Steward to license them under alternative terms.
+>
+> Interface.  Read-and-sign document face: the authorized representative reviews
+> sections 1-8, completes the section-9 signature block, and sends the signed
+> agreement to `168888@live.cn`; individual employees still sign `CLA/ICLA.md`.
+>
+> Dependencies.  None at runtime — a standalone document face paired with
+> `CLA/ICLA.md` and `CLA/README.md` under the AGPL-3.0-or-later protocol.
+>
+> Evidence.  Its contributor flow matches `CLA/README.md`; the pre-header
+> original is preserved in the sibling archive `CLA/CCLA.md.zh.md`.
+>
+> Exit-codes.  Not applicable (document face; no executable interface).
+
 Thank you for your interest in contributing to rocqwash ("Project"). This
 Corporate Contributor License Agreement ("Agreement") is entered into
 between Your Entity and the Project Steward. Individual employees of Your
