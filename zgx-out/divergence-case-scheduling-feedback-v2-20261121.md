@@ -1,215 +1,228 @@
-# 分歧案卷 v2：docs/scheduling-feedback.json —— 已提交面 vs 重算面（三值、调度反馈）· 根因定谳版
-
-Ticket: R2-48（案卷 v2 铸席·书面；身份 live-lumen，主机 Darwin arm64）
-Date: 2026-11-21
-案态：根因已定谳 —— H1，HIGH，两跑反证存活（R2-44）。处置开放依旧，裁量权在台：本档登记定因后三选项的测量后果，不代台选择。
-承替：本档承替 v1（R2-39，同目录 `divergence-case-scheduling-feedback-20261121.md`）。v1 的 §2 时间线与 §5 命令基座原样保留（本档 §2/§7）；中文为忠实转写，措辞与数字如有出入，以 v1 英文原文为准。全档以定因结论为基准行文：face 先于输入落库，10 行 ghost 行未随库。
-
-依据（sources）:
-- v1 案卷：`return-package/divergence-case-scheduling-feedback-20261121.md`
-- R2-44 根因侦察卡：`return-package/divergence-rootcause-recon-20261121.md`
-- R2-44 回执：`../R2-44-receipt.md`
-- /Users/zuguangzhao/rocqwash/zgx-out/zgx-ledger-proposals.jsonl 行 22/23（本席本场核验，§8）
-
-纪律：本席本场零 git 查询、零网络、零仓树写；写出仅两件——本案卷 v2 与 `../R2-48-receipt.md`。凡标〔R2-39 记录〕〔R2-44 记录〕者均为原席执行、本席逐字转引；本席亲自执行并出示输出的检查只有 §8 所列。
+# Divergence case file v2: `docs/scheduling-feedback.json` -- committed face vs recomputed face (three values, scheduling feedback) -- root-cause-confirmed edition
+Ticket: R2-48 (case file v2 casting agent, written form; identity live-lumen, host Darwin arm64)
+Purpose.  Case record for the `docs/scheduling-feedback.json` divergence: the committed
+  canonical face (blob a952af0, 3/46/0.0588 over "51 rows") vs the deterministic recompute
+  (blob 06998c8, 1/38/0.0244 over 41 rows). Registers the face-value table, the confirmed
+  root cause (H1, HIGH, survived two falsification runs R2-44), the H2-H6 dispositions, the
+  three desk options with their measured consequences, the residual unknowns, and the
+  reproduction base. Disposition remains open; the ruling power rests with the desk: this
+  file registers the measured consequences of the options and does not choose for it.
+Interface.  Prose record face (not executable). Supersedes v1 (R2-39, same directory,
+  `divergence-case-scheduling-feedback-20261121.md`) with v1's section 2 timeline and
+  section 5 command base preserved (sections 2 and 7 here); companion execution record
+  `../R2-48-receipt.md`; conclusions tagged [R2-39 records] / [R2-44 records] throughout.
+Dependencies.  `return-package/divergence-case-scheduling-feedback-20261121.md` (v1 case
+  file), `return-package/divergence-rootcause-recon-20261121.md` (R2-44 recon card),
+  `../R2-44-receipt.md` (R2-44 execution record),
+  `/Users/zuguangzhao/rocqwash/zgx-out/zgx-ledger-proposals.jsonl` (lines 22/23, verified
+  by this agent this session, section 8), `tools/learning_feedback.py`,
+  `docs/exp-ledger.jsonl`, `docs/b-gate-audit.json`.
+Evidence.  The checks executed by this agent this session are listed verbatim in section 8;
+  every other conclusion is cited to its agent of record; the whole file is written on the
+  baseline of the root-cause finding: the face was integrated ahead of its input, and the
+  10 ghost rows never reached the repository. Supersession note: v1's carried-over sections
+  are a faithful transcription of v1; where wording or numbers differ, the v1 English
+  original governs.
+Exit-codes.  Not applicable (prose record face; no exit codes are defined or altered).
+Discipline: this agent ran zero git queries, zero network, zero repository-tree writes this session; writes are exactly two files -- this case file v2 and `../R2-48-receipt.md`. Everything marked [R2-39 records] / [R2-44 records] was executed by the original agent and is transcribed here verbatim by citation; the only checks this agent executed personally, with output shown, are those in section 8.
 
 ---
 
-## 1. 案情一句话（定因版）
+## 1. The case in one paragraph (post-verdict form)
 
-v1 的一句话原样成立：2026-11-19 以来每个取样锚上，docs/scheduling-feedback.json 的已提交 canonical 面与 tools/learning_feedback.py 对同一提交自身输入的确定性重算，恰在三个 repair_outcomes 值上相左；文件其余字节全同，伴面 docs/b-gate-audit.json 在同锚重算字节重合——分歧类专属 scheduling-feedback.json。
+v1's one-sentence statement stands verbatim: at every sampled anchor since 2026-11-19, the committed canonical face of `docs/scheduling-feedback.json` and the deterministic recompute of `tools/learning_feedback.py` over the same commit's own inputs disagree in exactly the three repair_outcomes values; every other byte of the file is identical, and the companion face `docs/b-gate-audit.json` recomputes byte-identical everywhere -- the divergence class is specific to scheduling-feedback.json.
 
-面值对（值引自提案行 1/15/19/21 与 R2-36 回执；blob 同一性 R2-39 会话重钉）：
+Face-value table (values cited from proposal lines 1/15/19/21 and the R2-36 execution record; blob identities re-pinned in the R2-39 session):
 
-| 侧 | blob | sha256 | repair_outcomes（repaired / unrecorded / rate / wogc / escalated） | 总行数 |
+| side | blob | sha256 | repair_outcomes (repaired / unrecorded / rate / wogc / escalated) | total rows |
 |---|---|---|---|---|
-| canonical（已提交） | a952af079aa8e6baf68b38f60a5d68248963d86e | 1ed190e168041c74488086f3aa5f55711a2a140fc436e043b0c183f58db19b14 | 3 / 46 / 0.0588 / 2 / 0 | 51 |
-| 重算（产出） | 06998c8fbbcf3d88087d370fc1556bcb3fce8b08 | e66ca0a1d1b862b6b0554b96d7852ed4b39e239a32f114ba09199fbadb9c423b（全值） | 1 / 38 / 0.0244 / 2 / 0 | 41 |
+| canonical (committed) | a952af079aa8e6baf68b38f60a5d68248963d86e | 1ed190e168041c74488086f3aa5f55711a2a140fc436e043b0c183f58db19b14 | 3 / 46 / 0.0588 / 2 / 0 | 51 |
+| recompute (produced) | 06998c8fbbcf3d88087d370fc1556bcb3fce8b08 | e66ca0a1d1b862b6b0554b96d7852ed4b39e239a32f114ba09199fbadb9c423b (full value) | 1 / 38 / 0.0244 / 2 / 0 | 41 |
 
-v1 记录产出侧 sha256 只有 16 位前缀（v1 诚实注记 6）；64 位全值已由 r24 批（提案行 23，本席 §8 核验）补上，缺口闭合。
+v1 recorded only a 16-hex prefix of the produced-side sha256 (v1 honesty note 6); the full 64-hex value was supplied by the r24 batch (proposal line 23, verified by this agent in section 8), and the gap is closed.
 
-定因后补的一句（v1 说不了、现在能说）：canonical 侧的「51」从来不是已提交事实，是 face 生成当时的输入行数。compute_repair 对每个合法 JSONL 行 total+1、rate=repaired/total（工具 256–276 行），故已提交 total=51 反推生成时输入恰 51 合法行；而已提交 ledger 只有 41 行，全史四 blob 无一 51 行（§4.2 证三）。〔R2-44 记录〕
+One sentence that became sayable only after the verdict (v1 could not say it): the canonical side's "51" was never a committed fact -- it is the input row count at the face's generation time. compute_repair adds 1 to total for every valid JSONL row and sets rate = repaired/total (tool lines 256-276), so the committed total=51 implies exactly 51 valid input rows at generation time; the committed ledger, however, has only 41 rows, and no blob in the entire history has 51 rows (evidence 3 in section 4.2). [R2-44 records]
 
-差值算术（fail-loud 更正，R2-44 在案）：ask 原话「8 行」只是 unrecorded 差（46−38）；实测总差 10 行——unrecorded +8、repaired +2；wogc=2、escalated=0 两侧相同（自已提交面重钉）。三值之差是一个量的两种记法：3/51=0.0588，1/41=0.0244。
+Delta arithmetic (fail-loud correction, on record in R2-44): the ticket's wording "8 lines" was only the unrecorded delta (46-38); the measured total delta is 10 rows -- unrecorded +8, repaired +2; wogc=2 and escalated=0 are identical on both sides (re-pinned from the committed face). The three-value difference is one quantity in two notations: 3/51=0.0588, 1/41=0.0244.
 
-F1–F6（v1 §1，全部仍真，一行一条）：F1 canonical blob 全部 10 锚同为 a952af0；F2 重算确定性（四份归档重算面全 06998c8，r20 重跑 cmp rc=0）；F3 分歧 diff 恒为同一 471 字节三值 hunk（r12=r17=r20，本会话 cmp）；F4 唯一 repair 输入 blob cf81fa36 自 95460fd 未变、41 行，已提交输入下工具说 1/38；F5 face 末触笔 fa879e4，早于案发——face 到货即陈旧；F6 台 resolve 0a0a9c43 落了案的证据面、没动 face。定因把 F4 的「无已提交状态可出 3/46」从张力升级为普查证明（§4.2 证三）。
+F1-F6 (v1 section 1, all still true, one line each): F1 the canonical blob is a952af0 at all 10 anchors; F2 recompute determinism (all four archived recomputed faces are 06998c8; the r20 rerun cmp rc=0); F3 the divergence diff is always the same 471-byte three-value hunk (r12=r17=r20, cmp this session); F4 the sole repair input blob cf81fa36 is unchanged since 95460fd, 41 rows, and the tool says 1/38 over the committed input; F5 the face's last touch is fa879e4, before the case opened -- the face was stale on arrival; F6 the desk resolve 0a0a9c43 integrated the case's evidence faces and did not touch the face. The verdict upgrades F4's "no committed state can produce 3/46" from a tension to a proven survey result (evidence 3, section 4.2).
 
-## 2. 时间线 T0–T6（v1 §2 原样保留；下为忠实转写，措辞以 v1 为准）
+## 2. Timeline T0-T6 (carried verbatim from v1 section 2; a faithful transcription, v1's wording governs)
 
-锚链（逐环 merge-base --is-ancestor YES、rev-list 计数如下；R2-39 记录）：
-f1b6e27 ->(+2)-> 3e18590 ->(+2)-> 6998c40 ->(+1)-> 3a56b85 ->(+10)-> c48a548 ->(+8)-> 0a0a9c43 ->(+3)-> 8502146；f1b6e27..8502146 = 26 commits；c48a548..8502146 = 11；fa879e4 是 f1b6e27 之祖（6 commits）。
+Anchor chain (each hop merge-base --is-ancestor YES; rev-list counts as follows; R2-39 records):
+f1b6e27 ->(+2)-> 3e18590 ->(+2)-> 6998c40 ->(+1)-> 3a56b85 ->(+10)-> c48a548 ->(+8)-> 0a0a9c43 ->(+3)-> 8502146; f1b6e27..8502146 = 26 commits; c48a548..8502146 = 11; fa879e4 is an ancestor of f1b6e27 (6 commits).
 
-| # | 时间（UTC） | 锚 | 发生了什么 | 批次戳 / 提案行 | diff 形状 |
+| # | time (UTC) | anchor | what happened | batch stamp / proposal line | diff shape |
 |---|---|---|---|---|---|
-| T0 | 2026-11-19 22:13:39Z（批次）；行 1 ts 22:17:23Z | f1b6e27（3 样之 1） | 发现。克隆 /Users/zuguangzhao/rocqwash 内 f1b6e27 首次取样；b-gate 重算与已提交面字节同，scheduling-feedback 分歧；按 fail-loud 记录，当时不断言原因 | R1 批 20261119T221339Z；提案行 1 | git diff 恰为三值变化（行 1 证据；blob 对同 F1+F2） |
-| T1 | 2026-11-19 23:00:26Z；行 2 ts 23:02:10Z | f1b6e27（3 样之 2） | 第二次独立复现，第二批；同三值；b-gate 仍字节同 | R2 批 20261119T230026Z；提案行 2 | 同三值变化（行 2 证据） |
-| T2 | 2026-11-19 23:29:08Z；行 3 ts 23:30:00Z | f1b6e27（3 样之 3） | 第三次独立复现；已提交 vs 重算以 blob 级 cmp 核对（git show HEAD:docs/b-gate-audit.json 输出送 cmp） | R3 批 20261119T232908Z；提案行 3 | 同三值变化（行 3 证据） |
-| T3 | 2026-11-19 23:46:22Z；行 4 ts 23:46:58Z | 3e18590 | 首次跨锚取样，PR#17 automerge 后新锚首测；分歧扛过锚移；exp-ledger 在 HEAD 与 fa879e4 各 41 行 →「未提交账态」假设入档（当时不断言为结论） | R4 批 20261119T234622Z；提案行 4 | 同三值 hunk 逐字引于 r4-plan-run.log 第 7 步；归档重算面哈希 06998c8（R2-39 会话） |
-| T4 | 2026-11-20 14:16:31Z；行 15 ts 14:18:05Z | 6998c40（如标；见 caveat） | 「6998c40」标签下第四次取样。Caveat（账 9.7 注 3，F1 证实）：从未有工具在 6998c40 上跑过；tip 已 +1，读锚实为 3a56b85（= 6998c40+1）；6998c40 本身只出已提交面核（canonical blob 与值由 R2-39 会话在 6998c40 重钉）。本分歧首次改用 rocqwash-loop 克隆；提案升级为「重算并落新面」 | R2-20 批 20261120T141631Z；提案行 15；档案 r12-anchor-3a56b85-20261120T141631Z/ | r12-divergence.diff，471 字节，index a952af0..06998c8（本会话 cmp） |
-| T5 | 2026-11-20 16:51:50Z；行 20 ts 16:56:15Z | c48a548 | 第五次取样，第三个独立锚目睹同一 blob 对（继 0765d671、3a56b85）；fetch 走完整 NETRED 通路（30s 低速中止 rc=128，120s 退避，HTTP/1.1 重试 rc=0）；提案加入流程诉求：面与其输入 blob sha 键控的 sync guard | R2-26 批 20261120T165150Z；提案行 20；档案 r17-anchor-c48a548-20261120T165150Z/ | r17-divergence.diff == r12-divergence.diff，471 字节，index a952af0..06998c8（本会话 cmp） |
-| T6 | 2026-11-20 19:19:30Z；行 21 ts 19:24:17Z | 8502146 | 第六次取样，台 resolve 0a0a9c43 之后首次；分歧扛过台动作；行 21 原话：这张面挺过了三任读席与一次台 resolve，仍是陈旧的；提案不变（常设重算 + sync guard，行 21 称其已过期） | R2-36 批 20261120T191930Z；提案行 21；档案 r20-20261120T191930Z/ | r20-divergence.diff == r17 == r12，471 字节，index a952af0..06998c8（本会话 cmp） |
+| T0 | 2026-11-19 22:13:39Z (batch); line 1 ts 22:17:23Z | f1b6e27 (1 of 3 samples) | Discovery. First sampling of f1b6e27 inside the /Users/zuguangzhao/rocqwash clone; the b-gate recompute is byte-identical to the committed face while scheduling-feedback diverges; recorded fail-loud, no cause asserted at the time | R1 batch 20261119T221339Z; proposal line 1 | git diff is exactly the three-value change (line 1 evidence; blob pair same as F1+F2) |
+| T1 | 2026-11-19 23:00:26Z; line 2 ts 23:02:10Z | f1b6e27 (2 of 3 samples) | Second independent reproduction, second batch; same three values; b-gate still byte-identical | R2 batch 20261119T230026Z; proposal line 2 | same three-value change (line 2 evidence) |
+| T2 | 2026-11-19 23:29:08Z; line 3 ts 23:30:00Z | f1b6e27 (3 of 3 samples) | Third independent reproduction; committed vs recompute checked with blob-level cmp (git show HEAD:docs/b-gate-audit.json output piped to cmp) | R3 batch 20261119T232908Z; proposal line 3 | same three-value change (line 3 evidence) |
+| T3 | 2026-11-19 23:46:22Z; line 4 ts 23:46:58Z | 3e18590 | First cross-anchor sampling, first test at a new anchor after the PR#17 automerge; the divergence survived the anchor move; exp-ledger has 41 rows at both HEAD and fa879e4 -> the "uncommitted ledger state" hypothesis entered the record (no cause asserted at the time) | R4 batch 20261119T234622Z; proposal line 4 | the same three-value hunk quoted verbatim in r4-plan-run.log step 7; archived recompute face hash 06998c8 (R2-39 session) |
+| T4 | 2026-11-20 14:16:31Z; line 15 ts 14:18:05Z | 6998c40 (as labeled; see caveat) | Fourth sampling under the "6998c40" label. Caveat (correlation ledger 9.7 note 3, confirmed by F1): no tool ever ran on 6998c40; the tip had moved +1 and the read anchor was in fact 3a56b85 (= 6998c40+1); 6998c40 itself was only checked for the committed face (canonical blob and values re-pinned at 6998c40 in the R2-39 session). The divergence switched to the rocqwash-loop clone here; the proposal upgraded to "recompute and integrate the new face" | R2-20 batch 20261120T141631Z; proposal line 15; archive r12-anchor-3a56b85-20261120T141631Z/ | r12-divergence.diff, 471 bytes, index a952af0..06998c8 (cmp this session) |
+| T5 | 2026-11-20 16:51:50Z; line 20 ts 16:56:15Z | c48a548 | Fifth sampling, third independent anchor witnessing the same blob pair (after 0765d671 and 3a56b85); fetch went through the full NETRED path (30s low-speed abort rc=128, 120s backoff, HTTP/1.1 retry rc=0); the proposal added a process demand: a sync guard keyed to the face's input blob shas | R2-26 batch 20261120T165150Z; proposal line 20; archive r17-anchor-c48a548-20261120T165150Z/ | r17-divergence.diff == r12-divergence.diff, 471 bytes, index a952af0..06998c8 (cmp this session) |
+| T6 | 2026-11-20 19:19:30Z; line 21 ts 19:24:17Z | 8502146 | Sixth sampling, first after the desk resolve 0a0a9c43; the divergence survived the desk action; line 21's wording: this face survived three reading agents and one desk resolve and is still stale; proposal unchanged (standing recompute + sync guard; line 21 calls it overdue) | R2-36 batch 20261120T191930Z; proposal line 21; archive r20-20261120T191930Z/ | r20-divergence.diff == r17 == r12, 471 bytes, index a952af0..06998c8 (cmp this session) |
 
-Context rows（非编号取样槽）：
+Context rows (unnumbered sampling slots):
 
-| # | 时间 | 事件 | 证据 |
+| # | time | event | evidence |
 |---|---|---|---|
-| C0（v2 新增·先于 T0） | 2026-11-19T17:40:19Z（fa879e4 adate 2026-11-20T01:40:19+08:00） | 出生笔 fa879e4。face a952af0 诞生于一次开发笔：同笔重写工具 v1.0→v1.1.0（calibration 接线、快照 EOL 规整），14 路径无一 ledger；pre-image 432094a6 的值恰为 1/38/0.0244（重算侧值）——这一笔把 face 从「对」改成「错」，输入侧 51 行 dev-tree ledger 未随库 | R2-44 记录（侦察卡 §1/§2）；face 内 diff 432094a6..a952af0 |
-| C1（先于 T0） | 2026-11-19 20:45:25Z | 供给道 PR#17 批工件 zgx-out/scheduling-feedback.20261119T204525Z.json 已带重算侧值 1/38/0.0244；automerge 3e18590（2026-11-19T21:14:45Z，提交 97c809f 携批）并入 main——案的重算侧先于案的被发现就上了游 | 值由 R2-39 会话重析：git show 97c809f:zgx-out/scheduling-feedback.20261119T204525Z.json → repaired=1 unrecorded=38 rate=0.0244；PR#17 恰触 3 文件、全 zgx-out/（账 §3） |
-| C2（T4、T5 之间） | 2026-11-20 15:42:14Z（提案 ts）；r5 批 20261120T153929Z | r5 席读锚 0765d671（3a56b85 与 c48a548 之间，+9 至 c48a548）：加分类规则人工重数（对已提交 41 行按工具动作词表独立分类：1 fix-content、2 watch-only、38 无词表 token——与工具完全吻合）与「到货即陈旧」发现（输入 blob cf81fa36 自 95460fd 未变，95460fd 先于 fa879e4）；标靶更名 stale-scheduling-feedback-face | 提案行 19；blob 同一性与祖先由 R2-39 会话复核（F4） |
-| C3（T5、T6 之间） | 0a0a9c43 落笔 2026-11-21T03:03:06+08:00（= 2026-11-20T19:03:06Z），早 T6 批次戳 16 分钟 | 台 RESOLVE：落证据道（38 zgx-out 路径：读席批、r12 分歧证据、治理提案、双戳环境快照 204525Z+232908Z）。未触 docs/（§3） | git show --name-only 0a0a9c43：38 路径，0 出 zgx-out/（R2-39 会话） |
-| C4（后于 T6） | 当时 tip a4d8d50（2026-11-21T03:30:24+08:00，0a0a9c43 后 4 笔） | 案在 tip 仍开：canonical 面仍 a952af0；已提交提案账 20 行（0a0a9c43、8502146、a4d8d50 三点实测）vs 工作树 21 行——行 21 未提交，与此前每条批行同姿态（账 8 注 4） | git rev-parse a4d8d50:docs/scheduling-feedback.json → a952af0；三笔处行数经 git show 计行（R2-39 会话） |
-| C5（v2 新增·后于 T6） | 行 22 ts 2026-11-20T20:55:47Z；行 23 ts 21:22:43Z；侦察卡/回执 2026-11-21 | 定因落档与定因后复测：R2-44 侦察卡+回执交付，提案行 22 追加（根因 + 护栏精确标靶，json.loads 自检 21→22）；随后 r24 批（行 23）在上游新 tip d27af2d 复测——分歧原样（恰 3 行 diff，index a952af0..06998c8），输入 blob cf81fa36 未变，face 末触仍 fa879e4；其间有一次 21:07:49Z 未记档 fetch+checkout（netred_p6.md 披露，见 §6 残三）。R2-48 铸本案卷 v2 | R2-44 回执；行 22/23 本席 §8 核验 |
+| C0 (added in v2, before T0) | 2026-11-19T17:40:19Z (fa879e4 adate 2026-11-20T01:40:19+08:00) | Birth commit fa879e4. The face a952af0 was born in a development commit: the same commit rewrote the tool v1.0 -> v1.1.0 (calibration wiring, snapshot EOL normalization) and touched no ledger among its 14 paths; the values of pre-image 432094a6 were exactly 1/38/0.0244 (the recompute-side values) -- this commit flipped the face from right to wrong, and the input-side 51-row dev-tree ledger did not come with it | R2-44 records (recon card sections 1-2); in-face diff 432094a6..a952af0 |
+| C1 (before T0) | 2026-11-19 20:45:25Z | The supply-track PR#17 batch artifact zgx-out/scheduling-feedback.20261119T204525Z.json already carried the recompute-side values 1/38/0.0244; the automerge 3e18590 (2026-11-19T21:14:45Z, commit 97c809f carrying the batch) merged into main -- the case's recompute side was upstream before the case was discovered | values re-analyzed in the R2-39 session: git show 97c809f:zgx-out/scheduling-feedback.20261119T204525Z.json -> repaired=1 unrecorded=38 rate=0.0244; PR#17 touched exactly 3 files, all zgx-out/ (correlation ledger section 3) |
+| C2 (between T4 and T5) | 2026-11-20 15:42:14Z (proposal ts); r5 batch 20261120T153929Z | The r5 agent read anchor 0765d671 (between 3a56b85 and c48a548, +9 to c48a548): manual recount under added classification rules (independent classification of the committed 41 rows by the tool's action vocabulary: 1 fix-content, 2 watch-only, 38 rows with no vocabulary token -- exact agreement with the tool) and the stale-on-arrival finding (input blob cf81fa36 unchanged since 95460fd, which precedes fa879e4); target renamed stale-scheduling-feedback-face | proposal line 19; blob identity and ancestry re-checked in the R2-39 session (F4) |
+| C3 (between T5 and T6) | 0a0a9c43 committed 2026-11-21T03:03:06+08:00 (= 2026-11-20T19:03:06Z), 16 minutes before the T6 batch stamp | DESK RESOLVE: integrated the evidence track (38 zgx-out paths: reading-agent batches, r12 divergence evidence, governance proposals, dual-stamp environment snapshots 204525Z + 232908Z). docs/ untouched (section 3) | git show --name-only 0a0a9c43: 38 paths, 0 outside zgx-out/ (R2-39 session) |
+| C4 (after T6) | tip then a4d8d50 (2026-11-21T03:30:24+08:00, 4 commits after 0a0a9c43) | The case was still open at tip: canonical face still a952af0; committed proposal ledger 20 lines (measured at 0a0a9c43, 8502146, a4d8d50) vs working tree 21 lines -- line 21 uncommitted, the same posture as every earlier batch line (correlation ledger 8 note 4) | git rev-parse a4d8d50:docs/scheduling-feedback.json -> a952af0; line counts at the three commits via git show (R2-39 session) |
+| C5 (added in v2, after T6) | line 22 ts 2026-11-20T20:55:47Z; line 23 ts 21:22:43Z; recon card / execution record 2026-11-21 | The verdict landed on the record and post-verdict re-testing: the R2-44 recon card + execution record were delivered, proposal line 22 appended (root cause + precise guard target, json.loads self-check 21 -> 22); then the r24 batch (line 23) re-tested at the new upstream tip d27af2d -- divergence unchanged (exactly 3 diff lines, index a952af0..06998c8), input blob cf81fa36 unchanged, face last touch still fa879e4; in between, one unlogged fetch+checkout at 21:07:49Z (disclosed in netred_p6.md, see residual 3 in section 6). R2-48 cast this case file v2 | R2-44 execution record; lines 22/23 verified by this agent in section 8 |
 
-编号注：关联账的轨迹编号 T0–T7 中，账-T0 = 本档 C1，账-T1..T7 = 本档 T0..T6。本档编号沿用 ask 的取样锚方案，自洽。
+Numbering note: in the correlation ledger's trajectory numbering T0-T7, ledger-T0 = C1 of this file and ledger-T1..T7 = T0..T6 of this file. This file follows the ticket's sampling-anchor scheme and is self-consistent.
 
-同形断言（闭式，v1 原样保留）：对每个取样槽，diff index 必然同名同一 blob 对 a952af0..06998c8——已提交侧因 canonical blob 全锚同（F1），产出侧因每份归档重算面哈希 06998c8（F2），字面 index 行见于三份归档 diff 文件且彼此字节同（F3）。行 23（r24，d27af2d）的复测使该断言延伸到定因后的新上游 tip。
+Closed-form assertion (carried verbatim from v1): at every sampling slot the diff index names the same blob pair a952af0..06998c8 -- the committed side because the canonical blob is the same at all anchors (F1), the produced side because every archived recomputed face hashes 06998c8 (F2), and the literal index line appears in the three archived diff files, byte-identical to one another (F3). The line 23 (r24, d27af2d) re-test extends the assertion to the post-verdict new upstream tip.
 
-## 3. 台 resolve 0a0a9c43：落了什么、没落什么（v1 §3 保留；开放理由更新为定因版）
+## 3. The desk resolve 0a0a9c43: what was integrated and what was not (carried from v1 section 3; the openness rationale updated to the post-verdict form)
 
-resolve 是什么（R2-39 记录）：单亲提交 0a0a9c43d4fc7aa11ba806d4ce2cc4da9375c955（父 a07403e），信息 "chore(zgx-out): land PR#18 content via desk resolve - her planface reading batches at anchors f1b6e27/3e18590/3a56b85/c48a548, r12 divergence evidence, governance proposals, and the dual-stamp environment snapshots (204525Z + 232908Z both preserved); zgx actor namespace (PR#18 resolve)"，committer date 2026-11-21T03:03:06+08:00；8502146 之祖（c48a548→0a0a9c43 = 8；0a0a9c43→8502146 = 3），亦 a4d8d50 之祖（+4）。
+What the resolve is (R2-39 records): the single-parent commit 0a0a9c43d4fc7aa11ba806d4ce2cc4da9375c955 (parent a07403e), message "chore(zgx-out): land PR#18 content via desk resolve - her planface reading batches at anchors f1b6e27/3e18590/3a56b85/c48a548, r12 divergence evidence, governance proposals, and the dual-stamp environment snapshots (204525Z + 232908Z both preserved); zgx actor namespace (PR#18 resolve)", committer date 2026-11-21T03:03:06+08:00; ancestor of 8502146 (c48a548 -> 0a0a9c43 = 8; 0a0a9c43 -> 8502146 = 3) and also of a4d8d50 (+4).
 
-落了什么（38 路径，实测，R2-39 记录）：全部 zgx-out/（grep -c . = 38、grep -vc '^zgx-out/' = 0）。R20 工单言「40 items」，提交实载 38（账 10.3 在案；40-vs-38 措辞属落库核验席 R2-35 辖区，非本案）。提案证据道在 0a0a9c43/8502146/a4d8d50 各 20 已提交行——行 1–20 全链上游。双戳环境闭环：environment.20261119T204525Z.txt 与 232908Z.txt 皆在，blob 仅第 3 行戳行异。
+What was integrated (38 paths, measured, R2-39 records): all zgx-out/ (grep -c . = 38, grep -vc '^zgx-out/' = 0). The R20 task instruction said "40 items"; the commit actually carried 38 (correlation ledger 10.3 on record; the 40-vs-38 wording belongs to the integration-verification agent R2-35's jurisdiction, not to this case). The proposal evidence track has 20 committed lines at each of 0a0a9c43/8502146/a4d8d50 -- lines 1-20 all upstream. Dual-stamp environment closure: environment.20261119T204525Z.txt and 232908Z.txt both present, blobs differing only in the line 3 stamp.
 
-没做什么：docs/ 零触——38 路径无一出 zgx-out/；face 末触仍 fa879e4；canonical blob 在 0a0a9c43 与 8502146 仍 a952af0、值 3/46/0.0588（F1）。陈旧面挺过了自己的落库：resolve 把分歧证据收进 zgx-out/ 的同一笔里，证据所描述的那张面在 docs/ 原样陈旧——同一提交。
+What was not done: docs/ untouched -- none of the 38 paths leaves zgx-out/; the face's last touch remains fa879e4; the canonical blob is still a952af0 at both 0a0a9c43 and 8502146, values 3/46/0.0588 (F1). The stale face survived its own integration: the same resolve that took the divergence evidence into zgx-out/ left the face the evidence describes stale in place under docs/ -- one and the same commit.
 
-开放理由（定因版）。案开，不因证据缺、不因读不稳——到 T6 分歧已确定性、输入锚定、字节稳定，跨 7 批/10 锚/26 commits/2 克隆在档。v1 把开放归为证据/动作不对称加「哪面权威」的权限问题；定因后前者照旧，后者半收：R2-44 不替台答「哪面权威」，但把证据面能答的全答了——已提交输入的出生笔忠实产物是重算面（§4.3 反证跑 a，机械事实在案）。于是案只开在一处：
+Openness rationale (post-verdict form). The case stays open not for lack of evidence and not for unstable readings -- by T6 the divergence was deterministic, input-anchored, and byte-stable, on record across 7 batches / 10 anchors / 26 commits / 2 clones. v1 attributed the openness to the evidence/action asymmetry plus an authority question ("which face is authoritative"); after the verdict the former stands as before and the latter is half closed: R2-44 does not answer "which face is authoritative" for the desk, but it answers everything the evidence faces can answer -- the birth-commit-faithful product of the committed inputs is the recompute face (falsification run a in section 4.3; a mechanical fact on record). The case is therefore open at exactly one point:
 
-1. 证据面全上游（0a0a9c43 落行 1–20；行 21/22/23 在盘在档，提交姿态见 §9 注 3）。
-2. 对象面（blob a952af0）自 fa879e4 起无任何所有者动作在案。
-3. 处置（A/B/C 择一、是否追究意图层）是裁决不是证据——读席无权，提案只能荐（行 15/19/20/21/22 皆荐非行）。
-4. 管线中没有任何东西重算这张面，没有护栏把它与输入键控，未来每个读席都会重发现分歧——T4/T5/T6 乃至 r24（行 23）正是如此。0a0a9c43 resolve 的是案的记录，不是案。
+1. The evidence faces are all upstream (0a0a9c43 integrated lines 1-20; lines 21/22/23 are on disk and on record; commit posture in section 9 note 3).
+2. The object face (blob a952af0) has had no owner action on record since fa879e4.
+3. The disposition (choosing one of A/B/C, deciding whether to pursue the intent layer) is a ruling, not evidence -- reading agents have no authority over it; proposals can only recommend (lines 15/19/20/21/22 recommend, none act).
+4. Nothing in the pipeline recomputes this face and no guard keys it to its input, so every future reading agent will re-discover the divergence -- T4/T5/T6 and r24 (line 23) did exactly that. What 0a0a9c43 resolved was the case's record, not the case.
 
-案态 OPEN，待台一裁（§5 选项间）。
+Case state OPEN, pending one desk ruling (among the options in section 5).
 
-## 4. 根因定谳（新章）
+## 4. Root cause confirmed (new chapter)
 
-### 4.1 H1 定谳表述（HIGH）
+### 4.1 The H1 statement (HIGH)
 
-H1：canonical face blob a952af0 恰由一笔写出——fa879e4（"feat(evolution): two closing tickets ..."，作者 168888@live.cn，adate 2026-11-20T01:40:19+08:00 = 2026-11-19T17:40:19Z，单亲 5074eac）。同一笔重写 tools/learning_feedback.py（v1.0→v1.1.0，加 calibration 段），把 face 的 pre-image blob 432094a6——其值 1/38/0.0244，字节级即重算侧值——换成 a952af0（3/46/0.0588）；而 face 唯一 repair 输入 docs/exp-ledger.jsonl 全程停在 blob cf81fa36（41 行，自 95460fd 未变，95460fd 先于 fa879e4）。fa879e4 自己的工具跑自己已提交的输入，产出 blob 06998c8（1/38/0.0244，rc=0，errors=0）——出生笔复现不出自己的已提交面。全引用 ledger 普查恰 4 blob、严格 append-only 前缀链（27→30→38→41 行），无 51 行、无 3×fix-content；两克隆不可达对象、工作树、本机有界扫描皆无缺失态。故：face 由真实工具跑（输出形完整，含 calibration 段）对一份彼时本地的、先于岸账 10 行的 51 行 dev-tree ledger 算出——+2 action=fix-content、+8 无动作词表 token——而只提交了 face。10 行输入从未落任何引用，本机不可恢复。face 到货即陈旧；此后每次重算（含 face 提交 3h05m 后的 zgx 供给批、直至 r24/d27af2d）皆得 06998c8。〔R2-44 记录，证据见 §4.2–§4.3〕
+H1: the canonical face blob a952af0 was written by exactly one commit -- fa879e4 ("feat(evolution): two closing tickets ...", author 168888@live.cn, adate 2026-11-20T01:40:19+08:00 = 2026-11-19T17:40:19Z, single parent 5074eac). The same commit rewrote `tools/learning_feedback.py` (v1.0 -> v1.1.0, adding the calibration section) and replaced the face's pre-image blob 432094a6 -- whose values 1/38/0.0244 are byte-for-byte the recompute-side values -- with a952af0 (3/46/0.0588); meanwhile the face's sole repair input `docs/exp-ledger.jsonl` stayed at blob cf81fa36 throughout (41 rows, unchanged since 95460fd, which precedes fa879e4). Running fa879e4's own tool over its own committed input produces blob 06998c8 (1/38/0.0244, rc=0, errors=0) -- the birth commit cannot reproduce its own committed face. The all-refs ledger survey finds exactly 4 blobs in a strictly append-only prefix chain (27 -> 30 -> 38 -> 41 rows): no 51-row state and no 3x fix-content anywhere; the unreachable objects of both clones, the working trees, and the bounded host scan all lack the missing state. Therefore: the face was computed by a real tool run (output shape complete, calibration section included) over a then-local 51-row dev-tree ledger that preceded the shore ledger by 10 rows -- +2 action=fix-content, +8 rows with no action-vocabulary token -- and only the face was committed. The 10 input rows never reached any ref and are unrecoverable on this machine. The face was stale on arrival; every recompute since (including the zgx supply batch 3h05m after the face's commit, through r24/d27af2d) yields 06998c8. [R2-44 records, evidence in sections 4.2-4.3]
 
-说白了：一笔开发提交把算好的成绩单交了上去，原始答题卡留在了一台没进库的工作树里，后来答题卡丢了。此后全管线拿着成绩单与一份对不上的答题卡反复对账，每轮都发现对不上——缺的从来不是核算，是那 10 行。
+In plain words: one development commit handed in the finished report card while the original answer sheet stayed behind in a work tree that never entered the repository, and the answer sheet was later lost. From then on the whole pipeline repeatedly reconciled the report card against a mismatched answer sheet, and every round found the mismatch -- what was missing was never the accounting; it was those 10 rows.
 
-### 4.2 三条决定性证据（皆 R2-44 会话执行，命令逐字）
+### 4.2 The three decisive pieces of evidence (all executed in the R2-44 session, commands verbatim)
 
-证一·出生点考古。`git log --follow --format='%H|%aI|%cI|%an|%cn|%s' -- docs/scheduling-feedback.json`（两库各跑）。全史克隆恰得两笔：f88fe9af（2026-11-19T06:14:24+08:00，创建；face blob 432094a6，当席析值 1/38/0.0244——即重算侧值；同笔并创工具与 repair-plan-ledger 史）与 fa879e4（2026-11-20T01:40:19+08:00，a952af0 之生；git rev-parse fa879e4:docs/scheduling-feedback.json = a952af0…，fa879e4^: = 432094a6）。此后无任何一笔触碰 face（与 F1/F5 一致）。fa879e4 同笔 14 路径（ci-whitepaper、learning-feedback.md、pin-provenance-v2、scheduling-feedback.json、jargon SPEC+两快照+jargon-map+test_snippet、t_engines_seeds、evolution_dashboard/jargon_map_sync/learning_feedback/pin_repair 四工具）无一 ledger——face 重写搭的是工具功能笔的车，不是账目落库笔。rocqwash 浅克隆之 --follow 只见 3e18590，系 shallow graft 所致（is-shallow-repository=true，.git/shallow 持 2 笔），非第二出生；全史克隆为历史权威。
+Evidence 1, birth-point archaeology. `git log --follow --format='%H|%aI|%cI|%an|%cn|%s' -- docs/scheduling-feedback.json` (run in both clones). The full-history clone yields exactly two commits: f88fe9af (2026-11-19T06:14:24+08:00, creation; face blob 432094a6, values analyzed by that agent as 1/38/0.0244 -- the recompute-side values; the same commit created the tool and the repair-plan-ledger history) and fa879e4 (2026-11-20T01:40:19+08:00, the birth of a952af0; git rev-parse fa879e4:docs/scheduling-feedback.json = a952af0..., fa879e4^: = 432094a6). No later commit ever touched the face (consistent with F1/F5). The same fa879e4 commit carried 14 paths (ci-whitepaper, learning-feedback.md, pin-provenance-v2, scheduling-feedback.json, the jargon SPEC + two snapshots + jargon-map + test_snippet, t_engines_seeds, and the four tools evolution_dashboard/jargon_map_sync/learning_feedback/pin_repair), none of them a ledger -- the face rewrite was carried inside a tool-feature commit, not a ledger-integration commit. The rocqwash shallow clone's --follow sees only 3e18590 -- a shallow-graft artifact (is-shallow-repository=true, .git/shallow holds 2 commits), not a second birth; the full-history clone is the authority on history.
 
-证二·出生态沙箱重算。`git archive fa879e4 | tar -x -C /tmp/r244-sbx && python3 -I tools/learning_feedback.py` → stdout "repair: repaired=1 escalated=0 watch_only_guard_correct=2 unrecorded=38 repair_action_rate=0.0244"，rc=0，errors: 0；写出面 git hash-object = 06998c8fbbcf3d88087d370fc1556bcb3fce8b08——恰为重算 blob。出生笔用自己已提交的输入复现不出自己已提交的 face；若 H1 假（已提交态已足），此跑当出 a952af0/3/46。/tmp 沙箱属既许例外，临时件查毕即删（§6 残五）。
+Evidence 2, birth-state sandbox recompute. `git archive fa879e4 | tar -x -C /tmp/r244-sbx && python3 -I tools/learning_feedback.py` -> stdout "repair: repaired=1 escalated=0 watch_only_guard_correct=2 unrecorded=38 repair_action_rate=0.0244", rc=0, errors: 0; the written face git hash-object = 06998c8fbbcf3d88087d370fc1556bcb3fce8b08 -- exactly the recompute blob. The birth commit's own tool over its own committed input cannot reproduce its own committed face; if H1 were false (the committed state already sufficient), this run would have produced a952af0/3/46. The /tmp sandbox is a registered exception; the scratch files were deleted after the check (residual 5, section 6).
 
-证三·全引用 ledger 普查。`for c in $(git log --all --format=%H -- docs/exp-ledger.jsonl); do git rev-parse $c:docs/exp-ledger.jsonl; done | sort -u` → 恰 4 blob：
+Evidence 3, the all-refs ledger survey. `for c in $(git log --all --format=%H -- docs/exp-ledger.jsonl); do git rev-parse $c:docs/exp-ledger.jsonl; done | sort -u` -> exactly 4 blobs:
 
-| blob | 首落笔 | 日期（+08:00） | 行数 | fix-content | watch-only | escalated | 无 token |
+| blob | first integrated in commit | date (+08:00) | rows | fix-content | watch-only | escalated | no token |
 |---|---|---|---|---|---|---|---|
 | ffd36594 | 523e7d4 | 2026-11-14T14:05:03 | 27 | 1 | 0 | 0 | 26 |
 | 343fa11d | 70bb8c0 | 2026-11-15T17:00:39 | 30 | 1 | 0 | 0 | 29 |
 | 3760669b | a69f370 | 2026-11-17T06:01:12 | 38 | 1 | 2 | 0 | 35 |
 | cf81fa36 | 95460fd | 2026-11-19T02:16:45 | 41 | 1 | 2 | 0 | 38 |
 
-严格 append-only 链（旧 blob 是新 blob 的字节前缀，3/3 链 True，当席 python 前缀检）。已提交史任何处无 51 行态：所有引用、所有 tag、所有已取远端分支、本地在场 3 个 PR 头（8b528beb/PR10、918d5f00/PR12、ad4e5d26/PR15，全带 343fa11d）皆无；`git fsck --unreachable --no-reflogs` 两克隆 0 个 ledger 形不可达 blob（rocqwash 41 个不可达 blob 全为合并冲突/文档遗留）；三份工作树 ledger 全 cf81fa36/41 行（f233b26 为第七锚）；有界主机 JSONL 扫描（45–60 行文件 × action=fix-content）零候选。
+A strictly append-only chain (each older blob is a byte prefix of the newer one; 3/3 links True, python prefix check by that agent). No 51-row state anywhere in committed history: absent from all refs, all tags, all fetched remote branches, and the 3 locally present PR heads (8b528beb/PR10, 918d5f00/PR12, ad4e5d26/PR15, all carrying 343fa11d); `git fsck --unreachable --no-reflogs` finds 0 ledger-shaped unreachable blobs in either clone (the 41 unreachable blobs of rocqwash are all merge-conflict/document residue); the three working-tree ledgers are all cf81fa36/41 rows (f233b26 is the seventh anchor); a bounded host JSONL scan (files of 45-60 lines x action=fix-content) yields zero candidates.
 
-### 4.3 反证两跑（H1 的两次证伪尝试，均存活）
+### 4.3 Two falsification runs (H1 survived both)
 
-- 反证跑 (a)「已提交输入配出生期工具，能产出该 face 吗？」——DISPROVEN：即证二。产出 06998c8 而非 a952af0。〔RUN〕
-- 反证跑 (b)「存在某个已提交 ledger 状态可出 3/46 吗？」——DISPROVEN：即证三。无任何 blob 51 行；唯一 blob 集是止于 cf81fa36 的严格前缀链。〔RUN〕
-- 逆形式如实记：ask 示例测试的逆——「按 H1 预测行集重算应得 3/46」——不可执行：H1 行集不可物化（引用、不可达对象、工作树、主机文件皆无）。记 NOT RUN（不可能），普查结果代位。〔R2-44 在案〕
+- Falsification run (a), "can the birth-era tool over the committed inputs produce the face?" -- DISPROVEN: this is evidence 2. It produced 06998c8, not a952af0. [RUN]
+- Falsification run (b), "does some committed ledger state produce 3/46?" -- DISPROVEN: this is evidence 3. No blob has 51 rows; the sole blob set is the strict prefix chain ending at cf81fa36. [RUN]
+- The inverse form, recorded honestly: the inverse of the ticket's example test -- "recomputing over the row set predicted by H1 should give 3/46" -- is not executable: the H1 row set cannot be materialized (absent from refs, unreachable objects, working trees, and host files alike). Recorded NOT RUN (impossible); the survey result stands in its place. [R2-44 on record]
 
-### 4.4 H2–H6 处置
+### 4.4 Dispositions for H2-H6
 
-| 假设 | 内容 | 处置 | 依据（皆 R2-44 记录） |
+| hypothesis | content | disposition | basis (all R2-44 records) |
 |---|---|---|---|
-| H2 | 出生期工具规则缺陷（=选项 B1 形态） | REFUTED·HIGH | fa879e4 自己的工具跑自己已提交输入得重算 face（反证跑 a）；REPAIR_TOKENS 与 EXP_DEFAULT 出生=当前（工具 91/100–105 行；diff 至 8502146 零触及分类核）；C2 人工重数独立复核（提案行 19） |
-| H3 | 外来输入文件（另一份 51 行 JSONL） | LOW·残余 | EXP_DEFAULT 出生即固定 ("docs","exp-ledger.jsonl")（RUN）；有界主机扫描零候选（RUN）。不可完全证伪——已删文件无痕；记残余，不主张 |
-| H4 | 手改 face（非工具跑） | LOW·残余 | fa879e4 face diff 新增完全 schema 连贯的 calibration 段（entries 0 / ledger_present true / agreement null），而 cf81fa36 中 calibration_ledger 行数 = 0（RUN）——恰是真实跑对已提交（或不含 calibration 行的 51 行超集）输入的输出形；rounds 面字节未动。手改须凭空造段而 rounds 不动。不可严格证伪；记残余 |
-| H5 | 差值行系桌面侧录入、后已补落上游 | 桌面侧来源 HIGH；迟补落 REFUTED·HIGH | 桌面双面追加是本账成例：95460fd 信息（"rows appended in the dev-tree ledger and landed via API git-data"）、a69f370（"union-sync the exp/repair ledgers after the rebase dance (both-side appends)"）。但涉事 10 行从未落 anywhere：普查+fsck+工作树+主机扫描全负（RUN）。10 行是 ghost 行：录在桌面（或暂存某处），从未上船 |
-| H6 | 历史重写/未取远端引用藏 51 行笔 | LOW·部分开放 | 无支持证据——严格前缀链普查+fa879e4 的工具笔性格已足以解释现状。残余缺口如实：12 个远端引用未取（单飞 ls-remote 枚举 rc=0；fetch 会改 odb，只读纪律禁止）；本地在场 3 个 PR 头全净。年代学（PR 编号、batch35-20261117、tag 日期）把未取引用置于案窗当时或之后。定因后动态见 §6 残三 |
+| H2 | birth-era tool-rule defect (= option B1's form) | REFUTED, HIGH | fa879e4's own tool over its own committed input yields the recompute face (falsification run a); REPAIR_TOKENS and EXP_DEFAULT at birth = current (tool lines 91 / 100-105; the diff to 8502146 touches none of the classification core); C2's manual recount independently re-checked (proposal line 19) |
+| H3 | a foreign input file (another 51-row JSONL) | LOW, residual | EXP_DEFAULT fixed at birth as ("docs","exp-ledger.jsonl") [RUN]; bounded host scan zero candidates [RUN]. Cannot be fully falsified -- a deleted file leaves no trace; recorded as a residual, not asserted |
+| H4 | a hand-edited face (not a tool run) | LOW, residual | the fa879e4 face diff adds a fully schema-coherent calibration section (entries 0 / ledger_present true / agreement null) while the calibration_ledger row count in cf81fa36 = 0 [RUN] -- exactly the output shape of a real run over the committed input (or a 51-row superset containing no calibration rows); the rounds face byte-untouched. A hand edit would have to invent the section out of thin air while leaving rounds untouched. Cannot be strictly falsified; recorded as a residual |
+| H5 | the delta rows were desktop-side entries, integrated upstream later | desktop-side origin HIGH; late integration REFUTED, HIGH | dual-side desktop appends are established ledger practice: the 95460fd message ("rows appended in the dev-tree ledger and landed via API git-data") and a69f370 ("union-sync the exp/repair ledgers after the rebase dance (both-side appends)"). But the 10 rows in question never reached anywhere: survey + fsck + working tree + host scan all negative [RUN]. The 10 rows are ghost rows: recorded on the desktop (or parked somewhere), never shipped |
+| H6 | history rewrite / unfetched remote refs hiding a 51-row commit | LOW, partially open | no supporting evidence -- the strict prefix-chain survey plus fa879e4's tool-commit character already explain the state. The residual gap, stated honestly: 12 remote refs unfetched (single-flight ls-remote enumeration rc=0; a fetch would modify the odb, forbidden by the read-only discipline); the 3 locally present PR heads are all clean. Chronology (PR numbers, batch35-20261117, tag dates) places the unfetched refs at or after the case window. Post-verdict developments in residual 3, section 6 |
 
-### 4.5 时间佐证与 ghost 行窗口
+### 4.5 Chronological corroboration and the ghost-row window
 
-差值 10 行构成：+2 行 action=fix-content（repaired 3 vs 1）、+8 行无任何 REPAIR_TOKENS 词表 token（unrecorded 46 vs 38）；watch-only（2）与 escalated（0）不变。时间窗由已提交数据有界：晚于岸账末行 ts 2026-11-18T17:05:56Z（EXP-20261118-0002），早于 face 提交瞬间 2026-11-19T17:40:19Z。精确内容不可恢复（§6 残一）。
+The 10-row delta decomposes as: +2 rows action=fix-content (repaired 3 vs 1), +8 rows carrying no REPAIR_TOKENS vocabulary token (unrecorded 46 vs 38); watch-only (2) and escalated (0) unchanged. The time window is bounded by committed data: later than the shore ledger's last row ts 2026-11-18T17:05:56Z (EXP-20261118-0002), earlier than the face's commit instant 2026-11-19T17:40:19Z. The exact content is unrecoverable (residual 1, section 6).
 
-佐证：zgx 供给批工件在 2026-11-19T20:45:25Z（face 提交后 3h05m）已带 1/38/0.0244——51 行态在供给道跑时已不在（或从未在）其树中；51 行 dev-tree 态被正面钉住的瞬间恰是 face 提交瞬间。「桌面侧迟补落」之问（ask 原话 houtao ru zhang，R2-44 转述）已答：桌面侧来源 YES、迟补落 NO（§4.4 H5）。〔R2-44 记录〕
+Corroboration: the zgx supply batch artifact at 2026-11-19T20:45:25Z (3h05m after the face's commit) already carried 1/38/0.0244 -- the 51-row state was no longer in (or was never in) the supply track's tree when it ran; the instant the 51-row dev-tree state is positively pinned is exactly the face's commit instant. The "desktop-side late integration" question (the ticket's original words, romanized "houtao ru zhang", as transliterated by R2-44) is answered: desktop-side origin YES, late integration NO (H5 in section 4.4). [R2-44 records]
 
-## 5. 台侧三选项：定因后的测量后果（决策面交台·禁代裁）
+## 5. The three desk-side options: measured consequences after the verdict (decision surface with the desk; adjudication forbidden)
 
-非裁决条款（v1 §4 原样保留，一字未松）：本档不排正确性秩、不表偏好、不收口。案在台裁决前保持 OPEN。定因改变的是各选项的代价与可行性测量，不是谁来做这个选择。
+The non-adjudication clause (carried verbatim from v1 section 4, not loosened by a word): this file establishes no correctness ranking, expresses no preference, and closes nothing. The case remains OPEN until the desk rules. What the verdict changed is the measured cost and feasibility of each option -- not who makes the choice.
 
-### 选项 A —— 重算并落新 face：机械支持
+### Option A -- recompute and integrate the new face: mechanical support
 
-定因新增支持：重算面是已提交输入的出生笔忠实产物（§4.3 反证跑 a：出生工具 × 已提交输入 = 06998c8，rc=0 errors=0），且自 2026-11-19T20:45:25Z 起就是供给道的 face；家族成例不变（docs/b-gate-audit.json 每锚重算与已提交面字节同，blob 6c823880…，R2-39 会话重钉）。v1 §4 为 A 列的验收门原样有效：新锚重跑 rc=0 errors=0；diff 限 3 个 repair_outcomes 字段、其余字节同；重跑确定性 cmp rc=0；落库笔触 docs/（fa879e4 以来首笔）并携分歧证据引用（行 15/19/20/21/22）；护栏在「账追加而不重跑面」fixture 上实测点火。定因另添一条天然验收：落地 blob 应为 06998c8 或其后代——若不是，说明落地锚的输入已变，须按新输入另行定谳，不得照抄旧值。
-在案推荐措辞：行 15/19/20/21（regenerate-and-land），行 22 以定因机制补强。
+Post-verdict support: the recompute face is the birth-commit-faithful product of the committed inputs (falsification run a in section 4.3: birth tool x committed input = 06998c8, rc=0 errors=0), and it has been the supply track's face since 2026-11-19T20:45:25Z; the family precedent stands (docs/b-gate-audit.json recomputes byte-identical to the committed face at every anchor, blob 6c823880..., re-pinned in the R2-39 session). The acceptance gates v1 section 4 set for column A remain valid verbatim: rerun rc=0 errors=0 at the new anchor; the diff limited to the 3 repair_outcomes fields with all other bytes identical; rerun determinism cmp rc=0; the integration commit touches docs/ (the first commit to do so since fa879e4) and carries the divergence-evidence references (lines 15/19/20/21/22); the guard demonstrably fires on the "ledger appended without face rerun" fixture. The verdict adds one natural acceptance gate of its own: the integration blob should be 06998c8 or a descendant -- if it is not, the inputs at the integration anchor have changed and the case must be re-established per the new inputs, not the old values copied.
+On-record recommended wording: lines 15/19/20/21 (regenerate-and-land), line 22 strengthened with the verdict mechanism.
 
-### 选项 B —— 保 canonical 面、修重算侧：两形皆挫
+### Option B -- keep the canonical face, fix the recompute side: both forms defeated
 
-B1（工具规则缺陷）——反证在案：H2 REFUTED·HIGH（§4.4）。出生工具跑出生输入=重算面；分类核心出生至今零改动；C2 人工重数独立复核。B1 的 discharge 负担（以已提交态演示规则缺陷）目前在案无支持证据，反有两道独立反证。台若仍欲走 B1，须先推翻反证跑 (a) 或 C2 重数——二者皆 RUN 在案；推翻它们是新证据工程，不是重新断言。
+B1 (tool-rule defect) -- counter-evidenced on record: H2 REFUTED, HIGH (section 4.4). The birth tool over the birth input = the recompute face; the classification core is unchanged since birth; C2's manual recount independently re-checked. B1's discharge burden (demonstrating the rule defect from a committed state) currently has no supporting evidence on record and two independent pieces of counter-evidence. If the desk still wants to pursue B1, it must first overturn falsification run (a) or the C2 recount -- both are RUN on record; overturning them is new evidence work, not re-assertion.
 
-B2（交出缺失的 51 行输入态）——就案面而言不可行：R2-44 测量结论原话 measured impossible-on-record。普查证明无任何已提交状态可出 3/46（§4.2 证三）；ghost 行本机不可恢复（§4.2 证三猎取全负）。B2 的 discharge 负担（交出该态或其重建，并演示工具出 3/46/0.0588）以现有案面之物无法满足。唯一理论出路在案面之外：作者另一台机器若仍有彼时工作树——本机档案既不能证明也不能证伪它，须台直接向作者取证。本档如实登记这条出路存在、不在案。
+B2 (supply the missing 51-row input state) -- infeasible as the case record stands: R2-44's measured conclusion, verbatim, is measured impossible-on-record. The survey proves no committed state can produce 3/46 (evidence 3, section 4.2); the ghost rows are unrecoverable on this machine (the survey's hunt, all negative, section 4.2). B2's discharge burden (supplying the state or a reconstruction of it, and demonstrating the tool yielding 3/46/0.0588) cannot be met with anything on the case record. The only theoretical exit lies outside the record: the author's other machine may still hold the then-current work tree -- the machine-local archive can neither prove nor disprove its existence, and the desk must seek that evidence from the author directly. This file registers, honestly, that this exit exists and is not on record.
 
-v1 §4 为 B 列的验收门（修正工具或供给输入对已提交态复现 3/46/0.0588、其余面不变、b-gate-audit 与六工具电池无扰）原样保留，供台若辟新路时用。
+The acceptance gates v1 section 4 set for column B (a corrected tool or a repaired input reproducing 3/46/0.0588 over the committed state, all other faces unchanged, and no disturbance to b-gate-audit or the six-tool battery) are carried over verbatim, for the desk to use if it opens a new path.
 
-### 选项 C —— 其余路径（v1 原样，逐条更新）
+### Option C -- other paths (carried verbatim from v1, updated item by item)
 
-- C1 只落护栏（不动面）：定因给护栏精确标靶——按输入 blob sha 键控的护栏在 fa879e4 本身就会点火：face 重跑而账未落，恰是「账追加而面未重跑」的镜像形（行 22 语）。但 C1 不解决在案分歧：现有分歧会立刻触护栏，事实上把台推回 A 或 B。
-- C2 以「已知态」注记关案：定因后代价更清楚——案卷将同时载「根因已证」与「面保持错值」，且每个未来读席仍会重发现分歧（已 7 批 10 锚，行 23 又添 d27af2d），除非改读协议本身——抑制性改动，代价归台；F2/F4 确定性证据将无调和对留档。
-- C3 专席落地/核验包装：适用 A 或 B，改执行人不改断言；本档数字零复用之禁令不变。
-- C4 台自定义其他构造。
+- C1, integrate the guard only (leave the face): the verdict gives the guard a precise target -- a guard keyed to the input blob shas would have fired at fa879e4 itself: the face was rerun without the ledger being integrated, the exact mirror image of "ledger appended while the face was not rerun" (line 22's wording). But C1 does not resolve the divergence on record: the existing divergence would trip the guard immediately, in effect pushing the desk back to A or B.
+- C2, close the case with a "known-state" annotation: the post-verdict cost is clearer -- the case file would then carry both "root cause proven" and "the face keeps its wrong values", and every future reading agent would still re-discover the divergence (7 batches and 10 anchors so far, with d27af2d added by line 23) unless the reading protocol itself changes -- a suppressive change whose cost belongs to the desk; the F2/F4 determinism evidence would remain on record with no reconciling account.
+- C3, a dedicated integration/verification packaging agent: applicable to A or B; changes the executor, not the assertion; this file's zero-reuse rule for its own numbers stands.
+- C4, any other construction the desk defines.
 
-决策面交台·禁代裁：以上是测量，不是裁决。A 的机械支持不等于 A 正确——「权威」仍可属 B：若台认定 ghost 行才是应然账面，那是意图裁决，须台向作者取证，本档无此权。案 OPEN，候台一裁。
+Decision surface with the desk; adjudication forbidden: the above is measurement, not a ruling. Option A's mechanical support does not make A correct -- "authoritative" could still belong to B: if the desk holds that the ghost rows are the ledger that should have been, that is an intent ruling requiring evidence from the author, and this file has no such authority. The case is OPEN, pending one desk ruling.
 
-## 6. 残余未知五条（如实）
+## 6. Five residual unknowns (stated honestly)
 
-1. ghost 十行的精确内容（+2 fix-content、+8 无 token；窗 (2026-11-18T17:05:56Z, 2026-11-19T17:40:19Z]）：引用、不可达对象、工作树、本机文件四路皆不可恢复；算术只钉住 token 类计数。对真实行的逆重算 NOT RUN（不可能），普查代位。
-2. 持机/持树：提交瞬间握有 51 行态的具体工作树/机器不可判定——在案环境快照全部 host=Darwin/arm64，无从区分。
-3. 12 个未取远端引用的内容（H6 残余）：R2-44 会话仅 ls-remote 枚举（rc=0），fetch 被只读纪律禁止，内容未验。定因后动态（本席 §8 核验行 23）：其中 d27af2d 已由一次 21:07:49Z 未记档 fetch+checkout 进 loop 克隆并成为上游 main 顶端（netred_p6.md 披露），r24 批（行 23）在其上复测——分歧原样、输入 blob cf81fa36 未变、face 末触仍 fa879e4；即 12 引用中至少 main 顶端已验且无藏匿。其余引用内容仍未验——低险（年代学在案窗当时或之后）但未证伪，如实保留。
-4. 作者意图（ghost 行是否曾拟上船）：从工件不可知。迟补落是账史常态（95460fd/a69f370 信息），「忘了落」是最省俭读法——但省俭不是证据；若台需要意图结论，唯一取证对象是作者本人。
-5. sandbox 例外与有界扫描的边界：定谳的决定性重算（反证跑 a）在 /tmp 沙箱例外下执行（/tmp/r244-sbx 及 r244-* 临时件，查毕即删）；在案证据只有捕获 stdout 与出面 blob 06998c8，复核 = 原样重跑两命令。同帧如实记：首轮全_home JSONL 扫描 >120s 被杀、以有界扫描代之——「本机零候选」是有界负，不是穷尽负。
+1. The exact content of the ghost ten rows (+2 fix-content, +8 without token; window (2026-11-18T17:05:56Z, 2026-11-19T17:40:19Z]): unrecoverable by any of the four routes -- refs, unreachable objects, working trees, host files; the arithmetic pins only the token-class counts. The inverse recompute over the real rows is NOT RUN (impossible); the survey stands in its place.
+2. The holding machine / work tree: which specific work tree or machine held the 51-row state at the commit instant is undecidable -- every environment snapshot on record has host=Darwin/arm64, leaving nothing to distinguish.
+3. The contents of the 12 unfetched remote refs (the H6 residual): the R2-44 session only enumerated them with ls-remote (rc=0); a fetch was forbidden by the read-only discipline, so the contents are unverified. Post-verdict developments (line 23, verified by this agent in section 8): d27af2d was pulled into the loop clone by one unlogged fetch+checkout at 21:07:49Z and became upstream main's tip (disclosed in netred_p6.md); the r24 batch (line 23) re-tested on it -- divergence unchanged, input blob cf81fa36 unchanged, face last touch still fa879e4; that is, at least main's tip among the 12 refs has been verified and hides nothing. The remaining refs' contents are still unverified -- low risk (chronology places them at or after the case window) but not falsified; kept on the record honestly.
+4. Author intent (whether the ghost rows were ever meant to ship): unknowable from artifacts. Late integration is normal ledger history (the 95460fd/a69f370 messages), and "forgot to integrate" is the most parsimonious reading -- but parsimony is not evidence; if the desk needs an intent finding, the only evidence source is the author.
+5. The sandbox exception and the bounded scan's boundary: the verdict's decisive recompute (falsification run a) ran under the /tmp sandbox exception (/tmp/r244-sbx and r244-* scratch files, deleted after the check); the evidence on record is only the captured stdout and the produced-face blob 06998c8, and verification means re-running the two commands verbatim. Recorded in the same frame, honestly: the first full-_home JSONL scan was killed past 120s and replaced by the bounded scan -- "zero candidates on this machine" is a bounded negative, not an exhaustive one.
 
-## 7. 复现基座
+## 7. Reproduction base
 
-分歧面基座：v1 §5 全部命令（5.1 提案账完整性、5.2 锚链、5.3 canonical 面普查、5.4 diff 档案字节同、5.5 重算确定性与 blob 重钉、5.6 T0 合并批工件、5.7 resolve 内容、5.8 repair 输入同一性、5.9 读席证据序列）原样有效，逐字以 v1 §5 为准，本档不复抄。〔R2-39 记录〕
+Divergence-face base: every command of v1 section 5 (5.1 proposal-ledger integrity, 5.2 anchor chain, 5.3 canonical-face survey, 5.4 diff-archive byte identity, 5.5 recompute determinism and blob re-pinning, 5.6 the T0 merge batch artifact, 5.7 resolve contents, 5.8 repair-input identity, 5.9 the reading-agent evidence sequence) remains valid verbatim; v1 section 5 governs word for word and is not repeated here. [R2-39 records]
 
-定因面新增命令（R2-44 记录，逐字见 §4.2；汇总）：
-- 出生点考古：git log --follow --format='%H|%aI|%cI|%an|%cn|%s' -- docs/scheduling-feedback.json（两库）
-- 出生态沙箱重算：git archive fa879e4，tar 解至 /tmp/r244-sbx 后 python3 -I tools/learning_feedback.py（/tmp 例外）
-- 全引用普查：git log --all --format=%H -- docs/exp-ledger.jsonl 逐笔 rev-parse blob 后 sort -u
-- 前缀链核验：逐对字节前缀检查（python，3/3 True）
-- 不可达猎取：git fsck --unreachable --no-reflogs（两克隆）
-- 工具核心读点：tools/learning_feedback.py 91 行（EXP_DEFAULT）、100–105 行（REPAIR_TOKENS）、256–276 行（compute_repair）
-- 远端引用枚举：git ls-remote origin（单飞，仅枚举）
+Post-verdict commands (R2-44 records, verbatim in section 4.2; summary):
+- Birth-point archaeology: git log --follow --format='%H|%aI|%cI|%an|%cn|%s' -- docs/scheduling-feedback.json (both clones)
+- Birth-state sandbox recompute: git archive fa879e4, extracted with tar to /tmp/r244-sbx, then python3 -I tools/learning_feedback.py (the /tmp exception)
+- All-refs survey: git log --all --format=%H -- docs/exp-ledger.jsonl, rev-parse of the blob per commit, then sort -u
+- Prefix-chain check: pairwise byte-prefix check (python, 3/3 True)
+- Unreachable-object search: git fsck --unreachable --no-reflogs (both clones)
+- Tool-core read points: tools/learning_feedback.py line 91 (EXP_DEFAULT), lines 100-105 (REPAIR_TOKENS), lines 256-276 (compute_repair)
+- Remote-ref enumeration: git ls-remote origin (single flight, enumeration only)
 
-## 8. 本席本场执行的检查（R2-48，逐字）
+## 8. Checks executed by this agent this session (R2-48, verbatim)
 
-1. 提案账在盘核验（read-only，/Users/zuguangzhao/rocqwash/zgx-out/zgx-ledger-proposals.jsonl）：
-   - `wc -l` → 23（R2-44 回执记其会话 21→22；此后又有追加，见下第 3 条）。
-   - `sed -n '22p'` 送 `python3 -I`（json.loads + 字段吐出 + ASCII 断言）→ json OK；ts=2026-11-20T20:55:47Z、actor=zgx、target=docs/scheduling-feedback.json、schema=zgx-proposal/1、ascii_only=True——与 R2-44 回执行 22 记载逐字段吻合，R2-44 的追加确在盘。
-   - `tail -n 1`（= 行 23）送 `python3 -I` → json OK；ts=2026-11-20T21:22:43Z、actor=zgx、target=docs/scheduling-feedback.json、kind=proposal、ascii_only=True；evidence 字段记 r24 批 20261120T212043Z：d27af2d 复测（六工具 rc=0；face cmp 差首在 17 行 400 字符；committed sha256 1ed190e1… / produced e66ca0a1…b9c423b 全值；diff 恰 3 行；index a952af0..06998c8；8eff64e..d27af2d = 3 笔且三 docs 路径零触；输入 blob cf81fa36 未变；face 末触 fa879e4）；并披露 21:07:49Z 一次未记档 fetch+checkout（netred_p6.md）。行 23 属 r24 席辖，本档只登记其存在与要点（C5、§6 残三）。
-2. 回执 ASCII 自检（write 后执行）：`python3 -I` 断言 ../R2-48-receipt.md 全 ASCII → ascii_only=True。
-3. 两份写出文件在盘：ls -l 本档与 ../R2-48-receipt.md。
+1. Proposal-ledger on-disk verification (read-only, /Users/zuguangzhao/rocqwash/zgx-out/zgx-ledger-proposals.jsonl):
+   - `wc -l` -> 23 (the R2-44 execution record notes its session went 21 -> 22; a later line followed, see item 3 below).
+   - `sed -n '22p'` piped to `python3 -I` (json.loads + field output + ASCII assertion) -> json OK; ts=2026-11-20T20:55:47Z, actor=zgx, target=docs/scheduling-feedback.json, schema=zgx-proposal/1, ascii_only=True -- matching the R2-44 execution record's line 22 field for field; R2-44's append is confirmed on disk.
+   - `tail -n 1` (= line 23) piped to `python3 -I` -> json OK; ts=2026-11-20T21:22:43Z, actor=zgx, target=docs/scheduling-feedback.json, kind=proposal, ascii_only=True; the evidence field records the r24 batch 20261120T212043Z: the d27af2d re-test (six tools rc=0; face cmp first difference at line 17 char 400; committed sha256 1ed190e1... / produced e66ca0a1...b9c423b full values; diff exactly 3 lines; index a952af0..06998c8; 8eff64e..d27af2d = 3 commits with the three docs paths untouched; input blob cf81fa36 unchanged; face last touch fa879e4); it also discloses one unlogged fetch+checkout at 21:07:49Z (netred_p6.md). Line 23 falls under the r24 agent's jurisdiction; this file registers only its existence and its main points (C5, residual 3 in section 6).
+2. Execution-record ASCII self-check (run after writing): `python3 -I` asserted ../R2-48-receipt.md all-ASCII -> ascii_only=True.
+3. Both written files on disk: ls -l of this file and ../R2-48-receipt.md.
 
-除此之外本席零检查；一切在案结论皆为转引（页首纪律行）。
+Beyond these, this agent ran zero checks; every conclusion on record is a citation (discipline line at the top).
 
-## 9. 诚实注记
+## 9. Honesty notes
 
-1. 本席零 git 查询、零网络、零仓树写（写出仅本档+回执）；未复跑任何原席检查——这是本席任务边界（书面铸造），不是遗漏。每条在案结论已标原席（〔R2-39 记录〕〔R2-44 记录〕）；复核通路 = v1 §5 + 侦察卡 §2–4 命令。
-2. 中文时间线为 v1 §2 的忠实转写；措辞或数字如有出入，以 v1 英文原文为准，并按经验面纪律报勘误，不静默改写。
-3. 行 21/22/23 的提交姿态：R2-39 记录已提交 20 行（0a0a9c43/8502146/a4d8d50 三点）；行 21 未提交；行 22 为 R2-44 追加（本席核验在盘）；行 23 为 r24 追加（本席核验在盘）。三者此刻是否已落上游，本席零 git 未能验——如实记「未验」。
-4. 8eff64e 与 d27af2d：R2-44 观察前者为当时上游 main 顶端；行 23 记载后者经 21:07:49Z fetch+checkout 成为顶端并在其上复测。两 SHA 处的事实皆系他人席别记录，本席未独立核验 git 侧——转引如实。
-5. 产出面 sha256 全值（e66ca0a1d1b862b6b0554b96d7852ed4b39e239a32f114ba09199fbadb9c423b）本席未复算，转引行 23；v1 诚实注记 6 的「仅 16 位前缀」缺口由此闭合，功劳归 r24 席。
-6. 本档不裁决（§5 条款）、不追加任何提案行——案卷席不提案（v1 诚实注记 9 姿态不变）。
-7. 本档全部数字溯源：§1–§7 转引页首四源；本席新测仅 §8 三项。
+1. This agent ran zero git queries, zero network, zero repository-tree writes (writes are this file + the execution record only); no original agent's check was re-run -- that is this agent's task boundary (written casting), not an omission. Every conclusion on record is tagged with its original agent ([R2-39 records] / [R2-44 records]); the verification path = v1 section 5 + the recon card sections 2-4 commands.
+2. The timeline is a faithful transcription of v1 section 2; where wording or numbers differ, the v1 English original governs, and any discrepancy is reported per the experience-face discipline, never silently rewritten.
+3. The commit posture of lines 21/22/23: the R2-39 records show 20 committed lines (measured at 0a0a9c43/8502146/a4d8d50); line 21 was uncommitted; line 22 was appended by R2-44 (verified on disk by this agent); line 23 was appended by r24 (verified on disk by this agent). Whether the three have since reached upstream, this agent could not verify with zero git -- recorded honestly as "unverified".
+4. 8eff64e and d27af2d: R2-44 observed the former as upstream main's tip at that time; line 23 records that the latter became the tip through the 21:07:49Z fetch+checkout and was re-tested on it. The facts at both SHAs come from other agents' records; this agent did not independently verify the git side -- cited honestly.
+5. The produced-face sha256 full value (e66ca0a1d1b862b6b0554b96d7852ed4b39e239a32f114ba09199fbadb9c423b) was not recomputed by this agent; cited from line 23; the "16-hex prefix only" gap of v1 honesty note 6 is closed by it, with credit to the r24 agent.
+6. This file adjudicates nothing (the section 5 clause) and appends no proposal line -- case-file agents do not propose (v1 honesty note 9 posture unchanged).
+7. Every number in this file traces to the four sources at the top (sections 1-7 are citations); this agent's new measurements are only the three items in section 8.
 
-## 10. English summary（non-authoritative; the Chinese main face governs）
+## 10. Summary (condensed restatement; the section text above governs)
 
 **Case.** At every anchor since 2026-11-19 the committed face of docs/scheduling-feedback.json (blob a952af0: repair_outcomes 3/46/0.0588 over "51 rows") disagrees with the deterministic recompute of tools/learning_feedback.py over the same commit's own inputs (blob 06998c8: 1/38/0.0244 over 41 rows) in exactly three values; everything else is byte-identical, and companion docs/b-gate-audit.json recomputes byte-identical everywhere. Total measured delta: 10 rows (+2 repaired, +8 unrecorded; wogc/escalated unchanged) - the "8 lines" framing was the unrecorded delta only (fail-loud correction on record by R2-44).
 
 **Root cause - CONFIRMED, H1, HIGH (R2-44).** The stale face was born in one commit, fa879e4 (2026-11-19T17:40:19Z), which rewrote the tool (v1.0 -> v1.1.0), replaced the face's pre-image 432094a6 (whose values already were the recompute values) with a952af0, and touched no ledger path among its 14 paths: the face was computed by a real tool run against a then-local dev-tree exp-ledger of 51 valid rows (+2 action=fix-content, +8 token-less vs shore cf81fa36/41); only the face was committed. The face was stale on arrival; every recompute since - including the zgx supply batch 3h05m later and the r24 batch at d27af2d - yields 06998c8.
 
-**Three decisive evidences.** (1) Birth archaeology: exactly two commits ever touched the face; the birth commit carried tool+face but no ledger. (2) Birth-state sandbox rerun: the birth commit's own tool over its own committed inputs yields 06998c8 (rc=0, errors 0), not the committed face. (3) All-refs census: exactly 4 ledger blobs in a strict append-only prefix chain (27/30/38/41 rows); no 51-row state exists in any ref, tag, remote branch, local PR head, unreachable object, working tree, or bounded host scan.
+**Three decisive evidences.** (1) Birth archaeology: exactly two commits ever touched the face; the birth commit carried tool+face but no ledger. (2) Birth-state sandbox rerun: the birth commit's own tool over its own committed inputs yields 06998c8 (rc=0, errors 0), not the committed face. (3) All-refs survey: exactly 4 ledger blobs in a strict append-only prefix chain (27/30/38/41 rows); no 51-row state exists in any ref, tag, remote branch, local PR head, unreachable object, working tree, or bounded host scan.
 
-**Two falsification runs (H1 survived both).** (a) "committed inputs + birth-era tool can produce the face" - DISPROVEN (rerun yields 06998c8); (b) "some committed ledger state yields 3/46" - DISPROVEN (census). The inverse test over the real ghost rows is NOT RUN - impossible, the rows are unrecoverable; the census stands in its place.
+**Two falsification runs (H1 survived both).** (a) "committed inputs + birth-era tool can produce the face" - DISPROVEN (rerun yields 06998c8); (b) "some committed ledger state yields 3/46" - DISPROVEN (survey). The inverse test over the real ghost rows is NOT RUN - impossible, the rows are unrecoverable; the survey stands in its place.
 
-**H2-H6.** H2 birth-era tool-rule defect REFUTED HIGH (this is option B1's form); H3 foreign-input-file LOW residual; H4 hand-edited face LOW residual (coherent new calibration section, zero calibration_ledger rows in the committed ledger); H5 desktop-side origin HIGH / late landing REFUTED HIGH (the 10 rows are ghost rows, never shipped); H6 history-rewrite/unfetched-refs LOW, partially open (12 remote refs enumerated, not fetched at recon time; post-recon, d27af2d has since been fetched and re-read with the divergence intact - proposal line 23; the rest remain unverified).
+**H2-H6.** H2 birth-era tool-rule defect REFUTED HIGH (this is option B1's form); H3 foreign-input-file LOW residual; H4 hand-edited face LOW residual (coherent new calibration section, zero calibration_ledger rows in the committed ledger); H5 desktop-side origin HIGH / late integration REFUTED HIGH (the 10 rows are ghost rows, never shipped); H6 history-rewrite/unfetched-refs LOW, partially open (12 remote refs enumerated, not fetched at recon time; post-recon, d27af2d has since been fetched and re-read with the divergence intact - proposal line 23; the rest remain unverified).
 
-**Desk options after the verdict - consequences mapped, no adjudication.** Option A (regenerate and land) is mechanically supported: the recompute face is the birth-commit-faithful product of the committed inputs, plus the family precedent (b-gate-audit byte-identical at every anchor); a natural added gate: the landing blob should be 06998c8 or a descendant. Option B1 is counter-evidenced (H2 REFUTED; its discharge burden has no supporting evidence on record - overturning it would take new evidence work, not re-assertion). Option B2 is measured impossible-on-record (no committed state yields 3/46; the ghost rows are unrecoverable) - the only theoretical exit, the author's other machine, lies outside the record and is a matter for the desk to pursue with the author. The sync guard gains a precise target: keyed to input blob shas, it would have fired at fa879e4 itself (face rerun without ledger landing - the mirror shape). Selection remains the desk's; this file ranks nothing and closes nothing.
+**Desk options after the verdict - consequences mapped, no adjudication.** Option A (regenerate and land, the recorded proposal label) is mechanically supported: the recompute face is the birth-commit-faithful product of the committed inputs, plus the family precedent (b-gate-audit byte-identical at every anchor); a natural added gate: the integration blob should be 06998c8 or a descendant. Option B1 is counter-evidenced (H2 REFUTED; its discharge burden has no supporting evidence on record - overturning it would take new evidence work, not re-assertion). Option B2 is measured impossible-on-record (no committed state yields 3/46; the ghost rows are unrecoverable) - the only theoretical exit, the author's other machine, lies outside the record and is a matter for the desk to pursue with the author. The sync guard gains a precise target: keyed to input blob shas, it would have fired at fa879e4 itself (face rerun without ledger integration - the mirror shape). Selection remains the desk's; this file ranks nothing and closes nothing.
 
 **Five residual unknowns.** (1) exact ghost-row content; (2) which tree/machine held the 51-row state at the commit instant; (3) contents of the 12 remote refs (d27af2d since fetched and re-read clean per line 23; the rest unverified); (4) author intent - unknowable from artifacts; (5) the evidence's own boundaries: the decisive rerun ran under the /tmp sandbox exception (scratch deleted; verification = re-running the recorded commands), and the "no candidate on this host" result is a bounded-scan negative, not an exhaustive one.
 
-**Status.** Root cause CONFIRMED; case OPEN pending one desk ruling. This file supersedes v1 (R2-39) with the timeline and command base preserved; the casting seat (R2-48) ran zero git queries - every claim is attributed to its seat of record (R2-39 / R2-44 / r24 line 23 / R2-48 fresh checks in Chinese section 8).
+**Status.** Root cause CONFIRMED; case OPEN pending one desk ruling. This file supersedes v1 (R2-39) with the timeline and command base preserved; the casting agent (R2-48) ran zero git queries - every claim is attributed to its agent of record (R2-39 / R2-44 / r24 line 23 / R2-48 fresh checks in section 8).
