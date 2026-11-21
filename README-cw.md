@@ -1,4 +1,4 @@
-# cw.sh — unified entry quick reference (rocqos (rocqwash) tool suite · 64 routes over 62 tools)
+# cw.sh — unified entry quick reference (rocqos (rocqwash), the Rocq operations suite · 64 routes over 62 tools)
 
 > **Language versions:** this file is the English-first version of the quick
 > reference. The original Chinese full text is preserved verbatim in
@@ -22,13 +22,27 @@ Exit-codes.  0 pass; 2 unknown tool or passthrough usage error; 9 target script
 
 ## Overview
 
-`cw.sh` is the **one-command entry** for the twenty-five tools of the rocqwash
-suite — the seven tools of the v29-v32 releases, the five tools of the
-v35-v39 release, the three v37 tools, the v38 aggregate doctor, the v39 trio
-(doc-lint / netname-normalize / select-audit), the v40 baseline-diff, the v45
-render-events ledger renderer, the v46 `red-dispatch` / `audit` pair, the v47
-registry-fix prescription applier, and the annotation-face normalization
-linter (norm-lint). It lives at the repository root:
+`cw.sh` is the **one-command entry** for the rocqwash suite: it dispatches
+**64 routes onto 62 target scripts** — the same roster-derived count the
+title carries (64 = 62 target scripts + 2 alias routes; derivation in
+Design contract below). Two alias pairs share one
+target script each (`triage`/`ci-triage` → `tools/ci_triage.py`;
+`baseline-diff`/`baseline-diff-facade` → `tools/baseline_diff.py`), and
+`help` is the pseudo-route, not counted. By purpose, the surface is: the
+scan-and-wash chain (scan4 / dual-scan / erasure / cure / probe / chain /
+sync-ledger); the CI repair and push chain (doctor / net-probe / triage /
+ci-triage / pushci, watched by `sentinel` and routed by `dispatch`, with
+cw-doctor as the aggregate checkup); shaping and hygiene (wash-shape /
+unclog / norm-lint and the registry audit → fix → regen loop);
+documentation, localization and terminology faces (doc-lint / ai-flavor /
+the i18n pipeline / jargon-apply / termbase); intake and service faces
+(periscope / exp-append / mcp-server); and the recursive-evolution era
+collected in the third table below (gap ledger, vacuity-probe sweep,
+symbiosis bus, uplink, repair guards, scheduler, self-evolution round).
+The three quick-reference tables below keep registration order and carry
+every route exactly once; the release entries behind the version anchors
+still used below (the v37 trio, the v38 notes) sit in
+[CHANGELOG.md](CHANGELOG.md). It lives at the repository root:
 
 ```
 bash cw.sh <tool> [args...]
@@ -52,6 +66,10 @@ bash cw.sh <tool> [args...]
 
 ## Tool quick reference
 
+One positioning line per tool — per-flag detail lives in `bash cw.sh help
+<tool>`, each tool's own help output, and the tool entries in
+[docs/CAPABILITY-INDEX.md](docs/CAPABILITY-INDEX.md) (the contract surface).
+
 | Tool | Target script | Purpose | One-line example |
 |------|----------|------|----------|
 | `scan4` | `scan/scan_v4_token.py` | token-level qualified-identifier census (qualified names / shadowing sources / tracking ids) | `bash cw.sh scan4 --file demo.v --json report.json --text` |
@@ -66,16 +84,16 @@ bash cw.sh <tool> [args...]
 | `triage` | `tools/ci_triage.py` | CI red-run triage (five families + green-run classification spectrum; red is data, not tool failure) | `bash cw.sh triage --repo ORG/REPO --run ID --logs` |
 | `union` | `tools/registry_union.py` | registry union surgery (main as base + true-exclusive tail insertion against the merge-base; **dry-run by default**) | `bash cw.sh union --base b --main m --branch x --kind order --json r.json` |
 | `pushci` | `tools/pushci.py` | push-CI one-shot pipeline (five stages: preflight emission gate → push → watch → heal → verdict ± merge; orchestrated over the four existing tools by subprocess, zero new engines; seven-state verdict `success\|fix-content\|toolchain\|unstable\|heal-exhausted\|gate4-block\|dry-run` mapping to exit codes 0/1/2/9) | `bash cw.sh pushci --repo-path . --branch feature/x --json report.json` |
-| `sentinel` | `tools/cw_sentinel.py` | real-time watch sentinel (three signal sources — CI runs / ledger chain-roots / buildlog tokens — → JSONL event stream; once/loop dual mode; classification delegated to ci_triage; **no action by default**; `--on-red-preset` five presets, repeatable = chained in the given order with one failure continuing the chain — unclog/pushci/wash-shape/triage/cw-doctor, each honoring its tool's dry-run-by-default discipline; mutually exclusive with `--on-red`; side-effect actions require `--emit`, both channels share the same guard, rc=2) | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --on-red-preset unclog --on-red-arg src=src/ --emit events.jsonl --json r.json` |
-| `wash-shape` | `tools/wash_shape.py` | canonical five-pass shaping pipeline (lexical / token / header / EOL / anchor; plan is zero-write by default; `--apply` applies, then re-runs all five passes for verification; ③ header-pass template source probed three ways: `--header-map` per-file data > `--header-map-preset` named template library `tests/fixtures/header_map_v1.json` (effort-canon distillation, schema `rocqwash-header-map/1`) > env; same-slot explicit flags mutually exclusive, rc=2) | `bash cw.sh wash-shape --file demo.v --header-map-preset campaign_set_diamond --json plan.json` |
-| `unclog` | `tools/unclog.py` | blockage-unclogging closed loop (probe collection → chain_graph chain-root pick → cure_applier application → re-check → verdict `unclogged\|wall\|rounds-exhausted\|audit`; dry-run by default; frozen-listed files refused loudly; `--audit` read-only clog baseline with a zero-write self-proof; mutually exclusive with `--apply`/`--loop`; `--probe-parallel K` threads probe parallelism through probe_engine `--jobs`, recorded in the timing section so runs over the same candidate set with different K remain comparable) | `bash cw.sh unclog --src src/ --world world/ --audit --probe-parallel 2 --json r.json` |
-| `cw-doctor` | `tools/cw_doctor.py` | aggregate health check across four domains (dyld environment / net_probe network / registry anchor audit / clog probe_engine + chain_graph — per-domain subprocess orchestration of the existing tools → aggregate 0-100 health score + verdict `healthy\|degraded` + advice list; **diagnosis only, never executes**; red is data, not tool failure; schema `rocqwash-cwdoctor/1`; `--injector`-offline-testable) | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
-| `doc-lint` | `tools/doc_lint.py` | docs↔implementation consistency linter, three checks (① the tool table cross-checked across cw.sh's four places (header/usage/hint/case) + tools/ generic-entry reconciliation; ② CASES vs tests/README.md vs README.md count three-way check; ③ doc flag references vs each tool's real `--help` output, item by item; verdict `consistent\|drift`; red is data, not tool failure; schema `rocqwash-doclint/1`; `--repo` is the audited repo root, defaults to this repo) | `bash cw.sh doc-lint --repo . --json doclint.json` |
-| `baseline-diff` | `tools/baseline_diff.py` | clog-baseline differ (two `unclog --audit` baselines in argv order old→new → `new_blocks`/`resolved_blocks`/`persistent` three lists + `score_delta`; four-state verdict `improved\|degraded\|stable\|incomparable`; a self-consistency precheck rejects hand-edited ledgers; timing excluded from comparison; red is data, not tool failure; schema `rocqwash-baseline-diff/1`; intake protocol in [examples/baselines/README.md](examples/baselines/README.md)) | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
-| `dispatch` | `tools/red_dispatch.py` | red-event router (sentinel red events → action presets; three presets `report-only\|suggest\|auto`; **report-only, zero execution by default**; suggest prints a copy-paste command block; auto executes only when explicit, under a 60s cap, rc≠0 recorded loudly without touching the exit code; dedup state + cooldown; all routes wired onto cw.sh's existing routes, zero new engines; family-A content-red is never auto-fixed — it emits a fix list; schema `rocqwash-red-dispatch/1`) | `bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json` |
-| `audit` | `tools/registry_audit.py` | registry hygiene auditor (order.txt / _CoqProject dual-book **read-only** four-account output: duplicate rows / anchor-collision text / seq-form / malformed / missing anchors / orphans / live topology references + `--fix-plan` deterministic prescription with zero writes; **`--apply` does not exist**; keys and the anchor canon are reused from registry_union, zero re-invention; findings are data, always exit 0; schema `rocqwash-registry-audit/1`; live-tree runs belong to the repository owner session — at tool level only selftest/fixture evidence is in scope, per the v40 baseline protocol in [examples/baselines/README.md](examples/baselines/README.md)) | `bash cw.sh audit --order order.txt --project _CoqProject --live-src src/ --fix-plan --json audit.json` |
-| `registry-fix` | `tools/registry_fix.py` | registry prescription applier (executes the `audit --fix-plan` prescription item by item; three prescription kinds DEDUP keep-first / anchor re-stamp / ORPHAN-ADD skip; **dry-run by default**; `--apply` writes with three post-write assertions (duplicates zero-residue / anchor-collision text zero-addition / orphans non-increasing) and rolls back on any failure; staging is fully in-memory, zero write; same-parameter discipline binds audit↔applier verbatim; schema `rocqwash-registry-fix/1`) | `bash cw.sh registry-fix --audit-json audit.json --order order.txt --project _CoqProject --anchor-src src/ --json fix.json` |
-| `norm-lint` | `tools/norm_lint.py` | annotation-face normalization linter, report-only first form (machine-checks the prose faces of `.py`/`.sh`/`.md`: header banner + five-field block `Purpose.`/`Interface.`/`Dependencies.`/`Evidence.`/`Exit-codes.` verbatim; jargon mapping-table faces at word boundaries with backtick citations exempt; CJK residue warn per file; forbidden classes warn; header budget 30 lines; `*.zh.md` and `docs/zh/` archives skipped; findings are data — the exit code never escalates on them; default jargon map `docs/jargon-to-standard-mapping-v1.md`; schema `rocqwash-norm-lint/1`) | `bash cw.sh norm-lint --tree .` |
+| `sentinel` | `tools/cw_sentinel.py` | real-time watch sentinel (CI runs / ledger chain-roots / buildlog tokens → JSONL event stream; once/loop dual mode; **no action by default** — the preset and on-red wiring is in the v38 notes below) | `bash cw.sh sentinel --once --watch-ledgers ledgers/ --on-red-preset unclog --on-red-arg src=src/ --emit events.jsonl --json r.json` |
+| `wash-shape` | `tools/wash_shape.py` | canonical five-pass shaping pipeline (lexical / token / header / EOL / anchor; plan is zero-write by default; `--apply` applies, then re-runs all five passes for verification) | `bash cw.sh wash-shape --file demo.v --header-map-preset campaign_set_diamond --json plan.json` |
+| `unclog` | `tools/unclog.py` | blockage-unclogging closed loop (probe → chain-root pick → cure → re-check → verdict `unclogged\|wall\|rounds-exhausted\|audit`; dry-run by default; `--audit` is the read-only clog baseline) | `bash cw.sh unclog --src src/ --world world/ --audit --probe-parallel 2 --json r.json` |
+| `cw-doctor` | `tools/cw_doctor.py` | aggregate health check across four domains (dyld / network / registry / clog → 0-100 score + verdict; **diagnosis only, never executes**; red is data, not tool failure) | `bash cw.sh cw-doctor --json r.json --registry order.txt` |
+| `doc-lint` | `tools/doc_lint.py` | docs↔implementation consistency linter, three checks (cw.sh table places / count lines / cited flags vs each tool's real help output); drift is data, not tool failure | `bash cw.sh doc-lint --repo . --json doclint.json` |
+| `baseline-diff` | `tools/baseline_diff.py` | clog-baseline differ (two `unclog --audit` baselines old→new; four-state verdict `improved\|degraded\|stable\|incomparable`; intake protocol in [examples/baselines/README.md](examples/baselines/README.md)) | `bash cw.sh baseline-diff audit-wash-20261101.json audit-wash-20261111.json --md diff.md` |
+| `dispatch` | `tools/red_dispatch.py` | red-event router (sentinel red events → action presets; **report-only, zero execution by default**; family-A content-red is never auto-fixed — the route wiring is in the embed section below) | `bash cw.sh dispatch --event-file events.jsonl --preset suggest --json route.json` |
+| `audit` | `tools/registry_audit.py` | registry hygiene auditor (order.txt / _CoqProject dual-book, **read-only** four-account output + `--fix-plan` prescription with zero writes; **`--apply` does not exist**; findings are data, always exit 0) | `bash cw.sh audit --order order.txt --project _CoqProject --live-src src/ --fix-plan --json audit.json` |
+| `registry-fix` | `tools/registry_fix.py` | registry prescription applier (executes the `audit --fix-plan` prescription item by item; **dry-run by default**; `--apply` writes with three post-write assertions and rolls back on any failure) | `bash cw.sh registry-fix --audit-json audit.json --order order.txt --project _CoqProject --anchor-src src/ --json fix.json` |
+| `norm-lint` | `tools/norm_lint.py` | annotation-face normalization linter, report-only (machine-checks the five-field doc face and the jargon mapping faces; findings are data — the exit code never escalates on them) | `bash cw.sh norm-lint --tree .` |
 | `help` | — | master help; `help <tool>` prints the tool's one-line usage hint | `bash cw.sh help probe` |
 
 Typical pipeline (find → cure → re-verify):
@@ -122,7 +140,21 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 > verification is fully in place).
 
 
-## Tool quick reference: newer waves (through tag rw-v0.1.0-20261114)
+## Tool quick reference: newer waves (through tag rw-v0.1.0-20261114) and the recursive era
+
+Class-code legend for both tables below: **P0-P6** are the stage numbers of
+the E4 engine-body ticket's i18n pipeline (P0 policy pre-check, P1
+segmentation, P3 four-linkage apply, P6 ledger closure; P2 is the
+model-site handoff stage — the same "E4 P2 handoff form" named in
+row-render's emit/ingest face); **E2-2 / E2-3** are repair-guard tickets of
+the shared scope table — live enumeration
+`bash cw.sh repair-scope --classes` — and **E6** is repair_weekly's
+repair-outcome vocabulary; **X5** is the auto-merge gate ticket and **E4**
+the engine-body ticket, both carried in
+[docs/CAPABILITY-INDEX.md](docs/CAPABILITY-INDEX.md); **R1-R19** are the CI
+whitepaper's failure taxonomy (linked below, machine table
+`docs/ci-triage-table.json`; R15 is the stale provenance-pin row that
+pin-repair executes).
 
 | Tool | Target script | Purpose | One-line example |
 |------|----------|------|----------|
@@ -136,7 +168,7 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 | `ci-triage` | `tools/ci_triage.py` | Fetches and triages logs of failing CI runs; `--offline` switches to local log input | `bash cw.sh ci-triage --offline <value> --logs` |
 | `baseline-diff-facade` | `tools/baseline_diff.py` | Compares two baseline files and reports additions and removals (JSON and markdown output) | `bash cw.sh baseline-diff-facade <old> <new> --json <value>` |
 | `exp-append` | `tools/exp_port.py` | Experience-bus append face (schema rocqwash-exp/1, four fields, idempotent seen-set; duplicates return the existing id and write nothing) | `bash cw.sh exp-append append --tool <tool> --points <text> --batch <batch>` |
-| `mcp-server` | `tools/mcp_server.py` | MCP stdio server (tools/list carries 24 capabilities, net-gated faces deny-by-default, unknown methods answer -32601) | `bash cw.sh mcp-server tools/mcp_server.py` |
+| `mcp-server` | `tools/mcp_server.py` | MCP stdio server (tools/list carries 42 capabilities, net-gated faces deny-by-default, unknown methods answer -32601) | `bash cw.sh mcp-server tools/mcp_server.py` |
 | `periscope` | `tools/periscope.py` | Six-source peripheral intelligence collector (watch list, arXiv queries, own issues into machine-checked intel entries bound to sha and time, collision detection) | `bash cw.sh periscope --help` |
 | `ai-flavor` | `tools/ai_flavor.py` | Wording detection body: a 36-face battery (10 zh, 15 en stems, 8 sentence, 3 paragraph-initial) plus a separate em-dash battery (target 0); hits are data, not errors; pure exports `detect_text(text, word_map)` and `load_word_map(path)` | `bash cw.sh ai-flavor --file docs/report.md --json out/ai-flavor-report.json` |
 | `ai-flavor-apply` | `tools/ai_flavor_apply.py` | Advisory apply face: writes only through the rewrite provider (handoff default zero-network; http leg default-deny under the env gate), zh ban faces never machine-written, budget cap per file per class via `--state`, rescan residue zero gates GREEN | `bash cw.sh ai-flavor-apply --file docs/report.md --emit-handoff out/handoff.jsonl --state out/state.json` |
@@ -144,8 +176,51 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 | `i18n-pipeline` | `tools/i18n_pipeline.py` | Pipeline orchestration body: six immutable operation signatures, P0 policy pre-check (refusal is a legal exit-0 ledgered outcome), P1 segmentation under the protection list, P3 four-linkage application, P6 append-only ledger closure gate | `bash cw.sh i18n-pipeline --manifest out/run.json --stage p1 --json out/segments.json` |
 | `i18n-translate` | `tools/i18n_translate.py` | Model-site layer P2: handoff form default zero-network with ten-key (including policy_precheck_ref) ingest validation; http form optional default-deny with per-segment annotation and a NETRED ledger line per call | `bash cw.sh i18n-translate --segments out/segments.json --emit out/handoff.jsonl` |
 | `i18n-verify` | `tools/i18n_verify.py` | P4 runs the mechanical verify instruments as subprocesses into one matrix; P5 emits the human ten-point form and ingests verdicts fail-loud; the engine never judges | `bash cw.sh i18n-verify --emit-tenpoint docs/report.en.md --json out/tenpoint-form.json` |
-| `jargon-apply` | `tools/jargon_apply.py` | Jargon-to-standard apply face over the 62-entry map: replace entries only, human rows listed never applied, guarded rows refuse by default, plan default zero-write, apply rescans to residue zero, idempotent | `bash cw.sh jargon-apply --tree docs --plan --json out/jargon-plan.json` |
+| `jargon-apply` | `tools/jargon_apply.py` | Jargon-to-standard apply face over the 159-entry map: replace entries only, human rows listed never applied, guarded rows refuse by default, plan default zero-write, apply rescans to residue zero, idempotent | `bash cw.sh jargon-apply --tree docs --plan --json out/jargon-plan.json` |
 | `termbase` | `tools/termbase.py` | Read-only terminology thin layer over the E3 seed: schema validation fails loud, exact-face lookup, zero network; the E3 net interface and DIY channel stay candidates of their own seed SPECs | `bash cw.sh termbase --selftest` |
+
+### Recursive-era routes (registered after that tag)
+
+| Tool | Target script | Purpose | One-line example |
+|------|----------|------|----------|
+| `gap-cluster` | `tools/gap_cluster.py` | Aggregates TODO-SEAT and gap-ledger entries into a family-shape-keyed gap ledger (TODO-SEAT is the protocol token marking an uncovered assumption awaiting supply — a vacgen report row with `status=todo_seat`, or a gap-class experience-ledger entry carrying the literal token; deterministic, byte-identical reruns; a zero-gap ledger is data) | `bash cw.sh gap-cluster --ledger <value> --out <value> --json` |
+| `row-render` | `tools/row_render.py` | Renders gap-ledger rows into candidate taxonomy rows through the E4 P2 handoff form (vacgen admission gate plus ten-point human gate; a draft is written only on full admission) | `bash cw.sh row-render --gaps <value> --emit <value> --draft-out <value> --json` |
+| `calibration-ledger` | `tools/calibration_ledger.py` | Pairs vacgen v2 predicted confidence with the measured compile-leg rc into per-row calibration entries (idempotent seen set; row-rot signals are data) | `bash cw.sh calibration-ledger --report <value> --rc-file <value> --ledger <value>` |
+| `lean-sweep` | `tools/lean_sweep.py` | Vacuity-probe batch sweep orchestrator (bins, dedups, casts with a zero-compile precheck; the compile leg is a designed SKIP unless `--fire` and the toolchain probe passes) | `bash cw.sh lean-sweep --batches <value> --out <value> --json <value>` |
+| `verdict-diff` | `tools/verdict_diff.py` | Mechanical judge for sweep ledgers (buckets GREEN / ALERT / BLOCKED / MISSING / SKIPPED-TIERT — the last one is the tool's own spelling, transcribed verbatim — plus an exception list; ALERT exits 2 stop-work; baseline convergence caliber) | `bash cw.sh verdict-diff --results-lane <value> --json <value> --md <value>` |
+| `symbiosis-bus` | `tools/symbiosis_bus.py` | Cross-repository experience bus over `docs/exp-ledger.jsonl` (swap schema `rocqwash-symbio/1`; import walks the exp-append face one call per entry; export/status/diff read-only; zero network by design) | `bash cw.sh symbiosis-bus export --out <value> --dry-run` |
+| `uplink` | `tools/uplink.py` | External return-package intake gate (verify / intake / pr-prep; md5 mismatch and missing declared members fail loud; the register row and the caller-named draft are the only writes; zero network by design) | `bash cw.sh uplink verify --package <value> --digest <value>` |
+| `evolution-dashboard` | `tools/evolution_dashboard.py` | Self-evolution dashboard over the three standing accounts (experience ledger + round ledger + vacgen v2 TODO-SEAT reports → coverage curve, round conversion, per-run gap thermometer; JSON and markdown faces; absent standing paths are data) | `bash cw.sh evolution-dashboard --md-out <value> --stdout markdown` |
+| `bus-feeder` | `tools/bus_feeder.py` | Gap-ledger feeder for symbiosis swap packages (`rocqwash-symbio/1` in, TODO-SEAT gap rows out; family-shape keyed, idempotent on id and fingerprint; zero network by design) | `bash cw.sh bus-feeder feed --swap <value> --dry-run` |
+| `axiom-guard` | `tools/axiom_guard.py` | Repo-wide axiom guard (every `.v` compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; per-theorem Print Assumptions census plus the authoritative coqchk kernel recheck; empty default whitelist; env-gated rc 111 honest skip; zero repository writes) | `bash cw.sh axiom-guard --repo <value> --out <value>` |
+| `flaky-guard` | `tools/flaky_guard.py` | Flaky quarantine guard, repair class E2-3 (an isolation probe classifies each red case order-dependent vs content-red; `--move` quarantines into `tests/advisory_roster.txt` with a loud ADVISORY-OUT; scope-checked against `repair-scope`, budget-capped at 2 per class per branch, ledgered; dry-run by default) | `bash cw.sh flaky-guard --detect --log <value> --json <value>` |
+| `repair-scope` | `tools/repair_scope.py` | Shared repair-scope exclusion table for the E2 guard family (frozen rows read at runtime; per-class writable faces plus budget registry; the single source every repair guard imports) | `bash cw.sh repair-scope --classes` |
+| `roster-resync` | `tools/roster_resync.py` | Roster count drift guard, repair class E2-2 (the run_tests.sh CASES roster is the only count authority; the doc_lint count lines of tests/README.md and README.md are re-derived one-way from it and synced in place; the roster file is never written; dry-run by default) | `bash cw.sh roster-resync --json <value>` |
+| `scheduler-lite` | `tools/scheduler_lite.py` | TODO-SEAT threshold trigger planner for the jargon tier-B auto gear (verdict quiet / due / blocked; ignition gated on the EF all-green marker; dry-run by design: zero apply, zero commit, zero network) | `bash cw.sh scheduler-lite --gap-ledger <value> --json` |
+| `auto-merge` | `tools/auto_merge.py` | X5 auto-merge gate judge plus safety rail (six-verdict mergeability enum over caller-gathered facts; five-sample calibration set pinned; head-branch whitelist, daily budget cap, append-only merge ledger; dry-run by default) | `bash cw.sh auto-merge --facts <value> --head-branch <value> --json <value>` |
+| `jargon-map-sync` | `tools/jargon_map_sync.py` | Jargon map sync, markdown table to seed JSON (the detector map's curated superset absorbed into the apply map; single-form admission; plan zero-write default, `--apply` writes the map) | `bash cw.sh jargon-map-sync --md <value> --map <value> --json <value>` |
+| `repair-weekly` | `tools/repair_weekly.py` | Repair-outcome ledger weekly distribution face, repair class E6 (ISO-week per-red outcome census plus class and ticket distributions; read-only over the ledger; `--record` appends one per-red row under the enforced vocabulary, `--apply` required) | `bash cw.sh repair-weekly --json <value>` |
+| `selfevolve-round` | `tools/selfevolve_round.py` | One deterministic mechanical round, cron face (plan → apply → hard-gate verify → auto-round commit → push → CI judge; frozen faces excluded; zero qualifying fixes = clean no-op pass; apply residue nonzero = fail-loud, no commit) | `bash cw.sh selfevolve-round --dry-run` |
+| `pin-repair` | `tools/pin_repair.py` | Provenance-pin drift repair for the jargon seed map, triage row R15 auto-repair executor (re-signs drifted provenance md5 pins behind the sync tool's IN-SYNC verdict; a red verify rolls back to the pre-apply bytes) | `bash cw.sh pin-repair --selftest` |
+| `learning-feedback` | `tools/learning_feedback.py` | Scheduling feedback face over the three standing ledgers (auto vs human-approved round split, approval rate, per-class breakdown, four-state repair outcome tally; missing or corrupt inputs land in the errors field, never guessed) | `bash cw.sh learning-feedback --selftest` |
+| `b-gate` | `tools/b_gate_audit.py` | B-level generalization threshold audit over the round records (3 instances, each grounded in at least 1 executed round; per-class readiness verdict and an explicit gap list; counts measured from the records, never inflated) | `bash cw.sh b-gate --selftest` |
+| `tree-audit` | `tools/tree_audit.py` | Read-only tree health audit over `.lean`/`.v` source trees (one JSON census: totals, declarations, the unsound-feature sweep, comment faces, per-directory and largest-file tables; zero subprocess, zero network, zero tree writes) | `bash cw.sh tree-audit --root <value> --json <value>` |
+
+Recursive-era verification and documentation faces (hosted outside the
+routing table): the meta-verification layer
+[tests/test_tool_selftests.py](tests/test_tool_selftests.py) enumerates
+every `tools/*.py` and requires a declared selftest face exiting rc 0, or a
+registered in-file exemption — a red, missing, or undeclared selftest fails
+the meta test and stays visible in every suite run (suite entry
+`bash tests/run_tests.sh t_tool_selftests`). The methodology canon
+[docs/recursive-evolution-whitepaper-v1.0-20261121.md](docs/recursive-evolution-whitepaper-v1.0-20261121.md)
+states the recursive-evolution laws, pillars and layer-tier invariants, and
+walks the recorded November 19-21, 2026 chain; the CI whitepaper of the
+recursive era
+[docs/ci-whitepaper-recursive-era-v1-20261116.md](docs/ci-whitepaper-recursive-era-v1-20261116.md)
+holds the failure-class taxonomy (R1-R19) and repair playbook for reds
+produced by the iteration machinery itself, backed by the machine table
+`docs/ci-triage-table.json`.
 
 ### Exit codes
 
@@ -160,7 +235,11 @@ bash cw.sh audit        --order order.txt --project _CoqProject --live-src src/ 
 
 The three v37 tools (`sentinel` / `wash-shape` / `unclog`) share a five-point
 interface discipline — workflows (dynamic-workflow subagents / background
-bash tasks) integrate against it without needing each tool's internals:
+bash tasks) integrate against it without needing each tool's internals.
+Points ①-⑤ below are the five interface points; the numbering continues
+through ⑥-⑨ as keyed usage material rather than further interface points —
+⑥ and ⑨ are embed blocks (recipes), ⑦ records the v38 extension notes,
+and ⑧ indexes the copy-paste example library and the whitepapers:
 
 **① --once/--loop dual mode**: `--once` runs a single inspection/loop pass,
 emits the report and exits (for inlining inside workflow steps); `--loop
@@ -366,7 +445,21 @@ prints a one-line usage hint per tool. It complements the existing
 `cli/rocqwash` router, which covers the pre-v29 modules — the v29-v32 tools
 live in directories with several generic entries each, where the module
 auto-router's ambiguity guard declines to guess, so this entry routes them by
-explicit tool name. Self-test: `bash tests/test_cw_entry.sh` (also part of
+explicit tool name. The title count (64 routes over 62 tools) is a derived
+face: the tool registry is the `cw.sh` case routes joined with the `tools/`
+entry points whose name does not start with `_` (the same registry doc-lint
+check 1 reconciles), and the doc-count guard (`tools/repair_scope.py`,
+class E2-4) re-derives it one way and repairs the title in place on drift.
+The repair never fires on its own — nothing in the standing automation
+invokes it: detection rides the guard's selftest live vectors (read-only)
+and the desk faces, `python -I -B tools/repair_scope.py
+--doc-count-detect` (report-first, zero write; rc 1 = drift remaining)
+then `--doc-count-apply` (the minimal count-token rewrite, budget-capped
+at 2 per branch, every repair ledgered in `docs/repair-ledger.jsonl`).
+The rewrite keys on the title's face pattern — a wording change that
+breaks the pattern surfaces at detect time as a reported missing face
+(a data state, rc 0, no action), never as a silent rewrite.
+Self-test: `bash tests/test_cw_entry.sh` (also part of
 `bash tests/run_tests.sh`).
 
 > **Chinese quick reference, full text** (original archive · bilingual transition

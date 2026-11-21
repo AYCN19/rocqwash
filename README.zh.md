@@ -1,36 +1,30 @@
-> **rocqwash** — operating as **rocqos**, the *Rocq operations system*: a self-evolving operations layer for Rocq-based constructive-proof repositories. Built on Rocq 9.3. The "rocq" prefix is used with attribution to the [Rocq prover](https://rocq-prover.org) and its community; rocqos is an independent operations layer, not affiliated with Inria and not part of the Rocq distribution.
+> **rocqwash** — operating as **rocqos**, the *Rocq operations suite*: a self-evolving operations layer for Rocq-based constructive-proof repositories. Built on Rocq 9.3. The "rocq" prefix is used with attribution to the [Rocq prover](https://rocq-prover.org) and its community; rocqos is an independent operations layer, not affiliated with Inria and not part of the Rocq distribution.
 
 # rocqwash — Coq/Rocq Constructive Proof Unblocking Engine
-> English: [README_EN.md](README_EN.md)
+> 中文镜像 · 英文正本：[README.md](README.md) · 英文项目页：[README_EN.md](README_EN.md)
 
 [![CI](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/ci.yml) [![macOS advisory](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/mac-verify.yml/badge.svg?branch=main)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/actions/workflows/mac-verify.yml) [![certification](https://img.shields.io/badge/certification-machine--checked-brightgreen)](docs/ci-whitepaper-recursive-era-v1-20261116.md) [![Rocq](https://img.shields.io/badge/Rocq-9.3.0-blue)](https://rocq-prover.org) [![tag](https://img.shields.io/badge/tag-rw--v0.1.1--20261117-blue)](https://github.com/hy7pc8gfmf-dotcom/rocqwash/tree/rw-v0.1.1-20261117)
 
-**rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. It is designed to **naturally surpass LLM/probabilistic approaches** in proof-unblocking: every diagnostic is a type-theoretic structural property, every fix is idempotent and replayable, every verification is independently reproducible.
+**rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. Where proof-unblocking is concerned, it replaces probabilistic guessing with mechanically verifiable checks: every diagnostic is a type-theoretic structural property, every fix is idempotent and replayable, every verification is independently reproducible.
 
 > **Core Principle**: 凡可用类型论结构性判据机检的，一律不交给概率模型猜。
 > (What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models.)
 
-> **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-effort / work stream-total-v1.0-20261111.md](docs/rocqwash-service-effort / work stream-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（conclude / close三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·pending execution未排程）· [docs/ops-sentinel-长驻手册-v1.0-20261112.md](docs/ops-sentinel-长驻手册-v1.0-20261112.md)（哨长驻运维手册 v1.0·部署/使用/轮转恢复）· [docs/勘形-multi-repo-Main仓适配-20261112.md](docs/勘形-multi-repo-Main仓适配-20261112.md)（路线图⑦ Main repository CI 形制勘察·适配分级即用 4／小改 3／中改 2）
->
-> **v42 快照（2026-11-11·conclude / close总档波·四席并铸＋集成席conclude / close）**: 总报告/演练实录/路线图三档入 docs/（服务层总览 v40 在库续用）·cw_paths v1.x 双件入 ConstructiveWorld·rocqwash v41 `c5df4d4`，三闸conclude / close基准：doc_lint drift=0／破坏面矩阵 17 判全过／总套零红（SKIP 不计红）。
->
-> **v57 snapshot (2026-11-13, evolve cycle-2 execution round, draft candidates 1+2+3 executed, integration close)**: translation echelon (candidate 1, norm-baseline-guided top-6 by per-file error mass): six tool faces Englished per the annotation standard card（`tools/wash_shape.py` 25→0 · `wrapper/wash_station.py` 19→0 · `tools/ci_triage.py` 19→0 · `tools/cw_doctor.py` 17→0 · `tools/unclog.py` 16→0 · `tools/doc_lint.py` 15→0, echelon error mass 111→0; five-field headers prepended, function-level comments and CLI output literals translated, identifiers/flags/schema/exit codes zero-change; zh archives 4 new `docs/zh/`（wash_shape/wash_station/cw_doctor/doc_lint）＋2 updated（ci_triage/unclog carried prior archives）; guard-anchor line sync in `tests/test_destructive_matrix.py`）; registry hygiene execution (candidate 2 residue, Set-repo side, the only worker authorized to write that repository): commit `987a1b5` "registry hygiene cycle-2: reanchor canonical form (541 rows) + orphan registration (3 pieces)" landed on the `hy7pc8gfmf-dotcom/ConstructiveWorld-Set` working main（registry_fix --apply over the fresh audit fix-plan with --anchor-src for the 541 reanchor rows plus registry_regen batch-anchor --apply registering the 3 orphan pieces; verified locally by this integration turn as commit + message; push/CI evidence rides the registry worker's report）; taxonomy supplement (candidate 3, evidence-not-reclassification discipline held): `tools/ci_triage.py` two-shape evidence-note vectors: the Main#3 runner-lost form（failure + zero red steps + build step hanging in_progress + logs-GET 404 BlobNotFound）annotated `runner-lost-candidate` with the family kept UNRECOGNIZED via the new canned fixture `tests/fixtures/ci_triage_runner_lost.json`（review-ledger §二 S3 verbatim transcription）, and the #10 GATE2-ATTEST-RED auth-state form annotated `auth-state-red-maintained`（UNREC maintained, no taxonomy inflation）; `docs/retro-triage-Main仓全史-20261112.md` evidence-note section; `--selftest` rc=0 with both vectors; integration close: norm_lint `--tree` fitness reconciliation against the v2 baseline: error 2377→2267 warn 1098→1092 cjk_ratio 0.214081→0.189684, files 153→154（the cycle-2 draft face enters the scan）: −111 error = the echelon's increment（six tools to zero）, +1 error = ledger vintage drift（the v56 committed `更新账.md` append raced the v2 snapshot, parent-blob 492 vs HEAD 493 verified, zero ledger writes this turn）, warn −21 on the echelon +8 the new draft face +1 the retro doc section +3 ledger vintage +3 the snapshot line's own date-stamp churn（v56 same convention）; v3 baseline landed same-name `docs/norm-lint-baseline-20261113.{json,md}`（v2 recoverable at git HEAD; byte-identical double rerun）; three-gate close: doc_lint consistent／suite green twice（81 cases 62 pass 0 red 1 skip ×2·skip=t_quad8_check）／`bash -n` 12 shell faces pass; selftest spot checks rc=0 ×5（wash_shape/cw_doctor/unclog/doc_lint/ci_triage）＋wash_station via `tests/test_scan_station.py` 9/9.
->
-> **v56 snapshot (2026-11-13, annotation-face Englishing round two, nine-tool translation close)**: three workers translated nine tool faces（`scan/dual_scan.py`·`tools/chain_graph.py`·`tools/ledger_sync.py`·`verify/erasure_classifier.py`·`verify/retrofit_gate7_irr.py`·`verify/verify_gate6.py`·`wash/comment_sweep.py`·`wash/cure_applier.py`·`wash/probe_engine.py`）per the annotation standard card（two-part header＋five fields; function-level comments and CLI output literals included this round）; interface boundary zero-change machine-verified（identifier/flag/schema/exit-code AST comparison vs HEAD, nine of nine identical）; jargon word-face census per `docs/jargon-to-standard-mapping-v1.md`: mapping-table findings on the nine tools 35→0（norm_lint authority）, raw occurrences 48→3 with the 3 residue hits all in exempt JSON-schema key positions（`"seat": "W9"` fixture data etc., table §1 identifier exemption）; zh archives: 7 new `docs/zh/` records（4 Chinese module docstrings verbatim-faithful: chain_graph/ledger_sync/verify_gate6/probe_engine · comment_sweep/cure_applier pre-restructuring docstring archives with honest provenance note · adaptation_gate7_irr three-line header comment archive · dual_scan/erasure_classifier carried zero CJK at HEAD, no archive due）; integration close: norm_lint `--tree` fitness reconciliation against the v53 baseline: error 2441→2377 warn 1036→1098, the nine tool faces all cured to zero findings（error −81 warn −20＝the round's fitness increment, fed to evolve cycle-2）, remainder＝13 v54/v55 new faces（error 5 warn 61）＋README/ledger append churn; v2 baseline landed same-name `docs/norm-lint-baseline-20261113.json`（v1 recoverable at git HEAD）; three-gate close: doc_lint consistent（drift=0）／suite green twice（81 cases 62 pass 0 red 1 skip ×2·skip=t_quad8_check）／`bash -n` 13 shell faces pass; selftest spot checks rc=0 ×3（`tools/chain_graph.py`·`verify/verify_gate6.py`·`wash/probe_engine.py`）; `norm_lint --file` ×9 error=0.
->
-> **v55 snapshot (2026-11-13, signal-to-task-brief generator round, constitution law-three body)**: tool `tools/evolve.py`（in substance a signal-to-task-brief generator; the module-title face `autonomous evolution engine v1` keeps its name pending rename adjudication; schema `rocqwash-evolve/1`: the harvest→derive→draft pipeline with the autonomous-execution gate kept at human review: harvest five signal classes by subprocess of the existing engines（norm-lint fitness vs the v53 baseline with the frozen surfaces excluded / sentinel one-shot dual-repo new ci-red events with seen-idempotence / suite last state / registry-audit accounts with increment / maintained UNRECOGNIZED sentinel events）→ derive fixed-rule scored candidates（impact × evidence / effort, evidence clamped 10）plus genetic standing candidates from the ledger lineage → draft the constitution three-law-preamble task brief to `--draft-out`; **draft-only spawn gate: never executes a candidate, never writes the repository**; adverse signals are data, exit 0/2/9）; `--selftest` rc=0（ten PASS vector groups）; round-one live cycle（demo record `docs/演示-evolve首轮-20261113.md`: real signals S1 norm account / S2 sentinel dual-repo / S3 registry audit, zero mocks; task-brief draft `docs/evolve-draft-cycle1-20261113.md`: candidates C1–C5, TOP1 = C1 red-triage score 12.0, curable-error reduction rate honestly 0.00%（frozen ledger excluded, error 1960→1960）plus the curable-basis measurement rule registered for the engine spec; companion engine draft `docs/draft-evolve-v55-20261113.md`; ops manual `docs/ops-evolve-手册-v1.0-20261113.md`: variation/selection/inheritance mapped to implemented machinery, draft-only safety invariants）; suite hook-up（`t_evolve` case in `tests/run_tests.sh` · cw.sh routes `evolve`, six-place sync, 28 tools · `doc_lint` `DEFAULT_HELP_CAP` 27→28 on the registered-tool precedent · counts synced to 63 in `tests/README.md`＋`README.md`）; three-gate close: doc_lint consistent（help_run=28/28·drift=0）／suite green twice（81 cases 62 pass 0 red 1 skip ×2·skip=t_quad8_check）／`bash -n` pass（cw.sh＋run_tests.sh）; norm_lint tree re-run against the v53 baseline: 152 files error 2441→2449 warn 1036→1106: the +8 error delta sits entirely on the frozen ledger's committed v54 append（`更新账.md` byte-identical to HEAD this turn, zero writes）; the two new engine/suite faces（`tools/evolve.py`·`tests/test_evolve.py`）carry 0 error 0 warn, the four new doc faces carry 0 error（warn = CJK residue data per the account-doc convention）.
->
-> **v54 snapshot (2026-11-13, contributor-isolation tooling close)**: protocol `docs/contrib-isolation-protocol-v1.0-20261113.md`（contributor-isolation protocol v1.0: isolation lanes with the Main `y_e1_gamma_nodes/` subdirectory and Set topic-branch precedents, `contrib/<lane>/` lane placement with the `# --- contrib lane rows below ---` separator segment, the four-check intake pipeline audit→norm→gate→merge over the routed registry/norm/union/fix tools, the PR#48 tail-zone regeneration rule, fetch-first/canonical-first two-stream etiquette）; tools `tools/contrib_intake.py`（read-only four-gate intake inspector, schema `rocqwash-contrib-intake/1`: registry union dry run / norm lint / gate expectation / lane isolation over a contribution face vs a base face, gates never short-circuit, BLOCK verdicts are data, exit 0/1/2/9）＋`tools/registry_regen.py`（merge-target books verbatim as the draft bottom + canonical `#R<seq>-<md5-8>` rows tail-appended in dependency order, dry run by default, `--apply` writes only under an explicit `--out`, schema `rocqwash-registry-regen/1`); both `--selftest` rc=0; verification record `docs/检验-PR48-intake四闸-20261113.md`（the four-check pipeline run for real on Set PR#48: audit findings as data total 564, lane norm target empty, 8/8 witness visibility satisfied with 2 build-unreachable order-row mismatches, merge-check A2 firing as the already-landed guard, landed books byte-equal to the prescribed regeneration shape in both books）; suite hook-up（`t_contrib_intake`/`t_registry_regen` cases in `tests/run_tests.sh` with self-supplemented minimal shells · cw.sh routes `contrib-intake`＋`registry-regen`, six-place sync, 27 tools · `doc_lint` `DEFAULT_HELP_CAP` 26→27 on the registered-tool precedent · counts synced to 62 in `tests/README.md`＋`README.md`）; three-gate close: doc_lint consistent（help_run=27/27·drift=0）／suite green twice（62 cases 61 pass 0 red 1 skip ×2·skip=t_quad8_check）／`bash -n` pass（cw.sh＋run_tests.sh）; norm_lint tree re-run against the v53 baseline: 146 files（+6, every new face error-level 0）error 2441→2446 warn 1036→1056: the whole delta sits on the frozen ledger `更新账.md`（byte-identical to HEAD md5 `d0059f5d…`, a vintage of the committed baseline, zero writes this turn）; the four new suite/tool faces carry 0 error 0 warn.
->
-> **v53 快照（2026-11-13·注释面规范化波·宪法三律〔①国际化/规范化/英文化＋翻译替换·黑话禁令 ②协作隔离 ③自主递归演进〕·四产出铸＋集成席conclude / close）**: 规范双件 `docs/annotation-standard-v1.0-20261113.md`（注释规范卡 v1.0：两段式头注 banner＋五字段 Purpose./Interface./Dependencies./Evidence./Exit-codes. 逐字·禁词面四族·双语过渡规则〔翻译替换为正·原中文入 .zh.md 留档而非删除·代码标识符/CLI 旗标/JSON schema 字段/退出码语义零改动〕·error/warn 分级与检查器 0/1/2/9 口径）＋`docs/jargon-to-standard-mapping-v1.md`（黑话→标准表述对照表 v1＝规范卡 Appendix A·142 活跃词面·语境注记逐行·标识符豁免登记在册）；检查器 `tools/norm_lint.py`（注释面规范化检查 report-only 首形：.py/.sh/.md 散文面五查〔头注形/黑话词面/CJK 残留/禁类/头注行数帽 30〕·schema rocqwash-norm-lint/1·findings 是数据退出码不升级·--selftest 六矢量·*.zh.md 与 docs/zh/ 归档面免扫）＋基线账 `docs/norm-lint-baseline-20261113.{json,md}`（全仓现状如实 files=140·error=2441·warn=1036·cjk_ratio=0.248597·同输入重跑字节恒同）；翻译面四件（入口面 `cw.sh`/`cli/rocqwash`/`README-cw.md` ＋核心四器 `tools/ci_triage.py`/`tools/pushci.py`/`tools/unclog.py`/`tools/cw_sentinel.py` 头注/帮助面英文化：标识符/旗标/schema 字段/退出码语义零改动·原中文入 `README-cw.zh.md`/`cli/rocqwash.zh.md`/`docs/zh/` 四器 docstring 原档共六件留档）；集成席四件（①norm_lint 全仓基线账＝全仓扫描无allowlist现状如实出账＋重跑字节恒同验证 ②t_norm_lint 挂接 tests/test_norm_lint.py 最小自测壳三判＋总套两遍绿＋doc_lint consistent＋bash -n 全 sh 过 ③cw.sh norm-lint 路由入册二十五工具六处同步＋README-cw.md 工具表补行＋doc_lint DEFAULT_HELP_CAP 24→25 换代〔norm_lint 入册后 25 器·帽溢出 wash/probe_engine.py 按 v38/v46 同 precedent·--jobs 实在 help 在册·幻引假阳性清偿〕＋doc_lint 归档面免扫〔*.zh.md 与 docs/zh/＝规范卡 §5.2 归档非正本面〕＋入口面叙述类词面清偿约 26 处〔work stream/effort / work stream/agent / agent 叙述·日期戳·agent·叙述义 route 改写〕④README v53 快照行＋CHANGELOG v53 补行＋黑话终扫在册＝余量如实登记：标识符引形类〔cw.sh route 路由名×5·README-cw.md 例命令/文档链接文件名日期×6·cli/rocqwash adaptation 子动词名×4〕＋四器行内注释残留〔jargon 2-14·cjk_ratio 0.11-0.19·模块 docstring 已英文化·函数 docstring 与行内注释属递归波消减基线〕）；三闸conclude / close：doc_lint consistent（help_run=25/25·drift=0）／总套两遍绿（60 例 59 过 0 failing 1 略×2·略=t_quad8_check）／`bash -n` 全过（cw.sh＋run_tests.sh）。
->
-> **v52 快照（2026-11-13·Main 新内容勘形＋R3 复发判例＋哨消费演练·三席铸＋集成席conclude / close）**: 勘形席 `docs/勘形-Main新内容预热-20261113.md`（承前档《勘形-multi-repo-Main仓适配-20261112.md》current state跟进·只读 api 取证 Main tip `d2e74c2b` 三面新内容：① `y_e1_gamma_nodes/` 子目录 92 件双点并存（未注册设计内）②unif limbs 波（`planb4_l3_limbs_discharge.v` 落 Live＋双册注册·三肢清偿）③gate8 permanent vacuity sentinel（9e381d61）·六轮取证书＋`ci_triage` 真发两炉（run#50 family=none 17 步全绿／run#46 `--logs` 两跳 family=B-netred·checkout couldn't find remote ref 直证）→**预热需求 10 条 verdict＝即用 2／小改 4／pending execution 4**）；判例席 `docs/判例-R3复发-route2tierA自愈-20261113.md`（判例复发实录·**服务层闭环首例**：Set route2-tierA run#301/302（sha `8f59c8f`）R3「相对路径 cwd=workdir 错位·驱动同秒全灭」复发：哨活逮（events.jsonl seq 58·04:38）→`ci_triage` classification A-content-red→同事 restore `bd8f38b` automatic recovery→run#303/304 双绿·首红至复绿 ≈20 分钟全环零人工·附 Set PR#48 八件重叠 blob 8/8 SAME 勘形预热注记）；演练席 `docs/演练-哨事件消费-20261113.md`（消费演练·零新功能纯实跑：哨长驻产账（`_log/sentinel_v48/` JSONL 事件流）消费端三连：`render_events` ledger (data surface) / record list (generic prose)化（events_total=64·bad_lines=0）＋事件分析（kind/family 分布·活逮清单·UNREC 维持件清点）＋state.json seen reconcile与 report.json 轮史续接核验（round1→3 递进·600s 节奏活证）·与哨长驻同窗并行终态 65 事件·任务书给形三处不符如实登记按实取为准）；集成席三件（README v52 快照行／总套钦令两遍绿／docs 清单查勘＝无独立清单件·三件经由本快照行具名登记＝v49-v51 同法·更新账.md 禁触）；三闸conclude / close：doc_lint `--help-cap 24` consistent／总套两遍绿（59 例 58 过 0 failing 1 略×2·略=t_quad8_check）／`bash -n` 全过（run_tests.sh）。
->
-> **v51 快照（2026-11-12·哨韧性修＋triage 精化＋监督壳部署件波·三席铸＋集成席conclude / close）**: 哨韧性修 `tools/cw_sentinel.py`（v50 round10 IncompleteRead 传输层崩〔更新账.md:3999〕器修两轨：①韧性层传输层瞬断有界重试 `--net-retries` 缺省 3 发退避 5s/15s/45s〔TRANSIENT_TRANSPORT_ERRORS＝IncompleteRead/RemoteDisconnected/BadStatusLine/ConnectionError/socket.timeout·区别于 HTTPError 状态码面〕耗尽 9 fail-loud 保持·非瞬态零吞原样上抛；②loop 层逐源fallback＝异常源本轮 skip＋source-error 事件响亮注记·宁跳轮不崩驻·seen 未记下轮重报宁重复不丢件·once 直通 fail-loud rc 9 语义不动；selftest ⑭⑮ 两矢 canned 注入〔canned IncompleteRead 真崩栈同形 371261/72721·loop 401 双轮 rc0 对照 once 9〕）；triage 精化 `tools/ci_triage.py`（复核ledger (data surface) / record list (generic prose) token 二分限形落地：E 变体结论位校验：GATE2-ATTEST-RED/判定=CLEAN 真执行 token 在〔dump 行滤除后〕＝认证态红形留 UNRECOGNIZED 不充谱＝run#10 转正验收判〔器判=复核conclusion·v50 E 假阳性清偿〕·coqchk 步 success 完走形同留 UNREC·banner-absent 形保持 E〔run#7/8/20/26〕；KEY_LOG_PATTERNS 增 GATE2-ATTEST-RED/R4 覆盖划分/appendix 缺 三枚＝五 token 全员在册＋dump 行滤除〔青色脚本回显/组指令行非真执行行〕`--no-dump-filter` 可关＋`--offline` 顶层 job_logs 扩展位 canned 日志注入；`tests/fixtures/ci_triage_gate2_only_{cancelled,failure}.json` 增 canned job_logs 真执行行誊录〔run#7 banner-absent 真行＋2 dump 行／run#10 ATTEST-RED 真行＋1 dump 行＝证据陷阱原形在册〕）；监督壳部署件 `examples/sentinel_supervisor.sh`（哨长驻崩溃自动重启补偿壳正典部署形·重启帽/×2 指数退避/state 续接注记/定时收兵钩位留空/rc triage〔0 轮尽自停·2 用法错不进重启环·9 其余退避计帽〕·路径全参数化零硬编码）＋`docs/ops-sentinel-长驻手册-v1.0-20261112.md` §1.6 监督壳部署形＋`examples/README.md` 双语登记；集成席三件（挂载确认＝三席新矢全经既有 t_cw_sentinel/t_ci_triage `--selftest` 在册例直达·run_tests.sh 零新挂载位仅注释登记／README v51 快照行／真发抽验＝watcher `--once` 真网络 rc=0 韧性修后现形）；三闸conclude / close：doc_lint `--help-cap 24` consistent／总套两遍绿（59 例 58 过 0 failing 1 略×2）／`bash -n` 全过（监督壳＋run_tests.sh）。
->
-> **v50 快照（2026-11-12·UNREC 14 事件classification交叉验证集成波·三席铸＋集成席conclude / close）**: 工装席 triage 修（`tools/ci_triage.py` logs 端点两跳 415 修法〔Accept application/vnd.github+json→302 签名 URL→零 Authorization 第二跳 200·probe (tool citation) / check (generic sense)实测；415/403/404 原码入证据〕＋gate2-only 连坐形入谱 E 变体〔红步集 ⊆ {gate2+上传族} 且纯 gate2 红步在册·前置 build/coqchk 非 content failing·出处 Main retro #7/#8/#20/#26 banner-absent 连坐四发＋#10 认证态红一发〕＋`tests/fixtures/ci_triage_gate2_only_{cancelled,failure}.json` 真形两件〔retro ledger (data surface) / record list (generic prose) run#7/#10 逐字段誊录·selftest〔十〕直挂〕＋`docs/retro-triage-Main仓全史-20261112.md` §八增补）；复核席 `docs/复核-UNREC-14事件-20261112.md`（watcher 8＋retro 6＝14 件逐件人工classification独立 ground truth·conclusion分布（14 行）A×1/B×1/E×8/UNREC 维持×4·gate2-only 步名形二相性：GATE-BANNER-ABSENT 连坐×4 run→E／GATE2-ATTEST-RED 认证态×1 run（Main#10·parser CLEAN 公理=0·R4 划分破）→UNREC 人工指认）；验证席 `docs/验证-Main档案位实用化-20261112.md`（Main 档案位三步全过：fetch 直连 rc=0＋tip 三面对齐 `2f793c4`＋registry_audit 五账出账＋pushci --dry-run 真仓两跑幂等字节恒同零副作用）；集成席交叉验证（修后器面 `--repo/--run --logs` 线上重判 8 distinct run／14 ledger (data surface) / record list (generic prose)行：**一致率 run 级 5/8·行级 10/14**·分歧 3 run 4 行逐件在册不强行收敛：S1 Set#284 run 级谱外置顶遮蔽 mac 主红〔job 级器面=A 与复核一致〕·S2 Set#286 classification序 E>B 取先遮蔽 mac 主红〔job 级器面=B 一致〕·S6/R4 Main#10 E 变体假阳性＝GATE2-ATTEST-RED 认证态红形被步名子集规则吞＋GATE-BANNER-ABSENT 青色 dump 行假确证〔真执行行=判定=CLEAN 公理总数=0〕＝复核ledger (data surface) / record list (generic prose) §三-2 陷阱面器面复现：分歧即classification谱下一候选：scan 层 dump 行滤除／GATE2-ATTEST-RED 等五 token 入册／认证态红形留 UNREC 禁充谱）；三闸conclude / close：doc_lint `--help-cap 24` consistent／总套两遍绿／`bash -n` 全过。
->
-> **v49 快照（2026-11-12·Main 仓适配小改＋实测conclude / close波·四席并铸＋集成席conclude / close）**: fixtures agent Main 形两件入 tests/（`tests/fixtures/ci_triage_main_coq93.json`＝Main CI 9.3 coq93.yml 真形 16 步 canned＋`tests/fixtures/pushci_scenarios/s7_main_dry_run.json`＝branch main 直推路线 dry-run）·消费面＝`tools/ci_triage.py --selftest`〔九〕Main 形判读矢（兼容表 15 行机检＋E 两件齐）＋`tests/test_pushci.py` 七场景壳（t_ci_triage/t_pushci 既有例已挂登记·run_tests.sh 零改动）；retro ledger (data surface) / record list (generic prose) `docs/retro-triage-Main仓全史-20261112.md`（Main 全史 369 runs 实取·现役 coq93 31 条逐判＋coq#340 桥件·红炉并集 19 事件·与哨reconcile 30/30 零分歧）；K3b 复采样 `examples/baselines/audit-k3b-20261112.json`（probe_chain_s=190.719·perf-profile 律 1 噪声带首采 [165.202, 190.719]·K=3 无收益两发稳健结论）；总报告 v2.0 `docs/rocqwash-service-campaign-total-v2.0-20261112.md`（v1.0 基座全保留＋v43-v48 六波增补章）；三闸conclude / close：doc_lint `--help-cap 24` consistent／破坏面矩阵 17 判全过／总套 59 例 58 过 0 failing 1 略（t_quad8_check 四仓副本群正本缺卷·SKIP 不计红）。
+> **服务层总览**: [docs/service-layer-overview-v1.0-20261111.md](docs/service-layer-overview-v1.0-20261111.md)（三链一图全景＋器面索引）· [docs/rocqwash-service-campaign-total-v1.0-20261111.md](docs/rocqwash-service-campaign-total-v1.0-20261111.md)（v35-v41 七波累账总报告）· [docs/ops-live-run-log-20261111.md](docs/ops-live-run-log-20261111.md)（conclude / close三闸实录）· [docs/roadmap-v43-plus-20261111.md](docs/roadmap-v43-plus-20261111.md)（v43+ 候选池·决策料非排程令：①②④⑦ 已执行——④ 见下方 v47 增补、①②⑦ 见下方 v48 增补；③⑤⑥⑧ 待指派）· [docs/ops-sentinel-长驻手册-v1.0-20261112.md](docs/ops-sentinel-长驻手册-v1.0-20261112.md)（哨长驻运维手册 v1.0·部署/使用/轮转恢复）· [docs/勘形-multi-repo-Main仓适配-20261112.md](docs/勘形-multi-repo-Main仓适配-20261112.md)（路线图⑦ Main repository CI 形制勘察·适配分级即用 4／小改 3／中改 2）
+
+单行快照，最新在上；每条链接该轮的 docs/ 件面。完整条目原文见本文件的 git
+历史（CHANGELOG.md 收录 v35-v39、v53、v58-v66）。
+
+- **v57（2026-11-13·evolve cycle-2 执行轮）**: 六个器面按注释规范卡英文化（norm_lint 错误质量合计 111→0），新增两条 triage 证据注记矢量且未识别红类不充谱；norm_lint v3 基线落档（`docs/norm-lint-baseline-20261113.{json,md}`）；文档检查、全量套件、shell 语法检查全过。
+- **v56（2026-11-13·九器翻译收口）**: 九个器面翻译完成，接口边界机检零改动（AST 对照 9/9 恒同），新增 zh 存档 7 件；norm_lint 对照 v53 基线 error 2441→2377（`docs/norm-lint-baseline-20261113.json`）。
+- **v55（2026-11-13·信号→任务书生成器）**: `tools/evolve.py`（draft-only 闸：永不执行候选、永不写仓）；首轮真信号实跑（`docs/演示-evolve首轮-20261113.md`）。
+- **v54（2026-11-13·贡献者隔离工装）**: 规程 `docs/contrib-isolation-protocol-v1.0-20261113.md`、只读四闸收件检查器 `tools/contrib_intake.py`、缺省 dry run 处方重生器 `tools/registry_regen.py`；管线在 Set PR#48 实跑。
+- **v53（2026-11-13·注释面规范化地基）**: 注释规范卡 v1.0、黑话→标准对照表 v1、`tools/norm_lint.py` 检查器、首个全仓基线账（`docs/norm-lint-baseline-20261113.{json,md}`）；完整条目见 [CHANGELOG.md](CHANGELOG.md)。
+- **v52（2026-11-13·Main 勘形＋首个活体闭环）**: Main 新内容勘形；一次 CI 回归被分类并由同事提交 ≈20 分钟自动复绿、全环零人工（`docs/判例-R3复发-route2tierA自愈-20261113.md`）；哨事件消费演练。
+- **v51（2026-11-12·哨韧性轮）**: 传输层有界重试退避＋逐源 fallback、triage E 变体结论位校验、监督壳部署形（`examples/sentinel_supervisor.sh`）。
+- **v50（2026-11-12·14 事件分类交叉验证）**: triage 器对照人工复核，run 级一致率 5/8、行级 10/14；分歧逐件在册，识别红类谱不充谱。
+- **v49（2026-11-12·Main 仓适配轮）**: Main CI 形 fixtures＋triage/pushci 消费面、Main 全史 triage 账（369 runs）、战役总报告 v2.0（`docs/rocqwash-service-campaign-total-v2.0-20261112.md`）。
+- **v42（2026-11-11·conclude/close 总档轮）**: 总报告、演练实录、路线图三档入 docs/（链接见上方总览行）；基线绿（文档一致性 drift=0、破坏面矩阵 17/17、全量套件零红）。
 
 ## Architecture: Three Chains in One
 
@@ -42,6 +36,24 @@ Logic Chain (criteria + gates + calibration standards)
 Derivation Chain (input → wash → verify → land → certify → push)
 ```
 
+## 本页术语
+
+下述词汇在全文直接使用不再解释。更完整定义：
+[docs/zh/architecture.md](docs/zh/architecture.md) 与英文项目页
+[README_EN.md](README_EN.md)（"What it is" 与 "Why" 两节）。
+
+- **Prop 泄漏（Prop leakage）** — 语句仍以 `Prop` sort 陈述、未落到 Set 载体谓词形；扫描器把此类行标为 RED station。`Set` 与 `Prop` 在 Coq/Rocq 类型论中互斥，故此区分是机检事实而非风格偏好。
+- **洗（wash）** — 用逐字精确串替换＋计数断言把被标记语句改写到正典 Set 载体形（Qlt→QltT、Qle→QleT'、==→QeqT 等）；构造上幂等，第二遍零改动。
+- **QeqT / QltT / QleT'** — 洗的目标 Set 载体谓词形；Qeq/Qlt/Qle 为标准 Prop 载体原形。QeqT 目标拒绝 Qeq 等式改写——Set/Prop 互斥的推论。
+- **-face（面）** — 工具操作的 `.v` 文件区域：statement-face＝语句行，annotation-face＝注释/头注文本，区别于证明体。
+- **station（站）** — 一处被报告的位置：扫描器/探针列出的（名称， 行）对，交人工裁决；RED station＝判为 Prop 泄漏。
+- **probe（探针）** — 试编译：候选文件在 world 内以 `rocq c` 编译，按退出码分拣为可洗／生而净／红因各类。
+- **gate4 / gate6 / gate7** — 正典路径上的编号检查点：gate4＝注释卫生；gate6＝普查包装（`verify/verify_gate6.py`）；gate7＝英文化适配（CJK→0＋五字段头注帽）。
+- **W13** — generation-gap 世代缝隙指纹探针（`seam/seam_probe.py`）：按四种机制指纹分类洗后语句仍红的原因，逐一映射到处方。
+- **R4** — 提取侧三源审计：裸全提取 magic 计数、探针双面、五式 grep 三源须全净（提取侧合取现为部分完成——见英文项目页诚实边界册）。
+- **N=N** — 名表断言：洗前读出 N 条语句名，断言洗后文件按同序恰有这 N 条名（不符即退出码 2）。
+- **world（世界）** — 带自身依赖闭包的源树自足副本；探针对着 world 编译，多世界（UNION v2）清单逐世界冻结 md5 树。
+
 ## Components
 
 | Module | Purpose | LLM Surpass |
@@ -52,18 +64,18 @@ Derivation Chain (input → wash → verify → land → certify → push)
 | `verify/` | R4 three-source (bare magic=0 + probe dual-face + five-pattern grep) | LLM cannot enumerate full closure |
 | `seam/` | Generation-gap seam probe (W13 four-mechanism auto-classification) | Mechanical supply-signature Check vs LLM guess |
 | `certify/` | Two-tier freeze system + push-window four-criteria + UNION v2 | LLM cannot replace deterministic process |
-| `watch/` | CI monitoring + pin-IP push + thermal guard | Deterministic workflow vs LLM instability |
+| `watch/` | CI monitoring + pin-IP push (push pinned to a fixed remote IP) + thermal guard | Deterministic workflow vs LLM instability |
 | `tools/` | cpu_guard.sh thermal wrapper + shared utilities | Hardware-aware process control |
 | `wrapper/` | Adapter layers for frozen / out-of-repo pieces: `coqc_shim.sh` + `gate7_probe.sh` (gate7 probe chain → local `rocq c`, guard-wrapped launcher) + `guard.sh` + `scan_station.py` | Canonical argv/env adaptation; criteria stay solely with the original tools |
 | `scan/scan_v4_token.py` | Token-level qualified-identifier census (bare vs dotted constructor references, binder-aware) — closes the mixed-line masking blind spot of line-level filters | Token census is exhaustive at token granularity; line-level `grep -v` drops lines that carry both forms |
-| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: twenty-four deterministic idempotent rewrite patterns — the legacy five (bridge-wrapped rewrite, goal-opening downshift, opaque-reflexivity cure, qualified successor form, NatLe supply bridge), nine v1.1 statement-face patterns from the 20261103 wash-effort / work stream field report (Qle/Qlt carrier-face downshifts in token and %-scoped notation forms, refl bridge opener, Import-shadow direct-face qualification as two exclusive variants with fail-loud conflict detection, NatLe premise lift + intros-tail-guarded drop wrap), five v1.2 S07-lineage adaptation patterns from the W66 field report (parameterized-shell drop with a :=-binding-right guard, notation rebind line-insertion, @field projection-bridge bare form, predicate-face convergence token map whose targets must be the consuming supply lemma's conclusion constant names, and a report-only binder-shell station for the manual binder surgery), and five v1.3 patterns for the CI #178 extraction-defect families (E3 generic-interface instantiation: abstract-carrier application stations rewritten to a concrete-carrier specialization shim generated after the last import; E2 record polymorphic field: the un-annotated field-consumption Definition restated as an explicit-type-annotated middleware with downstream arity adaptation and a report-only sweep-completion station), applied by a face/proof-scoped regex engine with per-face token guards plus a line-insert and a station-report engine | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
+| `wash/cure_pack.json` + `wash/cure_applier.py` | Consumer-cure canonical pack: 25 deterministic idempotent rewrite patterns (measured at pack v1.4.1: the legacy five plus statement-face, S07-lineage and CI-extraction-defect families), applied by a face/proof-scoped regex engine with per-face token guards plus a line-insert and a station-report engine; the per-pattern inventory is the pack itself (`wash/cure_pack.json`) | Exact trigger + template + second-run-zero-change assertion; LLM-generated rewrites are not idempotently replayable |
 | `scan/dual_scan.py` | Dual-scanner cross-check driver: runs scan_v4_token + mac_stmt_scan over the same candidate files and reports per-file station counts plus a diff (only_v4 / only_stmt / common) — turns shared scanner blindness (application/type-face red causes) into a mechanical fact per file instead of a silent assumption | Both scanners' exit codes and station line-sets are mechanical; scanner consensus is reported, never blessed as completeness |
 | `verify/erasure_classifier.py` | Extraction-erasure station classifier: six clusters with disposition suggestions, CAPTURE cross-check, markdown adjudication ledger | Deterministic pattern rules over extraction artifacts; advisory output for human adjudication, never a verdict |
 | `wash/probe_engine.py` | Batch closure-compatibility probe engine: candidates TSV × world dir → per-file `rocq c` under cpu_guard → rc triage (WASHABLE / BORN-CLEAN / red-cause classes incl. MISSING_LIB) → idempotent ledger JSON | Real exit codes + red-cause regex classification are mechanical; LLM guesses at closure compatibility |
 | `tools/chain_graph.py` | Multi-ledger merger → missing-lib chain-root graph (dependents count + root self-washability) → TOP ranking markdown + JSON | Union/override merge and dependents counting are deterministic; LLM loses track across ledgers |
 | `wash/comment_pack.json` + `wash/comment_sweep.py` | Comment-domain sweep sidecar (does not impersonate a statement-face pattern): nested-comment-and-string-aware state machine, comment-domain flag-word exchange (review-bias word → neutral English term), data-driven leading-header replacement with a five-field shape spec; every application mechanically asserts the code-line-equality projection (comment-strip per the w7 criterion) and second-run zero-change | Comment-domain-only edits are provable by the code-strip projection; LLM edits leak into code silently |
 | `tools/ledger_sync.py` | Probe-ledger × status-ledger TSV sync: E1 dedup / E3 ghost / MD5-drift / NO-MD5 / generation-divergence findings (v2.1: recognizes the freeze-ledger `items` subkey shell and filters bare-dict metadata keys loudly; divergence-carrying records are surfaced per-entry with an idempotent row note, never silently dropped) / loud column validation → new TSV, idempotent | Fail-loud bookkeeping with deterministic row upgrades; LLM silently drops or duplicates rows |
-| `tools/pushci.py` | Push-CI one-shot pipeline orchestrator: five stages — preflight emission gate (dyld doctor verdict + net-probe stable window + optional gate4 comment pre-scan; the no-emission-on-single-probe discipline is codified here), push (retry ×3 + ghproxy re-route for https://github.com/ remotes; pushed_sha = ls-remote remote tip), CI watch (status-only polling — a frozen updated_at is not a zombie verdict), heal (ci_triage family route: NETRED/coqchk-skipped → stable-window → rerun, capped; content-red is never auto-fixed; off-table families are never auto-rerun), verdict ± PR merge — seven-state verdict (`success|fix-content|toolchain|unstable|heal-exhausted|gate4-block|dry-run`), exit codes 0/1/2/9; orchestrates the v35 four tools via subprocess, zero new engines; fully offline-injectable (`--injector`/`--git-caller`/`--sleep-scale`) | Deterministic state machine over mechanical gates; LLM cannot be trusted to decide emission windows or auto-heal policies |
+| `tools/pushci.py` | Push-CI one-shot pipeline orchestrator: five stages (preflight emission gate, push, CI watch, heal, verdict with optional PR merge), seven-state verdict (`success\|fix-content\|toolchain\|unstable\|heal-exhausted\|gate4-block\|dry-run`), exit codes 0/1/2/9; orchestrates the v35 four tools via subprocess, zero new engines; offline-injectable (`--injector`/`--git-caller`/`--sleep-scale`); per-stage detail in `tools/pushci.py --help` and the v36 addendum below | Deterministic state machine over mechanical gates; LLM cannot be trusted to decide emission windows or auto-heal policies |
 
 ## Repository Layout / 目录结构
 
@@ -83,30 +95,30 @@ rocqwash/
 ├── seam/                 # seam_probe.py W13 四机制指纹探针 — W13 four-mechanism fingerprint probe
 ├── certify/              # freeze_manifest.py 两层冻结 + push_gate.py 推窗四判据/UNION v2 + frozen8.py 八件冻结名单 — two-tier freeze + push-window gate + UNION v2 + frozen-eight registry
 ├── watch/                # watch.py CI 监控/钉 IP 推送/ls-remote 确证 — CI monitoring / pin-IP push / ls-remote confirm
-├── tests/  workflows/    # 自测套件（86 例）/ CI 工作流占位 — test suite (86 cases) / CI placeholder
+├── tests/  workflows/    # 自测套件（87 例）/ CI 工作流占位 — test suite (87 cases) / CI placeholder
 └── README.md  LICENSE  .gitignore
 ```
 
 > 状态快照 2026-11-01（巡检打磨席 rqsup4）：`scan/`、`names/`、`tools/cpu_guard.sh`、
 > `cli/`、`examples/`、`docs/`、`tests/`（34 例自测套件）已实现并实测；`wash/`
-> （`wash_engine.py` ledger (data surface) / record list (generic prose)洗引擎＋`_abl1_wash.py` 战役件＋`world_hook.py` 世界基校验钩子·
-> 五课①）、`verify/`（`verify_vo.py` four-point pass criterion＋战役工装＋`verify_gate6.py` gate6 薄包装·
-> 五课③）、`seam/`（`seam_probe.py` W13 四机制指纹probe (tool citation) / check (generic sense)）、`certify/`（`freeze_manifest.py`
+> （`wash_engine.py` 基于 ledger 的洗引擎＋`_abl1_wash.py` 战役件＋`world_hook.py` 世界基校验钩子）、
+> `verify/`（`verify_vo.py` four-point pass criterion＋战役工装＋`verify_gate6.py` gate6 薄包装）、
+> `seam/`（`seam_probe.py` W13 四机制指纹probe (tool citation) / check (generic sense)）、`certify/`（`freeze_manifest.py`
 > 两层冻结清单＋`push_gate.py` 推窗四判据/UNION v2 深件·agent rqwash2＋`frozen8.py`
 > 八件冻结名单机检）、`watch/`
 > （`watch.py` CI 监控/钉 IP 推送/ls-remote 确证·零 route 结构保证）、`tools/`
-> （`select_audit.py` 选件审计器·五课②）、`recipes/`（`S07_projection_reanchor_E5.md`
-> 五课④＋`ENBIG7_same_domain_collision_PW1.md` 五课③·判例处方件双件）、`wrapper/`
+> （`select_audit.py` 选件审计器）、`recipes/`（`S07_projection_reanchor_E5.md`＋
+> `ENBIG7_same_domain_collision_PW1.md`·判例处方件双件）、`wrapper/`
 > （适配层族：gate7 probe (tool citation) / check (generic sense)链 `coqc_shim.sh`＋`gate7_probe.sh`·cpu_guard 直通
 > `guard.sh`·scan 指认包装 `scan_station.py`·agent rqadapt·三判例验收站
-> `precedent_station.py`·五课⑤ rqsup4）已落地；
+> `precedent_station.py`·rqsup4）已落地；
 > `verify/` 统一入口已conclude / close（显式子动词分派 `cli/rocqwash verify gate4|verify_vo|verify_gate6|retrofit`·
 > rqadapt 落三子动词 2026-10-31·rqsup4 四巡补 verify_gate6 20261101）；`certify/`
 > 同款显式分派 `cli/rocqwash certify freeze|push_gate|frozen8`（rqsup4 五巡补
 > frozen8 20261101）——冻结件零改动；R4 提取侧三源为待办。
 > v30 增补（20261103·探测战役工具化轮）：`wash/probe_engine.py` 批量闭包相容
 > probe (tool citation) / check (generic sense)引擎＋`tools/chain_graph.py` 多账合并链根图＋`tools/ledger_sync.py`
-> probe×状态ledger (data surface) / record list (generic prose)同步器（E1 去重/E3 幽灵/列校验 fail-loud）——承 W13/W25/ledger (data surface) / record list (generic prose)
+> probe×状态ledger同步器（E1 去重/E3 幽灵/列校验 fail-loud）——承 W13/W25/ledger
 > v2 三原型 1:1 泛化，全路径参数化零硬编码；自测套件扩至 40 例全绿。
 > v31 增补（20261103·shape normalization战役实战判例工具化轮）：`wash/cure_pack.json` v1.1
 > 五式→十四式（Qle/Qlt 载体面降移两形·refl 桥开门·Import 遮蔽直通面双变体
@@ -149,7 +161,7 @@ rocqwash/
 > 注入内建（--injector/--git-caller/--sleep-scale·零真网络零真 push）；自测
 > 套件扩至 48 例。
 > v37 增补（20261111·实时动态三器轮·用户令：配合工作流实时动态提供清洗、shape normalization、
-> 排障、clear blockages堵塞）：`tools/cw_sentinel.py` 实时动态哨（三路信号源 CI runs/ledger (data surface) / record list (generic prose)
+> 排障、clear blockages堵塞）：`tools/cw_sentinel.py` 实时动态哨（三路信号源 CI runs/ledger
 > 链根/buildlog 词面→JSONL 事件流·once/loop 双模·classification全权在 ci_triage·链根
 > 全权在 chain_graph·零动作是缺省）＋`tools/wash_shape.py` shape-normalizing tool·正典形五洗
 > 流水（词面/token/头注/行尾/锚五洗全 subprocess 编排既有引擎·plan 缺省零写盘·
@@ -289,7 +301,18 @@ rocqwash/
 > [docs/en/architecture.md](docs/en/architecture.md)；贡献流程见
 > [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## Getting Started (5 minutes)
+## 递归演进层：自验证、MCP 与能力索引
+
+2026-11-19 起工具链闭合自身环路：审计自己的树、修复自己的红例、验证自己的验证器。
+
+- **递归代工具族**（`tools/`）：`tree_audit.py`（只读树健康普查·`.v`/`.lean` 源树）、`axiom_guard.py`（全仓公理守卫·逐定理一枚 `Print Assumptions` 判决）、`auto_round.py`（轮次准入/提交/账本/回滚）、`scheduler_lite.py`（TODO-SEAT 阈值触发器）、`repair_scope.py`（修复面共享排除名册）、`repair_weekly.py`（修复结果周分布）、`selfevolve_round.py`（单发确定性机械轮：普查→apply→验证→提交→push→CI 判读）。
+- **元验证层**：`tests/test_tool_selftests.py` 枚举 selftest 宇宙——57 器非 `_` 前缀 `tools/*.py`（60 件减 3 件 `_` 助手）——逐器运行声明的 `--selftest`，红、缺失或未豁免即响亮失败；套件挂载为 `t_tool_selftests` 例。
+- **方法论正典**：[docs/recursive-evolution-whitepaper-v1.0-20261121.md](docs/recursive-evolution-whitepaper-v1.0-20261121.md)——七律、七支柱、§7 2026-11-19/21 链实录。
+- **CI 红例分类表**：[docs/ci-triage-table.json](docs/ci-triage-table.json) v1.5——19 类（R1–R19），上方递归代 CI 白皮书徽章背后的分类表。
+- **逐器契约面**：[docs/CAPABILITY-INDEX.md](docs/CAPABILITY-INDEX.md)——一器一条目，每条七字段（路径、一行用途、调用形、可复制示例、imports、网络面、SKIP 面）。
+- **MCP stdio 服务器**：`tools/mcp_server.py`——stdio 上换行分隔 JSON-RPC 2.0、三方法、42 能力名册（冻结 `SELFTEST_ROSTER_COUNT`；`tests/t_mcp_face.py` `EXPECTED_TOOLS = 42` 机检）；协议面与安全面见 [docs/mcp.md](docs/mcp.md)。
+
+## Quick Start
 
 Prerequisites (three lines):
 
@@ -314,7 +337,7 @@ First verification — comment-hygiene gate on a clean sample:
 
 ```bash
 python3 verify/gate4_comment_guard.py --file tests/fixtures/gate4_clean_sample.v
-# [gate4ext] ... 件数=1  PASS=1  FAIL=0  REVIEW(人工复核)=0  UNREADABLE=0 ...
+# [gate4ext] ... 件数=1 (files=1)  PASS=1  FAIL=0  REVIEW(人工复核)=0 (human-review items)  UNREADABLE=0 ...
 ```
 
 Token-level successor-qualification census (finds bare constructor references
@@ -324,26 +347,18 @@ that line-level filters miss):
 python3 scan/scan_v4_token.py --file path/to/file.v --json census.json
 ```
 
-## Platform Support
-
-| Platform | Support | Notes |
-|---|---|---|
-| macOS | full | `tools/cpu_guard.sh` thermal gate uses `pmset` (macOS-only); queue/nice lanes are POSIX |
-| Windows | Git Bash + python3 | light-load direct runs; bring your own thermal policy if needed (`cpu_guard.sh` thermal reading degrades gracefully without `pmset`) |
-| Linux | same path as Windows | unverified by this project's CI — reported as-is, no claims |
-
-## Quick Start
 
 ```bash
 # Scan a .v file for Prop leakage — via the unified CLI entry
 cli/rocqwash scan --file my_proof.v
 
-# Extract statement names and assert N=N against baseline
+# Wash with an explicit exact-string ledger (idempotent, fail-loud, no guessing); writes my_proof_washed.v
+cli/rocqwash wash my_proof.v --patch wash_ledger.json --out my_proof_washed.v
+
+# Extract statement names and assert N=N against the washed file
 cli/rocqwash names my_proof.v --names-out names.txt
 cli/rocqwash names my_proof.v --compare my_proof_washed.v --expect 487
-
-# Wash with an explicit exact-string ledger (idempotent, fail-loud, no guessing)
-cli/rocqwash wash my_proof.v --patch wash_ledger.json --out my_proof_washed.v
+# --expect N asserts the extracted statement-name count equals N (487 is an example value)
 
 # Green-verdict four-pack on a compiled pair (magic / freshness / exit / log)
 cli/rocqwash verify verify_vo --v my_proof.v --vo my_proof.vo --rc 0 --log build.log
@@ -352,7 +367,7 @@ cli/rocqwash verify verify_vo --v my_proof.v --vo my_proof.vo --rc 0 --log build
 cli/rocqwash seam --file my_proof.v
 
 # Two-tier freeze manifest (tier1 per-file md5 + tier2 manifest md5)
-cli/rocqwash certify freeze freeze . --out manifest.json
+cli/rocqwash certify freeze freeze . --out manifest.json   # first freeze = the certify sub-verb; second = the action name (the pair is freeze|check)
 cli/rocqwash certify freeze check . --manifest manifest.json
 
 # Push-window four-criteria gate (judges the window, never pushes)
@@ -365,7 +380,7 @@ cli/rocqwash certify push_gate union-check --manifest union.json
 # CI in-flight monitoring (offline evidence mode; online read-only query also available)
 python3 watch/watch.py ci --runs-json runs.json
 
-# Pin-IP push wrapper (dry-run by default; masked output; --yes actually pushes)
+# Pin-IP push wrapper: pins git push to a fixed pre-resolved remote address — --pin-ip rewrites the remote URL host to that IP, --url-host keeps the original name as the Host header — so the push does not depend on DNS resolution at push time (dry-run by default; masked output; --yes actually pushes)
 python3 watch/watch.py push --repo . --remote origin --pin-ip 140.82.113.3 --url-host github.com
 
 # Post-push ls-remote double-read confirmation
@@ -380,14 +395,27 @@ make -C examples demo
 
 # Compile with thermal guard
 bash tools/cpu_guard.sh -Reg /tmp/my_reg -Front 0 -Mid 1 -- rocq c -native-compiler no -Q . "" my_proof.v
+# -Reg <dir> = a dedicated queue-registration lane; -Front/-Mid = ladder-queue tier cut-offs (FRONT tier runs nice 0, MID tier nice 10) — parameter reference: docs/en/architecture.md §6
 ```
 
+
+## Platform Support
+
+| Platform | Support | Notes |
+|---|---|---|
+| macOS | full | `tools/cpu_guard.sh` thermal gate uses `pmset` (macOS-only); queue/nice lanes are POSIX |
+| Windows | Git Bash + python3 | light-load direct runs; bring your own thermal policy if needed (`cpu_guard.sh` thermal reading degrades gracefully without `pmset`) |
+| Linux | same path as Windows | unverified by this project's CI — reported as-is, no claims |
+
 ## Seven Canonical Steps (不可跳)
+
+第 3 步的洗建立在一个类型论事实之上：`Set` 与 `Prop` 两 sort 在 Coq/Rocq 中互斥，
+故 Prop 载体语句是改写到 Set 载体谓词形，而非原位编辑（见「本页术语」）。
 
 1. **cp source into sandbox** (write-isolation)
 2. **Three-state triage** (true-wash / bridge-retain=exception-registry / UNCERTAIN=probe-first)
 3. **Canonical face-mapping wash** (Qlt→QltT / Qle→QleT' / ==→QeqT / bare=→Id+id_cong / nat≤→NatLe)
-4. **Compile verification** (RC=0 / magic 436f712100015ff4 / vo newer than v / PA Closed / coqchk Axioms:none)
+4. **Compile verification** (RC=0 / magic `436f712100015ff4`＝`.vo` 文件头魔数 / vo newer than v / PA Closed＝Print Assumptions 审计无公理 / coqchk Axioms:none)
 5. **R4 three-source conjunction** (bare full-extraction magic=0 + probe dual-face magic=0 + five-pattern grep=0)
 6. **gate7 English化 adaptation** (CJK→0 + five-field header 30-line cap)
 7. **N=N name-table assertion** (mac_stmt_names.py ordinal full-equality) + freeze md5
@@ -411,6 +439,11 @@ rocqwash is designed to **complement** LLM agents, not compete with them:
 **Collaboration pattern**: LLM understands → rocqwash diagnoses → LLM fixes → rocqwash verifies → LLM commits → rocqwash certifies.
 
 ## Why rocqwash Surpasses LLM/Probabilistic Approaches
+
+The comparison below is a capability statement, not a benchmark claim; each row
+names the mechanical mechanism that replaces a guess. It is the mechanical half
+of the complement split above: the LLM agent proposes and fixes, rocqwash
+verifies and certifies.
 
 | Capability | LLM | rocqwash |
 |-----------|-----|----------|

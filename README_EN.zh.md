@@ -1,16 +1,18 @@
 # rocqos (rocqwash) - the Rocq operations suite: constructive-proof unblocking and repository operations
 
-> Chinese main page: [README.md](README.md)
+> English main page: [README.md](README.md) · Chinese mirror: [README.zh.md](README.zh.md)
 
 **rocqwash** is a mechanical diagnosis, washing, verification, and certification toolchain for Coq/Rocq constructive mathematics projects. Diagnoses are type-theoretic structural checks, fixes are idempotent and replayable, and verdicts come from exit codes, byte-level artifacts, and kernel-level census rather than from self-reported statements.
 
-> **Core principle**: What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models. (The motto appears in Chinese on the [main page](README.md).)
+> **Core principle**: What can be mechanically verified via type-theoretic structural criteria shall never be delegated to probabilistic models. (The Chinese rendering of the motto is on the [Chinese mirror page](README.zh.md).)
 
-Status snapshot: 2026-11-15, public repository, release tag `rw-v0.1.0-20261114` (GPG-signed, GitHub-verified). Formal name **rocqos**, the Rocq operations suite; the repository link name stays `rocqwash` (one repo, two names). Main advances continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
+Status snapshot: 2026-11-21, public repository, release tag `rw-v0.1.1-20261117` (GPG-signed, `git verify-tag` good signature). Formal name **rocqos**, the Rocq operations suite; the repository link name stays `rocqwash` (one repo, two names). Main advances continuously; the code and its `--help` output are the source of truth. The per-tool capability contract surface is [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md); the component-level architecture document is [`docs/en/architecture.md`](docs/en/architecture.md) (Chinese mirror: [`docs/zh/architecture.md`](docs/zh/architecture.md)).
+
+**Terminology**: this document's "...-face" terms denote the region of a `.v` file a tool operates on: statement-face = statement lines, annotation-face = comment/header text, as opposed to proof bodies. In scanner output, a "station" is one statement of the scanned file, reported by its declaration name; several findings on the same statement count as one station.
 
 ## What it is
 
-- **scan/**: statement-face Prop-leakage scanner (`scan/mac_stmt_scan.py`; this document's "...-face" terms denote the region of a `.v` file a tool operates on: statement-face = statement lines, annotation-face = comment/header text, as opposed to proof bodies; five frozen families P1-P5 plus three negative-capture families, full channel definitions in [`docs/en/architecture.md`](docs/en/architecture.md) §4, with four-way RED/WHITELIST/EXEMPT/CAPTURE classification), token-level qualified-identifier census (`scan/scan_v4_token.py`), and a dual-scanner cross-check driver (`scan/dual_scan.py`) that reports per-file scanner disagreement as data.
+- **scan/**: statement-face Prop-leakage scanner (`scan/mac_stmt_scan.py`; five frozen families P1-P5 plus three negative-capture families, full channel definitions in [`docs/en/architecture.md`](docs/en/architecture.md) §4, with four-way RED/WHITELIST/EXEMPT/CAPTURE classification), token-level qualified-identifier census (`scan/scan_v4_token.py`), and a dual-scanner cross-check driver (`scan/dual_scan.py`) that reports per-file scanner disagreement as data.
 - **names/**: statement-name ordinal extractor with an ordered-equality assertion (`names/mac_stmt_names.py`): N names in, N names asserted, exit 2 on mismatch.
 - **wash/**: canonical ledger wash engine (`wash/wash_engine.py`, exact-string plus count assertion, idempotent replay), closure-compatibility probe engine (`wash/probe_engine.py`), consumer-cure pack (`wash/cure_pack.json` + `wash/cure_applier.py`, 24 deterministic rewrite patterns), and a comment-domain sweep sidecar (`wash/comment_sweep.py`).
 - **verify/**: green-verdict four-pack checker (`verify/verify_vo.py`: exit code, log, `.vo` magic bytes, `.vo` freshness), gate4 comment guard (`verify/gate4_comment_guard.py`), gate6 census wrapper (`verify/verify_gate6.py`), gate7 English adaptation (`verify/retrofit_gate7_irr.py`).
@@ -50,9 +52,9 @@ Logic Chain (criteria + gates + calibration standards)
 Derivation Chain (input -> wash -> verify -> land -> certify -> push)
 ```
 
-Every compile is wrapped by the thermal guard `tools/cpu_guard.sh` (a ladder queue with a macOS pmset thermal gate and exit-code passthrough, so that long compile runs cannot overheat the host machine). The canonical wash sequence has seven steps (sandbox copy, three-state triage, canonical face-mapping wash, compile verification, three-source extraction audit, gate7 English adaptation, N=N name-table assertion plus freeze md5); each step must pass before the next, and any failure is recorded as work-in-progress rather than re-labeled.
+Every compile is wrapped by the thermal guard `tools/cpu_guard.sh` (a ladder queue with a macOS pmset thermal gate and exit-code passthrough, so that long compile runs cannot overheat the host machine). The canonical wash sequence has seven steps (sandbox copy, three-state triage [true-wash / bridge-retain = exception registry / UNCERTAIN = probe-first], canonical face-mapping wash, compile verification, three-source extraction audit, gate7 English adaptation, N=N name-table assertion plus freeze md5); each step must pass before the next, and any failure is recorded as work-in-progress rather than re-labeled.
 
-`cli/rocqwash` routes a module directory by its generic per-file entry (argparse interface): exactly one generic `.py` (a file whose name does not start with `_`) is auto-routed, `_`-prefixed internal tools are never auto-run, and exit codes pass through unchanged. Component-level details, per-file status, and the exit-code table are in [`docs/en/architecture.md`](docs/en/architecture.md); the workflow-integration interface (sentinel presets, push-CI orchestration, offline injectors) is in [`README-cw.md`](README-cw.md), and an MCP stdio server is documented in [`docs/mcp.md`](docs/mcp.md).
+For each module directory, if it contains exactly one generic `.py` (a file whose name does not start with `_`), `cli/rocqwash <module>` routes to that file, passing arguments and exit codes through unchanged; `_`-prefixed internal tools are never auto-run. Component-level details, per-file status, and the exit-code table are in [`docs/en/architecture.md`](docs/en/architecture.md); the workflow-integration interface (sentinel presets, push-CI orchestration, offline injectors) is in [`README-cw.md`](README-cw.md), and an MCP stdio server is documented in [`docs/mcp.md`](docs/mcp.md).
 
 ## Installation
 
@@ -74,7 +76,7 @@ On a stock Windows box, put a real CPython on `PATH` before the first run: the `
 
 ### Clean mode quickstart
 
-On a machine without the canonical Coq/Rocq environment, tools whose work depends on that environment report the missing requirement explicitly in English (`requires canonical environment: ...`) instead of failing with an interpreter-level error. Selection is by environment variable:
+Throughout this document, the "canonical environment" (likewise the "canonical machine") means this project's sanctioned reference macOS environment — the ConstructiveWorld production face, consumed by tools through hardcoded defaults or auto-detection and itemized in [`docs/clean-mode-manual-20261114.md`](docs/clean-mode-manual-20261114.md) §2; the suite-green claims in this document apply to that environment (see [Testing](#testing)). On a machine without the canonical Coq/Rocq environment, tools whose work depends on that environment report the missing requirement explicitly in English (`requires canonical environment: ...`) instead of failing with an interpreter-level error. Selection is by environment variable:
 
 ```bash
 ROCWASH_CLEAN=1 python3 tools/<tool>.py ...   # one invocation
@@ -91,6 +93,8 @@ First run: scan the bundled demo source for statement-face Prop leakage (measure
 python3 scan/mac_stmt_scan.py --file examples/demo_prop_leak.v
 # RED stations: ['demo_eq_self', 'demo_eq_sym', 'demo_le_eq', 'demo_le_self', 'demo_mixed']
 ```
+
+A "station" is one statement of the scanned file, reported by its declaration name; several findings on the same statement count as one station.
 
 First verification: the comment-hygiene gate on the bundled clean sample (measured on this clone, 2026-11-14, rc=0, PASS=1 FAIL=0):
 
@@ -125,7 +129,7 @@ cli/rocqwash verify verify_vo --v my_proof.v --vo my_proof.vo --rc 0 --log build
 cli/rocqwash seam --file my_proof.v
 
 # Two-tier freeze manifest (tier1 per-file md5 + tier2 manifest md5)
-cli/rocqwash certify freeze freeze . --out manifest.json
+cli/rocqwash certify freeze freeze . --out manifest.json   # first freeze = the certify sub-verb; second = the action name (the pair is freeze|check)
 cli/rocqwash certify freeze check . --manifest manifest.json
 
 # Push-window four-criteria gate (judges the window, never pushes)
@@ -138,7 +142,7 @@ cli/rocqwash certify push_gate union-check --manifest union.json
 # CI in-flight monitoring (offline evidence mode; online read-only query also available)
 python3 watch/watch.py ci --runs-json runs.json
 
-# Pin-IP push wrapper (dry-run by default; masked output; --yes actually pushes)
+# Pin-IP push wrapper: pins git push to a fixed pre-resolved remote address — --pin-ip rewrites the remote URL host to that IP, --url-host keeps the original name as the Host header — so the push does not depend on DNS resolution at push time (dry-run by default; masked output; --yes actually pushes)
 python3 watch/watch.py push --repo . --remote origin --pin-ip 140.82.113.3 --url-host github.com  # example value; resolve GitHub's current IP at use time
 
 # Post-push ls-remote double-read confirmation
@@ -149,11 +153,12 @@ make -C examples demo
 
 # Compile with thermal guard
 bash tools/cpu_guard.sh -Reg /tmp/my_reg -Front 0 -Mid 1 -- rocq c -native-compiler no -Q . "" my_proof.v
+# -Reg <dir> = a dedicated queue-registration lane; -Front/-Mid = ladder-queue tier cut-offs (FRONT tier runs nice 0, MID tier nice 10) — parameter reference: docs/en/architecture.md §6
 ```
 
 ## Tool map
 
-The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one entry per registered tool; the index is the live authority and carries the full seven-field contract and a version-anchor duty). The table therefore does not enumerate every file under `tools/`: `tools/mcp_server.py`, the MCP stdio server (24 capabilities, registered in [`docs/mcp.md`](docs/mcp.md)), and newer tools below the table, and `tools/cpu_guard.sh`, the thermal wrapper, is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. Invocation lines are restored from each tool's argparse or usage text, with prefixes normalized to `python3` (the documented usage strings mix `python` and `python3` - use the interpreter available in your environment); "network" marks the five tools whose source text contains transport-class imports or network-class git subcommands, which therefore need a network window and remote access rights.
+The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one entry per registered tool; the index is the live authority and carries the full seven-field contract and a version-anchor duty). The table does not list every file under `tools/`: `tools/mcp_server.py`, the MCP stdio server (42 capabilities, registered in [`docs/mcp.md`](docs/mcp.md)), and the newer-wave tools appear below the table. `tools/cpu_guard.sh`, the thermal wrapper, is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. Invocation lines are restored from each tool's argparse or usage text, with prefixes normalized to `python3` (the documented usage strings mix `python` and `python3` - use the interpreter available in your environment); "network" marks the five tools whose source text contains transport-class imports or network-class git subcommands, which therefore need a network window and remote access rights.
 
 | File | Purpose | Example invocation | Network |
 |---|---|---|---|
@@ -185,9 +190,11 @@ The table condenses [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md) (one 
 | `tools/vacgen.py` | Lean vacuity probe skeleton generator with a four-layer shape-recognition engine; its zero-compile skeleton-casting mode runs without a Lean environment, the compile-verification leg needs a Lean toolchain | `python3 tools/vacgen.py --in <value> --force` | zero |
 | `tools/wash_shape.py` | shape-normalizing five-stage pipeline for annotation-face text (header maps and presets, multi-round loop) | `python3 tools/wash_shape.py --file <value> --apply` | zero |
 
-`tools/cpu_guard.sh` is the thermal wrapper used around compiles and is documented in [`docs/en/architecture.md`](docs/en/architecture.md) §6. The Lean-side procedure for vacgen is in [`docs/vacgen_sop.md`](docs/vacgen_sop.md) with an English page at [`docs/en/vacgen.md`](docs/en/vacgen.md). Further reading: bundled full-chain demo [`examples/README.md`](examples/README.md), suite reference [`tests/README.md`](tests/README.md), contribution guide [`CONTRIBUTING.md`](CONTRIBUTING.md), changelog [`CHANGELOG.md`](CHANGELOG.md).
+The Lean-side procedure for vacgen is in [`docs/vacgen_sop.md`](docs/vacgen_sop.md) with an English page at [`docs/en/vacgen.md`](docs/en/vacgen.md). Further reading: bundled full-chain demo [`examples/README.md`](examples/README.md), suite reference [`tests/README.md`](tests/README.md), contribution guide [`CONTRIBUTING.md`](CONTRIBUTING.md), changelog [`CHANGELOG.md`](CHANGELOG.md).
 
-Newer waves through tag `rw-v0.1.0`: the language-engine stack landed in the engine-body batch. `tools/ai_flavor.py` runs a 36-face AI-flavor wording battery plus an em-dash battery; `tools/ai_flavor_apply.py` plans advisory rewrites through handoff or HTTP providers (HTTP deny-by-default); `tools/jargon_apply.py` rewrites jargon to standard terms from the 62-entry map; `tools/termbase.py` is a read-only terminology lookup over the seed termbase; `tools/i18n_pipeline.py` orchestrates the zh-en four-linkage pipeline with a policy pre-check; `tools/i18n_translate.py` is the model-stage handoff emitter and ingester with nine-key per-segment annotation; `tools/i18n_verify.py` orchestrates the verification matrix plus the human ten-point gate; `tools/auto_round.py` keeps the round ledger with dual-gear admission, rollback, and salvage. `tools/exp_port.py` appends to the experience ledger (schema rocqwash-exp/1, idempotent), and `tools/periscope.py` collects six-source peripheral intelligence. Engine registration and growth rules live in [`seeds/engines/ENGINES.md`](seeds/engines/ENGINES.md); the per-tool contract face stays [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md).
+Newer waves through tag `rw-v0.1.0`: the language-engine tools below all landed through that tag. `tools/ai_flavor.py` runs a 36-face AI-flavor wording battery plus an em-dash battery; `tools/ai_flavor_apply.py` plans advisory rewrites through handoff or HTTP providers (HTTP deny-by-default); `tools/jargon_apply.py` rewrites jargon to standard terms from the 159-entry map (`seeds/jargon/jargon-map.json`: the 62-entry seed prefix plus the md-table superset the sync absorbed); `tools/termbase.py` is a read-only terminology lookup over the seed termbase; `tools/i18n_pipeline.py` orchestrates the zh-en four-linkage pipeline with a policy pre-check; `tools/i18n_translate.py` is the model-stage handoff emitter and ingester with nine-key per-segment annotation; `tools/i18n_verify.py` orchestrates the verification matrix plus the human ten-point gate; `tools/auto_round.py` keeps the round ledger with dual-gear admission, rollback, and salvage. `tools/exp_port.py` appends to the experience ledger (schema rocqwash-exp/1, idempotent), and `tools/periscope.py` collects six-source peripheral intelligence. Engine registration and growth rules live in [`seeds/engines/ENGINES.md`](seeds/engines/ENGINES.md); the per-tool contract face stays [`docs/CAPABILITY-INDEX.md`](docs/CAPABILITY-INDEX.md).
+
+Waves through tag `rw-v0.1.1` and after: the MCP roster-expansion work streams lifted the stdio server from 25 to 42 capabilities (stream 1 at commit `a07403e` adds six read/plan capabilities, stream 2 at commit `2220dca` adds eleven read/plan/partial capabilities, registered additively in [`docs/mcp.md`](docs/mcp.md) section 1). The suite carries a meta-verification layer (`tests/test_tool_selftests.py`, suite case `t_tool_selftests`, landed at commit `3f781a1`): it enumerates every `tools/*.py` tool (57 non-helper tools at this writing: 60 `.py` files, 3 `_`-prefixed helpers excluded) and requires each to hold a declared `--selftest` face exiting 0 or a registered `# selftest-exempt` basis, so a missing self-proof fails loudly in every suite run. The CI failure classes of the recursive-iteration era are documented in [`docs/ci-whitepaper-recursive-era-v1-20261116.md`](docs/ci-whitepaper-recursive-era-v1-20261116.md), whose machine-readable companion is the triage table [`docs/ci-triage-table.json`](docs/ci-triage-table.json) (schema `rocqwash.ci-triage-table/1`, version 1.5, classes R1-R19); the methodology canon of the recursive chain itself is [`docs/recursive-evolution-whitepaper-v1.0-20261121.md`](docs/recursive-evolution-whitepaper-v1.0-20261121.md). `tools/tree_audit.py` audits a `.lean`/`.v` source tree in one read-only JSON line (file, byte, and line totals; declaration counts split into theorem and definition-family faces; an unsound-feature sweep of nine registered keys, from `sorry` through `ofReduceBool`; zero network, zero subprocess, `python -I` safe), with a `--selftest` face. The capability index entered its regen generation (2026-11-20): the census outputs (`census.md`, `census-tools.json`, `flag-shape.json`) were re-scanned at anchor `0765d671` (59 `.py` files censused) beside the builder `docs/census_tools_build.py`, and the index now carries a four-number cross-table that binds each standing count to its own time point and basis; at this writing it holds 56 tool entries against 60 `.py` files under `tools/`.
 
 ## Testing
 
