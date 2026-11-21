@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T06:20:20Z",
+  "generated_at_utc": "2026-11-21T07:21:26Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "311d32d4ce906f51da031c59e1170e0123a88e5b",
-  "py_files_censused": 60,
+  "git_head_recorded": "",
+  "py_files_censused": 61,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,11 +25,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 58,
+   "with_argparse": 59,
    "with_subcommands": 1,
-   "zero_network": 50,
-   "needs_special_environment": 34,
-   "invocation_reconstructed": 58,
+   "zero_network": 51,
+   "needs_special_environment": 35,
+   "invocation_reconstructed": 59,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -5005,6 +5005,135 @@
    "selftest_token_face": true
   },
   {
+   "name": "lean_axiom_sweep.py",
+   "bytes": 44571,
+   "sha256": "f107eacf528220577073215666875a2214e0576d8b8070bb23ea8546a494cd06",
+   "lines": 942,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 29,
+    "head": "lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.\nPurpose.  Make \"0 sorry 0 axiom\" claims mechanically reproducible per theorem:\n  the declaration face of the target .lean file(s) is enumerated, one checker\n  file per target imports the target and prints `#print axioms <decl>` per\n  declaration, the checker runs in the target's own lake environment\n  (`lake env lean`) or against a direct lean binary, and the output is\n  parsed into axiom sets and classified: CLEAN / BENIGN-STANDARD (subset of\n  propext, Classical.choice, Quot.sound) / SORRY-ALARM (sorryAx) /\n  C"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "per-theorem axiom-closure classifier for Lean claim audits (one JSON line; rc 112 without a usable Lean toolchain)"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--root"
+      ],
+      "kwargs": {
+       "metavar": "FILE|DIR",
+       "help": "target .lean file or directory (required unless --selftest)"
+      }
+     },
+     {
+      "flags": [
+       "--json"
+      ],
+      "kwargs": {
+       "metavar": "OUT",
+       "help": "write the stdout JSON payload to OUT as well"
+      }
+     },
+     {
+      "flags": [
+       "--allow-axiom"
+      ],
+      "kwargs": {
+       "action": "append",
+       "default": "<dynamic>",
+       "dest": "allow_axioms",
+       "help": "extra axiom name admitted into BENIGN-STANDARD (repeatable; sorryAx is never admitted)"
+      }
+     },
+     {
+      "flags": [
+       "--timeout"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": "<dynamic>",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the frozen offline vector group and exit"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--root",
+     "--json",
+     "--allow-axiom",
+     "--timeout",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "json",
+     "os",
+     "re",
+     "shutil",
+     "subprocess",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [
+     {
+      "kind": "lean_lake_mathlib",
+      "count": 95,
+      "samples": [
+       ".lean",
+       "LEAN_OUT_CLEAN",
+       "LEAN_OUT_CUSTOM",
+       "LEAN_OUT_GHOST",
+       "LEAN_OUT_MIXED"
+      ]
+     }
+    ],
+    "needs_special_environment": true
+   },
+   "invocation": {
+    "form": "python tools/lean_axiom_sweep.py [--root] [--json] [--allow-axiom] [--timeout] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
    "name": "lean_sweep.py",
    "bytes": 57056,
    "sha256": "6c035f5c20a5fc5d856e9e880373da6202fa0a0b86630bdfb843908788c5659a",
@@ -5473,15 +5602,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 103772,
-   "sha256": "9a9c498cd3c788dd6fe1539f4da0e50b060c3b3637574d489e31d722d8817d88",
-   "lines": 2009,
+   "bytes": 106775,
+   "sha256": "a1df2e2d097d5c376f47b5d211886585f4c49beb035aa4e1659b1bb199a3e2f0",
+   "lines": 2056,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 43 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 44 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
    },
    "argparse": {
     "imported": true,
@@ -5560,7 +5689,7 @@
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 16,
+      "count": 23,
       "samples": [
        ".lean",
        "Lean",

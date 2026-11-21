@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  43-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  44-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -16,9 +16,14 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   the
   same increment), the MCP roster-expansion work stream 2's eleven
   read/plan/partial capabilities (the M2 ticket, survey table 2 rows 7-17:
-  all eleven INDEX entries already standing), and the tree_audit
+  all eleven INDEX entries already standing), the tree_audit
   registration increment's one capability (tree_audit, a read-only audit
-  face over the landed census CLI tools/tree_audit.py), each new capability
+  face over the landed census CLI tools/tree_audit.py), and the
+  axiom_sweep registration increment's one capability (axiom_sweep, a
+  read/plan face over the landed Lean axiom-closure classifier
+  tools/lean_axiom_sweep.py; its spec description is transcribed from the
+  tool's frozen CLI contract header, the INDEX entry awaiting its own
+  lane), each new capability
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
   symbiosis INDEX entry line lands with the integration increment).
 
@@ -31,7 +36,7 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   separate --help invocation of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 43 expected names in registration order,
+  3  tools/list -> exactly the 44 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -51,6 +56,9 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
         as two positional LEDGER.json paths in one call)
      4d tree_audit {"selftest": true} -> exit code: 0 with the
         fixture-vector green face (the selftest final PASS line)
+     4e axiom_sweep {"selftest": true} -> exit code: 0 with the
+        fixture-vector green face (the canned offline vectors; zero
+        toolchain launch)
   5  default deny -> tools/call net_probe returns isError true and names
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child)
   6  error faces -> resources/list -32601; unknown tool -32602; unknown
@@ -120,6 +128,9 @@ EXPECTED_TOOLS = [
     # the tree_audit registration increment (one read-only audit face over
     # the landed census CLI tools/tree_audit.py)
     "tree_audit",
+    # the axiom_sweep registration increment (one read/plan face over the
+    # landed Lean axiom-closure classifier tools/lean_axiom_sweep.py)
+    "axiom_sweep",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -139,6 +150,15 @@ EXPECTED_VACGEN_ARGS = [
 # --selftest, main()); the tree_audit schema properties must match this
 # list one-to-one, exactly the EXPECTED_VACGEN_ARGS discipline.
 EXPECTED_TREE_AUDIT_ARGS = ["root", "json_out", "selftest"]
+
+# Frozen axiom_sweep vector: the full argparse flag face of
+# tools/lean_axiom_sweep.py (root, json, allow_axiom, selftest, timeout)
+# in the registration contract's arg_map order; the axiom_sweep schema
+# properties must match this list one-to-one, exactly the
+# EXPECTED_TREE_AUDIT_ARGS discipline (the contract order differs from the
+# argparse declaration order by the last two flags).
+EXPECTED_AXIOM_SWEEP_ARGS = ["root", "json_out", "allow_axiom", "selftest",
+                             "timeout"]
 
 
 def _child_env():
@@ -238,6 +258,9 @@ def main():
             {"jsonrpc": "2.0", "id": 12, "method": "tools/call",
              "params": {"name": "tree_audit",
                         "arguments": {"selftest": True}}},
+            {"jsonrpc": "2.0", "id": 13, "method": "tools/call",
+             "params": {"name": "axiom_sweep",
+                        "arguments": {"selftest": True}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -333,6 +356,29 @@ def main():
                          "per-field {value, basis} annotations and the "
                          "top-level scan_face field")
 
+        # Probe 3d: axiom_sweep schema-face vectors (schema shape mirrors
+        # the tool's real argparse flag face one-to-one; the spec
+        # description declares the five-class classifier face and the
+        # rc-112 toolchain gate).
+        as_spec = by_name.get("axiom_sweep") or {}
+        as_props = list((as_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if as_props != EXPECTED_AXIOM_SWEEP_ARGS:
+            fails.append("probe3d axiom_sweep schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_AXIOM_SWEEP_ARGS, as_props))
+        if "root" in ((as_spec.get("inputSchema") or {}).get("required")
+                      or []):
+            fails.append("probe3d axiom_sweep root must stay optional (the "
+                         "tool usage-errors rc 2 without --root; --selftest "
+                         "runs without it)")
+        as_desc = as_spec.get("description") or ""
+        for token in ("BENIGN-STANDARD", "SORRY-ALARM", "CUSTOM-AXIOM-ALARM",
+                      "UNPARSED", "112"):
+            if token not in as_desc:
+                fails.append("probe3d axiom_sweep description should name "
+                             "the classification face token %s" % token)
+
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
         text3 = _result_text(r3)
@@ -377,6 +423,18 @@ def main():
         elif "exit code: 0" not in text12 or "tree_audit green" not in text12:
             fails.append("probe4d tree_audit exit 0 + fixture-vector green "
                          "face missing\n%s" % text12)
+
+        # Probe 4e: axiom_sweep selftest live call (canned fixture vectors,
+        # zero network, zero toolchain launch, zero repository writes)
+        r13 = _by_id(lines, 13)
+        text13 = _result_text(r13)
+        if not r13 or r13.get("result", {}).get("isError"):
+            fails.append("probe4e axiom_sweep selftest should not be an "
+                         "error\n%s" % text13)
+        elif "exit code: 0" not in text13 \
+                or "lean_axiom_sweep green" not in text13:
+            fails.append("probe4e axiom_sweep exit 0 + fixture-vector green "
+                         "face missing\n%s" % text13)
 
         # Probe 5: default deny negative sample
         r6 = _by_id(lines, 6)
@@ -441,7 +499,7 @@ def main():
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
     sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (7 probe groups, "
-                     "%d capabilities, 4 live-call spot checks)\n"
+                     "%d capabilities, 5 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

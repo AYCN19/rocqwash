@@ -1,7 +1,7 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 43 registered capabilities,
+  Context Protocol (MCP) stdio transport: 44 registered capabilities,
   each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
   Default deny for network and heavy capabilities (`sentinel_status`,
   `net_probe`, `ci_triage`, `pushci_status`): a failed tool result
@@ -43,10 +43,11 @@ ALLOW_NET_ENV = "ROCQWASH_MCP_ALLOW_NET"
 TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
-# additions, eleven M2 ticket additions, plus the tree_audit registration
-# increment); a roster change re-freezes this value and EXPECTED_TOOLS in
-# tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 43
+# additions, eleven M2 ticket additions, the tree_audit registration
+# increment, plus the axiom_sweep registration increment); a roster change
+# re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py in the
+# same round.
+SELFTEST_ROSTER_COUNT = 44
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1539,8 +1540,54 @@ TOOL_SPECS = [
             "face; the tree is read-only and the only write is the "
             "caller-named --json path.  --selftest runs the fixture vectors "
             "offline on temporary directories (takes no other flag).  Exit "
-            "codes: 0 green, 1 red (selftest, scan or report-write "
-            "failures), 2 usage (missing or non-directory --root)."
+         "codes: 0 green, 1 red (selftest, scan or report-write "
+         "failures), 2 usage (missing or non-directory --root)."
+        ),
+    },
+    # ---- the axiom_sweep registration increment: one read/plan face over
+    # the landed per-theorem Lean axiom-closure classifier
+    # (tools/lean_axiom_sweep.py --root/--json/--allow-axiom/--timeout/
+    # --selftest, its real argparse flag face).  Additive after the block
+    # above: the existing specs and schemas untouched.
+    {
+        "name": "axiom_sweep",
+        "kind": "cli",
+        "cli": os.path.join("tools", "lean_axiom_sweep.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("root", "--root"),
+            ("json_out", "--json"),
+            ("allow_axiom", "--allow-axiom"),
+            ("selftest", "--selftest"),
+            ("timeout", "--timeout"),
+        ),
+        "schema": _object_schema(
+            {
+                "root": {"type": "string", "description": "target .lean file or directory (tool-required for the sweep face; --selftest runs without it); CLI flag --root"},
+                "json_out": {"type": "string", "description": "additionally write the single-line JSON report (schema rocqwash-axiom-sweep/1) to this path (every counter field as {value, basis} plus the top-level scan_face coverage statement); CLI flag --json"},
+                "allow_axiom": {"type": "array", "description": "extra axiom names admitted into BENIGN-STANDARD, repeatable (sorryAx is never admitted); CLI flag --allow-axiom"},
+                "selftest": {"type": "boolean", "description": "run the frozen offline vector group on canned fixtures and exit (takes no other flag); bare CLI flag --selftest"},
+                "timeout": {"type": "integer", "description": "per-probe subprocess timeout seconds (default 600); CLI flag --timeout"},
+            }
+        ),
+        "description": (
+            "Per-theorem axiom-closure classifier for Lean claim audits "
+            "(tools/lean_axiom_sweep.py): enumerates the line-start "
+            "theorem/lemma/def names of the target, emits one checker file "
+            "that imports the target and prints `#print axioms <decl>` per "
+            "declaration, runs it via the target's own lake environment or "
+            "a direct lean binary, and classifies per declaration: CLEAN, "
+            "BENIGN-STANDARD (subset of propext / Classical.choice / "
+            "Quot.sound, the wave-2 three-axioms adjudication), "
+            "SORRY-ALARM (sorryAx, never whitelisted), CUSTOM-AXIOM-ALARM "
+            "(any other name, verbatim), UNPARSED (honest). Zero network "
+            "face (local lean/lake subprocesses only); the audited tree is "
+            "read-only and the only write is the caller-named --json path. "
+            "Without a usable Lean toolchain (lean or lake on PATH passing "
+            "a version probe) the tool exits 112 as an honest skip "
+            "judging nothing rather than simulating; the --selftest face "
+            "runs offline on canned fixtures regardless of toolchain."
         ),
     },
 ]
