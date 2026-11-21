@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T07:21:26Z",
+  "generated_at_utc": "2026-11-21T09:20:40Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "",
-  "py_files_censused": 61,
+  "git_head_recorded": "27bf0c45bc1d84938be8dac54494254fe9d6939b",
+  "py_files_censused": 62,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,11 +25,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 59,
+   "with_argparse": 60,
    "with_subcommands": 1,
    "zero_network": 51,
    "needs_special_environment": 35,
-   "invocation_reconstructed": 59,
+   "invocation_reconstructed": 60,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -2099,6 +2099,161 @@
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": false,
+   "selftest_token_face": true
+  },
+  {
+   "name": "claim_watch.py",
+   "bytes": 66458,
+   "sha256": "83a8478fe2a8790b4ece6f1224a02efa721aa830bf8c8e369250fc2f39b4b605",
+   "lines": 1443,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 26,
+    "head": "claim_watch.py - native resident claim watch tool (rocqwash tools/, ticket 13).\nPurpose.  One watch round over a signal config: fetch every signal's source\n  once, judge it, and append one honest ledger row per signal to an\n  append-only JSONL.  Registrations are data, never errors: keyword hits\n  carry the verbatim quote (forwarding to adjudication), a stale\n  heartbeat_at registers target silent death (its own outcome class),\n  hash_pin and round-over-round digests are the drift baselines (fetch\n  failures never enter the drift branch), and TLS/DNS/timeout register\n  unverifiable per tools/n"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "native resident claim watch: one round over a signal config, honest per-signal ledger rows (ticket 13; the live face is the network face)"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--config"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "JSON",
+       "help": "signal config file (schema rocqwash-claim-watch-config/1); required for a live round"
+      }
+     },
+     {
+      "flags": [
+       "--round-label"
+      ],
+      "kwargs": {
+       "dest": "round_label",
+       "default": null,
+       "metavar": "LABEL",
+       "help": "watch round label carried on every ledger row (default: the run's UTC minute stamp)"
+      }
+     },
+     {
+      "flags": [
+       "--ledger"
+      ],
+      "kwargs": {
+       "default": "<dynamic>",
+       "metavar": "JSONL",
+       "help": "append-only round ledger (default docs/claim-watch-ledger.jsonl)"
+      }
+     },
+     {
+      "flags": [
+       "--actor"
+      ],
+      "kwargs": {
+       "default": "claim_watch",
+       "metavar": "NAME",
+       "help": "actor namespace carried on every ledger row (default claim_watch)"
+      }
+     },
+     {
+      "flags": [
+       "--selftest",
+       "--offline-selftest"
+      ],
+      "kwargs": {
+       "dest": "offline_selftest",
+       "action": "store_true",
+       "help": "run the frozen canned vector group (zero network) and exit"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--config",
+     "--round-label",
+     "--ledger",
+     "--actor",
+     "--selftest",
+     "--offline-selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "_http_backoff",
+     "argparse",
+     "base64",
+     "datetime",
+     "hashlib",
+     "io",
+     "json",
+     "net_probe",
+     "os",
+     "re",
+     "shutil",
+     "socket",
+     "ssl",
+     "subprocess",
+     "sys",
+     "tempfile",
+     "time",
+     "urllib.error",
+     "urllib.parse",
+     "urllib.request"
+    ],
+    "third_party": [],
+    "local": [
+     "_http_backoff",
+     "net_probe"
+    ],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [
+     "socket",
+     "ssl",
+     "urllib.request"
+    ],
+    "adjacent_imports": [
+     "urllib.error",
+     "urllib.parse"
+    ],
+    "literal_face": [
+     {
+      "token": "api_github",
+      "count": 3
+     },
+     {
+      "token": "https_url",
+      "count": 17
+     }
+    ],
+    "subprocess_bridge_suspect": true,
+    "zero_network": false,
+    "git_subprocess_network_face": {
+     "present": true,
+     "tokens": [
+      "fetch"
+     ]
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/claim_watch.py [--config] [--round-label] [--ledger] [--actor] [--selftest] [--offline-selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
    "selftest_token_face": true
   },
   {
@@ -5602,15 +5757,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 106775,
-   "sha256": "a1df2e2d097d5c376f47b5d211886585f4c49beb035aa4e1659b1bb199a3e2f0",
-   "lines": 2056,
+   "bytes": 110413,
+   "sha256": "6eedb6274a834603475b158589f7715e054041319e8ffa7155cdc05c40cb6f1d",
+   "lines": 2108,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 44 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 45 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line\n  (two later increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch): a failed tool\n  result names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, tok"
    },
    "argparse": {
     "imported": true,

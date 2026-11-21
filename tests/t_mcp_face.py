@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  44-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  45-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -18,12 +18,16 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   read/plan/partial capabilities (the M2 ticket, survey table 2 rows 7-17:
   all eleven INDEX entries already standing), the tree_audit
   registration increment's one capability (tree_audit, a read-only audit
-  face over the landed census CLI tools/tree_audit.py), and the
+  face over the landed census CLI tools/tree_audit.py), the
   axiom_sweep registration increment's one capability (axiom_sweep, a
   read/plan face over the landed Lean axiom-closure classifier
   tools/lean_axiom_sweep.py; its spec description is transcribed from the
   tool's frozen CLI contract header, the INDEX entry awaiting its own
-  lane), each new capability
+  lane), and the claim_watch registration increment's one capability
+  (claim_watch, the net-gated live watch face over the landed native
+  resident watch CLI tools/claim_watch.py, ticket 13; its spec
+  description is likewise transcribed from the tool's frozen CLI
+  contract header), each new capability
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
   symbiosis INDEX entry line lands with the integration increment).
 
@@ -33,10 +37,11 @@ Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   second check).
 
 Probes (zero network; probes 1-6 run one session in order, probe 7 is a
-  separate --help invocation of the same child shape):
+  separate --help invocation and probe 8 a separate allow-net session of
+  the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 44 expected names in registration order,
+  3  tools/list -> exactly the 45 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -60,7 +65,10 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
         fixture-vector green face (the canned offline vectors; zero
         toolchain launch)
   5  default deny -> tools/call net_probe returns isError true and names
-     ROCQWASH_MCP_ALLOW_NET (the env is removed from the child)
+     ROCQWASH_MCP_ALLOW_NET (the env is removed from the child); the
+     same deny face is asserted for claim_watch (probe 5b), the net-gated
+     registration increment, whose only ungated face is the offline
+     selftest
   6  error faces -> resources/list -32601; unknown tool -32602; unknown
      argument on a new capability -32602; an array item starting with "-"
      -32602; a withheld enum choice on a command-shaped capability (the
@@ -68,6 +76,12 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   7  help gate -> the server's own --help invocation exits 0 with the
      argparse usage face on stdout (the "usage" anchor word and the prog
      name; locks the argparse flag gate against regression)
+  8  claim_watch offline-selftest face under the gate (the face vector of
+     the claim_watch registration increment, the offline-selftest face
+     only): a separate session with ROCQWASH_MCP_ALLOW_NET=1 calls
+     claim_watch {"offline_selftest": true} -> exit code: 0 with the
+     CLAIM-WATCH-SELFTEST PASS line (canned transport, virtual clock,
+     zero network; no live watch face is exercised by this suite)
 
 Dependencies.  Python 3 stdlib only; the server and every called CLI are
   stdlib-only; probes 4a/4b/4c run selftest faces or temporary fixtures
@@ -131,6 +145,11 @@ EXPECTED_TOOLS = [
     # the axiom_sweep registration increment (one read/plan face over the
     # landed Lean axiom-closure classifier tools/lean_axiom_sweep.py)
     "axiom_sweep",
+    # the claim_watch registration increment (ticket 13 rocqwash side: the
+    # net-gated live watch face over the landed native resident watch CLI
+    # tools/claim_watch.py; default deny, the offline selftest face is the
+    # only ungated face)
+    "claim_watch",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -159,6 +178,14 @@ EXPECTED_TREE_AUDIT_ARGS = ["root", "json_out", "selftest"]
 # argparse declaration order by the last two flags).
 EXPECTED_AXIOM_SWEEP_ARGS = ["root", "json_out", "allow_axiom", "selftest",
                              "timeout"]
+
+# Frozen claim_watch vector: the full argparse flag face of
+# tools/claim_watch.py (config, round_label, ledger, actor,
+# offline_selftest) in the registration contract's arg_map order; the
+# claim_watch schema properties must match this list one-to-one, exactly
+# the EXPECTED_AXIOM_SWEEP_ARGS discipline.
+EXPECTED_CLAIM_WATCH_ARGS = ["config", "round_label", "ledger", "actor",
+                             "offline_selftest"]
 
 
 def _child_env():
@@ -261,6 +288,8 @@ def main():
             {"jsonrpc": "2.0", "id": 13, "method": "tools/call",
              "params": {"name": "axiom_sweep",
                         "arguments": {"selftest": True}}},
+            {"jsonrpc": "2.0", "id": 14, "method": "tools/call",
+             "params": {"name": "claim_watch", "arguments": {}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -379,6 +408,29 @@ def main():
                 fails.append("probe3d axiom_sweep description should name "
                              "the classification face token %s" % token)
 
+        # Probe 3e: claim_watch schema-face vectors (schema shape mirrors
+        # the tool's real argparse flag face one-to-one; the spec
+        # description declares the default-deny net gate and the
+        # offline-selftest face, the ticket 13 registration increment).
+        cw_spec = by_name.get("claim_watch") or {}
+        cw_props = list((cw_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if cw_props != EXPECTED_CLAIM_WATCH_ARGS:
+            fails.append("probe3e claim_watch schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_CLAIM_WATCH_ARGS, cw_props))
+        if "config" in ((cw_spec.get("inputSchema") or {}).get("required")
+                        or []):
+            fails.append("probe3e claim_watch config must stay optional "
+                         "(the live face usage-errors rc 9 without it; "
+                         "--offline-selftest runs without it)")
+        cw_desc = cw_spec.get("description") or ""
+        for token in ("ROCQWASH_MCP_ALLOW_NET", "offline", "append-only",
+                      "verbatim", "unverifiable"):
+            if token not in cw_desc:
+                fails.append("probe3e claim_watch description should name "
+                             "the contract token %s" % token)
+
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
         text3 = _result_text(r3)
@@ -446,6 +498,19 @@ def main():
             fails.append("probe5 denial should name ROCQWASH_MCP_ALLOW_NET\n%s"
                          % text6)
 
+        # Probe 5b: the claim_watch registration increment is net-gated
+        # too (the same default-deny face; the offline selftest face is
+        # its only ungated face and is exercised under the gate in
+        # probe 8)
+        r14 = _by_id(lines, 14)
+        text14 = _result_text(r14)
+        if not r14 or not r14.get("result", {}).get("isError"):
+            fails.append("probe5b claim_watch should be denied by "
+                         "default\n%s" % text14)
+        elif "ROCQWASH_MCP_ALLOW_NET" not in text14:
+            fails.append("probe5b denial should name ROCQWASH_MCP_ALLOW_NET"
+                         "\n%s" % text14)
+
         # Probe 6: error faces
         r7 = _by_id(lines, 7)
         if not r7 or r7.get("error", {}).get("code") != -32601:
@@ -491,6 +556,48 @@ def main():
             fails.append("probe7 --help output should carry the argparse "
                          "usage face (usage anchor word plus prog name)\n%s"
                          % help_out)
+
+        # Probe 8: claim_watch offline-selftest face under the gate (the
+        # registration increment's face vector, the offline-selftest face
+        # only): a separate allow-net session, one call, canned fixtures,
+        # zero network; no live watch face is exercised by this suite.
+        gated_env = _child_env()
+        gated_env["ROCQWASH_MCP_ALLOW_NET"] = "1"
+        gated_requests = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+             "params": {"protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "t_mcp_face"}}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "claim_watch",
+                        "arguments": {"offline_selftest": True}}},
+        ]
+        payload = "".join(
+            (r if isinstance(r, str) else json.dumps(r)) + "\n"
+            for r in gated_requests
+        )
+        gated_run = subprocess.run(
+            [sys.executable, "-I", "-X", "utf8", "-B", SERVER],
+            input=payload.encode("utf-8"),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=REPO, env=gated_env, timeout=120,
+        )
+        gated_lines = []
+        for raw in gated_run.stdout.decode("utf-8", errors="replace") \
+                .splitlines():
+            raw = raw.strip()
+            if raw:
+                gated_lines.append(json.loads(raw))
+        g2 = _by_id(gated_lines, 2)
+        g2_text = _result_text(g2)
+        if not g2 or g2.get("result", {}).get("isError"):
+            fails.append("probe8 claim_watch offline_selftest should not "
+                         "be an error\n%s" % g2_text)
+        elif "exit code: 0" not in g2_text \
+                or "CLAIM-WATCH-SELFTEST PASS" not in g2_text:
+            fails.append("probe8 claim_watch exit 0 + offline-selftest "
+                         "pass face missing\n%s" % g2_text)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -498,8 +605,8 @@ def main():
         for line in fails:
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
-    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (7 probe groups, "
-                     "%d capabilities, 5 live-call spot checks)\n"
+    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (8 probe groups, "
+                     "%d capabilities, 6 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

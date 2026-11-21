@@ -1,14 +1,14 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
-
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 44 registered capabilities,
-  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
-  Default deny for network and heavy capabilities (`sentinel_status`,
-  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result
-  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.
+  Context Protocol (MCP) stdio transport: 45 registered capabilities,
+  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line
+  (two later increments from their tools' own CLI contract headers).
+  Default deny for the network and heavy capabilities (sentinel_status,
+  net_probe, ci_triage, pushci_status, claim_watch): a failed tool
+  result names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.
   Credential zero contact: no credential store, token file or netrc
-  path is read; child stdout and stderr are captured, never merged
-  into the protocol stream; every call runs under ROCQWASH_MCP_TIMEOUT
+  path is read; child stdout and stderr are captured, never merged into
+  the protocol stream; every call runs under ROCQWASH_MCP_TIMEOUT
   (default 300) and a timed-out child is reported as failed.
 
 Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
@@ -21,7 +21,7 @@ Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
 Dependencies.  Python 3 standard library only (argparse, json, os,
   subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 43-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 45-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors.
 
 Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1
@@ -44,10 +44,10 @@ TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
 # additions, eleven M2 ticket additions, the tree_audit registration
-# increment, plus the axiom_sweep registration increment); a roster change
-# re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py in the
-# same round.
-SELFTEST_ROSTER_COUNT = 44
+# increment, the axiom_sweep registration increment, plus the
+# claim_watch registration increment); a roster change re-freezes this
+# value and EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
+SELFTEST_ROSTER_COUNT = 45
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1588,6 +1588,58 @@ TOOL_SPECS = [
             "a version probe) the tool exits 112 as an honest skip "
             "judging nothing rather than simulating; the --selftest face "
             "runs offline on canned fixtures regardless of toolchain."
+        ),
+    },
+    # ---- the claim_watch registration increment (ticket 13, the
+    # rocqwash side): one net-gated live watch face over the landed
+    # native resident watch CLI (tools/claim_watch.py --config/
+    # --round-label/--ledger/--actor/--offline-selftest, its real
+    # argparse flag face).  Additive after the block above: the existing
+    # specs and schemas untouched.  Default deny: the live face is the
+    # network face; the offline selftest face (--offline-selftest, zero
+    # network) is the only face reachable without the env opt-in.
+    {
+        "name": "claim_watch",
+        "kind": "cli",
+        "cli": os.path.join("tools", "claim_watch.py"),
+        "net_gated": True,
+        "fixed_args": [],
+        "arg_map": (
+            ("config", "--config"),
+            ("round_label", "--round-label"),
+            ("ledger", "--ledger"),
+            ("actor", "--actor"),
+            ("offline_selftest", "--offline-selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "config": {"type": "string", "description": "signal config file (schema rocqwash-claim-watch-config/1, the three frozen signal forms repo-path / status-endpoint / zulip-web-public; the seed seeds/claim-watch/signals-rh-ns.json carries the ticket 13 eight RH signals and three NS/Euler triggers); required for a live round, not for the selftest; CLI flag --config"},
+                "round_label": {"type": "string", "description": "watch round label carried on every ledger row (default: the run's UTC minute stamp); CLI flag --round-label"},
+                "ledger": {"type": "string", "description": "append-only round ledger JSONL (default docs/claim-watch-ledger.jsonl); one row per signal per round, every row carrying at_utc + actor + round_label; CLI flag --ledger"},
+                "actor": {"type": "string", "description": "actor namespace carried on every ledger row (default claim_watch); CLI flag --actor"},
+                "offline_selftest": {"type": "boolean", "description": "run the frozen canned vector group (zero network, canned transport + virtual clock) and exit; bare CLI flag --offline-selftest"},
+            }
+        ),
+        "description": (
+            "Native resident claim watch over a signal config "
+            "(tools/claim_watch.py): one round fetches every signal's "
+            "source once and appends one honest ledger row per signal "
+            "(append-only JSONL).  Registration families: conclusion "
+            "keyword hits (ok=false, the verbatim matching text quoted; "
+            "forwarding to adjudication, no auto rescan, no auto "
+            "disclosure), status-endpoint phase flips and heartbeat "
+            "silence (heartbeat_at beyond the staleness threshold "
+            "registers as target silent death, its own outcome class, "
+            "never a false alarm), baseline and drift (a config hash_pin "
+            "or the previous round's digest; a fetch failure never "
+            "enters the drift branch), and honest non-verification "
+            "(TLS/DNS/timeout registered unverifiable per net_probe's "
+            "classification; a zulip 401 registers unverifiable "
+            "honestly).  NETRED backoff (max-retries + schedule from "
+            "the config) is built in.  Default deny: the live face is "
+            "the network face and requires ROCQWASH_MCP_ALLOW_NET=1; "
+            "the zero-network --offline-selftest face runs canned "
+            "fixtures without the env opt-in."
         ),
     },
 ]

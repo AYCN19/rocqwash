@@ -1,0 +1,172 @@
+{
+  "schema": "rocqwash-claim-watch-config/1",
+  "max_retries": 3,
+  "backoff_base_seconds": 2.0,
+  "signals": [
+    {
+      "id": "rh-01-brunoloff-progress",
+      "kind": "repo-path",
+      "repo": "brunoloff/rh-lean-progress",
+      "path": "progress.json",
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "definition drift",
+        "author retraction",
+        "comparator verdict",
+        "audit segment complete",
+        "certificate published",
+        "adjudication infrastructure"
+      ]
+    },
+    {
+      "id": "rh-02a-rerun-luosiallen",
+      "kind": "repo-path",
+      "repo": "luosiallen",
+      "path": "REPORT",
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "author retraction"
+      ]
+    },
+    {
+      "id": "rh-02b-rerun-hertaspace",
+      "kind": "repo-path",
+      "repo": "Hertaspace",
+      "path": "REPORT",
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "author retraction"
+      ]
+    },
+    {
+      "id": "rh-02c-rerun-sunnyspot114514",
+      "kind": "repo-path",
+      "repo": "sunnyspot114514",
+      "path": "REPORT",
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "author retraction"
+      ]
+    },
+    {
+      "id": "rh-03-deicyde-verification",
+      "kind": "repo-path",
+      "repo": "Deicyde/riemann-hypothesis",
+      "path": "verification",
+      "conclusion_keywords": [
+        "sorry",
+        "axiom",
+        "native_decide",
+        "comparator verdict"
+      ]
+    },
+    {
+      "id": "rh-04-alpoge-remark-pdf",
+      "kind": "repo-path",
+      "repo": "alpo.ge",
+      "path": "remark.pdf",
+      "hash_pin": "bytes:245114",
+      "conclusion_keywords": [
+        "author retraction",
+        "definition drift",
+        "full compilation passed",
+        "kernel replay passed"
+      ]
+    },
+    {
+      "id": "rh-05a-hn-50574968",
+      "kind": "status-endpoint",
+      "url": "https://hacker-news.firebaseio.com/v0/item/50574968.json",
+      "phase_field": "",
+      "done_phases": [],
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "definition drift",
+        "author retraction"
+      ]
+    },
+    {
+      "id": "rh-05b-zulip-general-113488",
+      "kind": "zulip-web-public",
+      "stream": "general",
+      "topic_hint": "113488",
+      "conclusion_keywords": [
+        "full compilation passed",
+        "kernel replay passed",
+        "sorry",
+        "axiom",
+        "native_decide",
+        "author retraction"
+      ]
+    },
+    {
+      "id": "rh-06-github-search",
+      "kind": "status-endpoint",
+      "url": "https://api.github.com/search/repositories?q=riemann+hypothesis+proof&sort=updated&order=desc&per_page=10",
+      "phase_field": "total_count",
+      "done_phases": [],
+      "conclusion_keywords": []
+    },
+    {
+      "id": "rh-07-rhverify-status",
+      "kind": "status-endpoint",
+      "url": "http://106.14.11.164/api/status",
+      "phase_field": "phase",
+      "done_phases": ["audit", "complete"],
+      "conclusion_keywords": [
+        "comparator verdict",
+        "certificate published",
+        "audit segment complete"
+      ]
+    },
+    {
+      "id": "ns-08a-tristanbuckmaster-events",
+      "kind": "status-endpoint",
+      "url": "https://api.github.com/repos/tristanbuckmaster/navier-stokes/events?per_page=30",
+      "phase_field": "",
+      "done_phases": [],
+      "conclusion_keywords": [
+        "certificate"
+      ]
+    },
+    {
+      "id": "ns-08b-comparator-flags",
+      "kind": "repo-path",
+      "repo": "tristanbuckmaster/navier-stokes",
+      "path": "",
+      "conclusion_keywords": [
+        "comparator",
+        "enable_nanoda",
+        "external_kernels",
+        ".github"
+      ]
+    },
+    {
+      "id": "ns-08c-sunnyspot-certificate",
+      "kind": "repo-path",
+      "repo": "sunnyspot114514",
+      "path": "certificate-check.json",
+      "conclusion_keywords": []
+    }
+  ]
+}
