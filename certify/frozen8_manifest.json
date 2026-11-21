@@ -3,7 +3,7 @@
   "certify/frozen8.py",
   "certify/push_gate.py"
  ],
- "freeze_commit": "43fca6a7edf1b76bd10d0ca9da7b7c6449caff93",
+ "freeze_commit": "19257b770b12c6cdf02492d379e3e0d0340f0082",
  "ledger_source": "更新账.md §三（在役八组件冻结自证·账载口径）",
  "n_files": 10,
  "root": "/Users/apple/Desktop/rocqwash",
@@ -19,7 +19,7 @@
   ],
   [
    "certify/push_gate.py",
-   "c8841e2325f184ee57ec4aa40c1e4c31"
+   "cc6482793071e26c0aebc23c960be40f"
   ],
   [
    "names/mac_stmt_names.py",
@@ -50,5 +50,5 @@
    "eed0699addc3593368da5f5e993b382e"
   ]
  ],
- "tier2_md5_of_tier1_text": "e548912b0df3919d71b89690b5347ea7"
+ "tier2_md5_of_tier1_text": "11b9e91fb15d6f22ad03fb4a38fbdc5e"
 }

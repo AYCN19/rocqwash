@@ -1,71 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""push_gate.py — certify 深件：推送窗四判据机检＋UNION v2 多世界清单
-（rocqwash certify/·20261031 席 rqwash2·与冻结件 freeze_manifest.py v1 并存）
-
-certify 模块第二件（v2 接口并存·冻结件零改动）。两块职责：
-
-[一] `window` — 推送窗四判据（承战役推送窗铁律的机械落地：
-     参照 ConstructiveWorld 战役 wf_land.dwf.ts:40「推送窗四判据：
-     ①runs in_progress=0 ②本地≥云端 ③fetch 干净 ④认证绿已坐实」）：
-
-      c1 ci-idle    CI 在飞 run=0。证据源任择其一（无证据=NOT-RUN=窗不开·fail-closed）：
-                      --runs-json <f>   预取的 GitHub Actions runs JSON（本工具自身零网络：
-                                        匿名 404 私库不可达时由调用方预取，本器只做机械判读——
-                                        status!="completed" 一律计在飞·未知状态保守计在飞）；
-                      --ci-capped-min N 时间线证据：remote-tracking reflog 最近一条
-                                        `update by push` 距今 ≥ N 分钟＋CI 时长封顶（ci.yml
-                                        timeout-minutes）⇒ 在飞 run 不可能存在（承更新账 §五判例）。
-      c2 local≥remote  fetch 后 `rev-list --count HEAD..<remote>/<branch>`（behind）==0
-                      （ahead 不设上限——本地领先正是待推状态）。
-      c3 fetch-clean  ls-remote 前后双读同 sha ＋ fetch rc=0 ＋ 远端 sha 是本地 HEAD
-                      祖先（merge-base --is-ancestor）。窗内无人动云端才算干净；
-                      fetch 失败（含网络死窗）＝FAIL——推不动也判不出，窗如实关。
-      c4 cert-green   本仓认证绿机械复核：bash tests/run_tests.sh rc==0（--suite 可指认
-                      他脚本）；可另加 --freeze-manifest <m.json> → 冻结件 freeze_manifest.py
-                      check 零漂移亦须 rc==0。任一红＝FAIL。
-
-      账面：逐判据 PASS/FAIL/NOT-RUN 行＋总结论 `push-window: OPEN|CLOSED`；
-      OPEN（四判据全 PASS）exit 0，否则 exit 1（NOT-RUN=关窗·诚实律：缺席旁证不计绿）。
-      本器只判窗不开推——push 动作在调用方（钉 IP 推送见 watch/watch.py push）。
-
-[二] `union-freeze` / `union-check` — UNION v2 多世界清单（freeze_manifest v1 的
-     多世界泛化·schema rocqwash-union-manifest/2）：
-
-      tier1 逐文件 md5 与 tier2（=tier1 账文 md5）逐字承 v1 冻结口径（import
-      freeze_manifest 的 tier1_lines/tier2_of 只读复用——冻结件零改动）；在此之上
-      增第三层：world 层 tier2 逐世界入账，union 层 union_tier2 = 逐世界
-      `name  tier2\n` 行账文的 md5——任一世界的 tier1/tier2 被改，union 层即现形。
-      --tier2 侧册把 union_tier2 落盘外置（v1 同款两层冻结语义：动清单即发现）。
-      check 逐世界三分对账（changed/added/removed）＋逐世界 tier2＋union 层＋可选
-      侧册四方咬合；零漂移 exit 0、有漂移 exit 1、清单畸形 exit 2。
-
-诚实律（承 CONTRIBUTING §0，一票否决）：
-  - 只认机械证据（退出码/md5/count），不出口头判词；
-  - NOT-RUN 显式出账且不计绿，禁把缺席证据标成 PASS；
-  - fail-loud：证据畸形/路径缺失一律非零＋响亮输出；
-  - 幂等可重放：union-freeze 无时间戳无环境噪声，同盘面重产逐字节恒同。
-
-写域声明：本器只写调用方显式指认的 --out/--tier2/--json 出路径，不碰仓库树、
-不碰外部沙箱；window 全程只读（fetch/ls-remote 均为远端只读操作）。
-
-依赖：Python ≥3.9 纯标准库＋git 在 PATH；冻结同侪 freeze_manifest.py 在场。
-一切涉编译的调用（如 --suite 命中的套件内编译段）必经 tools/cpu_guard.sh 温控包裹
-——本器自身零编译，套件内的 cpu_guard -Direct 冒烟例自带包裹。
-
-用法：
-  python3 certify/push_gate.py window --repo <dir> [--branch B] [--remote origin]
-        [--runs-json f | --ci-capped-min N] [--freeze-manifest m.json]
-        [--suite <path>] [--json out.json]
-  python3 certify/push_gate.py union-freeze --world name=path [--world name=path ...]
-        --out union.json [--tier2 t2.md5]
-  python3 certify/push_gate.py union-check --manifest union.json [--tier2 t2.md5] [--json out]
-  python3 certify/push_gate.py --selftest
-
-退出码：window 0=OPEN／1=CLOSED（含 NOT-RUN）／2=用法错／9=路径缺失；
-union-freeze 0=成／2=用法错／9=世界根缺失；union-check 0=零漂移／1=有漂移／
-2=清单畸形／9=清单或侧册缺失；--selftest 0=全过／2=向量失败。
-"""
+"""push_gate.py — certify deep piece: push-window four-criteria machine check + UNION v2 multi-world manifests.
+Purpose.  Two responsibilities in one file, coexisting with the frozen v1 freeze_manifest.py (frozen peer
+  untouched; tier1_lines/tier2_of reused read-only).  [1] window: the ConstructiveWorld `wf_land.dwf.ts:40`
+  push-window four criteria as a machine check.  c1 ci-idle: evidence from --runs-json (a pre-fetched GitHub
+  Actions runs JSON; the tool itself does zero networking; every status!="completed" run conservatively
+  counts as in flight) or --ci-capped-min (the remote-tracking reflog push timeline under the ci.yml
+  timeout-minutes cap; no evidence = NOT-RUN = window closed, fail-closed).  c2 local>=remote: behind == 0
+  after fetch, ahead uncapped.  c3 fetch-clean: ls-remote read twice, same sha, fetch rc=0, the remote sha
+  an ancestor of HEAD.  c4 cert-green: the --suite script rc==0 plus --freeze-manifest zero drift when
+  given.  The tool judges the window and never pushes (the push action belongs to the caller).  [2]
+  union-freeze/union-check: per-world tier1 and tier2 inherit the v1 frozen format; a third tier records
+  union_tier2 = md5 of the sorted per-world `name  tier2\n` line ledger, so any tier1/tier2 change in any
+  world surfaces at the union tier; --tier2 externalizes union_tier2; check runs the per-world three-way
+  reconciliation (changed/added/removed) plus per-world tier2 plus the union tier plus the optional side
+  ledger.  Honesty law (CONTRIBUTING §0): mechanical evidence only; NOT-RUN never counted as passing;
+  fail-loud on malformed evidence; replay idempotent byte-identical.
+Interface.  python3 certify/push_gate.py window --repo <dir> [--branch B] [--remote origin]
+  [--runs-json f | --ci-capped-min N] [--freeze-manifest m.json] [--suite <path>] [--json out.json]
+  python3 certify/push_gate.py union-freeze --world name=path [--world name=path ...] --out union.json [--tier2 t2.md5]
+  python3 certify/push_gate.py union-check --manifest union.json [--tier2 t2.md5] [--json out]; --selftest
+Dependencies.  Python >= 3.9 standard library only plus git on PATH; the frozen peer certify/freeze_manifest.py
+  present.  Every compile-carrying call (for example the --suite run) goes through the tools/cpu_guard.sh wrap;
+  the tool itself compiles nothing; writes only the caller-named --out/--tier2/--json paths; window stays read-only throughout.
+Evidence.  --selftest frozen vector group (zero network, zero repository writes; the UNION six vectors and
+  the window c1 dual-source, c2 behind, c4 failing-suite, zero-evidence NOT-RUN four vectors, on local path
+  remotes); suite member t_push_gate in tests/run_tests.sh.
+Exit-codes.  window 0=OPEN/1=CLOSED incl. NOT-RUN/2=usage/9=path missing; union-freeze 0=done/2=usage/9=world
+  root missing; union-check 0=zero drift/1=drift/2=manifest malformed/9=manifest or side ledger missing;
+  --selftest 0=all vectors pass/2=a vector failed."""
 import argparse
 import io
 import json
@@ -76,23 +39,23 @@ import sys
 PROG = "push_gate"
 UNION_SCHEMA = "rocqwash-union-manifest/2"
 
-# 与冻结 v1 同侪只读复用（tier1_lines/tier2_of 承冻结口径·本文件零改动传递）
+# read-only reuse of the frozen v1 peer: tier1_lines/tier2_of inherit the frozen format, forwarded unchanged
 _HERE = os.path.dirname(os.path.abspath(__file__))
 if _HERE not in sys.path:
     sys.path.insert(0, _HERE)
 try:
-    import freeze_manifest as _v1  # noqa: E402  （冻结件·只 import 不改）
+    import freeze_manifest as _v1  # noqa: E402  (frozen peer, import-only)
 except Exception as _e:  # pragma: no cover
     print("FAIL-LOUD: 冻结同侪 certify/freeze_manifest.py 不可导入: %s" % _e,
           file=sys.stderr)
     sys.exit(9)
 
-# CI runs JSON 里视为「不在飞」的唯一终态；其余一切状态保守计在飞（fail-closed）
+# the only terminal status counted as not-in-flight in a CI runs JSON; every other status conservatively counts as in flight (fail-closed)
 CI_DONE = "completed"
 
 
 def run_out(argv, cwd=None):
-    """子进程跑一条命令→(rc, stdout, stderr)。零外壳注入（argv 直传）。"""
+    """Run one command in a subprocess -> (rc, stdout, stderr); argv passed straight through, no shell, no injection surface."""
     p = subprocess.run(argv, cwd=cwd, stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
     return (p.returncode,
@@ -104,10 +67,10 @@ def git(repo, *args):
     return run_out(["git", "-C", repo] + list(args))
 
 
-# ---------------- [一] 推送窗四判据 ----------------
+# ---------------- [1] the push-window four criteria ----------------
 
 def c1_ci_idle(args, repo, branch_full):
-    """判据①：CI 在飞 run=0。返回 (verdict, detail)。verdict∈PASS/FAIL/NOT-RUN。"""
+    """Criterion 1: CI in-flight runs = 0.  Returns (verdict, detail); verdict is one of PASS/FAIL/NOT-RUN."""
     if args.runs_json:
         if not os.path.isfile(args.runs_json):
             return "FAIL", "runs-json 缺失: %s" % args.runs_json
@@ -137,7 +100,7 @@ def c1_ci_idle(args, repo, branch_full):
             ts, _, subject = line.partition("|")
             if "update by push" in subject:
                 push_ts = ts.strip()
-                break  # log -g 新→旧·首中即最近一次本机推送
+                break  # log -g walks newest first, so the first hit is the most recent local push
         if push_ts is None:
             return "NOT-RUN", "reflog 无 `update by push` 条目——本机推送时间线缺席"
         import time
@@ -152,7 +115,7 @@ def c1_ci_idle(args, repo, branch_full):
 
 
 def c2_local_ge_remote(repo, remote_branch):
-    """判据②：本地≥云端（fetch 后 behind==0）。"""
+    """Criterion 2: local >= remote (behind == 0 after fetch)."""
     rc, so, se = git(repo, "rev-list", "--count", "HEAD..%s" % remote_branch)
     if rc != 0:
         return "FAIL", "rev-list behind 计数失败: %s" % se.strip()[:120]
@@ -166,7 +129,7 @@ def c2_local_ge_remote(repo, remote_branch):
 
 
 def c3_fetch_clean(repo, remote, branch, remote_branch):
-    """判据③：fetch 干净——ls-remote 前后双读同 sha＋fetch 成＋远端 sha 为 HEAD 祖先。"""
+    """Criterion 3: fetch clean, meaning ls-remote read twice around the fetch with the same sha, fetch rc=0, and the remote sha an ancestor of HEAD."""
     rc, so, se = git(repo, "ls-remote", remote, "refs/heads/%s" % branch)
     if rc != 0 or not so.strip():
         return "FAIL", "ls-remote 前读失败（网络/远端缺枝）: %s" % se.strip()[:120]
@@ -188,7 +151,7 @@ def c3_fetch_clean(repo, remote, branch, remote_branch):
 
 
 def c4_cert_green(args, repo, here):
-    """判据④：认证绿已坐实——套件 rc==0（必检）＋冻结清单零漂移（可选）。"""
+    """Criterion 4: certification green verified, meaning suite rc==0 (mandatory) plus optional frozen-manifest zero drift."""
     suite = args.suite or os.path.join(repo, "tests", "run_tests.sh")
     if not os.path.isfile(suite):
         return "FAIL", "认证套件缺失: %s（--suite 可指认）" % suite
@@ -232,7 +195,7 @@ def cmd_window(args, here):
     remote_branch = "%s/%s" % (args.remote, branch)
     branch_full = "refs/remotes/%s" % remote_branch
 
-    # c3 先行（fetch 落定 remote-tracking ref，c1 时间线证据/c2 计数方有据）
+    # c3 runs first: the fetch settles the remote-tracking ref, so the c1 timeline evidence and the c2 count have a basis
     c3_v, c3_d = c3_fetch_clean(repo, args.remote, branch, remote_branch)
     c1_v, c1_d = c1_ci_idle(args, repo, branch_full)
     c2_v, c2_d = c2_local_ge_remote(repo, remote_branch)
@@ -258,10 +221,10 @@ def cmd_window(args, here):
     sys.exit(0 if open_ else 1)
 
 
-# ---------------- [二] UNION v2 多世界清单 ----------------
+# ---------------- [2] the UNION v2 multi-world manifests ----------------
 
 def union_tier2_of(worlds):
-    """union 层：逐世界 `name  tier2\n` 行账文（按世界名排序）的 md5。"""
+    """The union tier: md5 of the per-world `name  tier2\n` line ledger, worlds sorted by name."""
     text = "".join("%s  %s\n" % (w["name"], w["tier2"])
                    for w in sorted(worlds, key=lambda w: w["name"]))
     return _v1.md5_bytes(text.encode("utf-8"))
@@ -313,7 +276,7 @@ def cmd_union_freeze(args):
         with io.open(args.tier2, "w", encoding="utf-8", newline="\n") as fh:
             fh.write(u2 + "\n")
         print("union_tier2 侧册 ->", args.tier2)
-    # 幂等自证：重产与在盘逐字节对照
+    # idempotence self-check: compare the re-produced manifest byte-for-byte against the one on disk
     with io.open(args.out, encoding="utf-8", newline="") as fh:
         first = fh.read()
     again = json.dumps(doc, ensure_ascii=False, indent=1, sort_keys=True) + "\n"
@@ -346,7 +309,7 @@ def cmd_union_check(args):
         sys.exit(2)
 
     drift = False
-    # 侧册先验（最强：清单在盘者改 union_tier2 也现形）
+    # side-ledger prior, the strongest tier: tampering with union_tier2 in the on-disk manifest also surfaces
     side_ok = True
     if args.tier2:
         with io.open(args.tier2, encoding="utf-8") as fh:
@@ -354,7 +317,7 @@ def cmd_union_check(args):
         side_ok = (side == doc.get("union_tier2"))
         print("union_tier2 侧册咬合: %s" % ("PASS" if side_ok else "FAIL"))
         drift = drift or not side_ok
-    # 逐世界对账
+    # per-world reconciliation
     total = {"changed": 0, "added": 0, "removed": 0}
     for w in doc["worlds"]:
         name = w.get("name", "?")
@@ -379,7 +342,7 @@ def cmd_union_check(args):
         drift = drift or bool(changed or added or removed or not t2_ok)
         for k in total:
             total[k] += len(dict(changed=changed, added=added, removed=removed)[k])
-    # union 层先验
+    # union-tier prior
     u2_now = union_tier2_of(doc["worlds"])
     u_ok = (u2_now == doc.get("union_tier2"))
     print("union_tier2 层自洽: %s" % ("PASS" if u_ok else "FAIL"))
@@ -396,11 +359,11 @@ def cmd_union_check(args):
     sys.exit(1 if drift else 0)
 
 
-# ---------------- 自证（冻结向量组·零网络零仓库写） ----------------
+# ---------------- self-attestation (frozen vector group: zero network, zero repository writes) ----------------
 
 def selftest():
-    """向量组：UNION 幂等/零漂移/漂移/tier1 篡改/union 层篡改/侧册；
-    window c1 双源＋c2 behind＋c4 红套件＋本地 path 远端全判据开窗。"""
+    """Vector group: UNION idempotence/zero-drift/drift/tier1 tampering/union-tier tampering/side ledger;
+    window c1 dual source + c2 behind + c4 failing suite + all-criteria open window on a local path remote."""
     import shutil
     import tempfile
     tmp = tempfile.mkdtemp(prefix="rocqwash_pushgate_self_")
@@ -412,7 +375,7 @@ def selftest():
                          newline="") as fh:
                 fh.write(content)
 
-        # —— UNION v2 向量 ——
+        # -- UNION v2 vectors --
         for d in ("wa", "wb/sub"):
             os.makedirs(os.path.join(tmp, d))
         w("wa/a.v", "Lemma a : True.\n")
@@ -434,7 +397,7 @@ def selftest():
                             "union-check", "--manifest", um] + list(extra))
 
         def crit(so, name, v):
-            """账面行断言（免 %-对齐空格耦合）：`c1 ci-idle PASS ...`。"""
+            """Row assertion on the printed ledger, immune to %-alignment spacing: `c1 ci-idle PASS ...`."""
             for ln in so.splitlines():
                 parts = ln.split()
                 if len(parts) >= 3 and parts[0] + " " + parts[1] == name \
@@ -444,13 +407,13 @@ def selftest():
         rc, so, _ = ucheck(("--tier2", os.path.join(tmp, "u.t2")))
         assert rc == 0 and "union-check OK" in so, "零漂移 check 应 0\n%s" % so
 
-        w("wb/sub/b.v", "Lemma b : False.\n")  # 漂移 B
+        w("wb/sub/b.v", "Lemma b : False.\n")  # drift B
         rc, so, _ = ucheck()
         assert rc == 1 and "1 changed" in so, "漂移应 1·账面应记 changed\n%s" % so
         w("wb/sub/b.v", "Lemma b : True.\n")
 
         doc = json.load(io.open(um, encoding="utf-8"))
-        doc["worlds"][0]["tier1"][0][1] = "0" * 32  # tier1 篡改（tier2 未随改）
+        doc["worlds"][0]["tier1"][0][1] = "0" * 32  # tier1 tampering (tier2 left unchanged)
         with io.open(um, "w", encoding="utf-8") as fh:
             json.dump(doc, fh)
         rc, so, _ = ucheck()
@@ -459,7 +422,7 @@ def selftest():
                             "union-freeze", "--world", "wa=%s" % os.path.join(tmp, "wa"),
                             "--world", "wb=%s" % os.path.join(tmp, "wb"), "--out", um])
         doc = json.load(io.open(um, encoding="utf-8"))
-        doc["union_tier2"] = "f" * 32  # union 层篡改
+        doc["union_tier2"] = "f" * 32  # union-tier tampering
         with io.open(um, "w", encoding="utf-8") as fh:
             json.dump(doc, fh)
         rc, so, _ = ucheck()
@@ -471,11 +434,11 @@ def selftest():
         rc, so, _ = ucheck(("--tier2", os.path.join(tmp, "u.t2")))
         assert rc == 0, "重产零漂移应 0\n%s" % so
         with io.open(os.path.join(tmp, "u.t2"), "w", encoding="utf-8") as fh:
-            fh.write("0" * 32 + "\n")  # 侧册篡改
+            fh.write("0" * 32 + "\n")  # side-ledger tampering
         rc, so, _ = ucheck(("--tier2", os.path.join(tmp, "u.t2")))
         assert rc == 1 and "侧册咬合: FAIL" in so, "侧册篡改应现形\n%s" % so
 
-        # —— window 向量（本地 path 远端·零网络） ——
+        # -- window vectors (local path remote, zero network) --
         def wabs(path, content):
             with io.open(path, "w", encoding="utf-8", newline="") as fh:
                 fh.write(content)
@@ -487,13 +450,13 @@ def selftest():
         wabs(os.path.join(seed, "s.txt"), "seed\n")
         run_out(gitc + ["-C", seed, "add", "s.txt"])
         run_out(gitc + ["-C", seed, "commit", "-q", "-m", "s"])
-        remote = os.path.join(tmp, "rem.git")  # bare——远端角色（push 允许）
+        remote = os.path.join(tmp, "rem.git")  # bare; the remote role (push allowed)
         rc, _, se = run_out(["git", "clone", "-q", "--bare", seed, remote])
         assert rc == 0, se
-        wk = os.path.join(tmp, "wk")  # origin=bare path（零网络）
+        wk = os.path.join(tmp, "wk")  # origin = the bare path (zero network)
         rc, _, se = run_out(["git", "clone", "-q", remote, wk])
         assert rc == 0, se
-        # wk：commit x → push（造 `update by push` reflog）→ commit y（本地领先 ahead=1）
+        # wk: commit x -> push (creates the `update by push` reflog entry) -> commit y (local ahead = 1)
         wabs(os.path.join(wk, "x.txt"), "x\n")
         run_out(gitc + ["-C", wk, "add", "x.txt"])
         run_out(gitc + ["-C", wk, "commit", "-q", "-m", "x"])
@@ -535,7 +498,7 @@ def selftest():
         rc, so, _ = window(["--ci-capped-min", "525600"])
         assert rc == 1 and crit(so, "c1 ci-idle", "NOT-RUN") and \
             "可能仍在飞" in so, "封顶窗未到应 NOT-RUN\n%s" % so
-        # c2：远端独走一 commit（经第三 clone 推 bare）→ behind=1 → CLOSED
+        # c2: the remote gains one commit on its own (a third clone pushes to the bare) -> behind=1 -> CLOSED
         adv = os.path.join(tmp, "adv")
         rc, _, se = run_out(["git", "clone", "-q", remote, adv])
         assert rc == 0, se
@@ -546,14 +509,14 @@ def selftest():
         assert rc == 0, se
         rc, so, _ = window(["--runs-json", runs_idle])
         assert rc == 1 and "behind=1" in so, "behind=1 应 CLOSED\n%s" % so
-        # c4：红套件 → CLOSED
+        # c4: a failing suite -> CLOSED
         suite_bad = os.path.join(tmp, "suite_bad.sh")
         with io.open(suite_bad, "w", encoding="utf-8") as fh:
             fh.write("#!/bin/sh\nexit 3\n")
         rc, so, _ = window(["--runs-json", runs_idle, "--suite", suite_bad])
         assert rc == 1 and crit(so, "c4 cert-green", "FAIL") and \
             "rc=3" in so, "红套件应 CLOSED\n%s" % so
-        # runs-json 畸形 → FAIL（证据不可采信）
+        # a malformed runs-json -> FAIL (the evidence cannot be trusted)
         bad = os.path.join(tmp, "bad.json")
         with io.open(bad, "w", encoding="utf-8") as fh:
             fh.write("{not json")
