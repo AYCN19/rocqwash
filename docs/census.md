@@ -1,4 +1,4 @@
-# rocqwash tools/ Word-Face Census Re-scan | November 21, 2026
+# rocqwash tools/ Word-Face Census Re-scan | 2026-11-21
 
 This document accompanies `census-tools.json` (machine-readable per-file records) and
 `flag-shape.json` (AST-level flag classification); all three were written in the same pass.
@@ -39,13 +39,13 @@ later light-probe pass; none ran in this re-scan). Scope is `*.py` only: `cpu_gu
 archive files plus the `vacgen_env_note.md.zh.md` sibling archive, and `__pycache__/` sit outside the census scope and are recorded as
 metadata.
 
-**Instrument note**: the builder is the November 14, 2026 cast instrument, this generation run
-from the in-repo copy `docs/census_tools_build.py` (the same instrument the November 20, 2026
+**Instrument note**: the builder is the 2026-11-14 cast instrument, this generation run
+from the in-repo copy `docs/census_tools_build.py` (the same instrument the 2026-11-20
 generation landed; its doc-face re-lay at `cab9147` was AST-identical modulo docstrings
-with the CLI face `--tools-dir/--out/--head` unchanged; the November 14, 2026 archive copy stays
+with the CLI face `--tools-dir/--out/--head` unchanged; the 2026-11-14 archive copy stays
 at `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`). It
 carries one hard-coded cast-time annotation (`new_item: true` on
-`vacgen.py`), written for the November 14, 2026 cast when that file had just landed; at this anchor
+`vacgen.py`), written for the 2026-11-14 cast when that file had just landed; at this anchor
 the marker does not read as a delta fact and is voided here by declaration.
 
 ## 2. Summary Table
@@ -623,7 +623,7 @@ Each line is a word-face fact of this re-scan at `2a1fe8fab9374d9a6aa7f672071aac
 
 - Argparse face: 58/60 files carry an argparse import and a reconstructible flag face; 2
   files have no argparse (_abl1_4b_compile.py, _http_backoff.py); their doc faces carry no command-line usage line at this
-  anchor, so the invocation basis is `none` (a form change against the November 14, 2026 cast, where
+  anchor, so the invocation basis is `none` (a form change against the 2026-11-14 cast, where
   two of them were restored from usage strings).
 - Subcommand face: 1/60 files carry `add_parser` (uplink.py: intake/pr-prep/verify). The
   census-time reading `zero subcommand face across all files` no longer holds tree-wide.
@@ -643,7 +643,7 @@ Each line is a word-face fact of this re-scan at `2a1fe8fab9374d9a6aa7f672071aac
   self-describe as internal helpers, consistent with their names.
 - Size span: 5,621 B to 146,132 B; line counts 116 to 3,105.
 - Non-`.py` metadata: `cpu_guard.sh` (4,581 B; grew from 4,053 B at census time),
-  `taxonomy.json` (11,939 B; grew from 3,560 B at the November 20, 2026 generation),
+  `taxonomy.json` (11,939 B; grew from 3,560 B at the 2026-11-20 generation),
   `vacgen_env_note.md` (5,639 B), twelve `.py.zh.md` archive files plus the
   `vacgen_env_note.md.zh.md` sibling archive, and `__pycache__/`.
 
@@ -651,14 +651,14 @@ Each line is a word-face fact of this re-scan at `2a1fe8fab9374d9a6aa7f672071aac
 
 | Face | Count | Time point | Measurement |
 |---|---|---|---|
-| Census-time cast | 27 | November 14, 2026 @ `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` | transcribed record (the November 14, 2026 census.md and INDEX sections 0 to 1); not re-measured |
-| Index entries | 56 | November 21, 2026 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `grep -c "^### tools/" docs/CAPABILITY-INDEX.md` = 56, measured |
-| Tree face | 60 | November 21, 2026 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `ls tools/*.py | wc -l` = 60, measured; this census tabulates 60 records |
-| MCP roster | 43 | November 21, 2026 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` (working tree, the tree_audit registration increment) | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 43 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 43 specs (41 cli + 2 file), measured; the re-scan generation reading was 42 (40 cli + 2 file), advanced by one face since: `tree_audit` (`tools/tree_audit.py`, this increment) |
+| Census-time cast | 27 | 2026-11-14 @ `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` | transcribed record (the 2026-11-14 census.md and INDEX sections 0 to 1); not re-measured |
+| Index entries | 56 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `grep -c "^### tools/" docs/CAPABILITY-INDEX.md` = 56, measured |
+| Tree face | 60 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `ls tools/*.py | wc -l` = 60, measured; this census tabulates 60 records |
+| MCP roster | 43 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` (working tree, the tree_audit registration increment) | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 43 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 43 specs (41 cli + 2 file), measured; the re-scan generation reading was 42 (40 cli + 2 file), advanced by one face since: `tree_audit` (`tools/tree_audit.py`, this increment) |
 
 Deltas, each measured at this anchor:
 
-- Tree 60 = census-time 27 + 33 files added after the November 14, 2026 cast (27 of the 27 still
+- Tree 60 = census-time 27 + 33 files added after the 2026-11-14 cast (27 of the 27 still
   present; 0 retired: none). The 33 new files: ai_flavor.py, ai_flavor_apply.py, auto_merge.py, auto_round.py, axiom_guard.py, b_gate_audit.py, bus_feeder.py, calibration_ledger.py, evolution_dashboard.py, exp_port.py, flaky_guard.py, gap_cluster.py, i18n_pipeline.py, i18n_translate.py, i18n_verify.py, jargon_apply.py, jargon_map_sync.py, lean_sweep.py, learning_feedback.py, mcp_server.py, periscope.py, pin_repair.py, repair_scope.py, repair_weekly.py, roster_resync.py, row_render.py, scheduler_lite.py, selfevolve_round.py, symbiosis_bus.py, termbase.py, tree_audit.py, uplink.py, verdict_diff.py.
 - Tree 60 vs index 56: 4 files carry no index entry (exp_port.py, jargon_map_sync.py, mcp_server.py, periscope.py).
   Index entries not on the tree: 0 (none).
@@ -675,7 +675,7 @@ Each item below is a negative finding of this scan, not an absolute claim.
 ### 6.1 Zero third-party dependencies (60 files)
 1. Scanned: module names of all import statements in the 60 files, compared three ways
    against the stdlib module-name set, the tools/ sibling file-name set, and the full-repo
-   `.py` file-name set (AST word face, November 21, 2026).
+   `.py` file-name set (AST word face, 2026-11-21).
 2. Not scanned: runtime dynamic imports (`importlib` / `__import__` call faces not dug into
    one by one); non-Python dependency faces (the shell environment `cpu_guard.sh` needs).
 3. Not an absolute claim: only this word-face scan's zero third-party module-name hits.
@@ -686,7 +686,7 @@ Re-check condition: re-scan whenever a file is added under tools/ or this census
 ### 6.2 The 50 files with a zero network face
 1. Scanned: transport-class import faces (socket/ssl/urllib.request/http.client/requests and
    similar lists), subprocess bridge token faces (curl/wget/api host names/ghproxy), and git
-   network-subcommand token faces (push/fetch/clone/pull/ls-remote; three channels, November 21, 2026).
+   network-subcommand token faces (push/fetch/clone/pull/ls-remote; three channels, 2026-11-21).
 2. Not scanned: actual runtime connection behavior; dynamically constructed host names and
    URLs (f-string assembly forms not semantically restored one by one); the network behavior
    of external programs these tools call (coqc/lake/git bodies).
@@ -731,7 +731,7 @@ bound to the increment that lands this file: the assembled text below carries th
 placeholder until that run appends its measured output, and no gate verdict is claimed
 before it runs. Verbatim docstring text is not carried
 in this file (it lives in the JSON), so upstream docstring wording sits outside the battery
-target. The standalone shell instrument `ai_flavor_selfcheck.sh` cited by the November 14, 2026 cast
+target. The standalone shell instrument `ai_flavor_selfcheck.sh` cited by the 2026-11-14 cast
 was not found in the workspace at closing time; its coverage is carried by the `ai_flavor`
 MCP face named above.
 
@@ -741,20 +741,16 @@ exemption must be registered with its line, class, and basis):
 - Class `cjk`, census.md L1: cured at a later repair increment (November 21, 2026):
   the bilingual title segment was Englished per the standing language law and the
   bilingual as-cast text is preserved verbatim in the sibling `census.md.zh.md`
-  archive (annotation standard section 5, archive never delete); the November 20, 2026
+  archive (annotation standard section 5, archive never delete); the 2026-11-20
   generation had registered the bilingual title as mandated and measured
   cjk_ratio 0.000105 against threshold 0.0 under it. Basis: standing English law,
   title form.
-- Class `forbidden` (date stamps in title, section 1, section 5 table cells, section 8):
-  cured at this normalization increment: every prose date stamp was re-rendered in
-  spelled-out calendar form (the cast, generation, and re-scan stamps of November 14, 20,
-  and 21, 2026), so the time-point binding survives unchanged; section 5 still binds each
-  of the four counts to its own time point and section 8 stays the provenance face, the
-  as-cast numeric forms stay on record in the sibling `census.md.zh.md` archive, and the
-  machine timestamp stays in the `census-tools.json` ledger field cited in section 8.
-  Basis: the normalization work order; the contract surface itself carried dates in prose
-  (the same class of finding reads on the November 14, 2026 census.md, measured error=6
-  warn=7 under the same instrument, recorded as the same-batch precedent).
+- Class `forbidden` (date stamps `2026-11-14` / `2026-11-20` / `2026-11-21`, title, section 1,
+  section 5 table cells, section 8): time-point binding is this re-scan's own
+  requirement; section 5 binds each of the four counts to its own time point and section 8
+  is the provenance face. Basis: the re-scan work order; the contract surface itself
+  carries dates in prose (the same class of finding reads on the 2026-11-14 census.md,
+  measured error=6 warn=7 under the same instrument, recorded as the same-batch precedent).
 
 Measured output at closing time:
 
@@ -778,7 +774,7 @@ Measured output at closing time:
   `--tools-dir/--out/--head` unchanged since its integration) + `flag_shape_probe.py` (archive
   copy at `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`,
   run unmodified), stdlib-only, run under `python -I` (isolated mode), zero network, zero
-  tool execution. This document was assembled by the November 20, 2026 workbench builder, re-laid
+  tool execution. This document was assembled by the 2026-11-20 workbench builder, re-laid
   for this generation (anchor and date advanced; the roster table re-measured to the
   42-pair face; the hard-wired count literals parameterized; the metadata and porcelain
   faces re-measured); prose faces are the builder's text, table and per-item lines are
@@ -786,7 +782,7 @@ Measured output at closing time:
 - Machine-readable outputs: `census-tools.json` (meta + files[60], per-file sha256 anchors),
   sha256 `f63178c57a6a913dee35d8f0fbdda3b8556a6e8da1397c6a36a28ca4a8788a59` (the re-scan generation bytes, sha256 `f8ec20b2b52d411904a77ea5a518d5b902ae4157248944199ef9abd02fca5e94`, stay on record as the generation this table was transcribed from); `flag-shape.json` (60 records), sha256 `98d621f30e8280f96187731a3ab7600f37147d8b1d33c6e80bdf345152c045ea`.
 - Increment re-run (the tree_audit MCP-face registration plus the net_probe unverifiable
-  registration, November 21, 2026): the census builder re-ran over the working tree at the same
+  registration, 2026-11-21): the census builder re-ran over the working tree at the same
   HEAD `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` into `docs/census-tools.json` (the
   section 1 command, same anchor; `meta.py_files_censused` = 60, scope unchanged). Two
   censused faces carry new working-tree modifications at this increment: `mcp_server.py`
@@ -800,11 +796,11 @@ Measured output at closing time:
   increment; all other rows remain the re-scan generation's transcriptions. The aggregate
   faces of section 4 re-measured unchanged (58/60 argparse, 1/60 subcommands, 50/60 zero
   network, 35/60 any-marker, 60/60 docstrings, 0 syntax errors, 58/60 selftest word face).
-- Census-time comparison base: the November 14, 2026 census (`census.md` + `census-tools.json` +
+- Census-time comparison base: the 2026-11-14 census (`census.md` + `census-tools.json` +
   `flag-shape.json`, archive path above), 27 files at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`.
-- Prior generation on record: the November 20, 2026 re-scan (this directory's census.md +
+- Prior generation on record: the 2026-11-20 re-scan (this directory's census.md +
   census-tools.json + flag-shape.json), 59 files at `0765d671a63193430de86faf3a9790f2d8a086a0`,
   landed at commit `13cefb0`; its JSON sha256 faces are recorded in that generation's own
   section 8.
-- Cast time: November 21, 2026 (UTC timestamp in `census-tools.json` field `meta.generated_at_utc`).
+- Cast time: 2026-11-21 (UTC timestamp in `census-tools.json` field `meta.generated_at_utc`).
 

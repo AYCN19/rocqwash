@@ -311,7 +311,7 @@ render-events plus the v46 dispatch/audit pair plus the v47 registry-fix
 prescription applier plus the annotation-face normalization linter norm-lint
 (twenty-five in total — 22 housed in the main table, with the
 netname-normalize / select-audit / render-events trio in the second table
-above; the entry as a whole now carries 64 routes over 62 tools). It
+above; the entry as a whole now carries 72 routes over 70 tools). It
 lives at the repository root:
 
 ```

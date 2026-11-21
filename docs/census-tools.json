@@ -1,9 +1,9 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T17:49:45Z",
+  "generated_at_utc": "2026-11-21T22:50:54Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "501cc39939e4a9d854c7276cc6042c8948f6e621",
+  "git_head_recorded": "detached-registration",
   "py_files_censused": 68,
   "non_py_files_present": [
    "__pycache__",
@@ -5262,15 +5262,15 @@
   },
   {
    "name": "lean_axiom_sweep.py",
-   "bytes": 69238,
-   "sha256": "654865d53d5492356bf43b7b9081323662a594380bed1e9a0b9b8609cd4a9e6b",
-   "lines": 1429,
+   "bytes": 94855,
+   "sha256": "f64c105dfffcb695238345308d84f10513e7291668b7883874b097ac55e63868",
+   "lines": 1892,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 40,
-    "head": "lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.\nPurpose.  Make \"0 sorry 0 axiom\" claims mechanically reproducible per theorem:\n  the declaration face of the target .lean file(s) is enumerated, one checker\n  file per target imports the target and prints `#print axioms <decl>` per\n  declaration, the checker runs in the target's own lake environment\n  (`lake env lean`) or against a direct lean binary, and the output is\n  parsed into axiom sets and classified: CLEAN / BENIGN-STANDARD (subset of\n  propext, Classical.choice, Quot.sound) / SORRY-ALARM (sorryAx) /\n  C"
+    "lines": 57,
+    "head": "lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.\nPurpose.  Make \"0 sorry 0 axiom\" claims mechanically reproducible per theorem:\n  the declaration face of the target .lean file(s) is enumerated and each\n  declaration is probed with `#print axioms <decl>` via the copy-append\n  form: the target file is copied to a private temp checker file and one\n  probe line per declaration is appended to the copy, so private\n  declarations are probed in their own file's context (the import-based\n  checker form survives only for cross-file aggregated sweeps where\n  copy-append i"
    },
    "argparse": {
     "imported": true,
@@ -5390,13 +5390,20 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 101,
+      "count": 148,
       "samples": [
        ".lean",
        "LEAN_OUT_CLEAN",
        "LEAN_OUT_CUSTOM",
-       "LEAN_OUT_GHOST",
-       "LEAN_OUT_MIXED"
+       "LEAN_OUT_DISPLACED",
+       "LEAN_OUT_GHOST"
+      ]
+     },
+     {
+      "kind": "windows_guard",
+      "count": 1,
+      "samples": [
+       "Windows"
       ]
      }
     ],
@@ -5878,9 +5885,9 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 160080,
-   "sha256": "f9dcc194182a147d78d5a5ed9887e667baecdfee071d88a81b4d8d41868e50fd",
-   "lines": 3122,
+   "bytes": 162017,
+   "sha256": "6edf40d8d175ca34106b5d04cb10d40c3970fd7e5a61931d550d506fa1792b07",
+   "lines": 3145,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -8563,9 +8570,9 @@
   },
   {
    "name": "repair_scope.py",
-   "bytes": 78951,
-   "sha256": "e21322c741a1f56301e0767b262c061b004f7cbcfc0ebdddf39657d57d4847c6",
-   "lines": 1856,
+   "bytes": 85355,
+   "sha256": "db77c53a04749cc2ce0048ca9968e9bc11a26eacaf08c345e37db2007f59151d",
+   "lines": 1982,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -8723,9 +8730,11 @@
     "modules": [
      "argparse",
      "ast",
+     "contextlib",
      "datetime",
      "doc_lint",
      "hashlib",
+     "importlib.util",
      "io",
      "json",
      "os",
@@ -8739,7 +8748,9 @@
     "local": [
      "doc_lint"
     ],
-    "guarded_conditional": []
+    "guarded_conditional": [
+     "doc_lint"
+    ]
    },
    "network": {
     "transport_imports": [],
@@ -8754,6 +8765,14 @@
    },
    "skip_face": {
     "markers": [
+     {
+      "kind": "env_rocwash",
+      "count": 8,
+      "samples": [
+       "ROCWASH_REPO_DIR",
+       "ROCWASH_TOOLS_DIR"
+      ]
+     },
      {
       "kind": "thermal_wrapper",
       "count": 1,
@@ -11438,9 +11457,9 @@
   },
   {
    "name": "vacgen.py",
-   "bytes": 193832,
-   "sha256": "679c8ac113472c4daecfd41a5dd0f034e97f3d6d552d9fbefe9f5f6fdf02d931",
-   "lines": 4038,
+   "bytes": 210213,
+   "sha256": "2295217b3cb03688043cf2fc5a63fc4591a8c52a701c9b5f24c2415f37dc991d",
+   "lines": 4372,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -11672,6 +11691,16 @@
        "default": null,
        "help": "(v2) mathlib checkout root for --verify-anchors"
       }
+     },
+     {
+      "flags": [
+       "--allow-bare-type-limb"
+      ],
+      "kwargs": {
+       "dest": "allow_bare_type_limb",
+       "action": "store_true",
+       "help": "(v2) opt-in W5 waiver: release a cast through the bare-type-conjunct-limb front gate when a limb head resolves neither as the audited file's own def : Prop nor as a Mathlib/Std predicate family head; every released limb is registered loud on stdout and in the report JSON (report.waiver); the default (flag off) stays fail-loud rc=1"
+      }
      }
     ],
     "positionals": [],
@@ -11698,7 +11727,8 @@
      "--exp-draft",
      "--verify-anchors",
      "--selftest",
-     "--mathlib"
+     "--mathlib",
+     "--allow-bare-type-limb"
     ],
     "subcommands": [],
     "has_subparsers": false,
@@ -11738,7 +11768,7 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 80,
+      "count": 88,
       "samples": [
        ".lean",
        "Lean",
@@ -11758,7 +11788,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--from-statements] [--from-repo] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib]",
+    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--from-statements] [--from-repo] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib] [--allow-bare-type-limb]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
