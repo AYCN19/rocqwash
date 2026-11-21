@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""ci_triage.py — failing-build triage tool for rocqwash CI (tools/).
+"""ci_triage.py: failing-build triage tool for rocqwash CI (tools/).
 
 Purpose.  Triages the jobs of a GitHub Actions run into failing and
   passing: prints a step-level table (step name/status/conclusion/start/
   end/duration in seconds), assigns each job a family from the five-family
   classification taxonomy plus the all-passing state, and prescribes an
   action; with --baseline-seconds given a historical duration for the same
-  sync, prints a ratio table (example: coqchk 561s vs 7480s = 13.3x — a
+  sync, prints a ratio table (example: coqchk 561s vs 7480s = 13.3x, a
   likely local resource squeeze, not a hang).  A failing result is data,
   not a tool failure: triage always exits 0 and reports the outcome
   explicitly on stdout.  Dry run by default in the network sense: online
@@ -49,7 +49,7 @@ Exit-codes.  0 = triage completed (a failing verdict is data, not a tool
   failure, jobs file missing or malformed JSON, unrecognized timestamp
   shape).  --selftest: 0 = all vectors pass / 2 = assertion failure.
 
-[Classification taxonomy] — five failure families plus the all-passing state:
+[Classification taxonomy]: five failure families plus the all-passing state:
   A content failure (A-content-red) = the failing step points at concrete
     content: Build/COQCHK emits Error:/FAIL/ORDER-MISSING, or COQCHK exits
     nonzero (COQCHK_EXIT≠0, nonzero axiom total) → action=fix-content.
@@ -67,12 +67,12 @@ Exit-codes.  0 = triage completed (a failing verdict is data, not a tool
     zero steps; its logs 404) → action=queue-etiquette.
   E coqchk-skipped signature (E-coqchk-skipped) = the upload step failed and
     the coqchk step was skipped (with GATE-BANNER-ABSENT confirmable from the
-    log) — a variant of family B; do not treat it as a content failure
+    log), a variant of family B; do not treat it as a content failure
     → action=rerun-after-stable-window.
   E variant (gate2-only cascade, banner-absent-restricted form) = the
     failed-step set is a subset of {gate2 + upload family} and at least one
     pure-gate2 failed step exists (a gate2 step name that is not an upload
-    name — this guards against "Upload artifact (gate2 ledger)" being counted
+    name; this guards against "Upload artifact (gate2 ledger)" being counted
     as a pure gate2 red through the gate2 substring), and the preceding
     build/coqchk steps are not content failures. Conclusion-position
     validation (judged on genuinely executed log lines after dump-line
@@ -95,12 +95,12 @@ Exit-codes.  0 = triage completed (a failing verdict is data, not a tool
   All passing = no failed jobs → family=none, action=watch-only. In-progress or
     conditionally skipped jobs (empty conclusion, or skipped/neutral) are also
     recorded as none, but the evidence explicitly notes "classification
-    deferred, not a passing verdict" — they are never counted as passing.
+    deferred, not a passing verdict"; they are never counted as passing.
   Failure shapes outside the taxonomy → family=UNRECOGNIZED, action=watch-only
     (never force-fitted into the taxonomy; takes top precedence at run level;
     manual log identification first; fail-loud).
   Maintained-UNRECOGNIZED evidence-package shapes (family unchanged, evidence
-    enhanced only — never a reclassification; token-level ground truth per the
+    enhanced only, never a reclassification; token-level ground truth per the
     review ledger, 复核台账 §二 S3/S6, §四-2/§四-3):
     ① runner-lost candidate = job failure + zero failed steps + a build-family
        step still hung (status=in_progress, conclusion=null) + a logs-GET
@@ -129,7 +129,7 @@ Exit-codes.  0 = triage completed (a failing verdict is data, not a tool
     has steps, zero failed steps) → direct-log C (EXIT=134 / Abort trap: 6) →
     E signature (upload-step red + coqchk skipped) → E variant (gate2-only
     cascade: failed-step set ⊆ {gate2+upload}, build/coqchk not content red,
-    banner-absent-restricted — attested-token and coqchk-completed shapes stay
+    banner-absent-restricted; attested-token and coqchk-completed shapes stay
     UNRECOGNIZED) → log B → step-name B (checkout/upload/artifact/cache/…) →
     log A (Error:/FAIL/ORDER-MISSING/COQCHK_EXIT≠0/nonzero axiom total) →
     step-name A (build/compile/coqchk/…) → UNRECOGNIZED.
@@ -150,7 +150,7 @@ Usage (all paths parameterized; zero hardcoded absolute paths):
       GATE-BANNER-ABSENT / GATE2-ATTEST-RED / R4 覆盖划分 / appendix 缺 /
       ENOTFOUND / ORDER-MISSING / EXIT=134 and others. Dump-line filtering:
       evidence collection and token search first drop ANSI-cyan script echo
-      lines ([36;1m) and ##[group]/##[endgroup] group-directive lines — script
+      lines ([36;1m) and ##[group]/##[endgroup] group-directive lines; script
       echo is not a real execution line, so "log confirmation" must be a real
       execution line (the filter rule is noted as-is: the number of dropped
       lines enters evidence); --no-dump-filter disables it (trap shapes then
@@ -159,8 +159,8 @@ Usage (all paths parameterized; zero hardcoded absolute paths):
       application/vnd.github+json (text/plain is now rejected with 415) with
       automatic redirects disabled → 302 Location signed URL; hop 2 GETs the
       signed URL with no Authorization header (the signature carries the
-      credentials — forwarding the token yields 403 Azure
-      AuthenticationFailed). A logs GET 404/403/415 itself enters evidence —
+      credentials; forwarding the token yields 403 Azure
+      AuthenticationFailed). A logs GET 404/403/415 itself enters evidence;
       403 Forbidden: job is completed is a family-B cancellation-cascade
       token; after retries are exhausted the original status code enters
       evidence as before.)
@@ -184,13 +184,13 @@ Usage (all paths parameterized; zero hardcoded absolute paths):
       job_log_notes {"<job_id>": "log-fetch note text"} dedicated to offline
       injection of the logs-GET evidence notes (the offline counterpart of
       the online fetch_job_log note path). Fixtures:
-      tests/fixtures/ci_triage_*.json — the six-file set, plus one main-shape
+      tests/fixtures/ci_triage_*.json: the six-file set, plus one main-shape
       coq93 real-form file ci_triage_main_coq93.json (a single Windows job
       "Main CI 9.3", 16 real step names, passing sample), two gate2-only
       real-form files ci_triage_gate2_only_{cancelled,failure}.json, and one
       runner-lost real-form file ci_triage_runner_lost.json (Main#3 real
       form: single job, conclusion=failure with zero failed steps, the build
-      step hung in_progress, canned logs-GET HTTP 404 note) — ten files in
+      step hung in_progress, canned logs-GET HTTP 404 note); ten files in
       total.)
   python3 tools/ci_triage.py --selftest
 
@@ -207,7 +207,7 @@ Report schema (--json) = rocqwash-ci-triage/1:
     queue-etiquette / watch-only;
   baseline_note (present only with --baseline-seconds): {applied,step_query,
     baseline_seconds,matched?,current_seconds?,ratio?,note|reason}
-    (applied=false = the baseline step is absent or unfinished — reported
+    (applied=false = the baseline step is absent or unfinished; reported
     explicitly, never silently; rc is still 0).
 
 Honesty rules (per CONTRIBUTING §0): accept only mechanical evidence; never
@@ -249,11 +249,11 @@ import _http_backoff
 
 # ---- classification-taxonomy word faces (frozen vectors; positive/negative judging in --selftest) ----
 
-# log key-line harvesters (tag, regex) — a hit line enters evidence verbatim
+# log key-line harvesters (tag, regex): a hit line enters evidence verbatim
 # (<=200 chars, dedup preserving order, cap 60).  KEEP (data faces): every tag
-# and regex below parses the frozen CI logs' own output vocabulary — the
+# and regex below parses the frozen CI logs' own output vocabulary, the
 # review-ledger five-token roster (GATE2-ATTEST-RED / R4 coverage split /
-# appendix missing added; 判定=CLEAN / 公理总数 already rostered) — and must
+# appendix missing added; 判定=CLEAN / 公理总数 already rostered), and must
 # never be rewritten.
 KEY_LOG_PATTERNS = [
     ("COQCHK_EXIT", re.compile(r"COQCHK_EXIT=(-?\d+)")),
@@ -286,26 +286,26 @@ GATE_BANNER_ABSENT_RE = re.compile(r"GATE-BANNER-ABSENT")
 # gate2-only shape conclusion-position validation token (the review-ledger
 # token dichotomy; the attested-red auth-state criterion): a genuinely executed
 # GATE2-ATTEST-RED line (17:18:53Z) or 判定=CLEAN parser verdict line (17:18:52Z)
-# on the roster means the auth-state shape holds and the E variant does not —
+# on the roster means the auth-state shape holds and the E variant does not;
 # the job stays UNRECOGNIZED, never force-fitted.
 GATE2_ATTEST_RE = re.compile(r"GATE2-ATTEST-RED|判定=CLEAN")
 # attested-red auth-state pair detection (maintained-UNREC evidence notes):
 # the auth-state-red-maintained note fires only when both tokens are
 # genuinely present on dump-filtered log text; a single token keeps the
 # plain gate2 exclusion note (the E-variant exclusion condition itself is
-# unchanged — evidence enhancement only, no classification change)
+# unchanged; evidence enhancement only, no classification change)
 GATE2_ATTEST_RED_RE = re.compile(r"GATE2-ATTEST-RED")
 GATE2_CLEAN_RE = re.compile(r"判定=CLEAN")
 # coqchk-step-completed criterion (the review-ledger second discriminator; the
 # run#10 form coqchk success 40398s = not the "artifacts missing" cascade
-# mechanism): only a step NAME starting with coqchk counts — this blocks the
+# mechanism): only a step NAME starting with coqchk counts; this blocks the
 # "gate5 vo-binary quarantine (pre-coqchk...)" / "Upload coqchk logs" coqchk
 # substring free-ride from misreading completion (the same free-ride reef rule
 # as the survey doc §3.1 / retro §2.3-1).
 COQCHK_DONE_RE = re.compile(r"(?i)^coqchk")
 # dump/telemetry line filtering (the review-ledger evidence trap): GitHub step
 # logs echo the whole script in cyan ([36;1m...[0m, ESC form or literal residue)
-# plus ##[group]/##[endgroup] group-directive lines — a script echo is not a
+# plus ##[group]/##[endgroup] group-directive lines; a script echo is not a
 # real execution line (the run#10 form: the banner-absent branch never actually
 # ran; only the dump line exists), so "log confirmation" must be a real
 # execution line.  The filter rule is noted as-is (the dropped-line count enters
@@ -319,7 +319,7 @@ NET_STEP_RE = re.compile(r"(?i)checkout|upload|artifact|cache|download|publish")
 UPLOAD_STEP_RE = re.compile(r"(?i)upload|artifact")
 COQCHK_STEP_RE = re.compile(r"(?i)coqchk")
 GATE2_STEP_RE = re.compile(r"(?i)gate2")   # gate2-only cascade shape criterion word (a pure
-# gate2 red step = GATE2 matches and UPLOAD does not — the "Upload artifact
+# gate2 red step = GATE2 matches and UPLOAD does not; the "Upload artifact
 # (gate2 ledger)" gate2 substring free-ride does not count as pure gate2, so an
 # upload red is never swallowed; the combined criterion lives in the classify
 # E-variant branch)
@@ -467,7 +467,7 @@ def http_get(url, token, timeout, accept="application/vnd.github+json",
     """Read-only GET -> bytes.  403/429/5xx retry with exponential backoff (the
     _http_backoff pure functions: base 2s, cap retry_max; a parseable
     Retry-After second count replaces that attempt's delay); exhausted retries
-    or 4xx semantic errors raise the original error — HTTPError becomes
+    or 4xx semantic errors raise the original error; HTTPError becomes
     ApiHTTPError (body head carried); connection failure -> 9.  _open/_sleep
     are injection points (selftest zero-network vectors; defaults are the real
     urlopen/real sleep)."""
@@ -532,7 +532,7 @@ def fetch_jobs_online(repo, run_id, token, timeout, retry_max=3):
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     """Auto-redirect-disabled handler (a 302 raises as HTTPError so fetch_job_log
-    can continue the two hops manually — urllib's default forwarding carries the
+    can continue the two hops manually: urllib's default forwarding carries the
     Authorization header onto the signed URL, the live-probed 403
     AuthenticationFailed from Azure; the two-hop zero-auth second hop is the
     fix)."""
@@ -557,10 +557,10 @@ def fetch_job_log(repo, job_id, token, timeout, retry_max=3, _open=None,
     note).
 
     Two-hop log fetch (the live-probed 415 fix): hop 1 GETs the logs endpoint
-    (Accept: application/vnd.github+json — text/plain is now rejected with 415;
+    (Accept: application/vnd.github+json; text/plain is now rejected with 415;
     auto-redirects disabled via the _NoRedirect opener) -> 302 Location signed
     URL; hop 2 GETs the signed URL with zero Authorization (the signature
-    carries the credentials — urllib's default redirect forwarding sends the
+    carries the credentials; urllib's default redirect forwarding sends the
     token and gets 403 Azure AuthenticationFailed, live-probed).  403/429/5xx
     on hop 1 retry with exponential backoff (same _http_backoff; a
     Retry-After second count is honored; exhaustion lands in the evidence
@@ -623,9 +623,9 @@ def load_jobs_offline(path):
     """Canned jobs JSON -> (jobs, total, job_logs, job_log_notes).  Same shape
     as the real API {"total_count":N,"jobs":[...]} plus two optional top-level
     extensions (neither a real API shape; both noted as such): job_logs
-    {"<job_id>": "log text"} (offline log injection — the canned channel for
+    {"<job_id>": "log text"} (offline log injection, the canned channel for
     the review-ledger token-dichotomy acceptance verdicts) and job_log_notes
-    {"<job_id>": "log-fetch note text"} (offline fetch-note injection — the
+    {"<job_id>": "log-fetch note text"} (offline fetch-note injection, the
     offline counterpart of the online fetch_job_log evidence-note channel);
     numeric keys normalize to int to join job.id.  Missing file / parse
     failure / malformed shape (bad jobs shape; job_logs or job_log_notes not
@@ -681,7 +681,7 @@ def filter_dump_lines(text):
 
     Filter rule (noted as-is; DUMP_LINE_RE): cyan script echo lines ([36;1m,
     ESC form or literal residue) plus ##[group]/##[endgroup] group-directive
-    lines — a script echo is not a real execution line; in the run#10 form the
+    lines: a script echo is not a real execution line; in the run#10 form the
     banner-absent branch never actually ran and only the dump line exists, so
     without filtering a dump line could impersonate a "log confirmation" (the
     S6 evidence trap in its original form).  Real execution lines (mojibake GBK
@@ -698,7 +698,7 @@ def scan_log_evidence(text, dump_filter=True):
     """Raw log text -> the key-line evidence list (tag + hit line verbatim,
     <=200 chars, dedup preserving order, cap 60).  dump_filter=True (default)
     drops dump/telemetry lines first (cyan script echo / group directives; the
-    review-ledger evidence trap — a "log confirmation" must be a real
+    review-ledger evidence trap: a "log confirmation" must be a real
     execution line)."""
     out = []
     if dump_filter and text:
@@ -727,11 +727,11 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
     "red_steps"} (precedence order in the module docstring; failing step names
     and red steps all enter evidence).  dump_filter=True (default) drops
     dump/telemetry lines from log_text first (cyan script echo / group
-    directives; the review-ledger evidence trap — the dropped-line count enters
+    directives; the review-ledger evidence trap: the dropped-line count enters
     evidence loudly, and only the filtered text feeds the criterion search and
     evidence collection).  log_note = the log-fetch note (the online
     fetch_job_log failure note or an offline canned note; it enters the
-    evidence face only and never judges a family — the logs-GET 404 criterion
+    evidence face only and never judges a family: the logs-GET 404 criterion
     leg of the runner-lost-candidate shape).  The family-judging face is
     unchanged: the shape notes only enhance evidence (the two
     maintained-UNREC shapes plus the evidence-annihilation candidate note
@@ -841,16 +841,16 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
 
     # E variant (the gate2-only cascade shape, banner-absent restricted form;
     # admitted from the manually identified evidence of the six Main retro
-    # events plus the review-ledger token dichotomy restriction — the #10
+    # events plus the review-ledger token dichotomy restriction (the #10
     # false-positive discharge): the red-step set ⊆ {gate2 + upload family} and
-    # a pure gate2 red step exists (a gate2 name that is not an upload name —
+    # a pure gate2 red step exists (a gate2 name that is not an upload name;
     # this blocks the "Upload artifact (gate2 ledger)" gate2 substring
     # free-ride from swallowing an upload red), with the preceding
     # build/coqchk steps not content failures (a proper Build/coqchk step name
     # matches neither gate2 nor the upload family, so its presence breaks the
     # subset condition).  Conclusion-position validation (the review-ledger
     # token dichotomy; judged on genuinely executed tokens after dump-line
-    # filtering — run#7 job 127903477736's log fetched with HTTP 200 showed a
+    # filtering: run#7 job 127903477736's log fetched with HTTP 200 showed a
     # genuinely executed banner-absent line at 13:22:43Z; run#10 job
     # 128320751675's raw log showed genuinely executed 判定=CLEAN(exit 0)
     # 公理总数=0 at 17:18:52Z plus GATE2-ATTEST-RED at 17:18:53Z):
@@ -905,7 +905,7 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
                 " identification)")
             # auth-state-red-maintained note (evidence enhancement only):
             # both tokens genuinely present on dump-filtered text = the
-            # attested-red pair (run#10 form) — the UNREC maintained
+            # attested-red pair (run#10 form); the UNREC maintained
             # rationale rides on the note automatically; family unchanged
             if (log_text and GATE2_ATTEST_RED_RE.search(log_text)
                     and GATE2_CLEAN_RE.search(log_text)):
@@ -982,11 +982,11 @@ def classify(job, log_text=None, dump_filter=True, log_note=None):
     # runner-lost candidate shape (Main#3 real form; review ledger §二 S3/R1
     # and §三-6, §四-3): job failure with zero failed steps, a build-family
     # step still hung (status=in_progress, conclusion=null), and a logs-GET
-    # HTTP 404 note (the log blob was never uploaded — the companion evidence
+    # HTTP 404 note (the log blob was never uploaded; the companion evidence
     # of a runner lost mid-step). Evidence-package form only: family stays
     # UNRECOGNIZED (never force-fitted; the D shape cancelled + zero steps
     # does not cover failure; manual identification first). The four legs
-    # must all hold — a missing 404 note leaves the plain fallback below.
+    # must all hold; a missing 404 note leaves the plain fallback below.
     if (conclusion == "failure" and not red_steps and log_note is not None
             and "logs-GET: HTTP 404" in log_note):
         hung = [str(s.get("name") or "(unnamed)") for s in steps
@@ -1361,7 +1361,7 @@ def selftest():
     #8/#20/#26 shape vectors stay E; the #10 fixture with the attested-token
     canned -> the UNRECOGNIZED conversion acceptance verdict, machine ruling =
     review ruling; the coqchk-success corroborating vector; the auth-state
-    tokens-never-enter-red-regexes check; four negative rules — of the six
+    tokens-never-enter-red-regexes check; four negative rules: of the six
     provenance events, four entered, one converted, one stays out); the
     dump-line filtering vectors (the review-ledger evidence trap: a dump-only
     banner never confirms, a genuinely executed line confirms,
@@ -1372,10 +1372,10 @@ def selftest():
     no-Location original codes enter evidence; canned, zero network); and the
     two-shape evidence-note vectors (runner-lost-candidate: the Main#3 real
     fixture four-legs pass plus the 57007s wall clock plus the canned 404 note
-    in evidence plus determinism plus four negatives — missing note / note
+    in evidence plus determinism plus four negatives: missing note / note
     without 404 / hung step not build-family / red steps present, any one
     missing leg kills the note; auth-state-red-maintained: the fixture pair
-    note assertion plus two single-token negatives — an incomplete pair keeps
+    note assertion plus two single-token negatives: an incomplete pair keeps
     only the old note; the job_log_notes extension and malformed fail-loud
     vectors); and the evidence-annihilation candidate (R19) vectors (the
     triage-table v1.5 row: a zero-byte injected log with every outcome
@@ -1459,7 +1459,7 @@ def selftest():
         repG = json.load(io.open(outs["green"], encoding="utf-8"))
         assert repG["family"] == "none" and repG["action"] == "watch-only"
 
-        # part 2: baseline comparison — the all-passing COQCHK 7480s vs baseline 561s = 13.3x (the example)
+        # part 2: baseline comparison, the all-passing COQCHK 7480s vs baseline 561s = 13.3x (the example)
         out = os.path.join(tmp, "baseline.json")
         p = run(["--offline", fx("green"), "--baseline-seconds", "561",
                  "--json", out])
@@ -1475,7 +1475,7 @@ def selftest():
         bn = json.load(io.open(out, encoding="utf-8"))["baseline_note"]
         assert bn["applied"] is False and "loud" in bn["reason"], bn
 
-        # part 3: determinism — the C fixture rerun with the same input is byte-identical in --json
+        # part 3: determinism; the C fixture rerun with the same input is byte-identical in --json
         before = io.open(outs["C_toolchain_break"], "rb").read()
         p = run(["--offline", fx("C_toolchain_break"),
                  "--json", outs["C_toolchain_break"]])
@@ -1599,7 +1599,7 @@ def selftest():
         except TriageError as e:
             assert e.code == 9, e.code
 
-        # part 8: the resilience layer — backoff sequence + Retry-After honored
+        # part 8: the resilience layer; backoff sequence + Retry-After honored
         # + http_get canned retry runner (zero network; _open/_sleep injection
         # points; the 403x3 -> [2,4,8] example)
         assert _http_backoff.backoff_delays(3) == [2.0, 4.0, 8.0]
@@ -1671,20 +1671,20 @@ def selftest():
         # part 9: the Main-shape reading vector (a mechanical pin on the
         # survey doc §3.1 compatibility table): the coq93.yml real form
         # (workflow "Main CI 9.3", the single Windows job "Rocq 9.3 build +
-        # coqchk (self-hosted seed cache, Windows)") — all 16 step names pinned
+        # coqchk (self-hosted seed cache, Windows)"): all 16 step names pinned
         # one by one, plus the five-family classification mechanically verified
         # line by line against the Main step names (a real red is never
         # missed; the UNRECOGNIZED fallback never misfires).  One divergence
         # between this mechanical check and the §3.1 prose is registered
         # as-is: the gate1 step name "pre-build" contains the build substring,
         # so CONTENT matches it into A (fix-content; a poison-token red is
-        # semantically a content red — the same free-ride as the
-        # gate5/attest word faces is acceptable) — not the §3.1-recorded
+        # semantically a content red; the same free-ride as the
+        # gate5/attest word faces is acceptable), not the §3.1-recorded
         # "zero hits -> UNRECOGNIZED fallback"; the "five-family skeleton
         # usable as-is" criterion is unaffected (no missed reds, no
         # misfires).  Added note: the gate2 row was originally pinned
         # UNRECOGNIZED (the state of the tool when the v48 compatibility table
-        # was written) — after the six Main retro events' manually identified
+        # was written); after the six Main retro events' manually identified
         # evidence admitted the gate2-only cascade shape into the taxonomy
         # (the E variant, part 10 below), this row is now pinned
         # E-coqchk-skipped; the fallback rows are down to gate3/RAM/
@@ -1861,7 +1861,7 @@ def selftest():
                            started_at=None, completed_at=None),
                     mkstep(3, G2_RED, "failure")]
         # KEEP (data faces): BANNER_REAL / ATT_REAL replicate the real CI
-        # logs' own lines verbatim (the review-ledger ground truth) — they are
+        # logs' own lines verbatim (the review-ledger ground truth); they are
         # fixture log content, never rewritten.
         BANNER_REAL = ("2026-11-06T13:22:43Z GATE-BANNER-ABSENT _chk_all.log"
                        " 不在盘——coqchk 未产出日志（上游 gate4/build 夭折连带，"
@@ -2146,13 +2146,13 @@ def selftest():
         assert io.open(out2, "rb").read() == io.open(out, "rb").read(), \
             "runner-lost json byte drift = violation"
         # 2) shape 1, four negatives (classify called directly; any single
-        #    missing leg kills the note; the plain UNREC fallback unchanged —
+        #    missing leg kills the note; the plain UNREC fallback unchanged,
         #    the family-judging face untouched): a. no logs note; b. the note
         #    is not a 404; c. the hung step is not build-family (an upload
         #    hang); d. red steps present (A judges as usual).
         #    KEEP (data faces): RL_NOTE_404 and the inline canned notes below
         #    replicate the real evidence-note format including its Chinese
-        #    suffix — fixture input data, never rewritten.
+        #    suffix; fixture input data, never rewritten.
         RL_NOTE_404 = ("logs-GET: HTTP 404 <Error><Code>BlobNotFound</Code>"
                        "</Error>（日志不可达·入证据）")
         HUNG_BUILD = mkstep(2, "Build full tree (order topology, fingerprint"

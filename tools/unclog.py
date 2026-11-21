@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""unclog.py — blockage-clearing closed-loop engine for rocqwash (tools/).
+"""unclog.py: blockage-clearing closed-loop engine for rocqwash (tools/).
 
 Purpose.  Closes the manual five-step unblocking procedure into a
-  self-driving loop over the existing engines; dry run by default — writes
+  self-driving loop over the existing engines; dry run by default: writes
   happen only under --apply.
 
 Interface.  python3 tools/unclog.py --src DIR [--world DIR]
@@ -30,7 +30,7 @@ Evidence.  --selftest: fourteen frozen vectors on tmp fixture trees with
   membership tests/test_unclog.py.
 
 Exit-codes.  0 = unclogged (or audit); 1 = wall or rounds-exhausted (a
-  failing result is data, not a tool failure — reported loudly); 2 = usage
+  failing result is data, not a tool failure; reported loudly); 2 = usage
   or scenario-shape error; 9 = missing path or tool failure.
 
 Extended contract (kept below the five-field block per the annotation
@@ -38,7 +38,7 @@ standard 30-line header budget).
 
 Closes the manual five-step unblocking procedure used by the real-time support
 workflow into a self-driving loop (orchestrates existing engines rather than
-reimplementing them — probe_engine/chain_graph/cure_applier/scan_v4_token/
+reimplementing them: probe_engine/chain_graph/cure_applier/scan_v4_token/
 frozen8 are always invoked as subprocesses; this tool supplies only the glue
 and the state machine, following the pushci.py orchestration precedent):
 
@@ -71,13 +71,13 @@ Three candidate sources (mutually exclusive):
                         order, later batches override earlier ones, same as
                         chain_graph); re-probe ledgers from later rounds are
                         merged round by round (resprobe: later overrides
-                        earlier — the post-repair state is recorded). This
+                        earlier; the post-repair state is recorded). This
                         mode has no per-round full re-probe (runs with zero
                         world dependency).
   (neither given)       --src full-tree enumeration: walk --src collecting
                         *.v files with per-file md5 → generate the TSV (the
                         RED column is not declared; probe_engine honestly
-                        reports RC0 for rc0 — the chain-root washability
+                        reports RC0 for rc0: the chain-root washability
                         criterion is self.rc, not verdict; same convention as
                         chain_graph.py)
 
@@ -101,14 +101,14 @@ Safety rules:
   --apply defaults to off = everything is a dry run with zero disk writes
     (single switch; --yes is not needed); applies go only through the
     cure_applier canonical pack (--pack default wash/cure_pack.json);
-    the apply target is always the chain-root file (<src>/<root>.v — outside
+    the apply target is always the chain-root file (<src>/<root>.v; outside
     pick there is no cure call path, so restricting applies to chain roots is
     a structural guarantee); files on the frozen roster (certify/frozen8.py
     --ledger, eight files, fetched via subprocess; a missing roster fails
     closed with 9) are pre-checked and refused: if the root name collides
     with a rostered rel / basename / extension-stripped name, or the root
     file's realpath collides with a rostered file (resolved on both the
-    --src and --repo-path sides), it is refused — recorded in the wall table
+    --src and --repo-path sides), it is refused; recorded in the wall table
     as reason=frozen-in-service, zero applies.
 
 --audit read-only audit (real-tree blockage baseline):
@@ -116,26 +116,26 @@ Safety rules:
   report" (schema rocqwash-unclog/1: final.verdict=audit; one round with
   probe_summary/chain_top present; cure/rescan/resprobe always None;
   cures_planned/cures_applied always 0; the wall table records every graph
-  case — unprobed/self-unwashable/frozen-in-service per root (data recorded,
-  not a stop condition — audit neither picks roots nor applies); a failure
+  case: unprobed/self-unwashable/frozen-in-service per root (data recorded,
+  not a stop condition; audit neither picks roots nor applies); a failure
   set with no chain root adds a no-chain-root wall entry instead of staying
-  silent; exit 0 — a failing result is baseline data, not a tool failure).
+  silent; exit 0; a failing result is baseline data, not a tool failure).
   Mutual exclusions: --audit with --apply → rc=2 (audit is read-only); with
   --loop → rc=2 (single-pass baseline; watch-mode cycling is not audit
   semantics); with --state-file → rc=2 (seen-state differencing is not audit
   semantics); --rounds does not apply to a single pass.
   Zero-write hard guarantee = the --src full-file md5 manifest is self-checked
   identical before and after the run (probe_engine itself copies the tree out
-  for compilation — wash/probe_engine.py — and cleans up artifacts; any
+  for compilation (wash/probe_engine.py) and cleans up artifacts; any
   manifest mismatch fails loudly with 9; a contaminated baseline is never
   reported); workdir/--json/events writes are the audit's own duty and are
   outside the guarded domain.
   Per-phase timings (enumerate/manifest/probe+chain/total) enter
-  report["timing"] = measured wall clock — the only non-deterministic part of
+  report["timing"] = measured wall clock, the only non-deterministic part of
   the report (byte-identical reruns still hold for everything except the
   timing section); the timing section also records the jobs dimension = the
-  --probe-parallel K value passed through to probe_engine --jobs (default 1)
-  — runs over the same candidate set with different K are comparable
+  --probe-parallel K value passed through to probe_engine --jobs (default 1):
+  runs over the same candidate set with different K are comparable
   (parallel-profile collection; see examples/baselines/perf-README.md; in
   injector canned mode the parameter is bypassed but still recorded).
   Offline-testable like the closed loop: --injector canned probe doubles as
@@ -144,14 +144,14 @@ Safety rules:
 
 --probe-parallel K (pass-through to probe_engine --jobs; default 1 = per-file
 serial, zero drift):
-  ① collect probe / ④ re-probe resprobe / --audit all share the parameter —
+  ① collect probe / ④ re-probe resprobe / --audit all share the parameter;
   candidate files are sharded across a ThreadPool (ledger record order always
-  follows candidate order; completion order never changes output order — the
+  follows candidate order; completion order never changes output order, the
   determinism rule; md5_match/verdict logic unchanged; per-file build logs
   still land independently in logdir; real compilation still goes through
   --guard cpu_guard per file; the guard FRONT profile applies its own
   clamping). K>1 = multiple concurrent rocqworker processes on one machine =
-  higher thermal load — with --guard given, K≤2 is advised (advisory note,
+  higher thermal load; with --guard given, K≤2 is advised (advisory note,
   not enforced; the user decides; thermal-control details in the parallelism
   section of the wash/probe_engine.py docstring). Injector canned mode does
   zero real compilation; the parameter is bypassed (canned data lands
@@ -167,12 +167,12 @@ serial, zero drift):
   cycle (--loop-max cap, 0 = unlimited). Mutual exclusion, spelled out:
   --rounds with --loop → rc=2 (--rounds caps the rounds of a single closed
   loop; watch-mode cycling is not its semantics; the per-cycle round cap is
-  always the default 5 — same rule as --audit with --loop; no silent choice
+  always the default 5, same rule as --audit with --loop; no silent choice
   between them).
 --state-file watch-mode seen state (rocqwash-sentinel-state/1, same shape as
-  cw_sentinel --state-file — same schema, same keys repos/ledgers/buildlogs;
+  cw_sentinel --state-file: same schema, same keys repos/ledgers/buildlogs;
   mutually read/write compatible):
-  inter-round failure-set differencing, only-new events — each round's
+  inter-round failure-set differencing, only-new events: each round's
   failure set is diffed against state.red_seen; newly appearing failed files
   emit {"event":"red-new", new_red:[...]} (already-seen failures are not
   reported again; seen grows monotonically); events are emitted before the
@@ -184,7 +184,7 @@ serial, zero drift):
 Offline-testable (hard requirement; the subprocess-call layer is injectable;
 zero real network and zero real compilation in --selftest):
   --injector DIR  DIR/scenario.json = {"probe":[probe_ledger...],
-                  "resprobe":[probe_ledger...]} — the two probe_engine call
+                  "resprobe":[probe_ledger...]}: the two probe_engine call
                   classes (probe/resprobe) are consumed strictly in order
                   from the canned ledgers (written verbatim into workdir and
                   then fed to the **real** chain_graph; exhaustion / missing
@@ -197,7 +197,7 @@ zero real network and zero real compilation in --selftest):
                   sleep).
 
 Output (deterministic; sort_keys; --json reruns are byte-identical on the
-same input; the report carries zero wall clock and zero absolute paths —
+same input; the report carries zero wall clock and zero absolute paths;
 paths are reported as basenames only, full paths go to explicit stdout; in
 audit mode the timing section is the exception = measured wall clock differs
 per run, all other sections stay identical):
@@ -241,7 +241,7 @@ Exit codes: 0 = unclogged / audit; 1 = wall / rounds-exhausted (a failing result
   9 = fail-loud (path missing / tool error: an engine subprocess exits nonzero
   for non-data reasons / frozen roster unavailable / full-tree enumeration
   finds zero candidates / audit zero-write self-check broken / state file
-  corrupted and refused — no silent rebuild).
+  corrupted and refused; no silent rebuild).
   --selftest: 0 = all pass / 2 = assertion failure.
 
 World discipline: this tool never writes --world (the world's .vo foundation
@@ -359,7 +359,7 @@ def enumerate_tree(src):
 
 def tree_manifest(src):
     """The whole-file {rel (POSIX form): md5} manifest of --src (the audit
-    zero-write self-proof; every file, not only .v — a one-byte add, delete or
+    zero-write self-proof; every file, not only .v: a one-byte add, delete or
     change shows up immediately)."""
     out = {}
     for dirpath, dirnames, filenames in os.walk(src):
@@ -383,8 +383,8 @@ def load_state(path):
     missing file starts from the zero state; corruption (JSON parse failure /
     repos/ledgers/buildlogs keys missing their dict / red_seen not a list) ->
     fail-loud 9 rejection; silent rebuilding is forbidden (seen is the
-    differential account — a silent rebuild would break the red-event
-    re-report guarantee; the corrupted original stays untouched — recovery is
+    differential account; a silent rebuild would break the red-event
+    re-report guarantee; the corrupted original stays untouched; recovery is
     a manual delete and a fresh zero-state start next round)."""
     if path is None:
         return new_state()
@@ -408,7 +408,7 @@ def load_state(path):
 
 def save_state(path, st):
     """State persistence (sort_keys canonical form; a differential event is
-    emitted before this function saves — prefer a duplicate over a lost
+    emitted before this function saves: prefer a duplicate over a lost
     entry, the watch discipline).  Missing directory -> 9."""
     if path is None:
         return
@@ -466,7 +466,7 @@ class Injector(object):
 
 class Engines(object):
     """Subprocess orchestration of the four engines (probe/resprobe injectable;
-    chain/cure/scan always run for real — pure stdlib, zero compiles, zero
+    chain/cure/scan always run for real: pure stdlib, zero compiles, zero
     network; real orchestration, never a puppet)."""
 
     def __init__(self, args, injector, workdir):
@@ -702,7 +702,7 @@ class UnclogRun(object):
         """Cross-round failure-account differential events, only-new: a newly
         seen failing file (not in state.red_seen) emits {"event":"red-new",
         new_red:[...], red_total, seen_before}, then the seen account merges
-        and persists (the event is emitted before the state is saved — prefer
+        and persists (the event is emitted before the state is saved; prefer
         a duplicate over a lost entry, the watch discipline).  An already-seen
         failing file is not reported again (seen grows monotonically; the
         only-new semantics); the default without --state-file disables the
@@ -779,7 +779,7 @@ class UnclogRun(object):
         if root is None:
             if not graph.get("top_order"):
                 # zero chain roots (no failing file has a missing-library
-                # group; a generation-gap or engine-cause failure) — the wall
+                # group; a generation-gap or engine-cause failure); the wall
                 # account must not go silent: add a no-chain-root entry listing
                 # every failing file (the verdict stays wall; never force-fitted)
                 self.wall_add("-", "no-chain-root",
@@ -874,7 +874,7 @@ class UnclogRun(object):
                                   % (root, cures_applied, cure_info["md5_after"],
                                      cure_info["on_disk_md5_match"]))
 
-        # step 4 recheck (the rescan residual should be zero and the resprobe rc should be 0 — reported as observed, never polished)
+        # step 4 recheck (the rescan residual should be zero and the resprobe rc should be 0; reported as observed, never polished)
         rescan = None
         resprobe = None
         if proceed:
@@ -944,19 +944,19 @@ def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
     report.  Same schema rocqwash-unclog/1: final.verdict = audit; one round
     (probe_summary/chain_top fully present; cure/rescan/resprobe always None;
     cures_planned/cures_applied always 0); the wall account records every
-    graph verdict — unprobed/self-unwashable/frozen-in-service root by root
+    graph verdict: unprobed/self-unwashable/frozen-in-service root by root
     (data enters the account, it is not a stop condition; audit picks no root
     and applies nothing); a zero-chain-root failure account gets a
     no-chain-root entry so the wall never goes silent; exit 0 (a failing
     result is baseline data, not a tool failure).  The hard zero-write
     guarantee = the --src whole-file md5 manifest must prove identical before
-    and after the run (probe_engine copies files out of the tree to compile —
-    wash/probe_engine.py:163 — and cleans its products at py:194; any manifest
+    and after the run (probe_engine copies files out of the tree to compile,
+    wash/probe_engine.py:163, and cleans its products at py:194; any manifest
     mismatch is fail-loud 9 and a polluted baseline is never emitted).  The
     elapsed time of each segment enters report["timing"] (the measured wall
     clock; the report's only non-deterministic section); the jobs dimension
     (the --probe-parallel K argument, the probe_engine --jobs passthrough,
-    default 1) enters the same section — the same candidate face with
+    default 1) enters the same section; the same candidate face with
     different K values is comparable across runs (the parallel-profile
     collection point)."""
     a = args
@@ -989,7 +989,7 @@ def run_audit(args, engines, frozen_hit, events_fh, source, cands_tsv,
         "%s(n=%d,washable=%s)" % (t["lib"], t["n"], t["self"]["washable"])
         for t in rd["chain_top"][:3]) or "-"))
 
-    # the wall account (every graph verdict recorded, including the frozen precheck — data enters the account, not a stop condition)
+    # the wall account (every graph verdict recorded, including the frozen precheck: data enters the account, not a stop condition)
     wall = {}
 
     def wall_add(root, reason, detail):
@@ -1401,7 +1401,7 @@ def selftest():
     (byte-identical); v7 the frozen-roster rejection; v8 the --loop watch mode
     JSONL; v9 CLI four codes; v10 the --audit read-only baseline (zero-write
     self-proof / final=audit / cures always empty / the wall's graph verdicts /
-    the frozen precheck / mutual exclusion rc=2 — real-tree audit live runs
+    the frozen precheck / mutual exclusion rc=2; real-tree audit live runs
     belong to the main session; this proves the fixture level only); v11 the
     --state-file watch-shaped seen (the cross-round differential only-new
     triple run: a new failure reported / a repeated failure not reported / a
@@ -1897,7 +1897,7 @@ def selftest():
 
         # v13 the --jobs dimension: the audit timing section records jobs=K
         # (the --probe-parallel argument; the probe_engine --jobs passthrough;
-        # default 1) — the same candidate face with different K is comparable
+        # default 1); the same candidate face with different K is comparable
         # across runs (the parallel-profile collection point; in injector
         # canned mode the argument is still recorded; zero real compiles)
         d, src, world, wd = fixture("v13_jobs")
