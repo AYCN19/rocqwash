@@ -2,23 +2,20 @@
 # -*- coding: utf-8 -*-
 """exp_port: experience-bus port for docs/exp-ledger.jsonl (append + query).
 
-Purpose.  The single write/read port of the in-repository experience ledger
-  docs/exp-ledger.jsonl (one JSON object per line, schema rocqwash-exp/1).
-  `append` validates a four-field entry (tool / points / evidence / batch)
-  and appends exactly one line under an entry id; a repeat of an
-  already-seen entry (same explicit id, or same content fingerprint) is a
-  loud no-op returning the existing id, so retries stay idempotent.
-  `query` reads entries back by id, tool or batch substring; a finding
-  (duplicate, zero matches) is data and never escalates the exit code;
-  corruption is loud.
+Purpose.  Single write/read port of docs/exp-ledger.jsonl (one JSON
+  object per line, schema rocqwash-exp/1).  `append` validates a
+  four-field entry (tool / points / evidence / batch) and appends exactly
+  one line under an entry id; a repeat of an already-seen entry (same
+  explicit id, or same content fingerprint) is a loud no-op returning the
+  existing id, so retries stay idempotent.  `query` reads entries back by
+  id, tool or batch substring; a finding (duplicate, zero matches) is
+  data and never escalates the exit code; corruption is loud.
 
 Interface.  `append --tool T --points P [--evidence E] [--batch B] [--actor A]
   [--id ID] [--ts TS] [--source-file P] [--correlation-id ID] [--ledger P]
-  [--dry-run]`
-  | `query [--id ID] [--tool SUB] [--batch SUB] [--limit N] [--ledger P]` | `--selftest`.
-  Ledger resolution: --ledger wins, then ROCWASH_EXPERIENCE_DIR, then
-  <repo>/docs/exp-ledger.jsonl.  Stdout carries `appended id=<ID>`,
-  `duplicate-skip id=<ID>` or `dry-run id=<ID>` (nothing written).
+  [--dry-run]` | `query [--id ID] [--tool SUB] [--batch SUB] [--limit N]
+  [--ledger P]` | `--selftest`.  Ledger resolution and stdout faces:
+  see the extended contract below.
 
 Dependencies.  Python 3 standard library only; zero network; plain JSONL
   with one-process-at-a-time discipline.
@@ -27,8 +24,7 @@ Evidence.  --selftest on temporary fixtures: minted-id persistence,
   idempotent re-append, explicit-id duplicate, dry-run zero-write, carried
   id/ts/provenance, corrupt-ledger fail loud without writing, query
   vectors, the minted-id sequence, the actor schema-increment field
-  (carried verbatim when provided, omitted by default, outside the
-  fingerprint seen set), CLI exit codes.
+  (see the extended contract below), CLI exit codes.
 
 Exit-codes.  0 appended / duplicate-skip / query answered (matches are
   data); 1 selftest red; 2 usage error; 9 missing or corrupt input.
@@ -52,7 +48,7 @@ Exit-codes.  0 appended / duplicate-skip / query answered (matches are
 #                fingerprint does not cover it, so the idempotent seen set
 #                stays on the four carrier fields exactly as before
 #   actor        optional schema-increment field (additive): the actor
-#                (seat or operator name) of the entry, carried verbatim on
+#                (agent or operator name) of the entry, carried verbatim on
 #                the appended row when provided (empty default: the key is
 #                omitted); the fingerprint does not cover it either, so
 #                actor-bearing and actor-less re-appends of the same four
@@ -64,6 +60,11 @@ Exit-codes.  0 appended / duplicate-skip / query answered (matches are
 #   On append the port reads the whole ledger and refuses nothing silently:
 #   an explicit --id already present, or a fingerprint already present,
 #   prints `duplicate-skip id=<existing>` and exits 0 without writing.
+#
+# Ledger resolution and stdout faces
+#   --ledger wins, then ROCWASH_EXPERIENCE_DIR, then
+#   <repo>/docs/exp-ledger.jsonl.  Stdout carries `appended id=<ID>`,
+#   `duplicate-skip id=<ID>` or `dry-run id=<ID>` (nothing written).
 #
 # Fail-loud face
 #   A ledger line that is not a JSON object exits 9 naming the line number,

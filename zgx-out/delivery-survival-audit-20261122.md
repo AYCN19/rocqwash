@@ -1,12 +1,33 @@
 # Delivery Survival Audit at upstream d27af2d (PR#18 + PR#20 faces)
 
-- Ticket: R2-52 (delivery survival audit seat, read-only) / execution receipt: R2-53
-- Date: 2026-11-21
-- Auditor: live-lumen (Mac seat, zsh), actor namespace zgx
-- Repo: /Users/zuguangzhao/ComplexAnalysis/rocqwash-loop
-- Audited tip: **d27af2dee259d30cf560965089754607b337b545** (`git rev-parse HEAD` at audit time; commit message begins "i18n(unit-u19): corporate CLA re-laid ...")
-- Method: pure git object reads only (`git rev-parse`, `git cat-file -e/-t/blob`, `git ls-tree`, `git diff-tree`, `git log`). Zero working-tree writes, zero checkout, zero network. NETRED single-flight: no network attempted, trivially compliant.
-- Fail-loud policy: any vanished path would be listed verbatim in the census lines below and in Section 4's register. The register is EMPTY: no delivered item disappeared.
+Purpose.  Delivery survival census of the two zgx deliveries (PR#18 desk
+  resolve 0a0a9c43, PR#20 face 8cfebb4) at the audited tip: per-item
+  presence plus blob-sha over every delivered path, fail-loud register of
+  anything vanished.  Ticket R2-52 (read-only audit) / execution receipt
+  R2-53; auditor live-lumen (Mac, zsh), actor namespace zgx; audited
+  checkout /Users/zuguangzhao/ComplexAnalysis/rocqwash-loop.  Session date
+  lives on the ledger/history surface; the verbatim pre-normalization face
+  is this file's .zh.md archive sibling.
+
+Interface.  Pure git object reads only (`git rev-parse`, `git cat-file
+  -e/-t/blob`, `git ls-tree`, `git diff-tree`, `git log`).  Zero
+  working-tree writes, zero checkout, zero network; NETRED single-flight:
+  no network attempted, trivially compliant.  Fail-loud policy: any
+  vanished path would be listed verbatim in the census lines below and in
+  Section 4's register; the register is EMPTY: no delivered item
+  disappeared.
+
+Dependencies.  git plumbing plus comm/cmp/wc on the audited checkout; nothing else, no network.
+
+Evidence.  Audited tip **d27af2dee259d30cf560965089754607b337b545**
+  (`git rev-parse HEAD` at audit time; commit message begins
+  "i18n(unit-u19): corporate CLA re-laid ...").  Every anchor, census
+  total, sample line and blob sha below was produced live during this
+  audit; none are carried over from prior tickets without re-execution.
+
+Exit-codes.  Prose verdict face: Section 4 carries the per-face survival
+  verdict (both deliveries 100% present, register empty, canonical
+  scheduling-feedback blob a952af0 unchanged).
 
 ## 0. Anchor verification (all run live this audit)
 
@@ -14,7 +35,7 @@
 |---|---|---|
 | HEAD / audited tip | d27af2dee259d30cf560965089754607b337b545 | `git rev-parse HEAD` -> d27af2dee259d30cf560965089754607b337b545 |
 | PR#18 desk resolve | 0a0a9c43d4fc7aa11ba806d4ce2cc4da9375c955 | `git cat-file -t` -> commit; `git log --oneline -1` -> "chore(zgx-out): land PR#18 content via desk resolve ... zgx actor namespace (PR#18 resolve)" |
-| PR#20 face | 8cfebb44be43eea72f1dd2751eafa04307f06141 | `git cat-file -t` -> commit; `git log --oneline -1` -> "chore(zgx-out): add planface batches 20261121 at anchors c48a548/8502146 with proposal ledger update" |
+| PR#20 face | 8cfebb44be43eea72f1dd2751eafa04307f06141 | `git cat-file -t` -> commit; `git log --oneline -1` -> commit subject naming the planface batch at anchors c48a548/8502146 with proposal ledger update (verbatim subject preserved in the .zh.md archive sibling) |
 | PR#20 batch anchor 1 | c48a548a7bd2095bd081e6b6837266f5576dee8c | `git rev-parse c48a548` |
 | PR#20 batch anchor 2 | 8502146d4acdcd5df102901cfeb46c75eafd8de1 | `git rev-parse 8502146` |
 
