@@ -226,9 +226,16 @@ TOOL_SPECS = [
         "cli": os.path.join("tools", "vacgen.py"),
         "net_gated": False,
         "fixed_args": [],
-        # Full argparse flag face of tools/vacgen.py (20 flags, argparse
-        # declaration order): the micro-ticket expanded this schema from the
-        # previous 11-flag subset; properties and arg_map stay one-to-one.
+        # Full MCP flag face of tools/vacgen.py (21 flags, argparse
+        # declaration order).  Count convention (baseline 20/23, unchanged
+        # by the cast-repair wave): the argparse face now holds 24
+        # add_argument sites; the 3 mode flags stay outside this schema on
+        # purpose (--from-statements/--from-repo ride the statement_probes
+        # MCP face, --selftest is not exposed), so 24 - 3 = 21 here.  The
+        # micro-ticket expanded this schema from the previous 11-flag
+        # subset; the cast-repair wave appended the opt-in
+        # allow_bare_type_limb W5 waiver flag; properties and arg_map stay
+        # one-to-one.
         "arg_map": (
             ("input", "--in"),
             ("out", "--out"),
@@ -250,6 +257,7 @@ TOOL_SPECS = [
             ("exp_draft", "--exp-draft"),
             ("verify_anchors", "--verify-anchors"),
             ("mathlib", "--mathlib"),
+            ("allow_bare_type_limb", "--allow-bare-type-limb"),
         ),
         "schema": _object_schema(
             {
@@ -273,12 +281,15 @@ TOOL_SPECS = [
                 "exp_draft": {"type": "string", "description": "experience-ledger draft JSON path written in cast mode; CLI flag --exp-draft"},
                 "verify_anchors": {"type": "boolean", "description": "re-run the anchor admission gate over the loaded taxonomy table; bare CLI flag --verify-anchors"},
                 "mathlib": {"type": "string", "description": "mathlib checkout root used by verify_anchors; CLI flag --mathlib"},
+                "allow_bare_type_limb": {"type": "boolean", "description": "opt-in W5 waiver: release a cast through the bare-type-conjunct-limb front gate when a limb head resolves neither as the audited file's own def : Prop nor as a Mathlib/Std predicate family head; every released limb is registered loud on stdout and in the report JSON (report.waiver); the default (flag off) stays fail-loud rc=1; bare CLI flag --allow-bare-type-limb"},
             }
         ),
         "description": (
             "Cast a Lean vacuity probe skeleton with the four layer shape recognition engine "
             "(tools/vacgen.py, zero-compile casting face). The schema mirrors the tool's "
-            "full argparse flag face (all 20 flags, one-to-one). Zero network face. The compile "
+            "argparse flag face minus the 3 mode flags (--from-statements/--from-repo live on "
+            "the statement_probes face, --selftest is not exposed): all 21 flags, one-to-one. "
+            "Zero network face. The compile "
             "verification leg needs a Lean toolchain and stays a design SKIP face when the "
             "toolchain is absent."
         ),

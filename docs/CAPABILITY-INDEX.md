@@ -604,7 +604,7 @@ Integration note (the P0 audit increment, at integration): the tree_audit entry 
 
 ### tools/vacgen.py
 - Purpose: Lean vacuity probe skeleton generator with a four-layer shape-recognition engine (premise decomposition, taxonomy lookup, confidence scoring, tiered harness), including a zero-compile coverage preflight and a difficulty map (`--preflight-all`); present on disk at census time and newly added to tools/, self-described as v2 in its docstring.
-- Invocation: `python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--mathlib]`
+- Invocation: `python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--mathlib] [--allow-bare-type-limb]`
 - Example: `python tools/vacgen.py --in <value> --force`
 - Imports: argparse, datetime, fractions, hashlib, json, os, re, sys (all standard library; the file header self-describes zero third-party dependencies)
 - Network face: zero

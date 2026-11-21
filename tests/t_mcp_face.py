@@ -220,7 +220,7 @@ EXPECTED_VACGEN_ARGS = [
     "input", "out", "toolchain", "snapshot", "audit_id", "name",
     "worktree", "lake", "guard", "core", "force", "taxonomy",
     "preflight_all", "census", "root", "cluster_table", "report",
-    "exp_draft", "verify_anchors", "mathlib",
+    "exp_draft", "verify_anchors", "mathlib", "allow_bare_type_limb",
 ]
 
 # Frozen tree_audit vector: the full argparse flag face of

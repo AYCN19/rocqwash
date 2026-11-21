@@ -7,7 +7,11 @@ Purpose.  Pin the vacgen lane deliverables at word-face level: the envelope
   the conjunction chain draws from the explicit-assumption segment only), the
   W5 cast-time bare-type-conjunct-limb front gate (canonical face "∧ Set ("
   plus the self-built limb family; a deformed cast dies rc=1 before any file
-  emission, with zero false positives on the castable faces), and the W6
+  emission, with zero false positives on the castable faces; since the
+  cast-repair wave of November 22, 2026 the gate judges only faces left
+  unresolved by knife-1 data re-homing and knife-2 Prop resolution, with
+  the opt-in --allow-bare-type-limb waiver registering released limbs in
+  report.waiver), and the W6
   two-dimensional verdict (after GREEN the degenerate battery scans emptyset
   / single-point / zero-element / top-type / always-true word faces; the
   report verdict gains the strength face over the refutationForms five-word
@@ -102,10 +106,16 @@ G1_TRIAL_ENVELOPE = (EXISTS + " (I : Set A), " + EXISTS +
                      " (h : IsClosed I), True")
 
 # bare-type conjunct limb face: single limb (canonical face needs two limbs,
-# so the family prong carries this one)
+# so the family prong carries this one).  Cast-repair wave, November 22,
+# 2026: the head is deliberately the UNKNOWN `Pkg` - the previous `Set (...)`
+# head now re-homes at L1 routing (knife 1: a data-family binder face is a
+# bound variable, not a conjunct limb), so the reject vector must pin the
+# family that stays loud: heads resolving neither as an own-file
+# `def : Prop` nor as a predicate family head (and waived only by the
+# opt-in --allow-bare-type-limb flag, registered in report.waiver).
 BARE_LIMB_FIXTURE = (
     "theorem bare_limb_face {A : Type}"
-    " (s : Set (RR XARROW RR)) (h : Nonempty A) : P s := by\n"
+    " (s : Pkg (RR XARROW RR)) (h : Nonempty A) : P s := by\n"
     "  sorry\n"
 ).replace("XARROW", ARROW)
 
@@ -261,6 +271,24 @@ def _thunk_w5_limb_family_bounds():
     return "family: 2 positive, 7 negative (fail-safe side held)"
 
 
+def _thunk_w5_data_limb_rehomed():
+    mod = _load_module()
+    stmt = mod.decompose_head(
+        "theorem rehome_face (s : Set (%s %s %s)) : P s := by\n  sorry\n"
+        % (RR, ARROW, RR))
+    names = [v["name"] for v in stmt["S1_vars"]]
+    env = mod.envelope_statement(stmt)
+    want = "%s (s : Set (%s %s %s)), True" % (EXISTS, RR, ARROW, RR)
+    hits = mod.envelope_bare_type_limb_hits(stmt, env)
+    assert "s" in names, "data binder not re-homed into S1: %r" % (names,)
+    assert env == want, "envelope drifted from the re-homed face: %s" % env
+    assert hits == [], "re-homed face flagged by the W5 gate: %r" % (hits,)
+    assert mod.is_bare_type_limb("Set (%s %s %s)" % (RR, ARROW, RR)), \
+        "word-face family must keep flagging (the cleaning seat is L1 routing)"
+    return "data binder re-homed to %r, envelope %r, word face unchanged" \
+        % (names, env)
+
+
 def _thunk_w5_cast_time_reject():
     proc, out, _report = _cast_fixture(BARE_LIMB_FIXTURE)
     assert proc.returncode == 1, \
@@ -358,6 +386,7 @@ def run_segment_vacgen():
     check(results, "p25-g1-trial-byte-stable", _thunk_p25_g1_trial_byte_stable)
     check(results, "w5-canonical-face", _thunk_w5_canonical_face)
     check(results, "w5-limb-family-bounds", _thunk_w5_limb_family_bounds)
+    check(results, "w5-data-limb-rehomed", _thunk_w5_data_limb_rehomed)
     check(results, "w5-cast-time-reject", _thunk_w5_cast_time_reject)
     check(results, "w5-zero-false-positives-cli", _thunk_w5_zero_false_positives_cli)
     check(results, "w5-check-row-in-report", _thunk_w5_check_row_in_report)

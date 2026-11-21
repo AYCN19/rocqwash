@@ -6,15 +6,15 @@ Purpose.
     The witness envelope (the `..._premises_witness` theorem of the cast) must be well-typed
     Lean: every conjunct a Prop, every referenced binder bound by an existential prefix
     segment.  A bare TYPE in the conjunction chain (word-face signature `∧ Set (`) is
-    always ill-typed (`Set X : Type`, never a Prop) and always leaves the binder unbound
-    - the registered engine debt (docs/vacgen_sop.md section 2.5 erratum, registered
-    November 14, 2026; root cause = L1 splitter classification + envelope_statement
-    splicing, vacgen.py:640-650 at 2.0.1; the cast's own envelope_free_vars_zero check
-    passes on the malformed envelope, so this test is the only machine guard today).
+    always ill-typed (`Set X : Type`, never a Prop) and always leaves the binder unbound.
     Fixture A (well-formed face) must yield a well-formed envelope: red = REGRESSION.
-    Fixture B (implicit-binder face) is the REGISTERED KNOWN DEBT PIN: red = the debt
-    WAS FIXED - update the pin per the erratum re-audit condition; full pin contract
-    beside DEBT_SIG below.
+    Fixture B (implicit-binder face) is the FLIPPED ENGINE-REPAIR PIN (docs/vacgen_sop.md
+    section 2.5 erratum): the November 14, 2026 known-debt pin (debt signature present,
+    cast green) was flipped on November 22, 2026 with the cast-repair wave registration
+    (knife 1: L1 data-limb re-homing seats the implicit `{K : Set (...)}` binder into
+    the existential prefix, vacgen.py sort_binders_into_segments/is_data_limb_face; the
+    2.1.0 W5 cast-time front gate had made the old debt pin unreachable rc=1 before
+    this flip).  Full pin contract beside DEBT_SIG below.
 
 Interface.
     python -I tests/t_vacgen_envelope_shape.py   (no flags; PASS/SKIP/FAIL to stdout)
@@ -24,8 +24,12 @@ Dependencies.
     design-SKIP unconditionally (zero-compile suite); loud SKIP (rc 0) when tools/vacgen.py is absent.
 
 Evidence.
-    Suite case t_vacgen_envelope_shape (tests/run_tests.sh); contract vectors: DEBT_SIG and the pin comments below;
-    fixture B green state prints the flip instructions loud.
+    NOT a run_tests.sh CASES roster case (the roster never lists
+    t_vacgen_envelope_shape; tests/run_tests.sh keeps a dead function shell for it
+    that is never invoked - the stale "suite case" docstring claim was corrected
+    with the pin flip).  Standalone run face only.  Contract vectors: DEBT_SIG
+    and the pin comments below; fixture B green state prints the flip
+    registration loud.
 
 Exit-codes.
     0 = all checks pass (design-SKIP legs reported, never counted red); 1 = any red (fail-loud listing).
@@ -45,14 +49,16 @@ VACGEN = os.path.normpath(os.path.join(HERE, "..", "tools", "vacgen.py"))
 #   S1 variable bound by its prefix segment.  Red here means a REGRESSION on
 #   well-formed faces.
 # - fixture B (implicit-binder face: replica of the batch-1 item-16 shape,
-#   implicit `{K : Set (Fin n → ℝ)}` binder): the REGISTERED KNOWN DEBT PIN -
-#   the debt signature `∧ Set (` must be PRESENT.  This pin tracks debt
-#   presence, not health: red here means the ENGINE DEBT WAS FIXED - update
-#   this pin together with the engine repair registration (re-audit condition
-#   of the SOP section 2.5 erratum); do not revert the engine to keep the pin
-#   green.  The companion face (explicit hypotheses existentialized as "vars",
-#   e.g. `∃ (hK : IsCompact K)`) is documented in the erratum but not pinned
-#   (formatting-sensitive word face).
+#   implicit `{K : Set (Fin n → ℝ)}` binder): the FLIPPED ENGINE-REPAIR PIN
+#   (docs/vacgen_sop.md section 2.5 erratum re-audit condition, flipped
+#   November 22, 2026 with the cast-repair wave registration).  Pin contract:
+#   cast rc=0, the debt signature `∧ Set (` ABSENT (red here = the knife-1
+#   re-homing regressed and the ill-typed conjunction is back - never revert
+#   the engine to keep an older pin green), and K bound by its re-homed
+#   prefix segment `∃ (K : Set (…))`.  The companion face (explicit
+#   hypotheses existentialized as "vars", e.g. `∃ (hK : IsCompact K)`) is
+#   documented in the erratum but not pinned (formatting-sensitive word
+#   face).
 #
 # Word-face debt signature: a bare `Set (...)` type as a conjunction member.
 # `Set X : Type` can never appear as a well-formed Prop conjunct, so this
@@ -124,28 +130,30 @@ def main() -> int:
                 fails.append("fixture A: S1 variable s not bound by a prefix "
                              "segment: %s" % line.strip())
 
-    # ---- fixture B: registered known-debt pin (tracks debt presence) ----
+    # ---- fixture B: flipped engine-repair pin (SOP section 2.5 erratum) ----
     r, out = _cast(tmp, "fixture_b.lean", FIXTURE_B)
     if r.returncode != 0:
-        fails.append("fixture B: cast rc=%d (the cast must succeed; the debt "
-                     "is in the emitted envelope, not the cast rc)" % r.returncode)
+        fails.append("fixture B: cast rc=%d (the re-homed face must cast green)"
+                     % r.returncode)
     else:
         line, path = _envelope_line(out)
         if line is None:
             fails.append("fixture B: no premises_witness theorem line in %s" % path)
-        elif not DEBT_SIG.search(line):
-            print("== REGISTERED KNOWN DEBT APPEARS FIXED ==")
-            print("   fixture B no longer carries the debt signature '∧ Set (';")
-            print("   per docs/vacgen_sop.md section 2.5 erratum: update this pin")
-            print("   with the engine repair registration (L1 splitter + "
-                  "envelope_statement + bound-form checker), then flip the pin.")
-            fails.append("fixture B: known-debt pin red = engine debt FIXED "
-                         "(update pin per the SOP section 2.5 erratum)")
         else:
-            print("== REGISTERED KNOWN DEBT PRESENT (pin green) ==")
-            print("   implicit-binder envelope still malformed (engine debt, "
-                  "docs/vacgen_sop.md section 2.5); hand-cast repair is the "
-                  "registered handling until the engine repair wave lands.")
+            if DEBT_SIG.search(line):
+                fails.append("fixture B: REGRESSION - debt signature '∧ Set (' "
+                             "reappeared in the envelope (knife-1 re-homing "
+                             "regressed): %s" % line.strip())
+            if not re.search(r"∃\s*\(\s*K\s*:\s*Set\s*\(\s*Fin\s+n\s*→\s*ℝ\s*\)\s*\)",
+                             line):
+                fails.append("fixture B: implicit data binder K not re-homed "
+                             "into the existential prefix: %s" % line.strip())
+        if not fails:
+            print("== ENGINE-REPAIR PIN GREEN (flipped per SOP section 2.5 "
+                  "erratum) ==")
+            print("   implicit data binder K rides the existential prefix; the "
+                  "debt signature is absent (cast-repair wave, November 22, "
+                  "2026).")
 
     # ---- Lean compile leg: design-SKIP ----
     print("SKIP: Lean compile leg design-SKIP (zero-compile suite)")

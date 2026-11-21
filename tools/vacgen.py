@@ -585,9 +585,31 @@ def parse_binders(region):
     return binders
 
 
-def sort_binders_into_segments(binders):
+def is_data_limb_face(t, prop_def_heads=()):
+    """Knife 1 (cast-repair wave, November 22, 2026): is this binder type a
+    bare-type-application face (`Head (args)`, the exact family
+    is_bare_type_limb flags) whose head is a data-type family head and not
+    Prop-resolvable?  True = the binder is a DATA binder and re-homes into
+    S1 (existential prefix); unknown heads return False and keep the v1
+    fail-safe seat (S2 conjunct), where the W5 gate keeps judging them."""
+    head = bare_limb_head(t)
+    if head is None:
+        return False
+    if is_prop_resolved_limb_head(head, prop_def_heads):
+        return False
+    return head_matches_family(head, DATA_TYPE_LIMB_FAMILIES)
+
+
+def sort_binders_into_segments(binders, prop_def_heads=()):
     """Route binders into S1 vars / S2 assumptions / S2 instance records
-    (C2.2: one record per hypothesis, never merged; C2.3 two-step test)."""
+    (C2.2: one record per hypothesis, never merged; C2.3 two-step test).
+    Knife 1 correct-seat routing (cast-repair wave, November 22, 2026): a
+    binder whose type is a data-family bare application (`Set (A)`,
+    `Finset (α)`, ... - the family is_bare_type_limb flags) re-homes into
+    S1 as a bound variable (existential prefix), so the premise conjunction
+    only ever assembles propositional premises and the W5 limb check never
+    sees a mis-seated data binder; Prop-resolvable heads and unknown heads
+    keep the v1 fail-safe seats."""
     S1_vars, S2_assumps, S2_instances = [], [], []
     for b in binders:
         rec_source = b.get("source", "signature")
@@ -596,7 +618,8 @@ def sort_binders_into_segments(binders):
                                  "type": b["type"],
                                  "cleanType": b.get("cleanType") or b["type"],
                                  "source": rec_source, "line0": b.get("line0")})
-        elif looks_like_data_type(b["type"]):
+        elif looks_like_data_type(b["type"]) \
+                or is_data_limb_face(b["type"], prop_def_heads):
             for nm in (b["names"] or ["_"]):
                 S1_vars.append({"name": nm, "type": b["type"], "line0": b.get("line0")})
         else:
@@ -665,10 +688,13 @@ def decompose_head(src):
     scope_kept = relevant_scope_binders(scope_binders, binder_region,
                                         conclusion, head["line0"])
     binders = sorted(scope_kept + sig_binders, key=lambda b: b.get("line0", 0))
-    S1_vars, S2_assumps, S2_instances = sort_binders_into_segments(binders)
+    prop_heads = own_prop_def_heads(src)
+    S1_vars, S2_assumps, S2_instances = sort_binders_into_segments(binders,
+                                                                   prop_heads)
     return {"status": "OK", "head": head, "head_raw_lines": span,
             "S1_vars": S1_vars, "S2_assumps": S2_assumps,
             "S2_instances": S2_instances, "S3_conclusion": conclusion,
+            "propDefHeads": sorted(prop_heads),
             "scope_binders": scope_binders, "decls": decls,
             "imports": imports, "module_lines": module_lines, "namespace": namespace}
 
@@ -699,10 +725,12 @@ def decompose_decl(raw_lines, code_lines, decls, head, scope_binders=None):
         scope = relevant_scope_binders(scope, binder_region, conclusion,
                                        head["line0"])
         binders = sorted(scope + sig_binders, key=lambda b: b.get("line0", 0))
-        S1_vars, S2_assumps, S2_instances = sort_binders_into_segments(binders)
+        prop_heads = own_prop_def_heads("\n".join(raw_lines))
+        S1_vars, S2_assumps, S2_instances = sort_binders_into_segments(binders,
+                                                                       prop_heads)
         return {"status": "OK", "head": head, "S1_vars": S1_vars,
                 "S2_assumps": S2_assumps, "S2_instances": S2_instances,
-                "S3_conclusion": conclusion}
+                "S3_conclusion": conclusion, "propDefHeads": sorted(prop_heads)}
     except ParseError:
         return {"status": "UNPARSED", "head": head, "S1_vars": [],
                 "S2_assumps": [], "S2_instances": [], "S3_conclusion": ""}
@@ -774,6 +802,122 @@ BARE_TYPE_LIMB_MARKER = "bare-type-conjunct-limb"
 # Prop position after a conjunction operator (`Set (...)` applied forms)
 BARE_TYPE_LIMB_CANONICAL = "∧ Set ("
 
+# knife 2 prong b (cast-repair wave, November 22, 2026): Mathlib/Std
+# predicate head families recognized as Prop by prefix family merge.  The
+# table is data on purpose (externalizable by a later work order without
+# touching the gate logic); entries keep the dotted Lean head spelling and
+# match under, over, and inside namespaces via head_matches_family.
+PROP_HEAD_FAMILY_PREFIXES = (
+    "Nat.Prime",
+    "Irreducible",
+    "IsCompact",
+    "IsOpen",
+    "IsClosed",
+    "Nonempty",
+    "Integrable",
+    "Topology.IsEmbedding",
+)
+
+# knife 1 (same wave): data-type head families.  A binder whose type is a
+# bare application of one of these heads is a DATA binder - its correct
+# seat is the existential prefix (the `variable (I : Set A)` G1-trial
+# precedent), never a conjunct limb, so the W5 word-face family stops
+# judging re-homed binders and the premise conjunction only ever assembles
+# propositional premises.
+DATA_TYPE_LIMB_FAMILIES = (
+    "Set",
+    "Finset",
+    "Family",
+    "Polynomial",
+    "MvPolynomial",
+    "Measure",
+)
+
+
+def head_matches_family(head, families):
+    """Prefix-family merge over dotted Lean heads: the head equals a family
+    (`Nat.Prime`), lives under a family's dotted namespace (`Set.Ioo` under
+    `Set`), or carries a family as a namespace segment (`MeasureTheory.
+    Measure` under `Measure`)."""
+    for fam in families:
+        if head == fam or head.startswith(fam + ".") \
+                or head.endswith("." + fam) or ("." + fam + ".") in head:
+            return True
+    return False
+
+
+def bare_limb_head(limb):
+    """Head identifier of the bare-application limb family (`Nat.Prime
+    (d + 1)` -> `Nat.Prime`), or None when the face is outside the family.
+    Same word-face conditions is_bare_type_limb judges (one identifier head
+    onto one balanced paren group, no dependent-binder colon, no structure
+    after the group), so the family definition stays in exactly one place."""
+    t = limb.strip()
+    if not re.match(r"^[^\W\d][\w'.!]*\s*\(", t):
+        return None
+    opener = t.find("(")
+    try:
+        _end, inner = scan_balanced(t, opener)
+    except ParseError:
+        return None
+    tail = t[opener + 1 + len(inner) + 1:].strip()
+    if tail:
+        return None  # structure after the group: not the bare family
+    if find_top_colon(inner) >= 0:
+        return None  # dependent-binder face: proposition
+    return t[:opener].strip()
+
+
+OWN_PROP_DEF_RE = re.compile(
+    r"^[ \t]*(?:(?:private|protected|partial|noncomputable|unsafe)\s+)*def\s+"
+    r"([^\s(:\[{]+)")
+
+
+def own_prop_def_heads(src):
+    """Knife 2 prong a: names of this file's own `def X ... : Prop`
+    declarations (word-face scan over the comment-stripped code lines; the
+    checked span ends at the declaration's own top-level `:=`, and the
+    return-type colon is the first top-level colon of that span).  Read
+    BEFORE the W5 limb verdict so a premise limb headed by
+    audited file's own Prop definition never flags.  Used by the W5
+    resolution only; no other face consumes it."""
+    heads = set()
+    lines = [code for _i, code in iter_code_lines(src.splitlines())]
+    i = 0
+    n = len(lines)
+    while i < n:
+        m = OWN_PROP_DEF_RE.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        name = m.group(1)
+        end = -1
+        j = i
+        buf = [lines[i]]
+        while j < n and end < 0:
+            end = find_decl_end("".join(buf))
+            if end >= 0:
+                break
+            j += 1
+            if j < n:
+                buf.append(lines[j])
+        if end >= 0 and IDENT_TOK.fullmatch(name):
+            decl_txt = "".join(buf)[:end]
+            ci = find_top_colon(decl_txt)
+            if ci >= 0 and decl_txt[ci + 1:].strip() == "Prop":
+                heads.add(name)
+        i = j + 1
+    return heads
+
+
+def is_prop_resolved_limb_head(head, prop_def_heads):
+    """Knife 2 verdict for one limb head: True when the head is the audited
+    file's own `def X ... : Prop` name (prong a) or a Mathlib/Std predicate
+    family head (prong b)."""
+    if head in prop_def_heads:
+        return True
+    return head_matches_family(head, PROP_HEAD_FAMILY_PREFIXES)
+
 
 def is_bare_type_limb(limb):
     """Word-face test: can this conjunction limb be a bare TYPE expression?
@@ -784,7 +928,8 @@ def is_bare_type_limb(limb):
     type-application faces (`Set (...)`: one identifier head onto one
     parenthesized argument group holding no top-level colon) flag.  `True`
     (the empty-conjunction identity) is W6's degeneracy datum, never a W5
-    hit."""
+    hit.  (Pure word face only: the knife-2 Prop resolution of a flagged
+    head runs in envelope_bare_type_limb_hits, never here.)"""
     t = limb.strip()
     if not t or t == "True":
         return False
@@ -792,20 +937,7 @@ def is_bare_type_limb(limb):
         return False
     if looks_like_type_v2(t):
         return True
-    m = re.match(r"^[^\W\d][\w'.!]*\s*\(", t)
-    if m:
-        opener = t.find("(")
-        try:
-            _end, inner = scan_balanced(t, opener)
-        except ParseError:
-            return False
-        tail = t[opener + 1 + len(inner) + 1:].strip()
-        if tail:
-            return False  # structure after the group: not the bare family
-        if find_top_colon(inner) >= 0:
-            return False  # dependent-binder face: proposition
-        return True
-    return False
+    return bare_limb_head(t) is not None
 
 
 def envelope_bare_type_limb_hits(stmt, env_text=None):
@@ -815,17 +947,29 @@ def envelope_bare_type_limb_hits(stmt, env_text=None):
     family over the statement's explicit-assumption segment (the only
     segment feeding the conjunction chain - a bare type in a conjunct limb
     position cannot elaborate as a Prop, so the deformed cast must die at
-    cast time, before the compile leg ever runs).  Returns the sorted
-    unique hit list; empty = clean."""
+    cast time, before the compile leg ever runs).  Knife-2 Prop resolution
+    (cast-repair wave, November 22, 2026) runs on every flagged limb head
+    BEFORE the verdict: a head resolved as the audited file's own
+    `def X ... : Prop` (stmt["propDefHeads"], read before the verdict) or
+    as a Mathlib/Std predicate family head (PROP_HEAD_FAMILY_PREFIXES)
+    never flags; a head resolving neither keeps the word-face verdict.
+    The data-family binder faces never reach this segment at all (knife 1
+    re-homes them into the existential prefix at L1 routing).  Returns the
+    sorted unique hit list; empty = clean."""
     if env_text is None:
         env_text = envelope_statement(stmt)
     hits = []
     if BARE_TYPE_LIMB_CANONICAL in env_text:
         hits.append(BARE_TYPE_LIMB_CANONICAL)
+    prop_heads = stmt.get("propDefHeads") or ()
     for a in stmt["S2_assumps"]:
         t = a["type"].strip()
-        if is_bare_type_limb(t):
-            hits.append(t)
+        if not is_bare_type_limb(t):
+            continue
+        head = bare_limb_head(t)
+        if head is not None and is_prop_resolved_limb_head(head, prop_heads):
+            continue  # knife 2: Prop-resolved limb head
+        hits.append(t)
     return sorted(set(hits))
 
 
@@ -2233,10 +2377,20 @@ def run_checks_v2(cast, ledger, files_text, report, taxonomy_info):
     # 6. envelope_bare_type_limbs_zero: W5 internalized self-check (2.1.0).
     # Closed-window bound-form invariant on THIS cast's assembled envelope
     # (same family as check 1); the cast-time front gate already rejects
-    # before emission, so a RED here would mean the gate was bypassed.
+    # before emission, so a RED here would mean the gate was bypassed -
+    # unless the opt-in --allow-bare-type-limb waiver released the cast at
+    # the gate (knife 3), in which case the row stays loud about the
+    # released limbs and report.waiver carries the registration.
     limb_hits = envelope_bare_type_limb_hits(stmt, env)
-    add("envelope_bare_type_limbs_zero", not limb_hits,
-        "bare-type conjunct limbs in the envelope: %s" % (limb_hits or "none"))
+    waiver = report.get("waiver") or {}
+    if limb_hits and waiver.get("applied") and waiver.get("limbs") == limb_hits:
+        add("envelope_bare_type_limbs_zero", True,
+            "WAIVED by %s (registered in report.waiver): %s"
+            % (waiver.get("flag") or "--allow-bare-type-limb",
+               "; ".join(limb_hits)))
+    else:
+        add("envelope_bare_type_limbs_zero", not limb_hits,
+            "bare-type conjunct limbs in the envelope: %s" % (limb_hits or "none"))
 
     return checks, blockers
 
@@ -2293,14 +2447,34 @@ def do_cast(args, ts_utc):
     # dies here with rc=1, before any skeleton text is emitted (fail-loud;
     # the statement face must be re-shaped or transcribed by hand before a
     # cast can run).  Existing output directories are never touched here.
+    # Knife-3 waiver face (cast-repair wave, November 22, 2026): the opt-in
+    # --allow-bare-type-limb flag releases ONLY the limb faces that knife-1
+    # re-homing and knife-2 Prop resolution left unresolved; every released
+    # limb is registered loud on stdout AND in the report JSON
+    # (report.waiver).  Default (flag off or attribute absent) is the
+    # unchanged fail-loud contract - never a silent pass.
     env_text = envelope_statement(stmt)
     limb_hits = envelope_bare_type_limb_hits(stmt, env_text)
-    if limb_hits:
+    allow_limb = bool(getattr(args, "allow_bare_type_limb", False))
+    waiver_applied = allow_limb and bool(limb_hits)
+    waiver_block = {"flag": "--allow-bare-type-limb", "applied": waiver_applied,
+                    "limbs": list(limb_hits),
+                    "basis": ("opt-in W5 waiver: limb heads unresolved by "
+                              "knife-1 data re-homing and knife-2 Prop "
+                              "resolution; each released limb is registered "
+                              "here and judged by the compile leg")}
+    if limb_hits and not allow_limb:
         print("  FAIL-LOUD: %s in the witness envelope (cast-time self-check): %s"
               % (BARE_TYPE_LIMB_MARKER, "; ".join(limb_hits)))
         print("  no skeleton cast (the premise conjunction cannot elaborate as"
               " a Prop; canonical family face: %s)" % BARE_TYPE_LIMB_CANONICAL)
         return 1
+    if waiver_applied:
+        print("  [WAIVER] %s: %d unresolved bare-type conjunct limb(s)"
+              " released by explicit opt-in: %s"
+              % (waiver_block["flag"], len(limb_hits), "; ".join(limb_hits)))
+        print("  the waiver is registered in the report JSON (report.waiver);"
+              " fail-quiet is never the default")
 
     stripped_all = lean_strip_comments(src)
     sorry_count = len(re.findall(r"\bsorry\b", stripped_all))
@@ -2512,10 +2686,17 @@ def do_cast(args, ts_utc):
                                 "consumers ignore unknown fields; further "
                                 "additive faces: verdict.strength."
                                 "degenerate_note (R-2 readability, emitted "
-                                "on degenerate reports only) and "
+                                "on degenerate reports only), "
                                 "gap_telemetry (R-7 conclusion-face "
                                 "todo_seat aggregation for taxonomy "
-                                "iteration)")},
+                                "iteration), waiver (knife-3 opt-in "
+                                "--allow-bare-type-limb release registration "
+                                "for W5 limb faces unresolved by knife-1 "
+                                "re-homing and knife-2 Prop resolution; "
+                                "applied=false is the default fail-loud "
+                                "face) and stmt.propDefHeads (knife-2 "
+                                "prong-a own-file def : Prop names)")},
+        "waiver": waiver_block,
         "in": {"path": os.path.abspath(args.in_path).replace("\\", "/"), "sha256": sha},
         "taxonomy": {"path": os.path.abspath(tax_info["path"]).replace("\\", "/") if tax_info["path"] else None,
                      "source": tax_info["source"], "rowsLoaded": tax_info["rowsLoaded"],
@@ -3550,6 +3731,32 @@ GAP_TELEMETRY_SELFTEST_FIXTURE = (
     "  sorry\n"
 )
 
+# W5 three-knife selftest fixtures (cast-repair wave, November 22, 2026).
+# REHOME: the data-family binder face knife 1 re-homes into the existential
+# prefix (correct seat of a data binder), so the W5 limb check sees a clean
+# envelope.  OWN_PROP: the audited file's own `def ... : Prop` resolves the
+# limb head (knife 2 prong a).  WAIVER: an unknown-head limb face resolves
+# neither way, so the cast dies fail-loud rc=1 with the flag off and passes
+# only under the opt-in --allow-bare-type-limb waiver (knife 3), which must
+# register every released limb in report.waiver.
+W5_REHOME_FIXTURE = (
+    "theorem w5_rehome_face (s : Set (\u211d \u2192 \u211d)) : P s := by\n"
+    "  sorry\n"
+)
+
+W5_OWN_PROP_FIXTURE = (
+    "def W5IsBig (n : \u2115) : Prop := n \u2265 100\n"
+    "\n"
+    "theorem w5_own_prop_face (n : \u2115) (h : W5IsBig (n + 1)) : P n := by\n"
+    "  sorry\n"
+)
+
+W5_WAIVER_FIXTURE = (
+    "theorem w5_waiver_face {s : \u2102} (h : Pkg (\u211d \u2192 \u211d))"
+    " (hs : (7 / 8 : \u211d) < s.re) : riemannZeta s \u2260 0 := by\n"
+    "  sorry\n"
+)
+
 
 def do_selftest(ts_utc):
     """--selftest (in-process vector face; zero network, zero compile).
@@ -3566,7 +3773,14 @@ def do_selftest(ts_utc):
     degenerate report, absent otherwise; always runs), and the R-7
     gap-telemetry vector (two-statement fixture, one recognized and one
     todo_seat conclusion: todo_seats=1, one family entry, per-cast blocks
-    plus the batch summary aggregation).  Conclusion vectors need the loaded
+    plus the batch summary aggregation), and the W5 three-knife vectors
+    (cast-repair wave, November 22, 2026: knife-1 data-limb re-homing into
+    the existential prefix, knife-2 Prop resolution by own-file def : Prop
+    and by the Mathlib/Std predicate family table, and knife-3 the opt-in
+    --allow-bare-type-limb waiver over the real do_cast entry in both flag
+    states - off stays fail-loud rc=1, on passes rc=0 with the release
+    registered in report.waiver; always runs, taxonomy-independent).
+    Conclusion vectors need the loaded
     taxonomy table; when only the builtin fail-safe starter row is in force
     they are skipped with rc=111 and a loud reason (the engine itself is
     still vector-proven on the premise face).  Returns 0 all green, 1 any
@@ -3769,6 +3983,7 @@ def do_selftest(ts_utc):
                     force=False, taxonomy=None, preflight_all=False,
                     census=None, root=None, cluster_table=None, report=None,
                     exp_draft=None, verify_anchors=False, mathlib=None,
+                    allow_bare_type_limb=False,
                     from_statements=fixture, from_repo=None)
                 buf = io.StringIO()
                 with contextlib.redirect_stdout(buf):
@@ -3884,6 +4099,116 @@ def do_selftest(ts_utc):
         batch_vector(GAP_TELEMETRY_SELFTEST_FIXTURE, t16_conds,
                      "gap-telemetry-long-tail")
 
+    # T17..T20 - W5 three-knife vectors (cast-repair wave, November 22,
+    # 2026).  All zero network, zero compile; the flag two-state vector runs
+    # the real do_cast entry over a TemporaryDirectory (disk face confined
+    # to the temp dir, console output captured) in both --allow-bare-type-
+    # limb states, so the default fail-loud contract and the opt-in
+    # registered waiver are pinned in the same face.
+    try:
+        stmt = decompose_head(W5_REHOME_FIXTURE)
+        s1_names = [v["name"] for v in stmt["S1_vars"]]
+        env = envelope_statement(stmt)
+        hits = envelope_bare_type_limb_hits(stmt, env)
+        vec("w5-knife1-data-limb-rehomed",
+            "s" in s1_names
+            and env == "∃ (s : Set (ℝ → ℝ)), True"
+            and hits == []
+            and is_bare_type_limb("Set (ℝ → ℝ)") is True,
+            "S1=%s env=%s hits=%s word-face-still-flags=%s"
+            % (s1_names, env, hits, is_bare_type_limb("Set (ℝ → ℝ)")))
+    except Exception as exc:  # a vector crash is a RED, not a crash
+        vec("w5-knife1-data-limb-rehomed", False,
+            "vector raised: %r" % (exc,))
+
+    try:
+        stmt = decompose_head(W5_OWN_PROP_FIXTURE)
+        own = stmt.get("propDefHeads") or []
+        env = envelope_statement(stmt)
+        hits = envelope_bare_type_limb_hits(stmt, env)
+        stmt_unresolved = {k: v for k, v in stmt.items() if k != "propDefHeads"}
+        hits_unresolved = envelope_bare_type_limb_hits(stmt_unresolved, env)
+        vec("w5-knife2-own-file-prop-head",
+            own == ["W5IsBig"]
+            and hits == []
+            and hits_unresolved == ["W5IsBig (n + 1)"],
+            "propDefHeads=%s resolved=%s unresolved=%s"
+            % (own, hits, hits_unresolved))
+    except Exception as exc:
+        vec("w5-knife2-own-file-prop-head", False,
+            "vector raised: %r" % (exc,))
+
+    try:
+        synth = {"S1_vars": [], "S2_assumps": [
+            {"name": "hprime", "type": "Nat.Prime (d + 1)"},
+            {"name": "hemb", "type": "Topology.IsEmbedding (e)"},
+            {"name": "hodd", "type": "Pkg.Prime (d + 1)"},
+        ], "S2_instances": [], "propDefHeads": []}
+        hits = envelope_bare_type_limb_hits(synth)
+        vec("w5-knife2-mathlib-family-head",
+            hits == ["Pkg.Prime (d + 1)"],
+            "hits=%s (Nat.Prime/Topology.IsEmbedding resolved by the "
+            "predicate family table; unknown head stays loud)" % (hits,))
+    except Exception as exc:
+        vec("w5-knife2-mathlib-family-head", False,
+            "vector raised: %r" % (exc,))
+
+    def w5_waiver_cast(flag_on):
+        """One real do_cast run over the unknown-head fixture; returns
+        (rc, stdout, report_dict_or_None, witness_exists)."""
+        with tempfile.TemporaryDirectory() as td:
+            fixture = os.path.join(td, "w5_waiver.lean")
+            with open(fixture, "w", encoding="utf-8", newline="\n") as fh:
+                fh.write(W5_WAIVER_FIXTURE)
+            out_dir = os.path.join(td, "cast_out")
+            report_path = os.path.join(td, "report.json")
+            ns = argparse.Namespace(
+                in_path=fixture, out_dir=out_dir,
+                toolchain=DEFAULT_TOOLCHAIN, snapshot=DEFAULT_SNAPSHOT,
+                audit_id=None, name="w5_waiver_face",
+                worktree=DEFAULT_WORKTREE, lake=DEFAULT_LAKE,
+                guard=DEFAULT_GUARD, core=DEFAULT_CORE, force=True,
+                taxonomy=None, preflight_all=False, census=None, root=None,
+                cluster_table=None, report=report_path, exp_draft=None,
+                verify_anchors=False, mathlib=None,
+                allow_bare_type_limb=flag_on,
+                from_statements=None, from_repo=None, selftest=False)
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = do_cast(ns, ts_utc)
+            rep = None
+            if os.path.isfile(report_path):
+                with open(report_path, encoding="utf-8") as fh:
+                    rep = json.load(fh)
+            witness = os.path.join(out_dir, "witness.lean")
+            return rc, buf.getvalue(), rep, os.path.isfile(witness)
+
+    try:
+        rc_off, out_off, rep_off, witness_off = w5_waiver_cast(False)
+        rc_on, out_on, rep_on, witness_on = w5_waiver_cast(True)
+        waived_limbs = ((rep_on or {}).get("waiver") or {})
+        row_on = next(((ok, d) for name, ok, d in
+                       ((rep_on or {}).get("verdict") or {}).get("checks", [])
+                       if name == "envelope_bare_type_limbs_zero"), (None, ""))
+        conds = {
+            "off-rc": rc_off == 1,
+            "off-marker": "FAIL-LOUD: %s" % BARE_TYPE_LIMB_MARKER in out_off,
+            "off-no-skeleton": not witness_off and rep_off is None,
+            "on-rc": rc_on == 0,
+            "on-verdict": (rep_on or {}).get("verdict", {}).get("ok") is True,
+            "on-waiver-registered": (waived_limbs.get("applied") is True
+                                     and waived_limbs.get("limbs")
+                                     == ["Pkg (ℝ → ℝ)"]),
+            "on-waiver-row": (row_on[0] is True and "WAIVED" in row_on[1]),
+            "on-stdout-loud": "[WAIVER]" in out_on,
+        }
+        ok = all(conds.values())
+        detail = " ".join("%s=%s" % (k, conds[k]) for k in sorted(conds))
+        vec("w5-knife3-waiver-flag-two-states", ok, detail)
+    except Exception as exc:
+        vec("w5-knife3-waiver-flag-two-states", False,
+            "vector raised: %r" % (exc,))
+
     print("== vacgen selftest: %d vectors, %d pass, %d fail, %d skip =="
           % (total[0], total[0] - len(failures) - len(skips),
              len(failures), len(skips)))
@@ -3976,6 +4301,15 @@ def main(argv=None):
                          "mode flags are ignored")
     ap.add_argument("--mathlib", default=None,
                     help="(v2) mathlib checkout root for --verify-anchors")
+    ap.add_argument("--allow-bare-type-limb", dest="allow_bare_type_limb",
+                    action="store_true",
+                    help="(v2) opt-in W5 waiver: release a cast through the "
+                         "bare-type-conjunct-limb front gate when a limb head "
+                         "resolves neither as the audited file's own "
+                         "def : Prop nor as a Mathlib/Std predicate family "
+                         "head; every released limb is registered loud on "
+                         "stdout and in the report JSON (report.waiver); the "
+                         "default (flag off) stays fail-loud rc=1")
     args = ap.parse_args(argv)
 
     ts_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
