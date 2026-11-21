@@ -1,9 +1,9 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T04:10:33Z",
+  "generated_at_utc": "2026-11-21T06:20:20Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
-  "tools_dir": "D:/ComplexAnalysis/rocqwash/tools",
-  "git_head_recorded": "2a1fe8fab9374d9a6aa7f672071aacfbab73e21e",
+  "tools_dir": "tools",
+  "git_head_recorded": "311d32d4ce906f51da031c59e1170e0123a88e5b",
   "py_files_censused": 60,
   "non_py_files_present": [
    "__pycache__",
@@ -3237,15 +3237,15 @@
   },
   {
    "name": "evolve.py",
-   "bytes": 90910,
-   "sha256": "2ed5c02e7046f267ff12ebc205fc1ff56311311880edbcc410cca5ae682d83af",
-   "lines": 1819,
+   "bytes": 107809,
+   "sha256": "26aaaaf7c766553e1faf365d5dfb731cf2745f7a9d01e07215fa59aa465b10e6",
+   "lines": 2123,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 29,
-    "head": "evolve.py — autonomous evolution engine v1 for rocqwash (tools/).\n\nPurpose.  The law-three harvest→derive→draft pipeline: turn live repository\n  signals into a reviewed, human-gated task-brief draft for the next round.\n  Harvest collects five signal classes by subprocess of the existing engines\n  (zero new engines): norm-lint fitness (current tree vs baseline, frozen\n  surfaces excluded), new ci-red events from one sentinel --once round, the\n  suite last state (captured ledger or a live run), registry-audit accounts\n  with increment, and maintained UNRECOGNIZED sentinel events. Derive applies\n"
+    "head": "evolve.py — autonomous evolution engine v1 for rocqwash (tools/).\n\nPurpose.  The law-three harvest→derive→draft pipeline: turn live repository\n  signals into a reviewed, human-gated task-brief draft for the next round.\n  Harvest collects six signal classes by subprocess of the existing engines:\n  norm-lint fitness, new ci-red events from one sentinel --once round, the\n  suite last state, registry-audit accounts with increment, maintained\n  UNRECOGNIZED sentinel events, and the gate-health readings (doc_lint rc,\n  recorded suite ledger, whitelist norm errors). Derive applies fixed\n  scoring rul"
    },
    "argparse": {
     "imported": true,
@@ -3407,6 +3407,38 @@
      },
      {
       "flags": [
+       "--gate"
+      ],
+      "kwargs": {
+       "dest": "gate",
+       "action": "store_true",
+       "help": "enable signal g (gate-health: the doc_lint rc, the latest recorded suite ledger, the whitelist-variant norm error count)"
+      }
+     },
+     {
+      "flags": [
+       "--gate-whitelist"
+      ],
+      "kwargs": {
+       "dest": "gate_whitelist",
+       "default": null,
+       "metavar": "PATH",
+       "help": "CJK whitelist forwarded to the gate norm scan (default docs/norm-lint-cjk-whitelist-20261113.txt under the repo root)"
+      }
+     },
+     {
+      "flags": [
+       "--gate-ledger-dir"
+      ],
+      "kwargs": {
+       "dest": "gate_ledger_dir",
+       "default": null,
+       "metavar": "DIR",
+       "help": "directory of recorded run_tests.sh ledgers; the latest parsable one supplies the suite reading (without it the reading is reported unreadable)"
+      }
+     },
+     {
+      "flags": [
        "--registry-git"
       ],
       "kwargs": {
@@ -3477,6 +3509,9 @@
      "--sentinel-injector",
      "--suite-ledger",
      "--suite-now",
+     "--gate",
+     "--gate-whitelist",
+     "--gate-ledger-dir",
      "--registry-git",
      "--registry-ref",
      "--git-path-order",
@@ -3537,7 +3572,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/evolve.py [--draft-out] [--json] [--repo-root] [--top] [--baseline] [--jargon-map] [--watch-repo] [--sentinel-state] [--sentinel-state-seed] [--sentinel-branch] [--sentinel-events] [--sentinel-injector] [--suite-ledger] [--suite-now] [--registry-git] [--registry-ref] [--git-path-order] [--git-path-project] [--registry-baseline]",
+    "form": "python tools/evolve.py [--draft-out] [--json] [--repo-root] [--top] [--baseline] [--jargon-map] [--watch-repo] [--sentinel-state] [--sentinel-state-seed] [--sentinel-branch] [--sentinel-events] [--sentinel-injector] [--suite-ledger] [--suite-now] [--gate] [--gate-whitelist] [--gate-ledger-dir] [--registry-git] [--registry-ref] [--git-path-order] [--git-path-project] [--registry-baseline]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": false,
@@ -3545,8 +3580,8 @@
   },
   {
    "name": "exp_port.py",
-   "bytes": 23281,
-   "sha256": "7ee67910340532aca987e90b40fe7f88afcd0cabd1328871f5df1b4779107d9c",
+   "bytes": 23297,
+   "sha256": "928d1a01bcae25fccbe0070b4cc50d35d828457bbd0d8f79fa16314de3a661f1",
    "lines": 540,
    "underscore_prefix": false,
    "has_main_guard": true,
@@ -5438,15 +5473,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 101351,
-   "sha256": "4377f61fb22865b5c7efcd4ad11bacfb89d52168581a057c86b94bcfd5a78dc5",
-   "lines": 1969,
+   "bytes": 103772,
+   "sha256": "9a9c498cd3c788dd6fe1539f4da0e50b060c3b3637574d489e31d722d8817d88",
+   "lines": 2009,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 42 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 43 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
    },
    "argparse": {
     "imported": true,
@@ -5525,8 +5560,9 @@
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 15,
+      "count": 16,
       "samples": [
+       ".lean",
        "Lean",
        "lake",
        "mathlib"
@@ -5551,15 +5587,15 @@
   },
   {
    "name": "net_probe.py",
-   "bytes": 19364,
-   "sha256": "32130053d782a4621aecb773ac4be0d1d32b934c0c2e8570c16955675b9057b0",
-   "lines": 438,
+   "bytes": 28501,
+   "sha256": "731ab7df14fc0068ee8f5e3f94404eca26b4d9a10731e72774ccfb37aeba22c2",
+   "lines": 612,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
-    "head": "net_probe.py - network-window probe (rocqwash tools/).\n\nPurpose.  Probe all endpoints with a bare GET and decide the dual-probe\n  stability window (a single-probe round must not initiate): with\n  --stable-window the window holds only when every endpoint is reachable\n  in every round; without it exit 0 only means the probe completed.\n  Reachable = any HTTP status from urlopen(url, timeout=12), 500/400\n  included; URLError, timeout or DNS failure = unreachable (http_code=null);\n  HTTPError subclasses URLError, so exceptions pass classify_error first.\n\nInterface.  python3 tools/net_probe.py [--en"
+    "lines": 40,
+    "head": "net_probe.py - network-window probe (rocqwash tools/).\n\nPurpose.  Probe all endpoints with a bare GET and decide the dual-probe\n  stability window (a single-probe round must not initiate): with\n  --stable-window the window holds only when every endpoint is reachable\n  in every round; without it exit 0 only means the probe completed.\n  Reachable = any HTTP status from urlopen(url, timeout=12), 500/400\n  included; URLError, timeout or DNS failure = unreachable (http_code=null);\n  HTTPError subclasses URLError, so exceptions pass classify_error first.\n  A failure whose error says nothing about th"
    },
    "argparse": {
     "imported": true,
@@ -5667,6 +5703,7 @@
      "random",
      "shutil",
      "socket",
+     "ssl",
      "subprocess",
      "sys",
      "tempfile",
@@ -5681,6 +5718,7 @@
    "network": {
     "transport_imports": [
      "socket",
+     "ssl",
      "urllib.request"
     ],
     "adjacent_imports": [
@@ -5701,7 +5739,7 @@
      },
      {
       "token": "https_url",
-      "count": 19
+      "count": 32
      }
     ],
     "subprocess_bridge_suspect": true,

@@ -1,7 +1,7 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 42 registered capabilities,
+  Context Protocol (MCP) stdio transport: 43 registered capabilities,
   each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
   Default deny for network and heavy capabilities (`sentinel_status`,
   `net_probe`, `ci_triage`, `pushci_status`): a failed tool result
@@ -21,7 +21,7 @@ Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
 Dependencies.  Python 3 standard library only (argparse, json, os,
   subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 42-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 43-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors.
 
 Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1
@@ -43,9 +43,10 @@ ALLOW_NET_ENV = "ROCQWASH_MCP_ALLOW_NET"
 TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
-# additions, eleven M2 ticket additions); a roster change re-freezes this
-# value and EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 42
+# additions, eleven M2 ticket additions, plus the tree_audit registration
+# increment); a roster change re-freezes this value and EXPECTED_TOOLS in
+# tests/t_mcp_face.py in the same round.
+SELFTEST_ROSTER_COUNT = 43
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1504,6 +1505,44 @@ TOOL_SPECS = [
             "same graduation law as the i18n handoff faces."
         ),
     },
+    # ---- the tree_audit registration increment: one read-only audit face
+    # over the landed census CLI (tools/tree_audit.py --root/--json/
+    # --selftest, its real argparse flag face).  Additive after the block
+    # above: the existing specs and schemas untouched.
+    {
+        "name": "tree_audit",
+        "kind": "cli",
+        "cli": os.path.join("tools", "tree_audit.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("root", "--root"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "root": {"type": "string", "description": "directory to audit; every report field travels with its counting rule as {value, basis} and the root field records this directory as given; CLI flag --root"},
+                "json_out": {"type": "string", "description": "additionally write the JSON report to this path (every top-level field as {value, basis} except scan_face, the top-level field that states what the scan covers and what it cannot see); CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the built-in fixture vectors on temporary directories and exit (takes no other flag); bare CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Read-only tree health audit over .lean and .v source trees "
+            "(tools/tree_audit.py): one JSON report of file, byte, line and "
+            "declaration totals plus an unsound-feature sweep (sorry, "
+            "sorryAx, axiom, opaque, native_decide, unsafe, implemented_by, "
+            "extern, ofReduceBool).  Every top-level report field except "
+            "scan_face carries {value, basis} so each number travels with "
+            "its counting rule, and the top-level scan_face field states "
+            "what the scan covers and what it cannot see.  Zero network "
+            "face; the tree is read-only and the only write is the "
+            "caller-named --json path.  --selftest runs the fixture vectors "
+            "offline on temporary directories (takes no other flag).  Exit "
+            "codes: 0 green, 1 red (selftest, scan or report-write "
+            "failures), 2 usage (missing or non-directory --root)."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -1784,7 +1823,8 @@ def _selftest():
     one-to-one sync, and the schema validation behavior of
     _validate_arguments).  The roster count is a
     frozen vector (the M2 roster: 25 standing specs, six M1 additions,
-    eleven M2 ticket additions), the same freeze discipline as
+    eleven M2 ticket additions, plus the tree_audit registration
+    increment), the same freeze discipline as
     EXPECTED_TOOLS in tests/t_mcp_face.py; a roster change re-freezes
     both.
     """

@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  42-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  43-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -14,9 +14,11 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   roster-expansion work stream 1's six capabilities (the M1 ticket, five
   INDEX entries already standing plus the gap_cluster entry that lands with
   the
-  same increment), and the MCP roster-expansion work stream 2's eleven
+  same increment), the MCP roster-expansion work stream 2's eleven
   read/plan/partial capabilities (the M2 ticket, survey table 2 rows 7-17:
-  all eleven INDEX entries already standing), each new capability
+  all eleven INDEX entries already standing), and the tree_audit
+  registration increment's one capability (tree_audit, a read-only audit
+  face over the landed census CLI tools/tree_audit.py), each new capability
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
   symbiosis INDEX entry line lands with the integration increment).
 
@@ -29,10 +31,10 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   separate --help invocation of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 42 expected names in registration order,
+  3  tools/list -> exactly the 43 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
-     micro-ticket schema-face vectors over three faces (schema-only, the
-     roster count stays 42): exp_append carries the optional actor string
+     micro-ticket schema-face vectors over three faces (schema-only):
+     exp_append carries the optional actor string
      property outside the required list (mu-1); vacgen_generate mirrors
      the full 20-flag argparse face of tools/vacgen.py one-to-one
      (mu-3); the render_events spec and its events property declare both
@@ -47,6 +49,8 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
         ledgers -> exit code: 0 and a chain root in the markdown output
         (evidence for the array positional path: two array elements land
         as two positional LEDGER.json paths in one call)
+     4d tree_audit {"selftest": true} -> exit code: 0 with the
+        fixture-vector green face (the selftest final PASS line)
   5  default deny -> tools/call net_probe returns isError true and names
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child)
   6  error faces -> resources/list -32601; unknown tool -32602; unknown
@@ -113,6 +117,9 @@ EXPECTED_TOOLS = [
     "symbiosis_bus_export", "uplink_verify", "i18n_translate_handoff",
     "i18n_verify", "red_dispatch_report", "ai_flavor_apply_plan",
     "row_render_check",
+    # the tree_audit registration increment (one read-only audit face over
+    # the landed census CLI tools/tree_audit.py)
+    "tree_audit",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -126,6 +133,12 @@ EXPECTED_VACGEN_ARGS = [
     "preflight_all", "census", "root", "cluster_table", "report",
     "exp_draft", "verify_anchors", "mathlib",
 ]
+
+# Frozen tree_audit vector: the full argparse flag face of
+# tools/tree_audit.py in argparse declaration order (--root, --json,
+# --selftest, main()); the tree_audit schema properties must match this
+# list one-to-one, exactly the EXPECTED_VACGEN_ARGS discipline.
+EXPECTED_TREE_AUDIT_ARGS = ["root", "json_out", "selftest"]
 
 
 def _child_env():
@@ -222,6 +235,9 @@ def main():
             {"jsonrpc": "2.0", "id": 11, "method": "tools/call",
              "params": {"name": "red_dispatch_report",
                         "arguments": {"preset": "auto"}}},
+            {"jsonrpc": "2.0", "id": 12, "method": "tools/call",
+             "params": {"name": "tree_audit",
+                        "arguments": {"selftest": True}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -264,8 +280,7 @@ def main():
                 fails.append("probe3 %s inputSchema not a closed object"
                              % t.get("name"))
 
-        # Probe 3b: micro-ticket schema-face vectors (schema-only; the
-        # roster count stays 42, so EXPECTED_TOOLS above is unchanged).
+        # Probe 3b: micro-ticket schema-face vectors (schema-only).
         by_name = {t.get("name"): t for t in tools}
         exp_spec = by_name.get("exp_append") or {}
         exp_schema = exp_spec.get("inputSchema") or {}
@@ -296,6 +311,27 @@ def main():
             fails.append("probe3b render_events spec description should "
                          "declare both accepted shapes, sentinel-event/1 "
                          "and exp/1 (mu-4)")
+
+        # Probe 3c: tree_audit schema-face vectors (schema shape mirrors the
+        # tool's real argparse flag face one-to-one; the spec description
+        # declares the basis annotations and the top-level scan_face field).
+        ta_spec = by_name.get("tree_audit") or {}
+        ta_props = list((ta_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if ta_props != EXPECTED_TREE_AUDIT_ARGS:
+            fails.append("probe3c tree_audit schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_TREE_AUDIT_ARGS, ta_props))
+        if "root" in ((ta_spec.get("inputSchema") or {}).get("required")
+                      or []):
+            fails.append("probe3c tree_audit root must stay optional (the "
+                         "tool usage-errors rc 2 without --root; --selftest "
+                         "runs without it)")
+        ta_desc = ta_spec.get("description") or ""
+        if "basis" not in ta_desc or "scan_face" not in ta_desc:
+            fails.append("probe3c tree_audit description should declare the "
+                         "per-field {value, basis} annotations and the "
+                         "top-level scan_face field")
 
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
@@ -330,6 +366,17 @@ def main():
                 md = h.read()
             if "LibX" not in md:
                 fails.append("probe4c chain root LibX missing from md face")
+
+        # Probe 4d: tree_audit selftest live call (fixture vectors on
+        # temporary directories, zero network, zero repository writes)
+        r12 = _by_id(lines, 12)
+        text12 = _result_text(r12)
+        if not r12 or r12.get("result", {}).get("isError"):
+            fails.append("probe4d tree_audit selftest should not be an "
+                         "error\n%s" % text12)
+        elif "exit code: 0" not in text12 or "tree_audit green" not in text12:
+            fails.append("probe4d tree_audit exit 0 + fixture-vector green "
+                         "face missing\n%s" % text12)
 
         # Probe 5: default deny negative sample
         r6 = _by_id(lines, 6)
@@ -394,7 +441,7 @@ def main():
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
     sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (7 probe groups, "
-                     "%d capabilities, 3 live-call spot checks)\n"
+                     "%d capabilities, 4 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

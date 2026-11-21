@@ -83,8 +83,8 @@ the marker does not read as a delta fact and is voided here by declaration.
 | lean_sweep.py | 57,056 | 1,089 | Y | Y | 0/16 | zero | lean(32), thermal(1) | token | arg |
 | learning_feedback.py | 35,331 | 740 | Y | Y | 0/1 | zero | lean(5) | flag | arg |
 | ledger_sync.py | 26,938 | 549 | Y | Y | 0/5 | zero | none | token | arg |
-| mcp_server.py | 101,351 | 1,969 | Y | Y | 0/1 | zero | env(3), ocaml(2), coq(11), lean(15), thermal(1) | flag | arg |
-| net_probe.py | 19,364 | 438 | Y | Y | 0/7 | socket, urllib.request +bridge | none | token | arg |
+| mcp_server.py | 103,772 | 2,009 | Y | Y | 0/1 | zero | env(3), ocaml(2), coq(11), lean(16), thermal(1) | flag | arg |
+| net_probe.py | 28,501 | 612 | Y | Y | 0/7 | socket, ssl, urllib.request +bridge | none | token | arg |
 | netname_normalize.py | 15,623 | 341 | Y | Y | 0/4 | zero | none | token | arg |
 | norm_lint.py | 37,945 | 944 | Y | Y | 0/9 | zero | none | flag | arg |
 | periscope.py | 75,772 | 1,720 | Y | Y | 0/6 | +bridge | lean(3) | flag | arg |
@@ -383,19 +383,19 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 - SKIP face: no special-environment marker word faces
 
 ### tools/mcp_server.py
-- Purpose: Expose the repository tool capability surface over the Model Context Protocol (MCP) stdio transport: 42 registered capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
+- Purpose: Expose the repository tool capability surface over the Model Context Protocol (MCP) stdio transport: 43 registered capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
 - Invocation: `python tools/mcp_server.py [--selftest]` (reconstructed from argparse)
 - Imports: argparse, json, os, subprocess, sys (standard library only)
 - Flag face: 0 positional, 1 optional (1 boolean per flag-shape.json)
 - Network face: zero
-- SKIP face: env(3), ocaml(2), coq(11), lean(15), thermal(1) marker word faces
+- SKIP face: env(3), ocaml(2), coq(11), lean(16), thermal(1) marker word faces
 
 ### tools/net_probe.py
 - Purpose: Probe all endpoints with a bare GET and decide the dual-probe stability window (a single-probe round must not initiate): with --stable-window the window holds only when every endpoint is reachable in every round; without it exit 0 only means the probe completed.
 - Invocation: `python tools/net_probe.py [--endpoints] [--rounds] [--interval] [--stable-window] [--jitter] [--seed] [--json]` (reconstructed from argparse)
-- Imports: argparse, datetime, io, json, os, random, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request (standard library only)
+- Imports: argparse, datetime, io, json, os, random, shutil, socket, ssl, subprocess, sys, tempfile, time, urllib.error, urllib.request (standard library only)
 - Flag face: 0 positional, 7 optional (1 boolean per flag-shape.json)
-- Network face: non-zero (socket, urllib.request; bridge tokens)
+- Network face: non-zero (socket, ssl, urllib.request; bridge tokens)
 - SKIP face: no toolchain markers; runs need a network window (its own job). Note: the
   docstring documents `--selftest` while the argparse flag face (7 flags) does not list
   it; the doc-versus-argparse divergence recorded at census time persists at this anchor.
@@ -654,7 +654,7 @@ Each line is a word-face fact of this re-scan at `2a1fe8fab9374d9a6aa7f672071aac
 | Census-time cast | 27 | 2026-11-14 @ `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` | transcribed record (the 2026-11-14 census.md and INDEX sections 0 to 1); not re-measured |
 | Index entries | 56 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `grep -c "^### tools/" docs/CAPABILITY-INDEX.md` = 56, measured |
 | Tree face | 60 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `ls tools/*.py | wc -l` = 60, measured; this census tabulates 60 records |
-| MCP roster | 42 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 42 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 42 specs (40 cli + 2 file), measured |
+| MCP roster | 43 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` (working tree, the tree_audit registration increment) | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 43 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 43 specs (41 cli + 2 file), measured; the re-scan generation reading was 42 (40 cli + 2 file), advanced by one face since: `tree_audit` (`tools/tree_audit.py`, this increment) |
 
 Deltas, each measured at this anchor:
 
@@ -662,9 +662,9 @@ Deltas, each measured at this anchor:
   present; 0 retired: none). The 33 new files: ai_flavor.py, ai_flavor_apply.py, auto_merge.py, auto_round.py, axiom_guard.py, b_gate_audit.py, bus_feeder.py, calibration_ledger.py, evolution_dashboard.py, exp_port.py, flaky_guard.py, gap_cluster.py, i18n_pipeline.py, i18n_translate.py, i18n_verify.py, jargon_apply.py, jargon_map_sync.py, lean_sweep.py, learning_feedback.py, mcp_server.py, periscope.py, pin_repair.py, repair_scope.py, repair_weekly.py, roster_resync.py, row_render.py, scheduler_lite.py, selfevolve_round.py, symbiosis_bus.py, termbase.py, tree_audit.py, uplink.py, verdict_diff.py.
 - Tree 60 vs index 56: 4 files carry no index entry (exp_port.py, jargon_map_sync.py, mcp_server.py, periscope.py).
   Index entries not on the tree: 0 (none).
-- Roster 42 = 40 cli capabilities on 40 distinct tool files + 2 file faces
-  (`docs/CAPABILITY-INDEX.md`, `docs/symbiosis_sop.md`); 60 - 40 = 20 tool files carry no
-  MCP capability. The 42 name-to-target pairs, measured from `TOOL_SPECS`: sentinel_status -> tools/cw_sentinel.py; net_probe -> tools/net_probe.py; baselinediff -> tools/baseline_diff.py; ci_triage -> tools/ci_triage.py; vacgen_generate -> tools/vacgen.py; exp_append -> tools/exp_port.py; pushci_status -> tools/pushci.py; capability_index -> docs/CAPABILITY-INDEX.md; chain_graph -> tools/chain_graph.py; doc_lint -> tools/doc_lint.py; ledger_sync -> tools/ledger_sync.py; netname_normalize -> tools/netname_normalize.py; norm_lint -> tools/norm_lint.py; render_events -> tools/render_events.py; select_audit -> tools/select_audit.py; registry_audit -> tools/registry_audit.py; registry_fix -> tools/registry_fix.py; registry_regen -> tools/registry_regen.py; registry_union -> tools/registry_union.py; abl1_4b_compile -> tools/_abl1_4b_compile.py; http_backoff -> tools/_http_backoff.py; ai_flavor_detect -> tools/ai_flavor.py; jargon_plan -> tools/jargon_apply.py; i18n_pipeline_dryrun -> tools/i18n_pipeline.py; symbiosis_status -> docs/symbiosis_sop.md; termbase -> tools/termbase.py; verdict_diff -> tools/verdict_diff.py; learning_feedback -> tools/learning_feedback.py; b_gate_audit -> tools/b_gate_audit.py; evolution_dashboard -> tools/evolution_dashboard.py; gap_cluster -> tools/gap_cluster.py; repair_weekly -> tools/repair_weekly.py; roster_resync -> tools/roster_resync.py; scheduler_lite -> tools/scheduler_lite.py; axiom_guard -> tools/axiom_guard.py; symbiosis_bus_export -> tools/symbiosis_bus.py; uplink_verify -> tools/uplink.py; i18n_translate_handoff -> tools/i18n_translate.py; i18n_verify -> tools/i18n_verify.py; red_dispatch_report -> tools/red_dispatch.py; ai_flavor_apply_plan -> tools/ai_flavor_apply.py; row_render_check -> tools/row_render.py.
+- Roster 43 = 41 cli capabilities on 41 distinct tool files + 2 file faces
+  (`docs/CAPABILITY-INDEX.md`, `docs/symbiosis_sop.md`); 60 - 41 = 19 tool files carry no
+  MCP capability. The 43 name-to-target pairs, measured from `TOOL_SPECS`: sentinel_status -> tools/cw_sentinel.py; net_probe -> tools/net_probe.py; baselinediff -> tools/baseline_diff.py; ci_triage -> tools/ci_triage.py; vacgen_generate -> tools/vacgen.py; exp_append -> tools/exp_port.py; pushci_status -> tools/pushci.py; capability_index -> docs/CAPABILITY-INDEX.md; chain_graph -> tools/chain_graph.py; doc_lint -> tools/doc_lint.py; ledger_sync -> tools/ledger_sync.py; netname_normalize -> tools/netname_normalize.py; norm_lint -> tools/norm_lint.py; render_events -> tools/render_events.py; select_audit -> tools/select_audit.py; registry_audit -> tools/registry_audit.py; registry_fix -> tools/registry_fix.py; registry_regen -> tools/registry_regen.py; registry_union -> tools/registry_union.py; abl1_4b_compile -> tools/_abl1_4b_compile.py; http_backoff -> tools/_http_backoff.py; ai_flavor_detect -> tools/ai_flavor.py; jargon_plan -> tools/jargon_apply.py; i18n_pipeline_dryrun -> tools/i18n_pipeline.py; symbiosis_status -> docs/symbiosis_sop.md; termbase -> tools/termbase.py; verdict_diff -> tools/verdict_diff.py; learning_feedback -> tools/learning_feedback.py; b_gate_audit -> tools/b_gate_audit.py; evolution_dashboard -> tools/evolution_dashboard.py; gap_cluster -> tools/gap_cluster.py; repair_weekly -> tools/repair_weekly.py; roster_resync -> tools/roster_resync.py; scheduler_lite -> tools/scheduler_lite.py; axiom_guard -> tools/axiom_guard.py; symbiosis_bus_export -> tools/symbiosis_bus.py; uplink_verify -> tools/uplink.py; i18n_translate_handoff -> tools/i18n_translate.py; i18n_verify -> tools/i18n_verify.py; red_dispatch_report -> tools/red_dispatch.py; ai_flavor_apply_plan -> tools/ai_flavor_apply.py; row_render_check -> tools/row_render.py; tree_audit -> tools/tree_audit.py.
 - Caller note: the four counts measure four different faces at four different times; none
   is derivable from another, and each stays bound to its own time point and basis.
 
@@ -777,7 +777,22 @@ Measured output at closing time:
   faces re-measured); prose faces are the builder's text, table and per-item lines are
   transcribed from the JSON records.
 - Machine-readable outputs: `census-tools.json` (meta + files[60], per-file sha256 anchors),
-  sha256 `f8ec20b2b52d411904a77ea5a518d5b902ae4157248944199ef9abd02fca5e94`; `flag-shape.json` (60 records), sha256 `98d621f30e8280f96187731a3ab7600f37147d8b1d33c6e80bdf345152c045ea`.
+  sha256 `f63178c57a6a913dee35d8f0fbdda3b8556a6e8da1397c6a36a28ca4a8788a59` (the re-scan generation bytes, sha256 `f8ec20b2b52d411904a77ea5a518d5b902ae4157248944199ef9abd02fca5e94`, stay on record as the generation this table was transcribed from); `flag-shape.json` (60 records), sha256 `98d621f30e8280f96187731a3ab7600f37147d8b1d33c6e80bdf345152c045ea`.
+- Increment re-run (the tree_audit MCP-face registration plus the net_probe unverifiable
+  registration, 2026-11-21): the census builder re-ran over the working tree at the same
+  HEAD `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` into `docs/census-tools.json` (the
+  section 1 command, same anchor; `meta.py_files_censused` = 60, scope unchanged). Two
+  censused faces carry new working-tree modifications at this increment: `mcp_server.py`
+  (103,772 B, 2,009 lines; the tree_audit spec plus its frozen roster constant; the lean
+  marker word face reads 16 against the table's 15, the added `.lean` spelling of the new
+  spec text) and `net_probe.py` (28,501 B, 612 lines; the unverifiable registration adds
+  the `ssl` transport import, so the network word face reads socket, ssl, urllib.request;
+  SKIP markers stay none; the argparse flag face is unchanged on both files, so
+  `flag-shape.json` was not re-run and stays byte-identical in content). The section 2
+  and section 3 rows of these two files were re-transcribed from the fresh JSON at this
+  increment; all other rows remain the re-scan generation's transcriptions. The aggregate
+  faces of section 4 re-measured unchanged (58/60 argparse, 1/60 subcommands, 50/60 zero
+  network, 35/60 any-marker, 60/60 docstrings, 0 syntax errors, 58/60 selftest word face).
 - Census-time comparison base: the 2026-11-14 census (`census.md` + `census-tools.json` +
   `flag-shape.json`, archive path above), 27 files at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`.
 - Prior generation on record: the 2026-11-20 re-scan (this directory's census.md +

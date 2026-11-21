@@ -9,6 +9,12 @@ Purpose.  Probe all endpoints with a bare GET and decide the dual-probe
   Reachable = any HTTP status from urlopen(url, timeout=12), 500/400
   included; URLError, timeout or DNS failure = unreachable (http_code=null);
   HTTPError subclasses URLError, so exceptions pass classify_error first.
+  A failure whose error says nothing about the target's existence or state
+  (TLS handshake blocked, DNS failure, connection timeout) is registered
+  as "unverifiable" on the endpoint entry, never as a claim about the
+  target (unreachable is not nonexistent; the MIT dashboard TLS-block
+  precedent); target-evidence failures (connection refused and friends)
+  stay plain failures.
 
 Interface.  python3 tools/net_probe.py [--endpoints URL[,URL...]]
   [--rounds N] [--interval S] [--stable-window] [--jitter S] [--seed N]
@@ -18,13 +24,18 @@ Interface.  python3 tools/net_probe.py [--endpoints URL[,URL...]]
   uniform(0, S) before each endpoint probe (--seed N pins the RNG;
   jitter_sec appears only while --jitter > 0); --stable-window requires
   --rounds >= 2.  Report schema rocqwash-net-probe/1: rounds[{at,
-  endpoints[{url, http_code, ok(, jitter_sec)}]}], verdict (STABLE|
-  UNSTABLE with --stable-window, else all-up|partial|all-down); writes
+  endpoints[{url, http_code, ok(, jitter_sec)(, status, reason_class,
+  evidence, registered_as)}]}], verdict (STABLE|
+  UNSTABLE with --stable-window, else all-up|partial|all-down); the four
+  registration keys appear only on unverifiable outcomes (status and
+  registered_as = "unverifiable"; reason_class = tls-blocked | dns |
+  timeout; evidence = the underlying error text); existing ok and
+  plain-failure entries carry no new keys; writes
   deterministic, rounds[].at is wall-clock UTC (varies per round).
 
 Dependencies.  Python 3 standard library only; zero network under --selftest.
 
-Evidence.  --selftest frozen vector group V1-V7; suite lane t_net_probe
+Evidence.  --selftest frozen vector group V1-V9; suite lane t_net_probe
   (tests/test_net_probe.py).
 
 Exit-codes.  0 = probe completed and, with --stable-window, the window
@@ -36,6 +47,7 @@ import json
 import os
 import random
 import socket
+import ssl
 import sys
 import time
 import urllib.error
@@ -52,6 +64,27 @@ DEFAULT_ENDPOINTS = [
     "https://github.com",
 ]
 
+# Registration class for outcomes that cannot be verified: the probe could
+# not reach the target for reasons that say nothing about the target's
+# existence or state (unreachable does not mean nonexistent), so the report
+# registers "unverifiable" instead of a plain failure red (an honest
+# auditor registers cannot-verify, never a false alarm).
+UNVERIFIABLE = "unverifiable"
+REASON_TLS_BLOCKED = "tls-blocked"
+REASON_DNS = "dns"
+REASON_TIMEOUT = "timeout"
+
+# DNS-resolution failure texts that surface as plain string reasons (the
+# platform spellings of getaddrinfo failures); matched lowercase against
+# the reason text of a URLError that carries no exception instance.
+DNS_REASON_TEXTS = (
+    "nodename nor servname",           # the BSD getaddrinfo spelling
+    "name or service not known",       # the Linux getaddrinfo spelling
+    "getaddrinfo failed",              # the desktop resolver spelling
+    "temporary failure in name resolution",
+    "no address associated",
+)
+
 
 def classify_error(exc):
     """Reachability classification: HTTPError (an HTTP status was received,
@@ -62,32 +95,75 @@ def classify_error(exc):
     return isinstance(exc, urllib.error.HTTPError)
 
 
+def classify_unverifiable(exc):
+    """Classify a probe exception into an unverifiable reason class.
+
+    Returns REASON_TLS_BLOCKED, REASON_DNS or REASON_TIMEOUT when the
+    failure says nothing about the target's existence or state: the probe
+    path itself was blocked (a TLS handshake refused or torn down by a
+    middlebox or policy, the MIT dashboard precedent; certificate
+    verification failures are ssl.SSLError subclasses and ride the same
+    class), the name did not resolve (DNS failure), or the connection
+    attempt timed out.  Returns None when the error carries target
+    evidence (an HTTP status was received, or the connection was actively
+    refused) so the outcome stays a plain failure.  urlopen wraps the
+    underlying transport error as URLError.reason, so both the exception
+    itself and its .reason attribute are judged.
+    """
+    for face in (exc, getattr(exc, "reason", None)):
+        if face is None:
+            continue
+        if isinstance(face, ssl.SSLError):
+            return REASON_TLS_BLOCKED
+        if isinstance(face, socket.gaierror):
+            return REASON_DNS
+        if isinstance(face, (socket.timeout, TimeoutError)):
+            return REASON_TIMEOUT
+    if isinstance(exc, urllib.error.URLError):
+        text = str(getattr(exc, "reason", exc))
+        lowered = text.lower()
+        if "timed out" in lowered:
+            return REASON_TIMEOUT
+        if any(marker in lowered for marker in DNS_REASON_TEXTS):
+            return REASON_DNS
+    return None
+
+
 def probe_once(url, timeout=TIMEOUT_SEC, _open=None):
     """Single-endpoint bare-GET probe -> (http_code: int|None, ok: bool,
-    reason: str).  _open accepts a canned urlopen (selftest zero-network
-    canned-exception injection point)."""
+    reason: str, reason_class: str|None).  reason_class carries the
+    unverifiable registration class of a failure (classify_unverifiable)
+    and is None for ok and plain-failure outcomes.  _open accepts a canned
+    urlopen (selftest zero-network canned-exception injection point)."""
     opener = _open if _open is not None else urllib.request.urlopen
     try:
         resp = opener(url, timeout=timeout)
     except Exception as exc:  # noqa: BLE001 - classify_error judges all
         ok = classify_error(exc)
         code = getattr(exc, "code", None) if ok else None
-        return code, ok, "%s: %s" % (type(exc).__name__, exc)
+        reason = "%s: %s" % (type(exc).__name__, exc)
+        return code, ok, reason, None if ok else classify_unverifiable(exc)
     code = getattr(resp, "status", None)
     if code is None and hasattr(resp, "getcode"):
         code = resp.getcode()
     close = getattr(resp, "close", None)
     if close:
         close()
-    return code, True, ""
+    return code, True, "", None
 
 
 def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
                 rng=None, _sleep=None):
     """One full round over the endpoints (argument order) ->
-    (entries[{url, http_code, ok(, jitter_sec)}], reasons{url: reason});
+    (entries[{url, http_code, ok(, jitter_sec)(, status, reason_class,
+    evidence, registered_as)}], reasons{url: reason});
     reasons collects down endpoints only, feeds diagnostic stdout and never
-    enters the JSON report.  Resilience: when jitter > 0, sleep
+    enters the JSON report.  Registration: a down endpoint whose error
+    classifies unverifiable (classify_unverifiable) is registered as
+    "unverifiable" on its entry with the four keys status, reason_class,
+    evidence and registered_as, never as a claim about the target; ok and
+    plain-failure entries gain no keys (backward-compatible shape).
+    Resilience: when jitter > 0, sleep
     uniform(0, jitter) seconds before each endpoint probe (one independent
     draw per endpoint; rng defaults to the random module; _sleep is the
     injection point behind the selftest fixed-seed deterministic vectors);
@@ -101,10 +177,16 @@ def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
         if jitter and jitter > 0:
             jit = r.uniform(0, jitter)
             do_sleep(jit)
-        code, ok, reason = probe_once(url, timeout=timeout, _open=_open)
+        code, ok, reason, reason_class = probe_once(url, timeout=timeout,
+                                                    _open=_open)
         entry = {"url": url, "http_code": code, "ok": ok}
         if jitter and jitter > 0:
             entry["jitter_sec"] = jit
+        if not ok and reason_class is not None:
+            entry["status"] = UNVERIFIABLE
+            entry["reason_class"] = reason_class
+            entry["evidence"] = reason
+            entry["registered_as"] = UNVERIFIABLE
         entries.append(entry)
         if not ok:
             reasons[url] = reason
@@ -114,7 +196,10 @@ def probe_round(endpoints, timeout=TIMEOUT_SEC, _open=None, jitter=0.0,
 def summarize_verdict(rounds):
     """Cross-round summary over all probes, three levels:
     all-up | partial | all-down (empty input defends as all-down; the CLI
-    side rejects empty endpoint lists)."""
+    side rejects empty endpoint lists).  An unverifiable endpoint counts
+    as not reached here: the verdict describes what this probe reached,
+    and the per-entry registration (status/registered_as) is what
+    separates cannot-verify from target-down."""
     probes = [e for r in rounds for e in r["endpoints"]]
     if not probes:
         return "all-down"
@@ -173,8 +258,9 @@ def selftest():
     V1 classify_error/probe_once classification: HTTPError (503/500/400) ->
        reachable with code; URLError -> unreachable; socket.timeout ->
        unreachable; canned response bodies 200/500 -> reachable with code
-    V2 probe_round canned two-endpoint mix: entry shape and order; reasons
-       collects down endpoints only
+    V2 probe_round canned two-endpoint mix: entry shape and order; the
+       canned DNS-text error rides the dns class; reasons collects down
+       endpoints only
     V3 verdict three levels: all-up/partial/all-down (single round + mixed
        rounds + empty-input defense)
     V4 stable window, three decisions: two passing rounds -> True; a drop
@@ -189,6 +275,16 @@ def selftest():
        seed, different order; bounds [0, S]; one draw per endpoint; draws
        recorded in jitter_sec; default jitter=0 means no key, no sleep, no
        behavior change
+    V8 unverifiable registration (canned, per reason class, zero network):
+       TLS handshake blocked (direct ssl.SSLError and the URLError-wrapped
+       face), DNS failure (gaierror instance and the platform text
+       spellings), connection timeout (socket.timeout and the URLError
+       "timed out" reason); each carries status/reason_class/evidence/
+       registered_as on the entry with registered_as = unverifiable
+    V9 default path untouched: ok entries and target-evidence failures
+       (connection refused) keep the exact legacy entry shape with no new
+       keys, and the verdict/stable-window semantics read ok only (an
+       unverifiable endpoint counts as not reached)
     """
     import shutil
     import tempfile
@@ -238,9 +334,19 @@ def selftest():
                 return FakeResp(200)
             raise ue
         entries, reasons = probe_round([ok_url, dead_url], _open=mixed_open)
-        assert entries == [
-            {"url": ok_url, "http_code": 200, "ok": True},
-            {"url": dead_url, "http_code": None, "ok": False}], entries
+        # The ok entry keeps the exact legacy shape; the dead entry's
+        # canned error is the platform DNS-failure text, so it rides the
+        # dns class and carries the registration keys (V8 judges the
+        # key-by-key shape; the ok entry shape is asserted exactly here).
+        assert entries[0] == {"url": ok_url, "http_code": 200,
+                              "ok": True}, entries
+        d0 = entries[1]
+        assert d0["url"] == dead_url and d0["http_code"] is None \
+            and d0["ok"] is False, d0
+        assert d0["status"] == UNVERIFIABLE \
+            and d0["registered_as"] == UNVERIFIABLE \
+            and d0["reason_class"] == REASON_DNS, d0
+        assert "URLError" in d0["evidence"], d0
         assert list(reasons) == [dead_url] and "URLError" in reasons[dead_url], \
             reasons
 
@@ -318,11 +424,79 @@ def selftest():
             "default means no key and no behavior change"
         assert ed == [{"url": u, "http_code": 200, "ok": True} for u in eps], ed
 
+        # ---- V8 unverifiable registration per reason class (canned
+        # exceptions, zero network): each carries the four registration
+        # keys on the entry with registered_as = unverifiable.
+        tls = ssl.SSLError("SSL: HANDSHAKE_FAILURE_ALERT received")
+        got = probe_once("https://x", _open=canned_open(exc=tls))
+        assert got[1] is False and got[3] == REASON_TLS_BLOCKED, got
+        tls_wrapped = urllib.error.URLError(tls)
+        got = probe_once("https://x", _open=canned_open(exc=tls_wrapped))
+        assert got[3] == REASON_TLS_BLOCKED, got
+        dns_inst = socket.gaierror(8, "nodename nor servname provided")
+        got = probe_once("https://x", _open=canned_open(exc=dns_inst))
+        assert got[3] == REASON_DNS, got
+        dns_wrapped = urllib.error.URLError(dns_inst)
+        got = probe_once("https://x", _open=canned_open(exc=dns_wrapped))
+        assert got[3] == REASON_DNS, got
+        dns_text = urllib.error.URLError(
+            "[Errno -2] Name or service not known")
+        got = probe_once("https://x", _open=canned_open(exc=dns_text))
+        assert got[3] == REASON_DNS, got
+        to_inst = socket.timeout("timed out")
+        got = probe_once("https://x", _open=canned_open(exc=to_inst))
+        assert got[3] == REASON_TIMEOUT, got
+        to_wrapped = urllib.error.URLError(OSError("timed out"))
+        got = probe_once("https://x", _open=canned_open(exc=to_wrapped))
+        assert got[3] == REASON_TIMEOUT, got
+
+        def tls_open(url, timeout=None):
+            raise tls_wrapped
+
+        ev, _ = probe_round(["https://dashboard.example"], _open=tls_open)
+        e0 = ev[0]
+        assert e0["url"] == "https://dashboard.example" \
+            and e0["http_code"] is None and e0["ok"] is False, e0
+        assert e0["status"] == UNVERIFIABLE \
+            and e0["registered_as"] == UNVERIFIABLE \
+            and e0["reason_class"] == REASON_TLS_BLOCKED, e0
+        assert "URLError" in e0["evidence"], e0
+        assert set(e0) == {"url", "http_code", "ok", "status",
+                           "reason_class", "evidence",
+                           "registered_as"}, e0
+
+        # ---- V9 default path untouched: ok entries and target-evidence
+        # failures (connection refused) keep the exact legacy entry shape,
+        # no new keys anywhere; the verdict and stable-window semantics
+        # read ok only, so unverifiable counts as not reached.
+        refused = urllib.error.URLError(OSError(111, "Connection refused"))
+
+        def refused_open(url, timeout=None):
+            raise refused
+
+        er, _ = probe_round(["https://refused.example"],
+                            _open=refused_open)
+        assert er == [{"url": "https://refused.example",
+                       "http_code": None, "ok": False}], er
+
+        def up_open9(url, timeout=None):
+            return FakeResp(200)
+
+        eu, _ = probe_round(["https://up.example"], _open=up_open9)
+        assert eu == [{"url": "https://up.example",
+                       "http_code": 200, "ok": True}], eu
+        assert summarize_verdict(
+            [{"endpoints": ev}, {"endpoints": er}]) == "all-down", \
+            "unverifiable counts as not reached (reachability semantics)"
+        assert stable_window_holds([{"endpoints": ev}]) is False, \
+            "an unverifiable round does not open the stable window"
+
         print("NET-PROBE-SELFTEST PASS: classification (HTTPError reachable,"
               " URLError/timeout unreachable, canned 200/500)/round shape and"
               " reasons/verdict levels/stable-window decisions/CLI usage"
               " codes/byte-identical report writes/fixed-seed jitter"
-              " determinism - eight sections all pass")
+              " determinism/unverifiable registration (tls-blocked, dns,"
+              " timeout)/default path untouched - nine sections all pass")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
