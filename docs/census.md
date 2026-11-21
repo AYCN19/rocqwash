@@ -768,7 +768,7 @@ Measured output at closing time:
   effect. The census read file bytes only and touched nothing (its own JSON outputs are
   written after the read pass).
 - Instruments: `census_tools_build.py` (the in-repo `docs/` copy, CLI face
-  `--tools-dir/--out/--head` unchanged since its landing) + `flag_shape_probe.py` (archive
+  `--tools-dir/--out/--head` unchanged since its integration) + `flag_shape_probe.py` (archive
   copy at `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`,
   run unmodified), stdlib-only, run under `python -I` (isolated mode), zero network, zero
   tool execution. This document was assembled by the 2026-11-20 workbench builder, re-laid
