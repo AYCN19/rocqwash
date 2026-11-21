@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T10:45:39Z",
+  "generated_at_utc": "2026-11-21T15:03:51Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "f3a35cbc5fbee5e56bfc068d1a81cbd2433e0a50",
-  "py_files_censused": 65,
+  "git_head_recorded": "02816c07a151d957f656db0d021b51eabc00b436",
+  "py_files_censused": 67,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,11 +25,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 63,
+   "with_argparse": 65,
    "with_subcommands": 1,
-   "zero_network": 52,
+   "zero_network": 54,
    "needs_special_environment": 35,
-   "invocation_reconstructed": 63,
+   "invocation_reconstructed": 65,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -5757,15 +5757,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 122890,
-   "sha256": "877f4606e2a2b2eb2157c06a6995633dcedd1eb3a185f111d67791affb37e6d5",
-   "lines": 2271,
+   "bytes": 129112,
+   "sha256": "c1cb0116da3760092ce2473d0e24c68a1fb777ad1ac9b882fd0f9e36ec4899a1",
+   "lines": 2367,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 30,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 48 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line\n  (five later increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,\n  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1\n  until that variable equals 1.\n  Credential zero c"
+    "lines": 29,
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 50 registered capabilities, each\n  spec transcribed from its docs/CAPABILITY-INDEX.md entry line (six later\n  increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,\n  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1\n  until that variable equals 1.\n  Credential zero co"
    },
    "argparse": {
     "imported": true,
@@ -5844,7 +5844,7 @@
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 23,
+      "count": 25,
       "samples": [
        ".lean",
        "Lean",
@@ -6305,6 +6305,100 @@
    },
    "invocation": {
     "form": "python tools/norm_lint.py [--tree] [--file] [--jargon-map] [--cjk-threshold] [--cjk-whitelist] [--json] [--ai-flavor-map] [--md] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
+   "name": "numeric_probe.py",
+   "bytes": 37496,
+   "sha256": "46ba419532519b4b2c1e5a8148ee79c6634091acb158befb981ae2c7c185fc47",
+   "lines": 818,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 28,
+    "head": "numeric_probe.py - exact-arithmetic re-verification gate for claimed\nnumerical verifications (the CP1989-style stdlib exact gate face).\n\nPurpose.  Reads a claim file (JSON array; rows carry id, kind, statement,\n  the discriminating field left|interval|target, source_anchor) and\n  mechanically re-verifies each claim with Fraction exact arithmetic:\n  rational-bound executes A < B / A <= B / A = B; interval-containment\n  executes x in [lo, hi]; transcendental-plan (zeta/theta/psi/ln) emits a\n  bound-discipline verification plan and returns PLANNED (the honest\n  plan-only face, never a fabricated "
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "exact-arithmetic re-verification gate for claimed numerical verifications (Fraction only, zero floats, zero subprocess, zero network)."
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--claim"
+      ],
+      "kwargs": {
+       "default": null,
+       "help": "claim file: a JSON array of claim objects (id, kind, statement, left|interval|target, source_anchor)"
+      }
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "default": null,
+       "help": "additionally write the JSON report to this caller-named path"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the frozen 42-vector group in-process and exit; takes no other flag"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--claim",
+     "--out",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "fractions",
+     "json",
+     "os",
+     "re",
+     "shutil",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/numeric_probe.py [--claim] [--out] [--selftest]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -9715,6 +9809,112 @@
    "selftest_token_face": true
   },
   {
+   "name": "statement_identity.py",
+   "bytes": 48926,
+   "sha256": "045f59f40ccc353658d7e37f6c88ad9898ea2d5c15d47c24cbb6cc689722e613",
+   "lines": 1114,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 28,
+    "head": "statement_identity.py - challenge<->proven two-face identity prober\n(the encoding audit-line generation-3/4 method: does the proven thing\nequal the claimed thing?).\n\nPurpose.  Take a claimed face (challenge-side statement file) and a proven\n  face (the repo's certified counterpart), enumerate both statement faces\n  (line-start theorem/lemma/def vernaculars over comment/string-masked\n  text, the frozen sibling regex face), normalize them for matching\n  (whitespace collapse, declared-name placeholder, binder identifiers\n  replaced with appearance-order placeholders, operators/head symbols\n  kept"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "challenge<->proven two-face statement identity prober (identity matrix with MATCHED / SEAM:<class> / UNMATCHED cells; uncast rows = generation-3 matrix-uncast-area detection)"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--claimed"
+      ],
+      "kwargs": {
+       "metavar": "FILE|DIR",
+       "help": "claimed face: one statement file or a face directory (*.v)"
+      }
+     },
+     {
+      "flags": [
+       "--proven"
+      ],
+      "kwargs": {
+       "metavar": "FILE|DIR",
+       "help": "proven face: the certified counterpart, same kind as --claimed"
+      }
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "JSON",
+       "help": "write the stdout JSON payload to this path too"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the offline fixture vectors and exit"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--claimed",
+     "--proven",
+     "--out",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "hashlib",
+     "io",
+     "json",
+     "os",
+     "re",
+     "shutil",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/statement_identity.py [--claimed] [--proven] [--out] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
    "name": "sweep_verdict.py",
    "bytes": 31939,
    "sha256": "c5e9a193c20b81eae2fa36955adecee7eff03ab19208a213b5804bd42c05f740",
@@ -11064,14 +11264,14 @@
   },
   {
    "name": "vacgen.py",
-   "bytes": 146132,
-   "sha256": "12c5333548edf82d44e42a8031a573cba0e2ea2ef9761eb918f9d6f999b744dc",
-   "lines": 3105,
+   "bytes": 181386,
+   "sha256": "25b6266d97424b2092b4661dacac0561420744983b0ef269ed14612db852e826",
+   "lines": 3800,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 37,
+    "lines": 50,
     "head": "vacgen.py (v2) - vacuity probe skeleton generator with shape recognition (four-layer engine, taxonomy-as-data).\n\nPurpose.\n    Cast the four-account vacuity probe skeleton directory for a Lean statement-face file (cast mode, v1 CLI face\n    preserved verbatim) and run a zero-compile coverage preflight over a census-qualified file set\n    (--preflight-all, difficulty map).  v2 layers: L1 premise decomposer (three-segment split, file-scope\n    `variable` / instance-binder G1 fix), L2 taxonomy lookup (rows in taxonomy.json; zero premise-family knowledge\n    in-engine), L3 confidence scoring with h"
    },
    "argparse": {
@@ -11098,7 +11298,7 @@
       "kwargs": {
        "dest": "out_dir",
        "default": null,
-       "help": "(v1 face) output four-account skeleton directory (default: vacgen_out/<name>)"
+       "help": "(v1 face) output four-account skeleton directory (default: vacgen_out/<name>); batch face: batch output root (default: vacgen_batch_out)"
       }
      },
      {
@@ -11233,6 +11433,26 @@
      },
      {
       "flags": [
+       "--from-statements"
+      ],
+      "kwargs": {
+       "dest": "from_statements",
+       "default": null,
+       "help": "(v2 batch) statement-block file: theorem statements in the audited repo's own syntax, one per block, blank-line separated, text exactly as the repo states it; each block is re-cast through the untouched single-challenge machinery into <out>/casts/<id>/ with a per-statement JSON at <out>/reports/<id>.json and <out>/summary.json"
+      }
+     },
+     {
+      "flags": [
+       "--from-repo"
+      ],
+      "kwargs": {
+       "dest": "from_repo",
+       "default": null,
+       "help": "(v2 batch) audited repo root: enumerate line-start theorem/lemma declarations in *.lean files (lean_axiom_sweep enumeration face; .git skipped, comment bodies not masked) and cast each as --from-statements does"
+      }
+     },
+     {
+      "flags": [
        "--report"
       ],
       "kwargs": {
@@ -11267,7 +11487,7 @@
       "kwargs": {
        "dest": "selftest",
        "action": "store_true",
-       "help": "in-process vector face (zero network, zero compile): taxonomy admission, premise zero-regression, ticket-15 conclusion-face vectors, 169B QRH end-to-end coverage; standalone - other mode flags are ignored"
+       "help": "in-process vector face (zero network, zero compile): taxonomy admission, premise zero-regression, ticket-15 conclusion-face vectors, 169B QRH end-to-end coverage, statement-ingestion batch vectors; standalone - other mode flags are ignored"
       }
      },
      {
@@ -11298,6 +11518,8 @@
      "--census",
      "--root",
      "--cluster-table",
+     "--from-statements",
+     "--from-repo",
      "--report",
      "--exp-draft",
      "--verify-anchors",
@@ -11312,13 +11534,16 @@
    "imports": {
     "modules": [
      "argparse",
+     "contextlib",
      "datetime",
      "fractions",
      "hashlib",
+     "io",
      "json",
      "os",
      "re",
-     "sys"
+     "sys",
+     "tempfile"
     ],
     "third_party": [],
     "local": [],
@@ -11339,7 +11564,7 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 65,
+      "count": 79,
       "samples": [
        ".lean",
        "Lean",
@@ -11359,7 +11584,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib]",
+    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--from-statements] [--from-repo] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,

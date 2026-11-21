@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  48-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  50-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -39,7 +39,14 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   INDEX entries awaiting their own lane), each new capability
   transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line or,
   for the later increments, from the tool's frozen CLI contract header (the
-  symbiosis INDEX entry line lands with the integration increment).
+  symbiosis INDEX entry line lands with the integration increment). The
+  numeric-probe registration increment adds the last two capabilities:
+  numeric_probe, the exact-arithmetic claim-gate face over the landed CLI
+  tools/numeric_probe.py, and statement_probes, the two v2 batch
+  statement-ingestion faces over the landed vacgen v2 batch flags
+  tools/vacgen.py --from-statements/--from-repo; each spec likewise
+  transcribed from its tool's frozen CLI contract header, the INDEX
+  entries awaiting their own lane.
 
 Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   as case t_mcp_face on 20261115, audit finding P0-6; the roster count is
@@ -51,7 +58,7 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 48 expected names in registration order,
+  3  tools/list -> exactly the 50 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -78,6 +85,11 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
         <tmp json>} -> exit code: 0 with the GREEN verdict face (the
         v2-B audit-line judge on a temporary fixture; zero network, the
         only write is the caller-named tmp out path)
+     4g numeric_probe {"selftest": true} -> exit code: 0 with the
+        frozen-vector green face (the 42-vector group printing
+        "[SELFTEST] numeric_probe green: 42 vector(s), 0 fail"; the
+        numeric-probe registration increment's face vector; zero
+        network, zero repository writes)
   5  default deny -> tools/call net_probe returns isError true and names
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child); the
      same deny face is asserted for claim_watch (probe 5b), the net-gated
@@ -184,6 +196,13 @@ EXPECTED_TOOLS = [
     # stop-gate key; each spec transcribed from its tool's own frozen
     # CLI contract header, the INDEX entries awaiting their own lane)
     "source_fetch", "sweep_verdict", "release_chain",
+    # the numeric-probe registration increment (two faces over the landed
+    # claim-gate CLI tools/numeric_probe.py --claim/--out/--selftest and
+    # the landed vacgen v2 batch flags tools/vacgen.py
+    # --from-statements/--from-repo; both zero-network and ungated; each
+    # spec transcribed from its tool's own frozen CLI contract header,
+    # the INDEX entries awaiting their own lane)
+    "numeric_probe", "statement_probes",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -254,6 +273,19 @@ EXPECTED_RELEASE_CHAIN_ARGS = [
     "confirm_publish", "dry_run", "repo", "stage", "release_id",
     "deposit_id", "timeout",
 ]
+
+# Frozen numeric_probe vector: the full argparse flag face of
+# tools/numeric_probe.py (claim, out, selftest) in argparse declaration
+# order; the numeric_probe schema properties must match this list
+# one-to-one, exactly the EXPECTED_RELEASE_CHAIN_ARGS discipline.
+EXPECTED_NUMERIC_PROBE_ARGS = ["claim", "out", "selftest"]
+
+# Frozen statement_probes vector: the registered arg_map covers exactly
+# the two real argparse batch flags of tools/vacgen.py (from_statements,
+# from_repo); the v1-face flags and the tool's own --selftest stay
+# outside this face, so the schema properties must match this list
+# one-to-one, exactly the EXPECTED_NUMERIC_PROBE_ARGS discipline.
+EXPECTED_STATEMENT_PROBES_ARGS = ["from_statements", "from_repo"]
 
 
 def _child_env():
@@ -379,6 +411,9 @@ def main():
              "params": {"name": "source_fetch", "arguments": {}}},
             {"jsonrpc": "2.0", "id": 17, "method": "tools/call",
              "params": {"name": "release_chain", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 18, "method": "tools/call",
+             "params": {"name": "numeric_probe",
+                        "arguments": {"selftest": True}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -561,6 +596,50 @@ def main():
             fails.append("probe3f release_chain stage should pin the four "
                          "gated layers in the schema enum")
 
+        # Probe 3g: the numeric-probe registration increment's schema-face
+        # vectors (each schema shape mirrors its tool's real argparse flag
+        # face one-to-one; the numeric_probe description declares the
+        # three claim kinds, the honest UNPARSED row and the {value,
+        # basis} + scan_face wrap; the statement_probes arg_map covers
+        # exactly the two v2 batch flags of vacgen.py, and no live call
+        # runs in this suite: the batch face's only write root is the CLI
+        # default vacgen_batch_out under the repository root, and the
+        # suite writes zero repository bytes).
+        np_spec = by_name.get("numeric_probe") or {}
+        np_props = list((np_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if np_props != EXPECTED_NUMERIC_PROBE_ARGS:
+            fails.append("probe3g numeric_probe schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_NUMERIC_PROBE_ARGS, np_props))
+        if "claim" in ((np_spec.get("inputSchema") or {}).get("required")
+                       or []):
+            fails.append("probe3g numeric_probe claim must stay optional "
+                         "(--selftest runs without it; the probe face "
+                         "usage-errors rc 2 without --claim)")
+        np_desc = np_spec.get("description") or ""
+        for token in ("rational-bound", "interval-containment",
+                      "transcendental-plan", "UNPARSED", "scan_face",
+                      "PLANNED", "42-vector"):
+            if token not in np_desc:
+                fails.append("probe3g numeric_probe description should "
+                             "declare the contract token %s" % token)
+        sp_spec = by_name.get("statement_probes") or {}
+        sp_props = list((sp_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if sp_props != EXPECTED_STATEMENT_PROBES_ARGS:
+            fails.append("probe3g statement_probes schema flags must match "
+                         "the vacgen v2 batch argparse face one-to-one"
+                         "\nexpected=%r\nactual=%r"
+                         % (EXPECTED_STATEMENT_PROBES_ARGS, sp_props))
+        sp_desc = sp_spec.get("description") or ""
+        for token in ("--from-statements", "--from-repo", "UNPARSED",
+                      "mutually exclusive", "Zero network",
+                      "vacgen-batch-summary/1"):
+            if token not in sp_desc:
+                fails.append("probe3g statement_probes description should "
+                             "declare the contract token %s" % token)
+
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
         text3 = _result_text(r3)
@@ -637,6 +716,20 @@ def main():
             if "rocqwash-sweep-verdict/1" not in sv_json:
                 fails.append("probe4f sweep_verdict out face missing the "
                              "report schema token")
+
+        # Probe 4g: numeric_probe selftest live call (the frozen 42-vector
+        # group on synthetic claim files in a system temporary directory;
+        # zero network, zero subprocess inside the probe, zero repository
+        # writes)
+        r18 = _by_id(lines, 18)
+        text18 = _result_text(r18)
+        if not r18 or r18.get("result", {}).get("isError"):
+            fails.append("probe4g numeric_probe selftest should not be an "
+                         "error\n%s" % text18)
+        elif "exit code: 0" not in text18 \
+                or "numeric_probe green" not in text18:
+            fails.append("probe4g numeric_probe exit 0 + 42-vector green "
+                         "face missing\n%s" % text18)
 
         # Probe 5: default deny negative sample
         r6 = _by_id(lines, 6)
@@ -823,7 +916,7 @@ def main():
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
     sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (9 probe groups, "
-                     "%d capabilities, 8 live-call spot checks)\n"
+                     "%d capabilities, 9 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

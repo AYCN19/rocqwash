@@ -17,16 +17,26 @@ Interface.
     python -I vacgen.py --preflight-all --census <census.json>  --root <clone>
             [--report <difficulty-map.json>] [--cluster-table <json>]
     python -I vacgen.py --verify-anchors --mathlib <root> --taxonomy <path>
+    python -I vacgen.py --from-statements <file> --out <dir>    (batch, v2:
+            theorem statements in the audited repo's own syntax, one per
+            block, blank-line separated; each block is re-cast through the
+            untouched single-challenge machinery; one JSON per statement
+            plus <out>/summary.json)
+    python -I vacgen.py --from-repo <dir> --out <dir>           (batch, v2:
+            line-start theorem/lemma declarations enumerated over the
+            target's *.lean files with the lean_axiom_sweep enumeration
+            face, then cast as above)
     python -I vacgen.py --selftest                              (in-process
             vector face: taxonomy admission, premise zero-regression, ticket-15
-            conclusion-face vectors, 169B QRH end-to-end coverage 2/2; zero
-            network, zero compile; exits 111 with a loud reason when the
-            tool-adjacent taxonomy table is absent so the conclusion vectors
-            cannot load)
+            conclusion-face vectors, 169B QRH end-to-end coverage 2/2,
+            statement-ingestion batch vectors; zero network, zero compile;
+            exits 111 with a loud reason when the tool-adjacent taxonomy
+            table is absent so the conclusion vectors cannot load)
 
 Dependencies.
     Python stdlib only: argparse, hashlib, os, re, sys, datetime, fractions (v1 import face, vacgen.py:42-48) plus
-    json (stdlib; required by the taxonomy loader, arch-spec-v2.md section 3.3 pseudocode).  Zero network,
+    json (stdlib; required by the taxonomy loader, arch-spec-v2.md section 3.3 pseudocode).  The v2 batch face adds
+    contextlib / io (per-statement cast-log capture) and tempfile (selftest vector dirs), all stdlib.  Zero network,
     zero compile, python -I compatible.
 
 Evidence.
@@ -38,16 +48,22 @@ Evidence.
 Exit-codes.
     0 = verdict ok=true (all bound-form checks green); 1 = verdict ok=false (blocked checks,
     taxonomy or anchor drift); 2 = usage error (mode exclusivity, missing --in);
+    batch face (--from-*): 0 = batch complete (per-statement failures are counted
+    UNPARSED / CAST-RED rows, never crashes; preflight parity), 1 = batch-level
+    fail-loud (usage exclusivity, unreadable input, zero statements enumerated);
     --selftest: 0 = all vectors green, 1 = any vector red, 111 = conclusion
     vectors skipped (tool-adjacent taxonomy table absent; loud reason printed).
 """
 
 import argparse
+import contextlib
 import hashlib
+import io
 import json
 import os
 import re
 import sys
+import tempfile
 from datetime import datetime, timezone
 from fractions import Fraction
 
@@ -81,6 +97,18 @@ TOOL_NAME = "vacgen"
 # bounds only (never exact-equality invariants, per the artifact-verifier
 # design law).
 TOOL_VERSION = "2.1.0"
+# 2.1.0 additive batch face (statement-ingestion work order, November 21,
+# 2026): `--from-statements <file>` / `--from-repo <dir>` enumerate the
+# audited repo's own statement faces (blocks file, or the lean_axiom_sweep
+# line-start theorem/lemma enumeration face) and re-cast each statement
+# through the untouched single-challenge machinery (do_cast is never
+# modified by the batch face), emitting one JSON per statement plus
+# summary.json under the batch output root.  TOOL_VERSION is deliberately
+# NOT bumped: the version string is stamped into every cast header
+# (Cast.header) and report (report.tool.version), so a bump would change
+# the single-challenge bytes this face is required to leave byte-identical.
+# The batch face carries its own schema strings
+# (vacgen-batch-summary/1, vacgen-batch-statement/1) instead.
 
 DEFAULT_GUARD = "D:/ComplexAnalysis/infra/thermal/cpu_guard_v3.ps1"
 DEFAULT_LAKE = "C:/Users/Live/.elan/bin/lake.exe"
@@ -2510,6 +2538,511 @@ def build_exp_draft(report, args, ts_utc):
             "entries": entries}
 
 
+# -------------------------------------------- statement ingestion (batch)
+# Batch face (work order November 21, 2026): audits of 416-face corpora re-cast
+# probes built from the audited repo's OWN statements with zero hand-authored
+# challenges.  Two input faces, one output face:
+#   --from-statements <file>  statement blocks, blank-line separated;
+#   --from-repo <dir>         line-start theorem/lemma enumeration (the
+#                             lean_axiom_sweep face).
+# Per statement the existing premise/conclusion taxonomy machinery runs by
+# calling do_cast UNTOUCHED through a shimmed arg surface (single-challenge
+# path stays byte-identical; the batch face only orchestrates).  Output: one
+# JSON per statement under <out>/reports/, the four-account skeleton cast per
+# statement under <out>/casts/<id>/, the exact block text under
+# <out>/sources/, and <out>/summary.json.
+
+BATCH_SUMMARY_SCHEMA = "vacgen-batch-summary/1"
+BATCH_REPORT_SCHEMA = "vacgen-batch-statement/1"
+BATCH_DEFAULT_OUT = "vacgen_batch_out"
+BATCH_LOG_CAP = 400  # per-statement captured cast-log line bound (monotone cap)
+
+# Enumeration face parity with lean_axiom_sweep (tools/lean_axiom_sweep.py:
+# 110-117): line-start keyword with the modifier prefix, namespace/section/end
+# stack for full names.  The keyword set is restricted to theorem|lemma per the
+# work order ("enumerate line-start theorem/lemma declarations"); def families
+# are not statement faces (they surface as the C4.2 non-theorem-declaration
+# gate if handed to the cast, so they are not enumerated here at all).
+BATCH_DECL_RE = re.compile(
+    r"(?m)^[ \t]*(?:(?:private|protected|noncomputable|unsafe|partial|"
+    r"local|global|export)[ \t]+)*(theorem|lemma)[ \t]+([A-Za-z_][A-Za-z0-9_']*)")
+BATCH_NAMESPACE_RE = re.compile(r"(?m)^[ \t]*namespace[ \t]+([A-Za-z_][A-Za-z0-9_'.]*)")
+BATCH_SECTION_RE = re.compile(r"(?m)^[ \t]*section(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
+BATCH_END_RE = re.compile(r"(?m)^[ \t]*end(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
+
+REPO_SOURCE_NOTE = (
+    "statement text = the audited repo's own lines: a file-context prefix "
+    "(import/namespace/section/file-scope variable/open lines that lie "
+    "outside sibling declaration spans) plus the declaration span; the span "
+    "ends at the next line-start theorem/lemma match or EOF; comment bodies "
+    "are not masked, so a comment-mimicking line enumerates and surfaces as "
+    "an honest UNPARSED row rather than a silent drop (the declared "
+    "lean_axiom_sweep enumeration limitation); attribute-prefixed single-line "
+    "spellings do not enumerate (same declared face)")
+
+
+def split_statement_blocks(src):
+    """[(text, start_line1)] - split a --from-statements file into statement
+    blocks: one block per statement, separated by runs of blank lines (the
+    work-order face).  Comment-only blocks are kept: they reach decompose_head
+    and surface as honest UNPARSED rows, never silently dropped.  A statement
+    containing an interior blank line is split by this face by definition
+    (blank line = separator); the halves then fail parse and are reported
+    UNPARSED with the parse reason - loud, not silent."""
+    blocks = []
+    cur = []
+    start = None
+    for line_no, line in enumerate(src.splitlines(), 1):
+        if line.strip():
+            if not cur:
+                start = line_no
+            cur.append(line)
+        elif cur:
+            blocks.append(("\n".join(cur), start))
+            cur = []
+    if cur:
+        blocks.append(("\n".join(cur), start))
+    return blocks
+
+
+def collect_lean_targets(root):
+    """[(abs_path, rel_path)] sorted - walk face identical to
+    lean_axiom_sweep.collect_targets (tools/lean_axiom_sweep.py:330-344): a
+    file root scans that file, a directory root walks *.lean recursively with
+    .git directories skipped."""
+    if os.path.isfile(root):
+        return [(os.path.abspath(root), os.path.basename(root))]
+    out = []
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d != ".git"]
+        for fn in filenames:
+            if fn.endswith(".lean"):
+                abs_path = os.path.join(dirpath, fn)
+                rel = os.path.relpath(abs_path, root).replace("\\", "/")
+                out.append((abs_path, rel))
+    out.sort()
+    return out
+
+
+def enumerate_theorem_lemma_decls(text):
+    """[(decl_line1, full_name, ns_open)] in file order - enumeration face
+    identical to lean_axiom_sweep.enumerate_decls (tools/lean_axiom_sweep.py:
+    170-194): the line-start theorem/lemma regex with the modifier prefix,
+    the namespace/section/end stack applied for full names; comment and
+    string bodies are NOT masked (declared sweep limitation, carried over on
+    purpose: a comment-mimicking line enumerates and later surfaces as an
+    honest UNPARSED row instead of being silently dropped).  ns_open lists
+    the namespace frames open before the declaration (section frames are
+    anonymous and skipped)."""
+    out = []
+    stack = []  # namespace names (section frames push "")
+    line_no = 0
+    for line in text.splitlines():
+        line_no += 1
+        m = BATCH_DECL_RE.match(line)
+        if m:
+            ns_open = [p for p in stack if p]
+            parts = list(ns_open)
+            parts.append(m.group(2))
+            out.append((line_no, ".".join(parts), ns_open))
+            continue
+        m = BATCH_NAMESPACE_RE.match(line)
+        if m:
+            stack.append(m.group(1))
+            continue
+        if BATCH_SECTION_RE.match(line):
+            stack.append("")
+            continue
+        if BATCH_END_RE.match(line) and stack:
+            stack.pop()
+    return out
+
+
+def decl_drop_extent(code_lines, decls, start0, limit0):
+    """(start0, end0_exclusive) raw-line extent of one sibling declaration,
+    from its start to the same cut candidates decl_span applies (next
+    declaration line or next `end` code line), clipped to limit0.  Used to
+    excise sibling spans from a repo statement's file-context prefix so the
+    cast block carries exactly one declaration (the head)."""
+    later = [d["line0"] for d in decls if d["line0"] > start0]
+    ends = [idx for idx, code in code_lines
+            if idx > start0 and re.match(r"^[ \t]*end\b", code)]
+    cuts = [c for c in later + ends if c <= limit0]
+    end0 = min(cuts) if cuts else limit0
+    return start0, min(end0, limit0)
+
+
+def repo_statement_blocks(root):
+    """([(block_text, meta)], enumeration_errors) per line-start
+    theorem/lemma declaration under root.  block_text = the repo's own
+    statement face: the file-context prefix (every line before the head
+    declaration that lies outside a sibling declaration's span - imports,
+    namespace/section frames, file-scope variable commands, open lines)
+    followed by the declaration span (ends at the next line-start
+    theorem/lemma match or EOF).  The prefix carries variable commands with
+    their full multi-line extents verbatim, so collect_variable_commands sees
+    the same premise scope the repo states (R-3 continuation face)."""
+    files = collect_lean_targets(root)
+    blocks = []
+    errors = []
+    for abs_path, rel in files:
+        try:
+            with open(abs_path, "rb") as fh:
+                text = fh.read().decode("utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            # unreadable file: honest enumeration error row in the summary,
+            # never a crash and never a silent skip
+            errors.append({"path": rel, "error": str(exc)})
+            continue
+        decls = enumerate_theorem_lemma_decls(text)
+        if not decls:
+            continue
+        raw_lines = text.splitlines()
+        code_lines = list(iter_code_lines(raw_lines))
+        scanned = scan_decls(code_lines)
+        for pos, (decl_line1, full_name, ns_open) in enumerate(decls):
+            head_line0 = decl_line1 - 1
+            end_line0 = (decls[pos + 1][0] - 1 if pos + 1 < len(decls)
+                         else len(raw_lines))
+            # file-context prefix: lines before the head outside sibling spans
+            drop = set()
+            for d in scanned:
+                if d["line0"] >= head_line0:
+                    break
+                s0, e0 = decl_drop_extent(code_lines, scanned, d["line0"],
+                                          head_line0)
+                drop.update(range(s0, e0))
+            prefix = [raw_lines[i] for i in range(head_line0) if i not in drop]
+            while prefix and not prefix[-1].strip():
+                prefix.pop()
+            while prefix and not prefix[0].strip():
+                prefix.pop(0)
+            span = raw_lines[head_line0:end_line0]
+            while span and not span[-1].strip():
+                span.pop()
+            body = list(prefix)
+            if body:
+                body.append("")
+            body.extend(span)
+            block_text = "\n".join(body)
+            meta = {"kind": "repo", "path": rel,
+                    "pathAbs": os.path.abspath(abs_path).replace("\\", "/"),
+                    "declLine": decl_line1, "declName": full_name,
+                    "sourceNote": REPO_SOURCE_NOTE}
+            blocks.append((block_text, meta))
+    return blocks, errors
+
+
+def premise_face_text(stmt):
+    """Joined human premise face for the batch report (display face only;
+    the authoritative per-record split lives in the castReport the
+    single-challenge machinery wrote)."""
+    parts = []
+    for a in stmt["S2_assumps"]:
+        parts.append("(%s : %s)" % (a.get("name") or "_", a["type"]))
+    for i in stmt["S2_instances"]:
+        parts.append("[%s]" % i["type"])
+    return " ".join(parts)
+
+
+def _write_json_file(path, doc):
+    """House JSON face (identical to the report/difficulty-map writers):
+    indent=1, ensure_ascii=False, LF newlines, one trailing newline."""
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(doc, fh, ensure_ascii=False, indent=1)
+        fh.write("\n")
+
+
+def cast_batch_statement(args, ts_utc, sid, src_path, cast_dir, report_path):
+    """Cast one statement block through the existing single-challenge
+    machinery.  do_cast is called UNTOUCHED over a shimmed arg surface - the
+    v1/v2 single-challenge face stays byte-identical; the batch face only
+    orchestrates.  The per-statement cast stdout is captured into the
+    returned log face (the batch console stays one line per statement), and
+    the v2 report JSON do_cast writes is loaded, embedded verbatim, and its
+    intermediate file removed (one JSON per statement remains on disk).
+    Returns (shim_rc, log_text, raw_report_or_None)."""
+    shim = argparse.Namespace(**vars(args))
+    shim.in_path = src_path
+    shim.out_dir = cast_dir
+    shim.name = sid                     # per-statement artifact name face
+    shim.audit_id = (("%s-%s" % (args.audit_id, sid)) if args.audit_id else None)
+    shim.report = report_path + ".cast"  # raw v2 report intermediate
+    shim.exp_draft = None                # single-cast face, not in batch
+    shim.force = True                    # the batch root is generator-owned
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = do_cast(shim, ts_utc)
+    log_text = buf.getvalue()
+    raw_report = None
+    if os.path.isfile(shim.report):
+        try:
+            with open(shim.report, encoding="utf-8") as fh:
+                raw_report = json.load(fh)
+        except (OSError, ValueError):
+            raw_report = None
+        try:
+            os.remove(shim.report)
+        except OSError:
+            pass
+    return rc, log_text, raw_report
+
+
+def do_batch(args, ts_utc, mode):
+    """--from-statements / --from-repo (batch face): enumerate the audited
+    repo's own statement faces, re-cast each through the untouched
+    single-challenge machinery, and emit one JSON per statement plus
+    summary.json under the batch output root.  Per-statement failures are
+    counted, never raised (preflight parity): an unparseable statement is an
+    honest UNPARSED row with the parse reason carried verbatim - not a
+    crash, and never a silent skip.  rc 0 = batch complete; rc 1 =
+    batch-level fail-loud (usage exclusivity handled in main, unreadable
+    input, zero statements enumerated)."""
+    print("== %s v%s statement-ingestion batch (%s) ==" % (TOOL_NAME, TOOL_VERSION, mode))
+    try:
+        table, tax_info = load_taxonomy(args.taxonomy)
+    except TaxonomyError as exc:
+        print("FAIL-LOUD: taxonomy: %s" % exc)
+        return 1
+    print("[TAXONOMY]")
+    print("  source: %s | rowsLoaded: %d | rowsVoided: %d | builtin: %s"
+          % (tax_info["source"], tax_info["rowsLoaded"], tax_info["rowsVoided"],
+             tax_info["builtin"]))
+
+    # ---- gather statement blocks (fail-loud on empty enumeration) ----
+    enum_errors = []
+    if mode == "from-statements":
+        print("[BATCH INPUT]")
+        if not os.path.isfile(args.from_statements):
+            print("FAIL-LOUD: --from-statements file not found: %s"
+                  % args.from_statements)
+            return 1
+        with open(args.from_statements, "rb") as fh:
+            raw = fh.read()
+        try:
+            src = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            print("FAIL-LOUD: --from-statements file is not valid UTF-8: %s" % exc)
+            return 1
+        # blocks normalized to (text, meta) pairs: meta rides with its block
+        # so the cast loop unpacks (block_text, meta) directly
+        blocks = [(text, {"kind": "statements-file",
+                          "path": os.path.abspath(args.from_statements).replace("\\", "/"),
+                          "blockStartLine": start})
+                  for text, start in split_statement_blocks(src)]
+        print("  statements file: %s (sha256: %s, blocks: %d)"
+              % (os.path.abspath(args.from_statements).replace("\\", "/"),
+                 hashlib.sha256(raw).hexdigest(), len(blocks)))
+    else:
+        root = args.from_repo
+        if not os.path.exists(root):
+            print("FAIL-LOUD: --from-repo root not found: %s" % root)
+            return 1
+        # repo_statement_blocks already returns (text, meta) pairs
+        blocks, enum_errors = repo_statement_blocks(root)
+        files_scanned = len(collect_lean_targets(root))
+        print("[BATCH INPUT]")
+        print("  repo root: %s (*.lean targets: %d, declarations enumerated: %d,"
+              " unreadable files: %d)"
+              % (os.path.abspath(root).replace("\\", "/"), files_scanned,
+                 len(blocks), len(enum_errors)))
+    if not blocks:
+        print("FAIL-LOUD: no statements enumerated (a batch casts at least one "
+              "statement; empty input is a usage error, rc=1)")
+        return 1
+
+    batch_id = "vacgen-batch-%s" % ts_utc[:10]
+    out_root = args.out_dir or BATCH_DEFAULT_OUT
+    sources_dir = os.path.join(out_root, "sources")
+    casts_dir = os.path.join(out_root, "casts")
+    reports_dir = os.path.join(out_root, "reports")
+    os.makedirs(sources_dir, exist_ok=True)
+    os.makedirs(reports_dir, exist_ok=True)
+
+    counts = {"statements": len(blocks), "cast": 0, "castRed": 0,
+              "castError": 0, "unparsed": 0}
+    agg_rec = agg_total = 0
+    rows = []
+    n = len(blocks)
+    for i, (block_text, meta) in enumerate(blocks, 1):
+        sid = "stmt_%03d" % i
+        src_path = os.path.join(sources_dir, sid + ".lean")
+        cast_dir = os.path.join(casts_dir, sid)
+        report_path = os.path.join(reports_dir, sid + ".json")
+        with open(src_path, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(block_text)
+        # pre-parse for the honest row classification: the single-challenge
+        # face fails loud rc=1 on a parse error with no skeleton cast; the
+        # batch face turns exactly that into a counted UNPARSED row
+        stmt = None
+        parse_error = None
+        try:
+            stmt = decompose_head(block_text)
+        except ParseError as exc:
+            parse_error = str(exc)
+        except Exception as exc:  # any parse-stage failure: same honest row
+            parse_error = "%s: %s" % (type(exc).__name__, exc)
+
+        doc = {
+            "schema": BATCH_REPORT_SCHEMA,
+            "id": sid,
+            "batchId": batch_id,
+            "mode": mode,
+            "status": None,
+            "source": meta,
+            "statement": block_text,
+            "head": None,
+            "premiseFace": "",
+            "conclusionFace": "",
+            "l3": None,
+            "basis": None,
+            "skeletonDir": None,
+            "skeletonPaths": [],
+            "parseError": parse_error,
+            "castRc": None,
+            "castLog": None,
+            "castReport": None,
+            "generatedAt": ts_utc,
+        }
+        if stmt is None:
+            # honest UNPARSED row (v1 face parity: "no skeleton cast"); the
+            # exact block text stays on disk in sources/ as the evidence face
+            doc["status"] = "UNPARSED"
+            counts["unparsed"] += 1
+            _write_json_file(report_path, doc)
+            rows.append({"id": sid, "status": "UNPARSED", "head": None,
+                         "recognized": None, "total": None,
+                         "report": os.path.relpath(report_path, out_root).replace("\\", "/"),
+                         "skeletonDir": None})
+            reason = (parse_error or "").replace("\n", " ")[:90]
+            print("  [%d/%d] %s UNPARSED - %s" % (i, n, sid, reason))
+            continue
+
+        # parsed: cast through the untouched single-challenge machinery
+        doc["head"] = {"kw": stmt["head"]["kw"], "name": stmt["head"]["name"],
+                       "namespace": stmt["namespace"]}
+        doc["premiseFace"] = premise_face_text(stmt)
+        doc["conclusionFace"] = stmt["S3_conclusion"]
+        status = "CAST"
+        rc = None
+        log_text = ""
+        raw_report = None
+        try:
+            rc, log_text, raw_report = cast_batch_statement(
+                args, ts_utc, sid, src_path, cast_dir, report_path)
+        except Exception as exc:  # honest row, batch continues (preflight parity)
+            status = "CAST-ERROR"
+            doc["castLog"] = {"truncated": False, "note": "cast raised",
+                              "error": "%s: %s" % (type(exc).__name__, exc)}
+        if status != "CAST-ERROR":
+            if rc == 0:
+                status = "CAST"
+                counts["cast"] += 1
+            else:
+                status = "CAST-RED"
+                counts["castRed"] += 1
+        # the per-statement report must carry the same status the summary row
+        # carries (the UNPARSED branch sets its own; CAST/CAST-RED/CAST-ERROR
+        # set it here, before the report is written to disk)
+        doc["status"] = status
+        if status != "CAST-ERROR":
+            doc["castRc"] = rc
+            log_lines = log_text.splitlines()
+            doc["castLog"] = {"truncated": len(log_lines) > BATCH_LOG_CAP,
+                              "lines": log_lines[:BATCH_LOG_CAP]}
+            if raw_report is not None:
+                doc["castReport"] = raw_report
+                cov = raw_report.get("coverage") or {}
+                pct = cov.get("coverageLowerPct")
+                total = cov.get("total") or 0
+                doc["l3"] = {"recognized": cov.get("recognized"),
+                             "total": cov.get("total"),
+                             "todoSeats": cov.get("todoSeats"),
+                             "coverageLowerPct": pct,
+                             "tier": tier_of(pct if pct is not None else 0,
+                                             total, False)}
+                doc["basis"] = {
+                    "counters": raw_report.get("assumptions") or [],
+                    "topFamily": cov.get("topFamily"),
+                    "taxonomy": raw_report.get("taxonomy"),
+                }
+        cast_files = sorted(os.listdir(cast_dir)) if os.path.isdir(cast_dir) else []
+        # skeleton dir/path faces reflect disk reality: null/empty when this
+        # row cast nothing (honest, no invented paths)
+        doc["skeletonDir"] = (os.path.abspath(cast_dir).replace("\\", "/")
+                              if cast_files else None)
+        doc["skeletonPaths"] = [os.path.abspath(os.path.join(cast_dir, f)).replace("\\", "/")
+                                for f in cast_files]
+        _write_json_file(report_path, doc)
+        rows.append({"id": sid, "status": status,
+                     "head": "%s %s" % (stmt["head"]["kw"], stmt["head"]["name"]),
+                     "recognized": (doc["l3"] or {}).get("recognized"),
+                     "total": (doc["l3"] or {}).get("total"),
+                     "report": os.path.relpath(report_path, out_root).replace("\\", "/"),
+                     "skeletonDir": (os.path.relpath(cast_dir, out_root).replace("\\", "/")
+                                     if cast_files else None)})
+        if status == "CAST":
+            l3_face = doc["l3"] or {}
+            agg_rec += l3_face.get("recognized") or 0
+            agg_total += l3_face.get("total") or 0
+            print("  [%d/%d] %s CAST %s %s | L3 %s/%s | %d file(s)"
+                  % (i, n, sid, stmt["head"]["kw"], stmt["head"]["name"],
+                     doc["l3"]["recognized"] if doc["l3"] else "-",
+                     doc["l3"]["total"] if doc["l3"] else "-",
+                     len(cast_files)))
+        else:
+            print("  [%d/%d] %s %s - cast rc=%s (see %s)"
+                  % (i, n, sid, status, rc,
+                     os.path.relpath(report_path, out_root).replace("\\", "/")))
+
+    agg_pct = (agg_rec * 100 // agg_total) if agg_total else 0
+    summary = {
+        "schema": BATCH_SUMMARY_SCHEMA,
+        "batchId": batch_id,
+        "tool": {"name": TOOL_NAME, "version": TOOL_VERSION},
+        "mode": mode,
+        "input": ({"statementsFile": os.path.abspath(args.from_statements).replace("\\", "/")}
+                  if mode == "from-statements"
+                  else {"repoRoot": os.path.abspath(args.from_repo).replace("\\", "/"),
+                        "enumerationErrors": enum_errors}),
+        "taxonomy": {"path": os.path.abspath(tax_info["path"]).replace("\\", "/")
+                     if tax_info["path"] else None,
+                     "rowsLoaded": tax_info["rowsLoaded"],
+                     "rowsVoided": tax_info["rowsVoided"],
+                     "builtin": tax_info["builtin"]},
+        "counts": dict(counts),
+        "l3Aggregate": {"recognized": agg_rec, "total": agg_total,
+                        "coverageLowerPct": agg_pct,
+                        "scope": "CAST rows only; word-face lower bound, dated snapshot"},
+        "outRoot": os.path.abspath(out_root).replace("\\", "/"),
+        "rows": rows,
+        "negativeFinding": negative_finding_block(
+            "word-face recognition through the untouched single-challenge cast "
+            "path (L1 bracket-balanced split + L2 regex rows in %s; %d row(s) "
+            "loaded, %d voided at admission) over %d statement block(s) "
+            "enumerated in %s mode; window %s"
+            % (tax_info["path"] or "builtin starter row", tax_info["rowsLoaded"],
+               tax_info["rowsVoided"], len(blocks), mode, ts_utc)),
+        "generatedAt": ts_utc,
+    }
+    summary_path = os.path.join(out_root, "summary.json")
+    _write_json_file(summary_path, summary)
+
+    print("[BATCH SUMMARY]")
+    print("  statements: %d | cast: %d | cast-red: %d | cast-error: %d | unparsed: %d"
+          % (counts["statements"], counts["cast"], counts["castRed"],
+             counts["castError"], counts["unparsed"]))
+    print("  L3 aggregate (CAST rows only, word-face lower bound, dated %s): %d/%d = %d%%"
+          % (ts_utc, agg_rec, agg_total, agg_pct))
+    print("  out root: %s" % os.path.abspath(out_root).replace("\\", "/"))
+    print("[REPORT] %s" % os.path.abspath(summary_path).replace("\\", "/"))
+    print("[VERDICT]")
+    print("  ok=true - batch complete; per-statement failures are counted rows, "
+          "never silent (cast=%d cast-red=%d unparsed=%d)"
+          % (counts["cast"], counts["castRed"], counts["unparsed"]))
+    return 0
+
+
 # ---------------------------------------------------------------- preflight
 
 def load_cluster_table(path):
@@ -2824,6 +3357,30 @@ CONCL_FAMILY_IDS = (
     "concl.quantified.existential",
 )
 
+# Batch-face selftest fixtures (statement ingestion; work order November 21,
+# 2026).  Blocks carry NO interior blank lines - blank line = block separator
+# in the --from-statements face.  The alpha block is the 169B QRH statement
+# face (premise + conclusion both taxonomy-covered on the loaded table; the
+# premise alone is covered by the builtin fail-safe row), so the vector face
+# asserts L1 faces and summary consistency without pinning taxonomy-dependent
+# recognition counts.
+BATCH_SELFTEST_FIXTURE = (
+    "theorem vacgen_batch_alpha\n"
+    "    {s : \u2102} (hs : (7 / 8 : \u211d) < s.re) : riemannZeta s \u2260 0 := by\n"
+    "  sorry\n"
+    "\n"
+    "theorem vacgen_batch_beta (n : \u2115) (h : 0 < n) : n \u2260 0 := by\n"
+    "  sorry\n"
+)
+
+BATCH_SELFTEST_FIXTURE_UNPARSED = (
+    "theorem vacgen_batch_alpha\n"
+    "    {s : \u2102} (hs : (7 / 8 : \u211d) < s.re) : riemannZeta s \u2260 0 := by\n"
+    "  sorry\n"
+    "\n"
+    "this block is not a Lean statement face\n"
+)
+
 
 def do_selftest(ts_utc):
     """--selftest (in-process vector face; zero network, zero compile).
@@ -2832,11 +3389,15 @@ def do_selftest(ts_utc):
     vectors (nonzero applied / NeZero predicate / quantified universal and
     existential / specific exists unchanged), the conclusion-row kind guard,
     the C4.2 hole interception on conclusion records, negative faces stay
-    todo_seat, and the 169B QRH challenge end-to-end coverage 2/2 = 100%.
-    Conclusion vectors need the loaded taxonomy table; when only the builtin
-    fail-safe starter row is in force they are skipped with rc=111 and a
-    loud reason (the engine itself is still vector-proven on the premise
-    face).  Returns 0 all green, 1 any red, 111 conclusion legs skipped."""
+    todo_seat, the 169B QRH challenge end-to-end coverage 2/2, and the
+    statement-ingestion batch vectors (two-statement fixture: both cast with
+    per-statement reports and a consistent summary; one unparseable block:
+    an honest UNPARSED row, never a crash - taxonomy-independent, never
+    skipped).  Conclusion vectors need the loaded taxonomy table; when only
+    the builtin fail-safe starter row is in force they are skipped with
+    rc=111 and a loud reason (the engine itself is still vector-proven on
+    the premise face).  Returns 0 all green, 1 any red, 111 conclusion legs
+    skipped."""
     print("== %s v%s selftest (window %s) ==" % (TOOL_NAME, TOOL_VERSION, ts_utc))
     failures = []
     skips = []
@@ -2990,6 +3551,101 @@ def do_selftest(ts_utc):
                 "recognized=%d todo=%d premise=%s conclusion=%s"
                 % (recognized, todo, prem["familyId"], conl["familyId"]))
 
+    # T13/T14 - statement-ingestion batch vectors (work order November 21,
+    # 2026).  Both run the real do_batch entry over a TemporaryDirectory
+    # (zero network, zero compile; disk face confined to the temp dir;
+    # do_batch's console output captured so the vector face stays one line
+    # per vector).  The vectors are taxonomy-independent - the cast path
+    # accepts the builtin fail-safe row (run_checks_v2 check 5) - so they are
+    # never skipped on the absent-table face.  Recognition COUNTS are not
+    # pinned (taxonomy-dependent); the pinned faces are L1 text faces, the
+    # eight-file skeleton product, and the summary-vs-report consistency.
+    def batch_vector(fixture_text, ok_conds, name):
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                fixture = os.path.join(td, "statements.lean")
+                with open(fixture, "w", encoding="utf-8", newline="\n") as fh:
+                    fh.write(fixture_text)
+                out_root = os.path.join(td, "batch_out")
+                ns = argparse.Namespace(
+                    in_path=None, out_dir=out_root,
+                    toolchain=DEFAULT_TOOLCHAIN, snapshot=DEFAULT_SNAPSHOT,
+                    audit_id=None, name=None, worktree=DEFAULT_WORKTREE,
+                    lake=DEFAULT_LAKE, guard=DEFAULT_GUARD, core=DEFAULT_CORE,
+                    force=False, taxonomy=None, preflight_all=False,
+                    census=None, root=None, cluster_table=None, report=None,
+                    exp_draft=None, verify_anchors=False, mathlib=None,
+                    from_statements=fixture, from_repo=None)
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    rc = do_batch(ns, ts_utc, "from-statements")
+                with open(os.path.join(out_root, "reports", "stmt_001.json"),
+                          encoding="utf-8") as fh:
+                    rep1 = json.load(fh)
+                with open(os.path.join(out_root, "reports", "stmt_002.json"),
+                          encoding="utf-8") as fh:
+                    rep2 = json.load(fh)
+                with open(os.path.join(out_root, "summary.json"),
+                          encoding="utf-8") as fh:
+                    summ = json.load(fh)
+                conds = ok_conds(rc, out_root, rep1, rep2, summ)
+                vec(*conds)
+        except Exception as exc:  # a vector crash is a RED, not a crash
+            vec(name, False, "batch vector raised: %r" % (exc,))
+
+    def t13_conds(rc, out_root, rep1, rep2, summ):
+        skel1 = sorted(os.listdir(os.path.join(out_root, "casts", "stmt_001")))
+        skel2 = sorted(os.listdir(os.path.join(out_root, "casts", "stmt_002")))
+        conds = {
+            "rc": rc == 0,
+            "statuses": rep1["status"] == "CAST" and rep2["status"] == "CAST",
+            "premise-face": ("hs :" in rep1["premiseFace"]
+                             and "(7 / 8" in rep1["premiseFace"]),
+            "conclusion-face": rep1["conclusionFace"] == "riemannZeta s \u2260 0",
+            "skeleton-8-files": (len(skel1) == 8 and len(skel2) == 8
+                                 and "witness.lean" in skel1
+                                 and "boundary.lean" in skel1
+                                 and "gap_anchors.txt" in skel1),
+            "summary-counts": (summ["counts"]["statements"] == 2
+                               and summ["counts"]["cast"] == 2
+                               and summ["counts"]["unparsed"] == 0),
+            "summary-consistent": (
+                summ["l3Aggregate"]["recognized"]
+                == (rep1["l3"]["recognized"] or 0) + (rep2["l3"]["recognized"] or 0)
+                and summ["l3Aggregate"]["total"]
+                == (rep1["l3"]["total"] or 0) + (rep2["l3"]["total"] or 0)),
+            "summary-rows": ([r["status"] for r in summ["rows"]] == ["CAST", "CAST"]),
+        }
+        ok = all(conds.values())
+        detail = " ".join("%s=%s" % (k, conds[k]) for k in sorted(conds))
+        return ("batch-two-statement-cast", ok, detail)
+
+    def t14_conds(rc, out_root, rep1, rep2, summ):
+        conds = {
+            "rc": rc == 0,
+            "unparsed-row": (rep2["status"] == "UNPARSED"
+                             and bool(rep2["parseError"])
+                             and rep2["skeletonPaths"] == []
+                             and rep2["l3"] is None),
+            "no-skeleton-cast": not os.path.isdir(os.path.join(out_root, "casts", "stmt_002")),
+            "statement-evidence": os.path.isfile(
+                os.path.join(out_root, "sources", "stmt_002.lean")),
+            "good-row-unaffected": (rep1["status"] == "CAST"
+                                    and os.path.isfile(os.path.join(
+                                        out_root, "casts", "stmt_001", "witness.lean"))),
+            "summary-counts": (summ["counts"]["statements"] == 2
+                               and summ["counts"]["cast"] == 1
+                               and summ["counts"]["unparsed"] == 1),
+            "summary-rows": ([r["status"] for r in summ["rows"]]
+                             == ["CAST", "UNPARSED"]),
+        }
+        ok = all(conds.values())
+        detail = " ".join("%s=%s" % (k, conds[k]) for k in sorted(conds))
+        return ("batch-unparsed-row-honest", ok, detail)
+
+    batch_vector(BATCH_SELFTEST_FIXTURE, t13_conds, "batch-two-statement-cast")
+    batch_vector(BATCH_SELFTEST_FIXTURE_UNPARSED, t14_conds, "batch-unparsed-row-honest")
+
     print("== vacgen selftest: %d vectors, %d pass, %d fail, %d skip =="
           % (total[0], total[0] - len(failures) - len(skips),
              len(failures), len(skips)))
@@ -3021,7 +3677,9 @@ def main(argv=None):
     ap.add_argument("--in", dest="in_path", required=False, default=None,
                     help="(v1 face) statement-face file of the audited Lean artifact")
     ap.add_argument("--out", dest="out_dir", default=None,
-                    help="(v1 face) output four-account skeleton directory (default: vacgen_out/<name>)")
+                    help="(v1 face) output four-account skeleton directory "
+                         "(default: vacgen_out/<name>); batch face: batch output "
+                         "root (default: vacgen_batch_out)")
     ap.add_argument("--toolchain", default=DEFAULT_TOOLCHAIN,
                     help="(v1 face) toolchain pin recorded in the headers")
     ap.add_argument("--snapshot", default=DEFAULT_SNAPSHOT,
@@ -3054,6 +3712,17 @@ def main(argv=None):
     ap.add_argument("--cluster-table", dest="cluster_table", default=None,
                     help="(v2) optional cluster keyword table JSON (stratify.py key surface) "
                          "for by-cluster aggregation")
+    ap.add_argument("--from-statements", dest="from_statements", default=None,
+                    help="(v2 batch) statement-block file: theorem statements in the audited "
+                         "repo's own syntax, one per block, blank-line separated, text exactly "
+                         "as the repo states it; each block is re-cast through the untouched "
+                         "single-challenge machinery into <out>/casts/<id>/ with a per-statement "
+                         "JSON at <out>/reports/<id>.json and <out>/summary.json")
+    ap.add_argument("--from-repo", dest="from_repo", default=None,
+                    help="(v2 batch) audited repo root: enumerate line-start theorem/lemma "
+                         "declarations in *.lean files (lean_axiom_sweep enumeration face; "
+                         ".git skipped, comment bodies not masked) and cast each as "
+                         "--from-statements does")
     ap.add_argument("--report", default=None,
                     help="(v2) coverage report JSON path (cast) or difficulty map path "
                          "(preflight; default difficulty-map.json in cwd)")
@@ -3064,8 +3733,9 @@ def main(argv=None):
     ap.add_argument("--selftest", dest="selftest", action="store_true",
                     help="in-process vector face (zero network, zero compile): "
                          "taxonomy admission, premise zero-regression, ticket-15 "
-                         "conclusion-face vectors, 169B QRH end-to-end coverage; "
-                         "standalone - other mode flags are ignored")
+                         "conclusion-face vectors, 169B QRH end-to-end coverage, "
+                         "statement-ingestion batch vectors; standalone - other "
+                         "mode flags are ignored")
     ap.add_argument("--mathlib", default=None,
                     help="(v2) mathlib checkout root for --verify-anchors")
     args = ap.parse_args(argv)
@@ -3074,6 +3744,31 @@ def main(argv=None):
 
     if args.selftest:
         return do_selftest(ts_utc)
+
+    # ---- v2 batch face (statement ingestion; additive, November 21, 2026) ----
+    # exclusivity first: the batch face never rides along with another mode
+    if args.from_statements or args.from_repo:
+        if args.from_statements and args.from_repo:
+            print("FAIL-LOUD: --from-statements is mutually exclusive with "
+                  "--from-repo (usage error, rc=1)")
+            return 1
+        if args.in_path or args.preflight_all or args.verify_anchors:
+            print("FAIL-LOUD: batch mode (--from-statements/--from-repo) is "
+                  "mutually exclusive with --in/--preflight-all/--verify-anchors "
+                  "(usage error, rc=1)")
+            return 1
+        if args.report or args.exp_draft:
+            print("FAIL-LOUD: batch mode writes per-statement reports and "
+                  "summary.json under --out; --report/--exp-draft are "
+                  "single-cast/preflight faces (usage error, rc=1)")
+            return 1
+        if args.name:
+            print("FAIL-LOUD: --name is the single-cast face; batch mode derives "
+                  "per-statement artifact names from the statement ids "
+                  "(usage error, rc=1)")
+            return 1
+        return do_batch(args, ts_utc,
+                        "from-statements" if args.from_statements else "from-repo")
 
     # mode exclusivity + requirement checks (section 6.2/6.3)
     if args.preflight_all:

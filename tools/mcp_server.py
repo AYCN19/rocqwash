@@ -1,8 +1,8 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 48 registered capabilities,
-  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line
-  (five later increments from their tools' own CLI contract headers).
+  Context Protocol (MCP) stdio transport: 50 registered capabilities, each
+  spec transcribed from its docs/CAPABILITY-INDEX.md entry line (six later
+  increments from their tools' own CLI contract headers).
   Default deny for the network and heavy capabilities (sentinel_status,
   net_probe, ci_triage, pushci_status, claim_watch, source_fetch,
   release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1
@@ -22,12 +22,11 @@ Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
 Dependencies.  Python 3 standard library only (argparse, json, os,
   subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 48-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 50-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors.
 
-Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1
-  selftest red (red list on stderr); 2 usage error (unknown flag);
-  wire error codes per docs/mcp.md.
+Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1 selftest red
+  (red list on stderr); 2 usage error (unknown flag); wire error codes per docs/mcp.md.
 """
 
 import argparse
@@ -46,11 +45,12 @@ HOME_ENV = "ROCQWASH_HOME"
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
 # additions, eleven M2 ticket additions, the tree_audit registration
 # increment, the axiom_sweep registration increment, the claim_watch
-# registration increment, plus the v2-B audit-line batch of three:
-# source_fetch, sweep_verdict, release_chain); a roster change
-# re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py in
-# the same round.
-SELFTEST_ROSTER_COUNT = 48
+# registration increment, the v2-B audit-line batch of three:
+# source_fetch, sweep_verdict, release_chain, plus the numeric-probe
+# registration batch of two: numeric_probe, statement_probes); a roster
+# change re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py
+# in the same round.
+SELFTEST_ROSTER_COUNT = 50
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1803,6 +1803,101 @@ TOOL_SPECS = [
             "INDEX entry awaits its own lane."
         ),
     },
+    # ---- the numeric-probe registration increment: one exact-arithmetic
+    # re-verification gate face over the landed claim-gate CLI
+    # (tools/numeric_probe.py --claim/--out/--selftest, its real argparse
+    # flag face), plus one statement-ingestion batch face over the landed
+    # vacgen v2 batch flags (tools/vacgen.py --from-statements/
+    # --from-repo, exactly those real argparse flags).  Both zero-network,
+    # both ungated.  Additive after the block above: the existing specs
+    # and schemas untouched.
+    {
+        "name": "numeric_probe",
+        "kind": "cli",
+        "cli": os.path.join("tools", "numeric_probe.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("claim", "--claim"),
+            ("out", "--out"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "claim": {"type": "string", "description": "claim file: a JSON array of claim objects, each carrying id, kind, statement, the discriminating field left|interval|target, and source_anchor (tool-required for the probe face; --selftest runs without it); CLI flag --claim"},
+                "out": {"type": "string", "description": "additionally write the JSON report to this caller-named path; CLI flag --out"},
+                "selftest": {"type": "boolean", "description": "run the frozen 42-vector group in-process and exit (takes no other flag); bare CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Exact-arithmetic re-verification gate for claimed numerical "
+            "verifications (tools/numeric_probe.py, schema "
+            "rocqwash-numeric-probe/1): reads the caller-named --claim "
+            "JSON array and mechanically re-verifies each claim with "
+            "Fraction exact arithmetic, zero floats, zero subprocess, "
+            "zero network.  kind rational-bound executes A < B / A <= B / "
+            "A = B (entries as p/q strings or declared-precision decimals, "
+            "a decimal carrying the band value +/- 10^-d/2 for its d "
+            "written fraction digits, an explicit precision k overriding "
+            "d, a bare integer an exact point); kind interval-containment "
+            "executes x-band containment in [lo, hi]; kind "
+            "transcendental-plan (zeta/theta/psi/ln targets) emits a "
+            "bound-discipline verification plan and returns PLANNED, the "
+            "honest plan-only face until a high-precision backend ticket "
+            "lands, never a fabricated numeric verdict; any claim whose "
+            "numbers fail to parse lands an honest UNPARSED row.  One "
+            "JSON report line: per-claim verdicts (PASS / FAIL / PLANNED "
+            "/ UNPARSED) with the exact executed comparison recorded in "
+            "each row basis, counts wrapped {value, basis}, and the "
+            "top-level scan_face coverage statement.  rc 0 iff no FAIL "
+            "and no UNPARSED row; rc 1 names every red row id on stderr "
+            "(fail loud); rc 2 usage.  --selftest runs the frozen "
+            "42-vector group offline in-process (takes no other flag)."
+        ),
+    },
+    {
+        "name": "statement_probes",
+        "kind": "cli",
+        "cli": os.path.join("tools", "vacgen.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("from_statements", "--from-statements"),
+            ("from_repo", "--from-repo"),
+        ),
+        "schema": _object_schema(
+            {
+                "from_statements": {"type": "string", "description": "statement-block file: theorem statements in the audited repo's own syntax, one per block, blank-line separated, text exactly as the repo states it (tool-required on this face unless from_repo is given; the two faces are mutually exclusive); CLI flag --from-statements"},
+                "from_repo": {"type": "string", "description": "audited repo root: enumerate line-start theorem/lemma declarations in *.lean files (the lean_axiom_sweep enumeration face; .git skipped) and cast each as --from-statements does (tool-required on this face unless from_statements is given; the two faces are mutually exclusive); CLI flag --from-repo"},
+            }
+        ),
+        "description": (
+            "Statement-ingestion batch faces over the landed casting CLI "
+            "tools/vacgen.py (the v2 batch face, zero-compile, zero "
+            "network): --from-statements FILE casts statement blocks "
+            "(blank-line separated, the audited repo's own syntax) through "
+            "the untouched single-challenge machinery into <out>/casts/"
+            "<id>/ with a per-statement JSON at <out>/reports/<id>.json, "
+            "the exact block text under <out>/sources/, and <out>/summary."
+            "json (schema vacgen-batch-summary/1); --from-repo DIR "
+            "enumerates line-start theorem/lemma declarations in *.lean "
+            "files (the lean_axiom_sweep enumeration face, .git skipped, "
+            "comment bodies not masked) and casts each the same way.  The "
+            "two flags are mutually exclusive and either one is "
+            "tool-required (calling neither lands the v1 single-challenge "
+            "face, which usage-errors rc 1 without --in).  arg_map covers "
+            "exactly these two real flags; the batch output root is the "
+            "CLI default vacgen_batch_out under the repository root (the "
+            "--out redirect is not exposed here; caller duty rides with "
+            "the underlying CLI).  Per-statement failures are counted, "
+            "never raised: an unparseable statement is an honest UNPARSED "
+            "row with the parse reason carried verbatim, never a silent "
+            "skip; rc 0 batch complete, rc 1 batch-level fail-loud.  Zero "
+            "network, zero compile: the cast writes skeletons, sources, "
+            "reports and summary only; the build command line is recorded "
+            "as text, never executed."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -2085,10 +2180,11 @@ def _selftest():
     frozen vector (the M2 roster: 25 standing specs, six M1 additions,
     eleven M2 ticket additions, the tree_audit registration increment,
     the axiom_sweep registration increment, the claim_watch
-    registration increment, plus the v2-B audit-line batch of three:
-    source_fetch, sweep_verdict, release_chain), the same freeze
-    discipline as EXPECTED_TOOLS in tests/t_mcp_face.py; a roster
-    change re-freezes both.
+    registration increment, the v2-B audit-line batch of three:
+    source_fetch, sweep_verdict, release_chain, plus the numeric-probe
+    registration batch of two: numeric_probe, statement_probes), the
+    same freeze discipline as EXPECTED_TOOLS in tests/t_mcp_face.py; a
+    roster change re-freezes both.
     """
     failures = []
 
