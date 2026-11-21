@@ -3,18 +3,18 @@
 #
 # Purpose.  Run the statically rostered 87-case suite one case at a time with a
 #   per-case PASS/FAIL/SKIP line and a final summary; all green exits 0, any red
-#   exits 1.  Idempotent: zero bytes written into the repository (python3 -B bans
-#   __pycache__; the temp log lives in mktemp under a trap; the wash and adaptation
-#   cases drive only temp directories and in-memory fixtures, so the hardcoded
-#   script paths are never touched); repeated runs are byte-identical.
+#   exits 1.  Idempotent: zero bytes written into the repository, byte-identical
+#   reruns; sole exception: ROCWASH_GATE_LEDGER_DIR opts into the gate-ledger
+#   append face, which writes only under that caller-designated directory.
 #
 # Interface.  bash tests/run_tests.sh; ROCWASH_TESTS_FAIL_PROBE=1 bash
-#   tests/run_tests.sh injects one always-red case (suite self-check; must exit 1).
+#   tests/run_tests.sh injects one always-red case (suite self-check; must exit 1);
 #   ROCWASH_TESTS_ONLY / ROCWASH_TESTS_EXCLUDE select cases; ROCWASH_ADVISORY_ROSTER
 #   points at the flaky-quarantine roster; ROCWASH_CLEAN=1 disables canonical
-#   auto-detection; ROCWASH_PY overrides the interpreter.  Exit-code contract per
-#   CONTRIBUTING section 4: 0 = all green (SKIP not counted red); 1 = any red; a
-#   case exiting 111 = SKIP (canonical environment absent).
+#   auto-detection; ROCWASH_PY overrides the interpreter; ROCWASH_GATE_LEDGER_DIR
+#   names a standing gate-ledger directory (set: one summary row lands under it
+#   per run, the ledger the evolve --gate-ledger-dir reading parses; unset:
+#   nothing written).  Exit-code contract per CONTRIBUTING section 4.
 #
 # Dependencies.  bash 3.2+ and python3; the rostered test faces under tests/;
 #   the canonical pointers ROCWASH_CANON_SET / ROCWASH_CANON_CW / ROCWASH_CANON_W1
@@ -1239,8 +1239,59 @@ echo "== summary: $PASS pass / $FAIL failing / $SKIP skipped / $TOTAL cases tota
 if [ "$SKIP" -ne 0 ]; then
   echo "skipped cases (canonical environment absent; the canonical machine runs the full sweep):$SKIPS"
 fi
+SUITE_RC=0
 if [ "$FAIL" -ne 0 ]; then
   echo "failing cases:$REDS"
-  exit 1
+  SUITE_RC=1
 fi
-exit 0
+
+# ---------- env-gated gate-ledger append (standing suite ledger) ----------
+# ROCWASH_GATE_LEDGER_DIR opts this run into the standing gate-ledger face:
+# one row file <dir>/suite-<UTC-stamp>.txt carrying the run's rc, the UTC
+# timestamp, the roster mode (full-roster or selection), and the canonical
+# summary line — the standing suite-ledger data shape that tools/evolve.py
+# SUITE_SUMMARY_RE and tools/flaky_guard.py SUMMARY_RES parse (timestamped
+# row names sort chronologically, so the latest-wins lexicographic reading
+# stays wall-clock-free).  The row is emitted through "$PY" with \u escapes
+# so this face stays ASCII-only.  Unset (default): zero bytes written and
+# the zero-write contract above holds unchanged.  An append failure prints
+# a loud note on stderr and never flips the suite's own exit code (an
+# unrecorded run leaves the ledger at its last row; the evolve reading
+# reports the latest recorded row and a stale row is data, never failure).
+if [ -n "${ROCWASH_GATE_LEDGER_DIR:-}" ]; then
+  GL_STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+  GL_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  GL_MODE="full-roster"
+  if [ -n "${ROCWASH_TESTS_ONLY:-}" ] || [ -n "${ROCWASH_TESTS_EXCLUDE:-}" ] \
+     || [ -n "${_advisory:-}" ]; then
+    GL_MODE="selection"
+  fi
+  if "$PY" -B -c '
+import io
+import os
+import sys
+d, stamp, ts, mode, rc, passed, red, skip, total = sys.argv[1:10]
+try:
+    os.makedirs(d, exist_ok=True)
+    row = (
+        "== rocqwash gate ledger row ==\n"
+        "ts_utc: " + ts + "\n"
+        "rc: " + rc + "\n"
+        "mode: " + mode + "\n"
+        "== \u6c47\u603b: " + passed + " \u8fc7 / " + red + " \u7ea2 / "
+        + skip + " \u7565 / \u5171 " + total + " \u4f8b ==\n"
+    )
+    with io.open(os.path.join(d, "suite-" + stamp + ".txt"), "w",
+                 encoding="utf-8", newline="\n") as fh:
+        fh.write(row)
+except OSError as exc:
+    sys.stderr.write("gate-ledger note: append failed (%s)\n" % exc)
+    sys.exit(1)
+' "$ROCWASH_GATE_LEDGER_DIR" "$GL_STAMP" "$GL_TS" "$GL_MODE" "$SUITE_RC" \
+     "$PASS" "$FAIL" "$SKIP" "$TOTAL"; then
+    echo "(gate-ledger) row appended: $ROCWASH_GATE_LEDGER_DIR/suite-$GL_STAMP.txt"
+  else
+    echo "(gate-ledger note) row append failed; the ledger stays at its last row" >&2
+  fi
+fi
+exit $SUITE_RC

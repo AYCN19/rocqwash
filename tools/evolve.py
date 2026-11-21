@@ -98,7 +98,14 @@ Exit-codes.  0 = harvest/derive/draft completed (adverse signals are data);
 #                       carries a parsable summary line (timestamped
 #                       capture names sort chronologically, so the engine
 #                       stays wall-clock-free). Without the flag the suite
-#                       reading is reported unreadable.
+#                       reading is reported unreadable. The standing
+#                       writer is the suite entry itself: tests/run_tests.sh
+#                       appends one row per run (rc, UTC timestamp, roster
+#                       mode, canonical summary line) when
+#                       ROCWASH_GATE_LEDGER_DIR names the directory; a
+#                       default run writes nothing, and the repo-root
+#                       default directory gate-ledgers/ is gitignored, so
+#                       rows never dirty the tree.
 # --registry-git REPO / --registry-ref REF  enable the registry signal
 #                       (git direct-read form); --git-path-order /
 #                       --git-path-project override the book paths
@@ -1626,8 +1633,11 @@ def selftest():
       [11] gate-health harvest: the doc_lint rc classification on stub
           engines honoring the doc_lint interface, the recorded-ledger
           latest-wins scan with the unreadable faces, the whitelist-variant
-          norm count on the real norm child, and the gate-repair derive
-          rule with the healthy-gate note.
+          norm count on the real norm child, the gate-repair derive
+          rule with the healthy-gate note, and the standing-writer row
+          shape (the run_tests.sh ROCWASH_GATE_LEDGER_DIR append face)
+          reading recorded with its counts carried as data on the Gate
+          health draft line.
     """
     fails = []
     tmp = tempfile.mkdtemp(prefix="rocqwash_evolve_self_")
@@ -2028,7 +2038,8 @@ def selftest():
 
         # ---- [11] gate-health harvest (stub doc_lint engines honoring the
         #      doc_lint interface --repo + rc; the real norm child on the
-        #      vector-1 canned tree; canned recorded ledgers) ----
+        #      vector-1 canned tree; canned recorded ledgers; the
+        #      run_tests.sh append-face row shape) ----
         ok_stub = os.path.join(tmp, "dl_consistent.py")
         _wf(ok_stub, "import sys\nsys.exit(0)\n")
         drift_stub = os.path.join(tmp, "dl_drift.py")
@@ -2093,6 +2104,48 @@ def selftest():
                 and "ledger directory missing" in g4["suite"]["reason"],
                 "vector11 missing-dir unreadable face: %s" % g4["suite"],
                 fails)
+        # standing-writer row shape (the tests/run_tests.sh
+        # ROCWASH_GATE_LEDGER_DIR append face): the exact bytes the suite
+        # entry appends parse recorded, and the Gate health draft line
+        # carries the suite reading as data, never unreadable.
+        append_rows = os.path.join(tmp, "append_rows")
+        os.makedirs(append_rows)
+        _wf(os.path.join(append_rows, "suite-20261121T093000Z.txt"),
+            "== rocqwash gate ledger row ==\n"
+            "ts_utc: 2026-11-21T09:30:00Z\n"
+            "rc: 0\n"
+            "mode: full-roster\n"
+            "== \u6c47\u603b: 86 \u8fc7 / 0 \u7ea2 / 1 \u7565 / \u5171 87 \u4f8b ==\n")
+        g5 = harvest_gate(tree, gate_wl, append_rows, tmp,
+                          doc_lint_tool=ok_stub, jargon_map=map_path)
+        _expect(g5["suite"]["status"] == "recorded"
+                and g5["suite"]["file"] == "suite-20261121T093000Z.txt"
+                and (g5["suite"]["pass"], g5["suite"]["red"],
+                     g5["suite"]["skip"], g5["suite"]["total"])
+                == (86, 0, 1, 87),
+                "vector11 append-face row shape reads recorded: %s"
+                % g5["suite"], fails)
+        cands_g5, _n_g5 = derive_candidates({"gate": g5}, 5)
+        txt_g5 = render_draft(os.path.join(tmp, "d1", "draft_run.md"), tmp,
+                              cands_g5, [], {"gate": g5}, 5)
+        _expect("recorded suite ledger 0 red per suite-20261121T093000Z.txt"
+                in txt_g5,
+                "vector11 Gate health draft line carries the suite reading "
+                "as data: %s" % [ln for ln in txt_g5.splitlines()
+                                 if ln.startswith("- Gate health")], fails)
+        bare_rows = os.path.join(tmp, "bare_rows")
+        os.makedirs(bare_rows)
+        _wf(os.path.join(bare_rows, "suite-broken.txt"),
+            "== rocqwash gate ledger row ==\n"
+            "rc: 1\n"
+            "(no summary line in this row)\n")
+        g6 = harvest_gate(tree, gate_wl, bare_rows, tmp,
+                          doc_lint_tool=ok_stub, jargon_map=map_path)
+        _expect(g6["suite"]["status"] == "unreadable"
+                and "no parsable run_tests.sh summary line"
+                in g6["suite"]["reason"],
+                "vector11 row without the summary line stays unreadable: %s"
+                % g6["suite"], fails)
         healthy = {"present": True,
                    "doc_lint": {"rc": 0, "status": "consistent"},
                    "suite": {"status": "recorded", "file": "suite-ok.txt",

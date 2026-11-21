@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Standing suite gate-ledger: rows appended by tests/run_tests.sh when
+# ROCWASH_GATE_LEDGER_DIR opts the run in (runtime accounting data, never
+# tree state; tools/evolve.py --gate-ledger-dir is the standing reader).
+gate-ledgers/
