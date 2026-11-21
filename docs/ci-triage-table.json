@@ -1,6 +1,6 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
-  "version": "1.7",
+  "version": "1.8",
   "updated": "2026-11-22",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
@@ -323,6 +323,21 @@
       "auto_repairable": false,
       "prescription": "de-blind the pattern and promote the skipped status to a verdict-failure class in the same commit; the guard self-test must assert every status class including the failure classes (a vector per class, and the live vector fails on any failure-class row) so a guard face going blind turns the self-test red; the last two markers co-fire with the first two in a blind detect log (missing-face rows printed under outcome=clean, rc=0)",
       "guard": "a verdict aggregation must be one named set of failure statuses consumed by both the CLI and the self-test; a face pattern anchors on structural tokens only (prefix + count tail), never on prose wording; prose wording is not load-bearing for a count face"
+    },
+    {
+      "id": "R22",
+      "title": "repo-relative assumptions break the detached execution form (meta-suite temp-copy class)",
+      "markers": [
+        "ModuleNotFoundError in the meta-suite temp-copy form",
+        "in-repo green while CI red on the same tool",
+        "MissingInput on the copy parent directory",
+        "no probe block found on emitted probe line"
+      ],
+      "precedence": 22,
+      "family": "structural",
+      "auto_repairable": false,
+      "prescription": "candidate-path imports and live-repo resolution (script dir / env override / cwd / cwd/tools; loud ModuleNotFoundError or named rc=111 env-absent skip when nothing resolves); never a bare sibling import or a bare dirname(dirname(__file__)) root in guard code; run the meta suite before pushing guard-tool changes",
+      "guard": "any new sibling import or repo-relative root in a guard tool must be candidate-path based and carry an honest env-absent skip; the meta suite is the detector and runs before the push"
     }
   ]
 }
