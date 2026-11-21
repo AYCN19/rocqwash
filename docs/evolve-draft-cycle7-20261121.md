@@ -36,24 +36,32 @@ executed, and the engine wrote nothing outside its explicit output paths.
 ## Round inputs (fitness account)
 
 - Repository root: `/Users/apple/Desktop/rocqwash`
-- Draft width (--top): 5; candidates derived: 4; drafted: 4.
-- Norm fitness: current error 691 / warn 983 vs baseline 2267 / 1092; raw delta -1576 / -109; translatable delta -1574 / -134; reduction rate error 0.6952 warn 0.0998.
+- Draft width (--top): 5; candidates derived: 5; drafted: 5.
+- Norm fitness: current error 691 / warn 989 vs baseline 2267 / 1092; raw delta -1576 / -103; translatable delta -1574 / -128; reduction rate error 0.6952 warn 0.0943.
   - Frozen surfaces excluded from the translatable metric: `certify/freeze_manifest.py`, `names/mac_stmt_names.py`, `scan/mac_stmt_scan.py`, `seam/seam_probe.py`, `tools/cpu_guard.sh`, `verify/gate4_comment_guard.py`, `verify/verify_vo.py`, `wash/wash_engine.py`, `更新账.md`.
 - Sentinel round: not harvested (no --watch-repo given).
 - Suite state: not harvested (no --suite-ledger or --suite-now given).
 - Registry audit: not harvested (no --registry-git given).
 - Maintained UNRECOGNIZED events: not harvested (no --sentinel-events/--sentinel-state given).
-- Gate health: not harvested (no --gate given).
+- Gate health: doc_lint rc 0 (consistent); recorded suite ledger unreadable (no --gate-ledger-dir given); whitelist-variant norm errors 691 (whitelist `/Users/apple/Desktop/rocqwash/docs/norm-lint-cjk-whitelist-20261113.txt`).
 
-## Candidate 1 — longtail-translation (rank 1, score 10.0000)
+## Candidate 1 — gate-repair (rank 1, score 10.0000)
+
+- **Goal** — Repair the adverse gate-health readings that gate the evolution loop: doc_lint consistent (rc 0), recorded suite ledger unreadable (no --gate-ledger-dir given), whitelist-variant norm error mass 691.
+- **Approach** — Repair each adverse reading at its own face: doc_lint drift is repaired on the doc faces its report names (never by weakening the check), a recorded suite red is reproduced in isolation and fixed at the tool face the case attests (never weaken the case), and the whitelist-variant norm errors are carried per the mapping table with .zh.md archive siblings; an unreadable suite reading is repaired by recording a fresh ledger capture.
+- **Acceptance** — doc_lint exits 0 (consistent); the latest recorded run ledger parses with 0 red; the whitelist-variant norm error count decreases against the starting account; no gate engine face was weakened.
+- **Grading** — impact 2 x evidence 10 (raw 691, clamped to 10) / effort 2 = score 10.0000; recorded gate readings are evidence over the loop's own gates; live faces own the primary signals.
+- **Evidence** — gate signal: doc_lint rc 0 (consistent); suite ledger unreadable (no --gate-ledger-dir given); whitelist-variant norm errors 691 (whitelist `/Users/apple/Desktop/rocqwash/docs/norm-lint-cjk-whitelist-20261113.txt`).
+
+## Candidate 2 — longtail-translation (rank 2, score 10.0000)
 
 - **Goal** — Continue the law-one translation program on the prose long tail: reduce the remaining translatable error mass (134 error findings on non-frozen faces) by at least the next echelon (`seeds/jargon/_snapshots/annotation-whitepaper-v1.0-20260921.md` (107), `wrapper/verify_born.py` (12), `seeds/jargon/_snapshots/terminology-general-project-20260921.md` (5), `README.md` (3)).
 - **Approach** — Take the next echelon from the top error-carrying files in Evidence, translate each face per the mapping table with .zh.md archive siblings, keep code identifiers, CLI flags, schema field names and exit codes unchanged.
 - **Acceptance** — The translatable error count strictly decreases against the starting account; every touched tool keeps --selftest rc=0; the full suite is green twice; zero jargon residue on the touched faces.
 - **Grading** — impact 3 x evidence 10 (raw 134, clamped to 10) / effort 3 = score 10.0000; the fitness main signal, a broad long tail.
-- **Evidence** — norm signal: translatable error mass 134; reduction rate error 0.6952 warn 0.0998 since baseline; top carriers: `seeds/jargon/_snapshots/annotation-whitepaper-v1.0-20260921.md` (107); `wrapper/verify_born.py` (12); `seeds/jargon/_snapshots/terminology-general-project-20260921.md` (5); `README.md` (3); `README_EN.md` (2); `docs/CAPABILITY-INDEX.md` (2); `docs/census.md` (1); `docs/ci-whitepaper-recursive-era-v1-20261116.md` (1).
+- **Evidence** — norm signal: translatable error mass 134; reduction rate error 0.6952 warn 0.0943 since baseline; top carriers: `seeds/jargon/_snapshots/annotation-whitepaper-v1.0-20260921.md` (107); `wrapper/verify_born.py` (12); `seeds/jargon/_snapshots/terminology-general-project-20260921.md` (5); `README.md` (3); `README_EN.md` (2); `docs/CAPABILITY-INDEX.md` (2); `docs/census.md` (1); `docs/ci-whitepaper-recursive-era-v1-20261116.md` (1).
 
-## Candidate 2 — standing-candidate (rank 2, score 0.5000)
+## Candidate 3 — standing-candidate (rank 3, score 0.5000)
 
 - **Goal** — Close the long-standing duplicate-block and anchor findings on the serviced books by running the audited prescription path.
 - **Approach** — registry_audit --fix-plan for the prescription, then registry_fix dry run, then human review, then --apply (staged per-row md5 accounting with rollback); the books are regenerated on the current mainline per the isolation protocol, never hand-edited.
@@ -61,7 +69,7 @@ executed, and the engine wrote nothing outside its explicit output paths.
 - **Grading** — impact 1 x evidence 1 (raw 1, clamped to 10) / effort 2 = score 0.5000; persisted memory with no live signal this round; baseline agenda weight.
 - **Evidence** — heredity: ledger v54 entry, boundary list (re-statement); origin ledger v47 entry, roadmap section.
 
-## Candidate 3 — standing-candidate (rank 3, score 0.5000)
+## Candidate 4 — standing-candidate (rank 4, score 0.5000)
 
 - **Goal** — Execute the recorded final step of the multi-repo adaptation path (a real push against the protected main repository) once its recorded preconditions hold.
 - **Approach** — Confirm the working-clone placement decision and the branch-protection posture recorded in the ledger, run the push planner in dry-run first, then the real push only after the human gate accepts the plan.
@@ -69,7 +77,7 @@ executed, and the engine wrote nothing outside its explicit output paths.
 - **Grading** — impact 1 x evidence 1 (raw 1, clamped to 10) / effort 2 = score 0.5000; persisted memory with no live signal this round; baseline agenda weight.
 - **Evidence** — heredity: ledger v54 entry, boundary list; origin ledger v49 entry, boundary list.
 
-## Candidate 4 — standing-candidate (rank 4, score 0.5000)
+## Candidate 5 — standing-candidate (rank 5, score 0.5000)
 
 - **Goal** — Bring the single skipped suite case back into the running set once its missing input archive is restored.
 - **Approach** — Restore the four-repo copy set the case reconciles (a desktop-archive decision recorded as pending), then run the case and confirm it joins the passing set.
