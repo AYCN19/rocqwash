@@ -1,6 +1,6 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
-  "version": "1.5",
+  "version": "1.6",
   "updated": "2026-11-21",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
@@ -293,6 +293,21 @@
       "auto_repairable": false,
       "prescription": "fix capture mechanism then re-execute (auto_repairable=false - the fix requires re-running the original batch, not re-signing)",
       "guard": "zero-byte output with rc recorded = structural silent red; the capture mechanism is the disease, not the tool"
+    },
+    {
+      "id": "R20",
+      "title": "guard-pinned prose dropped by a docs-only revision",
+      "markers": [
+        "exactly one",
+        "snapshot line expected, found 0",
+        "destructive-matrix N-row red after docs-only change",
+        "guard-anchor"
+      ],
+      "precedence": 20,
+      "family": "content",
+      "auto_repairable": false,
+      "prescription": "restore the pinned line verbatim from git history (git show <pre-change>:file), never fabricate a line to satisfy the counter; re-anchor the guard in the same commit only when the underlying facts changed (auto_repairable=false - restore-vs-reanchor is a decision, not a mechanical edit)",
+      "guard": "doc-revision tickets must run the destructive-matrix rows anchored on the files they touch before pushing; a snapshot/counted line is load-bearing prose, not decoration"
     }
   ]
 }
