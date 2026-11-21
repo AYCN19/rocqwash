@@ -1,4 +1,4 @@
-# rocqwash tools/ Word-Face Census Re-scan | rocqwash tools/ 词面普查重扫 | 2026-11-21
+# rocqwash tools/ Word-Face Census Re-scan | 2026-11-21
 
 This document accompanies `census-tools.json` (machine-readable per-file records) and
 `flag-shape.json` (AST-level flag classification); all three were written in the same pass.
@@ -738,10 +738,13 @@ MCP face named above.
 Registered exemptions (report-only findings carried as data, per the rule that every
 exemption must be registered with its line, class, and basis):
 
-- Class `cjk`, census.md L1: the bilingual title line is mandated by the register
-  discipline (bilingual title, English table headers, all-English body); the
-  2026-11-20 generation measured cjk_ratio 0.000105 against threshold 0.0, and this
-  generation's own reading rides the gate run above. Basis: register discipline, title form.
+- Class `cjk`, census.md L1: cured at a later repair increment (November 21, 2026):
+  the bilingual title segment was Englished per the standing language law and the
+  bilingual as-cast text is preserved verbatim in the sibling `census.md.zh.md`
+  archive (annotation standard section 5, archive never delete); the 2026-11-20
+  generation had registered the bilingual title as mandated and measured
+  cjk_ratio 0.000105 against threshold 0.0 under it. Basis: standing English law,
+  title form.
 - Class `forbidden` (date stamps `2026-11-14` / `2026-11-20` / `2026-11-21`, title, section 1,
   section 5 table cells, section 8): time-point binding is this re-scan's own
   requirement; section 5 binds each of the four counts to its own time point and section 8
