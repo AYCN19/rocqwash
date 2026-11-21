@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-20T14:45:09Z",
+  "generated_at_utc": "2026-11-21T04:10:33Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "D:/ComplexAnalysis/rocqwash/tools",
-  "git_head_recorded": "0765d671a63193430de86faf3a9790f2d8a086a0",
-  "py_files_censused": 59,
+  "git_head_recorded": "2a1fe8fab9374d9a6aa7f672071aacfbab73e21e",
+  "py_files_censused": 60,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,13 +25,13 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 56,
+   "with_argparse": 58,
    "with_subcommands": 1,
-   "zero_network": 49,
-   "needs_special_environment": 33,
-   "invocation_reconstructed": 56,
+   "zero_network": 50,
+   "needs_special_environment": 34,
+   "invocation_reconstructed": 58,
    "invocation_usage_string": 0,
-   "invocation_not_reconstructed": 3,
+   "invocation_not_reconstructed": 2,
    "syntax_errors": 0
   }
  },
@@ -740,9 +740,9 @@
   },
   {
    "name": "auto_round.py",
-   "bytes": 88348,
-   "sha256": "673a1329f0ae7ab0e544d9b1753b5dcf394740a902e29a0b29e29d0e75f071fe",
-   "lines": 1976,
+   "bytes": 89111,
+   "sha256": "03d7ccce95cc8310a4cde33d1856c949379884c11a71bcfb9e50461cfc5a04d5",
+   "lines": 1990,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -1863,14 +1863,14 @@
   },
   {
    "name": "ci_triage.py",
-   "bytes": 121218,
-   "sha256": "7d63dc8de76a523d62117876a8f02ee0fc7aeaa070ab99180771a88008d7259d",
-   "lines": 2194,
+   "bytes": 128886,
+   "sha256": "dd4bf3e682b2841c76b8a85aa88b54a0937a2c6174cc9940deb406ed5842d03d",
+   "lines": 2316,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 206,
+    "lines": 216,
     "head": "ci_triage.py — failing-build triage tool for rocqwash CI (tools/).\n\nPurpose.  Triages the jobs of a GitHub Actions run into failing and\n  passing: prints a step-level table (step name/status/conclusion/start/\n  end/duration in seconds), assigns each job a family from the five-family\n  classification taxonomy plus the all-passing state, and prescribes an\n  action; with --baseline-seconds given a historical duration for the same\n  sync, prints a ratio table (example: coqchk 561s vs 7480s = 13.3x — a\n  likely local resource squeeze, not a hang).  A failing result is data,\n  not a tool failure: tr"
    },
    "argparse": {
@@ -2070,7 +2070,7 @@
     "markers": [
      {
       "kind": "coq_rocq",
-      "count": 109,
+      "count": 111,
       "samples": [
        "",
        "c",
@@ -2979,14 +2979,14 @@
   },
   {
    "name": "doc_lint.py",
-   "bytes": 64245,
-   "sha256": "4b2af684d82f3706edfb91d7a029d917a179ed4b8fa2c7c71190f8d680469604",
-   "lines": 1333,
+   "bytes": 69864,
+   "sha256": "9e81a5a94e31cf1d98c6338da61981f689751570181f9cc77ad5a4a6c3cd9d9b",
+   "lines": 1442,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 44,
+    "lines": 51,
     "head": "doc_lint.py — the docs-vs-implementation consistency three-check tool (docs <-> tools reconciliation; guards against documentation drift; rocqwash tools/).\n\nPurpose.  Runs the three checks (all purely local, zero network, zero\n  compiles, Python 3 stdlib only, orchestrating zero new engines — every\n  parsing rule is anchored to the current on-disk lines, no invented\n  shapes) and reports whether the documentation and the implementation\n  agree.  Read-only by construction: nothing is ever written into the\n  audited repository.\n\nInterface.  python3 tools/doc_lint.py [--repo DIR] [--json OUT]\n  ["
    },
    "argparse": {
@@ -3022,9 +3022,9 @@
       "kwargs": {
        "dest": "help_cap",
        "type": "<dynamic>",
-       "default": "<dynamic>",
+       "default": null,
        "metavar": "N",
-       "help": "the check-3 --help real-run tool cap (default 32; over-cap tools truncate in canonical order and are listed honestly)"
+       "help": "the check-3 --help real-run tool cap (default: derived at run time = the measured registry size plus the margin constant, so a new tool registration raises the cap with zero manual steps; an explicit value wins; over-cap tools truncate in canonical order and are listed honestly)"
       }
      }
     ],
@@ -3545,14 +3545,14 @@
   },
   {
    "name": "exp_port.py",
-   "bytes": 20461,
-   "sha256": "ede828bc34b7bd47f8ea19f26aa2063f81825ef25651d1444ad650ae071a9178",
-   "lines": 492,
+   "bytes": 23281,
+   "sha256": "7ee67910340532aca987e90b40fe7f88afcd0cabd1328871f5df1b4779107d9c",
+   "lines": 540,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
+    "lines": 32,
     "head": "exp_port: experience-bus port for docs/exp-ledger.jsonl (append + query).\n\nPurpose.  The single write/read port of the in-repository experience ledger\n  docs/exp-ledger.jsonl (one JSON object per line, schema rocqwash-exp/1).\n  `append` validates a four-field entry (tool / points / evidence / batch)\n  and appends exactly one line under an entry id; a repeat of an\n  already-seen entry (same explicit id, or same content fingerprint) is a\n  loud no-op returning the existing id, so retries stay idempotent.\n  `query` reads entries back by id, tool or batch substring; a finding\n  (duplicate, zero ma"
    },
    "argparse": {
@@ -3614,6 +3614,15 @@
       "kwargs": {
        "default": "",
        "help": "append: batch label; query: batch substring"
+      }
+     },
+     {
+      "flags": [
+       "--actor"
+      ],
+      "kwargs": {
+       "default": "",
+       "help": "append: optional actor (seat or operator name) carried verbatim as the actor field (schema increment, not part of the fingerprint seen set)"
       }
      },
      {
@@ -3693,6 +3702,7 @@
      "--points",
      "--evidence",
      "--batch",
+     "--actor",
      "--id",
      "--ts",
      "--source-file",
@@ -3745,7 +3755,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/exp_port.py <command> [--selftest] [--tool] [--points] [--evidence] [--batch] [--id] [--ts] [--source-file] [--correlation-id] [--ledger] [--dry-run] [--limit]",
+    "form": "python tools/exp_port.py <command> [--selftest] [--tool] [--points] [--evidence] [--batch] [--actor] [--id] [--ts] [--source-file] [--correlation-id] [--ledger] [--dry-run] [--limit]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -5428,22 +5438,36 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 51641,
-   "sha256": "b0d9d620bae44c6b33811d8b4cb20c6b07966d0f7f8e2134a1e72392b717559e",
-   "lines": 1116,
+   "bytes": 101351,
+   "sha256": "4377f61fb22865b5c7efcd4ad11bacfb89d52168581a057c86b94bcfd5a78dc5",
+   "lines": 1969,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 25 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\n\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 42 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.\n  Default deny for network and heavy capabilities (`sentinel_status`,\n  `net_probe`, `ci_triage`, `pushci_status`): a failed tool result\n  names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, token file or netrc\n  path is read; child stdout and stderr are captured, never"
    },
    "argparse": {
-    "imported": false,
-    "parser_descriptions": [],
-    "add_argument": [],
+    "imported": true,
+    "parser_descriptions": [
+     "rocqwash MCP stdio server: newline-delimited JSON-RPC 2.0 over stdin and stdout (docs/mcp.md)."
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the frozen interface-shape vectors and exit; the service loop, stdin and the network are not touched"
+      }
+     }
+    ],
     "positionals": [],
-    "optionals": [],
+    "optionals": [
+     "--selftest"
+    ],
     "subcommands": [],
     "has_subparsers": false,
     "set_defaults_func": false
@@ -5451,6 +5475,7 @@
    "usage_face": [],
    "imports": {
     "modules": [
+     "argparse",
      "json",
      "os",
      "subprocess",
@@ -5474,6 +5499,15 @@
    "skip_face": {
     "markers": [
      {
+      "kind": "env_rocwash",
+      "count": 3,
+      "samples": [
+       "ROCWASH_COQCHK",
+       "ROCWASH_LLM_",
+       "ROCWASH_ROCQ"
+      ]
+     },
+     {
       "kind": "ocaml_opam",
       "count": 2,
       "samples": [
@@ -5483,27 +5517,36 @@
      },
      {
       "kind": "coq_rocq",
-      "count": 6,
+      "count": 11,
       "samples": [
-       ""
+       "",
+       "chk"
       ]
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 10,
+      "count": 15,
       "samples": [
        "Lean",
-       "lake"
+       "lake",
+       "mathlib"
+      ]
+     },
+     {
+      "kind": "thermal_wrapper",
+      "count": 1,
+      "samples": [
+       "cpu_guard"
       ]
      }
     ],
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "",
-    "basis": "not-reconstructed"
+    "form": "python tools/mcp_server.py [--selftest]",
+    "basis": "argparse-reconstructed"
    },
-   "selftest_flag": false,
+   "selftest_flag": true,
    "selftest_token_face": true
   },
   {
@@ -7610,15 +7653,15 @@
   },
   {
    "name": "render_events.py",
-   "bytes": 26217,
-   "sha256": "f14b424c02f8d01a7be432fba63320d85be3240bd3859a51b50ed2a5cc3dc7ad",
-   "lines": 570,
+   "bytes": 26759,
+   "sha256": "a32e66f1290a7840d408027a85a67899cd43c0d6ce06509c6865e6f595494721",
+   "lines": 578,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
-    "head": "render_events.py — cw_sentinel JSONL event-stream renderer (markdown ledger + JSON summary).\n\nPurpose.  Render event streams in the `rocqwash-sentinel-event/1` schema (emitted\n  by `cw_sentinel.py`) into a deterministic markdown ledger plus a\n  `rocqwash-render-events/1` JSON summary; pure consumer face, zero network, the\n  stream rendered as it stands.  A failing result is data, not a tool failure.\n\nInterface.  Exactly one input mode: `--events FILE.jsonl` (single file; line order\n  is stream order) or `--dir DIR` (all `*.jsonl` merged in filename order, then\n  sorted by (seq, ts, source orde"
+    "lines": 30,
+    "head": "render_events.py — cw_sentinel JSONL event-stream renderer (markdown ledger + JSON summary).\n\nPurpose.  Render event streams into a deterministic markdown ledger plus a\n  `rocqwash-render-events/1` JSON summary; accepted input shapes: native\n  `rocqwash-sentinel-event/1` and any JSON-object-per-line stream (measured:\n  `rocqwash-exp/1` rows, bad_lines=0; missing kind `other`, family/action\n  `(none)`); a failing result is data, not a tool failure.\n\nInterface.  Exactly one input mode: `--events FILE.jsonl` (single file; line order\n  is stream order) or `--dir DIR` (all `*.jsonl` merged in filen"
    },
    "argparse": {
     "imported": true,
@@ -7633,7 +7676,7 @@
       "kwargs": {
        "default": null,
        "metavar": "FILE.jsonl",
-       "help": "single event stream JSONL (rocqwash-sentinel-event/1; line order is stream order)"
+       "help": "single event stream JSONL (native shape rocqwash-sentinel-event/1; any JSON-object-per-line stream renders too, e.g. rocqwash-exp/1 rows; line order is stream order)"
       }
      },
      {
@@ -9435,6 +9478,108 @@
    "selftest_token_face": true
   },
   {
+   "name": "tree_audit.py",
+   "bytes": 27402,
+   "sha256": "239832dcd922463406d66588405af5f0a5b1dfba8bfd7f652f5170ba7939333b",
+   "lines": 593,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 40,
+    "head": "tree_audit.py - read-only tree health audit over .lean/.v source trees.\n\nPurpose.  One JSON-line census of a source tree: file/byte/line totals (lines\n  and non-empty lines), declaration counts split into thm (theorem|lemma) and\n  defFam (def|abbrev|structure|class|instance|inductive) with decls as their\n  combined total, an unsound-feature sweep (sorry, sorryAx, axiom, opaque,\n  native_decide, unsafe, implemented_by, extern, ofReduceBool), comment faces,\n  per-directory and largest-file tables, and the import-root histogram.  Every\n  top-level key but scan_face is {\"value\": N, \"basis\": \"...\"}"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "read-only tree health audit over .lean/.v source trees (one JSON line)"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--root"
+      ],
+      "kwargs": {
+       "metavar": "DIR",
+       "help": "the audit root (scanned literally; .git skipped)"
+      }
+     },
+     {
+      "flags": [
+       "--json"
+      ],
+      "kwargs": {
+       "metavar": "OUT",
+       "help": "write the stdout JSON payload to OUT as well"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the fixture vectors on temporary directories"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--root",
+     "--json",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "json",
+     "os",
+     "re",
+     "shutil",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [
+     {
+      "kind": "lean_lake_mathlib",
+      "count": 15,
+      "samples": [
+       ".lean",
+       "Lean"
+      ]
+     }
+    ],
+    "needs_special_environment": true
+   },
+   "invocation": {
+    "form": "python tools/tree_audit.py [--root] [--json] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
    "name": "unclog.py",
    "bytes": 103325,
    "sha256": "c177fc2bf97eef913a7ae741af1672fed9fc51da932e76aa84324ba6a78437cf",
@@ -10107,14 +10252,14 @@
   },
   {
    "name": "vacgen.py",
-   "bytes": 134619,
-   "sha256": "1c2bd96d5175a2d54caf151c05d3c5018d24ca5b2578c99a619da5095c3cc5c7",
-   "lines": 2870,
+   "bytes": 146132,
+   "sha256": "12c5333548edf82d44e42a8031a573cba0e2ea2ef9761eb918f9d6f999b744dc",
+   "lines": 3105,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
+    "lines": 37,
     "head": "vacgen.py (v2) - vacuity probe skeleton generator with shape recognition (four-layer engine, taxonomy-as-data).\n\nPurpose.\n    Cast the four-account vacuity probe skeleton directory for a Lean statement-face file (cast mode, v1 CLI face\n    preserved verbatim) and run a zero-compile coverage preflight over a census-qualified file set\n    (--preflight-all, difficulty map).  v2 layers: L1 premise decomposer (three-segment split, file-scope\n    `variable` / instance-binder G1 fix), L2 taxonomy lookup (rows in taxonomy.json; zero premise-family knowledge\n    in-engine), L3 confidence scoring with h"
    },
    "argparse": {
@@ -10305,6 +10450,16 @@
      },
      {
       "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "dest": "selftest",
+       "action": "store_true",
+       "help": "in-process vector face (zero network, zero compile): taxonomy admission, premise zero-regression, ticket-15 conclusion-face vectors, 169B QRH end-to-end coverage; standalone - other mode flags are ignored"
+      }
+     },
+     {
+      "flags": [
        "--mathlib"
       ],
       "kwargs": {
@@ -10334,6 +10489,7 @@
      "--report",
      "--exp-draft",
      "--verify-anchors",
+     "--selftest",
      "--mathlib"
     ],
     "subcommands": [],
@@ -10391,11 +10547,11 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--mathlib]",
+    "form": "python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib]",
     "basis": "argparse-reconstructed"
    },
-   "selftest_flag": false,
-   "selftest_token_face": false,
+   "selftest_flag": true,
+   "selftest_token_face": true,
    "new_item": true
   },
   {

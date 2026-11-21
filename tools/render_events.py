@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 """render_events.py — cw_sentinel JSONL event-stream renderer (markdown ledger + JSON summary).
 
-    Purpose.  Render event streams in the `rocqwash-sentinel-event/1` schema (emitted
-      by `cw_sentinel.py`) into a deterministic markdown ledger plus a
-      `rocqwash-render-events/1` JSON summary; pure consumer face, zero network, the
-      stream rendered as it stands.  A failing result is data, not a tool failure.
+    Purpose.  Render event streams into a deterministic markdown ledger plus a
+      `rocqwash-render-events/1` JSON summary; accepted input shapes: native
+      `rocqwash-sentinel-event/1` and any JSON-object-per-line stream (measured:
+      `rocqwash-exp/1` rows, bad_lines=0; missing kind `other`, family/action
+      `(none)`); a failing result is data, not a tool failure.
 
     Interface.  Exactly one input mode: `--events FILE.jsonl` (single file; line order
       is stream order) or `--dir DIR` (all `*.jsonl` merged in filename order, then
@@ -38,6 +39,11 @@ import sys
 PROG = "render_events"
 SCHEMA = "rocqwash-render-events/1"
 EVENT_SCHEMA = "rocqwash-sentinel-event/1"
+# Declared input face (honest-schema rule): EVENT_SCHEMA names the native
+# row shape, but load_events() accepts any JSON-object-per-line stream
+# (measured: rocqwash-exp/1 experience-ledger rows render with
+# bad_lines=0); rows outside the native shape simply fill the fallback
+# cells (missing kind -> `other`, missing family/action -> `(none)`).
 # full kind spectrum of the three `cw_sentinel.py` signal sources
 # (`cw_sentinel.py:17/22/28`) - kinds outside the spectrum count as `other`
 KNOWN_KINDS = ("ci-red", "blocking", "build-signal")
@@ -506,8 +512,10 @@ def main():
                     "rocqwash-render-events/1 summary (pure rendering; zero "
                     "network, nothing re-created)")
     ap.add_argument("--events", default=None, metavar="FILE.jsonl",
-                    help="single event stream JSONL (rocqwash-sentinel-event/"
-                         "1; line order is stream order)")
+                    help="single event stream JSONL (native shape rocqwash-"
+                         "sentinel-event/1; any JSON-object-per-line stream "
+                         "renders too, e.g. rocqwash-exp/1 rows; line order "
+                         "is stream order)")
     ap.add_argument("--dir", default=None, metavar="DIR",
                     help="merge all *.jsonl in DIR (filename order; sorted by "
                          "seq+ts to restore the global order)")

@@ -12,8 +12,9 @@ Purpose.  The single write/read port of the in-repository experience ledger
   (duplicate, zero matches) is data and never escalates the exit code;
   corruption is loud.
 
-Interface.  `append --tool T --points P [--evidence E] [--batch B] [--id ID]
-  [--ts TS] [--source-file P] [--correlation-id ID] [--ledger P] [--dry-run]`
+Interface.  `append --tool T --points P [--evidence E] [--batch B] [--actor A]
+  [--id ID] [--ts TS] [--source-file P] [--correlation-id ID] [--ledger P]
+  [--dry-run]`
   | `query [--id ID] [--tool SUB] [--batch SUB] [--limit N] [--ledger P]` | `--selftest`.
   Ledger resolution: --ledger wins, then ROCWASH_EXPERIENCE_DIR, then
   <repo>/docs/exp-ledger.jsonl.  Stdout carries `appended id=<ID>`,
@@ -25,7 +26,9 @@ Dependencies.  Python 3 standard library only; zero network; plain JSONL
 Evidence.  --selftest on temporary fixtures: minted-id persistence,
   idempotent re-append, explicit-id duplicate, dry-run zero-write, carried
   id/ts/provenance, corrupt-ledger fail loud without writing, query
-  vectors, the minted-id sequence, CLI exit codes.
+  vectors, the minted-id sequence, the actor schema-increment field
+  (carried verbatim when provided, omitted by default, outside the
+  fingerprint seen set), CLI exit codes.
 
 Exit-codes.  0 appended / duplicate-skip / query answered (matches are
   data); 1 selftest red; 2 usage error; 9 missing or corrupt input.
@@ -48,6 +51,12 @@ Exit-codes.  0 appended / duplicate-skip / query answered (matches are
 #                report id threading exp/round/event accounts together; the
 #                fingerprint does not cover it, so the idempotent seen set
 #                stays on the four carrier fields exactly as before
+#   actor        optional schema-increment field (additive): the actor
+#                (seat or operator name) of the entry, carried verbatim on
+#                the appended row when provided (empty default: the key is
+#                omitted); the fingerprint does not cover it either, so
+#                actor-bearing and actor-less re-appends of the same four
+#                carrier fields stay one idempotent entry
 #   source       optional: verbatim import provenance (--source-file JSON
 #                object), so a foreign draft's extra fields survive the ride
 #
@@ -202,6 +211,11 @@ def cmd_append(args):
         entry["source"] = source
     if args.correlation_id:
         entry["correlationId"] = args.correlation_id
+    # actor rides the row only when provided (empty default omits the key);
+    # it is outside the fingerprint, so the seen-set behavior above is
+    # unchanged for every pre-actor caller.
+    if getattr(args, "actor", ""):
+        entry["actor"] = args.actor
 
     if args.id and args.id in seen_ids:
         sys.stdout.write("duplicate-skip id=%s axis=id ledger=%s\n"
@@ -386,6 +400,35 @@ def selftest():
             minted = out.split("id=", 1)[1].split()[0]
             if first_id and minted == first_id:
                 fails.append("V9 minted id collided with the first id")
+
+        # V10: the actor schema-increment field rides the row verbatim when
+        # provided, is omitted without it, and stays outside the fingerprint
+        # seen set (same four carrier fields with a different actor still
+        # duplicate-skips, so pre-actor idempotence is preserved).
+        rc, out = _run(["append", "--tool", "actorTool", "--points", "ap",
+                        "--actor", "seat-A", "--ledger", ledger])
+        if rc != 0 or not out.startswith("appended id="):
+            fails.append("V10 actor append should exit 0 (rc=%d out=%r)" % (rc, out))
+        else:
+            entry = _last_entry(ledger)
+            if entry.get("actor") != "seat-A":
+                fails.append("V10 actor not carried verbatim: %r" % entry)
+        before_v10 = _bytes(ledger)
+        rc, out = _run(["append", "--tool", "actorTool", "--points", "ap",
+                        "--actor", "seat-B", "--ledger", ledger])
+        if rc != 0 or "axis=fingerprint" not in out:
+            fails.append("V10 actor change should still duplicate-skip on the "
+                         "carrier fingerprint (rc=%d out=%r)" % (rc, out))
+        if _bytes(ledger) != before_v10:
+            fails.append("V10 actor-only re-append changed the ledger")
+        rc, out = _run(["append", "--tool", "bareTool", "--points", "bp",
+                        "--ledger", ledger])
+        if rc != 0 or not out.startswith("appended id="):
+            fails.append("V10 no-actor append should exit 0 (rc=%d out=%r)" % (rc, out))
+        else:
+            entry = _last_entry(ledger)
+            if "actor" in entry:
+                fails.append("V10 default append must omit the actor key: %r" % entry)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -393,7 +436,7 @@ def selftest():
         for line in fails:
             sys.stderr.write("SELFTEST FAIL %s\n" % line)
         return 1
-    sys.stdout.write("%s (9 vectors)\n" % SELFTEST_MARK)
+    sys.stdout.write("%s (10 vectors)\n" % SELFTEST_MARK)
     return 0
 
 
@@ -450,6 +493,11 @@ def build_parser():
     parser.add_argument("--evidence", default="", help="append: evidence pointer")
     parser.add_argument("--batch", default="",
                         help="append: batch label; query: batch substring")
+    parser.add_argument("--actor", default="",
+                        help="append: optional actor (seat or operator name) "
+                             "carried verbatim as the actor field (schema "
+                             "increment, not part of the fingerprint seen "
+                             "set)")
     parser.add_argument("--id", default="",
                         help="append: carry an explicit entry id; query: exact entry id")
     parser.add_argument("--ts", default="",

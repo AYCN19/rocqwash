@@ -1,4 +1,4 @@
-# rocqwash tools/ Word-Face Census Re-scan | rocqwash tools/ 词面普查重扫 | 2026-11-20
+# rocqwash tools/ Word-Face Census Re-scan | rocqwash tools/ 词面普查重扫 | 2026-11-21
 
 This document accompanies `census-tools.json` (machine-readable per-file records) and
 `flag-shape.json` (AST-level flag classification); all three were written in the same pass.
@@ -9,7 +9,7 @@ Purpose.  Word-face census companion for the re-scan of `tools/`: per-item readi
 Interface.  Documentation face; sections 1 to 8; section 3 carries one entry per file;
   section 5 carries the four-number reconciliation table.
 Dependencies.  Transcribed from the census outputs `census-tools.json` and
-  `flag-shape.json` (59 `.py` files under `tools/`, AST word-face level).
+  `flag-shape.json` (60 `.py` files under `tools/`, AST word-face level).
 Evidence.  Table cells and per-item lines transcribe this scan's JSON records; section 7
   records the register self-check measurements; section 8 records anchors and digests.
 Exit-codes.  None of its own; exit-code semantics are runtime evidence not measured at
@@ -17,10 +17,10 @@ Exit-codes.  None of its own; exit-code semantics are runtime evidence not measu
 
 ## 1. Scope and Method
 
-Against the working tree at HEAD `0765d671a63193430de86faf3a9790f2d8a086a0` (measured via `git rev-parse HEAD` before the
+Against the working tree at HEAD `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` (measured via `git rev-parse HEAD` before the
 scan; the anchor binds the verdicts below), this re-scan performs a purely lexical pass over
-all 59 `.py` files in `tools/`. Command: `python -I census_tools_build.py --tools-dir
-D:/ComplexAnalysis/rocqwash/tools --out <census-tools.json> --head 0765d671a63193430de86faf3a9790f2d8a086a0`,
+all 60 `.py` files in `tools/`. Command: `python -I docs/census_tools_build.py --tools-dir
+D:/ComplexAnalysis/rocqwash/tools --out D:/ComplexAnalysis/rocqwash/docs/census-tools.json --head 2a1fe8fab9374d9a6aa7f672071aacfbab73e21e`,
 followed by `python -I flag_shape_probe.py` (cwd = the output directory). Method: `ast.parse`
 on each file's raw bytes, extracting bytes/sha256/line count, the module docstring, the
 argparse face (import, parser descriptions, the full `add_argument` list, the `add_parser`
@@ -35,12 +35,16 @@ arguments are bare-name call sites.
 either instrument; both ran stdlib-only under `python -I` with zero network. Runtime
 behavior, real exit codes, and live `--help` output were not measured (that belongs to a
 later light-probe pass; none ran in this re-scan). Scope is `*.py` only: `cpu_guard.sh`
-(4,581 B), `taxonomy.json` (3,560 B), `vacgen_env_note.md` (5,639 B), twelve `.py.zh.md`
-archive files, and `__pycache__/` sit outside the census scope and are recorded as metadata.
+(4,581 B), `taxonomy.json` (11,939 B), `vacgen_env_note.md` (5,639 B), 12 `.py.zh.md`
+archive files plus the `vacgen_env_note.md.zh.md` sibling archive, and `__pycache__/` sit outside the census scope and are recorded as
+metadata.
 
-**Instrument note**: the builder is the 2026-11-14 cast instrument (`census_tools_build.py`,
-archive copy `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`),
-run unmodified. It carries one hard-coded cast-time annotation (`new_item: true` on
+**Instrument note**: the builder is the 2026-11-14 cast instrument, this generation run
+from the in-repo copy `docs/census_tools_build.py` (the same instrument the 2026-11-20
+generation landed; its doc-face re-lay at `cab9147` was AST-identical modulo docstrings
+with the CLI face `--tools-dir/--out/--head` unchanged; the 2026-11-14 archive copy stays
+at `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`). It
+carries one hard-coded cast-time annotation (`new_item: true` on
 `vacgen.py`), written for the 2026-11-14 cast when that file had just landed; at this anchor
 the marker does not read as a delta fact and is voided here by declaration.
 
@@ -54,21 +58,21 @@ the marker does not read as a delta fact and is voided here by declaration.
 | ai_flavor.py | 20,687 | 481 | Y | Y | 0/5 | zero | none | flag | arg |
 | ai_flavor_apply.py | 54,406 | 1,303 | Y | Y | 0/7 | urllib.request | none | flag | arg |
 | auto_merge.py | 28,831 | 636 | Y | Y | 0/10 | zero | none | flag | arg |
-| auto_round.py | 88,348 | 1,976 | Y | Y | 2/22 | zero | none | flag | arg |
+| auto_round.py | 89,111 | 1,990 | Y | Y | 2/22 | zero | none | flag | arg |
 | axiom_guard.py | 28,426 | 648 | Y | Y | 0/8 | zero | env(8), coq(49), thermal(1) | flag | arg |
 | b_gate_audit.py | 21,052 | 498 | Y | Y | 0/1 | zero | none | flag | arg |
 | baseline_diff.py | 42,201 | 822 | Y | Y | 2/2 | zero | none | token | arg |
 | bus_feeder.py | 33,104 | 751 | Y | Y | 1/4 | zero | lean(1) | flag | arg |
 | calibration_ledger.py | 32,404 | 747 | Y | Y | 0/12 | zero | env(2), lean(10) | flag | arg |
 | chain_graph.py | 14,854 | 335 | Y | Y | 1/3 | zero | none | token | arg |
-| ci_triage.py | 121,218 | 2,194 | Y | Y | 0/11 | urllib.request +bridge | coq(109), win(4), runner(2) | token | arg |
+| ci_triage.py | 128,886 | 2,316 | Y | Y | 0/11 | urllib.request +bridge | coq(111), win(4), runner(2) | token | arg |
 | contrib_intake.py | 62,130 | 1,365 | Y | Y | 0/11 | git: clone | coq(23) | token | arg |
 | cw_doctor.py | 60,001 | 1,194 | Y | Y | 0/15 | zero | env(3), coq(5), dyld(31), thermal(6) | token | arg |
 | cw_sentinel.py | 139,143 | 2,589 | Y | Y | 0/23 | http.client, socket, urllib.request +bridge | coq(1), dyld(1), win(5), thermal(3) | token | arg |
-| doc_lint.py | 64,245 | 1,333 | Y | Y | 0/3 | zero | none | token | arg |
+| doc_lint.py | 69,864 | 1,442 | Y | Y | 0/3 | zero | none | token | arg |
 | evolution_dashboard.py | 52,889 | 1,080 | Y | Y | 0/8 | zero | lean(1) | flag | arg |
 | evolve.py | 90,910 | 1,819 | Y | Y | 0/19 | zero | coq(7) | token | arg |
-| exp_port.py | 20,461 | 492 | Y | Y | 1/12 | zero | env(2) | flag | arg |
+| exp_port.py | 23,281 | 540 | Y | Y | 1/13 | zero | env(2) | flag | arg |
 | flaky_guard.py | 49,683 | 1,173 | Y | Y | 0/18 | zero | env(16) | flag | arg |
 | gap_cluster.py | 30,859 | 657 | Y | Y | 0/4 | zero | lean(2), win(1) | token | arg |
 | i18n_pipeline.py | 80,939 | 1,939 | Y | Y | 0/4 | zero | none | flag | arg |
@@ -79,7 +83,7 @@ the marker does not read as a delta fact and is voided here by declaration.
 | lean_sweep.py | 57,056 | 1,089 | Y | Y | 0/16 | zero | lean(32), thermal(1) | token | arg |
 | learning_feedback.py | 35,331 | 740 | Y | Y | 0/1 | zero | lean(5) | flag | arg |
 | ledger_sync.py | 26,938 | 549 | Y | Y | 0/5 | zero | none | token | arg |
-| mcp_server.py | 51,641 | 1,116 | Y | N | 0/0 | zero | ocaml(2), coq(6), lean(10) | token | none |
+| mcp_server.py | 101,351 | 1,969 | Y | Y | 0/1 | zero | env(3), ocaml(2), coq(11), lean(15), thermal(1) | flag | arg |
 | net_probe.py | 19,364 | 438 | Y | Y | 0/7 | socket, urllib.request +bridge | none | token | arg |
 | netname_normalize.py | 15,623 | 341 | Y | Y | 0/4 | zero | none | token | arg |
 | norm_lint.py | 37,945 | 944 | Y | Y | 0/9 | zero | none | flag | arg |
@@ -91,7 +95,7 @@ the marker does not read as a delta fact and is voided here by declaration.
 | registry_fix.py | 73,501 | 1,420 | Y | Y | 0/9 | zero | env(1), coq(3) | token | arg |
 | registry_regen.py | 62,190 | 1,355 | Y | Y | 0/15 | zero | coq(37), win(1) | token | arg |
 | registry_union.py | 42,603 | 949 | Y | Y | 0/14 | zero | coq(4) | token | arg |
-| render_events.py | 26,217 | 570 | Y | Y | 0/5 | zero | none | token | arg |
+| render_events.py | 26,759 | 578 | Y | Y | 0/5 | zero | none | token | arg |
 | repair_scope.py | 78,951 | 1,856 | Y | Y | 0/12 | zero | thermal(1) | flag | arg |
 | repair_weekly.py | 34,095 | 769 | Y | Y | 0/13 | zero | none | flag | arg |
 | roster_resync.py | 27,142 | 619 | Y | Y | 0/4 | zero | none | token | arg |
@@ -102,9 +106,10 @@ the marker does not read as a delta fact and is voided here by declaration.
 | symbiosis_bus.py | 39,589 | 880 | Y | Y | 1/9 | zero | none | flag | arg |
 | termbase.py | 22,477 | 520 | Y | Y | 0/5 | zero | lean(1), win(1) | flag | arg |
 | toolchain_dyld_doctor.py | 26,422 | 542 | Y | Y | 0/6 | zero | env(4), coq(32), dyld(45), win(1), thermal(6) | token | arg |
+| tree_audit.py | 27,402 | 593 | Y | Y | 0/3 | zero | lean(15) | flag | arg |
 | unclog.py | 103,325 | 1,943 | Y | Y | 0/30 | zero | coq(5), thermal(2) | token | arg |
 | uplink.py | 59,383 | 1,392 | Y | Y | 0/11 | zero | none | flag | arg |
-| vacgen.py | 134,619 | 2,870 | Y | Y | 0/20 | zero | lean(65), thermal(3) | exempt | arg |
+| vacgen.py | 146,132 | 3,105 | Y | Y | 0/21 | zero | lean(65), thermal(3) | flag | arg |
 | verdict_diff.py | 33,797 | 668 | Y | Y | 0/6 | zero | none | token | arg |
 | wash_shape.py | 123,970 | 2,521 | Y | Y | 0/16 | zero | env(6), coq(6), dyld(1), win(3) | token | arg |
 
@@ -122,7 +127,7 @@ requirements (boundary in section 6). Selftest = `flag` (an argparse flag positi
 
 ## 3. Per-Item Lines
 
-59 items in filename order. The one-line purpose is a condensed transcription of the
+60 items in filename order. The one-line purpose is a condensed transcription of the
 docstring head; verbatim docstring text is recorded per file in `census-tools.json` field
 `docstring.head` (first 600 characters). Invocation forms are reconstructed from argparse,
 not verified by execution. Per-flag value/boolean classification lives in `flag-shape.json`.
@@ -239,7 +244,7 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 - Imports: _http_backoff, argparse, datetime, io, json, os, re, shutil, subprocess, sys, tempfile, time, urllib.error, urllib.request; local: _http_backoff
 - Flag face: 0 positional, 11 optional (2 boolean per flag-shape.json)
 - Network face: non-zero (urllib.request; bridge tokens)
-- SKIP face: coq(109), win(4), runner(2) marker word faces
+- SKIP face: coq(111), win(4), runner(2) marker word faces
 
 ### tools/contrib_intake.py
 - Purpose: Reconciles a contribution face (local clone or archive tree at a ref) against a base face, running four gates without short-circuit: `registry` replays the `registry_union` three-face union dry run (base face for merge-base and main, contrib face the branch), blocks on any assertion blast and attach.
@@ -291,9 +296,9 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 
 ### tools/exp_port.py
 - Purpose: The single write/read port of the in-repository experience ledger docs/exp-ledger.jsonl (one JSON object per line, schema rocqwash-exp/1).
-- Invocation: `python tools/exp_port.py <command> [--selftest] [--tool] [--points] [--evidence] [--batch] [--id] [--ts] [--source-file] [--correlation-id] [--ledger] [--dry-run] [--limit]` (reconstructed from argparse)
+- Invocation: `python tools/exp_port.py <command> [--selftest] [--tool] [--points] [--evidence] [--batch] [--actor] [--id] [--ts] [--source-file] [--correlation-id] [--ledger] [--dry-run] [--limit]` (reconstructed from argparse)
 - Imports: argparse, datetime, hashlib, json, os, shutil, sys, tempfile (standard library only)
-- Flag face: 1 positional, 12 optional (2 boolean per flag-shape.json)
+- Flag face: 1 positional, 13 optional (2 boolean per flag-shape.json)
 - Network face: zero
 - SKIP face: env(2) marker word faces
 
@@ -378,14 +383,12 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 - SKIP face: no special-environment marker word faces
 
 ### tools/mcp_server.py
-- Purpose: Expose the repository tool capability surface over the Model Context Protocol (MCP) stdio transport: 25 registered capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
-- Invocation: not reconstructed at this anchor (no argparse import, no usage-string
-  word face); the documented launch face is `python -I tools/mcp_server.py` (MCP stdio
-  server; 25 registered capabilities in `TOOL_SPECS`, 23 cli + 2 file faces)
-- Imports: json, os, subprocess, sys (standard library only)
-- Flag face: 0 positional, 0 optional (0 boolean per flag-shape.json)
+- Purpose: Expose the repository tool capability surface over the Model Context Protocol (MCP) stdio transport: 42 registered capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md entry line.
+- Invocation: `python tools/mcp_server.py [--selftest]` (reconstructed from argparse)
+- Imports: argparse, json, os, subprocess, sys (standard library only)
+- Flag face: 0 positional, 1 optional (1 boolean per flag-shape.json)
 - Network face: zero
-- SKIP face: ocaml(2), coq(6), lean(10) marker word faces
+- SKIP face: env(3), ocaml(2), coq(11), lean(15), thermal(1) marker word faces
 
 ### tools/net_probe.py
 - Purpose: Probe all endpoints with a bare GET and decide the dual-probe stability window (a single-probe round must not initiate): with --stable-window the window holds only when every endpoint is reachable in every round; without it exit 0 only means the probe completed.
@@ -478,7 +481,7 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 - SKIP face: coq(4) marker word faces
 
 ### tools/render_events.py
-- Purpose: Render event streams in the `rocqwash-sentinel-event/1` schema (emitted by `cw_sentinel.py`) into a deterministic markdown ledger plus a `rocqwash-render-events/1` JSON summary; pure consumer face, zero network, the stream rendered as it stands. A failing result is data, not a tool failure.
+- Purpose: Render event streams into a deterministic markdown ledger plus a `rocqwash-render-events/1` JSON summary; accepted input shapes: native `rocqwash-sentinel-event/1` and any JSON-object-per-line stream (measured: `rocqwash-exp/1` rows, bad_lines=0; missing kind `other`, family/action `(none)`); a fail.
 - Invocation: `python tools/render_events.py [--events] [--dir] [--md] [--json] [--top]` (reconstructed from argparse)
 - Imports: argparse, io, json, os, re, shutil, subprocess, sys, tempfile (standard library only)
 - Flag face: 0 positional, 5 optional (0 boolean per flag-shape.json)
@@ -565,6 +568,14 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 - Network face: zero
 - SKIP face: env(4), coq(32), dyld(45), win(1), thermal(6) marker word faces
 
+### tools/tree_audit.py
+- Purpose: One JSON-line census of a source tree: file/byte/line totals (lines and non-empty lines), declaration counts split into thm (theorem|lemma) and defFam (def|abbrev|structure|class|instance|inductive) with decls as their combined total, an unsound-feature sweep (sorry, sorryAx, axiom, opaque, native_d.
+- Invocation: `python tools/tree_audit.py [--root] [--json] [--selftest]` (reconstructed from argparse)
+- Imports: argparse, json, os, re, shutil, sys, tempfile (standard library only)
+- Flag face: 0 positional, 3 optional (1 boolean per flag-shape.json)
+- Network face: zero
+- SKIP face: lean(15) marker word faces
+
 ### tools/unclog.py
 - Purpose: Closes the manual five-step unblocking procedure into a self-driving loop over the existing engines; dry run by default - writes happen only under --apply. Interface.
 - Invocation: `python tools/unclog.py [--src] [--world] [--candidates] [--chain-ledgers] [--repo-path] [--rounds] [--apply] [--audit] [--top] [--scan-ids] [--pack] [--probe-resume] [--probe-parallel] [--rocq-cmd] [--guard] [--guard-reg] [--guard-front] [--guard-mid] [--guard-maxwait] [--timeout] [--workdir] [--json] [--events] [--once] [--loop] [--interval] [--loop-max] [--sleep-scale] [--injector] [--state-file]` (reconstructed from argparse)
@@ -584,9 +595,9 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 
 ### tools/vacgen.py
 - Purpose: Cast the four-account vacuity probe skeleton directory for a Lean statement-face file (cast mode, v1 CLI face preserved verbatim) and run a zero-compile coverage preflight over a census-qualified file set (--preflight-all, difficulty map).
-- Invocation: `python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--mathlib]` (reconstructed from argparse)
+- Invocation: `python tools/vacgen.py [--in] [--out] [--toolchain] [--snapshot] [--audit-id] [--name] [--worktree] [--lake] [--guard] [--core] [--force] [--taxonomy] [--preflight-all] [--census] [--root] [--cluster-table] [--report] [--exp-draft] [--verify-anchors] [--selftest] [--mathlib]` (reconstructed from argparse)
 - Imports: argparse, datetime, fractions, hashlib, json, os, re, sys (standard library only)
-- Flag face: 0 positional, 20 optional (3 boolean per flag-shape.json)
+- Flag face: 0 positional, 21 optional (4 boolean per flag-shape.json)
 - Network face: zero
 - SKIP face: lean(65), thermal(3) marker word faces
 
@@ -608,52 +619,52 @@ not verified by execution. Per-flag value/boolean classification lives in `flag-
 
 ## 4. Aggregates and Observations
 
-Each line is a word-face fact of this re-scan at `0765d671a63193430de86faf3a9790f2d8a086a0`:
+Each line is a word-face fact of this re-scan at `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e`:
 
-- Argparse face: 56/59 files carry an argparse import and a reconstructible flag face; 3
-  files have no argparse (_abl1_4b_compile.py, _http_backoff.py, mcp_server.py); their doc faces carry no command-line usage line at this
+- Argparse face: 58/60 files carry an argparse import and a reconstructible flag face; 2
+  files have no argparse (_abl1_4b_compile.py, _http_backoff.py); their doc faces carry no command-line usage line at this
   anchor, so the invocation basis is `none` (a form change against the 2026-11-14 cast, where
   two of them were restored from usage strings).
-- Subcommand face: 1/59 files carry `add_parser` (uplink.py: verify/intake/pr-prep). The
+- Subcommand face: 1/60 files carry `add_parser` (uplink.py: intake/pr-prep/verify). The
   census-time reading `zero subcommand face across all files` no longer holds tree-wide.
-- Network face: 49/59 files read zero across the three channels; 10 read non-zero (ai_flavor_apply.py, ci_triage.py, contrib_intake.py, cw_sentinel.py, i18n_translate.py, net_probe.py, periscope.py, pushci.py, row_render.py, selfevolve_round.py).
-- Special-environment face: 34/59 files hit at least one of the 9 marker families (counting
+- Network face: 50/60 files read zero across the three channels; 10 read non-zero (ai_flavor_apply.py, ci_triage.py, contrib_intake.py, cw_sentinel.py, i18n_translate.py, net_probe.py, periscope.py, pushci.py, row_render.py, selfevolve_round.py).
+- Special-environment face: 35/60 files hit at least one of the 9 marker families (counting
   the `windows_guard` family as well); 25 files carry no marker at all.
-- Docstring face: 59/59 files carry a file-header docstring; verbatim text in the JSON.
-- Syntax face: 0 syntax errors across all 59 files (`ast.parse` on raw bytes).
-- Selftest face: 56/59 files carry the `--selftest` word face; 28 of them hold an argparse
+- Docstring face: 60/60 files carry a file-header docstring; verbatim text in the JSON.
+- Syntax face: 0 syntax errors across all 60 files (`ast.parse` on raw bytes).
+- Selftest face: 58/60 files carry the `--selftest` word face; 31 of them hold an argparse
   flag position; `vacgen.py` carries the registered exemption line (`vacgen.py:3`) instead of
   a flag; 2 files carry neither (_abl1_4b_compile.py, _gen_fin_mac.py).
-- Dependency face: zero third-party module names across all 59 files (scan boundary in
-  section 6). In-repo local imports: 13 files; new edges against census time include
-  `repair_scope.py` to `doc_lint`, `roster_resync.py` to `doc_lint` + `repair_scope`,
-  `bus_feeder.py` to `gap_cluster` + `symbiosis_bus`, and `symbiosis_bus.py` to `exp_port`.
+- Dependency face: zero third-party module names across all 60 files (scan boundary in
+  section 6). In-repo local imports: 13 files; new local-import edges against the
+  census-time snapshot: 6 (bus_feeder.py -> gap_cluster; bus_feeder.py -> symbiosis_bus; repair_scope.py -> doc_lint; roster_resync.py -> doc_lint; roster_resync.py -> repair_scope; symbiosis_bus.py -> exp_port).
   Conditional (try-block) imports: 10 files (auto_merge.py, bus_feeder.py, contrib_intake.py, jargon_map_sync.py, lean_sweep.py, registry_audit.py, registry_fix.py, registry_regen.py, repair_weekly.py, symbiosis_bus.py).
 - Internal-item convention: the 3 files whose names begin with `_` (_abl1_4b_compile.py, _gen_fin_mac.py, _http_backoff.py)
   self-describe as internal helpers, consistent with their names.
-- Size span: 5,621 B to 139,143 B; line counts 116 to 2,870.
+- Size span: 5,621 B to 146,132 B; line counts 116 to 3,105.
 - Non-`.py` metadata: `cpu_guard.sh` (4,581 B; grew from 4,053 B at census time),
-  `taxonomy.json` (3,560 B), `vacgen_env_note.md` (5,639 B), twelve `.py.zh.md` archive
-  files, and `__pycache__/`.
+  `taxonomy.json` (11,939 B; grew from 3,560 B at the 2026-11-20 generation),
+  `vacgen_env_note.md` (5,639 B), twelve `.py.zh.md` archive files plus the
+  `vacgen_env_note.md.zh.md` sibling archive, and `__pycache__/`.
 
 ## 5. Four-Number Reconciliation
 
 | Face | Count | Time point | Measurement |
 |---|---|---|---|
 | Census-time cast | 27 | 2026-11-14 @ `5829f6d18a9ee2bc63c19ef46caad115e34a0c85` | transcribed record (the 2026-11-14 census.md and INDEX sections 0 to 1); not re-measured |
-| Index entries | 44 | 2026-11-20 @ `0765d671a63193430de86faf3a9790f2d8a086a0` | `grep -c "^### tools/" docs/CAPABILITY-INDEX.md` = 44, measured |
-| Tree face | 59 | 2026-11-20 @ `0765d671a63193430de86faf3a9790f2d8a086a0` | `ls tools/*.py | wc -l` = 59, measured; this census tabulates 59 records |
-| MCP roster | 25 | 2026-11-20 @ `0765d671a63193430de86faf3a9790f2d8a086a0` | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 25 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 25 specs (23 cli + 2 file), measured |
+| Index entries | 56 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `grep -c "^### tools/" docs/CAPABILITY-INDEX.md` = 56, measured |
+| Tree face | 60 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `ls tools/*.py | wc -l` = 60, measured; this census tabulates 60 records |
+| MCP roster | 42 | 2026-11-21 @ `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` | `EXPECTED_TOOLS` in `tests/t_mcp_face.py` = 42 names, measured; `TOOL_SPECS` in `tools/mcp_server.py` = 42 specs (40 cli + 2 file), measured |
 
 Deltas, each measured at this anchor:
 
-- Tree 59 = census-time 27 + 32 files added after the 2026-11-14 cast (27 of the 27 still
-  present; 0 retired: none). The 32 new files: ai_flavor.py, ai_flavor_apply.py, auto_merge.py, auto_round.py, axiom_guard.py, b_gate_audit.py, bus_feeder.py, calibration_ledger.py, evolution_dashboard.py, exp_port.py, flaky_guard.py, gap_cluster.py, i18n_pipeline.py, i18n_translate.py, i18n_verify.py, jargon_apply.py, jargon_map_sync.py, lean_sweep.py, learning_feedback.py, mcp_server.py, periscope.py, pin_repair.py, repair_scope.py, repair_weekly.py, roster_resync.py, row_render.py, scheduler_lite.py, selfevolve_round.py, symbiosis_bus.py, termbase.py, uplink.py, verdict_diff.py.
-- Tree 59 vs index 44: 15 files carry no index entry (auto_merge.py, calibration_ledger.py, exp_port.py, flaky_guard.py, gap_cluster.py, jargon_map_sync.py, lean_sweep.py, mcp_server.py, periscope.py, repair_scope.py, repair_weekly.py, roster_resync.py, row_render.py, scheduler_lite.py, verdict_diff.py).
+- Tree 60 = census-time 27 + 33 files added after the 2026-11-14 cast (27 of the 27 still
+  present; 0 retired: none). The 33 new files: ai_flavor.py, ai_flavor_apply.py, auto_merge.py, auto_round.py, axiom_guard.py, b_gate_audit.py, bus_feeder.py, calibration_ledger.py, evolution_dashboard.py, exp_port.py, flaky_guard.py, gap_cluster.py, i18n_pipeline.py, i18n_translate.py, i18n_verify.py, jargon_apply.py, jargon_map_sync.py, lean_sweep.py, learning_feedback.py, mcp_server.py, periscope.py, pin_repair.py, repair_scope.py, repair_weekly.py, roster_resync.py, row_render.py, scheduler_lite.py, selfevolve_round.py, symbiosis_bus.py, termbase.py, tree_audit.py, uplink.py, verdict_diff.py.
+- Tree 60 vs index 56: 4 files carry no index entry (exp_port.py, jargon_map_sync.py, mcp_server.py, periscope.py).
   Index entries not on the tree: 0 (none).
-- Roster 25 = 23 cli capabilities on 23 distinct tool files + 2 file faces
-  (`docs/CAPABILITY-INDEX.md`, `docs/symbiosis_sop.md`); 59 - 23 = 36 tool files carry no
-  MCP capability. The 25 name-to-target pairs, measured from `TOOL_SPECS`: sentinel_status -> tools/cw_sentinel.py; net_probe -> tools/net_probe.py; baselinediff -> tools/baseline_diff.py; ci_triage -> tools/ci_triage.py; vacgen_generate -> tools/vacgen.py; exp_append -> tools/exp_port.py; pushci_status -> tools/pushci.py; capability_index -> docs/CAPABILITY-INDEX.md; chain_graph -> tools/chain_graph.py; doc_lint -> tools/doc_lint.py; ledger_sync -> tools/ledger_sync.py; netname_normalize -> tools/netname_normalize.py; norm_lint -> tools/norm_lint.py; render_events -> tools/render_events.py; select_audit -> tools/select_audit.py; registry_audit -> tools/registry_audit.py; registry_fix -> tools/registry_fix.py; registry_regen -> tools/registry_regen.py; registry_union -> tools/registry_union.py; abl1_4b_compile -> tools/_abl1_4b_compile.py; http_backoff -> tools/_http_backoff.py; ai_flavor_detect -> tools/ai_flavor.py; jargon_plan -> tools/jargon_apply.py; i18n_pipeline_dryrun -> tools/i18n_pipeline.py; symbiosis_status -> docs/symbiosis_sop.md.
+- Roster 42 = 40 cli capabilities on 40 distinct tool files + 2 file faces
+  (`docs/CAPABILITY-INDEX.md`, `docs/symbiosis_sop.md`); 60 - 40 = 20 tool files carry no
+  MCP capability. The 42 name-to-target pairs, measured from `TOOL_SPECS`: sentinel_status -> tools/cw_sentinel.py; net_probe -> tools/net_probe.py; baselinediff -> tools/baseline_diff.py; ci_triage -> tools/ci_triage.py; vacgen_generate -> tools/vacgen.py; exp_append -> tools/exp_port.py; pushci_status -> tools/pushci.py; capability_index -> docs/CAPABILITY-INDEX.md; chain_graph -> tools/chain_graph.py; doc_lint -> tools/doc_lint.py; ledger_sync -> tools/ledger_sync.py; netname_normalize -> tools/netname_normalize.py; norm_lint -> tools/norm_lint.py; render_events -> tools/render_events.py; select_audit -> tools/select_audit.py; registry_audit -> tools/registry_audit.py; registry_fix -> tools/registry_fix.py; registry_regen -> tools/registry_regen.py; registry_union -> tools/registry_union.py; abl1_4b_compile -> tools/_abl1_4b_compile.py; http_backoff -> tools/_http_backoff.py; ai_flavor_detect -> tools/ai_flavor.py; jargon_plan -> tools/jargon_apply.py; i18n_pipeline_dryrun -> tools/i18n_pipeline.py; symbiosis_status -> docs/symbiosis_sop.md; termbase -> tools/termbase.py; verdict_diff -> tools/verdict_diff.py; learning_feedback -> tools/learning_feedback.py; b_gate_audit -> tools/b_gate_audit.py; evolution_dashboard -> tools/evolution_dashboard.py; gap_cluster -> tools/gap_cluster.py; repair_weekly -> tools/repair_weekly.py; roster_resync -> tools/roster_resync.py; scheduler_lite -> tools/scheduler_lite.py; axiom_guard -> tools/axiom_guard.py; symbiosis_bus_export -> tools/symbiosis_bus.py; uplink_verify -> tools/uplink.py; i18n_translate_handoff -> tools/i18n_translate.py; i18n_verify -> tools/i18n_verify.py; red_dispatch_report -> tools/red_dispatch.py; ai_flavor_apply_plan -> tools/ai_flavor_apply.py; row_render_check -> tools/row_render.py.
 - Caller note: the four counts measure four different faces at four different times; none
   is derivable from another, and each stays bound to its own time point and basis.
 
@@ -661,10 +672,10 @@ Deltas, each measured at this anchor:
 
 Each item below is a negative finding of this scan, not an absolute claim.
 
-### 6.1 Zero third-party dependencies (59 files)
-1. Scanned: module names of all import statements in the 59 files, compared three ways
+### 6.1 Zero third-party dependencies (60 files)
+1. Scanned: module names of all import statements in the 60 files, compared three ways
    against the stdlib module-name set, the tools/ sibling file-name set, and the full-repo
-   `.py` file-name set (AST word face, 2026-11-20).
+   `.py` file-name set (AST word face, 2026-11-21).
 2. Not scanned: runtime dynamic imports (`importlib` / `__import__` call faces not dug into
    one by one); non-Python dependency faces (the shell environment `cpu_guard.sh` needs).
 3. Not an absolute claim: only this word-face scan's zero third-party module-name hits.
@@ -672,10 +683,10 @@ Each item below is a negative finding of this scan, not an absolute claim.
    concatenation are not exhaustively ruled out.
 Re-check condition: re-scan whenever a file is added under tools/ or this census re-runs.
 
-### 6.2 The 49 files with a zero network face
+### 6.2 The 50 files with a zero network face
 1. Scanned: transport-class import faces (socket/ssl/urllib.request/http.client/requests and
    similar lists), subprocess bridge token faces (curl/wget/api host names/ghproxy), and git
-   network-subcommand token faces (push/fetch/clone/pull/ls-remote; three channels, 2026-11-20).
+   network-subcommand token faces (push/fetch/clone/pull/ls-remote; three channels, 2026-11-21).
 2. Not scanned: actual runtime connection behavior; dynamically constructed host names and
    URLs (f-string assembly forms not semantically restored one by one); the network behavior
    of external programs these tools call (coqc/lake/git bodies).
@@ -686,8 +697,8 @@ Re-check condition: re-scan whenever a file is added under tools/ or this census
 Re-check condition: re-check with the light-probe step measuring `--help` and exit codes;
 re-scan after tool versions advance.
 
-### 6.3 The subcommand face outside uplink.py (58 files)
-1. Scanned: a whole-tree AST scan of `add_parser` call faces across the 59 files (1 file
+### 6.3 The subcommand face outside uplink.py (59 files)
+1. Scanned: a whole-tree AST scan of `add_parser` call faces across the 60 files (1 file
    hits: uplink.py, subcommands verify/intake/pr-prep).
 2. Not scanned: non-argparse manual subcommand routing (`sys.argv[1]` branch forms, such as
    the command word of auto_round.py and symbiosis_bus.py) not semantically restored one by
@@ -700,7 +711,7 @@ Re-check condition: re-check when the light-probe step spot-checks flag semantic
 ### 6.4 The special-environment face readings
 1. Scanned: word-face counts and samples for the 9 marker families (ocaml/opam, the coq/rocq
    family, lean/lake/mathlib, macOS dyld tooling, the Windows guard, GPG, cpu_guard thermal,
-   self-hosted runner, `ROCWASH_*` environment variables) across the 59 files.
+   self-hosted runner, `ROCWASH_*` environment variables) across the 60 files.
 2. Not scanned: real runtime environment needs; dynamically assembled environment-variable
    names (a `"ROCWASH_" + suffix` form) not exhaustively ruled out.
 3. Not an absolute claim: marker hits are word-face facts, not proof of runtime requirements;
@@ -711,11 +722,14 @@ Re-check condition: verify item by item at the light-probe step and at later rea
 
 ## 7. Register Self-Check
 
-The authored text of this file was checked with the two standing instruments of the package:
-`ai_flavor` (the 36-face wording battery plus the em-dash U+2014 battery, register source
-glossary sections 4.6/5) and `norm_lint` (annotation-face normalization lint, 62 conditions),
-both driven through their MCP faces (`mcp__rocqwash__ai_flavor_detect`,
-`mcp__rocqwash__norm_lint`), target = this whole file. Verbatim docstring text is not carried
+The authored text of this file is scheduled for check with the two standing instruments of
+the package: `ai_flavor` (the 36-face wording battery plus the em-dash U+2014 battery,
+register source glossary sections 4.6/5) and `norm_lint` (annotation-face normalization
+lint, 62 conditions), both driven through their MCP faces (`mcp__rocqwash__ai_flavor_detect`,
+`mcp__rocqwash__norm_lint`), target = this whole file. At this generation the gate run is
+bound to the increment that lands this file: the assembled text below carries the
+placeholder until that run appends its measured output, and no gate verdict is claimed
+before it runs. Verbatim docstring text is not carried
 in this file (it lives in the JSON), so upstream docstring wording sits outside the battery
 target. The standalone shell instrument `ai_flavor_selfcheck.sh` cited by the 2026-11-14 cast
 was not found in the workspace at closing time; its coverage is carried by the `ai_flavor`
@@ -725,9 +739,10 @@ Registered exemptions (report-only findings carried as data, per the rule that e
 exemption must be registered with its line, class, and basis):
 
 - Class `cjk`, census.md L1: the bilingual title line is mandated by the register
-  discipline (bilingual title, English table headers, all-English body); measured
-  cjk_ratio 0.000105 against threshold 0.0. Basis: register discipline, title form.
-- Class `forbidden` (date stamps `2026-11-14` / `2026-11-20`, title, section 1,
+  discipline (bilingual title, English table headers, all-English body); the
+  2026-11-20 generation measured cjk_ratio 0.000105 against threshold 0.0, and this
+  generation's own reading rides the gate run above. Basis: register discipline, title form.
+- Class `forbidden` (date stamps `2026-11-14` / `2026-11-20` / `2026-11-21`, title, section 1,
   section 5 table cells, section 8): time-point binding is this re-scan's own
   requirement; section 5 binds each of the four counts to its own time point and section 8
   is the provenance face. Basis: the re-scan work order; the contract surface itself
@@ -737,42 +752,37 @@ exemption must be registered with its line, class, and basis):
 Measured output at closing time:
 
 ```
-ai_flavor (mcp__rocqwash__ai_flavor_detect, file = census.md):
-CH_3FAMILIES_10FACES lines=0
-EN_WORD_STEMS_15FACES lines=0
-EN_SENTENCE_8FACES lines=0
-EN_PARA_INITIAL_3FACES lines=0
-EM_DASH_U2014 count=0 (target 0)
-TOTAL_WORDING_LINES=0
-VERDICT CLEAN (36 faces = 0; em-dash = 0)   [rc=0]
-
-norm_lint (mcp__rocqwash__norm_lint, file = census.md):
-norm-lint rocqwash-norm-lint/1: files=1 error=0 warn=18 cjk_ratio=0.000103
-(report-only: findings are data; warn classes = the two registered exemptions above)
+(measured output appended after the gate run)
 ```
-
-Round ledger: round 1 (initial cast) ai_flavor CLEAN / norm_lint error=5 warn=15; fix =
-the five-field doc-face header block added (Purpose/Interface/Dependencies/Evidence/
-Exit-codes); round 2 (this closing face) ai_flavor CLEAN / norm_lint error=0 warn=18.
-Same-batch precedent: the 2026-11-14 census.md under the same instrument reads
-error=6 warn=7 (report path in the workbench `_gate/` directory).
 
 ## 8. Provenance
 
-- Scan tree: working tree `D:/ComplexAnalysis/rocqwash` at HEAD `0765d671a63193430de86faf3a9790f2d8a086a0` (measured via
+- Scan tree: working tree `D:/ComplexAnalysis/rocqwash` at HEAD `2a1fe8fab9374d9a6aa7f672071aacfbab73e21e` (measured via
   `git rev-parse HEAD` immediately before the scan; the anchor binds the verdicts). Working-
-  tree porcelain at scan time: 2 modified paths (`round-plan.json`, `docs/exp-ledger.jsonl`),
-  both declared live-state rows retained by design; the census read file bytes only and
-  touched nothing.
-- Instruments: `census_tools_build.py` + `flag_shape_probe.py`, archive copies at
-  `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`,
-  stdlib-only, run under `python -I` (isolated mode), zero network, zero tool execution.
-  This document was assembled by a same-directory workbench builder from the two JSON
-  outputs; prose faces are the builder's register-checked text, table and per-item lines are
+  tree porcelain at scan time (measured immediately before the scan): 17 modified paths and
+  3 untracked files. Of the censused `.py` faces, four (`exp_port.py`, `mcp_server.py`,
+  `render_events.py`, `vacgen.py`) carry uncommitted working-tree modifications, so their
+  measured bytes/sha256 are working-tree values at scan time, not committed values at the
+  recorded HEAD (non-`.py` `taxonomy.json` is modified likewise and sits outside the census
+  scope); the 3 untracked files sit at the repo root, outside `tools/`, with no census
+  effect. The census read file bytes only and touched nothing (its own JSON outputs are
+  written after the read pass).
+- Instruments: `census_tools_build.py` (the in-repo `docs/` copy, CLI face
+  `--tools-dir/--out/--head` unchanged since its landing) + `flag_shape_probe.py` (archive
+  copy at `D:/ComplexAnalysis/attn/_archive/01-战役沙箱-20261117版/_rqw06_capindex_20261114/`,
+  run unmodified), stdlib-only, run under `python -I` (isolated mode), zero network, zero
+  tool execution. This document was assembled by the 2026-11-20 workbench builder, re-laid
+  for this generation (anchor and date advanced; the roster table re-measured to the
+  42-pair face; the hard-wired count literals parameterized; the metadata and porcelain
+  faces re-measured); prose faces are the builder's text, table and per-item lines are
   transcribed from the JSON records.
-- Machine-readable outputs: `census-tools.json` (meta + files[59], per-file sha256 anchors),
-  sha256 `b5850d9bb32c5081e3a2e3318c035ffc605eb2ece085919ffc9d55383fc8e301`; `flag-shape.json` (59 records), sha256 `bf1745afa63604d52e45d0ec7614cc9c78cf7b84735a4eec0b808d5d5c3faa4c`.
+- Machine-readable outputs: `census-tools.json` (meta + files[60], per-file sha256 anchors),
+  sha256 `f8ec20b2b52d411904a77ea5a518d5b902ae4157248944199ef9abd02fca5e94`; `flag-shape.json` (60 records), sha256 `98d621f30e8280f96187731a3ab7600f37147d8b1d33c6e80bdf345152c045ea`.
 - Census-time comparison base: the 2026-11-14 census (`census.md` + `census-tools.json` +
   `flag-shape.json`, archive path above), 27 files at `5829f6d18a9ee2bc63c19ef46caad115e34a0c85`.
-- Cast time: 2026-11-20 (UTC timestamp in `census-tools.json` field `meta.generated_at_utc`).
+- Prior generation on record: the 2026-11-20 re-scan (this directory's census.md +
+  census-tools.json + flag-shape.json), 59 files at `0765d671a63193430de86faf3a9790f2d8a086a0`,
+  landed at commit `13cefb0`; its JSON sha256 faces are recorded in that generation's own
+  section 8.
+- Cast time: 2026-11-21 (UTC timestamp in `census-tools.json` field `meta.generated_at_utc`).
 

@@ -30,7 +30,14 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
   3  tools/list -> exactly the 42 expected names in registration order,
-     each with a description and a closed-object inputSchema
+     each with a description and a closed-object inputSchema; plus the
+     micro-ticket schema-face vectors over three faces (schema-only, the
+     roster count stays 42): exp_append carries the optional actor string
+     property outside the required list (mu-1); vacgen_generate mirrors
+     the full 20-flag argparse face of tools/vacgen.py one-to-one
+     (mu-3); the render_events spec and its events property declare both
+     accepted row shapes, rocqwash-sentinel-event/1 and rocqwash-exp/1
+     (mu-4)
   4  live-call spot checks (three of the new batch, all zero network):
      4a http_backoff (no arguments; fixed --selftest) -> exit code: 0 with
         the frozen-vector pass face
@@ -106,6 +113,18 @@ EXPECTED_TOOLS = [
     "symbiosis_bus_export", "uplink_verify", "i18n_translate_handoff",
     "i18n_verify", "red_dispatch_report", "ai_flavor_apply_plan",
     "row_render_check",
+]
+
+# Frozen micro-ticket vector (mu-3): the full argparse flag face of
+# tools/vacgen.py in argparse declaration order; the vacgen_generate
+# schema properties must match this list one-to-one (the schema was
+# expanded from the previous 11-flag subset; a roster change would
+# re-freeze EXPECTED_TOOLS, a vacgen flag change re-freezes this list).
+EXPECTED_VACGEN_ARGS = [
+    "input", "out", "toolchain", "snapshot", "audit_id", "name",
+    "worktree", "lake", "guard", "core", "force", "taxonomy",
+    "preflight_all", "census", "root", "cluster_table", "report",
+    "exp_draft", "verify_anchors", "mathlib",
 ]
 
 
@@ -244,6 +263,39 @@ def main():
                     or schema.get("additionalProperties") is not False:
                 fails.append("probe3 %s inputSchema not a closed object"
                              % t.get("name"))
+
+        # Probe 3b: micro-ticket schema-face vectors (schema-only; the
+        # roster count stays 42, so EXPECTED_TOOLS above is unchanged).
+        by_name = {t.get("name"): t for t in tools}
+        exp_spec = by_name.get("exp_append") or {}
+        exp_schema = exp_spec.get("inputSchema") or {}
+        exp_props = exp_schema.get("properties") or {}
+        if exp_props.get("actor", {}).get("type") != "string":
+            fails.append("probe3b exp_append actor should be a first-class "
+                         "string property (mu-1)")
+        if "actor" in (exp_schema.get("required") or []):
+            fails.append("probe3b exp_append actor must stay optional "
+                         "(empty default, mu-1)")
+        vac_props = list((by_name.get("vacgen_generate") or {})
+                         .get("inputSchema", {}).get("properties") or {})
+        if vac_props != EXPECTED_VACGEN_ARGS:
+            fails.append("probe3b vacgen_generate schema flags must match the "
+                         "argparse face one-to-one (mu-3)\nexpected=%r\nactual=%r"
+                         % (EXPECTED_VACGEN_ARGS, vac_props))
+        re_spec = by_name.get("render_events") or {}
+        re_events_desc = ((re_spec.get("inputSchema") or {})
+                          .get("properties", {}).get("events", {})
+                          .get("description", ""))
+        if "rocqwash-sentinel-event/1" not in re_events_desc \
+                or "rocqwash-exp/1" not in re_events_desc:
+            fails.append("probe3b render_events events description should "
+                         "declare both accepted shapes, sentinel-event/1 "
+                         "and exp/1 (mu-4)")
+        if "rocqwash-sentinel-event/1" not in re_spec.get("description", "") \
+                or "rocqwash-exp/1" not in re_spec.get("description", ""):
+            fails.append("probe3b render_events spec description should "
+                         "declare both accepted shapes, sentinel-event/1 "
+                         "and exp/1 (mu-4)")
 
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)

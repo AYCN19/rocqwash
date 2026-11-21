@@ -191,6 +191,9 @@ TOOL_SPECS = [
         "cli": os.path.join("tools", "vacgen.py"),
         "net_gated": False,
         "fixed_args": [],
+        # Full argparse flag face of tools/vacgen.py (20 flags, argparse
+        # declaration order): the micro-ticket expanded this schema from the
+        # previous 11-flag subset; properties and arg_map stay one-to-one.
         "arg_map": (
             ("input", "--in"),
             ("out", "--out"),
@@ -200,28 +203,47 @@ TOOL_SPECS = [
             ("name", "--name"),
             ("worktree", "--worktree"),
             ("lake", "--lake"),
+            ("guard", "--guard"),
             ("core", "--core"),
             ("force", "--force"),
+            ("taxonomy", "--taxonomy"),
             ("preflight_all", "--preflight-all"),
+            ("census", "--census"),
+            ("root", "--root"),
+            ("cluster_table", "--cluster-table"),
+            ("report", "--report"),
+            ("exp_draft", "--exp-draft"),
+            ("verify_anchors", "--verify-anchors"),
+            ("mathlib", "--mathlib"),
         ),
         "schema": _object_schema(
             {
-                "input": {"type": "string", "description": "input Lean source file; CLI flag --in"},
-                "out": {"type": "string", "description": "output skeleton path; CLI flag --out"},
-                "toolchain": {"type": "string", "description": "Lean toolchain pin; CLI flag --toolchain"},
-                "snapshot": {"type": "string", "description": "toolchain snapshot; CLI flag --snapshot"},
-                "audit_id": {"type": "string", "description": "audit identifier stamped into the skeleton; CLI flag --audit-id"},
-                "name": {"type": "string", "description": "probe name; CLI flag --name"},
-                "worktree": {"type": "string", "description": "Lean worktree path for the compile leg; CLI flag --worktree"},
-                "lake": {"type": "string", "description": "lake executable for the compile leg; CLI flag --lake"},
-                "core": {"type": "integer", "description": "core count for the compile leg; CLI flag --core"},
-                "force": {"type": "boolean", "description": "overwrite an existing skeleton; CLI flag --force"},
-                "preflight_all": {"type": "boolean", "description": "run the zero-compile coverage preflight; CLI flag --preflight-all"},
+                "input": {"type": "string", "description": "input Lean source file (the statement-face file of the audited artifact; mutually exclusive with preflight_all); CLI flag --in"},
+                "out": {"type": "string", "description": "output four-account skeleton directory; CLI flag --out"},
+                "toolchain": {"type": "string", "description": "Lean toolchain pin recorded in the headers; CLI flag --toolchain"},
+                "snapshot": {"type": "string", "description": "mathlib snapshot window recorded in the headers; CLI flag --snapshot"},
+                "audit_id": {"type": "string", "description": "audit identifier stamped into the skeleton header; CLI flag --audit-id"},
+                "name": {"type": "string", "description": "artifact name (default: the sanitized input file stem); CLI flag --name"},
+                "worktree": {"type": "string", "description": "compile working tree recorded in the build command line; CLI flag --worktree"},
+                "lake": {"type": "string", "description": "lake executable recorded in the build command line; CLI flag --lake"},
+                "guard": {"type": "string", "description": "cpu_guard wrapper recorded in the build command line; CLI flag --guard"},
+                "core": {"type": "integer", "description": "core count recorded in the build command line; CLI flag --core"},
+                "force": {"type": "boolean", "description": "overwrite the generator-owned targets if they exist; bare CLI flag --force"},
+                "taxonomy": {"type": "string", "description": "taxonomy table path (chain: this flag, then the VACGEN_TAXONOMY environment variable, then the tool-adjacent taxonomy.json, then the builtin starter row); CLI flag --taxonomy"},
+                "preflight_all": {"type": "boolean", "description": "preflight mode over census-qualified files: zero-compile coverage pass into a difficulty map (mutually exclusive with input); bare CLI flag --preflight-all"},
+                "census": {"type": "string", "description": "census.json path (required with preflight_all; read-only); CLI flag --census"},
+                "root": {"type": "string", "description": "clone root the census walk used (required with preflight_all); CLI flag --root"},
+                "cluster_table": {"type": "string", "description": "optional cluster keyword table JSON (the stratify key surface) for by-cluster aggregation; CLI flag --cluster-table"},
+                "report": {"type": "string", "description": "coverage report JSON path in cast mode, or difficulty map path in preflight mode (default difficulty-map.json in the working directory); CLI flag --report"},
+                "exp_draft": {"type": "string", "description": "experience-ledger draft JSON path written in cast mode; CLI flag --exp-draft"},
+                "verify_anchors": {"type": "boolean", "description": "re-run the anchor admission gate over the loaded taxonomy table; bare CLI flag --verify-anchors"},
+                "mathlib": {"type": "string", "description": "mathlib checkout root used by verify_anchors; CLI flag --mathlib"},
             }
         ),
         "description": (
             "Cast a Lean vacuity probe skeleton with the four layer shape recognition engine "
-            "(tools/vacgen.py, zero-compile casting face). Zero network face. The compile "
+            "(tools/vacgen.py, zero-compile casting face). The schema mirrors the tool's "
+            "full argparse flag face (all 20 flags, one-to-one). Zero network face. The compile "
             "verification leg needs a Lean toolchain and stays a design SKIP face when the "
             "toolchain is absent."
         ),
@@ -237,6 +259,7 @@ TOOL_SPECS = [
             ("points", "--points"),
             ("evidence", "--evidence"),
             ("batch", "--batch"),
+            ("actor", "--actor"),
         ),
         "schema": _object_schema(
             {
@@ -244,6 +267,7 @@ TOOL_SPECS = [
                 "points": {"type": "string", "description": "one-line takeaways of the entry"},
                 "evidence": {"type": "string", "description": "evidence pointer of the entry"},
                 "batch": {"type": "string", "description": "batch label of the entry"},
+                "actor": {"type": "string", "description": "optional actor (seat or operator name) carried verbatim on the appended ledger row; empty default (the field is first-class since the micro-ticket that promoted the points-line prefix workaround; it stays outside the idempotent fingerprint seen set); CLI flag --actor"},
             },
             required=("tool", "points"),
         ),
@@ -251,7 +275,9 @@ TOOL_SPECS = [
             "Append one structured experience entry to the in-repo experience ledger "
             "(tools/exp_port.py append, schema rocqwash-exp/1, idempotent seen set: "
             "re-appending an already-seen entry returns the existing id and writes "
-            "nothing). The returned text carries the entry id of the ledger line."
+            "nothing). The optional actor field rides the appended row verbatim when "
+            "provided and stays outside the fingerprint seen set. The returned text "
+            "carries the entry id of the ledger line."
         ),
     },
     {
@@ -464,8 +490,8 @@ TOOL_SPECS = [
         ),
         "schema": _object_schema(
             {
-                "events": {"type": "string", "description": "event stream JSONL path; CLI flag --events"},
-                "dir": {"type": "string", "description": "event directory alternative input; CLI flag --dir"},
+                "events": {"type": "string", "description": "event stream JSONL path; accepted row shapes, declared per the tool's measured behavior: rocqwash-sentinel-event/1 rows (the native cw_sentinel.py stream) or any JSON-object-per-line stream such as rocqwash-exp/1 experience-ledger rows (unknown keys are ignored; missing kind counts as other, missing family/action as (none)); CLI flag --events"},
+                "dir": {"type": "string", "description": "event directory alternative input; every *.jsonl file inside is merged (same accepted row shapes as events); CLI flag --dir"},
                 "md_out": {"type": "string", "description": "markdown ledger output path; CLI flag --md"},
                 "json_out": {"type": "string", "description": "JSON report output path; CLI flag --json"},
                 "top": {"type": "integer", "description": "ranked-list length cap; CLI flag --top"},
@@ -473,7 +499,13 @@ TOOL_SPECS = [
         ),
         "description": (
             "Render a JSONL event stream into a markdown ledger (tools/render_events.py; input "
-            "via --events or --dir, output via --md or --json). Zero network face."
+            "via --events or --dir, output via --md or --json). Accepted input shapes, declared "
+            "per the tool's measured behavior (an exp/1 stream of 58 rows rendered with "
+            "bad_lines=0): rocqwash-sentinel-event/1 rows, the native cw_sentinel.py stream, "
+            "and any JSON-object-per-line stream, e.g. rocqwash-exp/1 experience-ledger rows; "
+            "rows not matching the native shape render with kind counted as other and "
+            "family/action as (none), and bad lines are skipped and counted, never fatal. "
+            "Zero network face."
         ),
     },
     {
@@ -1748,8 +1780,9 @@ def _selftest():
     """Run the frozen interface-shape vectors; return 0 green or 1 red.
 
     Zero network face, zero stdin read, zero writes: the vectors inspect
-    module state only (the spec table, the name map and the schema
-    validation behavior of _validate_arguments).  The roster count is a
+    module state only (the spec table, the name map, the arg_map/schema
+    one-to-one sync, and the schema validation behavior of
+    _validate_arguments).  The roster count is a
     frozen vector (the M2 roster: 25 standing specs, six M1 additions,
     eleven M2 ticket additions), the same freeze discipline as
     EXPECTED_TOOLS in tests/t_mcp_face.py; a roster change re-freezes
@@ -1853,6 +1886,22 @@ def _selftest():
                     False,
                     "a value outside the declared enum was accepted",
                 )
+
+    # V4 arg_map/schema sync: every spec's schema property set matches its
+    # arg_map key set one-to-one.  A schema flag with no arg_map row would
+    # be accepted at the guard and then silently dropped from the child
+    # argv; an arg_map row with no schema property would be unreachable
+    # from the wire.  (Micro-ticket face: this vector pins the expanded
+    # vacgen_generate flag table against its schema.)
+    for spec in TOOL_SPECS:
+        name = spec["name"]
+        arg_keys = sorted(key for key, _flag in spec["arg_map"])
+        schema_keys = sorted(spec["schema"]["properties"])
+        check(
+            "V4 arg_map/schema sync {0}".format(name),
+            arg_keys == schema_keys,
+            "arg_map keys {0} != schema properties {1}".format(arg_keys, schema_keys),
+        )
 
     if failures:
         for line in failures:

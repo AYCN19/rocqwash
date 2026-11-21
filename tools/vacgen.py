@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# selftest-exempt: covered by suite cases t_vacgen_shape / t_vacgen_expectedred (roster PASS) + the vacgen segment of t_refinery (envelope wording)
+# selftest face: python -I tools/vacgen.py --selftest (in-process vectors; the
+#   roster cases t_vacgen_shape / t_vacgen_expectedred + the vacgen segment of
+#   t_refinery continue to cover the cast face end-to-end)
 """vacgen.py (v2) - vacuity probe skeleton generator with shape recognition (four-layer engine, taxonomy-as-data).
 
 Purpose.
@@ -15,6 +17,12 @@ Interface.
     python -I vacgen.py --preflight-all --census <census.json>  --root <clone>
             [--report <difficulty-map.json>] [--cluster-table <json>]
     python -I vacgen.py --verify-anchors --mathlib <root> --taxonomy <path>
+    python -I vacgen.py --selftest                              (in-process
+            vector face: taxonomy admission, premise zero-regression, ticket-15
+            conclusion-face vectors, 169B QRH end-to-end coverage 2/2; zero
+            network, zero compile; exits 111 with a loud reason when the
+            tool-adjacent taxonomy table is absent so the conclusion vectors
+            cannot load)
 
 Dependencies.
     Python stdlib only: argparse, hashlib, os, re, sys, datetime, fractions (v1 import face, vacgen.py:42-48) plus
@@ -29,7 +37,9 @@ Evidence.
 
 Exit-codes.
     0 = verdict ok=true (all bound-form checks green); 1 = verdict ok=false (blocked checks,
-    taxonomy or anchor drift); 2 = usage error (mode exclusivity, missing --in).
+    taxonomy or anchor drift); 2 = usage error (mode exclusivity, missing --in);
+    --selftest: 0 = all vectors green, 1 = any vector red, 111 = conclusion
+    vectors skipped (tool-adjacent taxonomy table absent; loud reason printed).
 """
 
 import argparse
@@ -973,12 +983,26 @@ def classify_record(rec, table, ctx, ft_cache, s1_names):
     Miss = TODO-SEAT.  Degraded faces (bare `_` hole) are intercepted before
     classification and forced to todo_seat (C4.2 negative-sample contract:
     no third path to `recognized`)."""
-    if rec["kind"] in ("assumption", "instance") and HOLE_RE.search(rec["type"]):
+    if (rec["kind"] in ("assumption", "instance", "conclusion")
+            and HOLE_RE.search(rec["type"])):
+        # ticket-15 (需求书v2-B 20261121): the interception now also covers
+        # conclusion records - the generic conclusion rows would otherwise
+        # give a hole-bearing conclusion a recognized path (C4.2: no third
+        # path to `recognized` on a degraded face).
         return {"status": "todo_seat", "familyId": None, "confidence": None,
                 "degraded": "hole"}
     for idx, entry in enumerate(table):
         m = entry["row"]["match"]
         target = m["target"]
+        if target == "conclusion" and rec["kind"] != "conclusion":
+            # ticket-15 (需求书v2-B 20261121) kind guard: conclusion-face rows
+            # classify the conclusion record only.  The conclusion face text is
+            # file-wide (ctx["conclusion"]), so without this guard an
+            # assumption/instance record inherits any matching conclusion row
+            # (mis-attributed premise recognition; sample28 A/B regression
+            # 20261121: AtomicGaussian/TriangularGaussian premise hα : 0 < α
+            # fired recognized@concl.quantified.existential before the guard).
+            continue
         if target == "file.text":
             hit = ft_cache[idx]
         else:
@@ -2778,6 +2802,209 @@ def do_verify_anchors(args, ts_utc):
     return 0
 
 
+# ---------------------------------------------------------------- selftest
+
+QRH_169B_SELFTEST_SOURCE = (
+    "import Mathlib\n"
+    "\n"
+    "namespace OAI\n"
+    "\n"
+    "theorem riemannZeta_ne_zero_of_seven_eighths_lt_re\n"
+    "    {s : \u2102} (hs : (7 / 8 : \u211d) < s.re) : riemannZeta s \u2260 0 := by\n"
+    "  sorry\n"
+    "\n"
+    "end OAI\n"
+)
+
+CONCL_FAMILY_IDS = (
+    "concl.real.const-lt-field-re-exists",
+    "concl.ne.applied-nonzero",
+    "concl.nezero.predicate",
+    "concl.quantified.universal",
+    "concl.quantified.existential",
+)
+
+
+def do_selftest(ts_utc):
+    """--selftest (in-process vector face; zero network, zero compile).
+    Freezes the recognition contract the engine must keep: taxonomy
+    admission, premise-face zero-regression, the ticket-15 conclusion-face
+    vectors (nonzero applied / NeZero predicate / quantified universal and
+    existential / specific exists unchanged), the conclusion-row kind guard,
+    the C4.2 hole interception on conclusion records, negative faces stay
+    todo_seat, and the 169B QRH challenge end-to-end coverage 2/2 = 100%.
+    Conclusion vectors need the loaded taxonomy table; when only the builtin
+    fail-safe starter row is in force they are skipped with rc=111 and a
+    loud reason (the engine itself is still vector-proven on the premise
+    face).  Returns 0 all green, 1 any red, 111 conclusion legs skipped."""
+    print("== %s v%s selftest (window %s) ==" % (TOOL_NAME, TOOL_VERSION, ts_utc))
+    failures = []
+    skips = []
+    total = [0]
+
+    def vec(name, ok, detail):
+        total[0] += 1
+        print(("PASS " if ok else "FAIL ") + name + " - " + detail)
+        if not ok:
+            failures.append(name)
+
+    def skip(name, reason):
+        total[0] += 1
+        print("SKIP " + name + " - " + reason)
+        skips.append(name)
+
+    def classify(kind, name, rtype, table, ctx_text, s1_names=(), ft_text=""):
+        rec = {"kind": kind, "name": name, "type": rtype, "source": "selftest"}
+        ctx = {"conclusion": ctx_text, "file_text": ft_text}
+        ft_cache = build_ft_cache(table, ft_text)
+        return classify_record(rec, table, ctx, ft_cache, list(s1_names))
+
+    try:
+        table, tax_info = load_taxonomy(None)
+    except TaxonomyError as exc:
+        print("FAIL selftest-setup - taxonomy load failed: %s" % exc)
+        return 1
+    table_by_family = {e["row"]["familyId"]: e["row"] for e in table}
+    builtin_only = bool(tax_info["builtin"])
+
+    # T1 - taxonomy admission (always; the fail-safe chain end is a legal
+    # green here - the vector face proves the engine, the deployment face
+    # is proven separately by the absent-table skip below)
+    vec("taxonomy-admission",
+        (tax_info["rowsLoaded"] > 0 or tax_info["builtin"]) and tax_info["rowsVoided"] == 0,
+        "rowsLoaded=%d rowsVoided=%d builtin=%s source=%s"
+        % (tax_info["rowsLoaded"], tax_info["rowsVoided"], tax_info["builtin"],
+           tax_info["source"]))
+
+    # T2 - ticket-15 conclusion families present in the loaded table
+    if builtin_only:
+        skip("conclusion-families-present",
+             "tool-adjacent taxonomy.json absent (builtin fail-safe starter "
+             "row in force); conclusion vectors T2-T10,T12 cannot load")
+    else:
+        missing = [f for f in CONCL_FAMILY_IDS if f not in table_by_family]
+        vec("conclusion-families-present", not missing,
+            "missing=%s rowsLoaded=%d" % (missing, tax_info["rowsLoaded"]))
+
+    # T3 - premise face zero-regression (runs on the builtin row too)
+    v = classify("assumption", "hs", "(7 / 8 : \u211d) < s.re", table,
+                 "riemannZeta s \u2260 0", s1_names=("s",))
+    vec("premise-face-zero-regression",
+        v["status"] == "recognized"
+        and v["familyId"] == "ineq.real.const-lt-field-re"
+        and v.get("matchedTarget") == "assumption.type",
+        "status=%s familyId=%s matchedTarget=%s"
+        % (v["status"], v["familyId"], v.get("matchedTarget")))
+
+    # T11 - negative faces stay todo_seat (always; no row may claim them)
+    v_neg_concl = classify("conclusion", "", "s = 1", table, "s = 1")
+    v_neg_concl2 = classify("conclusion", "", "False", table, "False")
+    v_neg_prem = classify("assumption", "h", "0 < \u03b1", table, "s = 1")
+    vec("negative-faces-todo",
+        v_neg_concl["status"] == "todo_seat" and v_neg_concl["familyId"] is None
+        and v_neg_concl2["status"] == "todo_seat"
+        and v_neg_prem["status"] == "todo_seat"
+        and v_neg_prem["familyId"] is None,
+        "concl(s = 1)=%s concl(False)=%s prem(0 < \u03b1)=%s"
+        % (v_neg_concl["status"], v_neg_concl2["status"], v_neg_prem["status"]))
+
+    def concl_vec(name, text, want_family):
+        if builtin_only:
+            skip(name, "conclusion vectors need the loaded taxonomy table")
+            return
+        v = classify("conclusion", "", text, table, text)
+        vec(name, v["status"] == "recognized" and v["familyId"] == want_family,
+            "status=%s familyId=%s" % (v["status"], v["familyId"]))
+
+    # T4..T8 - ticket-15 conclusion-face vectors (require the loaded table)
+    concl_vec("conclusion-nonzero-applied",
+              "riemannZeta s \u2260 0", "concl.ne.applied-nonzero")
+    concl_vec("conclusion-nonzero-applied-multi-arg",
+              "DirichletCharacter.LFunction \u03c7 s \u2260 0",
+              "concl.ne.applied-nonzero")
+    concl_vec("conclusion-nezero-predicate", "NeZero N",
+              "concl.nezero.predicate")
+    concl_vec("conclusion-quantified-universal",
+              "\u2200 s : \u2102, riemannZeta s \u2260 0 \u2192 s.re = 1 / 2",
+              "concl.quantified.universal")
+    concl_vec("conclusion-quantified-existential",
+              "\u2203 n : \u2115, 0 < n", "concl.quantified.existential")
+    concl_vec("conclusion-specific-exists-unchanged",
+              "(\u2203 s : \u2102, (7 / 8 : \u211d) < s.re)",
+              "concl.real.const-lt-field-re-exists")
+
+    # T9 - conclusion-row kind guard pin (sample28 20261121 regression: an
+    # assumption record must never inherit the file-wide conclusion face)
+    if builtin_only:
+        skip("premise-no-conclusion-inheritance",
+             "conclusion vectors need the loaded taxonomy table")
+    else:
+        v_p = classify("assumption", "h\u03b1", "0 < \u03b1", table,
+                       "\u2203 n : \u2115, 0 < n")
+        v_c = classify("conclusion", "", "\u2203 n : \u2115, 0 < n", table,
+                       "\u2203 n : \u2115, 0 < n")
+        vec("premise-no-conclusion-inheritance",
+            v_p["status"] == "todo_seat" and v_p["familyId"] is None
+            and v_c["status"] == "recognized",
+            "assumption=%s/%s conclusion=%s/%s"
+            % (v_p["status"], v_p["familyId"], v_c["status"], v_c["familyId"]))
+
+    # T10 - C4.2 hole interception now covers conclusion records
+    if builtin_only:
+        skip("hole-conclusion-degraded",
+             "conclusion vectors need the loaded taxonomy table")
+    else:
+        v = classify("conclusion", "", "riemannZeta _ \u2260 0", table,
+                     "riemannZeta _ \u2260 0")
+        vec("hole-conclusion-degraded",
+            v["status"] == "todo_seat" and v.get("degraded") == "hole",
+            "status=%s degraded=%s" % (v["status"], v.get("degraded")))
+
+    # T12 - 169B QRH challenge end-to-end (L1 decompose -> L2 classify -> L3)
+    if builtin_only:
+        skip("qrh-e2e-coverage-2of2",
+             "conclusion vectors need the loaded taxonomy table")
+    else:
+        try:
+            stmt = decompose_head(QRH_169B_SELFTEST_SOURCE)
+        except ParseError as exc:
+            vec("qrh-e2e-coverage-2of2", False, "decompose failed: %s" % exc)
+        else:
+            records = list(_iter_records(stmt))
+            records.append({"kind": "conclusion", "name": "",
+                            "type": stmt["S3_conclusion"], "source": "signature"})
+            ctx = {"conclusion": stmt["S3_conclusion"],
+                   "file_text": lean_strip_comments(QRH_169B_SELFTEST_SOURCE)}
+            ft_cache = build_ft_cache(table, ctx["file_text"])
+            classified = [classify_record(r, table, ctx, ft_cache,
+                                          [v["name"] for v in stmt["S1_vars"]])
+                          for r in records]
+            recognized = sum(1 for v in classified if v["status"] == "recognized")
+            todo = sum(1 for v in classified if v["status"] != "recognized")
+            prem = classified[0]
+            conl = classified[-1]
+            vec("qrh-e2e-coverage-2of2",
+                recognized == 2 and todo == 0
+                and prem["familyId"] == "ineq.real.const-lt-field-re"
+                and conl["familyId"] == "concl.ne.applied-nonzero",
+                "recognized=%d todo=%d premise=%s conclusion=%s"
+                % (recognized, todo, prem["familyId"], conl["familyId"]))
+
+    print("== vacgen selftest: %d vectors, %d pass, %d fail, %d skip =="
+          % (total[0], total[0] - len(failures) - len(skips),
+             len(failures), len(skips)))
+    if failures:
+        print("  ok=false - failing vectors: %s" % ", ".join(failures))
+        return 1
+    if skips:
+        print("  skip-face: %d conclusion vector(s) skipped - tool-adjacent "
+              "taxonomy.json absent (rc=111; loud environment-absent reason "
+              "per the tools selftest contract)" % len(skips))
+        return 111
+    print("  ok=true - all vectors green (window %s)" % ts_utc)
+    return 0
+
+
 # ---------------------------------------------------------------- CLI
 
 def main(argv=None):
@@ -2834,11 +3061,19 @@ def main(argv=None):
                     help="(v2) RQW03 exp_port draft JSON path (cast mode)")
     ap.add_argument("--verify-anchors", dest="verify_anchors", action="store_true",
                     help="(v2) re-run the anchor admission gate over the loaded table")
+    ap.add_argument("--selftest", dest="selftest", action="store_true",
+                    help="in-process vector face (zero network, zero compile): "
+                         "taxonomy admission, premise zero-regression, ticket-15 "
+                         "conclusion-face vectors, 169B QRH end-to-end coverage; "
+                         "standalone - other mode flags are ignored")
     ap.add_argument("--mathlib", default=None,
                     help="(v2) mathlib checkout root for --verify-anchors")
     args = ap.parse_args(argv)
 
     ts_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if args.selftest:
+        return do_selftest(ts_utc)
 
     # mode exclusivity + requirement checks (section 6.2/6.3)
     if args.preflight_all:

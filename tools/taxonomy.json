@@ -69,10 +69,10 @@
       },
       "mathlibAnchors": [
         {
-          "symbol": "Complex.re",
-          "relPath": "Mathlib/Data/Complex/Basic.lean",
-          "line": 92,
-          "pinStatus": "candidate-unverified"
+          "symbol": "re",
+          "relPath": "Mathlib/Basic/Complex/Basic.lean",
+          "line": 36,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
         }
       ],
       "refutationForms": [
@@ -81,10 +81,154 @@
       ],
       "boundaryApplicability": "numeric-constant",
       "gapKeywords": [],
-      "notes": "rendered from the real W1 gap cluster shape:(∃ <id> : ℂ, (<num> / <num> : ℝ) < <id>) (count=1, gap-0001 of gap-ledger-w2.json); the source cast graded band with one degenerate top-type battery face (degeneracy data, not a row defect); gapKeywords is empty because the W1 face carries no keyword field; anchor line 92 is a candidate pin facing the C3.3 anchor gate; priority 35 orders below the landed premise families (50 builtin, 40 abs sibling draft) because this family renders the conclusion witness face",
+      "notes": "rendered from the real W1 gap cluster shape:(∃ <id> : ℂ, (<num> / <num> : ℝ) < <id>) (count=1, gap-0001 of gap-ledger-w2.json); the source cast graded band with one degenerate top-type battery face (degeneracy data, not a row defect); gapKeywords is empty because the W1 face carries no keyword field; priority 35 orders below the landed premise families (50 builtin, 40 abs sibling draft) because this family renders the conclusion witness face; anchor re-pinned 2026-11-21 (C3.3 drift repair, regex untouched): the old pin Complex.re @ Mathlib/Data/Complex/Basic.lean:92 is a hard drift on the pinned checkout (mathlib 0493595, 2026-09-29) - that file is a 5-line deprecated shim since 2026-08-27 and the real-part projection now lives as the Complex structure field 're : ℝ' at Mathlib/Basic/Complex/Basic.lean:36; symbol pinned to the field declaration text 're' as it appears on the line",
       "sourceGapId": "gap-0001",
       "sourceLane": "row-render-handoff",
       "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.ne.applied-nonzero",
+      "cluster": "annum",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\s*(?:[A-Za-z_\\u0100-\\uffff][\\w'.!]*(?:\\s+(?:[A-Za-z_\\u0100-\\uffff][\\w'.!]*|\\([^≠]*\\)|⟨[^≠]*⟩))+|\\([^≠]*\\))\\s*≠\\s*0\\s*$",
+        "flags": ""
+      },
+      "priority": 45,
+      "confidence": "MID",
+      "witnessStrategy": "nonvanishing-bite registration: the conclusion asserts an applied analytic-function face ≠ 0 (e.g. riemannZeta s ≠ 0, LFunction χ s ≠ 0); the witness skeleton stays premise-driven (this row never feeds the numeric-constant boundary block - boundary resolution consumes assumption records only), so the row registers the recognition face and routes the conclusion todo-seat to the nonvanishing fill lane",
+      "mathlibAnchors": [
+        {
+          "symbol": "ne_zero_of_one_lt_re",
+          "relPath": "Mathlib/Analysis/Complex/Norm.lean",
+          "line": 360,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
+        },
+        {
+          "symbol": "differentiableOn_riemannZeta",
+          "relPath": "Mathlib/NumberTheory/LSeries/RiemannZeta.lean",
+          "line": 141,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point"
+      ],
+      "boundaryApplicability": "none",
+      "gapKeywords": [
+        "nonvanishing",
+        "zeta",
+        "LSeries"
+      ],
+      "sourceLane": "ticket15-conclusion-face",
+      "sourceRowId": "ticket15-QRH-169B",
+      "notes": "ticket 15 (需求书v2-B 20261121) conclusion-face family, measured anchor QRH challenge 169B (OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re, conclusion 'riemannZeta s ≠ 0' cast todo_seat at L3 1/2 on 20261120T23:26Z with rowsLoaded=2); anchors verified on the pinned checkout: ne_zero_of_one_lt_re 'lemma ne_zero_of_one_lt_re {s : ℂ} (hs : 1 < s.re) : s ≠ 0' (real-part premise -> nonzero conclusion, the same shape as the QRH premise face) and differentiableOn_riemannZeta (analytic-face companion, same pin as the v1 premise row); requires >= 1 application argument so the bare-variable ≠ 0 face stays with concl.nezero.predicate; priority 45 orders above the specific exists family (35) but below the premise row (50)",
+      "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.nezero.predicate",
+      "cluster": "physics-misc",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\s*(?:NeZero\\s+(?:[A-Za-z_\\u0100-\\uffff][\\w'.!]*|\\([^≠]*\\))|[A-Za-z_\\u0100-\\uffff][\\w'.!]*\\s*≠\\s*0)\\s*$",
+        "flags": ""
+      },
+      "priority": 40,
+      "confidence": "MID",
+      "witnessStrategy": "nonvanishing-predicate registration: the conclusion is a NeZero predicate application (e.g. NeZero N) or a bare-identifier nonzero face (e.g. f ≠ 0, Function.ne-on-result spellings); shape registration only - the skeleton stays premise-driven (boundary resolution never sees conclusion records)",
+      "mathlibAnchors": [
+        {
+          "symbol": "NeZero.nontrivial",
+          "relPath": "Mathlib/Basic/Nontrivial/Defs.lean",
+          "line": 136,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point"
+      ],
+      "boundaryApplicability": "none",
+      "gapKeywords": [
+        "NeZero",
+        "nonvanishing"
+      ],
+      "sourceLane": "ticket15-conclusion-face",
+      "sourceRowId": "ticket15-NEZERO-PREDICATE",
+      "notes": "ticket 15 conclusion-face family (nonvanishing predicate forms): NeZero X and bare-ident ≠ 0 conclusion spellings; anchor verified on the pinned checkout: NeZero.nontrivial 'theorem NeZero.nontrivial {α : Type*} [Zero α] (a : α) [NeZero a] : Nontrivial α' (the Mathlib home tying the NeZero predicate to content); the bare branch takes a single identifier so the applied-face 'f s ≠ 0' stays with concl.ne.applied-nonzero (priority 45); priority 40 keeps this family ahead of the generic quantifier families (30) on shared faces",
+      "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.quantified.universal",
+      "cluster": "annum",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\s*∀\\s*[A-Za-z_\\u0100-\\uffff(\\[{][^,]*,\\s*[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 30,
+      "confidence": "MID",
+      "witnessStrategy": "universal-conclusion shape registration: a ∀-headed conclusion face (e.g. ∀ s : ℂ, P s → Q s); registration lane only - the fill strategy is pointwise witness instantiation at the quantifier (Mathlib forall congruence/imp lemmas), the skeleton remains premise-driven",
+      "mathlibAnchors": [
+        {
+          "symbol": "forall₂_imp",
+          "relPath": "Mathlib/Basic/Logic/Basic.lean",
+          "line": 524,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point"
+      ],
+      "boundaryApplicability": "none",
+      "gapKeywords": [
+        "quantifier",
+        "forall"
+      ],
+      "sourceLane": "ticket15-conclusion-face",
+      "sourceRowId": "ticket15-QUANT-UNIVERSAL",
+      "notes": "ticket 15 conclusion-face family (quantified conclusion shapes, universal leg): matches a leading ∀ binder head ending in a top-level comma; anchor verified on the pinned checkout: forall₂_imp 'theorem forall₂_imp {p q : ∀ a, β a → Prop} (h : ∀ a b, p a b → q a b)' (Mathlib's imp-under-∀ face, the manipulation lemma for pointwise instantiation); priority 30 orders below the specific exists family concl.real.const-lt-field-re-exists (35) so that family keeps its face under first-match-wins; parenthesized quantifier faces stay with that specific family by design (fail-safe todo_seat on misses)",
+      "tenpointVerdict": "PENDING"
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.quantified.existential",
+      "cluster": "annum",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\s*∃\\s*[A-Za-z_\\u0100-\\uffff(\\[{][^,]*,\\s*[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 30,
+      "confidence": "MID",
+      "witnessStrategy": "existential-conclusion shape registration: an ∃-headed conclusion face (e.g. ∃ n : ℕ, P n); registration lane only - the fill strategy is explicit witness construction (refine ⟨w, proof⟩), the skeleton remains premise-driven",
+      "mathlibAnchors": [
+        {
+          "symbol": "exists_prop_of_false",
+          "relPath": "Mathlib/Basic/Logic/Basic.lean",
+          "line": 723,
+          "pinStatus": "verified @ mathlib 0493595 (2026-09-29)"
+        }
+      ],
+      "refutationForms": [
+        "full",
+        "point"
+      ],
+      "boundaryApplicability": "none",
+      "gapKeywords": [
+        "quantifier",
+        "exists"
+      ],
+      "sourceLane": "ticket15-conclusion-face",
+      "sourceRowId": "ticket15-QUANT-EXISTENTIAL",
+      "notes": "ticket 15 conclusion-face family (quantified conclusion shapes, existential leg): matches a leading ∃ binder head ending in a top-level comma; anchor verified on the pinned checkout: exists_prop_of_false 'theorem exists_prop_of_false {p : Prop} {q : p → Prop} : ¬p → ¬∃ h' : p, q h'' (Mathlib existential-prop manipulation face in the same module as the universal leg anchor); priority 30 keeps both legs below the specific parenthesized exists family (35), and the parenthesized face '(∃ ...)' deliberately does NOT match this row (anchored on a bare ∃ head) so that family recognition is unchanged",
+      "tenpointVerdict": "PENDING"
     }
-  ]
+  ],
+  "anchorVerifiedAt": "2026-11-21T03:00Z @ mathlib 0493595 (2026-09-29), root D:/ComplexAnalysis/attn/_archive/04-大型构建与机器区/f2d1_sbx_20261112/worktree/.lake/packages/mathlib"
 }

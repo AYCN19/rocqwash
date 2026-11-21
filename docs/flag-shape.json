@@ -312,6 +312,7 @@
    "--points",
    "--evidence",
    "--batch",
+   "--actor",
    "--id",
    "--ts",
    "--source-file",
@@ -485,7 +486,9 @@
  "mcp_server.py": {
   "positionals": [],
   "value_flags": [],
-  "bool_flags": []
+  "bool_flags": [
+   "--selftest"
+  ]
  },
  "net_probe.py": {
   "positionals": [],
@@ -842,6 +845,16 @@
    "--smoke"
   ]
  },
+ "tree_audit.py": {
+  "positionals": [],
+  "value_flags": [
+   "--root",
+   "--json"
+  ],
+  "bool_flags": [
+   "--selftest"
+  ]
+ },
  "unclog.py": {
   "positionals": [],
   "value_flags": [
@@ -925,7 +938,8 @@
   "bool_flags": [
    "--force",
    "--preflight-all",
-   "--verify-anchors"
+   "--verify-anchors",
+   "--selftest"
   ]
  },
  "verdict_diff.py": {

@@ -58,8 +58,8 @@ The original 8 capabilities are listed in the order the RQW08 ticket names them;
 | net_probe | `tools/net_probe.py` | endpoints, rounds, interval, stable_window, seed | default deny (network face) |
 | baselinediff | `tools/baseline_diff.py OLD NEW` | old*, new*, json_out, md_out | allow |
 | ci_triage | `tools/ci_triage.py` | repo, run, logs, offline, timeout, retry_max | default deny (network face) |
-| vacgen_generate | `tools/vacgen.py` | input, out, toolchain, snapshot, audit_id, name, worktree, lake, core, force, preflight_all | allow (compile leg design SKIP) |
-| exp_append | `tools/exp_port.py append` | tool*, points*, evidence, batch | allow (CLI in tree, idempotent seen set) |
+| vacgen_generate | `tools/vacgen.py` | input, out, toolchain, snapshot, audit_id, name, worktree, lake, guard, core, force, taxonomy, preflight_all, census, root, cluster_table, report, exp_draft, verify_anchors, mathlib (the full 20-flag argparse face, one-to-one) | allow (compile leg design SKIP) |
+| exp_append | `tools/exp_port.py append` | tool*, points*, evidence, batch, actor (optional schema-increment field: carried verbatim on the appended row when provided, empty default, outside the idempotent fingerprint seen set) | allow (CLI in tree, idempotent seen set) |
 | pushci_status | `tools/pushci.py` | repo_path, branch, base_ref, dry_run, watch_interval, watch_max_rounds, timeout | default deny (network + remote write face) |
 | capability_index | `docs/CAPABILITY-INDEX.md` (file read, not a CLI) | none | allow |
 | chain_graph | `tools/chain_graph.py LEDGERS...` | ledgers* (array, positional), json_out, md_out, top | allow |
@@ -67,7 +67,7 @@ The original 8 capabilities are listed in the order the RQW08 ticket names them;
 | ledger_sync | `tools/ledger_sync.py` | probe, ledger, out, report, policy | allow |
 | netname_normalize | `tools/netname_normalize.py` | dir, apply, map, json_out | allow (apply = local rename write face, limited to `--dir`) |
 | norm_lint | `tools/norm_lint.py` | tree, file, jargon_map, cjk_threshold, cjk_whitelist, json_out, md_out, selftest | allow (report mode first) |
-| render_events | `tools/render_events.py` | events, dir, md_out, json_out, top | allow |
+| render_events | `tools/render_events.py` | events, dir, md_out, json_out, top (the events/dir descriptions declare both accepted row shapes per the tool's measured behavior: native rocqwash-sentinel-event/1 rows and any JSON-object-per-line stream such as rocqwash-exp/1 rows, which render with kind as other and family/action as (none)) | allow |
 | select_audit | `tools/select_audit.py` | order, select* (array, repeated-flag face), grep, requires, world, json_out | allow |
 | registry_audit | `tools/registry_audit.py` | order, project, git, ref, git_path_order, git_path_project, live_src, anchor_src, fix_plan, json_out, md_out | allow (local git read-only) |
 | registry_fix | `tools/registry_fix.py` | audit_json, order, project, anchor_src, apply, work_dir, audit_tool, json_out | allow (dry run by default; apply bounded by staged assertions + rollback) |
@@ -140,7 +140,7 @@ Measured environment: Python 3.13.2 (Windows 10, Git Bash); lower versions untes
 
 ## 6. Design SKIP face
 
-- **exp_append**: `tools/exp_port.py` is in place (the experience-bus A1 face, schema rocqwash-exp/1: the tool/points/evidence/batch four-field face, JSONL append into `docs/exp-ledger.jsonl`, idempotent seen set: a duplicate returns the existing id and writes nothing); the pre-integration not-found existence-probe form is retired. The registered argument face was re-verified against the integrated CLI.
+- **exp_append**: `tools/exp_port.py` is in place (the experience-bus A1 face, schema rocqwash-exp/1: the tool/points/evidence/batch carrier face plus the optional actor field (schema increment, outside the fingerprint seen set), JSONL append into `docs/exp-ledger.jsonl`, idempotent seen set: a duplicate returns the existing id and writes nothing); the pre-integration not-found existence-probe form is retired. The registered argument face was re-verified against the integrated CLI.
 - **vacgen_generate compile leg**: the zero-compile casting face runs anywhere; the compile verification leg needs a Lean toolchain (design SKIP face per INDEX §3.3) and stays SKIP when lake is absent.
 - **Unimplemented MCP faces**: resources/prompts/completions/logging/ping/batching and the SSE transport are not implemented (unknown methods get `-32601`); `tools/listChanged` stays false; capabilities advertise the tools face only.
 - **capability_index anchor**: the INDEX text is returned live from disk; its internal anchor line advances with the repo (caller duty per INDEX §0); the server neither caches nor rewrites it.
