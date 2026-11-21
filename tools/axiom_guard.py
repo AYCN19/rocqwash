@@ -5,7 +5,15 @@ Purpose.  Answer "what does each theorem actually rest on?" mechanically
   for the whole repository: every .v file is compiled in a private temp
   workdir and judged at two levels (a per-theorem Print Assumptions
   census plus the coqchk kernel recheck); the standard is strict - every
-  statement Closed, the axiom whitelist empty by default.
+  statement Closed, the axiom whitelist empty by default.  A third,
+  strictly additive trust-surface face (verdict-neutral to that
+  judgment) sweeps every source for the Rocq switches that disable
+  kernel checks and for ML module entry points, sweeps a repo-root
+  _CoqProject/_RocqProject for -admit/-type-in-type/-noinit, and counts
+  vm_compute/native_compute informationally (bytecode-flag law):
+  trust-surface hits are alarms, never silently passed, never
+  allow-listable, and never change the compile/light/heavy verdicts or
+  the exit code.
 Interface.  python3 tools/axiom_guard.py --repo DIR [--out DIR]
   [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC]
   [--keep] | --selftest.  Binary paths resolve per flag then
@@ -76,6 +84,19 @@ import tempfile
 #      outside the whitelist, or the heavy face cannot deliver a summary
 #      (unjudgeable is not green).  Compile-broken files are debt, not
 #      red.  Run verdict PASS = zero red files.
+#   6. Trust surface (additive, verdict-neutral): under the same masking
+#      scanner, every source is swept for the Rocq switches that turn
+#      kernel checking off (Unset Guard/Positivity/Universe Checking,
+#      Unset Elimination Schemes) and for ML entry points (Declare ML
+#      Module); a repo-root _CoqProject/_RocqProject is swept for
+#      -admit / -type-in-type / -noinit; vm_compute/native_compute are
+#      counted informationally (verification-time concern, the
+#      bytecode-flag law).  All hits land in report["trust_surface"]
+#      with file/line evidence and the block verdict "alarm"; they are
+#      never silently passed and allow-listing them is forbidden by
+#      design (the block policy note states this).  The face never
+#      touches files, debt_register, red_files or the run verdict:
+#      classification output is byte-identical with and without hits.
 
 PROG = "axiom_guard"
 SCHEMA = "rocqwash-axiom-guard/1"
@@ -146,6 +167,113 @@ def statement_names(text):
         line = masked.count("\n", 0, m.start(2)) + 1
         out.append((m.group(2), line))
     return out
+
+
+# ---- trust-surface face (additive, verdict-neutral; face 6) ----
+# Rocq source-level switches that turn kernel-side checking off, plus the
+# ML module entry point: any live occurrence is an alarm.  Tokens are the
+# canonical single-space forms; the sweep itself tolerates arbitrary
+# whitespace between the words of a token.
+TRUST_TOKENS = (
+    "Unset Guard Checking",
+    "Unset Positivity Checking",
+    "Unset Universe Checking",
+    "Unset Elimination Schemes",
+    "Declare ML Module",
+)
+TRUST_TOKEN_RES = tuple(
+    re.compile(r"\b%s\b" % (r"\s+".join(map(re.escape, tok.split()))))
+    for tok in TRUST_TOKENS)
+# Repo-root project files swept by the flag-scan face (the Coq-era name
+# plus its Rocq-era equivalent) and the trust-relevant flags (matched as
+# whole whitespace tokens, so "-arg -type-in-type" relay lines hit).
+PROJECT_FLAG_FILES = ("_CoqProject", "_RocqProject")
+PROJECT_FLAG_TOKENS = ("-admit", "-type-in-type", "-noinit")
+# Certificate census tokens (informational, verdict-neutral).
+CERTIFICATE_TOKENS = ("vm_compute", "native_compute")
+TRUST_POLICY_NOTE = (
+    "Trust-surface policy: live occurrences of the Rocq switches (Unset "
+    "Guard Checking, Unset Positivity Checking, Unset Universe Checking, "
+    "Unset Elimination Schemes, Declare ML Module) and of the repo-root "
+    "project-file flags (-admit, -type-in-type, -noinit) are alarms. "
+    "Allow-listing these switches and flags is forbidden by design: a "
+    "trust-surface hit is never silently passed. This face is strictly "
+    "additive and verdict-neutral: the compile/light/heavy classification, "
+    "debt_register, red_files and the run verdict are computed exactly as "
+    "without it.")
+TRUST_CERTIFICATE_NOTE = (
+    "vm_compute/native_compute occurrence counts are informational and "
+    "verdict-neutral: evaluation-tactic and bytecode-flag choice is a "
+    "verification-time concern (the bytecode-flag law), not a static "
+    "trust-surface defect; the counts never enter any verdict.")
+
+
+def trust_surface_hits(text, rel):
+    """[{token, file, line}] for every live (non-comment, non-string)
+    occurrence of a Rocq switch token or ML module declaration in one
+    source.  The sweep reuses the same masking scanner as name extraction
+    (a commented-out or string-embedded switch never hits), and line
+    numbers are computed on the masked text whose positions match the raw
+    file, so the evidence points at the real line."""
+    masked = mask_comments_strings(text)
+    hits = []
+    for tok, tok_re in zip(TRUST_TOKENS, TRUST_TOKEN_RES):
+        for m in tok_re.finditer(masked):
+            hits.append({"token": tok, "file": rel,
+                         "line": masked.count("\n", 0, m.start()) + 1})
+    return hits
+
+
+def certificate_counts(text):
+    """(vm_compute, native_compute) whole-token occurrence counts over the
+    masked source.  Informational only: the bytecode-flag law makes the
+    evaluation-tactic choice a verification-time concern, so this census
+    never enters any verdict."""
+    masked = mask_comments_strings(text)
+    return tuple(len(re.findall(r"\b%s\b" % re.escape(tok), masked))
+                 for tok in CERTIFICATE_TOKENS)
+
+
+def project_flag_hits(repo):
+    """[{token, file, line}] flag-scan face: a repo-root _CoqProject (or
+    its Rocq-era _RocqProject equivalent) is swept for the trust-relevant
+    flags -admit / -type-in-type / -noinit.  '#' comment tails are
+    stripped first and a flag matches as a whole whitespace token, so the
+    "-arg -type-in-type" relay form hits on the flag itself.  No project
+    file at the root -> no hits (nothing is fabricated)."""
+    hits = []
+    for name in PROJECT_FLAG_FILES:
+        path = os.path.join(repo, name)
+        if not os.path.isfile(path):
+            continue
+        with io.open(path, "r", encoding="utf-8", errors="replace") as fh:
+            for ln_no, line in enumerate(fh, 1):
+                for tok in line.split("#", 1)[0].split():
+                    if tok in PROJECT_FLAG_TOKENS:
+                        hits.append({"token": tok, "file": name,
+                                     "line": ln_no})
+    return hits
+
+
+def build_trust_surface(hits, vm_count, native_count):
+    """Assemble the report["trust_surface"] block.  The block verdict is
+    "alarm" when any source-switch or project-flag hit exists, "clean"
+    otherwise - and never a silent pass: the policy note carried in the
+    block states that allow-listing these switches and flags is forbidden
+    by design.  Hits are sorted (file, line, token) so the block stays
+    byte-identical across runs on the same input tree."""
+    hits = sorted(hits, key=lambda h: (h["file"], h["line"], h["token"]))
+    return {
+        "verdict": "alarm" if hits else "clean",
+        "hits": hits,
+        "certificates": {
+            "vm_compute": vm_count,
+            "native_compute": native_count,
+            "verdict": "informational",
+            "note": TRUST_CERTIFICATE_NOTE,
+        },
+        "policy": TRUST_POLICY_NOTE,
+    }
 
 
 def run_cmd(argv, timeout):
@@ -329,6 +457,10 @@ def guard(repo, rocq, coqchk, allow_axioms, timeout, out_dir, keep):
         "verdict": "PASS",
     }
     reds = []
+    # Trust-surface accumulators (additive face, verdict-neutral).
+    trust_hits = []
+    vm_total = 0
+    native_total = 0
     try:
         for idx, (rel, abs_path) in enumerate(v_files):
             tag = "%03d_%s" % (idx, os.path.basename(abs_path)[:-2])
@@ -342,6 +474,18 @@ def guard(repo, rocq, coqchk, allow_axioms, timeout, out_dir, keep):
             with io.open(work_v, "wb") as fh:
                 fh.write(raw)
             entry = {"file": rel, "md5": md5_of_bytes(raw)}
+            # Trust-surface face (additive, verdict-neutral): static
+            # switch-token sweep over the masked source plus the
+            # informational certificate census.  Every source is scanned
+            # regardless of its compile classification - a file that
+            # fails to compile is still scanned for what it tries to
+            # switch off - and no result here ever enters files,
+            # debt_register, red_files or the run verdict.
+            ts_text = raw.decode("utf-8", "replace")
+            trust_hits.extend(trust_surface_hits(ts_text, rel))
+            vm_n, nat_n = certificate_counts(ts_text)
+            vm_total += vm_n
+            native_total += nat_n
             rc, out, err = compile_one(rocq, work_v, timeout, log_dir, tag)
             if err is not None:
                 entry["classification"] = "compile-broken"
@@ -397,6 +541,12 @@ def guard(repo, rocq, coqchk, allow_axioms, timeout, out_dir, keep):
                         and rel not in reds:
                     reds.append(rel)
             report["files"].append(entry)
+        # Trust-surface assembly (additive face): source hits plus the
+        # repo-root project-file flag scan land in one block with file
+        # evidence; the classification keys below are computed exactly
+        # as without this face.
+        report["trust_surface"] = build_trust_surface(
+            trust_hits + project_flag_hits(repo), vm_total, native_total)
         report["red_files"] = reds
         report["verdict"] = "RED" if reds else "PASS"
         if out_dir:
@@ -431,6 +581,15 @@ def _summarize(report):
               % (f["file"], len(lc), closed, hv))
     for f in broken:
         print("  debt %s (rc %s)" % (f["file"], f.get("compile_rc")))
+    ts = report.get("trust_surface")
+    if ts is not None:
+        print("  trust-surface %s hits=%d certificates(vm_compute=%d, "
+              "native_compute=%d)"
+              % (ts["verdict"], len(ts["hits"]),
+                 ts["certificates"]["vm_compute"],
+                 ts["certificates"]["native_compute"]))
+        for h in ts["hits"]:
+            print("  alarm %s:%d %s" % (h["file"], h["line"], h["token"]))
     for rel in report.get("red_files", []):
         print("  RED  %s" % rel)
 
@@ -475,6 +634,23 @@ SAMPLE_V_TEXT = ("(* Theorem decoy_in_comment : False. *)\n"
                  "\n"
                  "Theorem t_axiom_one : True.\n"
                  "Proof. exact I. Qed.\n")
+
+# Trust-surface fixtures: one source carrying two live switch hits plus
+# comment/string decoys that must never hit, one clean source, and one
+# text for the informational certificate census (live-only counting).
+TRUST_HIT_V_TEXT = ("Definition rely := 1.\n"
+                    "Unset Guard Checking.\n"
+                    "(* Unset Positivity Checking. comment decoy *)\n"
+                    "Definition s := \"Unset Universe Checking decoy\".\n"
+                    "Declare ML Module \"plugin\".\n")
+TRUST_CLEAN_V_TEXT = ("(* Unset Guard Checking. comment decoy *)\n"
+                      "Definition a := \"Declare ML Module string decoy\".\n"
+                      "Theorem t_clean_one : True.\n"
+                      "Proof. exact I. Qed.\n")
+TRUST_CERT_TEXT = ("Goal True. vm_compute. reflexivity. Qed.\n"
+                   "(* vm_compute comment decoy *)\n"
+                   "Definition d := \"native_compute string decoy\".\n"
+                   "Compute (vm_compute 3, native_compute 7).\n")
 
 
 def selftest():
@@ -532,6 +708,91 @@ def selftest():
             and lines[1].startswith("Theorem t_closed_one")
             and lines[6].startswith("Theorem t_axiom_one"),
             "comment and string bodies blanked; real statements intact")
+        # trust-surface face: source sweep (one live-hit fixture with
+        # comment/string decoys + one clean fixture), the informational
+        # certificate census, the flag scan on a temp _CoqProject, and
+        # the verdict-does-not-change seam (classification outputs are
+        # byte-identical with and without switch hits).
+        hits = trust_surface_hits(TRUST_HIT_V_TEXT, "hit.v")
+        vec("trust-source-hit",
+            hits == [{"token": "Unset Guard Checking", "file": "hit.v",
+                      "line": 2},
+                     {"token": "Declare ML Module", "file": "hit.v",
+                      "line": 5}],
+            "live switches hit with file/line evidence; %s" % (hits,))
+        vec("trust-source-clean",
+            trust_surface_hits(TRUST_CLEAN_V_TEXT, "clean.v") == [],
+            "commented-out and string-embedded switches never hit")
+        vec("trust-certificate-counts",
+            certificate_counts(TRUST_CERT_TEXT) == (2, 1),
+            "vm_compute/native_compute counted live-only (masked decoys "
+            "excluded), informational")
+        proj_dir = os.path.join(tmp, "flagrepo")
+        os.makedirs(proj_dir)
+        with io.open(os.path.join(proj_dir, "_CoqProject"), "w",
+                     encoding="utf-8", newline="\n") as fh:
+            fh.write("-R src Pkg\n"
+                     "-arg -type-in-type\n"
+                     "# -admit in a comment must not hit\n"
+                     "-noinit\n")
+        flag_hits = project_flag_hits(proj_dir)
+        vec("flag-scan-hits",
+            flag_hits == [{"token": "-type-in-type", "file": "_CoqProject",
+                           "line": 2},
+                          {"token": "-noinit", "file": "_CoqProject",
+                           "line": 4}],
+            "flag tokens hit with file/line evidence; comment tails "
+            "stripped; -arg relay lines hit; %s" % (flag_hits,))
+        clean_dir = os.path.join(tmp, "flagclean")
+        os.makedirs(clean_dir)
+        vec("flag-scan-absent-clean", project_flag_hits(clean_dir) == [],
+            "no project file at the repo root -> no flag hits")
+        # verdict-does-not-change seam: attaching the trust-surface block
+        # to a fully classified report adds exactly one key and leaves
+        # every classification output byte-identical, with and without
+        # switch hits.
+        def seed_report():
+            return {"schema": SCHEMA,
+                    "files": [{"file": "a.v", "md5": "0" * 32,
+                               "classification": "compile-ok",
+                               "compile_rc": 0, "statements": 1,
+                               "light_census": [{"statement": "t",
+                                                 "line": 1,
+                                                 "verdict": "closed",
+                                                 "axioms": []}],
+                               "heavy": {"verdict": "clean",
+                                         "axioms": [], "coqchk_rc": 0}}],
+                    "debt_register": ["b.v"],
+                    "red_files": ["a.v"],
+                    "verdict": "RED"}
+
+        ref = seed_report()
+        with_hit = json.loads(json.dumps(ref))
+        without_hit = json.loads(json.dumps(ref))
+        with_hit["trust_surface"] = build_trust_surface(
+            [{"token": "Unset Guard Checking", "file": "a.v", "line": 2}],
+            1, 2)
+        without_hit["trust_surface"] = build_trust_surface([], 0, 0)
+        ok = (all(with_hit[k] == ref[k] and without_hit[k] == ref[k]
+                  for k in ref)
+              and set(with_hit) - set(ref) == {"trust_surface"}
+              and set(without_hit) - set(ref) == {"trust_surface"}
+              and with_hit["trust_surface"]["verdict"] == "alarm"
+              and without_hit["trust_surface"]["verdict"] == "clean"
+              and with_hit["verdict"] == without_hit["verdict"] == "RED"
+              and with_hit["red_files"] == without_hit["red_files"] == ["a.v"]
+              and with_hit["debt_register"] == ["b.v"])
+        vec("trust-verdict-does-not-change", ok,
+            "classification keys identical with and without hits; only "
+            "trust_surface added (alarm vs clean)")
+        vec("trust-policy-anti-allowlist",
+            "forbidden by design" in with_hit["trust_surface"]["policy"]
+            and "never silently passed"
+            in with_hit["trust_surface"]["policy"]
+            and "bytecode-flag law"
+            in with_hit["trust_surface"]["certificates"]["note"],
+            "the report itself states allow-listing is forbidden and "
+            "cites the bytecode-flag law")
         # report determinism helpers
         vec("tail-and-tmp-normalize",
             len(error_tail("\n".join("ln%d" % k

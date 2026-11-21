@@ -23,7 +23,13 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   read/plan face over the landed Lean axiom-closure classifier
   tools/lean_axiom_sweep.py; its spec description is transcribed from the
   tool's frozen CLI contract header, the INDEX entry awaiting its own
-  lane), and the claim_watch registration increment's one capability
+  lane; the closure-snapshot increment extends its arg_map and schema
+  with the snapshot/baseline mappings, the beyond-platform
+  closure-evolution audit face - deterministic machine closure snapshots
+  schema rocqwash-axiom-closure-snapshot/1 plus a snapshot-vs-snapshot
+  closure_diff with the top-level diff_alarm, the diff reading only the
+  two snapshots' data, no Lean needed), and the claim_watch registration
+  increment's one capability
   (claim_watch, the net-gated live watch face over the landed native
   resident watch CLI tools/claim_watch.py, ticket 13; its spec
   description is likewise transcribed from the tool's frozen CLI
@@ -224,13 +230,15 @@ EXPECTED_VACGEN_ARGS = [
 EXPECTED_TREE_AUDIT_ARGS = ["root", "json_out", "selftest"]
 
 # Frozen axiom_sweep vector: the full argparse flag face of
-# tools/lean_axiom_sweep.py (root, json, allow_axiom, selftest, timeout)
-# in the registration contract's arg_map order; the axiom_sweep schema
-# properties must match this list one-to-one, exactly the
-# EXPECTED_TREE_AUDIT_ARGS discipline (the contract order differs from the
-# argparse declaration order by the last two flags).
+# tools/lean_axiom_sweep.py (root, json, allow_axiom, selftest, timeout,
+# snapshot, baseline) in the registration contract's arg_map order; the
+# axiom_sweep schema properties must match this list one-to-one, exactly
+# the EXPECTED_TREE_AUDIT_ARGS discipline (the contract order differs from
+# the argparse declaration order by the last flags; the closure-snapshot
+# increment appended snapshot/baseline, the beyond-platform
+# closure-evolution audit face).
 EXPECTED_AXIOM_SWEEP_ARGS = ["root", "json_out", "allow_axiom", "selftest",
-                             "timeout"]
+                             "timeout", "snapshot", "baseline"]
 
 # Frozen claim_watch vector: the full argparse flag face of
 # tools/claim_watch.py (config, round_label, ledger, actor,
@@ -512,7 +520,10 @@ def main():
         # Probe 3d: axiom_sweep schema-face vectors (schema shape mirrors
         # the tool's real argparse flag face one-to-one; the spec
         # description declares the five-class classifier face and the
-        # rc-112 toolchain gate).
+        # rc-112 toolchain gate; the closure-snapshot increment adds the
+        # snapshot/baseline properties, whose descriptions name the
+        # rocqwash-axiom-closure-snapshot/1 schema and the beyond-platform
+        # closure-evolution audit rationale).
         as_spec = by_name.get("axiom_sweep") or {}
         as_props = list((as_spec.get("inputSchema") or {})
                         .get("properties") or {})
@@ -531,6 +542,31 @@ def main():
             if token not in as_desc:
                 fails.append("probe3d axiom_sweep description should name "
                              "the classification face token %s" % token)
+        as_snap = ((as_spec.get("inputSchema") or {})
+                   .get("properties", {}).get("snapshot") or {})
+        if "rocqwash-axiom-closure-snapshot/1" \
+                not in as_snap.get("description", "") \
+                or "closure evolution" not in as_snap.get("description", "") \
+                or "byte-identical" not in as_snap.get("description", ""):
+            fails.append("probe3d axiom_sweep snapshot description should "
+                         "name the rocqwash-axiom-closure-snapshot/1 "
+                         "schema, the determinism face and the "
+                         "beyond-platform closure-evolution rationale")
+        as_base = ((as_spec.get("inputSchema") or {})
+                   .get("properties", {}).get("baseline") or {})
+        if "closure_diff" not in as_base.get("description", "") \
+                or "diff_alarm" not in as_base.get("description", "") \
+                or "NEW-DEPENDENCY" not in as_base.get("description", "") \
+                or "closure evolution" not in as_base.get("description", ""):
+            fails.append("probe3d axiom_sweep baseline description should "
+                         "name the closure_diff block, diff_alarm, "
+                         "NEW-DEPENDENCY and the beyond-platform "
+                         "closure-evolution rationale")
+        for token in ("closure evolution", "closure_diff", "diff_alarm",
+                      "rocqwash-axiom-closure-snapshot/1"):
+            if token not in as_desc:
+                fails.append("probe3d axiom_sweep spec description should "
+                             "name the closure-evolution token %s" % token)
 
         # Probe 3e: claim_watch schema-face vectors (schema shape mirrors
         # the tool's real argparse flag face one-to-one; the spec

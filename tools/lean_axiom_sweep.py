@@ -10,25 +10,36 @@ Purpose.  Make "0 sorry 0 axiom" claims mechanically reproducible per theorem:
   propext, Classical.choice, Quot.sound) / SORRY-ALARM (sorryAx) /
   CUSTOM-AXIOM-ALARM (any other name, verbatim) / UNPARSED (honest).
 Interface.  python -I tools/lean_axiom_sweep.py --root <file|dir> [--json OUT]
-  [--allow-axiom NAME]... [--timeout SEC] | --selftest.  stdout carries one
-  JSON line (schema rocqwash-axiom-sweep/1); --json additionally writes the
-  same payload to OUT; --selftest runs the frozen offline vectors and exits.
+  [--allow-axiom NAME]... [--timeout SEC] [--snapshot OUT]
+  [--baseline SNAPSHOT] | --selftest.  stdout carries one JSON line (schema
+  rocqwash-axiom-sweep/1); --json additionally writes the same payload to
+  OUT; --snapshot additionally writes a machine closure snapshot (schema
+  rocqwash-axiom-closure-snapshot/1, deterministic); --baseline diffs the
+  current closure against a previous snapshot into the closure_diff block;
+  --selftest runs the frozen offline vectors and exits.
 Dependencies.  Python 3 standard library only; the probe face needs a usable
   Lean 4 toolchain (lean or lake on PATH passing a version probe, so an
   elan shim without a default toolchain does not pass), never downloaded or
-  simulated; without one the sweep exits 112 judging nothing.
+  simulated; without one the sweep exits 112 judging nothing.  The
+  snapshot and diff faces are toolchain-independent: the diff reads only
+  the two snapshot files' data, no Lean involvement.
 Evidence.  --selftest covers the parse and classify faces with canned
   `#print axioms` fixtures for all five classes, the report shape (every
   counter wrapped {value, basis}, scan_face four fields), the checker
-  emission and module-derivation faces, and the gate vector (child PATH
-  stripped -> rc 112); zero network, zero toolchain launch, zero real-repo
-  touch.
+  emission and module-derivation faces, the gate vector (child PATH
+  stripped -> rc 112), the closure faces (snapshot determinism
+  double-run byte-identical, all four diff verdict kinds, diff_alarm
+  true and false, NEW-DEPENDENCY, baseline load error faces, the
+  no-baseline backward-compat shape); zero network, zero toolchain
+  launch, zero real-repo touch.
 Exit-codes.  0 green (every classified declaration CLEAN or BENIGN-STANDARD,
   zero UNPARSED rows, zero errors); 1 red (any SORRY-ALARM,
   CUSTOM-AXIOM-ALARM or UNPARSED row, or any recorded error: unjudgeable is
-  not green); 2 usage error; 112 no usable Lean toolchain (the honest skip
-  names the requirement; the axiom_guard rc 111 env-gate precedent family,
-  code 112 per this tool's contract).
+  not green; unchanged by the diff face - diff_alarm rides the payload);
+  2 usage error (including an unreadable or wrong-schema --baseline);
+  112 no usable Lean toolchain (the honest skip names the requirement; the
+  axiom_guard rc 111 env-gate precedent family, code 112 per this tool's
+  contract).
 """
 
 # Detail carried below the five-field header budget (the norm_lint
@@ -84,6 +95,39 @@ Exit-codes.  0 green (every classified declaration CLEAN or BENIGN-STANDARD,
 #      axioms" finding [propext, Classical.choice, Quot.sound] of the
 #      earlier audit work stream and subsets adjudicate here; whitelist
 #      hits ride along in "allowed").
+#
+# Closure snapshot and diff faces (the beyond-platform capability: the
+# platform tools give today's closure, nobody gives closure EVOLUTION).
+#   --snapshot OUT writes a machine closure snapshot, schema
+#   rocqwash-axiom-closure-snapshot/1: plain machine fields (schema, tool,
+#   root, allow_axioms, counts) plus per classified declaration the full
+#   probe name, file, line, class and the SORTED axiom set.  UNPARSED rows
+#   carry no closure and stay out of declarations; they are recorded
+#   honestly by name at snapshot level (unparsed_count/unparsed_names),
+#   nothing silently dropped.  Deterministic: declaration rows sorted by
+#   (name, file, line), name lists and axiom sets sorted, no wall clock -
+#   the same sweep answers byte-identically, double-run byte-identical.
+#   --baseline SNAPSHOT diffs the current closure against a previously
+#   written snapshot into the closure_diff block, keyed by full
+#   declaration name (a repeated name resolves to the last row in the
+#   snapshot's sorted order).  Per declaration one verdict: UNCHANGED
+#   (same axiom set), AXIOM-SET-CHANGED (from_axioms -> to_axioms listed),
+#   NEW-THEOREM (name only in the current snapshot), LOST-THEOREM (name
+#   absent from the current snapshot: a removal and a failed or unparsed
+#   probe both surface here, snapshots record closures only).  A
+#   previously-clean declaration (empty baseline axiom set) whose current
+#   axiom set is non-empty is a NEW-DEPENDENCY, listed by name.  Any
+#   AXIOM-SET-CHANGED verdict or any NEW-DEPENDENCY event sets the
+#   top-level diff_alarm true (false otherwise; NEW-THEOREM and
+#   LOST-THEOREM alone do not alarm; the flag rides the payload, the
+#   sweep exit code stays the sweep's own green/red face).  closure_diff
+#   and diff_alarm are {value, basis}-wrapped like every other top-level
+#   report field; with no --baseline neither key exists and the report
+#   shape is byte-for-byte today's (backward compatible, exit 0 as
+#   today).  The diff reads ONLY the two snapshot files' data, so the
+#   snapshot and diff faces are toolchain-independent; a baseline file
+#   that is missing, unparseable, or not a rocqwash-axiom-closure-snapshot/1
+#   document is a usage error (rc 2) named on stderr, never a guess.
 #
 # Determinism.  Sorted file walk, enumeration order per file, no wall
 # clock in the report, fixed string caps; the same input tree with the
@@ -165,6 +209,42 @@ SCAN_EQUIVALENTS = (
     " declarations are enumerated too (bodies are not masked) and surface"
     " as UNPARSED rows rather than being silently dropped."
 )
+
+# Closure snapshot + diff faces (toolchain-independent: the diff reads
+# only the two snapshots' data).
+SNAPSHOT_SCHEMA = "rocqwash-axiom-closure-snapshot/1"
+
+# The four per-declaration diff verdicts.
+DIFF_UNCHANGED = "UNCHANGED"
+DIFF_CHANGED = "AXIOM-SET-CHANGED"
+DIFF_NEW = "NEW-THEOREM"
+DIFF_LOST = "LOST-THEOREM"
+
+# The summary/alarm basis strings (English, module constants so the
+# selftest can pin them and consumers quote the counting rule verbatim).
+DIFF_BASIS_UNCHANGED = (
+    "same full declaration name in both snapshots with an identical axiom"
+    " set")
+DIFF_BASIS_CHANGED = (
+    "same full declaration name whose axiom set differs; from_axioms and"
+    " to_axioms list the two sets (a class drift without an axiom-set"
+    " drift, for example a whitelist difference, stays UNCHANGED by this"
+    " contract - both classes ride the row)")
+DIFF_BASIS_NEW = (
+    "full declaration name present only in the current snapshot")
+DIFF_BASIS_LOST = (
+    "full declaration name absent from the current snapshot: a removal and"
+    " a failed or unparsed probe both surface here, snapshots record"
+    " closures only")
+DIFF_BASIS_NEWDEP = (
+    "previously-clean declarations (empty baseline axiom set) whose"
+    " current axiom set is non-empty; the names are listed in"
+    " new_dependency_names")
+DIFF_BASIS_ALARM = (
+    "true when any AXIOM-SET-CHANGED verdict or any NEW-DEPENDENCY event"
+    " exists, false otherwise; NEW-THEOREM and LOST-THEOREM alone do not"
+    " alarm; the flag rides the payload, the sweep exit code stays the"
+    " sweep's own green/red face")
 
 
 def enumerate_decls(text):
@@ -445,9 +525,13 @@ def sweep(root, allow, timeout):
     return exit_code_for(report), report
 
 
-def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face):
+def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
+                 diff_face=None):
     """Pure report assembly over the collected rows; the selftest schema
-    vector feeds this with canned rows (offline, no toolchain)."""
+    vector feeds this with canned rows (offline, no toolchain).  A
+    diff_face (a diff_closures payload, or None without --baseline) is
+    attached as the closure_diff + diff_alarm top-level fields; without
+    one the report shape is byte-for-byte today's (backward compatible)."""
     counts = {}
     for row in decl_rows:
         counts[row["classification"]] = \
@@ -459,7 +543,7 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face):
     unparsed = counts.get("UNPARSED", 0)
     custom_names = sorted({c for row in decl_rows for c in row["custom"]})
     verdict = "RED" if (sorry or custom or unparsed) else "PASS"
-    return {
+    report = {
         "schema": SCHEMA,
         "root": {"value": root,
                  "basis": "the scan root as given; a file root scans that"
@@ -547,6 +631,9 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face):
             "equivalents": SCAN_EQUIVALENTS,
         },
     }
+    if diff_face is not None:
+        attach_closure_diff(report, diff_face)
+    return report
 
 
 def exit_code_for(report):
@@ -558,6 +645,162 @@ def exit_code_for(report):
     return EXIT_OK
 
 
+def build_snapshot(root, decl_rows, allow):
+    """Machine closure snapshot (schema rocqwash-axiom-closure-snapshot/1)
+    over a sweep's declaration rows: per classified declaration the full
+    probe name, file, line, class and the sorted axiom set.  UNPARSED rows
+    carry no closure and stay out of declarations; they are recorded
+    honestly by name at snapshot level, nothing silently dropped.
+    Deterministic: rows sorted by (name, file, line), name lists and
+    axiom sets sorted, no wall clock - the same sweep answers
+    byte-identically, double-run byte-identical."""
+    decls = []
+    unparsed = []
+    for row in decl_rows:
+        if row["classification"] == "UNPARSED":
+            unparsed.append(row["name"])
+            continue
+        decls.append({"name": row["name"],
+                      "file": row["file"],
+                      "line": row["line"],
+                      "classification": row["classification"],
+                      "axioms": sorted(row["axioms"])})
+    decls.sort(key=lambda d: (d["name"], d["file"], d["line"]))
+    return {
+        "schema": SNAPSHOT_SCHEMA,
+        "tool": TOOL,
+        "root": root,
+        "allow_axioms": sorted(allow),
+        "declaration_count": len(decl_rows),
+        "classified_count": len(decls),
+        "unparsed_count": len(unparsed),
+        "unparsed_names": sorted(set(unparsed)),
+        "declarations": decls,
+    }
+
+
+def load_snapshot(path):
+    """Read a closure snapshot file; returns (snapshot, error) with error
+    None on success.  A missing, unparseable or wrong-schema file is a
+    usage error, never a guess (a sweep report is not a snapshot)."""
+    try:
+        with open(path, "rb") as fh:
+            text = fh.read().decode("utf-8", "replace")
+    except OSError as exc:
+        return None, "cannot read --baseline snapshot %s: %s" % (path, exc)
+    try:
+        data = json.loads(text)
+    except ValueError as exc:
+        return None, ("--baseline snapshot %s is not valid JSON: %s"
+                      % (path, exc))
+    if not isinstance(data, dict) or data.get("schema") != SNAPSHOT_SCHEMA:
+        found = data.get("schema") if isinstance(data, dict) else None
+        return None, ("--baseline snapshot %s does not carry schema %s"
+                      " (found %r); a sweep report (%s) is not a snapshot"
+                      % (path, SNAPSHOT_SCHEMA, found, SCHEMA))
+    if not isinstance(data.get("declarations"), list):
+        return None, ("--baseline snapshot %s carries no declarations"
+                      " list" % path)
+    return data, None
+
+
+def diff_closures(baseline, current):
+    """Pure per-declaration closure diff of two snapshot dicts; reads only
+    the two snapshots' data, so the diff face is toolchain-independent
+    (no Lean involvement).  Rows are keyed by full declaration name (a
+    repeated name resolves to the last row in the snapshot's sorted
+    order) and sorted by name; each carries one verdict - UNCHANGED /
+    AXIOM-SET-CHANGED (from_axioms -> to_axioms listed) / NEW-THEOREM /
+    LOST-THEOREM - plus new_dependency for a previously-clean declaration
+    (empty baseline axiom set) whose current axiom set is non-empty.
+    diff_alarm: true when any AXIOM-SET-CHANGED verdict or any
+    NEW-DEPENDENCY event exists, false otherwise."""
+    base_map = {}
+    for decl in baseline["declarations"]:
+        base_map[decl["name"]] = decl
+    cur_map = {}
+    for decl in current["declarations"]:
+        cur_map[decl["name"]] = decl
+    rows = []
+    counts = {DIFF_UNCHANGED: 0, DIFF_CHANGED: 0,
+              DIFF_NEW: 0, DIFF_LOST: 0}
+    new_dep = []
+    for nm in sorted(set(base_map) | set(cur_map)):
+        b = base_map.get(nm)
+        c = cur_map.get(nm)
+        if b is None:
+            rows.append({"name": nm, "verdict": DIFF_NEW,
+                         "from_axioms": [], "to_axioms": sorted(c["axioms"]),
+                         "from_classification": "",
+                         "to_classification": c["classification"],
+                         "new_dependency": False})
+            counts[DIFF_NEW] += 1
+            continue
+        if c is None:
+            rows.append({"name": nm, "verdict": DIFF_LOST,
+                         "from_axioms": sorted(b["axioms"]),
+                         "to_axioms": [],
+                         "from_classification": b["classification"],
+                         "to_classification": "",
+                         "new_dependency": False})
+            counts[DIFF_LOST] += 1
+            continue
+        from_ax = sorted(b["axioms"])
+        to_ax = sorted(c["axioms"])
+        dep = (not from_ax) and bool(to_ax)
+        verdict = DIFF_CHANGED if from_ax != to_ax else DIFF_UNCHANGED
+        rows.append({"name": nm, "verdict": verdict,
+                     "from_axioms": from_ax, "to_axioms": to_ax,
+                     "from_classification": b["classification"],
+                     "to_classification": c["classification"],
+                     "new_dependency": dep})
+        counts[verdict] += 1
+        if dep:
+            new_dep.append(nm)
+    alarm = counts[DIFF_CHANGED] > 0 or bool(new_dep)
+    return {
+        "baseline_root": baseline.get("root", ""),
+        "rows": rows,
+        "summary": {
+            "unchanged": {"value": counts[DIFF_UNCHANGED],
+                          "basis": DIFF_BASIS_UNCHANGED},
+            "axiom_set_changed": {"value": counts[DIFF_CHANGED],
+                                  "basis": DIFF_BASIS_CHANGED},
+            "new_theorem": {"value": counts[DIFF_NEW],
+                            "basis": DIFF_BASIS_NEW},
+            "lost_theorem": {"value": counts[DIFF_LOST],
+                             "basis": DIFF_BASIS_LOST},
+            "new_dependency": {"value": len(new_dep),
+                               "basis": DIFF_BASIS_NEWDEP},
+        },
+        "new_dependency_names": sorted(new_dep),
+        "diff_alarm": {"value": alarm, "basis": DIFF_BASIS_ALARM},
+    }
+
+
+def attach_closure_diff(report, diff_face):
+    """Insert the closure faces into a built report: closure_diff as a
+    {value, basis} top-level field and diff_alarm as the top-level
+    {value, basis} alarm flag (the schema-value-basis law; no --baseline
+    leaves both keys out, the report shape stays today's)."""
+    report["closure_diff"] = {
+        "value": diff_face,
+        "basis": "per-declaration closure diff of the current sweep against"
+                 " the --baseline snapshot (schema %s): rows keyed by full"
+                 " declaration name with verdict UNCHANGED /"
+                 " AXIOM-SET-CHANGED (from_axioms -> to_axioms listed) /"
+                 " NEW-THEOREM / LOST-THEOREM, a {value, basis} summary per"
+                 " verdict kind and the NEW-DEPENDENCY names; computed from"
+                 " the two snapshots' data only, no toolchain involvement"
+                 % SNAPSHOT_SCHEMA,
+    }
+    report["diff_alarm"] = {
+        "value": diff_face["diff_alarm"]["value"],
+        "basis": DIFF_BASIS_ALARM,
+    }
+    return report
+
+
 def write_json(path, payload):
     """Write the stdout payload (plus one newline) to path as UTF-8."""
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
@@ -566,10 +809,11 @@ def write_json(path, payload):
 
 
 def summarize(report):
-    """One stderr summary line (stdout stays the single JSON line)."""
+    """One stderr summary line (stdout stays the single JSON line); with a
+    --baseline run the closure-diff counts ride the same line's tail."""
     sys.stderr.write(
         "AXIOM-SWEEP: %s decls=%d clean=%d benign_standard=%d sorry=%d"
-        " custom=%d unparsed=%d errors=%d\n"
+        " custom=%d unparsed=%d errors=%d"
         % (report["verdict"]["value"],
            report["declarations"]["value"],
            report["clean"]["value"],
@@ -578,6 +822,18 @@ def summarize(report):
            report["custom_axiom_alarm"]["value"],
            report["unparsed"]["value"],
            report["error_count"]["value"]))
+    if "closure_diff" in report:
+        sumry = report["closure_diff"]["value"]["summary"]
+        sys.stderr.write(
+            " closure_diff unchanged=%d changed=%d new=%d lost=%d"
+            " new_dependency=%d diff_alarm=%s"
+            % (sumry["unchanged"]["value"],
+               sumry["axiom_set_changed"]["value"],
+               sumry["new_theorem"]["value"],
+               sumry["lost_theorem"]["value"],
+               sumry["new_dependency"]["value"],
+               report["diff_alarm"]["value"]))
+    sys.stderr.write("\n")
 
 
 # ---- selftest (frozen offline vectors on the parse, classify, report and
@@ -819,6 +1075,189 @@ def selftest():
             round_trip = json.load(fh)
         vec("json-round-trip", round_trip == rep, "payload mismatch")
 
+        # closure snapshot + diff faces: pure functions over canned rows,
+        # offline, zero toolchain launch (the diff face reads only the two
+        # snapshots' data, so toolchain independence is by construction)
+        def mk_row(name, klass, axioms, file="a.lean", line=1):
+            return {"file": file, "line": line, "name": name,
+                    "classification": klass, "axioms": list(axioms),
+                    "custom": [], "allowed": [], "probe": "lean-direct",
+                    "raw": "", "unparsed_reason": ""}
+
+        base_rows = [
+            mk_row("t_unchanged", "CLEAN", [], line=2),
+            mk_row("t_changed", "BENIGN-STANDARD", ["propext"], line=5),
+            mk_row("t_lost", "CLEAN", [], line=7),
+            mk_row("t_newdep", "CLEAN", [], line=9),
+        ]
+        cur_rows = [
+            mk_row("t_unchanged", "CLEAN", [], line=2),
+            mk_row("t_changed", "BENIGN-STANDARD",
+                   ["propext", "Classical.choice"], line=5),
+            mk_row("t_new", "CLEAN", [], file="b.lean", line=4),
+            mk_row("t_newdep", "SORRY-ALARM", ["sorryAx"], line=9),
+        ]
+
+        # snapshot determinism: shuffled input rows must give
+        # byte-identical snapshots (the sort normalizes the order)
+        snap1 = build_snapshot("TMP", base_rows, [])
+        snap2 = build_snapshot("TMP", list(reversed(base_rows)), [])
+        vec("snapshot-determinism",
+            json.dumps(snap1, ensure_ascii=False)
+            == json.dumps(snap2, ensure_ascii=False),
+            "shuffled input rows changed the snapshot bytes")
+        vec("snapshot-shape",
+            snap1["schema"] == SNAPSHOT_SCHEMA
+            and snap1["tool"] == TOOL
+            and [d["name"] for d in snap1["declarations"]]
+                == ["t_changed", "t_lost", "t_newdep", "t_unchanged"]
+            and snap1["declaration_count"] == 4
+            and snap1["classified_count"] == 4
+            and snap1["unparsed_count"] == 0
+            and snap1["unparsed_names"] == [],
+            "got %s" % (snap1,))
+        snap3 = build_snapshot("TMP", [
+            mk_row("t_a", "BENIGN-STANDARD",
+                   ["propext", "Classical.choice"], line=2),
+            mk_row("t_u", "UNPARSED", [], line=4),
+        ], [])
+        vec("snapshot-axioms-sorted-unparsed-honest",
+            snap3["declarations"][0]["axioms"]
+            == ["Classical.choice", "propext"]
+            and snap3["declaration_count"] == 2
+            and snap3["classified_count"] == 1
+            and snap3["unparsed_count"] == 1
+            and snap3["unparsed_names"] == ["t_u"]
+            and all(d["name"] != "t_u" for d in snap3["declarations"]),
+            "got %s" % (snap3,))
+
+        # diff faces: all four verdict kinds in one pair
+        base_snap = build_snapshot("BASE", base_rows, [])
+        cur_snap = build_snapshot("CUR", cur_rows, [])
+        diff = diff_closures(base_snap, cur_snap)
+        by_verdict = {}
+        for row in diff["rows"]:
+            by_verdict.setdefault(row["verdict"], []).append(row["name"])
+        vec("diff-all-four-verdicts",
+            sorted(by_verdict.get(DIFF_UNCHANGED, [])) == ["t_unchanged"]
+            and sorted(by_verdict.get(DIFF_CHANGED, []))
+                == ["t_changed", "t_newdep"]
+            and by_verdict.get(DIFF_NEW, []) == ["t_new"]
+            and by_verdict.get(DIFF_LOST, []) == ["t_lost"],
+            "got %s" % (by_verdict,))
+        changed_row = next(r for r in diff["rows"]
+                           if r["name"] == "t_changed")
+        vec("diff-changed-from-to-listed",
+            changed_row["verdict"] == DIFF_CHANGED
+            and changed_row["from_axioms"] == ["propext"]
+            and changed_row["to_axioms"] == ["Classical.choice", "propext"]
+            and changed_row["from_classification"] == "BENIGN-STANDARD"
+            and changed_row["to_classification"] == "BENIGN-STANDARD"
+            and changed_row["new_dependency"] is False,
+            "got %s" % (changed_row,))
+        newdep_row = next(r for r in diff["rows"] if r["name"] == "t_newdep")
+        vec("diff-new-dependency-alarm-true",
+            newdep_row["new_dependency"] is True
+            and diff["new_dependency_names"] == ["t_newdep"]
+            and diff["summary"]["new_dependency"]["value"] == 1
+            and diff["diff_alarm"]["value"] is True
+            and diff["diff_alarm"]["basis"] == DIFF_BASIS_ALARM,
+            "got %s / %s" % (newdep_row, diff["diff_alarm"]))
+        vec("diff-summary-shape",
+            diff["summary"]["unchanged"]["value"] == 1
+            and diff["summary"]["axiom_set_changed"]["value"] == 2
+            and diff["summary"]["new_theorem"]["value"] == 1
+            and diff["summary"]["lost_theorem"]["value"] == 1
+            and all(set(v) == {"value", "basis"}
+                    for v in diff["summary"].values()),
+            "got %s" % (diff["summary"],))
+        vec("diff-rows-sorted-by-name",
+            [r["name"] for r in diff["rows"]]
+            == sorted(r["name"] for r in diff["rows"]),
+            "got %s" % ([r["name"] for r in diff["rows"]],))
+        calm = diff_closures(base_snap, build_snapshot("CUR", base_rows + [
+            mk_row("t_extra", "CLEAN", [], file="c.lean", line=1)], []))
+        vec("diff-alarm-false-face",
+            calm["diff_alarm"]["value"] is False
+            and calm["summary"]["axiom_set_changed"]["value"] == 0
+            and calm["summary"]["new_dependency"]["value"] == 0
+            and calm["summary"]["new_theorem"]["value"] == 1,
+            "got %s" % (calm["diff_alarm"],))
+        same = diff_closures(base_snap, build_snapshot("BASE", base_rows, []))
+        vec("diff-identical-all-unchanged",
+            len(same["rows"]) == 4
+            and all(r["verdict"] == DIFF_UNCHANGED for r in same["rows"])
+            and same["diff_alarm"]["value"] is False
+            and same["summary"]["unchanged"]["value"] == 4,
+            "got %s" % (same["rows"],))
+
+        # baseline load faces: missing, unparseable, wrong-schema, and the
+        # write/read round trip
+        bad_json_path = os.path.join(tmp, "bad.json")
+        with open(bad_json_path, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("{not json")
+        err_bad = load_snapshot(bad_json_path)[1]
+        vec("baseline-load-bad-json",
+            err_bad is not None and "not valid JSON" in err_bad,
+            "got %r" % (err_bad,))
+        err_absent = load_snapshot(os.path.join(tmp, "absent.json"))[1]
+        vec("baseline-load-absent",
+            err_absent is not None and "cannot read" in err_absent,
+            "got %r" % (err_absent,))
+        wrong_path = os.path.join(tmp, "wrong.json")
+        write_json(wrong_path, json.dumps({"schema": SCHEMA},
+                                          ensure_ascii=False))
+        err_wrong = load_snapshot(wrong_path)[1]
+        vec("baseline-load-wrong-schema",
+            err_wrong is not None and SNAPSHOT_SCHEMA in err_wrong
+            and SCHEMA in err_wrong,
+            "got %r" % (err_wrong,))
+        good_path = os.path.join(tmp, "good.json")
+        write_json(good_path, json.dumps(base_snap, ensure_ascii=False))
+        loaded, err_load = load_snapshot(good_path)
+        vec("baseline-load-round-trip",
+            err_load is None and loaded == base_snap,
+            "got %r" % (err_load,))
+
+        # report faces: no --baseline leaves the shape untouched (backward
+        # compatible); a diff face attaches {value, basis}-wrapped
+        rep_nodiff = build_report("TMP", canned_files, clean_decls, [], [],
+                                  {})
+        vec("no-baseline-backward-compat",
+            "closure_diff" not in rep_nodiff
+            and "diff_alarm" not in rep_nodiff
+            and rep_nodiff["verdict"]["value"] == "PASS"
+            and exit_code_for(rep_nodiff) == 0,
+            "got keys %s" % (sorted(rep_nodiff),))
+        rep_diff = attach_closure_diff(
+            build_report("TMP", canned_files, clean_decls, [], [], {}),
+            diff)
+        bare_diff = [k for k in rep_diff
+                     if k not in ("scan_face", "schema")
+                     and not (isinstance(rep_diff[k], dict)
+                              and "value" in rep_diff[k]
+                              and "basis" in rep_diff[k])]
+        vec("diff-report-value-basis-wrap",
+            bare_diff == []
+            and rep_diff["closure_diff"]["value"] is diff
+            and rep_diff["diff_alarm"]["value"] is True,
+            "bare keys: %s" % bare_diff)
+        vec("build-report-diff-face-param",
+            "closure_diff" in build_report("TMP", canned_files, clean_decls,
+                                           [], [], {}, diff_face=diff)
+            and "closure_diff" in build_report("TMP", canned_files,
+                                               clean_decls, [], [], {},
+                                               diff_face=calm),
+            "build_report must accept and attach a diff face")
+
+        # closure flag face: --snapshot/--baseline parse as values
+        parsed_flags = build_parser().parse_args(
+            ["--root", "x", "--snapshot", "s.json", "--baseline", "b.json"])
+        vec("closure-flag-face",
+            parsed_flags.snapshot == "s.json"
+            and parsed_flags.baseline == "b.json",
+            "got %r %r" % (parsed_flags.snapshot, parsed_flags.baseline))
+
         # flag face: --selftest parses standalone; usage faces rc 2
         vec("selftest-flag-face",
             build_parser().parse_args(["--selftest"]).selftest is True
@@ -843,6 +1282,10 @@ def selftest():
         rc, _out, _err = spawn(["--root", os.path.join(tmp, "absent")])
         vec("exit-root-absent-rc2", rc == 2,
             "absent --root exits %s (usage error)" % rc)
+        rc, _out, _err = spawn(["--selftest", "--snapshot",
+                                os.path.join(tmp, "s.json")])
+        vec("exit-selftest-with-snapshot-rc2", rc == 2,
+            "--selftest with a scan flag exits %s (usage error)" % rc)
 
         # gate vector: child PATH stripped to an empty directory -> 112.
         # Runs on every host: absence is forced by the stripped child
@@ -886,6 +1329,21 @@ def build_parser():
                          " --selftest)")
     ap.add_argument("--json", metavar="OUT",
                     help="write the stdout JSON payload to OUT as well")
+    ap.add_argument("--snapshot", metavar="OUT",
+                    help="additionally write a machine closure snapshot"
+                         " (schema %s) of the sweep to OUT: per classified"
+                         " declaration the full probe name, the sorted"
+                         " axiom set and the class; deterministic (sorted,"
+                         " double-run byte-identical) and"
+                         " toolchain-independent" % SNAPSHOT_SCHEMA)
+    ap.add_argument("--baseline", metavar="SNAPSHOT",
+                    help="diff the current closure against this previously"
+                         " written snapshot file (schema %s) and add the"
+                         " closure_diff block plus the top-level diff_alarm"
+                         " flag; the diff reads only the two snapshots'"
+                         " data, no Lean needed (the beyond-platform"
+                         " closure-evolution audit face)"
+                         % SNAPSHOT_SCHEMA)
     ap.add_argument("--allow-axiom", action="append", default=[],
                     dest="allow_axioms",
                     help="extra axiom name admitted into BENIGN-STANDARD"
@@ -902,7 +1360,7 @@ def main(argv=None):
     """CLI entry; returns the process exit code (0/1/2/112)."""
     args = build_parser().parse_args(argv)
     if args.selftest:
-        if args.root or args.json:
+        if args.root or args.json or args.snapshot or args.baseline:
             build_parser().error("--selftest runs standalone; combine it"
                                  " with no scan flags")
         return selftest()
@@ -914,6 +1372,14 @@ def main(argv=None):
         return EXIT_USAGE
     if args.timeout < 1:
         build_parser().error("--timeout must be >= 1")
+    # --baseline is validated up front (a missing, unparseable or
+    # wrong-schema file is a usage error, fail fast before any probing).
+    baseline_snap = None
+    if args.baseline:
+        baseline_snap, baseline_err = load_snapshot(args.baseline)
+        if baseline_err is not None:
+            sys.stderr.write("%s: %s\n" % (TOOL, baseline_err))
+            return EXIT_USAGE
     lean, lake, usable_lean, usable_lake = probe_toolchain()
     if not (usable_lean or usable_lake):
         sys.stderr.write(
@@ -924,6 +1390,19 @@ def main(argv=None):
             " (rc %d)\n" % (lean, lake, EXIT_NO_TOOLCHAIN))
         return EXIT_NO_TOOLCHAIN
     code, report = sweep(args.root, args.allow_axioms, args.timeout)
+    # Closure faces: build the current snapshot once when either flag is
+    # given; with a baseline, attach the closure_diff + diff_alarm fields
+    # (the exit code stays the sweep's own green/red face - diff_alarm
+    # rides the payload).  A red sweep still snapshots: the evolution
+    # audit wants every closure state, judged or not.
+    closure_snap = None
+    if args.snapshot or args.baseline:
+        closure_snap = build_snapshot(args.root,
+                                      report["declarations_detail"]["value"],
+                                      args.allow_axioms)
+    if baseline_snap is not None:
+        attach_closure_diff(
+            report, diff_closures(baseline_snap, closure_snap))
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     payload = json.dumps(report, ensure_ascii=False)
@@ -933,6 +1412,14 @@ def main(argv=None):
             write_json(args.json, payload)
         except OSError as exc:
             sys.stderr.write("%s: --json write failed: %s\n" % (TOOL, exc))
+            return EXIT_RED
+    if args.snapshot:
+        try:
+            write_json(args.snapshot,
+                       json.dumps(closure_snap, ensure_ascii=False))
+        except OSError as exc:
+            sys.stderr.write("%s: --snapshot write failed: %s\n"
+                             % (TOOL, exc))
             return EXIT_RED
     summarize(report)
     return code

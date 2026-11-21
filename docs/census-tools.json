@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T15:03:51Z",
+  "generated_at_utc": "2026-11-21T17:49:45Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "02816c07a151d957f656db0d021b51eabc00b436",
-  "py_files_censused": 67,
+  "git_head_recorded": "501cc39939e4a9d854c7276cc6042c8948f6e621",
+  "py_files_censused": 68,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,11 +25,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 65,
+   "with_argparse": 66,
    "with_subcommands": 1,
    "zero_network": 54,
    "needs_special_environment": 35,
-   "invocation_reconstructed": 65,
+   "invocation_reconstructed": 66,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -1061,15 +1061,15 @@
   },
   {
    "name": "axiom_guard.py",
-   "bytes": 28426,
-   "sha256": "c11ddeb2fc1e688ae6ceccf5f973a03ff3a90f3cf326596df98d53656f35001b",
-   "lines": 648,
+   "bytes": 42165,
+   "sha256": "c1fe0183dd1062983f892f1eecd4bda6f5a80ee42e3014b86017441c4006ebbd",
+   "lines": 909,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 28,
-    "head": "axiom_guard.py - repo-wide axiom guard over every .v file (rocqwash tools/).\nPurpose.  Answer \"what does each theorem actually rest on?\" mechanically\n  for the whole repository: every .v file is compiled in a private temp\n  workdir and judged at two levels (a per-theorem Print Assumptions\n  census plus the coqchk kernel recheck); the standard is strict - every\n  statement Closed, the axiom whitelist empty by default.\nInterface.  python3 tools/axiom_guard.py --repo DIR [--out DIR]\n  [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC]\n  [--keep] | --selftest.  Binary paths resolv"
+    "lines": 36,
+    "head": "axiom_guard.py - repo-wide axiom guard over every .v file (rocqwash tools/).\nPurpose.  Answer \"what does each theorem actually rest on?\" mechanically\n  for the whole repository: every .v file is compiled in a private temp\n  workdir and judged at two levels (a per-theorem Print Assumptions\n  census plus the coqchk kernel recheck); the standard is strict - every\n  statement Closed, the axiom whitelist empty by default.  A third,\n  strictly additive trust-surface face (verdict-neutral to that\n  judgment) sweeps every source for the Rocq switches that disable\n  kernel checks and for ML module entr"
    },
    "argparse": {
     "imported": true,
@@ -1209,7 +1209,7 @@
      },
      {
       "kind": "coq_rocq",
-      "count": 49,
+      "count": 57,
       "samples": [
        "",
        "chk"
@@ -1745,6 +1745,100 @@
    },
    "invocation": {
     "form": "python tools/calibration_ledger.py [--report] [--rc-file] [--leg-map] [--default-leg] [--ledger] [--batch] [--ts] [--signal-threshold] [--signals-out] [--strict] [--dry-run] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
+   "name": "capability_index.py",
+   "bytes": 26815,
+   "sha256": "981ef6134ab9442d32b3ab58ea670319bf8828e974242af5a0955b5406f4ff7e",
+   "lines": 641,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 49,
+    "head": "capability_index.py - census-rendered tool capability index CLI (R-4).\n\nPurpose.  Renders the rocqwash tool capability index from the census masters\n  instead of returning one opaque document: the primary master is the census\n  output docs/census-tools.json (one record per tool), the secondary master is\n  the AST flag-shape table docs/flag-shape.json, and the MCP roster (face\n  counts per tool) is read AST-level from TOOL_SPECS in tools/mcp_server.py.\n  Three output faces share those same masters so a summary count and a full\n  record can never disagree: mode full (the default, unchanged by R-"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "census-rendered tool capability index (full | summary | single-tool record)"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--mode"
+      ],
+      "kwargs": {
+       "choices": "<dynamic>",
+       "default": "full",
+       "help": "full (default) renders the complete sorted record set; summary renders one line per tool (name, one-phrase purpose, MCP face count)"
+      }
+     },
+     {
+      "flags": [
+       "--tool"
+      ],
+      "kwargs": {
+       "metavar": "NAME",
+       "default": null,
+       "help": "render only this tool's full record (with or without .py); full mode only"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the fixture and real-master vectors; standalone"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--mode",
+     "--tool",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "ast",
+     "json",
+     "os",
+     "re",
+     "sys"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/capability_index.py [--mode] [--tool] [--selftest]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -3392,9 +3486,9 @@
   },
   {
    "name": "evolve.py",
-   "bytes": 107809,
-   "sha256": "26aaaaf7c766553e1faf365d5dfb731cf2745f7a9d01e07215fa59aa465b10e6",
-   "lines": 2123,
+   "bytes": 110904,
+   "sha256": "91757906dc9b9a71d367868243a1e418adb7ff136d2dad569c73a1bc339e6f99",
+   "lines": 2176,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -3715,6 +3809,13 @@
    },
    "skip_face": {
     "markers": [
+     {
+      "kind": "env_rocwash",
+      "count": 3,
+      "samples": [
+       "ROCWASH_GATE_LEDGER_DIR"
+      ]
+     },
      {
       "kind": "coq_rocq",
       "count": 7,
@@ -5161,14 +5262,14 @@
   },
   {
    "name": "lean_axiom_sweep.py",
-   "bytes": 44571,
-   "sha256": "f107eacf528220577073215666875a2214e0576d8b8070bb23ea8546a494cd06",
-   "lines": 942,
+   "bytes": 69238,
+   "sha256": "654865d53d5492356bf43b7b9081323662a594380bed1e9a0b9b8609cd4a9e6b",
+   "lines": 1429,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
+    "lines": 40,
     "head": "lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.\nPurpose.  Make \"0 sorry 0 axiom\" claims mechanically reproducible per theorem:\n  the declaration face of the target .lean file(s) is enumerated, one checker\n  file per target imports the target and prints `#print axioms <decl>` per\n  declaration, the checker runs in the target's own lake environment\n  (`lake env lean`) or against a direct lean binary, and the output is\n  parsed into axiom sets and classified: CLEAN / BENIGN-STANDARD (subset of\n  propext, Classical.choice, Quot.sound) / SORRY-ALARM (sorryAx) /\n  C"
    },
    "argparse": {
@@ -5193,6 +5294,24 @@
       "kwargs": {
        "metavar": "OUT",
        "help": "write the stdout JSON payload to OUT as well"
+      }
+     },
+     {
+      "flags": [
+       "--snapshot"
+      ],
+      "kwargs": {
+       "metavar": "OUT",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--baseline"
+      ],
+      "kwargs": {
+       "metavar": "SNAPSHOT",
+       "help": "<dynamic>"
       }
      },
      {
@@ -5230,6 +5349,8 @@
     "optionals": [
      "--root",
      "--json",
+     "--snapshot",
+     "--baseline",
      "--allow-axiom",
      "--timeout",
      "--selftest"
@@ -5269,7 +5390,7 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 95,
+      "count": 101,
       "samples": [
        ".lean",
        "LEAN_OUT_CLEAN",
@@ -5282,7 +5403,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/lean_axiom_sweep.py [--root] [--json] [--allow-axiom] [--timeout] [--selftest]",
+    "form": "python tools/lean_axiom_sweep.py [--root] [--json] [--snapshot] [--baseline] [--allow-axiom] [--timeout] [--selftest]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -5757,20 +5878,20 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 129112,
-   "sha256": "c1cb0116da3760092ce2473d0e24c68a1fb777ad1ac9b882fd0f9e36ec4899a1",
-   "lines": 2367,
+   "bytes": 160080,
+   "sha256": "f9dcc194182a147d78d5a5ed9887e667baecdfee071d88a81b4d8d41868e50fd",
+   "lines": 3122,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 50 registered capabilities, each\n  spec transcribed from its docs/CAPABILITY-INDEX.md entry line (six later\n  increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,\n  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1\n  until that variable equals 1.\n  Credential zero co"
+    "lines": 47,
+    "head": "mcp_server.py - rocqwash MCP server, stdio plus optional HTTP transport (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) through two transports served by one shared\n  dispatcher: the newline-delimited JSON-RPC 2.0 stdio face, and the\n  --http face (POST application/json on /mcp, streamable-style\n  request/response, with an internal Mcp-Session-Id response header;\n  Python stdlib http.server, zero new dependencies).  50 registered\n  capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md\n  entry line (six later incr"
    },
    "argparse": {
     "imported": true,
     "parser_descriptions": [
-     "rocqwash MCP stdio server: newline-delimited JSON-RPC 2.0 over stdin and stdout (docs/mcp.md)."
+     "rocqwash MCP server: newline-delimited JSON-RPC 2.0 over stdin and stdout by default, with an optional HTTP transport on the same shared dispatcher (docs/mcp.md)."
     ],
     "add_argument": [
      {
@@ -5779,13 +5900,45 @@
       ],
       "kwargs": {
        "action": "store_true",
-       "help": "run the frozen interface-shape vectors and exit; the service loop, stdin and the network are not touched"
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--http"
+      ],
+      "kwargs": {
+       "metavar": "PORT",
+       "type": "<dynamic>",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--http-host"
+      ],
+      "kwargs": {
+       "metavar": "HOST",
+       "default": "<dynamic>",
+       "help": "address for the HTTP listener (default: 127.0.0.1, local only). Widening it (for example 0.0.0.0) exposes the endpoint beyond this machine; trusted-network-only: the endpoint performs no authentication, so never expose it to an untrusted network"
+      }
+     },
+     {
+      "flags": [
+       "--stdio"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "serve the newline-delimited JSON-RPC stdio face on stdin and stdout (the default face when no flag selects a transport); combine with --http to run both transports in one process"
       }
      }
     ],
     "positionals": [],
     "optionals": [
-     "--selftest"
+     "--selftest",
+     "--http",
+     "--http-host",
+     "--stdio"
     ],
     "subcommands": [],
     "has_subparsers": false,
@@ -5795,21 +5948,31 @@
    "imports": {
     "modules": [
      "argparse",
+     "http.client",
+     "http.server",
      "json",
      "os",
      "subprocess",
-     "sys"
+     "sys",
+     "threading"
     ],
     "third_party": [],
     "local": [],
     "guarded_conditional": []
    },
    "network": {
-    "transport_imports": [],
+    "transport_imports": [
+     "http.client"
+    ],
     "adjacent_imports": [],
-    "literal_face": [],
+    "literal_face": [
+     {
+      "token": "https_url",
+      "count": 2
+     }
+    ],
     "subprocess_bridge_suspect": false,
-    "zero_network": true,
+    "zero_network": false,
     "git_subprocess_network_face": {
      "present": false,
      "tokens": []
@@ -5844,7 +6007,7 @@
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 25,
+      "count": 26,
       "samples": [
        ".lean",
        "Lean",
@@ -5863,7 +6026,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/mcp_server.py [--selftest]",
+    "form": "python tools/mcp_server.py [--selftest] [--http] [--http-host] [--stdio]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -10491,15 +10654,15 @@
   },
   {
    "name": "tree_audit.py",
-   "bytes": 27402,
-   "sha256": "239832dcd922463406d66588405af5f0a5b1dfba8bfd7f652f5170ba7939333b",
-   "lines": 593,
+   "bytes": 57340,
+   "sha256": "afb568ebfe013f36a1a12531dfc366af52867ed182e25b37205d6d02ba2896eb",
+   "lines": 1131,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 40,
-    "head": "tree_audit.py - read-only tree health audit over .lean/.v source trees.\n\nPurpose.  One JSON-line census of a source tree: file/byte/line totals (lines\n  and non-empty lines), declaration counts split into thm (theorem|lemma) and\n  defFam (def|abbrev|structure|class|instance|inductive) with decls as their\n  combined total, an unsound-feature sweep (sorry, sorryAx, axiom, opaque,\n  native_decide, unsafe, implemented_by, extern, ofReduceBool), comment faces,\n  per-directory and largest-file tables, and the import-root histogram.  Every\n  top-level key but scan_face is {\"value\": N, \"basis\": \"...\"}"
+    "lines": 71,
+    "head": "tree_audit.py - read-only tree health audit over .lean/.v source trees.\n\nPurpose.  One JSON-line census of a source tree: file/byte/line totals (lines\n  and non-empty lines), declaration counts split into thm and defFam across\n  two per-suffix grammar faces (Lean lowercase keywords in .lean, Rocq\n  capitalized vernacular in .v) with decls as their combined total and\n  grammar_faces carrying the per-grammar sub-counts, an unsound-feature sweep\n  (sorry, sorryAx, axiom, opaque, native_decide, unsafe, implemented_by,\n  extern, ofReduceBool), a trust_surface sweep of the platform blind-spot\n  swit"
    },
    "argparse": {
     "imported": true,
@@ -10552,6 +10715,7 @@
      "json",
      "os",
      "re",
+     "shlex",
      "shutil",
      "sys",
      "tempfile"
@@ -10574,10 +10738,20 @@
    "skip_face": {
     "markers": [
      {
+      "kind": "coq_rocq",
+      "count": 30,
+      "samples": [
+       ""
+      ]
+     },
+     {
       "kind": "lean_lake_mathlib",
-      "count": 15,
+      "count": 70,
       "samples": [
        ".lean",
+       "LEAN_DEFFAM_KEYWORDS",
+       "LEAN_THM_KEYWORDS",
+       "LEAN_TRUST_SWITCHES",
        "Lean"
       ]
      }
@@ -11264,9 +11438,9 @@
   },
   {
    "name": "vacgen.py",
-   "bytes": 181386,
-   "sha256": "25b6266d97424b2092b4661dacac0561420744983b0ef269ed14612db852e826",
-   "lines": 3800,
+   "bytes": 193832,
+   "sha256": "679c8ac113472c4daecfd41a5dd0f034e97f3d6d552d9fbefe9f5f6fdf02d931",
+   "lines": 4038,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
@@ -11564,7 +11738,7 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 79,
+      "count": 80,
       "samples": [
        ".lean",
        "Lean",

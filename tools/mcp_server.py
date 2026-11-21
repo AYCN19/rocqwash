@@ -1597,8 +1597,11 @@ TOOL_SPECS = [
     # ---- the axiom_sweep registration increment: one read/plan face over
     # the landed per-theorem Lean axiom-closure classifier
     # (tools/lean_axiom_sweep.py --root/--json/--allow-axiom/--timeout/
-    # --selftest, its real argparse flag face).  Additive after the block
-    # above: the existing specs and schemas untouched.
+    # --selftest/--snapshot/--baseline, its real argparse flag face; the
+    # closure-snapshot increment adds the snapshot/baseline mappings: the
+    # beyond-platform closure-evolution audit, platform tools give
+    # today's closure, nobody gives closure evolution).  Additive after
+    # the block above: the existing specs and schemas untouched.
     {
         "name": "axiom_sweep",
         "kind": "cli",
@@ -1611,6 +1614,8 @@ TOOL_SPECS = [
             ("allow_axiom", "--allow-axiom"),
             ("selftest", "--selftest"),
             ("timeout", "--timeout"),
+            ("snapshot", "--snapshot"),
+            ("baseline", "--baseline"),
         ),
         "schema": _object_schema(
             {
@@ -1619,6 +1624,8 @@ TOOL_SPECS = [
                 "allow_axiom": {"type": "array", "description": "extra axiom names admitted into BENIGN-STANDARD, repeatable (sorryAx is never admitted); CLI flag --allow-axiom"},
                 "selftest": {"type": "boolean", "description": "run the frozen offline vector group on canned fixtures and exit (takes no other flag); bare CLI flag --selftest"},
                 "timeout": {"type": "integer", "description": "per-probe subprocess timeout seconds (default 600); CLI flag --timeout"},
+                "snapshot": {"type": "string", "description": "additionally write a machine closure snapshot of the sweep to this path (schema rocqwash-axiom-closure-snapshot/1: per classified declaration the full probe name, the sorted axiom set and the class; deterministic - sorted, double-run byte-identical - so a later run can diff against it); the beyond-platform closure-evolution audit face: platform tools give today's closure, nobody gives closure evolution; CLI flag --snapshot"},
+                "baseline": {"type": "string", "description": "diff the current closure against this previously written snapshot file (schema rocqwash-axiom-closure-snapshot/1) and emit the closure_diff block: per-declaration UNCHANGED / AXIOM-SET-CHANGED (from -> to listed) / NEW-THEOREM / LOST-THEOREM, a {value, basis} summary per verdict kind, and a top-level diff_alarm true when any NEW-DEPENDENCY (a previously-clean declaration gaining an axiom) or any AXIOM-SET-CHANGED exists; the diff reads only the two snapshots' data, no Lean toolchain involvement - the closure evolution audit face of this beyond-platform increment; CLI flag --baseline"},
             }
         ),
         "description": (
@@ -1637,7 +1644,19 @@ TOOL_SPECS = [
             "Without a usable Lean toolchain (lean or lake on PATH passing "
             "a version probe) the tool exits 112 as an honest skip "
             "judging nothing rather than simulating; the --selftest face "
-            "runs offline on canned fixtures regardless of toolchain."
+            "runs offline on canned fixtures regardless of toolchain. "
+            "Closure-evolution audit face (beyond the platform: platform "
+            "tools give today's closure, nobody gives closure evolution): "
+            "--snapshot writes the deterministic machine closure snapshot "
+            "(schema rocqwash-axiom-closure-snapshot/1, sorted, "
+            "double-run byte-identical) and --baseline diffs the current "
+            "closure against a previous snapshot into the closure_diff "
+            "block (per-declaration UNCHANGED / AXIOM-SET-CHANGED with "
+            "from -> to listed / NEW-THEOREM / LOST-THEOREM, a summary per "
+            "verdict kind, top-level diff_alarm on any NEW-DEPENDENCY or "
+            "AXIOM-SET-CHANGED); the diff reads only the two snapshots' "
+            "data, so the snapshot and diff faces are "
+            "toolchain-independent."
         ),
     },
     # ---- the claim_watch registration increment (ticket 13, the
