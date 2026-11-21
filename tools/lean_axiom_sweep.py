@@ -32,7 +32,11 @@ Dependencies.  Python 3 standard library only; the probe face needs a usable
   the two snapshot files' data, no Lean involvement.
 Evidence.  --selftest covers the parse and classify faces with canned
   `#print axioms` fixtures for all six classes, the copy-append emission
-  face (checker text plus the emitted probe list it is aligned by), the
+  face (checker text plus the emitted probe list the parse name-maps),
+  the name-keyed parse face (exact-name attribution under deliberately
+  wrong probe line numbers, a missing block leaving exactly its own row
+  UNPARSED no cascade, the mangled-private unique-suffix fallback and
+  its ambiguity refusal, double-run byte-identical), the
   per-probe failure-isolation face (a failed or unresolved probe leaves
   ONLY its own declaration UNPARSED, no sibling cascade), a private- plus
   public-declaration fixture probed offline into PRIVATE-COVERED with its
@@ -91,15 +95,22 @@ Exit-codes.  0 green (every classified declaration CLEAN, BENIGN-STANDARD
 # (build_checker: one import line plus one `#print axioms <name>` line per
 # declaration) is kept for non-private declarations ONLY where copy-append
 # is not applicable - a cross-file aggregated sweep, which this tool does
-# not run today; no live caller emits it.  Marker alignment is derived
-# from the emitted probe list (the checker line number of every probe
-# line), never from positional counting: an output block is attributed to
-# the declaration whose probe line carries the block's position, verified
-# against the exact probe name.  A failed or unresolved probe maps ONLY to
-# its own declaration as UNPARSED (no cascade to siblings); the checker
-# output is parsed regardless of the child exit code (info blocks and
-# errors share the stream), and a whole-file failure still records the
-# capped error tail on the file row, never judged.
+# not run today; no live caller emits it.  The probe lines carry an
+# exact-name marker comment for human-readable checker text only: lean
+# echoes neither comments nor probe lines, so the parse never searches
+# stdout for marker text and never keys blocks to line numbers (the
+# retired marker/line bookkeeping could never succeed).  Attribution is
+# NAME-KEYED: the whole probe stdout is scanned for '<name>'
+# does-not-depend / depends-on blocks and each reported name maps to the
+# emitted probe list by exact match; a private declaration reported
+# under its mangled module-private name matches by suffix containment
+# ONLY when exactly one emitted declaration name is a suffix of the
+# reported name (anything else stays UNPARSED, honest).  A failed or
+# unresolved probe maps ONLY to its own declaration as UNPARSED (no
+# cascade to siblings); the checker output is parsed regardless of the
+# child exit code (info blocks and errors share the stream), and a
+# whole-file failure still records the capped error tail on the file
+# row, never judged.
 #
 # Classification face.  Each parsed axiom set classifies by the precedence
 # below.  A PRIVATE declaration whose probe succeeded and whose set
@@ -198,8 +209,9 @@ SORRY_AX = "sorryAx"
 # through the copy-append form.  Its axiom closure rides the row and
 # counts normally toward the sweep verdict; it is NOT a pass-by-absence.
 PRIVATE_COVERED = "PRIVATE-COVERED"
-# Exact-name marker comment on every emitted probe line; the parser
-# aligns output blocks via the emitted probe list, never positionally.
+# Exact-name marker comment on every emitted probe line; human-readable
+# checker text only - lean never echoes comments, so the parse never
+# searches stdout for it (attribution is name-keyed over the blocks).
 PROBE_MARKER = "rocqwash-probe"
 
 # Line-start declaration enumeration (byte-literal; comment bodies unmasked).
@@ -214,17 +226,17 @@ NAMESPACE_RE = re.compile(r"(?m)^[ \t]*namespace[ \t]+([A-Za-z_][A-Za-z0-9_'.]*)
 SECTION_RE = re.compile(r"(?m)^[ \t]*section(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
 END_RE = re.compile(r"(?m)^[ \t]*end(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
 
-# `#print axioms` output faces (Lean 4 CLI message lines).  The message
-# BODY regexes stay unanchored, but attribution keys the
-# "<file>:<line>:<col>: <severity>: " position prefix against the emitted
-# probe list: an axiom/clean block is attributed to the declaration whose
-# emitted probe line carries the block's position, then name-verified.
-# POSITION_RE tolerates Windows drive-letter paths (the non-greedy path
-# piece can only end at a `:<digits>:<digits>: ` run followed by a
-# severity word).  A probe line carrying anything other than its own
-# axiom/clean block parses UNPARSED for that ONE declaration - honest, no
-# sibling cascade; an unprefixed message line is attributable to no
-# emitted probe line and is ignored.
+# `#print axioms` output faces (Lean 4 CLI message lines).  Attribution
+# is NAME-KEYED: the unanchored block regexes scan the whole probe stdout
+# and each reported '<name>' maps to the emitted probe list by exact
+# match, with a unique-suffix fallback for mangled private names; probe
+# line numbers are bookkeeping only, never parsed.  POSITION_RE (still
+# tolerant of Windows drive-letter paths: the non-greedy path piece can
+# only end at a `:<digits>:<digits>: ` run followed by a severity word)
+# now feeds ONLY the honest per-name UNPARSED reasons: an error message
+# quoting a probe's name becomes that probe's reason when its block is
+# missing.  A probe whose name never parses stays UNPARSED for that ONE
+# declaration - honest, no sibling cascade.
 CLEAN_RE = re.compile(r"'([^']+)' does not depend on any axioms")
 AXIOMS_RE = re.compile(r"'([^']+)' depends on axioms:[ \t]*\[([^\]]*)\]")
 POSITION_RE = re.compile(
@@ -398,13 +410,15 @@ def build_copy_checker(text, names):
     """The primary copy-append probe form.  Returns (checker_text, probes)
     where checker_text is the target file's own text with one probe line
     per declaration APPENDED - `#print axioms <name> -- rocqwash-probe
-    <name>`, enumeration order, exact-name marker comment - and probes is
-    the emitted probe list [(checker_line_no, name)] the parser aligns
-    output blocks by (never positional counting).  Running the probes in
-    the file's own context makes private declarations resolvable (the
-    import-based form cannot see them) and needs no module derivation; a
-    leading decoded BOM is dropped (a zero-information decoding artifact,
-    not content masking)."""
+    <name>`, enumeration order, exact-name marker comment (human-readable
+    checker text only: lean never echoes comments, so the parse cannot
+    and does not search stdout for it) - and probes is the emitted probe
+    list [(checker_line_no, name)] the parser maps output blocks by NAME
+    (the line numbers are bookkeeping only, never parsed).  Running the
+    probes in the file's own context makes private declarations
+    resolvable (the import-based form cannot see them) and needs no
+    module derivation; a leading decoded BOM is dropped (a
+    zero-information decoding artifact, not content masking)."""
     if text.startswith("\ufeff"):
         text = text[1:]
     lines = text.split("\n")
@@ -439,88 +453,120 @@ def classify_axioms(axioms, allow):
 
 
 def parse_print_axioms(output, probes):
-    """Attribute `#print axioms` output blocks to declarations via the
-    emitted probe list [(checker_line_no, name)] - never positional
-    counting.  Returns one row per probe, in probe order: {"name", "ok",
-    "axioms", "reason", "raw"}; ok=False rows are UNPARSED (honest) and
-    map ONLY to their own declaration (no sibling cascade).
+    """Name-keyed attribution of `#print axioms` output blocks to the
+    emitted probes - the retired marker/line bookkeeping never worked:
+    lean echoes neither comments nor the probe lines, so stdout carries
+    no marker text and no trustworthy line alignment.  The WHOLE probe
+    stdout is scanned for '<name>' does-not-depend / depends-on blocks
+    and each reported name maps to the emitted probe list [(line, name)]
+    by EXACT name (the line numbers in the list are bookkeeping only).
+    Returns one row per probe, in probe order: {"name", "ok", "axioms",
+    "reason", "raw"}; ok=False rows are UNPARSED (honest) and map ONLY to
+    their own declaration (no sibling cascade); raw is the capped output
+    head.
 
-    Alignment face: an axiom/clean block sitting on an emitted probe line
-    attributes to that probe's declaration after exact-name verification;
-    an error message on a probe line (unknown identifier, unresolved
-    name) fails exactly that declaration; a probe line with no message at
-    all (launch failure, mid-file elaboration failure) fails exactly that
-    declaration.  Correspondence guard: an axiom/clean block quoting one
-    of the probed names from a NON-probe line means the output is not
-    this emission's (a displaced or duplicated response - the old
-    positional surplus face) and nothing is judged; blocks quoting names
-    that were never probed are not this emission's probes either (the
-    target file may carry its own `#print` lines) and are ignored."""
-    probe_names = {nm for _ln, nm in probes}
-    probe_lines = {ln for ln, _nm in probes}
-    msgs = []  # (line_no, severity, message) in stream order
+    Mangled-private fallback: the copy-append context can report a
+    private declaration under its mangled module-private name; on an
+    exact miss the reported name matches by suffix containment ONLY when
+    exactly one emitted declaration name is a suffix of it - zero or
+    several candidates stay UNPARSED, never guessed.  A name answered
+    with two DIFFERENT axiom sets (a displaced or duplicated response)
+    is unusable: exactly its own row goes UNPARSED with a
+    does-not-correspond reason, nothing judged.  A probe whose name
+    never parses takes the first position-prefixed error message quoting
+    it ('<name>' as a quoted token; unknown identifier and friends) as
+    its reason, else an honest no-block reason naming the blocks that
+    were reported; blocks quoting never-probed names (the target file
+    may carry its own `#print` lines) attribute to nobody and ride no
+    row."""
+    probe_names = [nm for _ln, nm in probes]
+    name_set = set(probe_names)
+    # Reported name -> dict of DISTINCT axiom tuples seen (insertion
+    # ordered, hence deterministic): duplicate identical blocks collapse,
+    # conflicting ones stay visible.
+    seen = {}
+    for m in AXIOMS_RE.finditer(output):
+        axioms = tuple(a.strip() for a in m.group(2).split(",") if a.strip())
+        seen.setdefault(m.group(1), {})[axioms] = None
+    for m in CLEAN_RE.finditer(output):
+        seen.setdefault(m.group(1), {})[()] = None
+    # Position-prefixed error messages feed ONLY the honest per-name
+    # UNPARSED reasons, never attribution: the first error message
+    # quoting a probe's name becomes that probe's reason when its block
+    # is missing.
+    err_by_name = {}
     for m in POSITION_RE.finditer(output):
-        msgs.append((int(m.group("line")), m.group("sev"),
-                     m.group("msg")))
-    by_line = {}
-    for ln, sev, msg in msgs:
-        by_line.setdefault(ln, []).append((sev, msg))
-    # Correspondence guard first: a probed name answered from a line that
-    # is not its emitted probe line breaks the emission correspondence.
-    guard_reason = None
-    for ln, _sev, msg in msgs:
-        blk = AXIOMS_RE.search(msg) or CLEAN_RE.search(msg)
-        if blk and blk.group(1) in probe_names and ln not in probe_lines:
-            guard_reason = ("output does not correspond to the emitted"
-                            " probe list: probed name %r answered at"
-                            " non-probe line %d; nothing attributed"
-                            % (blk.group(1), ln))
-            break
-    if guard_reason is not None:
-        return [{"name": nm, "ok": False, "axioms": [],
-                 "reason": guard_reason, "raw": output[:RAW_CAP]}
-                for _ln, nm in probes]
+        if m.group("sev") != "error":
+            continue
+        msg = m.group("msg")
+        for nm in probe_names:
+            if nm not in err_by_name and "'%s'" % nm in msg:
+                err_by_name[nm] = msg
+    # Per reported name resolve its target probe: exact first, then the
+    # unique-suffix fallback; a conflicting or ambiguous reported name
+    # resolves to nobody.
+    target = {}       # probe name -> resolved axiom list
+    rep_targets = {}  # reported name -> number of probes it could serve
+    for rep, sets in seen.items():
+        if len(sets) > 1:
+            rep_targets[rep] = 0  # conflicting duplicate: unusable
+            continue
+        axioms = list(next(iter(sets)))
+        if rep in name_set:
+            target[rep] = axioms
+            rep_targets[rep] = 1
+            continue
+        tgt = [nm for nm in probe_names if rep.endswith(nm)]
+        rep_targets[rep] = len(tgt)
+        if len(tgt) == 1 and tgt[0] not in target:
+            target[tgt[0]] = axioms
+    reported_sorted = sorted(seen)
     rows = []
-    for ln, nm in probes:
-        block = None    # message carrying this probe's own axiom/clean block
-        mismatch = None # message carrying a block that quotes another name
-        error = None    # first error message on the probe line
-        for sev, msg in by_line.get(ln, []):
-            blk = AXIOMS_RE.search(msg) or CLEAN_RE.search(msg)
-            if blk is not None and blk.group(1) == nm:
-                if block is None:
-                    block = msg
-            elif blk is not None:
-                if mismatch is None:
-                    mismatch = msg
-            elif sev == "error" and error is None:
-                error = msg
-        if block is not None:
-            ax = AXIOMS_RE.search(block)
-            axioms = ([a.strip() for a in ax.group(2).split(",")
-                       if a.strip()] if ax else [])
-            rows.append({"name": nm, "ok": True, "axioms": axioms,
+    for nm in probe_names:
+        if nm in seen and len(seen[nm]) > 1:
+            variants = [list(t) for t in seen[nm]]
+            rows.append({"name": nm, "ok": False, "axioms": [],
+                         "reason": ("output does not correspond to a"
+                                    " single emission: %r answered with"
+                                    " %d conflicting blocks %r; nothing"
+                                    " attributed"
+                                    % (nm, len(variants), variants)),
+                         "raw": output[:RAW_CAP]})
+            continue
+        if nm in target:
+            rows.append({"name": nm, "ok": True, "axioms": target[nm],
                          "reason": "", "raw": ""})
             continue
-        if mismatch is not None:
-            bad = (AXIOMS_RE.search(mismatch)
-                   or CLEAN_RE.search(mismatch)).group(1)
+        if nm in err_by_name:
+            msg = err_by_name[nm].strip()[:RAW_CAP]
             rows.append({"name": nm, "ok": False, "axioms": [],
-                         "reason": "probe block names %r, expected %r"
-                                   % (bad, nm),
-                         "raw": mismatch[:RAW_CAP]})
+                         "reason": msg, "raw": output[:RAW_CAP]})
             continue
-        if error is not None:
+        cands = [rep for rep in seen if rep.endswith(nm)]
+        if len(cands) == 1 and rep_targets[cands[0]] > 1:
             rows.append({"name": nm, "ok": False, "axioms": [],
-                         "reason": error.strip()[:RAW_CAP],
-                         "raw": error.strip()[:RAW_CAP]})
+                         "reason": ("reported name %r is a mangled-name"
+                                    " candidate for %r but its suffix"
+                                    " match is ambiguous across probes"
+                                    " %r; nothing attributed"
+                                    % (cands[0], nm,
+                                       [p for p in probe_names
+                                        if cands[0].endswith(p)])),
+                         "raw": output[:RAW_CAP]})
             continue
-        context = (output[:RAW_CAP] if not by_line.get(ln) else
-                   " ".join(m.strip() for _s, m in by_line[ln])[:RAW_CAP])
+        if len(seen) == 1:
+            rep = next(iter(seen))
+            rows.append({"name": nm, "ok": False, "axioms": [],
+                         "reason": ("probe block names %r, expected %r;"
+                                    " no exact or unique-suffix match"
+                                    % (rep, nm)),
+                         "raw": output[:RAW_CAP]})
+            continue
         rows.append({"name": nm, "ok": False, "axioms": [],
-                     "reason": "no probe block found on emitted probe"
-                               " line %d" % ln,
-                     "raw": context})
+                     "reason": ("no probe block found for name %r in"
+                                " probe output; blocks reported: %r"
+                                % (nm, reported_sorted)),
+                     "raw": output[:RAW_CAP]})
     return rows
 
 
@@ -1063,6 +1109,37 @@ LEAN_OUT_ISOLATED = (
     "ck.lean:4:0: error: unknown identifier 'b'\n"
     "ck.lean:6:0: info: 'c' does not depend on any axioms\n")
 
+# Name-keyed parse fixtures (the marker/line bookkeeping is retired):
+# NAMEKEY_PROBES carries deliberately WRONG probe line numbers to pin
+# that attribution keys the reported NAME against the emitted probe
+# list, never the line.  LEAN_OUT_NAMEKEY_MISSING drops one block:
+# exactly that row goes UNPARSED, siblings classify (no cascade).
+# LEAN_OUT_NAMEKEY_MANGLED reports a private declaration under its
+# mangled module-private name (the unique-suffix fallback face);
+# LEAN_OUT_NAMEKEY_MANGLED_AMBIG reports one whose suffix is shared by
+# two emitted names (the fallback must refuse: honest UNPARSED).
+LEAN_OUT_NAMEKEY_FULL = (
+    "ck.lean:2:0: info: 'n_clean' does not depend on any axioms\n"
+    "ck.lean:4:0: info: 'n_three' depends on axioms: "
+    "[propext, Classical.choice, Quot.sound]\n"
+    "ck.lean:6:0: info: 'n_sorry' depends on axioms: [sorryAx]\n"
+    "ck.lean:8:0: info: 'n_custom' depends on axioms: [my_ax.rh]\n"
+    "ck.lean:10:0: info: 'n_priv' depends on axioms: [propext]\n")
+LEAN_OUT_NAMEKEY_MISSING = (
+    "ck.lean:2:0: info: 'n_clean' does not depend on any axioms\n"
+    "ck.lean:4:0: info: 'n_three' depends on axioms: "
+    "[propext, Classical.choice, Quot.sound]\n"
+    "ck.lean:6:0: info: 'n_sorry' depends on axioms: [sorryAx]\n"
+    "ck.lean:10:0: info: 'n_priv' depends on axioms: [propext]\n")
+LEAN_OUT_NAMEKEY_MANGLED = (
+    "ck.lean:5:0: info: '_private.My.Mod.0.priv_one' depends on axioms:"
+    " [propext]\n")
+LEAN_OUT_NAMEKEY_MANGLED_AMBIG = (
+    "ck.lean:5:0: info: '_private.My.Mod.0.Foo.priv_bar' depends on"
+    " axioms: [propext]\n")
+NAMEKEY_PROBES = [(91, "n_clean"), (57, "n_three"), (33, "n_sorry"),
+                  (75, "n_custom"), (12, "n_priv")]
+
 # The design-4 offline fixture: one public and one private declaration;
 # copy-append probes both (the private one classes PRIVATE-COVERED with
 # its axiom set, the public one classes CLEAN).
@@ -1129,9 +1206,9 @@ def selftest():
             got2 == [("pn", 1, True), ("pt", 2, False)],
             "got %s" % (got2,))
 
-        # parse faces: the six classes plus attribution faces; alignment
-        # is keyed to the emitted probe list [(line, name)], never
-        # positional counting
+        # parse faces: the six classes plus attribution faces; blocks
+        # attribute by NAME against the emitted probe list [(line, name)]
+        # - the line numbers are bookkeeping only, never parsed
         rows = parse_print_axioms(LEAN_OUT_CLEAN, [(2, "t_clean")])
         vec("parse-clean", rows[0]["ok"] and rows[0]["axioms"] == [],
             "got %s" % (rows,))
@@ -1191,6 +1268,53 @@ def selftest():
             not rows[0]["ok"]
             and "no probe block" in rows[0]["reason"],
             "got %s" % (rows,))
+
+        # name-keyed parse faces: attribution keys the reported NAME
+        # against the emitted probe list - the deliberately wrong probe
+        # line numbers must not matter (the retired marker/line
+        # bookkeeping never worked: lean echoes no comments)
+        rows = parse_print_axioms(LEAN_OUT_NAMEKEY_FULL, NAMEKEY_PROBES)
+        ok = ([r["ok"] for r in rows] == [True] * 5
+              and [r["axioms"] for r in rows]
+              == [[], list(BENIGN_STANDARD), ["sorryAx"], ["my_ax.rh"],
+                  ["propext"]])
+        vec("parse-namekey-all-classified", ok, "got %s" % (rows,))
+        decls_nk = [("n_clean", 2, False), ("n_three", 4, False),
+                    ("n_sorry", 6, False), ("n_custom", 8, False),
+                    ("n_priv", 10, True)]
+        rows = classify_decl_rows("x.lean", decls_nk, rows, [], "lake-env")
+        vec("classify-namekey-all-five-classes",
+            [r["classification"] for r in rows]
+            == ["CLEAN", "BENIGN-STANDARD", "SORRY-ALARM",
+                "CUSTOM-AXIOM-ALARM", PRIVATE_COVERED],
+            "got %s" % (rows,))
+        rows = parse_print_axioms(LEAN_OUT_NAMEKEY_MISSING, NAMEKEY_PROBES)
+        ok = ([r["ok"] for r in rows]
+              == [True, True, True, False, True]
+              and "no probe block" in rows[3]["reason"]
+              and rows[3]["raw"] != ""
+              and all(r["ok"] for i, r in enumerate(rows) if i != 3))
+        vec("parse-namekey-missing-one-no-cascade", ok, "got %s" % (rows,))
+        rows = parse_print_axioms(LEAN_OUT_NAMEKEY_MANGLED,
+                                  [(99, "priv_one")])
+        rows_c = classify_decl_rows("x.lean", [("priv_one", 5, True)],
+                                    rows, [], "lake-env")
+        vec("parse-namekey-mangled-suffix-fallback",
+            rows[0]["ok"] and rows[0]["axioms"] == ["propext"]
+            and rows_c[0]["classification"] == PRIVATE_COVERED,
+            "got %s / %s" % (rows, rows_c))
+        rows = parse_print_axioms(LEAN_OUT_NAMEKEY_MANGLED_AMBIG,
+                                  [(99, "Foo.priv_bar"), (101, "priv_bar")])
+        vec("parse-namekey-mangled-ambiguous-honest",
+            all(not r["ok"] for r in rows)
+            and all("ambiguous" in r["reason"] for r in rows),
+            "got %s" % (rows,))
+        r1 = parse_print_axioms(LEAN_OUT_NAMEKEY_FULL, NAMEKEY_PROBES)
+        r2 = parse_print_axioms(LEAN_OUT_NAMEKEY_FULL, NAMEKEY_PROBES)
+        vec("parse-namekey-determinism",
+            json.dumps(r1, ensure_ascii=False)
+            == json.dumps(r2, ensure_ascii=False),
+            "double parse not byte-identical")
 
         # classify faces: precedence, whitelist, sorryAx never allowed
         vec("classify-clean", classify_axioms([], []) == ("CLEAN", [], []),
