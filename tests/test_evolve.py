@@ -12,7 +12,8 @@ Purpose.  Brings the autonomous evolution engine (harvest→derive→draft,
 
 Interface.  Invoked by tests/run_tests.sh (t_evolve) or standalone:
   python3 -B tests/test_evolve.py.  Three checks:
-  1 --selftest exits 0 with ten PASS vector-group lines and no FAIL line;
+  1 --selftest exits 0 with eleven PASS vector-group lines and no FAIL
+    line (the vector groups grew by the signal-g gate-health vector);
   2 --help exits 0 (argparse usage face present);
   3 exit-code contract spot checks: --bogus 2; missing --draft-out 2;
     no signal source 2; watch-repo without state 2; two suite sources 2;
@@ -48,10 +49,10 @@ def main():
     fails = []
     rc, out = run(["--selftest"])
     n_pass = sum(1 for line in out.splitlines() if line.startswith("PASS "))
-    if rc != 0 or n_pass != 10 or "FAIL" in out:
-        fails.append("check1 --selftest should exit 0 with ten PASS vector "
-                     "group lines and no FAIL line (got rc=%d, PASS=%d)"
-                     % (rc, n_pass))
+    if rc != 0 or n_pass != 11 or "FAIL" in out:
+        fails.append("check1 --selftest should exit 0 with eleven PASS "
+                     "vector group lines and no FAIL line (got rc=%d, "
+                     "PASS=%d)" % (rc, n_pass))
         print(out)
     rc, out = run(["--help"])
     if rc != 0:

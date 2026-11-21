@@ -931,9 +931,10 @@ t_evolve() {
   # harvest signal classes by subprocess of the existing engines, derive
   # scored candidates by fixed rules, draft the human-gated next-round task
   # brief (constitution three-law preamble auto-carried). tests/test_evolve.py
-  # minimal shell, three checks: --selftest rc=0 with ten PASS vector groups
-  # (canned signal injection via real subprocesses, candidate rules, draft
-  # formation, frozen exclusion, sentinel seen-idempotence, deterministic
+  # minimal shell, three checks: --selftest rc=0 with eleven PASS vector
+  # groups (canned signal injection via real subprocesses and stub engines,
+  # gate-health harvest, candidate rules, draft formation, frozen exclusion,
+  # sentinel seen-idempotence, deterministic
   # double run), --help smoke, exit-code contract spot checks bogus=2/
   # no-draft=2/no-signal=2/watch-without-state=2/two-suite-sources=2/
   # missing-baseline=9/missing-parent=9; tmp fixtures only, zero writes,

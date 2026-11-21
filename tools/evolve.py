@@ -4,28 +4,28 @@
 
 Purpose.  The law-three harvest→derive→draft pipeline: turn live repository
   signals into a reviewed, human-gated task-brief draft for the next round.
-  Harvest collects five signal classes by subprocess of the existing engines
-  (zero new engines): norm-lint fitness (current tree vs baseline, frozen
-  surfaces excluded), new ci-red events from one sentinel --once round, the
-  suite last state (captured ledger or a live run), registry-audit accounts
-  with increment, and maintained UNRECOGNIZED sentinel events. Derive applies
-  fixed scoring rules plus genetic standing candidates; draft renders the
-  human-gated brief to --draft-out; draft-only: selection is not implemented
-  in this code, no candidate is executed, the repository is never written.
+  Harvest collects six signal classes by subprocess of the existing engines:
+  norm-lint fitness, new ci-red events from one sentinel --once round, the
+  suite last state, registry-audit accounts with increment, maintained
+  UNRECOGNIZED sentinel events, and the gate-health readings (doc_lint rc,
+  recorded suite ledger, whitelist norm errors). Derive applies fixed
+  scoring rules plus genetic standing candidates; draft renders the
+  human-gated brief to --draft-out; draft-only: selection is not
+  implemented in this code, no candidate is executed, the repository is
+  never written.
 
 Interface.  python3 tools/evolve.py --draft-out PATH [--json PATH] [--top N]
   [--baseline PATH] [--watch-repo ORG/REPO]... [--sentinel-state PATH]
-  [--suite-ledger PATH | --suite-now] [--registry-git REPO --registry-ref
-  REF] | --selftest; every flag and the rocqwash-evolve/1 schema face are
-  specified in the extended contract below.
+  [--suite-ledger PATH | --suite-now] [--gate] [--registry-git REPO
+  --registry-ref REF] | --selftest; see the extended contract below.
 
-Dependencies.  Python 3 stdlib only; sibling engines norm_lint.py /
-  cw_sentinel.py / registry_audit.py / tests/run_tests.sh and the frozen eight
+Dependencies.  Python 3 stdlib only; sibling engines norm_lint.py, doc_lint.py,
+  cw_sentinel.py, registry_audit.py, tests/run_tests.sh and the frozen eight
   list in certify/frozen8.py live relative to this engine; git on PATH.
 
-Evidence.  --selftest vectors: canned signal injection via real subprocesses,
-  candidate-rule unit judgments, draft formation, frozen exclusion, sentinel
-  seen-idempotence, deterministic double run.
+Evidence.  --selftest vectors: canned signal injection (real subprocesses
+  and stub engines), candidate-rule unit judgments, draft formation, frozen
+  exclusion, sentinel seen-idempotence, deterministic double run.
 
 Exit-codes.  0 = harvest/derive/draft completed (adverse signals are data);
   2 = usage error; 9 = missing or unreachable input (fail-loud).
@@ -71,6 +71,34 @@ Exit-codes.  0 = harvest/derive/draft completed (adverse signals are data);
 #                       summary form) is parsed.
 # --suite-now           run tests/run_tests.sh live instead (mutually
 #                       exclusive with --suite-ledger, 2 if both given).
+# --gate                enable signal g (gate-health): three readings in
+#                       one harvest — (1) the doc_lint rc via a subprocess
+#                       of tools/doc_lint.py --repo (rc 0 consistent, rc 1
+#                       drift data; any other code is an unreachable
+#                       instrument and fails loud 9); (2) the suite red
+#                       count parsed from the latest recorded run_tests.sh
+#                       ledger (--gate-ledger-dir; the suite is never run
+#                       in the harvest path) — no directory given, a
+#                       missing directory, or no parsable summary line is
+#                       reported unreadable (data, never a failure); (3)
+#                       the whitelist-variant norm error count via a
+#                       subprocess of norm_lint --tree --cjk-whitelist
+#                       (the child's summary.error account; a nonzero
+#                       child exit fails loud 9). The norm child runs with
+#                       the repo root as its working directory, so its
+#                       default mapping table resolves exactly as the bare
+#                       gate command's does.
+# --gate-whitelist PATH  CJK whitelist forwarded to the gate norm scan
+#                       (default = the DEFAULT_GATE_WHITELIST constant,
+#                       resolved under the repo root; missing file fails
+#                       loud 9).
+# --gate-ledger-dir DIR  directory of recorded run_tests.sh ledgers (plain
+#                       text captures); the latest is the
+#                       lexicographically greatest filename whose content
+#                       carries a parsable summary line (timestamped
+#                       capture names sort chronologically, so the engine
+#                       stays wall-clock-free). Without the flag the suite
+#                       reading is reported unreadable.
 # --registry-git REPO / --registry-ref REF  enable the registry signal
 #                       (git direct-read form); --git-path-order /
 #                       --git-path-project override the book paths
@@ -89,10 +117,11 @@ Exit-codes.  0 = harvest/derive/draft completed (adverse signals are data);
 #                       decimals; evidence_raw is the underlying item count
 #                       per rule (regressing files, error mass, maintained
 #                       UNRECOGNIZED events, new A-family events,
-#                       duplicates+orphans, suite reds); the clamp keeps the
-#                       five rule families comparable and the raw count is
-#                       preserved in the candidate basis. Order = score
-#                       descending, then kind, then title (all deterministic).
+#                       duplicates+orphans, suite reds, gate findings); the
+#                       clamp keeps the rule families comparable and the raw
+#                       count is preserved in the candidate basis. Order =
+#                       score descending, then kind, then title (all
+#                       deterministic).
 # Rule table (signals to candidates; a rule fires only when its signal was
 #   harvested): norm translatable regression -> norm-regression; norm
 #   translatable error mass remaining -> longtail-translation (next
@@ -100,7 +129,9 @@ Exit-codes.  0 = harvest/derive/draft completed (adverse signals are data);
 #   UNRECOGNIZED events -> taxonomy-supplement; new A-family events ->
 #   red-triage (the other families follow the `red_dispatch.py` routing
 #   conventions and are not re-derived here); duplicates+orphans ->
-#   registry-hygiene; suite reds -> suite-repair. Genetic standing
+#   registry-hygiene; suite reds -> suite-repair; adverse gate readings
+#   (doc_lint drift, recorded suite reds, whitelist-variant norm error
+#   mass) -> gate-repair. Genetic standing
 #   candidates (heredity) fire whenever their topic has no live candidate
 #   this round; each cites its frozen-ledger entry (entry id and section,
 #   never a line number that would rot on append).
@@ -136,6 +167,7 @@ SCHEMA = "rocqwash-evolve/1"
 TOOLS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(TOOLS_DIR)
 NORM_TOOL = os.path.join(TOOLS_DIR, "norm_lint.py")
+DOC_LINT_TOOL = os.path.join(TOOLS_DIR, "doc_lint.py")
 SENTINEL_TOOL = os.path.join(TOOLS_DIR, "cw_sentinel.py")
 AUDIT_TOOL = os.path.join(TOOLS_DIR, "registry_audit.py")
 SUITE_ENTRY = os.path.join(REPO_ROOT, "tests", "run_tests.sh")
@@ -145,12 +177,14 @@ if CERTIFY_DIR not in sys.path:
 import frozen8 as _frozen8  # noqa: E402  (frozen ledger list, single source)
 
 DEFAULT_JARGON_MAP = "docs/jargon-to-standard-mapping-v1.md"
+DEFAULT_GATE_WHITELIST = "docs/norm-lint-cjk-whitelist-20261113.txt"
 DEFAULT_TOP = 5
 EVIDENCE_CAP = 10          # evidence clamp entering the score formula
 NORM_TIMEOUT = 180         # norm_lint child cap (seconds)
 SENTINEL_TIMEOUT = 600     # sentinel once-round cap (network retries included)
 SUITE_TIMEOUT = 900        # run_tests.sh cap (measured run ~150s)
 AUDIT_TIMEOUT = 180        # registry_audit child cap (tmp clone included)
+DOC_LINT_TIMEOUT = 120     # doc_lint child cap (measured run ~9s)
 FROZEN_LEDGER = "更新账.md"   # append-only frozen ledger (read-only surface)
 REPO_RE = re.compile(r"^[^/\s]+/[^/\s]+$")
 SUITE_SUMMARY_RE = re.compile(
@@ -321,6 +355,27 @@ CAND_SPECS = {
                       "doc_lint consistent; no case was skipped or weakened "
                       "to reach the green state.",
     },
+    "gate-repair": {
+        "impact": 2, "effort": 2,
+        "title": "Restore the gate-health readings to green",
+        "goal": "Repair the adverse gate-health readings that gate the "
+                "evolution loop: doc_lint {dl_status} (rc {dl_rc}), recorded "
+                "suite ledger {suite_txt}, whitelist-variant norm error "
+                "mass {norm_err}.",
+        "approach": "Repair each adverse reading at its own face: doc_lint "
+                    "drift is repaired on the doc faces its report names "
+                    "(never by weakening the check), a recorded suite red "
+                    "is reproduced in isolation and fixed at the tool face "
+                    "the case attests (never weaken the case), and the "
+                    "whitelist-variant norm errors are carried per the "
+                    "mapping table with .zh.md archive siblings; an "
+                    "unreadable suite reading is repaired by recording a "
+                    "fresh ledger capture.",
+        "acceptance": "doc_lint exits 0 (consistent); the latest recorded "
+                      "run ledger parses with 0 red; the whitelist-variant "
+                      "norm error count decreases against the starting "
+                      "account; no gate engine face was weakened.",
+    },
 }
 
 
@@ -334,6 +389,7 @@ KIND_TOPIC = {
     "red-triage": "red",
     "registry-hygiene": "registry",
     "suite-repair": "suite",
+    "gate-repair": "gate",
 }
 
 
@@ -769,6 +825,102 @@ def harvest_unrec(events_path, state_path):
             "maintained": out, "count": len(out)}
 
 
+def harvest_gate(repo_root, whitelist, ledger_dir, tmpdir,
+                 doc_lint_tool=None, jargon_map=None):
+    """Signal (g): gate-health readings from the existing gate engines.
+
+    Three readings, zero new engines: (1) the doc_lint rc via a subprocess
+    of the sibling engine at --repo (rc 0 consistent, rc 1 drift data; any
+    other code is an unreachable instrument and fails loud 9 with the
+    stderr tail); (2) the suite red count parsed from the latest recorded
+    run_tests.sh ledger under ledger_dir — the lexicographically greatest
+    filename whose content carries a parsable summary line (timestamped
+    capture names sort chronologically, so no wall-clock enters the
+    engine); a missing flag, a missing directory, or no parsable ledger is
+    reported unreadable (data, never a failure; the suite is never run in
+    the harvest path); (3) the whitelist-variant norm error count via a
+    subprocess of the norm engine on the repo root with --cjk-whitelist
+    (the child's own summary.error account; a nonzero child exit fails
+    loud 9). The norm child runs with the repo root as its working
+    directory, so its default mapping table resolves exactly as the bare
+    gate command's does; an explicit jargon_map is forwarded instead (the
+    selftest's canned fixture map). Each reading carries its own status,
+    so a stale or absent ledger is visible without poisoning the others.
+    """
+    if not os.path.isdir(repo_root):
+        fail("repo root missing: %s" % repo_root, 9)
+    if not os.path.isfile(whitelist):
+        fail("gate norm scan whitelist missing: %s" % whitelist, 9)
+    # reading 1: doc_lint rc (0 consistent / 1 drift are data)
+    rc, _out, err = run_child(
+        [sys.executable, "-B", doc_lint_tool or DOC_LINT_TOOL,
+         "--repo", repo_root],
+        "doc_lint gate reading", DOC_LINT_TIMEOUT)
+    if rc == 0:
+        doc_lint = {"rc": 0, "status": "consistent"}
+    elif rc == 1:
+        doc_lint = {"rc": 1, "status": "drift"}
+    else:
+        fail("doc_lint gate reading unreachable rc=%d: %s" % (rc, clip(err)),
+             9)
+    # reading 2: latest recorded suite ledger (read-only scan, no suite run)
+    suite = {"status": "unreadable", "file": None, "red": None,
+             "pass": None, "skip": None, "total": None, "reason": None}
+    if not ledger_dir:
+        suite["reason"] = "no --gate-ledger-dir given"
+    elif not os.path.isdir(ledger_dir):
+        suite["reason"] = "ledger directory missing: %s" % ledger_dir
+    else:
+        best = None
+        for name in sorted(os.listdir(ledger_dir)):
+            path = os.path.join(ledger_dir, name)
+            if not os.path.isfile(path):
+                continue
+            try:
+                with io.open(path, "r", encoding="utf-8",
+                             errors="replace") as fh:
+                    text = fh.read()
+            except OSError:
+                continue
+            m = SUITE_SUMMARY_RE.search(text)
+            if m:
+                best = (name, m)
+        if best is None:
+            suite["reason"] = ("no parsable run_tests.sh summary line "
+                               "under: %s" % ledger_dir)
+        else:
+            name, m = best
+            suite.update({"status": "recorded", "file": name,
+                          "pass": int(m.group(1)), "red": int(m.group(2)),
+                          "skip": int(m.group(3)),
+                          "total": int(m.group(4))})
+    # reading 3: whitelist-variant norm error count (real norm child)
+    out_json = os.path.join(tmpdir, "norm_gate.json")
+    cmd = [sys.executable, "-B", NORM_TOOL, "--tree", repo_root,
+           "--cjk-whitelist", whitelist, "--json", out_json]
+    if jargon_map:
+        cmd += ["--jargon-map", jargon_map]
+    rc, _out, err = run_child(cmd, "gate norm scan", NORM_TIMEOUT,
+                              cwd=repo_root)
+    if rc != 0:
+        fail("gate norm scan failed rc=%d: %s" % (rc, clip(err or _out)), 9)
+    report = load_json(out_json, "gate norm scan report")
+    require_schema(report, NORM_SCHEMA, "gate norm scan report")
+    summary = report.get("summary", {})
+    return {
+        "present": True,
+        "doc_lint": doc_lint,
+        "suite": suite,
+        "norm": {"error": summary.get("error", 0),
+                 "warn": summary.get("warn", 0),
+                 "files": summary.get("files", 0)},
+        "whitelist": (whitelist if os.path.isabs(whitelist)
+                      else os.path.abspath(
+                          os.path.join(repo_root, whitelist))),
+        "ledger_dir": os.path.abspath(ledger_dir) if ledger_dir else None,
+    }
+
+
 # ---- stage 2: derive --------------------------------------------------------
 
 
@@ -844,6 +996,20 @@ def derive_candidates(signals, top):
         cands.append(make_candidate(
             "suite-repair", suite["red"], {"red_cases": suite["red_cases"],
                                            "source": suite["source"]}, top))
+    gate = signals.get("gate")
+    if gate:
+        adverse = 1 if gate["doc_lint"]["status"] == "drift" else 0
+        if gate["suite"]["status"] == "recorded" and gate["suite"]["red"]:
+            adverse += gate["suite"]["red"]
+        adverse += gate["norm"]["error"]
+        if adverse > 0:
+            cands.append(make_candidate(
+                "gate-repair", adverse,
+                {"doc_lint": gate["doc_lint"], "suite": gate["suite"],
+                 "norm": gate["norm"], "whitelist": gate["whitelist"]}, top))
+        else:
+            notes.append("gate readings carry no adverse evidence; no gate "
+                         "candidate derived")
     live_topics = set(c["topic"] for c in cands)
     for standing in STANDING_CANDIDATES:
         if standing["topic"] in live_topics:
@@ -926,6 +1092,15 @@ def candidate_section(c, idx):
                            orph_n=basis["summary"]["orphans"])
     elif c["kind"] == "suite-repair":
         goal = goal.format(red_n=c["evidence_raw"])
+    elif c["kind"] == "gate-repair":
+        su = basis["suite"]
+        suite_txt = ("%d red per %s" % (su["red"], su["file"])
+                     if su["status"] == "recorded"
+                     else "unreadable (%s)" % su["reason"])
+        goal = goal.format(dl_status=basis["doc_lint"]["status"],
+                           dl_rc=basis["doc_lint"]["rc"],
+                           suite_txt=suite_txt,
+                           norm_err=basis["norm"]["error"])
     lines.append("- **Goal** — " + goal)
     lines.append("- **Approach** — " + approach)
     lines.append("- **Acceptance** — " + acceptance)
@@ -953,6 +1128,8 @@ def _grading_reason(c):
                             "multi-writer surface",
         "suite-repair": "the suite is the selection face; a red suite "
                         "outranks all",
+        "gate-repair": "recorded gate readings are evidence over the loop's "
+                       "own gates; live faces own the primary signals",
         "standing-candidate": "persisted memory with no live signal this "
                               "round; baseline agenda weight",
     }[c["kind"]]
@@ -1003,6 +1180,15 @@ def _evidence_line(c):
                          for r in b["red_cases"][:8])
         return "suite signal: %d red case(s) from %s: %s." \
                % (len(b["red_cases"]), b["source"], rows or "none")
+    if c["kind"] == "gate-repair":
+        su = b["suite"]
+        suite_txt = ("%d red per %s" % (su["red"], su["file"])
+                     if su["status"] == "recorded"
+                     else "unreadable (%s)" % su["reason"])
+        return "gate signal: doc_lint rc %d (%s); suite ledger %s; " \
+               "whitelist-variant norm errors %d (whitelist `%s`)." \
+               % (b["doc_lint"]["rc"], b["doc_lint"]["status"], suite_txt,
+                  b["norm"]["error"], b["whitelist"])
     return "heredity: %s." % b.get("anchor", "frozen-ledger lineage")
 
 
@@ -1107,6 +1293,18 @@ def render_draft(draft_path, repo_root, candidates, notes, signals, top):
     else:
         L.append("- Maintained UNRECOGNIZED events: not harvested (no "
                  "--sentinel-events/--sentinel-state given).")
+    gate = signals.get("gate")
+    if gate:
+        su = gate["suite"]
+        suite_txt = ("%d red per %s" % (su["red"], su["file"])
+                     if su["status"] == "recorded"
+                     else "unreadable (%s)" % su["reason"])
+        L.append("- Gate health: doc_lint rc %d (%s); recorded suite ledger "
+                 "%s; whitelist-variant norm errors %d (whitelist `%s`)."
+                 % (gate["doc_lint"]["rc"], gate["doc_lint"]["status"],
+                    suite_txt, gate["norm"]["error"], gate["whitelist"]))
+    else:
+        L.append("- Gate health: not harvested (no --gate given).")
     L.append("")
     for i, c in enumerate(in_draft, 1):
         L.append(candidate_section(c, i))
@@ -1188,10 +1386,15 @@ def run_pipeline(args):
         if args.sentinel_events or args.sentinel_state:
             signals["unrec"] = harvest_unrec(
                 args.sentinel_events, args.sentinel_state)
+        if args.gate:
+            whitelist = args.gate_whitelist or os.path.join(
+                args.repo_root, DEFAULT_GATE_WHITELIST)
+            signals["gate"] = harvest_gate(
+                args.repo_root, whitelist, args.gate_ledger_dir, tmpdir)
         if not signals:
             fail("no signal source requested: give at least one of "
                  "--baseline / --watch-repo / --suite-ledger / --suite-now / "
-                 "--registry-git / --sentinel-events", 2)
+                 "--registry-git / --sentinel-events / --gate", 2)
         candidates, notes = derive_candidates(signals, args.top)
         draft_text = render_draft(args.draft_out, args.repo_root, candidates,
                                   notes, signals, args.top)
@@ -1253,6 +1456,20 @@ def parse_args(argv):
                     help="captured run_tests.sh output (suite signal)")
     ap.add_argument("--suite-now", dest="suite_now", action="store_true",
                     help="run the suite live instead of reading a ledger")
+    ap.add_argument("--gate", dest="gate", action="store_true",
+                    help="enable signal g (gate-health: the doc_lint rc, "
+                         "the latest recorded suite ledger, the "
+                         "whitelist-variant norm error count)")
+    ap.add_argument("--gate-whitelist", dest="gate_whitelist", default=None,
+                    metavar="PATH",
+                    help="CJK whitelist forwarded to the gate norm scan "
+                         "(default docs/norm-lint-cjk-whitelist-20261113.txt "
+                         "under the repo root)")
+    ap.add_argument("--gate-ledger-dir", dest="gate_ledger_dir", default=None,
+                    metavar="DIR",
+                    help="directory of recorded run_tests.sh ledgers; the "
+                         "latest parsable one supplies the suite reading "
+                         "(without it the reading is reported unreadable)")
     ap.add_argument("--registry-git", dest="registry_git", default=None,
                     metavar="REPO",
                     help="enable the registry signal (git direct-read form)")
@@ -1405,7 +1622,12 @@ def selftest():
       [8] deterministic double run of the full CLI on canned inputs;
       [9] sentinel canned injector round, seen-idempotence second round,
           and the seeded harvest face;
-      [10] CLI usage contract (2/9 faces).
+      [10] CLI usage contract (2/9 faces);
+      [11] gate-health harvest: the doc_lint rc classification on stub
+          engines honoring the doc_lint interface, the recorded-ledger
+          latest-wins scan with the unreadable faces, the whitelist-variant
+          norm count on the real norm child, and the gate-repair derive
+          rule with the healthy-gate note.
     """
     fails = []
     tmp = tempfile.mkdtemp(prefix="rocqwash_evolve_self_")
@@ -1804,12 +2026,94 @@ def selftest():
         _expect(r == 2, "vector10 top 0 rc=2 (got %d)" % r, fails)
         print("PASS [10] CLI usage contract (2/9 faces)")
 
+        # ---- [11] gate-health harvest (stub doc_lint engines honoring the
+        #      doc_lint interface --repo + rc; the real norm child on the
+        #      vector-1 canned tree; canned recorded ledgers) ----
+        ok_stub = os.path.join(tmp, "dl_consistent.py")
+        _wf(ok_stub, "import sys\nsys.exit(0)\n")
+        drift_stub = os.path.join(tmp, "dl_drift.py")
+        _wf(drift_stub, "import sys\nsys.exit(1)\n")
+        dead_stub = os.path.join(tmp, "dl_dead.py")
+        _wf(dead_stub, "import sys\nsys.exit(9)\n")
+        gate_wl = os.path.join(tmp, "gate_whitelist.txt")
+        _wf(gate_wl, "# fixture whitelist (selftest)\n")
+        gate_ledgers = os.path.join(tmp, "gate_ledgers")
+        os.makedirs(gate_ledgers)
+        _wf(os.path.join(gate_ledgers, "suite-20261120.txt"),
+            "[1/2] t_old                     FAIL (rc=1)\n"
+            "== \u6c47\u603b: 1 \u8fc7 / 1 \u7ea2 / 0 \u7565 / \u5171 2 \u4f8b ==\n")
+        _wf(os.path.join(gate_ledgers, "suite-20261121.txt"),
+            "[1/2] t_newer                   FAIL (rc=2)\n"
+            "== \u6c47\u603b: 1 \u8fc7 / 1 \u7ea2 / 0 \u7565 / \u5171 2 \u4f8b ==\n")
+        g = harvest_gate(tree, gate_wl, gate_ledgers, tmp,
+                         doc_lint_tool=ok_stub, jargon_map=map_path)
+        _expect(g["doc_lint"] == {"rc": 0, "status": "consistent"},
+                "vector11 doc_lint consistent face: %s" % g["doc_lint"],
+                fails)
+        _expect(g["suite"]["status"] == "recorded"
+                and g["suite"]["file"] == "suite-20261121.txt"
+                and g["suite"]["red"] == 1
+                and g["suite"]["total"] == 2,
+                "vector11 latest ledger wins with its red count: %s"
+                % g["suite"], fails)
+        _expect(g["norm"]["error"] == 1,
+                "vector11 whitelist-variant norm error mass: %s" % g["norm"],
+                fails)
+        g2 = harvest_gate(tree, gate_wl, gate_ledgers, tmp,
+                          doc_lint_tool=drift_stub, jargon_map=map_path)
+        _expect(g2["doc_lint"] == {"rc": 1, "status": "drift"},
+                "vector11 doc_lint drift is data: %s" % g2["doc_lint"],
+                fails)
+        cands11, _n11 = derive_candidates({"gate": g2}, 5)
+        gr = [c for c in cands11 if c["kind"] == "gate-repair"]
+        _expect(len(gr) == 1 and gr[0]["evidence_raw"] == 3
+                and gr[0]["score"] == 3.0,
+                "vector11 gate-repair fires on drift+red+mass (3): %s" % gr,
+                fails)
+        txt11 = render_draft(os.path.join(tmp, "d1", "draft_run.md"), tmp,
+                             gr, [], {"gate": g2}, 5)
+        _expect("## Candidate 1 — gate-repair" in txt11
+                and "- Gate health: doc_lint rc 1 (drift)" in txt11,
+                "vector11 gate draft line and candidate render", fails)
+        try:
+            harvest_gate(tree, gate_wl, gate_ledgers, tmp,
+                         doc_lint_tool=dead_stub, jargon_map=map_path)
+            fails.append("vector11 unreachable doc_lint must fail loud 9")
+        except EvolveError as e:
+            _expect(e.code == 9, "vector11 dead engine code=%d" % e.code,
+                    fails)
+        g3 = harvest_gate(tree, gate_wl, None, tmp,
+                          doc_lint_tool=ok_stub, jargon_map=map_path)
+        _expect(g3["suite"]["status"] == "unreadable"
+                and g3["suite"]["reason"] == "no --gate-ledger-dir given",
+                "vector11 no-dir unreadable face: %s" % g3["suite"], fails)
+        g4 = harvest_gate(tree, gate_wl, os.path.join(tmp, "no_such_ledgers"),
+                          tmp, doc_lint_tool=ok_stub, jargon_map=map_path)
+        _expect(g4["suite"]["status"] == "unreadable"
+                and "ledger directory missing" in g4["suite"]["reason"],
+                "vector11 missing-dir unreadable face: %s" % g4["suite"],
+                fails)
+        healthy = {"present": True,
+                   "doc_lint": {"rc": 0, "status": "consistent"},
+                   "suite": {"status": "recorded", "file": "suite-ok.txt",
+                             "red": 0, "pass": 2, "skip": 0, "total": 2,
+                             "reason": None},
+                   "norm": {"error": 0, "warn": 0, "files": 3},
+                   "whitelist": gate_wl, "ledger_dir": None}
+        cands_h, notes_h = derive_candidates({"gate": healthy}, 5)
+        _expect(not [c for c in cands_h if c["kind"] == "gate-repair"]
+                and any("gate" in n for n in notes_h),
+                "vector11 healthy gate yields the note, no candidate: %s / %s"
+                % (cands_h, notes_h), fails)
+        print("PASS [11] gate-health harvest (stub rc faces, ledger scan, "
+              "real norm child)")
+
         if fails:
             print("== evolve selftest: %d FAIL ==" % len(fails))
             for f in fails:
                 print("FAIL:", f)
             return 2
-        print("EVOLVE-SELFTEST PASS: ten vector groups green")
+        print("EVOLVE-SELFTEST PASS: eleven vector groups green")
         return 0
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
