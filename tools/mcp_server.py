@@ -1,39 +1,60 @@
-"""mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
+"""mcp_server.py - rocqwash MCP server, stdio plus optional HTTP transport (rocqwash tools/).
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 50 registered capabilities, each
-  spec transcribed from its docs/CAPABILITY-INDEX.md entry line (six later
-  increments from their tools' own CLI contract headers).
-  Default deny for the network and heavy capabilities (sentinel_status,
-  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,
-  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1
-  until that variable equals 1.
+  Context Protocol (MCP) through two transports served by one shared
+  dispatcher: the newline-delimited JSON-RPC 2.0 stdio face, and the
+  --http face (POST application/json on /mcp, streamable-style
+  request/response, with an internal Mcp-Session-Id response header;
+  Python stdlib http.server, zero new dependencies).  50 registered
+  capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md
+  entry line (six later increments from their tools' own CLI contract
+  headers).  Default deny for the network and heavy capabilities
+  (sentinel_status, net_probe, ci_triage, pushci_status, claim_watch,
+  source_fetch, release_chain): a failed tool result names
+  ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.
   Credential zero contact: no credential store, token file or netrc
   path is read; child stdout and stderr are captured, never merged into
   the protocol stream; every call runs under ROCQWASH_MCP_TIMEOUT
   (default 300) and a timed-out child is reported as failed.
 
-Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
-  before the service loop: --selftest exits with the frozen
-  interface-shape vectors (no stdin read, no service loop), --help
-  exits 0, an unknown flag exits 2, no flag serves; the service face
-  needs ROCQWASH_HOME at the repository root and answers one compact
-  JSON-RPC 2.0 line per request (contract: docs/mcp.md).
+Interface.  `python -I mcp_server.py [--stdio] [--http PORT
+  [--http-host HOST]] [--selftest]`; the flag gate runs before any
+  service loop: --selftest exits with the frozen interface-shape and
+  dispatcher round-trip vectors (no stdin read, no service loop, no
+  socket unless ROCQWASH_MCP_HTTP_SMOKE=1), --help exits 0, an unknown
+  flag exits 2, no flag serves stdio.  --http PORT alone serves the
+  HTTP face standalone; --stdio --http PORT serves both faces in one
+  process, so a dead stdio pipe or a dead HTTP session costs one
+  transport, never the tool registry.  The HTTP listener binds
+  127.0.0.1 unless --http-host widens it (trusted-network-only: the
+  endpoint performs no authentication); GET /mcp answers 405 with a
+  plain hint, other methods and paths answer 404, and a malformed
+  body answers a JSON-RPC parse-error object, never a traceback.  The
+  service face needs ROCQWASH_HOME at the repository root and answers
+  one compact JSON-RPC 2.0 object per request (contract: docs/mcp.md).
 
-Dependencies.  Python 3 standard library only (argparse, json, os,
-  subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
+Dependencies.  Python 3 standard library only (argparse, http.client
+  [selftest smoke only], http.server, json, os, subprocess, sys,
+  threading); registered CLIs resolve under ROCQWASH_HOME.
 
 Evidence.  tests/t_mcp_face.py asserts the 50-name roster and the wire
-  contract; --selftest self-proofs the frozen interface-shape vectors.
+  contract; --selftest self-proofs the frozen interface-shape vectors
+  plus the dispatcher round-trip vectors (initialize, tools/list, one
+  tools/call shape), with the socket smoke gated behind
+  ROCQWASH_MCP_HTTP_SMOKE=1.
 
 Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1 selftest red
-  (red list on stderr); 2 usage error (unknown flag); wire error codes per docs/mcp.md.
+  (red list on stderr) or HTTP bind failure; 2 usage error (unknown flag,
+  out-of-range --http port); wire error codes per docs/mcp.md.
 """
 
 import argparse
+import http.client
+import http.server
 import json
 import os
 import subprocess
 import sys
+import threading
 
 PROTOCOL_VERSION_DEFAULT = "2024-11-05"
 SERVER_NAME = "rocqwash-mcp"
@@ -42,6 +63,15 @@ DEFAULT_TIMEOUT_S = 300
 ALLOW_NET_ENV = "ROCQWASH_MCP_ALLOW_NET"
 TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
+# R-1 HTTP transport: the HTTP face shares the stdio dispatcher; the
+# listener binds the loopback default unless --http-host widens it
+# (trusted-network-only), and the socket smoke stays env-gated out of
+# the default selftest.
+HTTP_ENDPOINT_PATH = "/mcp"
+HTTP_DEFAULT_HOST = "127.0.0.1"
+HTTP_SESSION_HEADER = "Mcp-Session-Id"
+HTTP_SMOKE_ENV = "ROCQWASH_MCP_HTTP_SMOKE"
+HTTP_MAX_BODY_BYTES = 32 * 1024 * 1024
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
 # additions, eleven M2 ticket additions, the tree_audit registration
 # increment, the axiom_sweep registration increment, the claim_watch
@@ -319,15 +349,32 @@ TOOL_SPECS = [
     },
     {
         "name": "capability_index",
-        "kind": "file",
-        "path": os.path.join("docs", "CAPABILITY-INDEX.md"),
+        "kind": "cli",
+        "cli": os.path.join("tools", "capability_index.py"),
         "net_gated": False,
         "fixed_args": [],
-        "arg_map": (),
-        "schema": _object_schema({}),
+        "arg_map": (
+            ("mode", "--mode"),
+            ("tool", "--tool"),
+        ),
+        "schema": _object_schema(
+            {
+                "mode": {"type": "string", "enum": ["full", "summary"], "description": "index render: full (default) emits the complete per-tool record set sorted by tool name, summary emits exactly one line per tool (name, one-phrase purpose, MCP face count) and exists because the full index overran harness response caps in two measured rounds (130KB against 50KB); CLI flag --mode"},
+                "tool": {"type": "string", "description": "optional single-tool filter rendering one full record (tool base name with or without .py, e.g. chain_graph or chain_graph.py); full mode only, a summary/tool combination is refused as usage on the CLI; CLI flag --tool"},
+            }
+        ),
         "description": (
-            "Return the full text of docs/CAPABILITY-INDEX.md, the single tool capability "
-            "contract surface, resolved from ROCQWASH_HOME. Zero network face, no side effects."
+            "Tool capability index rendered from the census masters "
+            "(tools/capability_index.py reads docs/census-tools.json and "
+            "docs/flag-shape.json, plus the TOOL_SPECS roster of this server "
+            "read AST-level, so a summary count and a full record cannot "
+            "disagree). mode=full (default, unchanged by the summary "
+            "increment) renders the complete index, one full record per "
+            "censused tool, sorted by tool name; mode=summary renders one "
+            "line per tool (name, one-phrase purpose, MCP face count); "
+            "tool=<name> renders the single full record of one tool and "
+            "equals that tool's block in full mode. Zero network face, "
+            "read-only; the --selftest face stays CLI-side."
         ),
     },
     # ---- zero-network capabilities: thirteen specs, each transcribed
@@ -2167,16 +2214,43 @@ def _dispatch(message):
             return _error(msg_id, INVALID_PARAMS, str(exc))
         except OSError as exc:
             return _error(msg_id, INTERNAL_ERROR, "Internal error: {0}".format(exc))
+    if method == "ping":
+        # MCP ping, the one method R-1 adds to the dispatcher (the design
+        # enumeration initialize/tools/list/tools/call/ping): it answers an
+        # empty result on both transports.
+        return _result(msg_id, {})
     return _error(msg_id, METHOD_NOT_FOUND, "Method not found: {0}".format(method))
 
 
-def _selftest():
-    """Run the frozen interface-shape vectors; return 0 green or 1 red.
+def _dispatch_message(message):
+    """One parsed JSON-RPC message object in, one response object out.
 
-    Zero network face, zero stdin read, zero writes: the vectors inspect
-    module state only (the spec table, the name map, the arg_map/schema
-    one-to-one sync, and the schema validation behavior of
-    _validate_arguments).  The roster count is a
+    The single dispatcher face both transports feed: the stdio loop and
+    the HTTP endpoint call it unchanged, so a dispatch rule lands on both
+    wires at once.  A dispatch exception becomes an INTERNAL_ERROR
+    envelope, never a traceback on the wire; a notification returns None
+    (no response under JSON-RPC 2.0 and MCP).
+    """
+    try:
+        return _dispatch(message)
+    except Exception as exc:  # fail loud on the wire, keep serving
+        msg_id = message.get("id") if isinstance(message, dict) else None
+        _log("internal error: {0!r}".format(exc))
+        return _error(msg_id, INTERNAL_ERROR, "Internal error: {0}".format(exc))
+
+
+def _selftest():
+    """Run the frozen interface-shape and dispatcher round-trip vectors;
+    return 0 green or 1 red.
+
+    V1-V4 inspect module state only (the spec table, the name map, the
+    arg_map/schema one-to-one sync, and the schema validation behavior of
+    _validate_arguments); V5 round-trips the HTTP-transport dispatcher
+    faces in process (body parse, initialize, tools/list, one tools/call
+    shape) with no socket; V6, the socket smoke, runs only under
+    ROCQWASH_MCP_HTTP_SMOKE=1 against one ephemeral loopback server.
+    Zero stdin read, zero writes, and zero sockets in the default face.
+    The roster count is a
     frozen vector (the M2 roster: 25 standing specs, six M1 additions,
     eleven M2 ticket additions, the tree_audit registration increment,
     the axiom_sweep registration increment, the claim_watch
@@ -2301,6 +2375,181 @@ def _selftest():
             "arg_map keys {0} != schema properties {1}".format(arg_keys, schema_keys),
         )
 
+    # V5 HTTP-transport dispatcher round trips: the shared body-parse and
+    # dispatcher faces the HTTP endpoint feeds, exercised in process with
+    # no socket (R-1: one dispatcher, two wires).  The initialize and
+    # tools/list envelopes and one tools/call shape are pinned here so a
+    # transport cannot drift from the stdio contract.
+    status, init_resp = _http_handle_body(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 101,
+                "method": "initialize",
+                "params": {"protocolVersion": PROTOCOL_VERSION_DEFAULT},
+            }
+        ).encode("utf-8")
+    )
+    check("V5 initialize status", status == 200, "status {0}".format(status))
+    check(
+        "V5 initialize round trip",
+        isinstance(init_resp, dict)
+        and init_resp.get("jsonrpc") == "2.0"
+        and init_resp.get("id") == 101
+        and init_resp.get("result", {}).get("protocolVersion")
+        == PROTOCOL_VERSION_DEFAULT
+        and init_resp.get("result", {}).get("serverInfo", {}).get("name")
+        == SERVER_NAME,
+        "the initialize envelope drifted",
+    )
+    status, init_default = _http_handle_body(
+        json.dumps({"jsonrpc": "2.0", "id": 102, "method": "initialize"}).encode(
+            "utf-8"
+        )
+    )
+    check(
+        "V5 initialize default version",
+        status == 200
+        and (init_default or {}).get("result", {}).get("protocolVersion")
+        == PROTOCOL_VERSION_DEFAULT,
+        "a params-less initialize must answer the default protocol version",
+    )
+    status, listing_resp = _http_handle_body(
+        json.dumps({"jsonrpc": "2.0", "id": 103, "method": "tools/list"}).encode(
+            "utf-8"
+        )
+    )
+    listed = (listing_resp or {}).get("result", {}).get("tools", [])
+    check(
+        "V5 tools list round trip",
+        status == 200
+        and len(listed) == len(TOOL_SPECS)
+        and [tool.get("name") for tool in listed] == [spec["name"] for spec in TOOL_SPECS]
+        and all(isinstance(tool.get("inputSchema"), dict) for tool in listed),
+        "the tools/list face drifted",
+    )
+    status, unknown_resp = _http_handle_body(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 104,
+                "method": "tools/call",
+                "params": {"name": "__no_such_tool__", "arguments": {}},
+            }
+        ).encode("utf-8")
+    )
+    check(
+        "V5 tools call unknown tool",
+        status == 200
+        and (unknown_resp or {}).get("error", {}).get("code") == INVALID_PARAMS
+        and "Unknown tool"
+        in (unknown_resp or {}).get("error", {}).get("message", ""),
+        "an unknown tool must be an INVALID_PARAMS envelope",
+    )
+    status, badargs_resp = _http_handle_body(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 105,
+                "method": "tools/call",
+                "params": {"name": "capability_index",
+                           "arguments": {"no_such_argument": 1}},
+            }
+        ).encode("utf-8")
+    )
+    check(
+        "V5 tools call argument guard",
+        status == 200
+        and (badargs_resp or {}).get("error", {}).get("code") == INVALID_PARAMS,
+        "an unknown argument must be refused by the shared guard",
+    )
+    # V5 tools/call shape through the home gate: ROCQWASH_HOME is cleared
+    # for this one call (restored below), so the envelope is the
+    # deterministic not-set face -- no child process, no file read, no
+    # socket; the dispatcher's full tools/call path (validation, gate,
+    # home check) is exercised and stops deterministically.
+    saved_home = os.environ.get(HOME_ENV)
+    try:
+        os.environ.pop(HOME_ENV, None)
+        status, call_resp = _http_handle_body(
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 106,
+                    "method": "tools/call",
+                    "params": {"name": "capability_index", "arguments": {}},
+                }
+            ).encode("utf-8")
+        )
+    finally:
+        if saved_home is not None:
+            os.environ[HOME_ENV] = saved_home
+    call_text = (((call_resp or {}).get("result") or {}).get("content") or [{}])[
+        0
+    ].get("text", "")
+    check(
+        "V5 tools call shape",
+        status == 200
+        and (call_resp or {}).get("result", {}).get("isError") is True
+        and HOME_ENV in call_text,
+        "the tools/call shape must reach the home gate without a subprocess",
+    )
+    status, ping_resp = _http_handle_body(
+        json.dumps({"jsonrpc": "2.0", "id": 107, "method": "ping"}).encode("utf-8")
+    )
+    check(
+        "V5 ping round trip",
+        status == 200 and (ping_resp or {}).get("result") == {},
+        "ping must answer an empty result on the shared dispatcher",
+    )
+    status, method_resp = _http_handle_body(
+        json.dumps({"jsonrpc": "2.0", "id": 108, "method": "resources/list"}).encode(
+            "utf-8"
+        )
+    )
+    check(
+        "V5 method not found",
+        status == 200
+        and (method_resp or {}).get("error", {}).get("code") == METHOD_NOT_FOUND,
+        "resources/list must stay METHOD_NOT_FOUND",
+    )
+    status, notification = _http_handle_body(
+        json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}).encode(
+            "utf-8"
+        )
+    )
+    check(
+        "V5 notification no response",
+        status == 202 and notification is None,
+        "a notification must produce no envelope",
+    )
+    status, parse_resp = _http_handle_body(b"{definitely not json")
+    check(
+        "V5 malformed body parse error",
+        status == 400
+        and (parse_resp or {}).get("error", {}).get("code") == PARSE_ERROR
+        and (parse_resp or {}).get("id") is None,
+        "a malformed body must be a parse-error object, never a traceback",
+    )
+    status, utf_resp = _http_handle_body(b"\xff\xfe\xfd")
+    check(
+        "V5 non-utf8 body parse error",
+        status == 400
+        and (utf_resp or {}).get("error", {}).get("code") == PARSE_ERROR,
+        "a non-UTF-8 body must be a parse-error object",
+    )
+
+    # V6 socket smoke: env-gated (default off -- the default selftest
+    # opens no socket, binds no port, answers no SYN).
+    if os.environ.get(HTTP_SMOKE_ENV) == "1":
+        _http_smoke_vectors(check)
+    else:
+        _log(
+            "http socket smoke skipped (default off; set {0}=1 to include it)".format(
+                HTTP_SMOKE_ENV
+            )
+        )
+
     if failures:
         for line in failures:
             sys.stderr.write("MCP-SERVER-SELFTEST FAIL {0}\n".format(line))
@@ -2332,34 +2581,521 @@ def _serve():
         except ValueError:
             _emit(_error(None, PARSE_ERROR, "Parse error: line is not valid JSON"))
             continue
-        try:
-            response = _dispatch(message)
-        except Exception as exc:  # fail loud on the wire, keep serving
-            msg_id = message.get("id") if isinstance(message, dict) else None
-            _log("internal error: {0!r}".format(exc))
-            response = _error(msg_id, INTERNAL_ERROR, "Internal error: {0}".format(exc))
+        response = _dispatch_message(message)
         if response is not None:
             _emit(response)
     return 0
 
 
-def main(argv=None):
-    """Parse the CLI flag gate, then route to the selected face; the
-    service loop is the one no-flag face."""
+# ---- R-1 HTTP transport: one shared dispatcher, two wires.  The stdio
+# face keeps its loop; the HTTP face answers POST /mcp with the same
+# envelopes, so a dead client connection costs one HTTP session and never
+# the tool registry.
+
+
+class _McpSessionTable:
+    """Registry of the internal session ids handed out in the
+    Mcp-Session-Id response header.
+
+    Advisory correlation state, not an authentication face: a request
+    with no id, or with an id this process never issued, is served a
+    fresh session without error.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._known = set()
+
+    def create(self):
+        session_id = "mcp-" + os.urandom(12).hex()
+        with self._lock:
+            self._known.add(session_id)
+        return session_id
+
+    def holds(self, session_id):
+        with self._lock:
+            return session_id in self._known
+
+
+class _McpHttpHandler(http.server.BaseHTTPRequestHandler):
+    """The HTTP face of the shared MCP dispatcher.
+
+    Contract: POST /mcp with one JSON-RPC 2.0 object as the body, one
+    application/json envelope back (202 Accepted with an empty body for
+    a notification), and an Mcp-Session-Id response header carrying an
+    internal session id.  GET /mcp answers 405 with a plain hint; every
+    other method and path answers 404; a malformed body answers a
+    JSON-RPC parse-error object, never a traceback.  Dispatch runs under
+    the same fail-loud guard as the stdio loop.
+    """
+
+    server_version = SERVER_NAME + "/" + SERVER_VERSION
+    protocol_version = "HTTP/1.1"
+    # Injected per listener by _build_http_server: each server owns its
+    # session table (the smoke listener stays isolated from a real one).
+    session_table = None
+
+    # -- response plumbing ------------------------------------------
+
+    def _split_path(self):
+        return self.path.split("?", 1)[0]
+
+    def _respond(self, status, body, content_type, session_id=None, extra_headers=()):
+        self.send_response(status)
+        for key, value in extra_headers:
+            self.send_header(key, value)
+        if session_id is not None:
+            self.send_header(HTTP_SESSION_HEADER, session_id)
+        if body:
+            self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if body and self.command != "HEAD":
+            self.wfile.write(body)
+
+    def _respond_json(self, status, payload, session_id=None):
+        body = (json.dumps(payload, ensure_ascii=False) + "\n").encode("utf-8")
+        self._respond(status, body, "application/json", session_id)
+
+    def _respond_hint(self, status, text, extra_headers=()):
+        body = (text + "\n").encode("utf-8")
+        self._respond(
+            status, body, "text/plain; charset=utf-8", None, extra_headers
+        )
+
+    def _read_declared_body(self):
+        """Drain a declared request body so keep-alive framing survives a
+        response that does not consume it (wrong path, wrong method)."""
+        length_header = self.headers.get("Content-Length")
+        if length_header is None:
+            return
+        try:
+            length = int(length_header)
+        except ValueError:
+            self.close_connection = True
+            return
+        if length < 0 or length > HTTP_MAX_BODY_BYTES:
+            self.close_connection = True
+        elif length:
+            self.rfile.read(length)
+
+    def _resolve_session(self):
+        """Reuse the session id the client echoes when this process issued
+        it; otherwise mint one.  Always returns a non-empty id."""
+        requested = self.headers.get(HTTP_SESSION_HEADER)
+        if (
+            isinstance(requested, str)
+            and requested
+            and self.session_table is not None
+            and self.session_table.holds(requested)
+        ):
+            return requested
+        return self.session_table.create()
+
+    # -- the method faces -------------------------------------------
+
+    def do_POST(self):
+        if self._split_path() != HTTP_ENDPOINT_PATH:
+            self._read_declared_body()
+            self._respond_hint(
+                404,
+                "Not Found: the MCP endpoint is POST {0} with a JSON-RPC 2.0 "
+                "object; this path serves nothing.".format(HTTP_ENDPOINT_PATH),
+            )
+            return
+        length_header = self.headers.get("Content-Length")
+        if length_header is None:
+            body = b""  # no declared body: the parse face answers the envelope
+        else:
+            try:
+                length = int(length_header)
+            except ValueError:
+                self._respond_hint(
+                    400, "Bad Request: Content-Length is not an integer."
+                )
+                return
+            if length < 0:
+                self._respond_hint(400, "Bad Request: Content-Length is negative.")
+                return
+            if length > HTTP_MAX_BODY_BYTES:
+                # Not drained on purpose; the Connection header ends it.
+                self._respond_hint(
+                    413,
+                    "Payload Too Large: the request body cap is {0} bytes.".format(
+                        HTTP_MAX_BODY_BYTES
+                    ),
+                    extra_headers=(("Connection", "close"),),
+                )
+                return
+            body = self.rfile.read(length)
+        session_id = self._resolve_session()
+        status, response = _http_handle_body(body)
+        if response is None:
+            self._respond(status, b"", "", session_id)
+        else:
+            self._respond_json(status, response, session_id)
+
+    def do_GET(self):
+        self._read_declared_body()
+        if self._split_path() == HTTP_ENDPOINT_PATH:
+            self._respond_hint(
+                405,
+                "Method Not Allowed: POST a JSON-RPC 2.0 object to {0} "
+                "(application/json); this server answers protocol JSON, "
+                "not HTML.".format(HTTP_ENDPOINT_PATH),
+                extra_headers=(("Allow", "POST"),),
+            )
+            return
+        self._respond_hint(
+            404,
+            "Not Found: the MCP endpoint is POST {0}.".format(HTTP_ENDPOINT_PATH),
+        )
+
+    def do_HEAD(self):
+        self._respond_hint(
+            404, "Not Found: only POST {0} speaks MCP JSON-RPC.".format(
+                HTTP_ENDPOINT_PATH
+            )
+        )
+
+    def _method_not_supported(self):
+        self._read_declared_body()
+        headers = (
+            (("Allow", "POST"),) if self._split_path() == HTTP_ENDPOINT_PATH else ()
+        )
+        self._respond_hint(
+            404,
+            "Not Found: only POST {0} speaks MCP JSON-RPC.".format(
+                HTTP_ENDPOINT_PATH
+            ),
+            extra_headers=headers,
+        )
+
+    def __getattr__(self, name):
+        # Every method without an explicit face above (PUT, DELETE, PATCH,
+        # OPTIONS, TRACE, and any exotic verb) answers 404 per the R-1
+        # contract: unsupported methods are 404, never the stdlib default 501.
+        if name.startswith("do_"):
+            return self._method_not_supported
+        raise AttributeError(name)
+
+    def log_message(self, format, *args):  # noqa: A002 - stdlib signature
+        _log("http {0} - {1}".format(self.address_string(), format % args))
+
+
+class _McpHttpServer(http.server.ThreadingHTTPServer):
+    """Threading HTTP listener for the shared dispatcher; daemon threads
+    so a co-tenant transport's exit never waits on an open connection."""
+
+    daemon_threads = True
+    allow_reuse_address = True
+
+
+def _build_http_server(host, port):
+    """Bind the HTTP face on host:port; None on bind failure (the caller
+    turns that into exit code 1 with the reason on stderr)."""
+    table = _McpSessionTable()
+
+    class _BoundMcpHttpHandler(_McpHttpHandler):
+        session_table = table
+
+    try:
+        return _McpHttpServer((host, port), _BoundMcpHttpHandler)
+    except OSError as exc:
+        _log("http bind failed on {0}:{1}: {2}".format(host, port, exc))
+        return None
+
+
+def _http_handle_body(raw):
+    """One HTTP request body in, one (status, envelope-or-None) out.
+
+    The HTTP-side parse face onto the same shared dispatcher the stdio
+    loop feeds: a body that is not valid UTF-8 JSON comes back as a
+    JSON-RPC parse-error object with HTTP 400, a notification as
+    (202, None), everything else as (200, envelope).  Never raises.
+    """
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError:
+        return 400, _error(None, PARSE_ERROR, "Parse error: body is not valid UTF-8")
+    try:
+        message = json.loads(text)
+    except ValueError:
+        return 400, _error(None, PARSE_ERROR, "Parse error: body is not valid JSON")
+    response = _dispatch_message(message)
+    if response is None:
+        return 202, None
+    return 200, response
+
+
+def _serve_http(host, port):
+    """Serve the HTTP face standalone: no stdin read, no stdio face."""
+    server = _build_http_server(host, port)
+    if server is None:
+        return 1
+    bound_host, bound_port = server.server_address[:2]
+    _log(
+        "rocqwash MCP http server ready: POST http://{0}:{1}{2} "
+        "(application/json, {3} header per response); stdio face not served; "
+        "allow-net={4}".format(
+            bound_host,
+            bound_port,
+            HTTP_ENDPOINT_PATH,
+            HTTP_SESSION_HEADER,
+            os.environ.get(ALLOW_NET_ENV) == "1",
+        )
+    )
+    try:
+        server.serve_forever(poll_interval=0.2)
+    except KeyboardInterrupt:
+        _log("http server interrupted; shutting down")
+    finally:
+        server.server_close()
+    return 0
+
+
+def _serve_stdio_and_http(host, port):
+    """Serve both faces in one process: the stdio loop on the main thread,
+    the HTTP listener on a daemon thread.  A dead stdio pipe ends the
+    process and the listener with it; a dead HTTP session ends only that
+    one connection -- neither takes the tool registry down."""
+    server = _build_http_server(host, port)
+    if server is None:
+        return 1
+    bound_host, bound_port = server.server_address[:2]
+    thread = threading.Thread(
+        target=server.serve_forever, kwargs={"poll_interval": 0.2}, daemon=True
+    )
+    thread.start()
+    _log(
+        "rocqwash MCP dual transport ready: stdio plus POST http://{0}:{1}{2}".format(
+            bound_host, bound_port, HTTP_ENDPOINT_PATH
+        )
+    )
+    try:
+        code = _serve()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5.0)
+    return code
+
+
+def _http_smoke_vectors(check):
+    """V6 socket smoke: bind one ephemeral loopback server and run real
+    HTTP round trips through it (initialize, session echo, tools/list,
+    malformed body, GET 405, unknown path 404, unsupported method 404,
+    notification 202).  Called only under the ROCQWASH_MCP_HTTP_SMOKE=1
+    gate: the default selftest opens no socket at all."""
+    import http.client
+
+    server = _build_http_server("127.0.0.1", 0)
+    if server is None:
+        check("V6 smoke bind", False, "the ephemeral loopback bind failed")
+        return
+    port = server.server_address[1]
+    thread = threading.Thread(
+        target=server.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True
+    )
+    thread.start()
+    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+    try:
+
+        def _json_body(response):
+            try:
+                return json.loads(response.read().decode("utf-8"))
+            except (ValueError, UnicodeDecodeError):
+                return {}
+
+        post_headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
+        connection.request(
+            "POST",
+            HTTP_ENDPOINT_PATH,
+            body=json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 7,
+                    "method": "initialize",
+                    "params": {"protocolVersion": PROTOCOL_VERSION_DEFAULT},
+                }
+            ),
+            headers=post_headers,
+        )
+        response = connection.getresponse()
+        body = _json_body(response)
+        session_id = response.getheader(HTTP_SESSION_HEADER)
+        check(
+            "V6 smoke initialize status",
+            response.status == 200,
+            "status {0}".format(response.status),
+        )
+        check(
+            "V6 smoke initialize content type",
+            (response.getheader("Content-Type") or "").startswith("application/json"),
+            "Content-Type {0!r}".format(response.getheader("Content-Type")),
+        )
+        check(
+            "V6 smoke session header issued",
+            isinstance(session_id, str) and bool(session_id),
+            "no {0} response header".format(HTTP_SESSION_HEADER),
+        )
+        check(
+            "V6 smoke initialize body",
+            body.get("id") == 7
+            and body.get("result", {}).get("serverInfo", {}).get("name") == SERVER_NAME,
+            "body {0!r}".format(body),
+        )
+
+        echo_headers = dict(post_headers)
+        echo_headers[HTTP_SESSION_HEADER] = session_id or "unissued"
+        connection.request(
+            "POST",
+            HTTP_ENDPOINT_PATH,
+            body=json.dumps({"jsonrpc": "2.0", "id": 8, "method": "tools/list"}),
+            headers=echo_headers,
+        )
+        response = connection.getresponse()
+        body = _json_body(response)
+        check(
+            "V6 smoke session echo",
+            response.getheader(HTTP_SESSION_HEADER) == session_id,
+            "session header {0!r}".format(response.getheader(HTTP_SESSION_HEADER)),
+        )
+        check(
+            "V6 smoke tools list count",
+            len(body.get("result", {}).get("tools", [])) == SELFTEST_ROSTER_COUNT,
+            "tools {0}".format(len(body.get("result", {}).get("tools", []))),
+        )
+
+        connection.request(
+            "POST", HTTP_ENDPOINT_PATH, body="{not json", headers=post_headers
+        )
+        response = connection.getresponse()
+        body = _json_body(response)
+        check(
+            "V6 smoke malformed status",
+            response.status == 400,
+            "status {0}".format(response.status),
+        )
+        check(
+            "V6 smoke malformed parse error",
+            body.get("error", {}).get("code") == PARSE_ERROR and body.get("id") is None,
+            "body {0!r}".format(body),
+        )
+
+        connection.request("GET", HTTP_ENDPOINT_PATH, headers={"Accept": "text/plain"})
+        response = connection.getresponse()
+        hint = response.read()
+        check(
+            "V6 smoke get 405 hint",
+            response.status == 405
+            and b"POST" in hint
+            and response.getheader("Allow") == "POST",
+            "status {0} hint {1!r}".format(response.status, hint[:120]),
+        )
+
+        connection.request("GET", "/no-such-face", headers={"Accept": "text/plain"})
+        response = connection.getresponse()
+        response.read()
+        check(
+            "V6 smoke unknown path 404",
+            response.status == 404,
+            "status {0}".format(response.status),
+        )
+
+        connection.request(
+            "PUT", HTTP_ENDPOINT_PATH, body=b"x", headers={"Content-Length": "1"}
+        )
+        response = connection.getresponse()
+        response.read()
+        check(
+            "V6 smoke unsupported method 404",
+            response.status == 404,
+            "status {0}".format(response.status),
+        )
+
+        connection.request(
+            "POST",
+            HTTP_ENDPOINT_PATH,
+            body=json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+            headers=post_headers,
+        )
+        response = connection.getresponse()
+        payload = response.read()
+        check(
+            "V6 smoke notification 202",
+            response.status == 202
+            and payload == b""
+            and bool(response.getheader(HTTP_SESSION_HEADER)),
+            "status {0} body {1!r}".format(response.status, payload[:50]),
+        )
+    finally:
+        connection.close()
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5.0)
+
+
+def _build_parser():
+    """The argparse flag gate, shared by main and the selftest vectors."""
     parser = argparse.ArgumentParser(
         prog="mcp_server.py",
-        description="rocqwash MCP stdio server: newline-delimited JSON-RPC 2.0 "
-        "over stdin and stdout (docs/mcp.md).",
+        description="rocqwash MCP server: newline-delimited JSON-RPC 2.0 over "
+        "stdin and stdout by default, with an optional HTTP transport on the "
+        "same shared dispatcher (docs/mcp.md).",
     )
     parser.add_argument(
         "--selftest",
         action="store_true",
-        help="run the frozen interface-shape vectors and exit; the service "
-        "loop, stdin and the network are not touched",
+        help="run the frozen interface-shape vectors and the dispatcher "
+        "round-trip vectors and exit; no service loop, no stdin read, and no "
+        "socket unless {0}=1 (then one ephemeral loopback server is used for "
+        "the HTTP smoke)".format(HTTP_SMOKE_ENV),
     )
+    parser.add_argument(
+        "--http",
+        metavar="PORT",
+        type=int,
+        help="serve MCP JSON-RPC over HTTP on this TCP port at endpoint {0} "
+        "(POST, application/json responses); combined with --stdio both "
+        "transports run in one process, without --stdio the process serves "
+        "HTTP only and does not read stdin".format(HTTP_ENDPOINT_PATH),
+    )
+    parser.add_argument(
+        "--http-host",
+        metavar="HOST",
+        default=HTTP_DEFAULT_HOST,
+        help="address for the HTTP listener (default: 127.0.0.1, local only). "
+        "Widening it (for example 0.0.0.0) exposes the endpoint beyond this "
+        "machine; trusted-network-only: the endpoint performs no "
+        "authentication, so never expose it to an untrusted network",
+    )
+    parser.add_argument(
+        "--stdio",
+        action="store_true",
+        help="serve the newline-delimited JSON-RPC stdio face on stdin and "
+        "stdout (the default face when no flag selects a transport); combine "
+        "with --http to run both transports in one process",
+    )
+    return parser
+
+
+def main(argv=None):
+    """Parse the CLI flag gate, then route to the selected face or faces;
+    with no flag the stdio service loop is the one face."""
+    parser = _build_parser()
     args = parser.parse_args(argv)
     if args.selftest:
         return _selftest()
+    if args.http is not None:
+        if not 1 <= args.http <= 65535:
+            parser.error("--http PORT must be an integer between 1 and 65535")
+        if args.stdio:
+            return _serve_stdio_and_http(args.http_host, args.http)
+        return _serve_http(args.http_host, args.http)
     return _serve()
 
 

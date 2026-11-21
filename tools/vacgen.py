@@ -109,6 +109,15 @@ TOOL_VERSION = "2.1.0"
 # the single-challenge bytes this face is required to leave byte-identical.
 # The batch face carries its own schema strings
 # (vacgen-batch-summary/1, vacgen-batch-statement/1) instead.
+# Additive report faces (work order November 21, 2026): R-2 readability -
+# verdict.strength carries a `degenerate_note` sibling on degenerate reports
+# only (DEGENERATE_NOTE verbatim; the `degenerate` key itself is kept for
+# backward compatibility) - and R-7 gap telemetry - a `gap_telemetry` block
+# (todo_seats + top-10 normalized head-symbol families) over conclusion-face
+# todo_seat results, on every cast report and aggregated on the batch
+# summary.  TOOL_VERSION stays unbumped: both faces are additive report data
+# (consumers ignore unknown fields) and never touch the cast bytes or the
+# exit-code semantics.
 
 DEFAULT_GUARD = "D:/ComplexAnalysis/infra/thermal/cpu_guard_v3.ps1"
 DEFAULT_LAKE = "C:/Users/Live/.elan/bin/lake.exe"
@@ -1155,6 +1164,13 @@ STRENGTH_CLASS_TO_FORM = {
 }
 STRENGTH_ORDER = ("full", "point", "tactics", "noclassic", "band")
 FORM_RANK = {"full": 4, "point": 3, "tactics": 2, "noclassic": 1, "band": 0}
+# R-2 readability (work order November 21, 2026): first-readers mistake a
+# `"degenerate": true` report face for a failure.  The sibling note below is
+# emitted next to the flag it explains, on degenerate reports only; the
+# existing `degenerate` key itself is kept verbatim for backward
+# compatibility (consumers ignore unknown fields, report.tool.schemaNote).
+DEGENERATE_NOTE = ("data note: band-level sample satisfiability verdict, "
+                   "not an error")
 
 
 def degenerate_battery_hits(env_text):
@@ -1198,7 +1214,7 @@ def strength_face(env_text, satisfiable, ts_utc):
     for c in classes:
         faces = sorted(f for cls, f in hits if cls == c)
         by_class.append({"class": c, "faces": faces, "count": len(faces)})
-    return {
+    face = {
         "satisfiable": True,
         "battery": by_class,
         "degenerate": bool(classes),
@@ -1209,6 +1225,107 @@ def strength_face(env_text, satisfiable, ts_utc):
         "note": ("degeneracy is data, not error: exit-code semantics "
                  "unchanged; counters carry monotone bounds only - "
                  "exact-equality invariants on live counters are forbidden"),
+    }
+    # R-2 readability: attach the plain-language sibling note on degenerate
+    # reports only (`degenerate` true); a clean battery (false) and a RED
+    # cast (None) carry no note.  The existing key stays for backward
+    # compatibility - this face is strictly additive.
+    if face["degenerate"]:
+        face["degenerate_note"] = DEGENERATE_NOTE
+    return face
+
+
+# ------------------------------------------------- R-7 gap telemetry (report)
+# Gap telemetry (work order November 21, 2026): additive report face that
+# aggregates conclusion-face todo_seat results for taxonomy iteration (the
+# batch long tail).  The single-challenge cast report carries the block over
+# this cast's one conclusion face; the batch summary carries the block
+# aggregated over every classified statement of the batch.  Purely additive
+# data: it never feeds the exit code, and counters are closed-window
+# monotone bounds (no exact-equality invariants over live counters).
+
+GAP_TELEMETRY_TOP = 10
+# Word-face operator glyphs recognized as a conclusion's head symbol
+# (checked at bracket depth 0, first hit wins).  Glyphs carry no case; the
+# lowercasing rule below applies to identifier heads only.
+GAP_HEAD_OPERATORS = ("\u2194", "\u2192", "\u2190", "\u2227", "\u2228",
+                      "\u00ac", "\u2260", "=", "\u2264", "\u2265", "<", ">",
+                      "\u2208", "\u2209", "\u2286", "\u2282")
+# Identifier head: codebase-ident conventions (IDENT_TOK face, vacgen.py:328)
+# widened with the unicode-letter lead so quantifier/binder glyphs
+# (\u2200 \u2203 \u03bb) head their own family instead of the empty residual.
+GAP_HEAD_IDENT_RE = re.compile(r"[A-Za-z_\u0370-\u03ff\u0100-\uffff][\w'.!]*",
+                               re.UNICODE)
+
+
+def _strip_outer_parens(s):
+    """Word-face helper: strip balanced outer parentheses (repeat).  A pair
+    only strips when it wraps the whole string ((P) and (Q) stays intact)."""
+    while len(s) >= 2 and s[0] == "(" and s[-1] == ")":
+        depth = 0
+        wraps_all = True
+        for i, ch in enumerate(s):
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0 and i != len(s) - 1:
+                    wraps_all = False
+                    break
+        if not wraps_all:
+            break
+        s = s[1:-1].strip()
+    return s
+
+
+def conclusion_head_family(conclusion):
+    """R-7: normalized head-symbol family of one conclusion face (the head
+    symbol lowercased, arguments stripped; word-face only - no Lean
+    elaboration on this face).  Rule: outer balanced parentheses stripped,
+    then the first top-level operator glyph wins; with no top-level operator
+    the first identifier token wins (quantifier glyphs head their own
+    family); an empty or glyph-free face normalizes to the "?" residual
+    (honest bucket, never a crash)."""
+    s = _strip_outer_parens((conclusion or "").strip())
+    depth = 0
+    for ch in s:
+        if ch in "([{":
+            depth += 1
+        elif ch in ")]}":
+            if depth > 0:
+                depth -= 1
+        elif depth == 0 and ch in GAP_HEAD_OPERATORS:
+            return ch.lower()
+    m = GAP_HEAD_IDENT_RE.search(s)
+    return m.group(0).lower() if m else "?"
+
+
+def gap_telemetry_block(conclusion_faces):
+    """R-7: build the gap_telemetry report block from (conclusion_text,
+    status) pairs - the cast face passes this cast's conclusion, the batch
+    summary passes every classified statement conclusion of the batch.
+    Only todo_seat conclusion faces count (basis string verbatim per the
+    work order); families are ranked by count, ties broken by family name,
+    capped at the top GAP_TELEMETRY_TOP rows."""
+    todo_texts = [text for text, status in conclusion_faces
+                  if status == "todo_seat"]
+    fam_counts = {}
+    for text in todo_texts:
+        fam = conclusion_head_family(text)
+        fam_counts[fam] = fam_counts.get(fam, 0) + 1
+    ranked = sorted(fam_counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return {
+        "todo_seats": {
+            "value": len(todo_texts),
+            "basis": ("conclusion faces left unmatched by the taxonomy in "
+                      "this batch"),
+        },
+        "families": [
+            {"family": fam,
+             "count": {"value": n,
+                       "basis": ("todo_seat conclusion faces with this "
+                                 "normalized head symbol in this batch")}}
+            for fam, n in ranked[:GAP_TELEMETRY_TOP]],
     }
 
 
@@ -2392,7 +2509,13 @@ def do_cast(args, ts_utc):
                                 "two-dimensional verdict), W5 cast-time "
                                 "bare-type-conjunct-limb front gate, named "
                                 "instance binder clean-type prefix rendering; "
-                                "consumers ignore unknown fields")},
+                                "consumers ignore unknown fields; further "
+                                "additive faces: verdict.strength."
+                                "degenerate_note (R-2 readability, emitted "
+                                "on degenerate reports only) and "
+                                "gap_telemetry (R-7 conclusion-face "
+                                "todo_seat aggregation for taxonomy "
+                                "iteration)")},
         "in": {"path": os.path.abspath(args.in_path).replace("\\", "/"), "sha256": sha},
         "taxonomy": {"path": os.path.abspath(tax_info["path"]).replace("\\", "/") if tax_info["path"] else None,
                      "source": tax_info["source"], "rowsLoaded": tax_info["rowsLoaded"],
@@ -2421,6 +2544,12 @@ def do_cast(args, ts_utc):
     # GREEN verdict only; the strength face is additive report data and never
     # feeds the exit code (degeneracy is data, not error).
     report["verdict"]["strength"] = strength_face(env_text, not blockers, ts_utc)
+    # R-7 gap telemetry (additive, work order November 21, 2026): this cast's
+    # conclusion face verdict, schema-identical to the batch summary block so
+    # downstream taxonomy iteration can join the per-cast blocks (the
+    # 368-mine long tail) or read the pre-aggregated batch block.
+    report["gap_telemetry"] = gap_telemetry_block(
+        [(stmt["S3_conclusion"], concl_verdict["status"])])
 
     print("[FOUR-ACCOUNT LEDGER]  (per-file, verbatim counts)")
     green = [r for r in ledger if r["file"] == "witness.lean" or r["file"] == "boundary.lean"]
@@ -2862,6 +2991,13 @@ def do_batch(args, ts_utc, mode):
     counts = {"statements": len(blocks), "cast": 0, "castRed": 0,
               "castError": 0, "unparsed": 0}
     agg_rec = agg_total = 0
+    # R-7 batch collection face: (conclusion_text, status) pairs gathered
+    # from every statement whose cast produced a report with a classified
+    # conclusion entry.  UNPARSED and CAST-ERROR rows never offered their
+    # conclusion to the taxonomy, so they are honestly absent from the
+    # telemetry (they stay counted in `counts` - this block aggregates
+    # classification outcomes, not enumeration).
+    batch_concl_faces = []
     rows = []
     n = len(blocks)
     for i, (block_text, meta) in enumerate(blocks, 1):
@@ -2952,6 +3088,16 @@ def do_batch(args, ts_utc, mode):
                               "lines": log_lines[:BATCH_LOG_CAP]}
             if raw_report is not None:
                 doc["castReport"] = raw_report
+                # R-7: feed the batch gap telemetry from the authoritative
+                # castReport conclusion verdict (never re-derived here); the
+                # full conclusion text rides from the already-decomposed
+                # statement (castReport carries only an 80-char typeHead).
+                concl_entry = next(
+                    (e for e in (raw_report.get("assumptions") or [])
+                     if e.get("kind") == "conclusion"), None)
+                if concl_entry is not None:
+                    batch_concl_faces.append(
+                        (stmt["S3_conclusion"], concl_entry.get("status")))
                 cov = raw_report.get("coverage") or {}
                 pct = cov.get("coverageLowerPct")
                 total = cov.get("total") or 0
@@ -3014,6 +3160,10 @@ def do_batch(args, ts_utc, mode):
         "l3Aggregate": {"recognized": agg_rec, "total": agg_total,
                         "coverageLowerPct": agg_pct,
                         "scope": "CAST rows only; word-face lower bound, dated snapshot"},
+        # R-7 gap telemetry (additive, work order November 21, 2026): the
+        # batch-aggregated conclusion-face todo_seat block (top families by
+        # count) - the taxonomy-iteration feed for the batch long tail.
+        "gap_telemetry": gap_telemetry_block(batch_concl_faces),
         "outRoot": os.path.abspath(out_root).replace("\\", "/"),
         "rows": rows,
         "negativeFinding": negative_finding_block(
@@ -3381,6 +3531,25 @@ BATCH_SELFTEST_FIXTURE_UNPARSED = (
     "this block is not a Lean statement face\n"
 )
 
+# R-7 gap-telemetry selftest fixture (work order November 21, 2026).  Alpha
+# carries the taxonomy-covered conclusion face (recognized on the loaded
+# table, concl.ne.applied-nonzero); beta carries the negative equality face
+# `n = 1` that no taxonomy row may claim (todo_seat on ANY table, the T11
+# negative-face contract - concl.nezero.predicate takes only NeZero X /
+# bare-ident \u2260 0 spellings), so the loaded-table vector pins
+# todo_seats=1 with exactly one family entry ("=", the normalized head
+# symbol of `n = 1`).  Beta keeps the t13 beta binder face so the cast path
+# (premise-driven skeleton, no numeric boundary) stays on the
+# proven-castable shape.
+GAP_TELEMETRY_SELFTEST_FIXTURE = (
+    "theorem vacgen_gap_alpha\n"
+    "    {s : \u2102} (hs : (7 / 8 : \u211d) < s.re) : riemannZeta s \u2260 0 := by\n"
+    "  sorry\n"
+    "\n"
+    "theorem vacgen_gap_beta (n : \u2115) (h : 0 < n) : n = 1 := by\n"
+    "  sorry\n"
+)
+
 
 def do_selftest(ts_utc):
     """--selftest (in-process vector face; zero network, zero compile).
@@ -3389,15 +3558,19 @@ def do_selftest(ts_utc):
     vectors (nonzero applied / NeZero predicate / quantified universal and
     existential / specific exists unchanged), the conclusion-row kind guard,
     the C4.2 hole interception on conclusion records, negative faces stay
-    todo_seat, the 169B QRH challenge end-to-end coverage 2/2, and the
+    todo_seat, the 169B QRH challenge end-to-end coverage 2/2, the
     statement-ingestion batch vectors (two-statement fixture: both cast with
     per-statement reports and a consistent summary; one unparseable block:
     an honest UNPARSED row, never a crash - taxonomy-independent, never
-    skipped).  Conclusion vectors need the loaded taxonomy table; when only
-    the builtin fail-safe starter row is in force they are skipped with
-    rc=111 and a loud reason (the engine itself is still vector-proven on
-    the premise face).  Returns 0 all green, 1 any red, 111 conclusion legs
-    skipped."""
+    skipped), the R-2 degenerate_note readability vector (note rides a
+    degenerate report, absent otherwise; always runs), and the R-7
+    gap-telemetry vector (two-statement fixture, one recognized and one
+    todo_seat conclusion: todo_seats=1, one family entry, per-cast blocks
+    plus the batch summary aggregation).  Conclusion vectors need the loaded
+    taxonomy table; when only the builtin fail-safe starter row is in force
+    they are skipped with rc=111 and a loud reason (the engine itself is
+    still vector-proven on the premise face).  Returns 0 all green, 1 any
+    red, 111 conclusion legs skipped."""
     print("== %s v%s selftest (window %s) ==" % (TOOL_NAME, TOOL_VERSION, ts_utc))
     failures = []
     skips = []
@@ -3551,6 +3724,27 @@ def do_selftest(ts_utc):
                 "recognized=%d todo=%d premise=%s conclusion=%s"
                 % (recognized, todo, prem["familyId"], conl["familyId"]))
 
+    # T15 - R-2 degenerate_note readability face (work order November 21,
+    # 2026): the sibling note rides a degenerate report and is absent
+    # otherwise - clean battery (degenerate false) and RED cast (degenerate
+    # None) carry no note, and the existing `degenerate` key is untouched.
+    # In-process over strength_face, taxonomy-independent, always runs.
+    f_deg = strength_face("example : 2 = 2 := rfl", True, ts_utc)
+    f_clean = strength_face("riemannZeta s \u2260 0", True, ts_utc)
+    f_red = strength_face("riemannZeta s \u2260 0", False, ts_utc)
+    vec("degenerate-note-readability",
+        f_deg["degenerate"] is True
+        and f_deg.get("degenerate_note") == DEGENERATE_NOTE
+        and f_clean["degenerate"] is False
+        and "degenerate_note" not in f_clean
+        and f_red["degenerate"] is None
+        and "degenerate_note" not in f_red,
+        "degenerate=%s note-rides=%s | clean degenerate=%s note-rides=%s | "
+        "red degenerate=%s note-rides=%s"
+        % (f_deg["degenerate"], "degenerate_note" in f_deg,
+           f_clean["degenerate"], "degenerate_note" in f_clean,
+           f_red["degenerate"], "degenerate_note" in f_red))
+
     # T13/T14 - statement-ingestion batch vectors (work order November 21,
     # 2026).  Both run the real do_batch entry over a TemporaryDirectory
     # (zero network, zero compile; disk face confined to the temp dir;
@@ -3645,6 +3839,50 @@ def do_selftest(ts_utc):
 
     batch_vector(BATCH_SELFTEST_FIXTURE, t13_conds, "batch-two-statement-cast")
     batch_vector(BATCH_SELFTEST_FIXTURE_UNPARSED, t14_conds, "batch-unparsed-row-honest")
+
+    # T16 - R-7 gap telemetry long-tail face (work order November 21, 2026):
+    # the two-statement fixture (alpha recognized on the loaded table, beta
+    # the negative equality face no row may claim) yields todo_seats=1 and
+    # exactly one family entry - on beta's per-cast gap_telemetry block, on
+    # the batch summary aggregation, and with alpha's block empty; the
+    # verbatim basis string is pinned too.  Recognition counts are pinned,
+    # so like T2-T12 the vector is skipped with a loud reason when only the
+    # builtin fail-safe starter row is in force.
+    if builtin_only:
+        skip("gap-telemetry-long-tail",
+             "conclusion vectors need the loaded taxonomy table")
+    else:
+        def t16_conds(rc, out_root, rep1, rep2, summ):
+            cr1 = rep1["castReport"]["gap_telemetry"]
+            cr2 = rep2["castReport"]["gap_telemetry"]
+            bt = summ["gap_telemetry"]
+            conds = {
+                "rc": rc == 0,
+                "statuses": (rep1["status"] == "CAST"
+                             and rep2["status"] == "CAST"),
+                "alpha-recognized-empty-telemetry": (
+                    cr1["todo_seats"]["value"] == 0
+                    and cr1["families"] == []),
+                "beta-one-todo-one-family": (
+                    cr2["todo_seats"]["value"] == 1
+                    and len(cr2["families"]) == 1
+                    and cr2["families"][0]["family"] == "="
+                    and cr2["families"][0]["count"]["value"] == 1),
+                "batch-summary-aggregate": (
+                    bt["todo_seats"]["value"] == 1
+                    and len(bt["families"]) == 1
+                    and bt["families"][0]["family"] == "="),
+                "basis-verbatim": (
+                    bt["todo_seats"]["basis"]
+                    == "conclusion faces left unmatched by the "
+                       "taxonomy in this batch"),
+            }
+            ok = all(conds.values())
+            detail = " ".join("%s=%s" % (k, conds[k]) for k in sorted(conds))
+            return ("gap-telemetry-long-tail", ok, detail)
+
+        batch_vector(GAP_TELEMETRY_SELFTEST_FIXTURE, t16_conds,
+                     "gap-telemetry-long-tail")
 
     print("== vacgen selftest: %d vectors, %d pass, %d fail, %d skip =="
           % (total[0], total[0] - len(failures) - len(skips),

@@ -3,39 +3,55 @@
 """tree_audit.py - read-only tree health audit over .lean/.v source trees.
 
 Purpose.  One JSON-line census of a source tree: file/byte/line totals (lines
-  and non-empty lines), declaration counts split into thm (theorem|lemma) and
-  defFam (def|abbrev|structure|class|instance|inductive) with decls as their
-  combined total, an unsound-feature sweep (sorry, sorryAx, axiom, opaque,
-  native_decide, unsafe, implemented_by, extern, ofReduceBool), comment faces,
-  per-directory and largest-file tables, and the import-root histogram.  Every
-  top-level key but scan_face is {"value": N, "basis": "..."} so each number
-  travels with its counting rule, and scan_face states what the scan covers
-  and what it cannot see.  Counting is byte-literal and lowercase, calibrated
-  one-to-one to the sandbox census_rh.py face (raw bytes, so comments and
-  strings count too), so a same-tree cross-check is field-for-field equal; the
-  root is scanned literally (no src/ descent) and .v counts sit beside .lean.
+  and non-empty lines), declaration counts split into thm and defFam across
+  two per-suffix grammar faces (Lean lowercase keywords in .lean, Rocq
+  capitalized vernacular in .v) with decls as their combined total and
+  grammar_faces carrying the per-grammar sub-counts, an unsound-feature sweep
+  (sorry, sorryAx, axiom, opaque, native_decide, unsafe, implemented_by,
+  extern, ofReduceBool), comment faces, per-directory and largest-file
+  tables, and the import-root histogram.  Every top-level key but scan_face
+  is {"value": N, "basis": "..."} so each number travels with its counting
+  rule, and scan_face states what the scan covers and what it cannot see.
+  Counting is byte-literal (raw bytes, so comments and strings count too):
+  .lean stays lowercase, calibrated one-to-one to the sandbox census_rh.py
+  face so a same-.lean cross-check is field-for-field equal, while .v rides
+  the Rocq vernacular face added by R-3b because the lowercase faces
+  undercount capitalized .v trees by orders of magnitude.  The root is
+  scanned literally (no src/ descent).
 Interface.  python3 tools/tree_audit.py --root DIR [--json OUT] | --selftest;
-  stdout carries one JSON line and --json writes the same payload to OUT.
-  Fields: files, bytes, lines, nonEmptyLines, thm, defFam, decls, sorry,
-  sorryAx, axiom, opaque, native_decide, unsafe, implemented_by, extern,
-  ofReduceBool, commentLines, blockCommentFiles, perDir, largest10,
-  zeroDeclFiles, importRoots, root, errors, errorCount, scan_face.  Shape:
-  every field but scan_face is {"value": ..., "basis": ...}; perDir.value maps
-  the first path segment to {files, decls, bytes}, largest10.value is
-  [{"path","bytes"}], importRoots.value is a top-ten [[root,count]] list,
-  errors.value is a capped string list; scan_face has exactly the four fields
-  scanned, not_scanned, negative_finding, equivalents.
-Dependencies.  Python 3 standard library only (argparse, json, os, re, shutil,
-  sys, tempfile); the fast path reads each file once in binary and scans bytes
-  with precompiled regexes: zero subprocess, zero network, zero imports of the
-  scanned tree, zero tree writes.
-Evidence.  --selftest builds a temporary fixture tree (.v and .lean files with
-  hand-derived known counts covering the thm/defFam split and blank /
-  whitespace-only lines), asserts every report field against those vectors,
-  asserts the value/basis shape of every top-level key but scan_face and the
-  four verbatim scan_face strings, the exit-code faces (green scan, empty
-  tree, missing root rc=2) and the --json round trip; the Deicyde mirror
-  cross-check against census_rh.py runs out of tree.
+  stdout carries one JSON line and --json writes the same payload to OUT;
+  stderr additionally carries the independent grep cross-check commands for
+  the acceptance gate.  Fields: files, bytes, lines, nonEmptyLines, thm,
+  defFam, decls, grammar_faces, sorry, sorryAx, axiom, opaque,
+  native_decide, unsafe, implemented_by, extern, ofReduceBool, commentLines,
+  blockCommentFiles, perDir, largest10, zeroDeclFiles, importRoots, root,
+  errors, errorCount, scan_face.  Shape: every field but scan_face is
+  {"value": ..., "basis": ...}; perDir.value maps the first path segment to
+  {files, decls, bytes}, largest10.value is [{"path","bytes"}],
+  importRoots.value is a top-ten [[root,count]] list, errors.value is a
+  capped string list, grammar_faces.value maps the grammar name (lean, rocq)
+  to {thm, defFam} counters that each carry value + basis; scan_face has
+  exactly the four fields scanned, not_scanned, negative_finding,
+  equivalents.
+Dependencies.  Python 3 standard library only (argparse, json, os, re,
+  shlex, shutil, sys, tempfile); the fast path reads each file once in
+  binary and scans bytes with precompiled regexes: zero subprocess, zero
+  network, zero imports of the scanned tree, zero tree writes.
+Evidence.  --selftest builds a temporary fixture tree (.v and .lean files
+  with hand-derived known counts covering the thm/defFam split per grammar,
+  a capitalized Rocq .v fixture (3 Theorem + 1 Corollary + 2 Definition +
+  1 Inductive) asserted through the rocq face, a no-leak guard proving the
+  lowercase faces contribute nothing to .v files, and blank / whitespace-
+  only lines), asserts every report field against those vectors, asserts
+  the value/basis shape of every top-level key but scan_face (the
+  grammar_faces counters included), the cross-grammar sum identity, basis
+  strings naming both grammars, the grep cross-check commands carrying the
+  same keyword tables, and the four verbatim scan_face strings, the
+  exit-code faces (green scan, empty tree, missing root rc=2) and the --json
+  round trip; the Deicyde mirror cross-check against census_rh.py runs out
+  of tree, and the real-tree rocq acceptance gate re-derives the rocq-face
+  counts with the printed grep commands (no expected count is hardcoded in
+  this file).
 Exit-codes.  0 green (complete scan or green selftest); 1 red (any selftest
   vector fails, any file read fails, or the --json write fails); 2 usage
   (missing or non-directory --root, --selftest combined with scan flags,
@@ -46,6 +62,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import sys
 import tempfile
@@ -64,13 +81,28 @@ TOOL = "tree_audit"
 # pattern captures the first dotted segment of the module name, and
 # nonEmptyLines is the oracle's splitlines-then-strip face.  One deliberate
 # deviation from the oracle: decls is reported here as the combined total
-# thm + defFam (8 line-start keywords), not the oracle's narrower 5-keyword
-# decl face, per the v2 audit contract; the two agree exactly on trees with
-# no structure/class/inductive at line start.  The oracle compiles the
-# sorryAx pattern but never sums it; this tool closes that gap per the audit
-# contract (sorryAx is a token total).  A file enters the scan by a .lean or
-# .v suffix (the oracle scans .lean only), and any .git directory is skipped
-# wholesale.
+# thm + defFam summed across both grammar faces (8 lowercase line-start
+# keywords in .lean, 15 capitalized ones in .v), not the oracle's narrower
+# 5-keyword decl face, per the v2 audit contract; the two agree exactly on
+# .lean trees with no structure/class/inductive at line start.  The oracle
+# compiles the sorryAx pattern but never sums it; this tool closes that gap
+# per the audit contract (sorryAx is a token total).  A file enters the scan
+# by a .lean or .v suffix (the oracle scans .lean only), and any .git
+# directory is skipped wholesale.
+#
+# R-3b dual grammar.  The declaration faces are chosen per source suffix:
+# .lean keeps the lowercase faces above byte-identical to the oracle; .v
+# counts the capitalized Rocq vernacular instead (ROCQ_THM_KEYWORDS /
+# ROCQ_DEFFAM_KEYWORDS), because on real .v trees the lowercase faces
+# undercount declarations by orders of magnitude.  thm, defFam and decls
+# are cross-grammar totals whose basis strings name both tables, and the
+# grammar_faces block carries the per-grammar sub-counts; every other sweep
+# (sorry, axiom, unsafe, comments, imports, lines) stays single-table
+# across both suffixes.  The acceptance gate on a real .v tree re-derives
+# the rocq face with the grep commands this tool prints on stderr
+# (grep_crosscheck_commands); both spellings render from the same keyword
+# tables, so the scanner and the independent check cannot drift, and no
+# expected count lives in this file.
 #
 # Output shape.  Every top-level key except scan_face is {"value": ...,
 # "basis": ...}; the basis is one ASCII line naming the counting rule, so a
@@ -97,10 +129,65 @@ TOOL = "tree_audit"
 # splitlines segment stripped non-empty, so a closed gate proves the count
 # is 0 and an open gate never changes it.
 
+# Per-grammar declaration keyword tables (R-3b).  One table per grammar
+# drives three consumers at once - the compiled byte regexes below, the
+# per-file face choice inside audit_root, and the independent grep
+# cross-check commands printed on stderr - so the scanner and the acceptance
+# check share one keyword set and cannot drift apart.  .lean keeps the
+# lowercase Lean faces; .v uses the capitalized Rocq vernacular.  Every
+# declaration face is line-start anchored (re.M) and right word-bounded
+# (\b), so "theorems_about" or a mid-line "Definition" never counts.
+LEAN_THM_KEYWORDS = (b"theorem", b"lemma")
+LEAN_DEFFAM_KEYWORDS = (b"def", b"abbrev", b"structure", b"class",
+                        b"instance", b"inductive")
+ROCQ_THM_KEYWORDS = (b"Theorem", b"Lemma", b"Corollary", b"Proposition")
+ROCQ_DEFFAM_KEYWORDS = (b"Definition", b"Fixpoint", b"CoFixpoint",
+                        b"Inductive", b"CoInductive", b"Class", b"Instance",
+                        b"Abbreviation", b"Record", b"Scheme", b"Let")
+
+# (grammar name, source suffix, keyword tables) in report and stderr order;
+# SUFFIX_FACE maps each scanned suffix to its grammar and FACE_TABLES maps
+# the grammar back to its tables.
+GRAMMAR_FACES = (
+    ("lean", ".lean", {"thm": LEAN_THM_KEYWORDS,
+                       "defFam": LEAN_DEFFAM_KEYWORDS}),
+    ("rocq", ".v", {"thm": ROCQ_THM_KEYWORDS,
+                    "defFam": ROCQ_DEFFAM_KEYWORDS}),
+)
+SUFFIX_FACE = {suffix: name for name, suffix, _ in GRAMMAR_FACES}
+FACE_TABLES = {name: tables for name, _, tables in GRAMMAR_FACES}
+
+
+def _kw_alt(keywords):
+    """Render a keyword table as its pipe-joined ASCII alternation."""
+    return "|".join(k.decode("ascii") for k in keywords)
+
+
+def _line_start_rx(keywords):
+    """Compile a keyword table into its line-start, word-bounded byte face."""
+    return re.compile(rb"^\s*(" + b"|".join(keywords) + rb")\b", re.M)
+
+
+def _face_basis(counter, suffix, keywords):
+    """Counting rule for one grammar face: its table + the line-start rule."""
+    return ("line-start %s keywords in %s files: %s (word-bounded; comments"
+            " and strings counted too)" % (counter, suffix, _kw_alt(keywords)))
+
+
+def _cross_basis(counter):
+    """Counting rule for a top-level counter; names BOTH grammar tables."""
+    return ("cross-grammar total of line-start %s declarations, word-bounded,"
+            " comments and strings counted too; %s"
+            % (counter, "; ".join(
+                "%s files: %s" % (suffix, _kw_alt(tables[counter]))
+                for _, suffix, tables in GRAMMAR_FACES)))
+
+
 RX = {
-    "thm": re.compile(rb"^\s*(theorem|lemma)\b", re.M),
-    "deffam": re.compile(rb"^\s*(def|abbrev|structure|class|instance"
-                         rb"|inductive)\b", re.M),
+    "lean_thm": _line_start_rx(LEAN_THM_KEYWORDS),
+    "lean_deffam": _line_start_rx(LEAN_DEFFAM_KEYWORDS),
+    "rocq_thm": _line_start_rx(ROCQ_THM_KEYWORDS),
+    "rocq_deffam": _line_start_rx(ROCQ_DEFFAM_KEYWORDS),
     "sorry": re.compile(rb"\bsorry\b"),
     "sorryAx": re.compile(rb"\bsorryAx\b"),
     "axiom": re.compile(rb"^\s*axiom\s", re.M),
@@ -118,11 +205,6 @@ RX = {
 SOURCE_SUFFIXES = (".lean", ".v")
 READ_ERROR_CAP = 10
 
-# Decl-keyword literals for the decl gates (any presence opens the pass).
-THM_LITERALS = (b"theorem", b"lemma")
-DEFFAM_LITERALS = (b"def", b"abbrev", b"structure", b"class",
-                   b"instance", b"inductive")
-
 # Gate for the non-empty-line pass: one byte outside the ASCII whitespace
 # set proves a non-empty line exists; no such byte proves the count is 0.
 NONEMPTY_GATE = re.compile(rb"[^\t\n\x0b\x0c\r ]")
@@ -133,22 +215,29 @@ NONEMPTY_GATE = re.compile(rb"[^\t\n\x0b\x0c\r ]")
 SCAN_SCANNED = (
     "All files with a .lean or .v suffix under the root, walked recursively"
     " with .git directories skipped; each file is read once in binary and"
-    " counted with fixed lowercase byte regexes, so comment and string"
-    " content is counted too."
+    " counted with fixed byte regexes chosen per grammar - Lean lowercase"
+    " keywords in .lean, Rocq capitalized vernacular in .v - so comment and"
+    " string content is counted too."
 )
 SCAN_NOT_SCANNED = (
     "Files with any other suffix, everything under .git, and anything a"
     " byte regex cannot see: identifier meaning, declaration structure,"
-    " encodings, uppercase spellings; unreadable files appear only in"
-    " errors."
+    " encodings, spellings outside each grammar's fixed keyword table;"
+    " unreadable files appear only in errors."
 )
 SCAN_NEGATIVE_FINDING = (
     "A zero count is a negative finding of this scan, not an absolute"
     " claim."
 )
 SCAN_EQUIVALENTS = (
-    "The declaration family uses fixed keyword patterns; equivalent"
-    " constructs spelled differently are not exhaustively covered."
+    "Declaration counts use two fixed keyword tables, each matched only at"
+    " line start and word-bounded: .lean thm = theorem|lemma, defFam ="
+    " def|abbrev|structure|class|instance|inductive; .v thm ="
+    " Theorem|Lemma|Corollary|Proposition, defFam = Definition|Fixpoint|"
+    "CoFixpoint|Inductive|CoInductive|Class|Instance|Abbreviation|Record|"
+    "Scheme|Let.  An equivalent construct spelled outside its table, or a"
+    " keyword not opening its line (attributes, Local/Global prefixes,"
+    " nested bullets), is not exhaustively covered."
 )
 
 
@@ -183,8 +272,8 @@ def audit_root(root):
     total_bytes = 0
     total_lines = 0
     non_empty_lines = 0
-    thm_total = 0
-    deffam_total = 0
+    face_thm = {name: 0 for name, _, _ in GRAMMAR_FACES}
+    face_deffam = {name: 0 for name, _, _ in GRAMMAR_FACES}
     decls = 0
     sorry = 0
     sorry_ax = 0
@@ -227,11 +316,20 @@ def audit_root(root):
                 non_empty_lines += sum(1 for ln in txt.splitlines()
                                        if ln.strip())
             largest.append((len(txt), rel))
-            n_thm = _pattern_count(RX["thm"], THM_LITERALS, txt)
-            n_deffam = _pattern_count(RX["deffam"], DEFFAM_LITERALS, txt)
+            # R-3b: the declaration face is chosen per source suffix - the
+            # capitalized Rocq vernacular keywords for .v, the lowercase
+            # Lean keywords for .lean - so a lowercase Lean keyword inside
+            # a .v file (or a capitalized vernacular keyword inside a .lean
+            # file) can never count.  Every other sweep below stays
+            # single-table across both grammars.
+            grammar = SUFFIX_FACE[".v" if fn.endswith(".v") else ".lean"]
+            tables = FACE_TABLES[grammar]
+            n_thm = _pattern_count(RX[grammar + "_thm"], tables["thm"], txt)
+            n_deffam = _pattern_count(RX[grammar + "_deffam"],
+                                      tables["defFam"], txt)
+            face_thm[grammar] += n_thm
+            face_deffam[grammar] += n_deffam
             n_decl = n_thm + n_deffam
-            thm_total += n_thm
-            deffam_total += n_deffam
             decls += n_decl
             bucket["decls"] += n_decl
             comment_lines += _pattern_count(RX["comment_line"], b"--", txt)
@@ -258,6 +356,9 @@ def audit_root(root):
                 for m in RX["import"].findall(txt):
                     r0 = m.split(b".")[0].decode("ascii", "replace")
                     imports[r0] = imports.get(r0, 0) + 1
+    thm_total = sum(face_thm.values())
+    deffam_total = sum(face_deffam.values())
+    face_counts = {"thm": face_thm, "defFam": face_deffam}
     largest.sort(reverse=True)
     report = {
         "files": {"value": files,
@@ -273,15 +374,22 @@ def audit_root(root):
                           "basis": "lines carrying at least one"
                                    " non-whitespace byte (splitlines, then"
                                    " strip)"},
-        "thm": {"value": thm_total,
-                "basis": "declarations starting a line with 'theorem' or"
-                         " 'lemma'"},
-        "defFam": {"value": deffam_total,
-                   "basis": "declarations starting a line with def,"
-                            " abbrev, structure, class, instance or"
-                            " inductive"},
+        "thm": {"value": thm_total, "basis": _cross_basis("thm")},
+        "defFam": {"value": deffam_total, "basis": _cross_basis("defFam")},
         "decls": {"value": decls,
-                  "basis": "combined total thm + defFam (backward anchor)"},
+                  "basis": "combined total thm + defFam summed across both"
+                           " grammar faces (backward anchor)"},
+        "grammar_faces": {
+            "value": {
+                name: {counter: {
+                    "value": face_counts[counter][name],
+                    "basis": _face_basis(counter, suffix, tables[counter]),
+                } for counter in ("thm", "defFam")}
+                for name, suffix, tables in GRAMMAR_FACES},
+            "basis": "per-grammar declaration sub-counts; thm and defFam"
+                     " above are the sums of the matching sub-counters, and"
+                     " each sub-counter names its own keyword table",
+        },
         "sorry": {"value": sorry,
                   "basis": "word-bounded 'sorry' token hits, comments and"
                            " strings included"},
@@ -311,14 +419,16 @@ def audit_root(root):
                                        " block-comment opener"},
         "perDir": {"value": per_dir,
                    "basis": "first path segment -> {files, decls, bytes};"
-                            " decls is the thm + defFam face"},
+                                " decls is the thm + defFam face under the"
+                                " file's own grammar"},
         "largest10": {"value": [{"path": rel, "bytes": n}
                                 for n, rel in largest[:10]],
                       "basis": "top 10 files by raw bytes, descending;"
                                " ties break by path, descending"},
         "zeroDeclFiles": {"value": zero_decl_files,
                           "basis": "files with zero thm and zero defFam"
-                                   " line-start hits"},
+                                   " line-start hits under their own"
+                                   " grammar face"},
         "importRoots": {"value": [[r0, n] for r0, n in
                                   sorted(imports.items(),
                                          key=lambda kv: -kv[1])[:10]],
@@ -351,6 +461,36 @@ def write_json(path, payload):
         fh.write("\n")
 
 
+def grep_crosscheck_commands(root):
+    """Render the independent grep cross-check commands for the audit root.
+
+    The acceptance gate re-derives every grammar face with these commands
+    and compares them field-for-field with the grammar_faces block; each
+    pattern is rendered from the same keyword table the scanner compiles,
+    so no expected count and no duplicated keyword set lives in this file.
+    Each command mirrors its face exactly: -E extended regex, the leading
+    ^[[:space:]]* mirrors the regex's ^\\s*, GNU grep's \\b mirrors the
+    word boundary, -r walks the tree, --exclude-dir=.git matches the
+    scanner's .git skip, and --include confines the command to the
+    grammar's suffix, mirroring the suffix gate; LC_ALL=C keeps the reading
+    byte-literal, and -o|wc -l counts one line per match exactly like the
+    scanner's non-overlapping findall (a match in either spelling must end
+    at the same word-bounded keyword occurrence, so the counts are 1:1).
+    Returns (label, command) pairs; nothing is executed here.
+    """
+    commands = []
+    for name, suffix, tables in GRAMMAR_FACES:
+        for counter in ("thm", "defFam"):
+            pattern = "^[[:space:]]*(%s)\\b" % _kw_alt(tables[counter])
+            commands.append((
+                "%s/%s" % (name, counter),
+                "LC_ALL=C grep -rhoE --include=%s --exclude-dir=.git -e %s"
+                " %s | wc -l" % (shlex.quote("*" + suffix),
+                                 shlex.quote(pattern),
+                                 shlex.quote(root))))
+    return commands
+
+
 def run_selftest():
     """Fixture vectors over temporary directories; 0 green, 1 red."""
     fails = []
@@ -367,11 +507,14 @@ def run_selftest():
         a_enc = FIXTURE_ALPHA.encode("utf-8")
         b_enc = FIXTURE_BETA.encode("utf-8")
         g_enc = FIXTURE_GAMMA.encode("utf-8")
+        d_enc = FIXTURE_DELTA.encode("utf-8")
         os.mkdir(os.path.join(tmp, "sub"))
         with open(os.path.join(tmp, "alpha.v"), "wb") as fh:
             fh.write(a_enc)
         with open(os.path.join(tmp, "beta.v"), "wb") as fh:
             fh.write(b_enc)
+        with open(os.path.join(tmp, "delta.v"), "wb") as fh:
+            fh.write(d_enc)
         with open(os.path.join(tmp, "sub", "gamma.lean"), "wb") as fh:
             fh.write(g_enc)
         os.mkdir(os.path.join(tmp, ".git"))
@@ -381,18 +524,22 @@ def run_selftest():
             fh.write(b"sorry\ntheorem decoy : Nat := 0\n")
         report, rc = audit_root(tmp)
         check("scan-rc", rc == 0, "rc=%s" % rc)
-        check("files", report["files"]["value"] == 3,
+        check("files", report["files"]["value"] == 4,
               "got %s" % report["files"]["value"])
         check("bytes", report["bytes"]["value"] ==
-              len(a_enc) + len(b_enc) + len(g_enc),
+              len(a_enc) + len(b_enc) + len(g_enc) + len(d_enc),
               "got %s" % report["bytes"]["value"])
-        check("lines", report["lines"]["value"] == 35,
+        check("lines", report["lines"]["value"] == 44,
               "got %s" % report["lines"]["value"])
-        check("nonEmptyLines", report["nonEmptyLines"]["value"] == 33,
+        check("nonEmptyLines", report["nonEmptyLines"]["value"] == 42,
               "got %s" % report["nonEmptyLines"]["value"])
-        check("thm", report["thm"]["value"] == 3,
+        # R-3b cross-grammar totals: lean carries only gamma.lean (2 thm,
+        # 1 defFam) and rocq carries only delta.v (4 thm, 3 defFam);
+        # alpha.v's lowercase Lean keywords contribute zero to both faces,
+        # which is the no-leak guard for the suffix gate.
+        check("thm", report["thm"]["value"] == 6,
               "got %s" % report["thm"]["value"])
-        check("defFam", report["defFam"]["value"] == 7,
+        check("defFam", report["defFam"]["value"] == 4,
               "got %s" % report["defFam"]["value"])
         check("decls", report["decls"]["value"] == 10,
               "got %s" % report["decls"]["value"])
@@ -401,6 +548,52 @@ def run_selftest():
               "thm=%s defFam=%s decls=%s" % (report["thm"]["value"],
                                              report["defFam"]["value"],
                                              report["decls"]["value"]))
+        # R-3b grammar_faces vectors: the capitalized .v fixture asserted
+        # through the rocq face (3 Theorem + 1 Corollary = 4 thm; 2
+        # Definition + 1 Inductive = 3 defFam), the .lean vectors unchanged
+        # through the lean face, the schema shape (every counter carries
+        # value + basis), the sum identity and basis strings naming BOTH
+        # grammars.
+        gf = report["grammar_faces"]["value"]
+        check("grammar-face-keys",
+              sorted(gf) == ["lean", "rocq"]
+              and sorted(gf["lean"]) == ["defFam", "thm"]
+              and sorted(gf["rocq"]) == ["defFam", "thm"],
+              "got %s" % sorted(gf))
+        check("rocq-thm-face", gf["rocq"]["thm"]["value"] == 4,
+              "got %s" % gf["rocq"]["thm"]["value"])
+        check("rocq-defFam-face", gf["rocq"]["defFam"]["value"] == 3,
+              "got %s" % gf["rocq"]["defFam"]["value"])
+        check("lean-thm-face", gf["lean"]["thm"]["value"] == 2,
+              "got %s" % gf["lean"]["thm"]["value"])
+        check("lean-defFam-face", gf["lean"]["defFam"]["value"] == 1,
+              "got %s" % gf["lean"]["defFam"]["value"])
+        gf_bad = [name + "/" + counter for name in gf
+                  for counter in gf[name]
+                  if sorted(gf[name][counter]) != ["basis", "value"]
+                  or not isinstance(gf[name][counter]["value"], int)
+                  or not (isinstance(gf[name][counter]["basis"], str)
+                          and gf[name][counter]["basis"])]
+        check("grammar-face-shape", gf_bad == [], "bad: %s" % gf_bad)
+        check("grammar-sums",
+              report["thm"]["value"] == gf["lean"]["thm"]["value"]
+              + gf["rocq"]["thm"]["value"]
+              and report["defFam"]["value"] == gf["lean"]["defFam"]["value"]
+              + gf["rocq"]["defFam"]["value"],
+              "thm=%s defFam=%s" % (report["thm"]["value"],
+                                    report["defFam"]["value"]))
+        check("thm-basis-names-both",
+              "theorem" in report["thm"]["basis"]
+              and "Theorem" in report["thm"]["basis"]
+              and ".lean" in report["thm"]["basis"]
+              and ".v" in report["thm"]["basis"],
+              "got %s" % report["thm"]["basis"])
+        check("defFam-basis-names-both",
+              "abbrev" in report["defFam"]["basis"]
+              and "Fixpoint" in report["defFam"]["basis"]
+              and ".lean" in report["defFam"]["basis"]
+              and ".v" in report["defFam"]["basis"],
+              "got %s" % report["defFam"]["basis"])
         check("sorry", report["sorry"]["value"] == 3,
               "got %s" % report["sorry"]["value"])
         check("sorryAx", report["sorryAx"]["value"] == 2,
@@ -419,16 +612,18 @@ def run_selftest():
               "got %s" % report["extern"]["value"])
         check("ofReduceBool", report["ofReduceBool"]["value"] == 1,
               "got %s" % report["ofReduceBool"]["value"])
-        check("commentLines", report["commentLines"]["value"] == 5,
+        check("commentLines", report["commentLines"]["value"] == 6,
               "got %s" % report["commentLines"]["value"])
         check("blockCommentFiles", report["blockCommentFiles"]["value"] == 1,
               "got %s" % report["blockCommentFiles"]["value"])
-        check("zeroDeclFiles", report["zeroDeclFiles"]["value"] == 1,
+        check("zeroDeclFiles", report["zeroDeclFiles"]["value"] == 2,
               "got %s" % report["zeroDeclFiles"]["value"])
         # The .git skip and the suffix filter are proven by the totals
         # above: the .git decoy would add one thm hit and one sorry token,
         # notes.txt one sorry token and one thm hit; both stay out of
-        # every count.
+        # every count.  alpha.v and beta.v are the two zero-decl files:
+        # their lowercase Lean keywords do not count under the rocq face
+        # (R-3b), exactly the undercount face the dual grammar removes.
         # Shape: every top-level key but scan_face carries value + basis;
         # scan_face carries exactly the four fixed fields, verbatim.
         bare = [k for k in report
@@ -449,19 +644,23 @@ def run_selftest():
               and face.get("equivalents") == SCAN_EQUIVALENTS,
               "scan_face strings drifted from the constants")
         per_dir = report["perDir"]["value"]
-        check("perDir-keys", set(per_dir) == {"alpha.v", "beta.v", "sub"},
+        check("perDir-keys",
+              set(per_dir) == {"alpha.v", "beta.v", "delta.v", "sub"},
               "got %s" % sorted(per_dir))
         check("perDir-alpha", per_dir.get("alpha.v") == {
-            "files": 1, "decls": 7, "bytes": len(a_enc)},
+            "files": 1, "decls": 0, "bytes": len(a_enc)},
             "got %s" % per_dir.get("alpha.v"))
         check("perDir-beta", per_dir.get("beta.v") == {
             "files": 1, "decls": 0, "bytes": len(b_enc)},
             "got %s" % per_dir.get("beta.v"))
+        check("perDir-delta", per_dir.get("delta.v") == {
+            "files": 1, "decls": 7, "bytes": len(d_enc)},
+            "got %s" % per_dir.get("delta.v"))
         check("perDir-sub", per_dir.get("sub") == {
             "files": 1, "decls": 3, "bytes": len(g_enc)},
             "got %s" % per_dir.get("sub"))
         largest = report["largest10"]["value"]
-        check("largest10-count", len(largest) == 3, "got %s" % len(largest))
+        check("largest10-count", len(largest) == 4, "got %s" % len(largest))
         check("largest10-top", largest[0] == {"path": "alpha.v",
                                               "bytes": len(a_enc)},
               "got %s" % largest[0])
@@ -482,6 +681,23 @@ def run_selftest():
         with open(json_path, "r", encoding="utf-8") as fh:
             round_trip = json.load(fh)
         check("json-round-trip", round_trip == report, "payload mismatch")
+        # The printed independent-grep commands must carry the same keyword
+        # tables as the scanner (string-built here, never executed).
+        cmds = dict(grep_crosscheck_commands(tmp))
+        check("grep-command-keys",
+              sorted(cmds) == ["lean/defFam", "lean/thm", "rocq/defFam",
+                               "rocq/thm"],
+              "got %s" % sorted(cmds))
+        check("grep-command-rocq",
+              "--include='*.v'" in cmds.get("rocq/thm", "")
+              and "Theorem|Lemma|Corollary|Proposition"
+              in cmds.get("rocq/thm", "")
+              and "\\b" in cmds.get("rocq/thm", ""),
+              "got %s" % cmds.get("rocq/thm"))
+        check("grep-command-lean",
+              "--include='*.lean'" in cmds.get("lean/thm", "")
+              and "theorem|lemma" in cmds.get("lean/thm", ""),
+              "got %s" % cmds.get("lean/thm"))
         # Empty tree face: zero files, still green.
         empty = tempfile.mkdtemp(prefix="tree_audit_selftest_empty_")
         try:
@@ -550,6 +766,23 @@ FIXTURE_GAMMA = (
     "import Init\n"
 )
 
+# delta.v: the capitalized Rocq vernacular face (R-3b).  Hand-derived
+# counts: 4 thm-family line starts (3 Theorem + 1 Corollary) and 3
+# defFam-family line starts (2 Definition + 1 Inductive); the "Local
+# Theorem" line opens with the prefix, not the keyword, so the line-start
+# limitation correctly leaves it uncounted.
+FIXTURE_DELTA = (
+    "-- delta fixture: the Rocq vernacular face (.v)\n"
+    "Theorem delta_one : nat.\n"
+    "Theorem delta_two : nat.\n"
+    "Theorem delta_three : nat.\n"
+    "Corollary delta_four : nat.\n"
+    "Local Theorem delta_hidden : nat.\n"
+    "Definition delta_five : nat := 5.\n"
+    "Definition delta_six : nat := 6.\n"
+    "Inductive delta_seven : Type := tag.\n"
+)
+
 
 def main(argv=None):
     """CLI entry; returns the process exit code (0/1/2)."""
@@ -576,6 +809,12 @@ def main(argv=None):
         sys.stderr.write("tree_audit: --root is not a directory: %s\n"
                          % args.root)
         return 2
+    # Acceptance-gate face (R-3b): print the independent grep commands so
+    # the gate can re-derive every grammar face with the SAME keyword
+    # tables the scanner compiled; the commands carry no expected counts.
+    for label, cmd in grep_crosscheck_commands(args.root):
+        sys.stderr.write("tree_audit grep-crosscheck %s: %s\n"
+                         % (label, cmd))
     payload = json.dumps(report, ensure_ascii=False)
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
