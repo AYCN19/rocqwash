@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T09:20:40Z",
+  "generated_at_utc": "2026-11-21T10:45:39Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "27bf0c45bc1d84938be8dac54494254fe9d6939b",
-  "py_files_censused": 62,
+  "git_head_recorded": "f3a35cbc5fbee5e56bfc068d1a81cbd2433e0a50",
+  "py_files_censused": 65,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -25,11 +25,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 60,
+   "with_argparse": 63,
    "with_subcommands": 1,
-   "zero_network": 51,
+   "zero_network": 52,
    "needs_special_environment": 35,
-   "invocation_reconstructed": 60,
+   "invocation_reconstructed": 63,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -5757,15 +5757,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 110413,
-   "sha256": "6eedb6274a834603475b158589f7715e054041319e8ffa7155cdc05c40cb6f1d",
-   "lines": 2108,
+   "bytes": 122890,
+   "sha256": "877f4606e2a2b2eb2157c06a6995633dcedd1eb3a185f111d67791affb37e6d5",
+   "lines": 2271,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 29,
-    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 45 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line\n  (two later increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch): a failed tool\n  result names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.\n  Credential zero contact: no credential store, tok"
+    "lines": 30,
+    "head": "mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) stdio transport: 48 registered capabilities,\n  each spec transcribed from its docs/CAPABILITY-INDEX.md entry line\n  (five later increments from their tools' own CLI contract headers).\n  Default deny for the network and heavy capabilities (sentinel_status,\n  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,\n  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1\n  until that variable equals 1.\n  Credential zero c"
    },
    "argparse": {
     "imported": true,
@@ -7974,6 +7974,216 @@
    "selftest_token_face": true
   },
   {
+   "name": "release_chain.py",
+   "bytes": 64517,
+   "sha256": "5b0231631271fbd7a7c8956c0f6edebceab9924c7ebc18f774f58d7fa2e5b62f",
+   "lines": 1314,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 29,
+    "head": "release_chain.py - the release chain face (issue -> GitHub Release ->\nZenodo) with separately gated publish steps (rocqwash tools/, v2-B).\n\nPurpose.  Emit the three-layer plan (issue body update -> GitHub Release\n  per-asset upload -> Zenodo deposit create + bucket PUTs + publish) as\n  a checklist with exact API calls.  DEFAULT dry-run (zero network);\n  actual steps need --confirm-publish, each layer stopping for\n  verification before the next (publish stop-gates, never bundled).\n  Minted URLs/DOIs are read verbatim from responses, never assembled.\nInterface.  python -I tools/release_chain.py "
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "release chain face: issue -> GitHub Release -> Zenodo as a three-layer plan (default dry-run); actual publish steps are separately gated, one layer per invocation, minted values verbatim from response"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--issue"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": null,
+       "metavar": "N",
+       "help": "the issue number the chain hangs off (required)"
+      }
+     },
+     {
+      "flags": [
+       "--release-title"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "TITLE",
+       "help": "the Release title (required; also pins the tag slug)"
+      }
+     },
+     {
+      "flags": [
+       "--assets"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "DIR",
+       "help": "directory of release assets, uploaded per-asset to both faces (required)"
+      }
+     },
+     {
+      "flags": [
+       "--zenodo-metadata"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "JSON",
+       "help": "Zenodo deposit metadata JSON file (a JSON object with a title key); without it the Zenodo layer is listed blocked"
+      }
+     },
+     {
+      "flags": [
+       "--confirm-publish"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "execute ONE stage against the live services (requires ROCQWASH_MCP_ALLOW_NET=1 and the stage credentials); without it the tool stays in dry-run"
+      }
+     },
+     {
+      "flags": [
+       "--dry-run"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "explicit dry-run (the default already); plan only, zero network"
+      }
+     },
+     {
+      "flags": [
+       "--repo"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "OWNER/NAME",
+       "help": "the repository carrying the issue and Release; execution mode resolves it from this flag or git remote origin, and fails loud rc=9 otherwise"
+      }
+     },
+     {
+      "flags": [
+       "--stage"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": null,
+       "metavar": "1|2|3|4",
+       "help": "which gated layer to execute: 1 issue body update, 2 Release create + uploads, 3 deposit create + bucket PUTs, 4 publish (irreversible, needs --deposit-id)"
+      }
+     },
+     {
+      "flags": [
+       "--release-id"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": null,
+       "metavar": "N",
+       "help": "a stage-2 minted Release id carried into a stage-1 finalize re-run (verbatim from its log)"
+      }
+     },
+     {
+      "flags": [
+       "--deposit-id"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "N",
+       "help": "the stage-3 minted deposit id; REQUIRED for stage 4 (the publish stop-gate carry)"
+      }
+     },
+     {
+      "flags": [
+       "--timeout"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": "<dynamic>",
+       "metavar": "SEC",
+       "help": "<dynamic>"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--issue",
+     "--release-title",
+     "--assets",
+     "--zenodo-metadata",
+     "--confirm-publish",
+     "--dry-run",
+     "--repo",
+     "--stage",
+     "--release-id",
+     "--deposit-id",
+     "--timeout"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "_http_backoff",
+     "argparse",
+     "hashlib",
+     "json",
+     "net_probe",
+     "os",
+     "re",
+     "shutil",
+     "subprocess",
+     "sys",
+     "tempfile",
+     "urllib.error",
+     "urllib.parse",
+     "urllib.request"
+    ],
+    "third_party": [],
+    "local": [
+     "_http_backoff",
+     "net_probe"
+    ],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [
+     "urllib.request"
+    ],
+    "adjacent_imports": [
+     "urllib.error",
+     "urllib.parse"
+    ],
+    "literal_face": [
+     {
+      "token": "api_github",
+      "count": 4
+     },
+     {
+      "token": "https_url",
+      "count": 18
+     }
+    ],
+    "subprocess_bridge_suspect": true,
+    "zero_network": false,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/release_chain.py [--issue] [--release-title] [--assets] [--zenodo-metadata] [--confirm-publish] [--dry-run] [--repo] [--stage] [--release-id] [--deposit-id] [--timeout]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": false,
+   "selftest_token_face": true
+  },
+  {
    "name": "render_events.py",
    "bytes": 26759,
    "sha256": "a32e66f1290a7840d408027a85a67899cd43c0d6ce06509c6865e6f595494721",
@@ -9318,6 +9528,286 @@
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
+   "name": "source_fetch.py",
+   "bytes": 39817,
+   "sha256": "982a8532f4e4e2d61bac2e61b2ade8650823fbd2184a6c2d0d54ccd76b7bd8e0",
+   "lines": 844,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 28,
+    "head": "source_fetch.py - audit fetch face: pinned, dual-source, trap-sniffing\nfetcher for the audit line (rocqwash tools/, v2-B micro-bundle; promoted\nfrom the ad-hoc `attn/_alpoge_rh_audit_20261121/fetch_assets.py` script).\n\nPurpose.  The first leg of every audit: fetch a claim artifact with NETRED\n  retry/backoff, verify sha256 where the expected value comes EITHER from\n  the caller OR from a CI file fetched at --sha256-source (the\n  constant-fetched-from-CI-file-at-source pattern - never hardcoded),\n  cross-pin an optional --mirror (both streams must hash-equal), and sniff\n  HTML-trap responses un"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "audit fetch face: NETRED fetch, sha256 pin from the caller or a CI file at source, mirror cross-pin, HTML-trap sniff; one JSON report line"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--url"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "URL",
+       "help": "primary fetch target (required)"
+      }
+     },
+     {
+      "flags": [
+       "--sha256"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "HEX64",
+       "help": "expected sha256 from the caller (lowercase hex; never a tool constant)"
+      }
+     },
+     {
+      "flags": [
+       "--sha256-source"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "URL",
+       "help": "URL of the CI file carrying the expected sha256 as its single 64-hex token (the constant-fetched-from-CI-file-at-source pattern)"
+      }
+     },
+     {
+      "flags": [
+       "--mirror"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "URL",
+       "help": "mirror fetch target; both byte streams must hash-equal (dual-source cross-pin)"
+      }
+     },
+     {
+      "flags": [
+       "--trap-sniff"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "sniff fetched bodies for HTML-trap responses (any-path-returns-200 precedent); a hit is TRAP-DETECTED and never saved"
+      }
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "DIR",
+       "help": "directory the verified bytes are written to (created if missing; only green bytes land)"
+      }
+     },
+     {
+      "flags": [
+       "--timeout"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": "<dynamic>",
+       "metavar": "SEC",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--retries"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": "<dynamic>",
+       "metavar": "N",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
+       "--backoff-base"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": "<dynamic>",
+       "metavar": "SEC",
+       "help": "<dynamic>"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--url",
+     "--sha256",
+     "--sha256-source",
+     "--mirror",
+     "--trap-sniff",
+     "--out",
+     "--timeout",
+     "--retries",
+     "--backoff-base"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "_http_backoff",
+     "argparse",
+     "hashlib",
+     "json",
+     "net_probe",
+     "os",
+     "re",
+     "shutil",
+     "subprocess",
+     "sys",
+     "tempfile",
+     "urllib.error",
+     "urllib.parse",
+     "urllib.request"
+    ],
+    "third_party": [],
+    "local": [
+     "_http_backoff",
+     "net_probe"
+    ],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [
+     "urllib.request"
+    ],
+    "adjacent_imports": [
+     "urllib.error",
+     "urllib.parse"
+    ],
+    "literal_face": [
+     {
+      "token": "https_url",
+      "count": 1
+     }
+    ],
+    "subprocess_bridge_suspect": false,
+    "zero_network": false,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/source_fetch.py [--url] [--sha256] [--sha256-source] [--mirror] [--trap-sniff] [--out] [--timeout] [--retries] [--backoff-base]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": false,
+   "selftest_token_face": true
+  },
+  {
+   "name": "sweep_verdict.py",
+   "bytes": 31939,
+   "sha256": "c5e9a193c20b81eae2fa36955adecee7eff03ab19208a213b5804bd42c05f740",
+   "lines": 696,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 29,
+    "head": "sweep_verdict.py - mechanical verdict face over per-lane sweep ledgers\n(rocqwash tools/, v2-B micro-bundle; the judge of batch audits).\n\nPurpose.  Union every per-lane result .tsv in the --lanes directory into\n  one judgment table with dedup on (idx, probe), then emit the GREEN /\n  EXCEPTION / MISSING verdict table with listings.  Per-lane split ledgers\n  are the canonical semantics - the shared append ledger was the root cause\n  of the first audit sweep, so that anti-shape is refused at the front\n  door (a file path where a directory is required is a usage error, not an\n  input).  The --expec"
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "mechanical verdict face: union per-lane sweep ledgers with dedup, judge GREEN/EXCEPTION/MISSING, interlock the expected-red baseline (no false alarm); one JSON report line"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--lanes"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "DIR",
+       "help": "directory of per-lane result .tsv files (one lane per file, idx|probe|status|note; required)"
+      }
+     },
+     {
+      "flags": [
+       "--expected-red"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "FILE",
+       "help": "expected by-design-fail rows (idx<TAB>probe lines); matched rows stay out of EXCEPTION (baselinediff interlock), and their absent rows recorded MISSING"
+      }
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "default": null,
+       "metavar": "JSON",
+       "help": "write the stdout JSON payload to this path too"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--lanes",
+     "--expected-red",
+     "--out"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "io",
+     "json",
+     "os",
+     "shutil",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [],
+    "needs_special_environment": false
+   },
+   "invocation": {
+    "form": "python tools/sweep_verdict.py [--lanes] [--expected-red] [--out]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": false,
    "selftest_token_face": true
   },
   {

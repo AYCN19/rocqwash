@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  45-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  48-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -27,8 +27,18 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   (claim_watch, the net-gated live watch face over the landed native
   resident watch CLI tools/claim_watch.py, ticket 13; its spec
   description is likewise transcribed from the tool's frozen CLI
-  contract header), each new capability
-  transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line (the
+  contract header), and the v2-B audit-line registration increment's
+  three capabilities (source_fetch, the net-gated pinned dual-source
+  trap-sniffing fetch face over the landed CLI tools/source_fetch.py;
+  sweep_verdict, the zero-network mechanical verdict judge over the
+  landed CLI tools/sweep_verdict.py; release_chain, the net-gated
+  release chain face over the landed CLI tools/release_chain.py, whose
+  schema carries dry_run default true and whose confirm_publish
+  description warns it is the publish stop-gate key; each spec
+  transcribed from its tool's own frozen CLI contract header, the
+  INDEX entries awaiting their own lane), each new capability
+  transcribed from its docs/CAPABILITY-INDEX.md section 2 entry line or,
+  for the later increments, from the tool's frozen CLI contract header (the
   symbiosis INDEX entry line lands with the integration increment).
 
 Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
@@ -37,11 +47,11 @@ Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   second check).
 
 Probes (zero network; probes 1-6 run one session in order, probe 7 is a
-  separate --help invocation and probe 8 a separate allow-net session of
-  the same child shape):
+  separate --help invocation and probes 8-9 separate allow-net sessions
+  of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 45 expected names in registration order,
+  3  tools/list -> exactly the 48 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -64,11 +74,19 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
      4e axiom_sweep {"selftest": true} -> exit code: 0 with the
         fixture-vector green face (the canned offline vectors; zero
         toolchain launch)
+     4f sweep_verdict {"lanes": <one synthetic tmp lane dir>, "out":
+        <tmp json>} -> exit code: 0 with the GREEN verdict face (the
+        v2-B audit-line judge on a temporary fixture; zero network, the
+        only write is the caller-named tmp out path)
   5  default deny -> tools/call net_probe returns isError true and names
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child); the
      same deny face is asserted for claim_watch (probe 5b), the net-gated
      registration increment, whose only ungated face is the offline
-     selftest
+     selftest, and for source_fetch and release_chain (probes 5c/5d),
+     the two net-gated v2-B audit-line faces, whose live faces are the
+     network faces and whose offline faces stay outside the wire face
+     (source_fetch's --selftest route) or behind the gate (release_chain
+     probe 9)
   6  error faces -> resources/list -32601; unknown tool -32602; unknown
      argument on a new capability -32602; an array item starting with "-"
      -32602; a withheld enum choice on a command-shaped capability (the
@@ -82,10 +100,17 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
      claim_watch {"offline_selftest": true} -> exit code: 0 with the
      CLAIM-WATCH-SELFTEST PASS line (canned transport, virtual clock,
      zero network; no live watch face is exercised by this suite)
+  9  release_chain offline dry-run face under the gate (the face vector
+     of the v2-B audit-line increment, the offline face only): a separate
+     session with ROCQWASH_MCP_ALLOW_NET=1 calls release_chain
+     {"issue": 7, "release_title": ..., "assets": <tmp dir>} without
+     confirm_publish -> exit code: 0 with the dry-run plan face (the
+     dry_run schema default true keeps the face offline; zero network,
+     "zero calls sent"; no publish face is exercised by this suite)
 
 Dependencies.  Python 3 stdlib only; the server and every called CLI are
-  stdlib-only; probes 4a/4b/4c run selftest faces or temporary fixtures
-  only; no repository byte is written; zero network.
+  stdlib-only; probes 4a/4b/4c/4f and probe 9 run selftest faces or
+  temporary fixtures only; no repository byte is written; zero network.
 
 Evidence.  Every probe asserts a first-hand response line from the child
   server on this machine; nothing is inferred from source reading.
@@ -150,6 +175,15 @@ EXPECTED_TOOLS = [
     # tools/claim_watch.py; default deny, the offline selftest face is the
     # only ungated face)
     "claim_watch",
+    # the v2-B audit-line registration increment (three faces over the
+    # landed audit-line CLIs: source_fetch, the net-gated pinned
+    # dual-source trap-sniffing fetch face; sweep_verdict, the
+    # zero-network mechanical verdict judge; release_chain, the
+    # net-gated release chain face whose schema carries dry_run default
+    # true and whose confirm_publish description warns it is the publish
+    # stop-gate key; each spec transcribed from its tool's own frozen
+    # CLI contract header, the INDEX entries awaiting their own lane)
+    "source_fetch", "sweep_verdict", "release_chain",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -186,6 +220,40 @@ EXPECTED_AXIOM_SWEEP_ARGS = ["root", "json_out", "allow_axiom", "selftest",
 # the EXPECTED_AXIOM_SWEEP_ARGS discipline.
 EXPECTED_CLAIM_WATCH_ARGS = ["config", "round_label", "ledger", "actor",
                              "offline_selftest"]
+
+# Frozen source_fetch vector: the full argparse flag face of
+# tools/source_fetch.py (url, sha256, sha256_source, mirror, trap_sniff,
+# out, timeout, retries, backoff_base) in argparse declaration order;
+# the source_fetch schema properties must match this list one-to-one,
+# exactly the EXPECTED_CLAIM_WATCH_ARGS discipline (the tool's --selftest
+# route is pre-argparse, so it is not an argparse flag and stays out of
+# the vector).
+EXPECTED_SOURCE_FETCH_ARGS = [
+    "url", "sha256", "sha256_source", "mirror", "trap_sniff", "out",
+    "timeout", "retries", "backoff_base",
+]
+
+# Frozen sweep_verdict vector: the full argparse flag face of
+# tools/sweep_verdict.py (lanes, expected_red, out) in argparse
+# declaration order; the sweep_verdict schema properties must match this
+# list one-to-one, exactly the EXPECTED_CLAIM_WATCH_ARGS discipline (the
+# tool's --selftest route is pre-argparse, so it is not an argparse flag
+# and stays out of the vector).
+EXPECTED_SWEEP_VERDICT_ARGS = ["lanes", "expected_red", "out"]
+
+# Frozen release_chain vector: the full argparse flag face of
+# tools/release_chain.py (issue, release_title, assets, zenodo_metadata,
+# confirm_publish, dry_run, repo, stage, release_id, deposit_id,
+# timeout) in argparse declaration order; the release_chain schema
+# properties must match this list one-to-one, exactly the
+# EXPECTED_CLAIM_WATCH_ARGS discipline (the tool's --selftest route is
+# pre-argparse, so it is not an argparse flag and stays out of the
+# vector; deposit_id rides as a string, the CLI declares no int type).
+EXPECTED_RELEASE_CHAIN_ARGS = [
+    "issue", "release_title", "assets", "zenodo_metadata",
+    "confirm_publish", "dry_run", "repo", "stage", "release_id",
+    "deposit_id", "timeout",
+]
 
 
 def _child_env():
@@ -252,6 +320,19 @@ def main():
     tmp = tempfile.mkdtemp(prefix="t_mcp_face_")
     try:
         fa, fb, jf, mf = _make_ledgers(tmp)
+        # synthetic offline fixtures for the v2-B audit-line probes: one
+        # clean sweep_verdict lane (probe 4f) and one one-file release
+        # assets dir (probe 9's dry-run plan inputs)
+        lanes_dir = os.path.join(tmp, "lanes")
+        os.mkdir(lanes_dir)
+        with open(os.path.join(lanes_dir, "lane-1.tsv"), "w",
+                  encoding="utf-8", newline="\n") as h:
+            h.write("idx\tprobe\tstatus\tnote\n7\twitness\tok\tclean\n")
+        sv_out = os.path.join(tmp, "sweep-verdict.json")
+        rc_assets = os.path.join(tmp, "rc-assets")
+        os.mkdir(rc_assets)
+        with open(os.path.join(rc_assets, "receipt.md"), "wb") as h:
+            h.write(b"# fixture receipt\n")
         requests = [
             {"jsonrpc": "2.0", "id": 1, "method": "initialize",
              "params": {"protocolVersion": "2024-11-05",
@@ -290,6 +371,14 @@ def main():
                         "arguments": {"selftest": True}}},
             {"jsonrpc": "2.0", "id": 14, "method": "tools/call",
              "params": {"name": "claim_watch", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 15, "method": "tools/call",
+             "params": {"name": "sweep_verdict",
+                        "arguments": {"lanes": lanes_dir,
+                                      "out": sv_out}}},
+            {"jsonrpc": "2.0", "id": 16, "method": "tools/call",
+             "params": {"name": "source_fetch", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 17, "method": "tools/call",
+             "params": {"name": "release_chain", "arguments": {}}},
             "this line is not json",
         ]
         rc, lines, err = _session(requests)
@@ -431,6 +520,47 @@ def main():
                 fails.append("probe3e claim_watch description should name "
                              "the contract token %s" % token)
 
+        # Probe 3f: the v2-B audit-line schema-face vectors (each schema
+        # shape mirrors its tool's real argparse flag face one-to-one;
+        # the release_chain schema carries dry_run default true and the
+        # confirm_publish description warning that it is the publish
+        # stop-gate key; stage pins its four gated layers in the enum).
+        sf_spec = by_name.get("source_fetch") or {}
+        sf_props = list((sf_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if sf_props != EXPECTED_SOURCE_FETCH_ARGS:
+            fails.append("probe3f source_fetch schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_SOURCE_FETCH_ARGS, sf_props))
+        sv_spec = by_name.get("sweep_verdict") or {}
+        sv_props = list((sv_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if sv_props != EXPECTED_SWEEP_VERDICT_ARGS:
+            fails.append("probe3f sweep_verdict schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_SWEEP_VERDICT_ARGS, sv_props))
+        rc_spec = by_name.get("release_chain") or {}
+        rc_schema = rc_spec.get("inputSchema") or {}
+        rc_props = list(rc_schema.get("properties") or {})
+        if rc_props != EXPECTED_RELEASE_CHAIN_ARGS:
+            fails.append("probe3f release_chain schema flags must match the "
+                         "argparse face one-to-one\nexpected=%r\nactual=%r"
+                         % (EXPECTED_RELEASE_CHAIN_ARGS, rc_props))
+        rc_dry = (rc_schema.get("properties") or {}).get("dry_run") or {}
+        if rc_dry.get("default") is not True:
+            fails.append("probe3f release_chain dry_run should carry the "
+                         "schema default true (the default face is the "
+                         "offline dry-run plan)")
+        rc_cpd = ((rc_schema.get("properties") or {})
+                  .get("confirm_publish") or {}).get("description", "")
+        if "STOP-GATE" not in rc_cpd:
+            fails.append("probe3f release_chain confirm_publish description "
+                         "should warn that it is the publish stop-gate key")
+        rc_stage = (rc_schema.get("properties") or {}).get("stage") or {}
+        if rc_stage.get("enum") != [1, 2, 3, 4]:
+            fails.append("probe3f release_chain stage should pin the four "
+                         "gated layers in the schema enum")
+
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
         text3 = _result_text(r3)
@@ -488,6 +618,26 @@ def main():
             fails.append("probe4e axiom_sweep exit 0 + fixture-vector green "
                          "face missing\n%s" % text13)
 
+        # Probe 4f: sweep_verdict live call on one synthetic clean lane
+        # (the v2-B audit-line judge's offline face; zero network, the
+        # only write is the caller-named tmp out path)
+        r15 = _by_id(lines, 15)
+        text15 = _result_text(r15)
+        if not r15 or r15.get("result", {}).get("isError"):
+            fails.append("probe4f sweep_verdict clean lane should not be "
+                         "an error\n%s" % text15)
+        elif "exit code: 0" not in text15 \
+                or "rocqwash-sweep-verdict/1" not in text15 \
+                or '"verdict_exception": {"value": 0' not in text15:
+            fails.append("probe4f sweep_verdict exit 0 + GREEN verdict "
+                         "face missing\n%s" % text15)
+        else:
+            with open(sv_out, "r", encoding="utf-8") as h:
+                sv_json = h.read()
+            if "rocqwash-sweep-verdict/1" not in sv_json:
+                fails.append("probe4f sweep_verdict out face missing the "
+                             "report schema token")
+
         # Probe 5: default deny negative sample
         r6 = _by_id(lines, 6)
         text6 = _result_text(r6)
@@ -510,6 +660,28 @@ def main():
         elif "ROCQWASH_MCP_ALLOW_NET" not in text14:
             fails.append("probe5b denial should name ROCQWASH_MCP_ALLOW_NET"
                          "\n%s" % text14)
+
+        # Probe 5c/5d: the two net-gated v2-B audit-line faces carry the
+        # same default-deny face (the live faces are the network faces;
+        # source_fetch's only other face is its pre-argparse --selftest
+        # route, not exposed over the wire, and release_chain's offline
+        # dry-run face is exercised under the gate in probe 9)
+        r16 = _by_id(lines, 16)
+        text16 = _result_text(r16)
+        if not r16 or not r16.get("result", {}).get("isError"):
+            fails.append("probe5c source_fetch should be denied by "
+                         "default\n%s" % text16)
+        elif "ROCQWASH_MCP_ALLOW_NET" not in text16:
+            fails.append("probe5c denial should name ROCQWASH_MCP_ALLOW_NET"
+                         "\n%s" % text16)
+        r17 = _by_id(lines, 17)
+        text17 = _result_text(r17)
+        if not r17 or not r17.get("result", {}).get("isError"):
+            fails.append("probe5d release_chain should be denied by "
+                         "default\n%s" % text17)
+        elif "ROCQWASH_MCP_ALLOW_NET" not in text17:
+            fails.append("probe5d denial should name ROCQWASH_MCP_ALLOW_NET"
+                         "\n%s" % text17)
 
         # Probe 6: error faces
         r7 = _by_id(lines, 7)
@@ -598,6 +770,51 @@ def main():
                 or "CLAIM-WATCH-SELFTEST PASS" not in g2_text:
             fails.append("probe8 claim_watch exit 0 + offline-selftest "
                          "pass face missing\n%s" % g2_text)
+
+        # Probe 9: release_chain offline dry-run face under the gate (the
+        # v2-B audit-line registration increment's face vector, the
+        # offline face only): a separate allow-net session, one call
+        # without confirm_publish on temporary fixtures, the dry_run
+        # schema default true keeps the face at the plan (zero network,
+        # "zero calls sent"); no publish face is exercised by this suite.
+        rc_requests = [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+             "params": {"protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "t_mcp_face"}}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "release_chain",
+                        "arguments": {"issue": 7,
+                                      "release_title": "Fixture Release",
+                                      "assets": rc_assets}}},
+        ]
+        rc_payload = "".join(
+            (r if isinstance(r, str) else json.dumps(r)) + "\n"
+            for r in rc_requests
+        )
+        rc_run = subprocess.run(
+            [sys.executable, "-I", "-X", "utf8", "-B", SERVER],
+            input=rc_payload.encode("utf-8"),
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=REPO, env=gated_env, timeout=120,
+        )
+        rc_lines = []
+        for raw in rc_run.stdout.decode("utf-8", errors="replace") \
+                .splitlines():
+            raw = raw.strip()
+            if raw:
+                rc_lines.append(json.loads(raw))
+        p2 = _by_id(rc_lines, 2)
+        p2_text = _result_text(p2)
+        if not p2 or p2.get("result", {}).get("isError"):
+            fails.append("probe9 release_chain dry-run should not be an "
+                         "error\n%s" % p2_text)
+        elif "exit code: 0" not in p2_text \
+                or "rocqwash-release-chain/1" not in p2_text \
+                or "zero calls sent" not in p2_text:
+            fails.append("probe9 release_chain exit 0 + offline dry-run "
+                         "plan face missing\n%s" % p2_text)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
@@ -605,8 +822,8 @@ def main():
         for line in fails:
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
-    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (8 probe groups, "
-                     "%d capabilities, 6 live-call spot checks)\n"
+    sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (9 probe groups, "
+                     "%d capabilities, 8 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

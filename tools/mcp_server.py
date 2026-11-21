@@ -1,11 +1,12 @@
 """mcp_server.py - rocqwash MCP stdio server (rocqwash tools/).
 Purpose.  Expose the repository tool capability surface over the Model
-  Context Protocol (MCP) stdio transport: 45 registered capabilities,
+  Context Protocol (MCP) stdio transport: 48 registered capabilities,
   each spec transcribed from its docs/CAPABILITY-INDEX.md entry line
-  (two later increments from their tools' own CLI contract headers).
+  (five later increments from their tools' own CLI contract headers).
   Default deny for the network and heavy capabilities (sentinel_status,
-  net_probe, ci_triage, pushci_status, claim_watch): a failed tool
-  result names ROCQWASH_MCP_ALLOW_NET=1 until that variable equals 1.
+  net_probe, ci_triage, pushci_status, claim_watch, source_fetch,
+  release_chain): a failed tool result names ROCQWASH_MCP_ALLOW_NET=1
+  until that variable equals 1.
   Credential zero contact: no credential store, token file or netrc
   path is read; child stdout and stderr are captured, never merged into
   the protocol stream; every call runs under ROCQWASH_MCP_TIMEOUT
@@ -21,7 +22,7 @@ Interface.  `python -I mcp_server.py [--selftest]`; the flag gate runs
 Dependencies.  Python 3 standard library only (argparse, json, os,
   subprocess, sys); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 45-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 48-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors.
 
 Exit-codes.  0 green (selftest pass, --help, stdin end of file); 1
@@ -44,10 +45,12 @@ TIMEOUT_ENV = "ROCQWASH_MCP_TIMEOUT"
 HOME_ENV = "ROCQWASH_HOME"
 # Frozen selftest vector: the M2 roster (25 standing specs, six M1
 # additions, eleven M2 ticket additions, the tree_audit registration
-# increment, the axiom_sweep registration increment, plus the
-# claim_watch registration increment); a roster change re-freezes this
-# value and EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 45
+# increment, the axiom_sweep registration increment, the claim_watch
+# registration increment, plus the v2-B audit-line batch of three:
+# source_fetch, sweep_verdict, release_chain); a roster change
+# re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py in
+# the same round.
+SELFTEST_ROSTER_COUNT = 48
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -1642,6 +1645,164 @@ TOOL_SPECS = [
             "fixtures without the env opt-in."
         ),
     },
+    # ---- the v2-B audit-line registration increment: three faces over
+    # the landed audit-line CLIs (the fetch leg, the judge leg, the
+    # release leg of the v2-B micro-bundle).  source_fetch and
+    # release_chain are net-gated (their live faces are the network
+    # faces); sweep_verdict is a zero-network judge.  Each spec is
+    # transcribed from its tool's own frozen CLI contract header (the
+    # axiom_sweep/claim_watch precedent; the INDEX entries await their
+    # own lane), and each arg_map covers exactly the tool's real
+    # argparse flag face: the three CLIs dispatch --selftest before
+    # argparse, so that route is not an argparse flag and stays out of
+    # the arg_maps (the registered chain_graph precedent).  Additive
+    # after the block above: the existing specs and schemas untouched.
+    {
+        "name": "source_fetch",
+        "kind": "cli",
+        "cli": os.path.join("tools", "source_fetch.py"),
+        "net_gated": True,
+        "fixed_args": [],
+        "arg_map": (
+            ("url", "--url"),
+            ("sha256", "--sha256"),
+            ("sha256_source", "--sha256-source"),
+            ("mirror", "--mirror"),
+            ("trap_sniff", "--trap-sniff"),
+            ("out", "--out"),
+            ("timeout", "--timeout"),
+            ("retries", "--retries"),
+            ("backoff_base", "--backoff-base"),
+        ),
+        "schema": _object_schema(
+            {
+                "url": {"type": "string", "description": "primary fetch target (tool-required for the fetch face; the CLI usage-errors rc 2 without it); CLI flag --url"},
+                "sha256": {"type": "string", "description": "expected sha256 from the caller, lowercase 64-hex, never a tool constant (mutually exclusive with sha256_source); CLI flag --sha256"},
+                "sha256_source": {"type": "string", "description": "URL of the CI file carrying the expected sha256 as its single 64-hex token (the constant-fetched-from-CI-file-at-source pattern; mutually exclusive with sha256; two or more distinct tokens is source-ambiguous, none is source-digest-missing, both fail loud); CLI flag --sha256-source"},
+                "mirror": {"type": "string", "description": "mirror fetch target; both byte streams must hash-equal (the dual-source cross-pin); CLI flag --mirror"},
+                "trap_sniff": {"type": "boolean", "description": "sniff fetched bodies for HTML-trap responses (the any-path-returns-200 precedent: a hit registers TRAP-DETECTED and is never saved; a clean sniff is a negative finding, the sha256 pin is the binding evidence); bare CLI flag --trap-sniff"},
+                "out": {"type": "string", "description": "directory the verified bytes are written to (created if missing; only fully verified bytes land, trap and mismatch bytes are registered and never reach disk); CLI flag --out"},
+                "timeout": {"type": "number", "description": "per-attempt timeout seconds (default 180); CLI flag --timeout"},
+                "retries": {"type": "integer", "description": "NETRED retry cap (default 3; 403/429/5xx and the transient dns/timeout faces retry, tls-blocked and 401/404 never retry); CLI flag --retries"},
+                "backoff_base": {"type": "number", "description": "exponential backoff base seconds (default 2.0); CLI flag --backoff-base"},
+            }
+        ),
+        "description": (
+            "Pinned, dual-source, trap-sniffing audit fetch face "
+            "(tools/source_fetch.py, schema rocqwash-source-fetch/1): "
+            "fetches the --url artifact under NETRED retry/backoff, "
+            "verifies sha256 where the expected digest comes from the "
+            "caller (--sha256) or from a CI file fetched at "
+            "--sha256-source (the constant-fetched-from-CI-file-at-source "
+            "pattern, never hardcoded), cross-pins the optional --mirror "
+            "(both streams must hash-equal), and sniffs HTML-trap "
+            "responses under --trap-sniff (a hit registers TRAP-DETECTED "
+            "and is never saved); only verified bytes reach --out. One "
+            "JSON report line; every counter travels wrapped {value, "
+            "basis} with the top-level scan_face coverage statement; a "
+            "fetch with no pin lands fetched-unverified and says so "
+            "honestly. Default deny: the live fetch face is the network "
+            "face and requires ROCQWASH_MCP_ALLOW_NET=1 (the CLI answers "
+            "its own honest rc 111 net-gated face without it). The CLI's "
+            "frozen-vector --selftest route is pre-argparse and not "
+            "exposed here (the registered chain_graph precedent); its "
+            "INDEX entry awaits its own lane."
+        ),
+    },
+    {
+        "name": "sweep_verdict",
+        "kind": "cli",
+        "cli": os.path.join("tools", "sweep_verdict.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("lanes", "--lanes"),
+            ("expected_red", "--expected-red"),
+            ("out", "--out"),
+        ),
+        "schema": _object_schema(
+            {
+                "lanes": {"type": "string", "description": "directory of per-lane result .tsv files, one lane per file, idx|probe|status|note with an optional column-naming header (tool-required; a file path where the directory is required usage-errors rc 2, the shared append ledger anti-shape that caused the first audit sweep's failure is refused at the front door); CLI flag --lanes"},
+                "expected_red": {"type": "string", "description": "expected by-design-fail rows (idx<TAB>probe lines): matched rows stay out of EXCEPTION (the baselinediff interlock, a baselined red is not failing), their absent rows are recorded MISSING, and stale entries are listed; CLI flag --expected-red"},
+                "out": {"type": "string", "description": "additionally write the stdout JSON payload (schema rocqwash-sweep-verdict/1) to this caller-named path; CLI flag --out"},
+            }
+        ),
+        "description": (
+            "Mechanical verdict face over per-lane sweep ledgers "
+            "(tools/sweep_verdict.py, schema rocqwash-sweep-verdict/1): "
+            "unions every per-lane result .tsv inside the --lanes "
+            "directory with dedup on (idx, probe), judges GREEN / "
+            "EXCEPTION / MISSING with full listings (unexpected status "
+            "tokens quoted verbatim; a conflict keeps the later lane in "
+            "sorted order and lists the divergence loud), and interlocks "
+            "the --expected-red file. One JSON report line; every "
+            "counter travels wrapped {value, basis} with the top-level "
+            "scan_face coverage statement; MISSING is declared "
+            "not-computed as null without the file, never fabricated as "
+            "zero. Zero network, zero compile, deterministic. The CLI's "
+            "frozen-vector --selftest route is pre-argparse and not "
+            "exposed here (the registered chain_graph precedent); its "
+            "INDEX entry awaits its own lane."
+        ),
+    },
+    {
+        "name": "release_chain",
+        "kind": "cli",
+        "cli": os.path.join("tools", "release_chain.py"),
+        "net_gated": True,
+        "fixed_args": [],
+        "arg_map": (
+            ("issue", "--issue"),
+            ("release_title", "--release-title"),
+            ("assets", "--assets"),
+            ("zenodo_metadata", "--zenodo-metadata"),
+            ("confirm_publish", "--confirm-publish"),
+            ("dry_run", "--dry-run"),
+            ("repo", "--repo"),
+            ("stage", "--stage"),
+            ("release_id", "--release-id"),
+            ("deposit_id", "--deposit-id"),
+            ("timeout", "--timeout"),
+        ),
+        "schema": _object_schema(
+            {
+                "issue": {"type": "integer", "description": "the issue number the chain hangs off (tool-required; the CLI usage-errors rc 2 without it); CLI flag --issue"},
+                "release_title": {"type": "string", "description": "the Release title (tool-required; also pins the deterministic tag slug); CLI flag --release-title"},
+                "assets": {"type": "string", "description": "directory of release assets, flat and non-recursive, bytes and sha256 pinned at plan time and re-verified at upload (tool-required; missing dir fails loud rc 9); CLI flag --assets"},
+                "zenodo_metadata": {"type": "string", "description": "Zenodo deposit metadata JSON file (a JSON object with a title key); without it the Zenodo layer is listed blocked honestly; CLI flag --zenodo-metadata"},
+                "confirm_publish": {"type": "boolean", "description": "PUBLISH STOP-GATE KEY: warning, this is the key that leaves the dry-run plan and executes ONE gated stage against the live services (stage 4 publish is irreversible); without it the face stays at the default dry-run plan with zero network; requires the ROCQWASH_MCP_ALLOW_NET opt-in at this face and the stage credentials at the CLI; bare CLI flag --confirm-publish"},
+                "dry_run": {"type": "boolean", "default": True, "description": "plan-only dry run, the default face of this capability (schema default true; a pure computation over local inputs, zero network, the plan is the deliverable, nothing is simulated); bare CLI flag --dry-run"},
+                "repo": {"type": "string", "description": "the repository owner/name carrying the issue and Release (dry-run carries the {owner}/{repo} placeholder without it; execution resolves it from this flag or git remote origin and fails loud rc 9 rather than guess); CLI flag --repo"},
+                "stage": {"type": "integer", "enum": [1, 2, 3, 4], "description": "which gated layer to execute with confirm_publish, one stage per invocation: 1 issue body update, 2 Release create plus per-asset uploads, 3 deposit create plus bucket PUTs, 4 publish (irreversible; additionally demands deposit_id, the mechanical stop-gate carry); without confirm_publish the plan always covers all layers; CLI flag --stage"},
+                "release_id": {"type": "integer", "description": "a stage-2 minted Release id carried into a stage-1 finalize re-run (verbatim from its log); CLI flag --release-id"},
+                "deposit_id": {"type": "string", "description": "the stage-3 minted deposit id; REQUIRED for stage 4 (the publish stop-gate carry: the irreversible publish cannot run without stage 3's minted handle); the CLI declares no int type, so it rides as a string; CLI flag --deposit-id"},
+                "timeout": {"type": "number", "description": "per-call timeout seconds (default 120); CLI flag --timeout"},
+            }
+        ),
+        "description": (
+            "Release chain face, issue -> GitHub Release -> Zenodo, with "
+            "separately gated publish steps (tools/release_chain.py, "
+            "schema rocqwash-release-chain/1): emits the three-layer "
+            "checklist with exact API calls (issue body update, Release "
+            "create plus per-asset uploads, Zenodo deposit create plus "
+            "bucket PUTs plus publish). Default face: dry-run (the "
+            "schema carries dry_run default true), a pure computation "
+            "over local inputs, zero network. Default deny: the live "
+            "face is the network face and requires "
+            "ROCQWASH_MCP_ALLOW_NET=1; actual steps additionally need "
+            "confirm_publish, the publish stop-gate key, one stage per "
+            "invocation, each layer stopping for verification before the "
+            "next (publish stop-gates, never bundled), and stage 4 (the "
+            "irreversible publish) also demands deposit_id, the "
+            "mechanical stop-gate carry. Minted URLs/DOIs are read "
+            "verbatim from responses, never assembled. One JSON report "
+            "line; every counter travels wrapped {value, basis} with the "
+            "top-level scan_face coverage statement. The CLI's "
+            "frozen-vector --selftest route is pre-argparse and not "
+            "exposed here (the registered chain_graph precedent); its "
+            "INDEX entry awaits its own lane."
+        ),
+    },
 ]
 
 TOOLS_BY_NAME = {spec["name"]: spec for spec in TOOL_SPECS}
@@ -1922,10 +2083,12 @@ def _selftest():
     one-to-one sync, and the schema validation behavior of
     _validate_arguments).  The roster count is a
     frozen vector (the M2 roster: 25 standing specs, six M1 additions,
-    eleven M2 ticket additions, plus the tree_audit registration
-    increment), the same freeze discipline as
-    EXPECTED_TOOLS in tests/t_mcp_face.py; a roster change re-freezes
-    both.
+    eleven M2 ticket additions, the tree_audit registration increment,
+    the axiom_sweep registration increment, the claim_watch
+    registration increment, plus the v2-B audit-line batch of three:
+    source_fetch, sweep_verdict, release_chain), the same freeze
+    discipline as EXPECTED_TOOLS in tests/t_mcp_face.py; a roster
+    change re-freezes both.
     """
     failures = []
 
