@@ -176,7 +176,7 @@
 **Added**
 
 - `tests/fixtures/header_map_v1.json` — header template library v1 (preset
-  `campaign_set_diamond` · distilled from the Set repository's 20261110
+  `campaign_set_diamond` · distilled from the Set repository's
   canonical five-field form · six placeholders, each carrying its citation ·
   body content is never synthesized; a missing evidence entry refuses the
   load — "evidence required before issuance" is enforced by the code;
