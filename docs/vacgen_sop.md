@@ -183,7 +183,7 @@
 ### 2.2 Scoping Note and Live-Counter Note
 
 - **Scope**: this five-grade law applies to the vacuity probe family (the transcribed interface plus the refutation/boundary/witness faces). Other probe families (for example inversion probes against a corrected form) declare their own expected-verdict mapping at casting time per Craft 1 S1-1, and the grade semantics follow that mapping; a run without a declared expected verdict does not enter grade adjudication.
-- **No exact-equality invariants against live counters**: quantities that evolve over time, such as probe counts, skeleton fill counts, and snapshot file counts, take only monotone bounds as their invariants (for example "the TODO-SEAT count is monotone non-increasing" and "an EXPECTED-FAIL face must not turn passing"); **exact-equality invariants are forbidden** (for example "always exactly N files", "exactly K successes"); snapshot numbers are always registered with their date and never serve as live-check bounds (artifact-verifier design law, rule 1).
+- **No exact-equality invariants against live counters**: quantities that evolve over time, such as probe counts, skeleton fill counts, and snapshot file counts, take only monotone bounds as their invariants (for example "the TODO-SEAT count is monotone non-increasing" and "an EXPECTED-FAIL face must not turn passing"); **exact-equality invariants are forbidden** (for example "always exactly N files", "exactly K successes"); snapshot numbers are always registered with their date and never count as live-check bounds (artifact-verifier design law, rule 1).
 
 ### 2.3 Limited-Form, Three-Bounds Template
 
