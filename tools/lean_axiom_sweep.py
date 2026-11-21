@@ -2,13 +2,20 @@
 # -*- coding: utf-8 -*-
 """lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.
 Purpose.  Make "0 sorry 0 axiom" claims mechanically reproducible per theorem:
-  the declaration face of the target .lean file(s) is enumerated, one checker
-  file per target imports the target and prints `#print axioms <decl>` per
-  declaration, the checker runs in the target's own lake environment
-  (`lake env lean`) or against a direct lean binary, and the output is
-  parsed into axiom sets and classified: CLEAN / BENIGN-STANDARD (subset of
-  propext, Classical.choice, Quot.sound) / SORRY-ALARM (sorryAx) /
-  CUSTOM-AXIOM-ALARM (any other name, verbatim) / UNPARSED (honest).
+  the declaration face of the target .lean file(s) is enumerated and each
+  declaration is probed with `#print axioms <decl>` via the copy-append
+  form: the target file is copied to a private temp checker file and one
+  probe line per declaration is appended to the copy, so private
+  declarations are probed in their own file's context (the import-based
+  checker form survives only for cross-file aggregated sweeps where
+  copy-append is not applicable).  The checker runs in the target's own
+  lake environment (`lake env lean`) or against a direct lean binary, and
+  the output is parsed into axiom sets and classified: CLEAN /
+  BENIGN-STANDARD (subset of propext, Classical.choice, Quot.sound) /
+  SORRY-ALARM (sorryAx) / CUSTOM-AXIOM-ALARM (any other name, verbatim) /
+  PRIVATE-COVERED (a private declaration successfully probed via the
+  copy-append form; its axiom closure counts normally toward the verdict,
+  it is not a pass-by-absence) / UNPARSED (honest).
 Interface.  python -I tools/lean_axiom_sweep.py --root <file|dir> [--json OUT]
   [--allow-axiom NAME]... [--timeout SEC] [--snapshot OUT]
   [--baseline SNAPSHOT] | --selftest.  stdout carries one JSON line (schema
@@ -24,16 +31,22 @@ Dependencies.  Python 3 standard library only; the probe face needs a usable
   snapshot and diff faces are toolchain-independent: the diff reads only
   the two snapshot files' data, no Lean involvement.
 Evidence.  --selftest covers the parse and classify faces with canned
-  `#print axioms` fixtures for all five classes, the report shape (every
-  counter wrapped {value, basis}, scan_face four fields), the checker
-  emission and module-derivation faces, the gate vector (child PATH
-  stripped -> rc 112), the closure faces (snapshot determinism
-  double-run byte-identical, all four diff verdict kinds, diff_alarm
-  true and false, NEW-DEPENDENCY, baseline load error faces, the
-  no-baseline backward-compat shape); zero network, zero toolchain
-  launch, zero real-repo touch.
-Exit-codes.  0 green (every classified declaration CLEAN or BENIGN-STANDARD,
-  zero UNPARSED rows, zero errors); 1 red (any SORRY-ALARM,
+  `#print axioms` fixtures for all six classes, the copy-append emission
+  face (checker text plus the emitted probe list it is aligned by), the
+  per-probe failure-isolation face (a failed or unresolved probe leaves
+  ONLY its own declaration UNPARSED, no sibling cascade), a private- plus
+  public-declaration fixture probed offline into PRIVATE-COVERED with its
+  axiom set, the report shape (every counter wrapped {value, basis},
+  scan_face four fields), the import-form checker emission and
+  module-derivation faces, the gate vector (child PATH stripped -> rc
+  112), the closure faces (snapshot determinism double-run
+  byte-identical, all four diff verdict kinds, diff_alarm true and
+  false, NEW-DEPENDENCY, baseline load error faces, the no-baseline
+  backward-compat shape); zero network, zero toolchain launch, zero
+  real-repo touch.
+Exit-codes.  0 green (every classified declaration CLEAN, BENIGN-STANDARD
+  or PRIVATE-COVERED, zero UNPARSED rows, zero errors); 1 red (any
+  SORRY-ALARM,
   CUSTOM-AXIOM-ALARM or UNPARSED row, or any recorded error: unjudgeable is
   not green; unchanged by the diff face - diff_alarm rides the payload);
   2 usage error (including an unreadable or wrong-schema --baseline);
@@ -50,26 +63,53 @@ Exit-codes.  0 green (every classified declaration CLEAN or BENIGN-STANDARD,
 # local/global/export) sharing the line, then theorem|lemma|def, then the
 # name (ASCII identifiers with apostrophes; quoted «...» and unicode
 # spellings are outside the face and surface as absence, not guesses).
-# A line-start namespace/section/end stack builds the full probe name
-# (namespace pushes its name, section pushes an empty frame, end pops one);
-# section/variable scoping inside a namespace is not tracked.  Comment and
-# string bodies are NOT masked (the tree_audit byte-literal convention): a
-# block-comment line that starts with theorem/lemma/def enters the census
-# and later surfaces as an UNPARSED row instead of being silently dropped.
+# The captured modifier prefix is scanned token-wise for `private`, so a
+# private declaration is flagged at enumeration time (this drives the
+# PRIVATE-COVERED class: private names are invisible to import-based
+# probes, the Euler pilot blind spot).  A line-start namespace/section/end
+# stack builds the full probe name (namespace pushes its name, section
+# pushes an empty frame, end pops one); section/variable scoping inside a
+# namespace is not tracked.  Comment and string bodies are NOT masked (the
+# tree_audit byte-literal convention): a block-comment line that starts
+# with theorem/lemma/def enters the census and later surfaces as an
+# UNPARSED row instead of being silently dropped.
 #
-# Probe face.  For each target the module name is derived from the nearest
-# ancestor holding lakefile.lean / lakefile.toml / lean-toolchain (the
-# project root; a head "src" segment is dropped per the lake srcDir
-# convention; with no project root the bare stem is used).  The checker
-# file lives in a private temp directory (the repository tree gains zero
-# bytes) and carries one import line plus one `#print axioms <name>` line
-# per declaration in enumeration order.  Run form: `lake env lean
-# <checker>` with cwd = the project root when lake is usable and a project
-# root exists; otherwise `lean <checker>` directly (cwd = project root or
-# the target's directory).  The checker output is parsed regardless of the
-# child exit code (info blocks and errors share the stream); a failed probe
-# leaves its declarations UNPARSED with the error tail recorded, never
-# judged.
+# Probe face.  Primary form, copy-append: for each target the file text is
+# copied into a checker file in a private temp directory (the repository
+# tree gains zero bytes) and one probe line per declaration is APPENDED to
+# the copy - `#print axioms <name> -- rocqwash-probe <name>`, one line per
+# declaration in enumeration order with an exact-name marker comment.
+# Because the probes run inside the file's own context, private
+# declarations resolve (import-based probes cannot see them: unknown
+# constant), and the file's own imports resolve exactly as the file itself
+# resolves them.  Run form is unchanged: `lake env lean <copy>` with
+# cwd = the project root (nearest ancestor holding lakefile.lean /
+# lakefile.toml / lean-toolchain; a head "src" segment of the module path
+# is dropped per the lake srcDir convention) when lake is usable and a
+# project root exists; otherwise `lean <copy>` directly (cwd = project
+# root or the target's directory).  The import-based checker form
+# (build_checker: one import line plus one `#print axioms <name>` line per
+# declaration) is kept for non-private declarations ONLY where copy-append
+# is not applicable - a cross-file aggregated sweep, which this tool does
+# not run today; no live caller emits it.  Marker alignment is derived
+# from the emitted probe list (the checker line number of every probe
+# line), never from positional counting: an output block is attributed to
+# the declaration whose probe line carries the block's position, verified
+# against the exact probe name.  A failed or unresolved probe maps ONLY to
+# its own declaration as UNPARSED (no cascade to siblings); the checker
+# output is parsed regardless of the child exit code (info blocks and
+# errors share the stream), and a whole-file failure still records the
+# capped error tail on the file row, never judged.
+#
+# Classification face.  Each parsed axiom set classifies by the precedence
+# below.  A PRIVATE declaration whose probe succeeded and whose set
+# adjudicates benign (empty or trio/whitelist subset) is classed
+# PRIVATE-COVERED instead of CLEAN / BENIGN-STANDARD: the class marks that
+# the declaration was actually seen through the copy-append probe (its
+# axiom closure rides the row and counts normally toward the verdict), NOT
+# a pass-by-absence.  Alarm classes keep their precedence over the marker:
+# a private declaration with sorryAx is SORRY-ALARM, one with a custom
+# axiom is CUSTOM-AXIOM-ALARM.
 #
 # Toolchain gate.  lean and lake resolve from PATH and each is probed with
 # `--version`: usable means the binary exists and the probe exits 0.  This
@@ -95,6 +135,10 @@ Exit-codes.  0 green (every classified declaration CLEAN or BENIGN-STANDARD,
 #      axioms" finding [propext, Classical.choice, Quot.sound] of the
 #      earlier audit work stream and subsets adjudicate here; whitelist
 #      hits ride along in "allowed").
+#   4. a private declaration (flagged by the enumeration modifiers scan)
+#      adjudicating at step 3 is classed PRIVATE-COVERED instead of
+#      CLEAN / BENIGN-STANDARD - probed through the copy-append form, its
+#      axiom set rides the row normally (steps 1-2 keep their classes).
 #
 # Closure snapshot and diff faces (the beyond-platform capability: the
 # platform tools give today's closure, nobody gives closure EVOLUTION).
@@ -150,21 +194,42 @@ SCHEMA = "rocqwash-axiom-sweep/1"
 BENIGN_STANDARD = ("propext", "Classical.choice", "Quot.sound")
 SORRY_AX = "sorryAx"
 
+# The PRIVATE-COVERED class: a private declaration successfully probed
+# through the copy-append form.  Its axiom closure rides the row and
+# counts normally toward the sweep verdict; it is NOT a pass-by-absence.
+PRIVATE_COVERED = "PRIVATE-COVERED"
+# Exact-name marker comment on every emitted probe line; the parser
+# aligns output blocks via the emitted probe list, never positionally.
+PROBE_MARKER = "rocqwash-probe"
+
 # Line-start declaration enumeration (byte-literal; comment bodies unmasked).
+# DECL_RE captures the modifier prefix as group 1 so the private flag is
+# detectable at enumeration time (group 2 keyword, group 3 name).
 DECL_MODIFIERS = (r"(?:(?:private|protected|noncomputable|unsafe|partial|"
                   r"local|global|export)[ \t]+)*")
 DECL_RE = re.compile(
-    r"(?m)^[ \t]*" + DECL_MODIFIERS +
+    r"(?m)^[ \t]*(" + DECL_MODIFIERS + r")"
     r"(theorem|lemma|def)[ \t]+([A-Za-z_][A-Za-z0-9_']*)")
 NAMESPACE_RE = re.compile(r"(?m)^[ \t]*namespace[ \t]+([A-Za-z_][A-Za-z0-9_'.]*)")
 SECTION_RE = re.compile(r"(?m)^[ \t]*section(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
 END_RE = re.compile(r"(?m)^[ \t]*end(?:[ \t]+[A-Za-z_][A-Za-z0-9_'.]*)?[ \t]*$")
 
-# `#print axioms` output faces (Lean 4 CLI info blocks; the message text
-# rides a "<file>:<line>:<col>: info: " prefix, so nothing is line-anchored
-# here).  Anything else parses UNPARSED - honest.
+# `#print axioms` output faces (Lean 4 CLI message lines).  The message
+# BODY regexes stay unanchored, but attribution keys the
+# "<file>:<line>:<col>: <severity>: " position prefix against the emitted
+# probe list: an axiom/clean block is attributed to the declaration whose
+# emitted probe line carries the block's position, then name-verified.
+# POSITION_RE tolerates Windows drive-letter paths (the non-greedy path
+# piece can only end at a `:<digits>:<digits>: ` run followed by a
+# severity word).  A probe line carrying anything other than its own
+# axiom/clean block parses UNPARSED for that ONE declaration - honest, no
+# sibling cascade; an unprefixed message line is attributable to no
+# emitted probe line and is ignored.
 CLEAN_RE = re.compile(r"'([^']+)' does not depend on any axioms")
 AXIOMS_RE = re.compile(r"'([^']+)' depends on axioms:[ \t]*\[([^\]]*)\]")
+POSITION_RE = re.compile(
+    r"(?m)^(?P<path>.*?):(?P<line>\d+):(?P<col>\d+): "
+    r"(?P<sev>info|error|warning): (?P<msg>.*)$")
 
 PROJECT_MARKERS = ("lakefile.lean", "lakefile.toml", "lean-toolchain")
 RAW_CAP = 200          # per-declaration raw probe block cap (chars)
@@ -185,9 +250,10 @@ SCAN_SCANNED = (
     " directories skipped (or the single named file); declarations are the"
     " line-start theorem/lemma/def regex with the namespace/section/end"
     " stack for full names; each declaration is probed by `#print axioms`"
-    " in one generated checker file that imports the target, run via the"
-    " target's own lake environment (`lake env lean`) or a direct lean"
-    " binary."
+    " appended to a copy of the target file (the copy-append form, so"
+    " private declarations are probed in their own file's context), run"
+    " via the target's own lake environment (`lake env lean`) or a direct"
+    " lean binary."
 )
 SCAN_NOT_SCANNED = (
     "Files with any other suffix, everything under .git, declarations whose"
@@ -195,7 +261,7 @@ SCAN_NOT_SCANNED = (
     " spellings), non-theorem/lemma/def declaration families, quoted"
     " <<..>> and non-ASCII identifier spellings, and anything the toolchain"
     " environment cannot compile: a failed or missing probe block leaves"
-    " its declaration UNPARSED, never judged."
+    " only its own declaration UNPARSED, never judged."
 )
 SCAN_NEGATIVE_FINDING = (
     "A zero count is a negative finding of this scan, not an absolute"
@@ -248,8 +314,11 @@ DIFF_BASIS_ALARM = (
 
 
 def enumerate_decls(text):
-    """[(full_name, line_no)] in file order: line-start theorem/lemma/def
-    names with the namespace/section/end stack applied; comment and string
+    """[(full_name, line_no, is_private)] in file order: line-start
+    theorem/lemma/def names with the namespace/section/end stack applied;
+    is_private flags a declaration whose captured modifier prefix carries
+    the `private` token (the prefix only ever holds the fixed modifier
+    words, so a token-set membership test is exact).  Comment and string
     bodies are not masked (declared scan-face limitation)."""
     out = []
     stack = []  # namespace names (section frames push "")
@@ -259,8 +328,9 @@ def enumerate_decls(text):
         m = DECL_RE.match(line)
         if m:
             parts = [p for p in stack if p]
-            parts.append(m.group(2))
-            out.append((".".join(parts), line_no))
+            parts.append(m.group(3))
+            out.append((".".join(parts), line_no,
+                        "private" in m.group(1).split()))
             continue
         m = NAMESPACE_RE.match(line)
         if m:
@@ -307,8 +377,13 @@ def derive_module(target):
 
 
 def build_checker(module, names):
-    """The checker program text: one import line plus one
-    `#print axioms <name>` per declaration, in enumeration order."""
+    """The import-based checker program text: one import line plus one
+    `#print axioms <name>` per declaration, in enumeration order.  The
+    FALLBACK probe form: import-based probes cannot see private names
+    (unknown constant), so this form applies to non-private declarations
+    ONLY where copy-append is not applicable - a cross-file aggregated
+    sweep, which this tool does not run today; kept single-source here and
+    pinned by the selftest emission vector."""
     lines = []
     if module:
         lines.append("import %s" % module)
@@ -317,6 +392,30 @@ def build_checker(module, names):
         lines.append("#print axioms %s" % nm)
     lines.append("")
     return "\n".join(lines)
+
+
+def build_copy_checker(text, names):
+    """The primary copy-append probe form.  Returns (checker_text, probes)
+    where checker_text is the target file's own text with one probe line
+    per declaration APPENDED - `#print axioms <name> -- rocqwash-probe
+    <name>`, enumeration order, exact-name marker comment - and probes is
+    the emitted probe list [(checker_line_no, name)] the parser aligns
+    output blocks by (never positional counting).  Running the probes in
+    the file's own context makes private declarations resolvable (the
+    import-based form cannot see them) and needs no module derivation; a
+    leading decoded BOM is dropped (a zero-information decoding artifact,
+    not content masking)."""
+    if text.startswith("\ufeff"):
+        text = text[1:]
+    lines = text.split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()  # drop the trailing empty piece of a final newline
+    tail_start = len(lines) + 2  # +1 blank separator line, +1 for 1-based
+    probes = [(tail_start + offset, nm) for offset, nm in enumerate(names)]
+    lines.append("")
+    for nm in names:
+        lines.append("#print axioms %s -- %s %s" % (nm, PROBE_MARKER, nm))
+    return "\n".join(lines) + "\n", probes
 
 
 def classify_axioms(axioms, allow):
@@ -339,48 +438,89 @@ def classify_axioms(axioms, allow):
     return "BENIGN-STANDARD", [], allowed
 
 
-def parse_print_axioms(output, names):
-    """Attribute ordered `#print axioms` blocks to the enumerated names.
+def parse_print_axioms(output, probes):
+    """Attribute `#print axioms` output blocks to declarations via the
+    emitted probe list [(checker_line_no, name)] - never positional
+    counting.  Returns one row per probe, in probe order: {"name", "ok",
+    "axioms", "reason", "raw"}; ok=False rows are UNPARSED (honest) and
+    map ONLY to their own declaration (no sibling cascade).
 
-    Returns one row per name: {"ok", "axioms", "reason", "raw"}; ok=False
-    rows are UNPARSED (honest).  Attribution is positional (emission
-    order) with name verification: equal counts pair one-to-one; fewer
-    markers leave the tail UNPARSED (a mid-file compile failure face);
-    more markers than declarations means the output does not correspond
-    to the emission and nothing is judged."""
-    markers = []
-    for m in AXIOMS_RE.finditer(output):
-        axioms = [a.strip() for a in m.group(2).split(",") if a.strip()]
-        markers.append((m.start(), m.group(1), axioms))
-    for m in CLEAN_RE.finditer(output):
-        markers.append((m.start(), m.group(1), []))
-    markers.sort()
+    Alignment face: an axiom/clean block sitting on an emitted probe line
+    attributes to that probe's declaration after exact-name verification;
+    an error message on a probe line (unknown identifier, unresolved
+    name) fails exactly that declaration; a probe line with no message at
+    all (launch failure, mid-file elaboration failure) fails exactly that
+    declaration.  Correspondence guard: an axiom/clean block quoting one
+    of the probed names from a NON-probe line means the output is not
+    this emission's (a displaced or duplicated response - the old
+    positional surplus face) and nothing is judged; blocks quoting names
+    that were never probed are not this emission's probes either (the
+    target file may carry its own `#print` lines) and are ignored."""
+    probe_names = {nm for _ln, nm in probes}
+    probe_lines = {ln for ln, _nm in probes}
+    msgs = []  # (line_no, severity, message) in stream order
+    for m in POSITION_RE.finditer(output):
+        msgs.append((int(m.group("line")), m.group("sev"),
+                     m.group("msg")))
+    by_line = {}
+    for ln, sev, msg in msgs:
+        by_line.setdefault(ln, []).append((sev, msg))
+    # Correspondence guard first: a probed name answered from a line that
+    # is not its emitted probe line breaks the emission correspondence.
+    guard_reason = None
+    for ln, _sev, msg in msgs:
+        blk = AXIOMS_RE.search(msg) or CLEAN_RE.search(msg)
+        if blk and blk.group(1) in probe_names and ln not in probe_lines:
+            guard_reason = ("output does not correspond to the emitted"
+                            " probe list: probed name %r answered at"
+                            " non-probe line %d; nothing attributed"
+                            % (blk.group(1), ln))
+            break
+    if guard_reason is not None:
+        return [{"name": nm, "ok": False, "axioms": [],
+                 "reason": guard_reason, "raw": output[:RAW_CAP]}
+                for _ln, nm in probes]
     rows = []
-    if len(markers) > len(names):
-        for nm in names:
-            rows.append({"name": nm, "ok": False, "axioms": [],
-                         "reason": "marker count %d exceeds declaration"
-                                   " count %d; nothing attributed"
-                                   % (len(markers), len(names)),
-                         "raw": output[:RAW_CAP]})
-        return rows
-    for idx, nm in enumerate(names):
-        if idx >= len(markers):
-            rows.append({"name": nm, "ok": False, "axioms": [],
-                         "reason": "no probe block found (declaration"
-                                   " count %d, marker count %d)"
-                                   % (len(names), len(markers)),
-                         "raw": output[:RAW_CAP]})
+    for ln, nm in probes:
+        block = None    # message carrying this probe's own axiom/clean block
+        mismatch = None # message carrying a block that quotes another name
+        error = None    # first error message on the probe line
+        for sev, msg in by_line.get(ln, []):
+            blk = AXIOMS_RE.search(msg) or CLEAN_RE.search(msg)
+            if blk is not None and blk.group(1) == nm:
+                if block is None:
+                    block = msg
+            elif blk is not None:
+                if mismatch is None:
+                    mismatch = msg
+            elif sev == "error" and error is None:
+                error = msg
+        if block is not None:
+            ax = AXIOMS_RE.search(block)
+            axioms = ([a.strip() for a in ax.group(2).split(",")
+                       if a.strip()] if ax else [])
+            rows.append({"name": nm, "ok": True, "axioms": axioms,
+                         "reason": "", "raw": ""})
             continue
-        pos, mname, axioms = markers[idx]
-        if mname != nm:
+        if mismatch is not None:
+            bad = (AXIOMS_RE.search(mismatch)
+                   or CLEAN_RE.search(mismatch)).group(1)
             rows.append({"name": nm, "ok": False, "axioms": [],
                          "reason": "probe block names %r, expected %r"
-                                   % (mname, nm),
-                         "raw": output[pos:pos + RAW_CAP]})
+                                   % (bad, nm),
+                         "raw": mismatch[:RAW_CAP]})
             continue
-        rows.append({"name": nm, "ok": True, "axioms": axioms,
-                     "reason": "", "raw": ""})
+        if error is not None:
+            rows.append({"name": nm, "ok": False, "axioms": [],
+                         "reason": error.strip()[:RAW_CAP],
+                         "raw": error.strip()[:RAW_CAP]})
+            continue
+        context = (output[:RAW_CAP] if not by_line.get(ln) else
+                   " ".join(m.strip() for _s, m in by_line[ln])[:RAW_CAP])
+        rows.append({"name": nm, "ok": False, "axioms": [],
+                     "reason": "no probe block found on emitted probe"
+                               " line %d" % ln,
+                     "raw": context})
     return rows
 
 
@@ -448,10 +588,48 @@ def run_probe(argv, cwd, timeout):
         return None, "", str(exc)
 
 
+def classify_decl_rows(rel, decls, parsed, allow, mode):
+    """Pure per-declaration row assembly over the enumeration
+    [(name, line, is_private)] and the parsed probe rows (aligned
+    one-to-one by construction of the emitted probe list): each axiom set
+    classifies by the detail-block precedence; a private declaration
+    adjudicating benign (CLEAN / BENIGN-STANDARD) is classed
+    PRIVATE-COVERED - probed through the copy-append form, its axiom
+    closure rides the row and counts normally toward the verdict, not a
+    pass-by-absence - while alarm classes keep their precedence over the
+    marker; a failed or unresolved probe maps only to its own declaration
+    as UNPARSED."""
+    rows = []
+    for (nm, ln, is_private), row in zip(decls, parsed):
+        klass, custom, allowed = classify_axioms(
+            row["axioms"] if row["ok"] else [], allow)
+        if not row["ok"]:
+            klass = "UNPARSED"
+            custom = []
+            allowed = []
+        elif is_private and klass in ("CLEAN", "BENIGN-STANDARD"):
+            klass = PRIVATE_COVERED
+        rows.append({
+            "file": rel, "line": ln, "name": nm,
+            "classification": klass,
+            "axioms": row["axioms"] if row["ok"] else [],
+            "custom": custom, "allowed": allowed,
+            "private": is_private,
+            "probe": mode,
+            "raw": "" if row["ok"] else row["raw"],
+            "unparsed_reason": row["reason"] if not row["ok"] else "",
+        })
+    return rows
+
+
 def sweep(root, allow, timeout):
-    """The run face; returns (exit_code, report).  Write faces: the private
-    temp workdir (removed on exit) and the caller-named --json file handled
-    by main.  The toolchain gate has already passed when this runs."""
+    """The run face; returns (exit_code, report).  Every target is probed
+    by the copy-append form (build_copy_checker): the file text plus the
+    appended probe lines run in the target's own lake environment or
+    against a direct lean binary, same cwd rules as ever.  Write faces:
+    the private temp workdir (removed on exit) and the caller-named --json
+    file handled by main.  The toolchain gate has already passed when this
+    runs."""
     lean, lake, usable_lean, usable_lake = probe_toolchain()
     targets = collect_targets(root)
     work = tempfile.mkdtemp(prefix="rocqwash_axiom_sweep_")
@@ -467,12 +645,16 @@ def sweep(root, allow, timeout):
                 errors.append("read %s: %s" % (rel, exc))
                 continue
             decls = enumerate_decls(text)
+            # The module name stays on the file row as honest metadata
+            # (and feeds the module-derivation face); the copy-append
+            # checker itself needs no import line.
             module, project_root = derive_module(abs_path)
             frow = {"file": rel, "declarations": len(decls),
-                    "module": module, "probe": "", "rc": None,
-                    "error_tail": []}
+                    "module": module, "probe": "", "form": "copy-append",
+                    "rc": None, "error_tail": []}
             if decls:
-                checker = build_checker(module, [nm for nm, _ in decls])
+                checker, probes = build_copy_checker(
+                    text, [nm for nm, _ln, _p in decls])
                 checker_path = os.path.join(work, "ck_%04d.lean" % idx)
                 with open(checker_path, "w", encoding="utf-8",
                           newline="\n") as fh:
@@ -498,23 +680,9 @@ def sweep(root, allow, timeout):
                 elif rc != 0:
                     frow["error_tail"] = error_tail(output)
                     errors.append("probe %s: lean exited %s" % (rel, rc))
-                parsed = parse_print_axioms(output, [nm for nm, _ in decls])
-                for (nm, ln), row in zip(decls, parsed):
-                    klass, custom, allowed = classify_axioms(
-                        row["axioms"] if row["ok"] else [], allow)
-                    if not row["ok"]:
-                        klass = "UNPARSED"
-                        custom = []
-                        allowed = []
-                    decl_rows.append({
-                        "file": rel, "line": ln, "name": nm,
-                        "classification": klass,
-                        "axioms": row["axioms"] if row["ok"] else [],
-                        "custom": custom, "allowed": allowed,
-                        "probe": mode,
-                        "raw": "" if row["ok"] else row["raw"],
-                        "unparsed_reason": row["reason"] if not row["ok"] else "",
-                    })
+                parsed = parse_print_axioms(output, probes)
+                decl_rows.extend(classify_decl_rows(
+                    rel, decls, parsed, allow, mode))
             file_rows.append(frow)
     finally:
         shutil.rmtree(work, ignore_errors=True)
@@ -541,6 +709,7 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
     sorry = counts.get("SORRY-ALARM", 0)
     custom = counts.get("CUSTOM-AXIOM-ALARM", 0)
     unparsed = counts.get("UNPARSED", 0)
+    private_covered = counts.get(PRIVATE_COVERED, 0)
     custom_names = sorted({c for row in decl_rows for c in row["custom"]})
     verdict = "RED" if (sorry or custom or unparsed) else "PASS"
     report = {
@@ -556,7 +725,8 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
                          "basis": "line-start theorem/lemma/def names"
                                   " enumerated per the scan_face regex"
                                   " (namespace/section/end stack applied)"},
-        "classified": {"value": clean + benign + sorry + custom,
+        "classified": {"value": clean + benign + sorry + custom
+                                 + private_covered,
                        "basis": "declarations whose `#print axioms` block"
                                 " parsed into an axiom set"},
         "clean": {"value": clean,
@@ -571,6 +741,17 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
                                      " or admitted by --allow-axiom"
                                      " (admitted names ride in the"
                                      " declaration's allowed field)"},
+        "private_covered": {"value": private_covered,
+                            "basis": "private declarations successfully"
+                                     " probed via the copy-append form"
+                                     " (private names are invisible to"
+                                     " import-based probes) whose axiom"
+                                     " set adjudicated benign; the"
+                                     " closure rides the row and counts"
+                                     " normally toward the verdict,"
+                                     " this is NOT a pass-by-absence,"
+                                     " and alarm classes keep their"
+                                     " precedence over the marker"},
         "sorry_alarm": {"value": sorry,
                         "basis": "sorryAx in the axiom set; never"
                                  " admissible to the whitelist"},
@@ -595,17 +776,19 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
                                   " sorryAx is never admitted"},
         "file_rows": {"value": file_rows,
                       "basis": "per target: file, declarations, module,"
-                               " probe mode, lean rc, capped error tail"},
+                               " probe mode, probe form (copy-append),"
+                               " lean rc, capped error tail"},
         "declarations_detail": {"value": decl_rows,
                                 "basis": "per declaration: file, line,"
                                          " full probe name, classification"
                                          " (CLEAN / BENIGN-STANDARD /"
                                          " SORRY-ALARM /"
-                                         " CUSTOM-AXIOM-ALARM / UNPARSED),"
+                                         " CUSTOM-AXIOM-ALARM /"
+                                         " PRIVATE-COVERED / UNPARSED),"
                                          " verbatim axiom set, custom and"
-                                         " whitelist names, probe mode,"
-                                         " capped raw block for unparsed"
-                                         " rows"},
+                                         " whitelist names, private flag,"
+                                         " probe mode, capped raw block"
+                                         " for unparsed rows"},
         "errors": {"value": errors[:READ_ERROR_CAP],
                    "basis": "first %d read or probe failures, each naming"
                             " the target" % READ_ERROR_CAP},
@@ -648,7 +831,9 @@ def exit_code_for(report):
 def build_snapshot(root, decl_rows, allow):
     """Machine closure snapshot (schema rocqwash-axiom-closure-snapshot/1)
     over a sweep's declaration rows: per classified declaration the full
-    probe name, file, line, class and the sorted axiom set.  UNPARSED rows
+    probe name, file, line, class and the sorted axiom set.  PRIVATE-COVERED
+    rows are classified rows: their closure enters the snapshot under the
+    PRIVATE-COVERED class like any other.  UNPARSED rows
     carry no closure and stay out of declarations; they are recorded
     honestly by name at snapshot level, nothing silently dropped.
     Deterministic: rows sorted by (name, file, line), name lists and
@@ -813,13 +998,14 @@ def summarize(report):
     --baseline run the closure-diff counts ride the same line's tail."""
     sys.stderr.write(
         "AXIOM-SWEEP: %s decls=%d clean=%d benign_standard=%d sorry=%d"
-        " custom=%d unparsed=%d errors=%d"
+        " custom=%d private_covered=%d unparsed=%d errors=%d"
         % (report["verdict"]["value"],
            report["declarations"]["value"],
            report["clean"]["value"],
            report["benign_standard"]["value"],
            report["sorry_alarm"]["value"],
            report["custom_axiom_alarm"]["value"],
+           report["private_covered"]["value"],
            report["unparsed"]["value"],
            report["error_count"]["value"]))
     if "closure_diff" in report:
@@ -861,9 +1047,29 @@ LEAN_OUT_MIXED = ("ck.lean:2:0: info: 'a' does not depend on any axioms\n"
 LEAN_OUT_GHOST = ("ck.lean:2:0: error: unknown identifier 't_ghost'\n")
 LEAN_OUT_NAME_MISMATCH = (
     "ck.lean:2:0: info: 'some_other' depends on axioms: [sorryAx]\n")
-LEAN_OUT_SURPLUS = (
+LEAN_OUT_STRAY = (
     "ck.lean:2:0: info: 'a' does not depend on any axioms\n"
     "ck.lean:3:0: info: 'b' depends on axioms: [sorryAx]\n")
+
+# Copy-append attribution fixtures: LEAN_OUT_DISPLACED answers a probed
+# name from a non-probe line (the emission-correspondence guard face);
+# LEAN_OUT_ISOLATED has a failed middle probe whose siblings still parse
+# (the no-cascade face the design freezes).
+LEAN_OUT_DISPLACED = (
+    "ck.lean:2:0: info: 'a' does not depend on any axioms\n"
+    "ck.lean:3:0: info: 'a' depends on axioms: [sorryAx]\n")
+LEAN_OUT_ISOLATED = (
+    "ck.lean:2:0: info: 'a' does not depend on any axioms\n"
+    "ck.lean:4:0: error: unknown identifier 'b'\n"
+    "ck.lean:6:0: info: 'c' does not depend on any axioms\n")
+
+# The design-4 offline fixture: one public and one private declaration;
+# copy-append probes both (the private one classes PRIVATE-COVERED with
+# its axiom set, the public one classes CLEAN).
+PRIVATE_PUBLIC_LEAN = (
+    "theorem pub_one : True := trivial\n"
+    "\n"
+    "private theorem priv_one : Nat := 1\n")
 
 # Declaration-enumeration fixtures.
 SAMPLE_LEAN = (
@@ -885,9 +1091,11 @@ SAMPLE_LEAN = (
     "instance : Inhabited Nat := <something>\n"
     "example : True := trivial\n"
 )
-SAMPLE_LEAN_NAMES = [("Foo.bar", 2), ("Foo.nested", 3), ("baz", 5),
-                     ("priv_one", 6), ("nc_def", 7), ("in_block_comment", 10),
-                     ("with_apostrophe", 12), ("in_section", 14)]
+SAMPLE_LEAN_NAMES = [("Foo.bar", 2, False), ("Foo.nested", 3, False),
+                     ("baz", 5, False), ("priv_one", 6, True),
+                     ("nc_def", 7, False), ("in_block_comment", 10, False),
+                     ("with_apostrophe", 12, False),
+                     ("in_section", 14, False)]
 
 
 def selftest():
@@ -905,52 +1113,83 @@ def selftest():
     script = os.path.abspath(__file__)
     tmp = tempfile.mkdtemp(prefix="rocqwash_axiom_sweep_selftest_")
     try:
-        # declaration enumeration: stack, modifiers, decoys, families out
+        # declaration enumeration: stack, modifiers, decoys, families out;
+        # the private flag rides every row
         got = enumerate_decls(SAMPLE_LEAN)
         vec("decl-enumeration", got == SAMPLE_LEAN_NAMES, "got %s" % (got,))
+        vec("decl-enumeration-name-line-face",
+            [(nm, ln) for nm, ln, _p in got]
+            == [("Foo.bar", 2), ("Foo.nested", 3), ("baz", 5),
+                ("priv_one", 6), ("nc_def", 7), ("in_block_comment", 10),
+                ("with_apostrophe", 12), ("in_section", 14)],
+            "got %s" % (got,))
+        got2 = enumerate_decls("private noncomputable def pn : Nat := 1\n"
+                               "protected theorem pt : True := trivial\n")
+        vec("decl-enumeration-private-modifier-chain",
+            got2 == [("pn", 1, True), ("pt", 2, False)],
+            "got %s" % (got2,))
 
-        # parse faces: the five classes plus attribution faces
-        rows = parse_print_axioms(LEAN_OUT_CLEAN, ["t_clean"])
+        # parse faces: the six classes plus attribution faces; alignment
+        # is keyed to the emitted probe list [(line, name)], never
+        # positional counting
+        rows = parse_print_axioms(LEAN_OUT_CLEAN, [(2, "t_clean")])
         vec("parse-clean", rows[0]["ok"] and rows[0]["axioms"] == [],
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_THREE, ["t_three"])
+        rows = parse_print_axioms(LEAN_OUT_THREE, [(2, "t_three")])
         vec("parse-benign-three",
             rows[0]["ok"] and rows[0]["axioms"] == list(BENIGN_STANDARD),
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_SUBSET, ["t_subset"])
+        rows = parse_print_axioms(LEAN_OUT_SUBSET, [(2, "t_subset")])
         vec("parse-benign-subset",
             rows[0]["ok"] and rows[0]["axioms"] == ["propext"],
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_SORRY, ["t_sorry"])
+        rows = parse_print_axioms(LEAN_OUT_SORRY, [(2, "t_sorry")])
         vec("parse-sorry", rows[0]["ok"] and rows[0]["axioms"] == ["sorryAx"],
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_CUSTOM, ["t_custom"])
+        rows = parse_print_axioms(LEAN_OUT_CUSTOM, [(2, "t_custom")])
         vec("parse-custom",
             rows[0]["ok"] and rows[0]["axioms"] == ["my_axiom.rh"],
             "got %s" % (rows,))
-        names = ["a", "b", "c", "d"]
-        rows = parse_print_axioms(LEAN_OUT_MIXED, names)
+        probes_mixed = [(2, "a"), (4, "b"), (6, "c"), (8, "d")]
+        rows = parse_print_axioms(LEAN_OUT_MIXED, probes_mixed)
         ok = (len(rows) == 4 and rows[0]["ok"] and rows[0]["axioms"] == []
               and rows[1]["axioms"] == ["propext", "Classical.choice"]
               and rows[2]["axioms"] == ["sorryAx"]
               and rows[3]["axioms"] == ["my_ax", "propext"])
         vec("parse-mixed-attribution", ok, "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_MIXED, names + ["e"])
+        rows = parse_print_axioms(LEAN_OUT_MIXED, probes_mixed + [(10, "e")])
         ok = (rows[0]["ok"] and rows[3]["ok"]
               and not rows[4]["ok"]
               and "no probe block" in rows[4]["reason"])
         vec("parse-tail-no-block", ok, "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_GHOST, ["t_ghost"])
+        rows = parse_print_axioms(LEAN_OUT_GHOST, [(2, "t_ghost")])
         vec("parse-unknown-identifier",
             not rows[0]["ok"] and "unknown identifier" in rows[0]["raw"],
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_NAME_MISMATCH, ["t_x"])
+        rows = parse_print_axioms(LEAN_OUT_NAME_MISMATCH, [(2, "t_x")])
         vec("parse-name-mismatch",
             not rows[0]["ok"] and "probe block names" in rows[0]["reason"],
             "got %s" % (rows,))
-        rows = parse_print_axioms(LEAN_OUT_SURPLUS, ["a"])
-        vec("parse-surplus-markers",
-            not rows[0]["ok"] and "exceeds" in rows[0]["reason"],
+        rows = parse_print_axioms(LEAN_OUT_STRAY, [(2, "a")])
+        vec("parse-stray-unknown-block-ignored",
+            len(rows) == 1 and rows[0]["ok"] and rows[0]["axioms"] == [],
+            "got %s" % (rows,))
+        rows = parse_print_axioms(LEAN_OUT_DISPLACED, [(2, "a")])
+        vec("parse-displaced-probed-name-guard",
+            all(not r["ok"] for r in rows)
+            and "does not correspond" in rows[0]["reason"],
+            "got %s" % (rows,))
+        rows = parse_print_axioms(LEAN_OUT_ISOLATED,
+                                  [(2, "a"), (4, "b"), (6, "c")])
+        vec("parse-failed-probe-isolated",
+            rows[0]["ok"] and rows[2]["ok"] and not rows[1]["ok"]
+            and "unknown identifier" in rows[1]["reason"]
+            and "unknown identifier" in rows[1]["raw"],
+            "got %s" % (rows,))
+        rows = parse_print_axioms("", [(3, "t_any")])
+        vec("parse-empty-output-per-probe",
+            not rows[0]["ok"]
+            and "no probe block" in rows[0]["reason"],
             "got %s" % (rows,))
 
         # classify faces: precedence, whitelist, sorryAx never allowed
@@ -980,7 +1219,69 @@ def selftest():
             == ("BENIGN-STANDARD", [], ["my_ax"]),
             "got %s" % (classify_axioms(["my_ax"], ["my_ax"]),))
 
-        # checker emission and module derivation
+        # declaration-classification face: the PRIVATE-COVERED marker
+        # class (private declarations probed through the copy-append
+        # form), alarm precedence over the marker, and the design-4
+        # private-plus-public offline fixture probed end to end
+        decls_prec = [("p_sorry", 2, True), ("p_custom", 4, True),
+                      ("p_ok", 6, True), ("pub", 8, False)]
+        parsed_prec = [
+            {"name": "p_sorry", "ok": True, "axioms": ["sorryAx"],
+             "reason": "", "raw": ""},
+            {"name": "p_custom", "ok": True, "axioms": ["my_ax"],
+             "reason": "", "raw": ""},
+            {"name": "p_ok", "ok": True, "axioms": [], "reason": "",
+             "raw": ""},
+            {"name": "pub", "ok": True, "axioms": [], "reason": "",
+             "raw": ""},
+        ]
+        rows = classify_decl_rows("x.lean", decls_prec, parsed_prec, [],
+                                  "lake-env")
+        vec("private-alarm-precedence",
+            [r["classification"] for r in rows]
+            == ["SORRY-ALARM", "CUSTOM-AXIOM-ALARM", "PRIVATE-COVERED",
+                "CLEAN"],
+            "got %s" % (rows,))
+        rows = classify_decl_rows(
+            "x.lean", [("p_allow", 8, True)],
+            [{"name": "p_allow", "ok": True, "axioms": ["my_ax"],
+              "reason": "", "raw": ""}], ["my_ax"], "lake-env")
+        vec("private-covered-allow-fold",
+            rows[0]["classification"] == "PRIVATE-COVERED"
+            and rows[0]["allowed"] == ["my_ax"]
+            and rows[0]["axioms"] == ["my_ax"],
+            "got %s" % (rows,))
+        rows = classify_decl_rows("x.lean", [("u", 3, False)],
+                                  [{"name": "u", "ok": False, "axioms": [],
+                                    "reason": "boom", "raw": "boom"}],
+                                  [], "lean-direct")
+        vec("unparsed-single-row-isolation",
+            rows[0]["classification"] == "UNPARSED"
+            and rows[0]["unparsed_reason"] == "boom",
+            "got %s" % (rows,))
+        fixture_decls = enumerate_decls(PRIVATE_PUBLIC_LEAN)
+        fixture_probes = build_copy_checker(
+            PRIVATE_PUBLIC_LEAN, ["pub_one", "priv_one"])[1]
+        answers = {"pub_one": "'pub_one' does not depend on any axioms",
+                   "priv_one": "'priv_one' depends on axioms: [propext]"}
+        fixture_out = "".join(
+            "ck.lean:%d:0: info: %s\n" % (ln, answers[nm])
+            for ln, nm in fixture_probes)
+        rows = classify_decl_rows(
+            "priv_pub.lean", fixture_decls,
+            parse_print_axioms(fixture_out, fixture_probes), [],
+            "lean-direct")
+        vec("private-covered-fixture",
+            [r["classification"] for r in rows]
+            == ["CLEAN", "PRIVATE-COVERED"]
+            and rows[1]["axioms"] == ["propext"]
+            and rows[1]["private"] is True
+            and rows[0]["private"] is False,
+            "got %s" % (rows,))
+
+        # checker emission and module derivation: the import form is the
+        # FALLBACK face (cross-file aggregated sweeps only), pinned
+        # verbatim; the copy-append form is the primary face
         checker = build_checker("My.Mod", ["a", "b"])
         vec("checker-emission",
             checker == "import My.Mod\n\n#print axioms a\n#print axioms b\n",
@@ -988,6 +1289,20 @@ def selftest():
         vec("checker-no-module",
             build_checker("", ["x"]) == "\n#print axioms x\n",
             "got %r" % build_checker("", ["x"]))
+        checker_ca, probes_ca = build_copy_checker(
+            PRIVATE_PUBLIC_LEAN, ["pub_one", "priv_one"])
+        vec("copy-append-emission",
+            checker_ca == (
+                PRIVATE_PUBLIC_LEAN
+                + "\n#print axioms pub_one -- rocqwash-probe pub_one\n"
+                + "#print axioms priv_one -- rocqwash-probe priv_one\n")
+            and probes_ca == [(5, "pub_one"), (6, "priv_one")],
+            "got %r / %s" % (checker_ca, probes_ca))
+        checker_empty, probes_empty = build_copy_checker("", ["x"])
+        vec("copy-append-empty-file",
+            checker_empty == "\n#print axioms x -- rocqwash-probe x\n"
+            and probes_empty == [(2, "x")],
+            "got %r / %s" % (checker_empty, probes_empty))
         proj = os.path.join(tmp, "proj")
         src = os.path.join(proj, "src", "My")
         os.makedirs(src)
@@ -1007,15 +1322,17 @@ def selftest():
         # report schema shape over canned rows (offline, no toolchain)
         canned_files = [{"file": "a.lean", "declarations": 2,
                          "module": "A", "probe": "lean-direct",
+                         "form": "copy-append",
                          "rc": 0, "error_tail": []}]
         canned_decls = [
             {"file": "a.lean", "line": 2, "name": "t_one",
              "classification": "CLEAN", "axioms": [], "custom": [],
-             "allowed": [], "probe": "lean-direct", "raw": "",
-             "unparsed_reason": ""},
+             "allowed": [], "private": False, "probe": "lean-direct",
+             "raw": "", "unparsed_reason": ""},
             {"file": "a.lean", "line": 5, "name": "t_two",
              "classification": "SORRY-ALARM", "axioms": ["sorryAx"],
-             "custom": [], "allowed": [], "probe": "lean-direct",
+             "custom": [], "allowed": [], "private": False,
+             "probe": "lean-direct",
              "raw": "", "unparsed_reason": ""},
         ]
         rep = build_report("TMP", canned_files, canned_decls, [],
@@ -1067,6 +1384,16 @@ def selftest():
             and rep3["custom_axiom_names"]["value"] == []
             and rep3["verdict"]["value"] == "PASS",
             "got %s" % (rep3["benign_standard"],))
+        priv_decls = [dict(clean_decls[0], name="t_priv",
+                           classification="PRIVATE-COVERED",
+                           axioms=["propext"], private=True)]
+        rep4 = build_report("TMP", canned_files, priv_decls, [], [], {})
+        vec("private-covered-report-face",
+            rep4["private_covered"]["value"] == 1
+            and rep4["classified"]["value"] == 1
+            and rep4["verdict"]["value"] == "PASS"
+            and exit_code_for(rep4) == 0,
+            "got %s / %s" % (rep4["private_covered"], rep4["classified"]))
         payload = json.dumps(rep, ensure_ascii=False)
         vec("single-line-json", "\n" not in payload, "payload holds a newline")
         json_path = os.path.join(tmp, "out.json")
@@ -1078,10 +1405,12 @@ def selftest():
         # closure snapshot + diff faces: pure functions over canned rows,
         # offline, zero toolchain launch (the diff face reads only the two
         # snapshots' data, so toolchain independence is by construction)
-        def mk_row(name, klass, axioms, file="a.lean", line=1):
+        def mk_row(name, klass, axioms, file="a.lean", line=1,
+                   private=False):
             return {"file": file, "line": line, "name": name,
                     "classification": klass, "axioms": list(axioms),
-                    "custom": [], "allowed": [], "probe": "lean-direct",
+                    "custom": [], "allowed": [], "private": private,
+                    "probe": "lean-direct",
                     "raw": "", "unparsed_reason": ""}
 
         base_rows = [
@@ -1130,6 +1459,16 @@ def selftest():
             and snap3["unparsed_names"] == ["t_u"]
             and all(d["name"] != "t_u" for d in snap3["declarations"]),
             "got %s" % (snap3,))
+        snap_pc = build_snapshot("TMP", [
+            mk_row("t_priv", "PRIVATE-COVERED", ["propext"], line=3,
+                   private=True)], [])
+        vec("snapshot-private-covered-closure",
+            snap_pc["classified_count"] == 1
+            and snap_pc["unparsed_count"] == 0
+            and snap_pc["declarations"][0]["classification"]
+                == "PRIVATE-COVERED"
+            and snap_pc["declarations"][0]["axioms"] == ["propext"],
+            "got %s" % (snap_pc,))
 
         # diff faces: all four verdict kinds in one pair
         base_snap = build_snapshot("BASE", base_rows, [])
