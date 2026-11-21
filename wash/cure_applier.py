@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-"""cure_applier.py — applier for the consumer-cure canonical pack (cure_pack.json).
+"""cure_applier.py: applier for the consumer-cure canonical pack (cure_pack.json).
 
     Purpose.  Applies the deterministic rewrite patterns of cure_pack.json to a Rocq/Coq source
       file; dry run by default (the file is written only under --apply).  The pack's
-      consumer-position cures — bridge wraps, goal-opening bridges, opaque-reflexivity replacement,
+      consumer-position cures (bridge wraps, goal-opening bridges, opaque-reflexivity replacement,
       qualified successor references, NatLe supply bridges, statement-face downshifts, import-shadow
-      qualification, lineage adaptation forms, extraction-defect cures, connective qualification —
+      qualification, lineage adaptation forms, extraction-defect cures, connective qualification)
       are canonical, idempotent rewrites: a second application changes nothing, and every --apply
       asserts idempotence mechanically (fail-loud) beside a compile leg (v41): when a compiler is
       configured, the before/after texts are both compiled and a green->red regression blocks the
-      write — the delivered verdict is "idempotent and compilable", never "idempotent but broken".
+      write; the delivered verdict is "idempotent and compilable", never "idempotent but broken".
 
     Interface.  python3 wash/cure_applier.py --file f.v [--pack cure_pack.json] [--only id1,id2]
       [--json out.json] [--apply] [--rocq BIN] | --selftest.  stdout report per pattern (matches, engine); --json
       report {file, mode, md5_before, md5_after, report{pattern_id: {matches, engine}},
       idempotence_ok, compile_check}.  Compile-leg path resolution: --rocq flag, then the
-      ROCWASH_ROCQ environment; unset = the leg is honestly not run (recorded, write proceeds —
+      ROCWASH_ROCQ environment; unset = the leg is honestly not run (recorded, write proceeds;
       external clones without a toolchain keep working); configured but missing = rc 9 fail-loud.
       The leg compiles temp-only copies (the .vo output face never touches the repository tree);
       wrap the whole invocation in tools/cpu_guard.sh for guarded runs.  Patterns may declare
       exclusive_group: two selected patterns of one group both matching is a variant-choice conflict
-      and fails loud — the caller picks one variant via --only.  Engines: line-regex,
+      and fails loud; the caller picks one variant via --only.  Engines: line-regex,
       proof-first-tactic, token-station, face-regex (face/proof-scoped triggers with per-face token
       guards), line-insert, station-report (report-only advisory stations, never rewritten, excluded
       from the idempotence residual); routed as `cure` in cw.sh.
@@ -35,7 +35,7 @@
     Exit-codes.  0 = ran (dry run, or applied with idempotence verified and the compile leg not
       red); 1 = idempotence assertion failed, or the compile leg intercepted a compile regression
       (fail-loud, file not written); 2 = usage; 4 = exclusive-group conflict (two variants of one
-      group matched — pick one via --only); 5 = unknown pattern id; 9 = file or pack missing, or
+      group matched, pick one via --only); 5 = unknown pattern id; 9 = file or pack missing, or
       (--apply with a changed text) the configured compiler binary is missing."""
 import argparse, hashlib, io, json, os, re, shutil, subprocess, sys, tempfile
 
@@ -51,7 +51,7 @@ PROOF_RE = re.compile(r"(?m)^[ \t]*Proof\b")
 
 
 def statement_faces(text):
-    """[(face_text, proof_region, proof_start_offset, region_end)] —
+    """[(face_text, proof_region, proof_start_offset, region_end)]:
     face = declaration keyword through the line before Proof (the statement
     face, where the carrier names live); proof region = Proof line through
     the next declaration keyword (exclusive)."""
@@ -239,7 +239,7 @@ ENGINES = {
 # ---------------------------------------------------------------------------
 
 class ExclusiveGroupConflict(Exception):
-    """Two selected patterns of one exclusive_group both produced matches —
+    """Two selected patterns of one exclusive_group both produced matches:
     the pack carries alternative cures for one red family and the caller
     must choose a variant (--only).  Never applied silently."""
 
@@ -281,7 +281,7 @@ def _skip_comment_string(text, i):
 
 def _statement_period(text, start, limit):
     """Offset of the first depth-0 statement terminator '.' (followed by
-    whitespace/EOF), skipping nested comments and string literals — the
+    whitespace/EOF), skipping nested comments and string literals: the
     deterministic end of a Proof-less declaration's statement face."""
     depth = 0
     i = start
@@ -303,7 +303,7 @@ def _statement_period(text, start, limit):
 
 
 def _face_regions(text):
-    """[(decl_start, face_end, proof_span, decl_line)] — statement face spans
+    """[(decl_start, face_end, proof_span, decl_line)]: statement face spans
     declaration keyword through the Proof line (or, for Proof-less
     declarations, through the first depth-0 statement terminator); proof_span
     = (start, end) when a Proof line exists, else None."""
@@ -418,22 +418,22 @@ def apply_face_regex(text, pat, fid):
                     rewriting bridge definitions and already-cured faces).
       decl_exclude  list of regexes tested against the declaration line
                     (e.g. skip Definition/Fixpoint faces where binder-shadow
-                    risk is structural — the station scanner owns those).
+                    risk is structural; the station scanner owns those).
       guard         "intros-tail": in proof scope, a match fires only when its
                     last group names the tail identifier of an `intros ...`
                     tactic in the same proof region (the hypothesis actually
-                    introduced from the lifted premise) — other exact-call
+                    introduced from the lifted premise); other exact-call
                     stations with constant tails are left untouched.
       file_include  regex that must match the whole file once (precondition,
                     e.g. the shadowing Import is present).
-      token_map     {bare_token: qualified_form} — builds the trigger from the
+      token_map     {bare_token: qualified_form}; builds the trigger from the
                     map keys (longest-first) and rewrites via the map.
       target        carrier predicate name used by template_fn.
       qualified_name  fully-qualified carrier name used by template_fn.
       binding_right_exclude  (v32) marker string (e.g. ":="): a match at or
                     after the first marker occurrence on its enclosing line
                     is on a binding right side and is skipped (per-match, not
-                    per-line — type annotations on the same line survive).
+                    per-line; type annotations on the same line survive).
     """
     fi = pat.get("file_include")
     if fi and not re.search(fi, text):
@@ -525,7 +525,7 @@ ENGINES["face-regex"] = apply_face_regex
 
 def apply_line_insert(text, pat, fid):
     """Insertion engine (v32): insert one verbatim line after the last
-    top-level Require/Import line — the canonical anchor of the S07
+    top-level Require/Import line: the canonical anchor of the S07
     notation-rebind cure (``Notation R := Real.`` after the world imports;
     UpReqSumD.v L58 precedent).  Fields:
       insert_line         the exact line to insert.
@@ -534,10 +534,10 @@ def apply_line_insert(text, pat, fid):
                           Import``; a file with no such line inserts at the
                           top (first line).
       file_include        regex that must match the whole file once (e.g. the
-                          interface Class name — insertion is scoped to the
+                          interface Class name; insertion is scoped to the
                           lineage that needs the rebind).
       require_token_regex regex that must occur somewhere (e.g. a bare ``R``
-                          use position — no rebind without a consumer).
+                          use position; no rebind without a consumer).
     Idempotent: when insert_line is already present the count is 0.
     """
     fi = pat.get("file_include")
@@ -567,7 +567,7 @@ ENGINES["line-insert"] = apply_line_insert
 
 def apply_station_report(text, pat, fid):
     """Report-only station scanner (v32).  Never rewrites: the text comes
-    back unchanged and the station count surfaces in the dry-run report —
+    back unchanged and the station count surfaces in the dry-run report:
     the positions needing the manual binder surgery of the S07 lineage
     (argumented Class binders like ``(RIS : Class carrier)`` / ``{RIS : Class
     carrier}``, whose full removal touches intros lines and call sites and
@@ -598,7 +598,7 @@ ENGINES["station-report"] = apply_station_report
 
 def run_pack(text, patterns):
     # variant-conflict pre-pass: exclusive groups are judged against the
-    # ORIGINAL text — sequential application could mask a variant (e.g. the
+    # ORIGINAL text: sequential application could mask a variant (e.g. the
     # variant-(a) deletion removing the Import precondition of variant (b)).
     # Both variants matching the original file is a caller decision (rc 4),
     # never a silent sequential resolution.
@@ -649,7 +649,7 @@ def md5s(text):
 # "idempotent and compilable" and never "idempotent but broken" (the audit's
 # P0-2 fake-green form: "idempotence verified; file written" on output that
 # no longer compiles).  Thermal contract: this tool does not embed a guard;
-# wrap the whole applier invocation in tools/cpu_guard.sh for guarded runs —
+# wrap the whole applier invocation in tools/cpu_guard.sh for guarded runs;
 # compile children stay inside the guard's process tree (the
 # verify/extract_magic_check.py contract form).
 # ---------------------------------------------------------------------------
@@ -663,11 +663,11 @@ def compile_leg(rocq_bin, target_path, before_text, after_text):
       compile-ok         the after text compiles (before state recorded in
                          the rc pair);
       compile-regression the before text compiled and the after text does
-                         not — the cure turned a compiling file into a
+                         not; the cure turned a compiling file into a
                          non-compiling one (fail-loud, rc 1, file NOT
                          written);
       baseline-broken    the before text does not compile (missing sibling
-                         world or a pre-existing red face) — the leg cannot
+                         world or a pre-existing red face); the leg cannot
                          judge and records that honestly instead of passing
                          silently; the write proceeds with the record.
     Write face: copies compile inside a mkdtemp dir (the .vo output face is
@@ -834,7 +834,7 @@ def selftest():
     ok = ok and c8 and c8b
 
     # cure7: scoped notation downshift (premise arrow must not be swallowed;
-    # unmarked comparison stays uncovered — station-scanner territory)
+    # unmarked comparison stays uncovered; station-scanner territory)
     p7 = v["cure7_qle_notation_downshift"]
     f7 = ("Theorem t3 : forall x : Q, In x [0; 0; 2] -> Qabs x <= 2%Q.\n"
           "Proof. intros. apply xq_Qle_bool_le. vm_compute. reflexivity. Qed.\n"
@@ -860,7 +860,7 @@ def selftest():
     ok = ok and c10 and c10b
 
     # cure7/cure9 tightening (v1.4.1, P0-2): the declaration head can no
-    # longer be swallowed into the lhs operand — the audit's broken form
+    # longer be swallowed into the lhs operand; the audit's broken form
     # (`QleT' (Lemma t : forall x : Q, Qabs x) 2%Q`) is structurally
     # unreachable, while the canonical operand forms still cure
     f7d = ("Lemma d1 : forall x : Q, Qabs x <= 2%Q.\n"
@@ -1176,7 +1176,7 @@ def selftest():
     tQb, nQb = apply_one(tQ, pQ)
     c27b = nQb == 0 and tQb == tQ
     # gate: a differently-named context variable (RI, not RI0) is outside
-    # the pattern's scope — the file_include precondition keeps it at zero
+    # the pattern's scope; the file_include precondition keeps it at zero
     plainQ = ("Section P.\n"
               "Context {RI : RealInterfaceEnhanced}.\n"
               "Theorem plain_compat : forall a b c d : @S01_BaseRing.R RI,\n"
@@ -1272,7 +1272,7 @@ def main():
     if args.apply:
         # idempotence assertion: second pass must find nothing (fail-loud).
         # report-mode patterns (engine station-report) are advisory stations,
-        # not cures — they never rewrite and are excluded from the residual.
+        # not cures; they never rewrite and are excluded from the residual.
         report_ids = set(p["id"] for p in patterns
                          if p.get("mode") == "report")
         _t2, report2 = run_pack(new_text, patterns)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""wash_shape.py — shape-normalizing tool: canonical seven-wash pipeline (rocqwash tools/).
+"""wash_shape.py: shape-normalizing tool, canonical seven-wash pipeline (rocqwash tools/).
 
 Purpose.  Applies the canonical wash pipeline to every target file in
   order (each wash selectable via --only; per-wash contract in the
@@ -44,7 +44,7 @@ Interface.  python3 tools/wash_shape.py --file A.v [--file B.v ...]
 
 Dependencies.  Python 3 standard library only; every path parameterized,
   zero hardcoded absolute paths, zero network.  The five wash engines
-  run as subprocesses (`python3 -B <engine>`) — orchestration, never
+  run as subprocesses (`python3 -B <engine>`): orchestration, never
   re-implementation.  Offline-testable: --injector cans the subprocess
   call layer with {rc,stdout,report}; --sleep-scale scales sleeps to
   zero for the selftest vectors.
@@ -73,12 +73,12 @@ Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
 #                 `wash/comment_pack.json` flag_words table for the canonical
 #                 same-meaning rewrite (the sidecar declares trigger = "gate4
 #                 comment-guard review findings"; flag_word_note = "Context-biaised
-#                 review words exchange to their neutral English term" — the
+#                 review words exchange to their neutral English term"; the
 #                 dual-sense review items are exactly that pack's exchange
 #                 targets).  The rewrite is applied by `wash/comment_sweep.py
 #                 --apply` (a comment_pack consumer: nesting/string-aware state
 #                 machine with a code-line equality assertion).  No entry ->
-#                 plan-miss (never synthesized — same rule as comment_pack's
+#                 plan-miss (never synthesized; same rule as comment_pack's
 #                 "never synthesized").
 # wash 2 token    `scan/scan_v4_token.py --file` survey (token level; closes the
 #                 W5 mixed-line blind spot) -> `wash/cure_applier.py` canonical
@@ -99,13 +99,13 @@ Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
 #                 rocqwash-header-map/1; placeholders {name}/{deps_stdlib}/
 #                 {deps_dev} derive from the target's Require faces and file
 #                 name; {bundle}/{summary}/{mission} carry the existing header
-#                 verbatim — any unbound placeholder is plan-miss, never
+#                 verbatim; any unbound placeholder is plan-miss, never
 #                 synthesized; the rendered text is still applied through
 #                 comment_sweep --header-map).  No template -> plan-miss.
 # wash 4 eol      CRLF->LF normalization (final-newline form preserved; the 3KB
 #                 probe window follows tools/registry_union.py detect_eol
 #                 EOL_PROBE_BYTES).  Earlier universal-newline engine write-backs
-#                 already normalize as a side effect — this wash's apply reports
+#                 already normalize as a side effect; this wash's apply reports
 #                 what the on-disk bytes actually show, including a zero-change
 #                 pass, honestly.
 # wash 5 anchor   order.txt line anchors -> registry_union.py --reanchor
@@ -150,7 +150,7 @@ Exit-codes.  0 = clean/shaped; 1 = partial/plan-miss (washes incomplete,
 #                 verdict partial with the residual items listed honestly).
 # loop mode       --loop watch mode: one pass per round; the plan cache keys on
 #                 the {abspath: md5} set of scope files plus wash-5 anchor
-#                 entities — a stable domain reuses the previous plan (cache
+#                 entities: a stable domain reuses the previous plan (cache
 #                 hit, zero engine re-runs), any source md5 change invalidates
 #                 and recomputes.  First round always recomputes; --once skips
 #                 the cache; rescan always computes fresh (post-apply disk
@@ -203,7 +203,7 @@ VERDICT_PARTIAL = "partial"
 VERDICT_PLAN_MISS = "plan-miss"
 
 # gate4 header-domain hard-item types (wash 3 territory; not counted by the
-# lexical wash).  Tuple and tag values are gate4's own output vocabulary —
+# lexical wash).  Tuple and tag values are gate4's own output vocabulary,
 # interface data, kept verbatim.
 HEADER_ITEM_TYPES = ("缺字段", "无头注", "头注非首块", "头注超标")
 REVIEW_DUAL = "语境双义复核"   # comment_pack exchange target (flag_word_note sense)
@@ -290,7 +290,7 @@ def make_event(seq, kind, fields, ts_enabled):
         ev["ts"] = now_iso()
     else:
         # KEEP (data face): the note value and its joiner are rocqwash-sentinel-event/1
-        # schema data — shared parsing face with cw_sentinel, kept verbatim.
+        # schema data: shared parsing face with cw_sentinel, kept verbatim.
         off = "ts=off（--sleep-scale 0·确定性输出）"
         base = ev.pop("note", None)
         ev["note"] = (off + "｜" + base) if base else off
@@ -299,7 +299,7 @@ def make_event(seq, kind, fields, ts_enabled):
 
 def events_seq_base(path):
     """Number of existing non-empty lines in --events (cross-process seq base;
-    same rule as cw_sentinel emit_seq_base — an append stream continues
+    same rule as cw_sentinel emit_seq_base: an append stream continues
     numbering from its existing lines).  Read failure -> 9."""
     try:
         with io.open(path, "r", encoding="utf-8") as fh:
@@ -310,8 +310,8 @@ def events_seq_base(path):
 
 def first_code_offset(text):
     """Offset of the first code character (depth 0, non-whitespace, comment/
-    string aware) — the leading header-zone boundary.  A 1:1 local
-    re-implementation of wash/comment_sweep.py first_code_offset (no import —
+    string aware): the leading header-zone boundary.  A 1:1 local
+    re-implementation of wash/comment_sweep.py first_code_offset (no import;
     engine drift must not couple into this file; same rule as the
     wash_engine.py local re-implementation)."""
     n = len(text)
@@ -381,9 +381,9 @@ def tail_of(text, n=200):
 
 
 def strip_comment_spans(text):
-    """Strip comment spans (newlines kept, string-aware) — the Require-face
+    """Strip comment spans (newlines kept, string-aware): the Require-face
     extraction precondition.  A 1:1 local re-implementation of
-    wash/comment_sweep.py strip_comments (no import — engine drift must not
+    wash/comment_sweep.py strip_comments (no import; engine drift must not
     couple into this file; same rule as first_code_offset)."""
     out = []
     i, n = 0, len(text)
@@ -430,7 +430,7 @@ def strip_comment_spans(text):
 
 def wrap_long_line(line, width=76, sub="      "):
     """Greedy word wrap (wraps only when >width and containing spaces;
-    continuation lines indent by 6; an over-long single word is kept whole) —
+    continuation lines indent by 6; an over-long single word is kept whole),
     the preset render wrapping form (corpus files wrap at width ~76 with 6-space
     continuations; shape evidenced by DecBridge6.v:19-29)."""
     if len(line) <= width or " " not in line.strip():
@@ -455,7 +455,7 @@ def require_faces(text):
     count:
       From Stdlib Require [Import|Export] A B.  -> stdlib column
       Require [Import|Export] A B.              -> dev column
-      From <X> Require [Import|Export] A B.     -> dev column (qualified X.A —
+      From <X> Require [Import|Export] A B.     -> dev column (qualified X.A;
         the corpus grep found zero bare-From cases; the mechanical
         completeness arm).
     Order = order of appearance in the file, deduplicated preserving first
@@ -489,7 +489,7 @@ def require_faces(text):
 def header_carry(text):
     """Verbatim-carry extraction of the existing leading header zone (the
     binding source for the preset placeholders {bundle}/{summary}/{mission}).
-    Returns a dict — a missing key means that placeholder cannot bind (the
+    Returns a dict: a missing key means that placeholder cannot bind (the
     judge records plan-miss honestly, never synthesizes):
       bundle  = the inside of the L1 `(* ConstructiveWorld-Set -- <body>. *)`
                 line (the final period belongs to the template line);
@@ -498,7 +498,7 @@ def header_carry(text):
       mission = the Mission field body (label-line remainder plus continuation
                 lines up to the next field label / comment close, newline and
                 indentation carried verbatim).
-    Corpus evidence: ConstructiveWorld-Set @6e805d1 DecBridge6.v:1/:3/:5-14 —
+    Corpus evidence: ConstructiveWorld-Set @6e805d1 DecBridge6.v:1/:3/:5-14,
     the three canonical bodies; header body content is never synthesized
     (same rule as comment_pack header_spec)."""
     off = first_code_offset(text)
@@ -539,7 +539,7 @@ class Injector(object):
     """--injector scenario: canning the subprocess call layer (offline
     testability).  Scenario JSON {engine key: {"rc": int, "stdout": str,
     "report": obj?}}; an engine call whose key matches always returns the
-    canned response (same response per call) — no real subprocess.  Key set =
+    canned response (same response per call); no real subprocess.  Key set =
     gate4/scan_v4/cure/sweep/registry_union/frozen8/jargon/ai_flavor."""
 
     KEYS = ("gate4", "scan_v4", "cure", "sweep", "registry_union", "frozen8",
@@ -691,7 +691,7 @@ class WashShape(object):
         rocqwash-header-map/1): missing library = 9; malformed JSON / unknown
         schema / unknown preset name / placeholder outside the allowlist /
         variants without an else fallback / any template line missing its
-        evidence citation = 2 (the gold-standard discipline mechanized —
+        evidence citation = 2 (the gold-standard discipline mechanized:
         evidence required before issuance)."""
         path = self.header_library_path
         if not os.path.isfile(path):
@@ -767,9 +767,9 @@ class WashShape(object):
         """Preset render (wash 3, placeholder substitution): template rows get
         their placeholders replaced one by one, then over-wide lines wrap
         greedily (wrap_long_line).  Every placeholder value comes from the
-        target file itself — {name} = basename minus .v, {deps_stdlib}/
+        target file itself: {name} = basename minus .v, {deps_stdlib}/
         {deps_dev} = the require_faces two columns, {bundle}/{summary}/
-        {mission} = header_carry verbatim — never synthesized.  Any unbound
+        {mission} = header_carry verbatim, never synthesized.  Any unbound
         placeholder -> (None, missing list) (the judge records plan-miss
         honestly).  Cache key = (abspath, text md5) (re-judged per loop round;
         same file same text stays identical, a changed file re-renders)."""
@@ -805,7 +805,7 @@ class WashShape(object):
                     filled = PH_RE.sub(lambda m: vals[m.group(1)], row)
                     for phys in filled.split("\n"):
                         if phys.startswith("    "):
-                            # wrap only field-body lines (4-space indent) — the
+                            # wrap only field-body lines (4-space indent): the
                             # L1 bundle line and the title line stay single-line
                             # across the whole corpus (DecBridge6.v:1 103 cols /
                             # :3 96 cols; abl_tail_supply_66.v:1 95 cols).
@@ -819,7 +819,7 @@ class WashShape(object):
 
     def header_map_entry(self, basename):
         """Map lookup (basename tried with and without .v; same form as
-        comment_sweep.run).  Map source only (--header-map/env) — the preset
+        comment_sweep.run).  Map source only (--header-map/env); the preset
         source goes through render_preset_header."""
         if not self.header_map:
             return None
@@ -1076,7 +1076,7 @@ class WashShape(object):
     def judge_header(self, path, g4, text):
         """Wash 3 header: gate4 header-domain hard items plus template judging
         (map source = per-file data, alignment and rewrite judged together;
-        preset source = designated-template render — rewrites only hard items
+        preset source = designated-template render: rewrites only hard items
         and never aligns an already-conforming five-field header, so a
         human-curated face is never machine-rewritten; no source = plan-miss
         reported honestly)."""
@@ -1359,7 +1359,7 @@ class WashShape(object):
     def plan_scope_md5s(self):
         """Plan-cache invalidation domain {abspath: md5}: scope files
         (--file/--dir collection) plus wash-5 anchor entities (order.txt line
-        anchor entities resolved via anchor_src — an entity md5 change is a
+        anchor entities resolved via anchor_src: an entity md5 change is a
         source change).  Entity appearance/disappearance/ambiguation enters the
         domain under a marker key (a domain-set change invalidates); an
         unreadable file records None (its state change triggers recompute;
@@ -1499,7 +1499,7 @@ class WashShape(object):
         engine is always comment_sweep; orchestration adds no new engine).  Map
         source = the explicit/env path; preset source = the freshly rendered
         single-file map written to a temp file ({basename: rendered text},
-        deleted after use — rendered values come from the file's own data;
+        deleted after use; rendered values come from the file's own data;
         orchestration persists nothing).  Unbindable placeholders (the file
         drifted after plan) -> engine failure rc 2 fail-loud."""
         tmp = None
@@ -1674,10 +1674,10 @@ class WashShape(object):
     # ---- main flow ----
 
     def one_pass(self, round_no=None):
-        """One complete pass: plan (--loop uses the cross-round cache — a stable
+        """One complete pass: plan (--loop uses the cross-round cache; a stable
         source-md5 domain hits the cache, any change recomputes; --once computes
         directly without the cache) -> (--apply? apply, then re-run all
-        washes — rescan always computes fresh, never reuses the cache) ->
+        washes; rescan always computes fresh, never reuses the cache) ->
         (verdict, report, n_applied)."""
         if self.args.loop:
             plan, cache_hit = self.plan_cached()
@@ -1805,7 +1805,7 @@ class WashShape(object):
 
     def _w(self, kind, status, detail, n_fix=0, n_miss=0, modules=None):
         """Wash entry: the four schema-surface keys (kind/action/status/detail)
-        plus internal stat keys (underscore-prefixed; stripped by the on-disk
+        plus internal stat keys (`_`-prefixed; stripped by the on-disk
         projection)."""
         action = "none"
         if status == STATUS_WOULD_FIX:
@@ -1828,7 +1828,7 @@ class WashShape(object):
 
 
 def project_entry(ent):
-    """Wash entry -> the four schema-surface keys (underscore-prefixed internal keys stripped)."""
+    """Wash entry -> the four schema-surface keys (`_`-prefixed internal keys stripped)."""
     return {"kind": ent["kind"], "action": ent["action"],
             "status": ent["status"], "detail": ent["detail"]}
 
@@ -1910,7 +1910,7 @@ def selftest():
     v11  --once/--loop modes (loop --max-rounds 2: two round events + stop)
     v12  determinism (plan --json reruns are byte-identical)
     v13  preset chain (--header-map-preset loads; conforming files untouched
-         rc0; probe order: preset beats env, --header-map beats env —
+         rc0; probe order: preset beats env, --header-map beats env;
          env ROCWASH_HEADER_MAP tested both ways)
     v14  preset placeholder render -> apply end to end (missing-field file
          renders a full rewrite -> rescan clean -> shaped rc0 -> rerun
@@ -1926,7 +1926,7 @@ def selftest():
          kinds round/stop; ts=off note)
     v18  plan-cache invalidation (a scope-file md5 change -> recompute miss /
          stable -> hit reuse [F,F,T]; a wash-5 anchor-entity md5 change is
-         also a source change [F,F,F,T] — a domain missing its entity would
+         also a source change [F,F,F,T]; a domain missing its entity would
          be a false hit)
     """
     import tempfile
@@ -1961,7 +1961,7 @@ def selftest():
         src_miss = os.path.join(tmp, "src_miss")
         os.makedirs(src_miss)
         # fixture .v header: Chinese field labels are the gate4 check input
-        # (interface data consumed by the frozen engine) — kept verbatim.
+        # (interface data consumed by the frozen engine), kept verbatim.
         header = ("(* 使命：洗形器自测夹具。\n"
                   "   依赖：无。\n"
                   "   对标：无。\n"
@@ -2011,7 +2011,7 @@ def selftest():
                    "Proof. exact I. Qed.\n")
         fx_v = wf(os.path.join(src, "hdmap_fx.v"), fx_header + fx_body)
         # v16-only copy (the v14 apply would wash hdmap_fx.v into a
-        # five-field-complete file — the plan-miss vector needs the
+        # five-field-complete file; the plan-miss vector needs the
         # untouched missing-field file)
         fx2_v = wf(os.path.join(src, "hdmap_fx2.v"), fx_header + fx_body)
 
@@ -2333,10 +2333,10 @@ def selftest():
 
         # v18 plan-cache invalidation (source md5 change -> recompute; stable
         # -> cache hit):
-        # a) scope-file md5 change — loop --apply three rounds: round 1 miss ->
+        # a) scope-file md5 change: loop --apply three rounds, round 1 miss ->
         #    apply CRLF->LF (file changes) -> round 2 must miss (eol clean after
         #    recompute) -> round 3 stable hit reuse;
-        # b) a wash-5 anchor-entity md5 change is also a source change —
+        # b) a wash-5 anchor-entity md5 change is also a source change:
         #    ToyE.v (the entity) is eol-applied in round 1 while order_e.txt is
         #    untouched -> round 2 misses purely from the entity domain (a domain
         #    missing its entity would be a false hit) -> round 2 applies and
