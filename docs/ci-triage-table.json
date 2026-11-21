@@ -1,7 +1,7 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
-  "version": "1.6",
-  "updated": "2026-11-21",
+  "version": "1.7",
+  "updated": "2026-11-22",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
   "classes": [
@@ -308,6 +308,21 @@
       "auto_repairable": false,
       "prescription": "restore the pinned line verbatim from git history (git show <pre-change>:file), never fabricate a line to satisfy the counter; re-anchor the guard in the same commit only when the underlying facts changed (auto_repairable=false - restore-vs-reanchor is a decision, not a mechanical edit)",
       "guard": "doc-revision tickets must run the destructive-matrix rows anchored on the files they touch before pushing; a snapshot/counted line is load-bearing prose, not decoration"
+    },
+    {
+      "id": "R21",
+      "title": "guard self-test excludes a status class (silent blindness)",
+      "markers": [
+        "selftest PASS while face missing",
+        "missing-face not counted",
+        "status=missing-face",
+        "outcome=clean"
+      ],
+      "precedence": 21,
+      "family": "structural",
+      "auto_repairable": false,
+      "prescription": "de-blind the pattern and promote the skipped status to a verdict-failure class in the same commit; the guard self-test must assert every status class including the failure classes (a vector per class, and the live vector fails on any failure-class row) so a guard face going blind turns the self-test red; the last two markers co-fire with the first two in a blind detect log (missing-face rows printed under outcome=clean, rc=0)",
+      "guard": "a verdict aggregation must be one named set of failure statuses consumed by both the CLI and the self-test; a face pattern anchors on structural tokens only (prefix + count tail), never on prose wording; prose wording is not load-bearing for a count face"
     }
   ]
 }

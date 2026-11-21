@@ -33,6 +33,7 @@ Exit-codes.  0 all vectors pass; 1 a failed vector; 2 usage error.
 
 import argparse
 import ast
+import contextlib
 import io
 import os
 import shutil
@@ -41,6 +42,24 @@ import tempfile
 
 TOOL = "repair_scope"
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _resolve_live_repo():
+    """The live repo root for the selftest live vectors: the script's
+    grandparent when the module runs inside its own checkout; otherwise
+    the ROCWASH_REPO_DIR override or the cwd when that directory carries
+    the live markers (cw.sh + tools/). None = detached temp copy - the
+    live vectors are then skipped with an honest marker (the sandbox
+    vectors carry the guard logic; a detached copy has no live repo)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    cands = [os.path.dirname(here),
+             os.environ.get("ROCWASH_REPO_DIR", ""),
+             os.getcwd()]
+    for c in cands:
+        if c and os.path.isfile(os.path.join(c, "cw.sh")) \
+                and os.path.isdir(os.path.join(c, "tools")):
+            return c
+    return None
 
 # pinned snapshot of certify/frozen8.py (runtime order); the runtime AST
 # read stays authoritative, this tuple is only the fallback
@@ -760,8 +779,15 @@ class DocCountRefused(Exception):
 # The face table: one row per count-carrying doc surface.  parts = the
 # named groups of the pattern in reconstruction order; keys = the
 # value-bearing groups (the only tokens a repair may ever touch).
+# The title face anchors on the "^# cw.sh" prefix and the
+# "routes over <N> tools" tail only; everything in between (the suite
+# wording) is deliberately unconstrained.  The former " tool suite "
+# literal requirement let a pure prose refresh (02da21f, "tool suite" ->
+# "the Rocq operations suite") blind the guard while --selftest stayed
+# green - triage class R21.  Suite wording must never break the face
+# again: the face is the prefix + the count tail, nothing else.
 DOC_COUNT_TITLE_RE = _re.compile(
-    r"(?P<pre>^# cw\.sh\b[^\r\n]* tool suite [^\r\n]*? )"
+    r"(?P<pre>^# cw\.sh\b[^\r\n]*? )"
     r"(?P<routes>\d+)"
     r"(?P<mid> routes over )"
     r"(?P<tools>\d+)"
@@ -775,15 +801,57 @@ DOC_COUNT_FACES = (
      "re": DOC_COUNT_TITLE_RE},
 )
 
+# Verdict-failure statuses for the class-4 detect/apply aggregation.
+# missing-face is a FAILURE class, never a neutral skip: a face listed in
+# the source-of-truth table whose title shape cannot be located means the
+# guard is blind on that surface, and a blind guard must alarm (triage
+# class R21: "selftest PASS while face missing" - the 02da21f regression
+# stayed green exactly because this class used to be skipped).  ok /
+# drift / excluded / missing-file keep their standing meanings; excluded
+# stays neutral (an excluded face is a guard-correct skip, like the
+# self-heal watch's own skips).
+DC_FAILURE_STATUSES = ("drift", "missing-face")
+
+
+def _dc_failure(rows):
+    """True when any detect row carries a verdict-failure status."""
+    return any(r["status"] in DC_FAILURE_STATUSES for r in rows)
+
 
 def _dc_doc_lint():
-    """The doc_lint module (same-directory import; the single derivation
-    source for the cw.sh and roster parsers)."""
+    """The doc_lint module (robust import: same-directory first, then
+    repo-layout candidates, so the temp-fixture selftest form and CI runners
+    both resolve the single derivation source for the cw.sh and roster
+    parsers; loud ModuleNotFoundError when no candidate carries it)."""
+    try:
+        import doc_lint
+        return doc_lint
+    except ModuleNotFoundError:
+        pass
+    import importlib.util
     here = os.path.dirname(os.path.abspath(__file__))
-    if here not in sys.path:
-        sys.path.insert(0, here)
-    import doc_lint
-    return doc_lint
+    cands = [
+        os.path.join(here, "doc_lint.py"),
+        os.path.join(os.environ.get("ROCWASH_TOOLS_DIR", ""), "doc_lint.py"),
+        os.path.join(os.getcwd(), "doc_lint.py"),
+        os.path.join(os.getcwd(), "tools", "doc_lint.py"),
+        os.path.join(os.path.dirname(here), "doc_lint.py"),
+    ]
+    seen = set()
+    for c in cands:
+        if not c or c in seen:
+            continue
+        seen.add(c)
+        if os.path.isfile(c):
+            spec = importlib.util.spec_from_file_location("doc_lint", c)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            sys.modules["doc_lint"] = mod
+            return mod
+    raise ModuleNotFoundError(
+        "doc_lint not importable: searched script dir, ROCWASH_TOOLS_DIR, "
+        "cwd, cwd/tools, copy-sibling dir; set ROCWASH_TOOLS_DIR when the "
+        "script runs as a detached temp copy")
 
 
 def doc_count_derive(repo_root):
@@ -833,7 +901,10 @@ def _dc_row(face, rel, line, status, doc, source, action, detail):
 
 def doc_count_detect(repo_root, faces=None):
     """Report-first drift scan over the count faces (zero writes).  Rows
-    are data: ok / drift / excluded / missing-face / missing-file."""
+    are data: ok / drift / excluded / missing-face / missing-file.
+    missing-face is a verdict-failure class (R21): a listed face whose
+    title shape never appeared alarms the verdict, it is never
+    neutral-skipped."""
     derived = doc_count_derive(repo_root)
     rows = []
     for face in (tuple(faces) if faces is not None else DOC_COUNT_FACES):
@@ -1032,9 +1103,10 @@ def doc_count_repair(repo_root, apply=False, faces=None,
 
 def doc_count_cli(args):
     """Class-4 operator face (--doc-count-detect / --doc-count-apply).
-    Returns the process code: 0 clean or repaired clean; 1 drift
-    remaining (detect) or residual drift (apply); 2 refused; 9 missing
-    input."""
+    Returns the process code: 0 clean or repaired clean; 1 a verdict
+    failure remaining (detect) or residual (apply) - drift, or a
+    missing face (a listed face whose title shape is gone; alarm,
+    never a neutral skip, R21); 2 refused; 9 missing input."""
     try:
         dl = _dc_doc_lint()
     except (ImportError, OSError) as e:
@@ -1052,19 +1124,24 @@ def doc_count_cli(args):
         if args.doc_count_detect:
             rows = doc_count_detect(args.repo)
             drift = any(r["status"] == "drift" for r in rows)
+            missing = any(r["status"] == "missing-face" for r in rows)
             report = {"schema": DocCountScope.REPORT_SCHEMA,
                       "face": DocCountScope.CLASS_ID, "mode": "detect",
                       "derived": summary, "rows": rows,
                       "budget_per_branch": DocCountScope.BUDGET_PER_BRANCH}
-            _dc_emit(args, report, rows, "drift" if drift else "clean",
+            _dc_emit(args, report, rows,
+                     "drift" if drift else ("missing-face" if missing
+                                            else "clean"),
                      False, ())
-            return 1 if drift else 0
+            return 1 if (drift or missing) else 0
         plan, applied = doc_count_repair(args.repo, apply=True,
                                          ledger_path=args.ledger)
         rows = doc_count_detect(args.repo)
-        residual = any(r["status"] == "drift" for r in rows)
-        outcome = ("residual-drift" if residual else
-                   ("repaired" if applied else "clean"))
+        drift = any(r["status"] == "drift" for r in rows)
+        residual = _dc_failure(rows)   # drift or missing-face stays open
+        outcome = ("residual-drift" if drift else
+                   ("residual-missing-face" if residual else
+                    ("repaired" if applied else "clean")))
         report = {"schema": DocCountScope.REPORT_SCHEMA,
                   "face": DocCountScope.CLASS_ID, "mode": "apply",
                   "derived": summary, "plan": plan, "rows": rows,
@@ -1138,6 +1215,14 @@ DC_MINI_TOOL = ('#!/usr/bin/env python3\n'
 DC_MINI_README = ("# cw.sh - unified entry quick reference (rocqos"
                   " (rocqwash) tool suite | 2 routes over 2 tools)\n")
 
+# The regressed title shape (02da21f refreshed the suite wording; the old
+# regex - pinned to the " tool suite " literal - went blind: finditer no
+# match, neutral missing-face skip, --selftest stayed green).  Under the
+# modernized face regex this is simply a face whose count tail is gone:
+# the missing-face fixture for the false-green kill vector (R21).
+DC_MINI_README_BLIND = ("# cw.sh - unified entry quick reference (rocqos"
+                        " (rocqwash), the Rocq operations suite)\n")
+
 
 def _dc_face_at(rel):
     face = dict(DOC_COUNT_FACES[0])
@@ -1200,6 +1285,17 @@ def run_doc_count_selftest():
     def vec(name, ok, detail=""):
         results.append((name, bool(ok), detail))
 
+    live_repo = _resolve_live_repo()
+    try:
+        _dc_doc_lint()
+        doc_lint_ok = True
+    except ModuleNotFoundError:
+        doc_lint_ok = False
+    if live_repo is None and not doc_lint_ok:
+        print("DOC-COUNT-SELFTEST SKIP: detached copy without doc_lint or a"
+              " live repo (env-absent family, rc=111 precedent); run from the"
+              " repo root or set ROCWASH_TOOLS_DIR / ROCWASH_REPO_DIR")
+        return 111
     tmp = tempfile.mkdtemp(prefix="rqw_doc_count_")
     try:
         # the red example lifecycle on one sandbox repo
@@ -1308,6 +1404,26 @@ def run_doc_count_selftest():
             and rows3[-1]["outcome"] == "escalated(budget-cap)",
             "a cap hit refuses the repair and lands the escalation row")
 
+        # false-green kill (R21): a face whose title shape is gone must
+        # fail the verdict - alarm, never the old neutral skip that kept
+        # --selftest green while the guard was blind on the surface.
+        repo4 = os.path.join(tmp, "r4")
+        os.makedirs(repo4)
+        _dc_mk_repo(repo4, title=DC_MINI_README_BLIND)
+        rows4 = doc_count_detect(repo4)
+        buf4 = io.StringIO()
+        with contextlib.redirect_stdout(buf4):
+            rc4 = doc_count_cli(argparse.Namespace(
+                repo=repo4, doc_count_detect=True, doc_count_apply=False,
+                json_out=None))
+        vec("missing-face-failure",
+            len(rows4) == 1 and rows4[0]["status"] == "missing-face"
+            and rc4 == 1 and _dc_failure(rows4)
+            and "outcome=missing-face" in buf4.getvalue(),
+            "a face whose title shape is gone reads status=missing-face"
+            " and the detect verdict fails (rc=1, outcome=missing-face);"
+            " the old drift-only verdict returned 0 - green while blind")
+
         # exclusion unit vectors over the shared providers
         doc_name, _src = ledger_doc(repo1)
         vec("excl-append-only-doc",
@@ -1335,20 +1451,30 @@ def run_doc_count_selftest():
             "the sources and ordinary doc faces stay out of the refusal"
             " set (one-way derivation, not a write ban)")
 
-        # live repo vectors (the module lives in this repo)
-        ok, refusals = DocCountScope.check_writable(REPO_ROOT)
-        vec("check-writable-consumption", ok,
-            str(refusals) if refusals else
-            "the class write faces pass the shared exclusion providers")
-        _rows8, src8 = frozen8_ledger(REPO_ROOT)
-        vec("shared-provider-consumption", src8 == "runtime-ledger8",
-            "source=%s" % src8)
-        live_rows = doc_count_detect(REPO_ROOT)
-        vec("live-face-equals-source",
-            live_rows and not any(r["status"] == "drift"
-                                  for r in live_rows),
-            "the live count faces equal the live registry/roster"
-            " derivation; a drift here is a live red example")
+        # live repo vectors (the module lives in this repo; a detached
+        # temp copy resolves no live repo and skips them honestly - the
+        # sandbox vectors above carry the guard logic in every form)
+        live_repo = _resolve_live_repo()
+        if live_repo:
+            ok, refusals = DocCountScope.check_writable(live_repo)
+            vec("check-writable-consumption", ok,
+                str(refusals) if refusals else
+                "the class write faces pass the shared exclusion providers")
+            _rows8, src8 = frozen8_ledger(live_repo)
+            vec("shared-provider-consumption", src8 == "runtime-ledger8",
+                "source=%s" % src8)
+            live_rows = doc_count_detect(live_repo)
+            vec("live-face-equals-source",
+                live_rows and not _dc_failure(live_rows),
+                "the live count faces equal the live registry/roster"
+                " derivation and every listed face is located; a drift or a"
+                " missing face here is a live red example (R21: a blind"
+                " guard is a failure verdict, never green)")
+        else:
+            vec("live-face-skipped", True,
+                "detached temp copy: no live repo resolvable (cwd and script"
+                " parent carry no cw.sh); the sandbox vectors carry the guard"
+                " logic; set ROCWASH_REPO_DIR to force the live face")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
