@@ -1,9 +1,9 @@
-# `rocqwash-service-campaign-total` — 服务战役总报告 · service work-stream total report v1.0 (November 11, 2026)
+# `rocqwash-service-campaign-total` · 服务战役总报告 · service work-stream total report v1.0 (November 11, 2026)
 
-> Purpose.  The cumulative total report of the v35-v41 work streams: diagnosis layer → orchestration layer → service layer → integration health-check layer → corpus expansion → canonicalization consolidation → parallelism and guardrails — seven work streams landed as seven commits on the single day of November 11, 2026, distilled into one document. This document is the deliverable of the v41 ledger schedule's "close-out total-archive work stream (v42)" (the source line `更新账.md:3760` labels it 五波累账总报告 — a cumulative total report of five work streams; this document carries all seven work streams of v35-v41 per its task instruction).
-> Interface.  Document face only — a read-only distillation of in-tree materials: ① the ledger sections v35-v41 in `更新账.md` (`更新账.md:3552-3760`, the original untouched); ② the four existing `docs/` documents — workflow-integration-whitepaper / perf-profile / push-gate-dual-door-assessment / ops-realtime-service (the in-tree service-layer-overview of the same v40 close-out work stream is referenced alongside, for the §2 two-dimension classification); ③ `git log v35..HEAD` and `git show --stat` over the seven commits, run at writing time (hashes recorded per work stream in §1); ④ the cw.sh twenty-tool roster, read at cw.sh:99 and cw.sh:104-153. Every number and commit hash is transcribed from the in-tree materials above — zero from memory. The original Chinese text is preserved in the sibling `.zh.md` archive.
-> Dependencies.  None at runtime (document face). Grounded in the rocqwash v41 tree (`c5df4d4`); `更新账.md` is read read-only; the frozen-eight set, quad8 and `更新账.md` were not touched (the ledger read-only); `cw.sh`, the full test suite and the README series belong to the integration agent and were not touched by this document's authoring lane. The three-gate close-out baseline (`doc_lint --repo` drift=0 / `tests/test_destructive_matrix.py` 17 verdicts all passing / `tests/run_tests.sh` full suite zero failing) belongs to the integration agent's final run — this lane does not run it on the integration agent's behalf; it only re-runs doc_lint after submitting this document, to verify zero drift for this document (end of §5).
-> Evidence.  The commit chain in §1 is the `git log --oneline v35..HEAD` output run at writing time (seven commits, oldest → newest); the tool-roster facts in §2 come from the cw.sh route segments cited per row; the closing self-check re-ran `python3 tools/doc_lint.py --repo .` wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120` — verdict consistent, drift=0, including zero flag drift for this document's flag citations (tail of §5).
+> Purpose.  The cumulative total report of the v35-v41 work streams: diagnosis layer → orchestration layer → service layer → integration health-check layer → corpus expansion → canonicalization consolidation → parallelism and guardrails; seven work streams landed as seven commits on the single day of November 11, 2026, distilled into one document. This document is the deliverable of the v41 ledger schedule's "close-out total-archive work stream (v42)" (the source line `更新账.md:3760` labels it 五波累账总报告 (a cumulative total report of five work streams); this document carries all seven work streams of v35-v41 per its task instruction).
+> Interface.  Document face only, a read-only distillation of in-tree materials: ① the ledger sections v35-v41 in `更新账.md` (`更新账.md:3552-3760`, the original untouched); ② the four existing `docs/` documents: workflow-integration-whitepaper / perf-profile / push-gate-dual-door-assessment / ops-realtime-service (the in-tree service-layer-overview of the same v40 close-out work stream is referenced alongside, for the §2 two-dimension classification); ③ `git log v35..HEAD` and `git show --stat` over the seven commits, run at writing time (hashes recorded per work stream in §1); ④ the cw.sh twenty-tool roster, read at cw.sh:99 and cw.sh:104-153. Every number and commit hash is transcribed from the in-tree materials above; zero from memory. The original Chinese text is preserved in the sibling `.zh.md` archive.
+> Dependencies.  None at runtime (document face). Grounded in the rocqwash v41 tree (`c5df4d4`); `更新账.md` is read read-only; the frozen-eight set, quad8 and `更新账.md` were not touched (the ledger read-only); `cw.sh`, the full test suite and the README series belong to the integration agent and were not touched by this document's authoring lane. The three-gate close-out baseline (`doc_lint --repo` drift=0 / `tests/test_destructive_matrix.py` 17 verdicts all passing / `tests/run_tests.sh` full suite zero failing) belongs to the integration agent's final run; this lane does not run it on the integration agent's behalf; it only re-runs doc_lint after submitting this document, to verify zero drift for this document (end of §5).
+> Evidence.  The commit chain in §1 is the `git log --oneline v35..HEAD` output run at writing time (seven commits, oldest → newest); the tool-roster facts in §2 come from the cw.sh route segments cited per row; the closing self-check re-ran `python3 tools/doc_lint.py --repo .` wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/cpu_guard.sh -MaxWaitSec 120`; verdict consistent, drift=0, including zero flag drift for this document's flag citations (tail of §5).
 > Exit-codes.  Not applicable to a document face; the documented tools keep their implemented exit-code semantics unchanged.
 
 ## §1 The seven work streams in sequence (v35→v41 · key points and commit hash per stream) · 七波演进脉络（v35→v41·每波要点＋commit 号）
@@ -12,7 +12,7 @@
 acf9fe6 (v35) → 4026051 (v36) → 41e74b0 (v37) → c205ea0 (v38) → caa3a28 (v39)
 → 496ebdf (v40) → c5df4d4 (v41, HEAD).
 
-### Work stream 1 — v35 diagnosis layer (acf9fe6) · 波一·v35 诊断层（acf9fe6）
+### Work stream 1 · v35 diagnosis layer (acf9fe6) · 波一·v35 诊断层（acf9fe6）
 
 Tooling of the November 10, 2026 mac-runner CI diagnosis six-act live run (更新账.md:3554). Four tools were applied to the tree:
 `tools/toolchain_dyld_doctor.py` (dyld broken-linkage diagnosis · otool -L parses the hard references → traces missing pieces back to their donor root → issues suggestions only, never executes on the user's behalf · the `--smoke` smoke run), `tools/net_probe.py`
@@ -24,10 +24,10 @@ md5-8 canonical form · dry run by default). The local mapping's other half sync
 (更新账.md:3580). Integration surface: cw.sh carries eleven tools; full suite 47 cases / 43 passing / 0 failing / 4 SKIP
 (更新账.md:3562). `git show --stat`: 26 files · +3610/-16.
 
-### Work stream 2 — v36 orchestration layer (4026051) · 波二·v36 编排层（4026051）
+### Work stream 2 · v36 orchestration layer (4026051) · 波二·v36 编排层（4026051）
 
 The single-command pipeline chains the four v35 tools into a pipeline (更新账.md:3591): `tools/pushci.py` (1918 lines)
-in five stages — preflight (the doctor environment check + the net_probe stability-window check + the optional `--pre-scan-gate4`
+in five stages: preflight (the doctor environment check + the net_probe stability-window check + the optional `--pre-scan-gate4`
 header pre-scan) → push (HTTP/1.1, three sends × 45 s → two sends rerouted through ghproxy · reroute only for github.com-shaped remotes) →
 resolve + watch (head_branch + head_sha engagement · status-only basis) → heal (the family comes from ci_triage
 classification · rerun after the double-probe stability window for B/E [403 idempotent], capped by `--max-heal 3` · A/C stop and are never auto-repaired ·
@@ -35,25 +35,25 @@ families outside the table never rerun automatically) → verdict ± merge (on 4
 register holds seven states. **The orchestration adds zero new engines** (everything is subprocess over the v35 engines); six scenarios, 15 canned verdicts
 (S1-S6 · the two `--injector` forms paired with `--git-caller` · offline, zero real network). cw.sh carries twelve tools;
 full suite 48 / 44 / 0 failing / 4 SKIP. Cross-agent collaboration case: the test agent escalated "implementation absent" → the orchestration agent directed
-"construct the implementation-independent pieces first + bounded polling" → the implementation was written to disk and aligned version by version — three layers, one agent each, zero collisions
+"construct the implementation-independent pieces first + bounded polling" → the implementation was written to disk and aligned version by version: three layers, one agent each, zero collisions
 (更新账.md:3598). `git show --stat`: 14 files · +3916/-22.
 
-### Work stream 3 — v37 service layer (41e74b0) · 波三·v37 服务层（41e74b0）
+### Work stream 3 · v37 service layer (41e74b0) · 波三·v37 服务层（41e74b0）
 
 From batch tools to a real-time dynamic service layer (更新账.md:3615). Three tools were applied: `tools/unclog.py`
 (1161 lines · the clear-blockages closed loop: probe collection → chain_graph chain roots → cure_applier applies only from the canonical pack →
 scan_v4 + probe re-check → verdict; the honest wall lists the cause per chain root and refuses to fabricate; dry run by default),
 `tools/wash_shape.py` (the shape-normalization five-wash pipeline: word face / token / header / line ending / anchor · plan/apply two stages
 · plan writes nothing to disk · frozen-roster entries are rejected loudly), `tools/cw_sentinel.py` (1079 lines · the real-time watcher takes three signal
-sources — CI failing builds / local blockage records / build logs → JSONL event stream · **report-only by default, zero actions**).
+sources: CI failing builds / local blockage records / build logs → JSONL event stream · **report-only by default, zero actions**).
 The five interface disciplines run through all three tools: JSON-in/out with the schema designated · exit codes 0/1/2/9 (a failing
 result is data, not a tool failure) · `--once`/`--loop` · `--injector`/`--sleep-scale` offline-testable · orchestration adds no new engine
 (更新账.md:3627). cw.sh carries fifteen tools; full suite 51 / 47 / 0 failing / 4 SKIP; README-cw gained the
 "workflow integration interface" section. `git show --stat`: 11 files · +4011/-13.
 
-### Work stream 4 — v38 integration health-check layer (c205ea0) · 波四·v38 接驳体检层（c205ea0）
+### Work stream 4 · v38 integration health-check layer (c205ea0) · 波四·v38 接驳体检层（c205ea0）
 
-Integration and health checks (更新账.md:3645): `tools/cw_doctor.py` (1082 lines · the four-domain aggregated health check —
+Integration and health checks (更新账.md:3645): `tools/cw_doctor.py` (1082 lines · the four-domain aggregated health check:
 environment 40 / network 20 / registry 25 / blockage record 15 → health score 0-100, plus per-domain advice pointing each non-passing domain at its tool ·
 a full real-machine run scored 91.67, healthy, rc=0); cw_sentinel `--on-red-preset` integration presets
 (unclog/pushci · dry run by default as an invariant · mutually exclusive with `--on-red` at rc=2); unclog `--audit`
@@ -65,10 +65,10 @@ whitepaper v1.0 (11 bash fenced blocks, two `bash -n` rounds, 0 failures · 134 
 0 missing). cw.sh carries sixteen tools; full suite 52 / 48 / 0 failing / 4 SKIP.
 `git show --stat`: 18 files · +3364/-171.
 
-### Work stream 5 — v39 corpus expansion (caa3a28) · 波五·v39 语料滚扩（caa3a28）
+### Work stream 5 · v39 corpus expansion (caa3a28) · 波五·v39 语料滚扩（caa3a28）
 
 Corpus expansion executed under the gold-standard discipline (更新账.md:3676): `wash/cure_pack.json` v1.3→v1.4
-(24→25 patterns) — a three-source survey yielded 11 candidates, **1 pattern accepted**: `cure39_ifq_connective_qualify`
+(24→25 patterns): a three-source survey yielded 11 candidates, **1 pattern accepted**: `cure39_ifq_connective_qualify`
 (the citation anchor is the Set repository anchor commit 9a51c74, its diff walked verbatim across 25 sites · the face-regex is reused, zero new
 engines), **10 candidates rejected, each with its reason recorded**; `tests/fixtures/header_map_v1.json`, the header template library
 v1 (preset=`campaign_set_diamond` · all 6 placeholders carry citations · **a missing evidence cell refuses the load, enforced by code**);
@@ -78,7 +78,7 @@ tests/test_relay_e2e.py, the integration end-to-end test + the docs/ops-realtime
 service operations manual. cw.sh carries seventeen → nineteen tools; full suite 54 / 50 / 0 failing / 4 SKIP; doc_lint
 refs=87 drift=0. `git show --stat`: 18 files · +2962/-73.
 
-### Work stream 6 — v40 canonicalization consolidation (496ebdf) · 波六·v40 正典化巩固（496ebdf）
+### Work stream 6 · v40 canonicalization consolidation (496ebdf) · 波六·v40 正典化巩固（496ebdf）
 
 Steady-state consolidation (更新账.md:3706): cw_sentinel state crash recovery (a corrupted state fails loud at exit 9 and is rejected
 · `--rebuild-state` is the only legitimate rebuild path) + JSONL rotation (`--emit-max-bytes`, two generations retained
@@ -86,17 +86,17 @@ Steady-state consolidation (更新账.md:3706): cw_sentinel state crash recovery
 `tools/baseline_diff.py` (545 lines · compares two audit baselines → new/resolved/persistent
 aligned cause by cause along the chain roots · **a different candidates set = incomparable, reported as it is and the ruling refused**); the **destructive-face review
 matrix** tests/test_destructive_matrix.py, 17 rows of refuse-to-write verdicts (self-proven by negative-case injection · it caught one
-real guardrail gap — cw_sentinel plain `--on-red` without `--emit` was accepted at rc=0 · the fix was scheduled to
+real guardrail gap: cw_sentinel plain `--on-red` without `--emit` was accepted at rc=0 · the fix was scheduled to
 v41); documentation close-out (the CONTRIBUTING five-interface-disciplines section + CHANGELOG + the docs/service-layer-
 overview four-function × three-layer full picture + the examples/baselines/README procedure). cw.sh carries twenty tools;
 full suite 56 / 52 / 0 failing / 4 SKIP. `git show --stat`: 16 files · +2953/-99.
 
-### Work stream 7 — v41 parallelism and guardrails (c5df4d4) · 波七·v41 并行与护栏（c5df4d4）
+### Work stream 7 · v41 parallelism and guardrails (c5df4d4) · 波七·v41 并行与护栏（c5df4d4）
 
-Parallelism and guardrail-gap repair (更新账.md:3735): the sentinel guardrail-gap repair — plain
+Parallelism and guardrail-gap repair (更新账.md:3735): the sentinel guardrail-gap repair: plain
 `--on-red` without `--emit` → rc=2 (cw_sentinel.py:883-886 · a bypass action must be accompanied by the event stream
 written to disk), matrix S2 extended to both plain and preset directions (registered in v40 → made standing in v41); the dual-door unification assessment report
-docs/push-gate-dual-door-assessment (**recommendation: option A — the two doors stand side by side and each rules on its own** · zero code changes);
+docs/push-gate-dual-door-assessment (**recommendation: option A (the two doors stand side by side and each rules on its own)** · zero code changes);
 the probe_engine `--jobs K` parallel pool (default 1, serial, zero drift · **the ledger order always follows the canonical candidate order** ·
 the thermal cap recommends K ≤ 2 · duplicate candidate names fail loud) + the unclog `--probe-parallel` pass-through + the report
 timing section gains a jobs dimension (the vector goes thirteen → fourteen); the sentinel preset registry expands (the three new presets wash-shape
@@ -150,21 +150,21 @@ The original numbering of each account's register section is carried over verbat
 
 | # | Source anchor | Case / criterion | Distillation | Follow-up |
 |---|---|---|---|---|
-| v35-① | 更新账.md:3574（§三） | criterion correction | the v34 ledger recorded t_quad8_check as "failing" — in this environment it is actually SKIP (rc=111 · the canonical repository's four-copy group is not present in the volume); the failure is not a tool failure and was not introduced in that round · the two environments' context difference is recorded side by side, as it is | the suite criterion "SKIP does not count as failing" holds to this day |
-| v36-① | 更新账.md:3607（§四.1 契约偏离登记①） | the `--injector` dual form | the pushci `--injector` dual form (steps strictly per round + the flat fixture verbatim) — the semantics were not loosened | the canonical form that makes the v36 six-scenario 15-verdict set offline-testable |
+| v35-① | 更新账.md:3574（§三） | criterion correction | the v34 ledger recorded t_quad8_check as "failing": in this environment it is actually SKIP (rc=111 · the canonical repository's four-copy group is not present in the volume); the failure is not a tool failure and was not introduced in that round · the two environments' context difference is recorded side by side, as it is | the suite criterion "SKIP does not count as failing" holds to this day |
+| v36-① | 更新账.md:3607（§四.1 契约偏离登记①） | the `--injector` dual form | the pushci `--injector` dual form (steps strictly per round + the flat fixture verbatim); the semantics were not loosened | the canonical form that makes the v36 six-scenario 15-verdict set offline-testable |
 | v36-② | 更新账.md:3607（②） | the README count face | README.md carries no tool count (the change syncs the case-count row 43→48) | the case-count-row sync rule holds |
-| v36-③ | 更新账.md:3607（③） | the README snapshot face | README.md has no v35 snapshot row (the v35 stream never entered the main README · that round only added the in-row v36 mention) | — |
-| v36-④ | 更新账.md:3607（④） | no rewriting history on another's behalf | the tests/README.md "47 cases on record" was a current-state statement at the time · kept verbatim under the no-retrospective-history-edit rule | — |
+| v36-③ | 更新账.md:3607（③） | the README snapshot face | README.md has no v35 snapshot row (the v35 stream never entered the main README · that round only added the in-row v36 mention) | none |
+| v36-④ | 更新账.md:3607（④） | no rewriting history on another's behalf | the tests/README.md "47 cases on record" was a current-state statement at the time · kept verbatim under the no-retrospective-history-edit rule | none |
 | v37-① | 更新账.md:3632（§三） | cross-agent count drift | the watcher agent's cw.sh header count said thirteen while usage said twelve → the integration agent unified them at fifteen (cross-agent count drift · a close-out duty of integration · case on record) | the written precedent that count drift belongs to the integration close-out duty |
-| v37-② | 更新账.md:3633（§三） | the injector philosophy | unclog `--injector` = "canned verification · real orchestration" — under chain/cure/scan/frozen8 injection the tools still run for real (not puppet tests) · offline testability and real orchestration coexist | same source as the whitepaper §1 discipline-④ mechanism section |
+| v37-② | 更新账.md:3633（§三） | the injector philosophy | unclog `--injector` = "canned verification · real orchestration": under chain/cure/scan/frozen8 injection the tools still run for real (not puppet tests) · offline testability and real orchestration coexist | same source as the whitepaper §1 discipline-④ mechanism section |
 | v38-① | 更新账.md:3663（§三裁决登记） | same-slot exclusivity | giving both `--on-red-preset` and `--on-red` = mutually exclusive at rc=2 (the task instruction's "preset wins" vs the selftest's "mutually exclusive" tension → ruled by the repository's same-slot-exclusivity discipline · boundary recorded in the docstring) | the negative-case table in the ops manual §2.2 is on record |
 | v38-② | 更新账.md:3664（§三） | two clocks, not one bell | cw_sentinel `--timeout` (single HTTP request) and `--subproc-timeout` (the subprocess cap) remain two separate things (the v37 agreed criterion unchanged) | continued in the v40 §3 register |
 | v39-① | 更新账.md:3693（§三） | expansion honesty | the cure_pack v1.4 single-pattern expansion is the honest survey conclusion (a pattern with no second-source reproduction waits for further survey per the rule · not an expansion shortfall) | the prefer-fewer-but-sound principle made into code (header_map refuses to load without evidence) |
 | v39-② | 更新账.md:3694（§三） | criterion refinement | the evidence-based correction of the doc_lint phantom-reference/dangling-reference criteria (dup ≠ surplus · README.md:232 union-freeze `--world` legally carries multiple values) | the doc_lint criteria settled |
-| v40-① | 更新账.md:3718（§二矩阵战果） | a real guardrail gap | the destructive-face matrix caught that cw_sentinel plain `--on-red` without `--emit` was accepted at rc=0 (the real guardrail lives in the preset path · a live probe run proved the action executes) — double proof: negative-case injection self-verification + a real gap caught | **fixed in v41 and made standing** (the cw_sentinel.py:883-886 guard · matrix S2 extended to both directions) |
-| v40-② | 更新账.md:3722（§三） | flag names kept separate | `--loop-max` and `--max-rounds` belong to unclog and sentinel respectively · no alias was created (the task instruction's slip corrected as it is · boundary recorded in the docstring) | — |
-| v40-③ | 更新账.md:3723（§三） | the two-clock split continues | cw_sentinel keeps its two clocks separate (the on-red 60 s bypass cap stays as agreed in v37) | — |
-| v41-① | 更新账.md:3747（§二跨席协作） | same-file serialization | the parallelism agent and the perf agent both edited unclog.py (the parallel layer + the timing dimension) = incremental dimension-adding on a shared base (the perf agent's first read before starting already saw the parallel layer · edits extended, never overwrote) — the zero-collision actual record | a worked sample of two-agent same-file collaboration |
+| v40-① | 更新账.md:3718（§二矩阵战果） | a real guardrail gap | the destructive-face matrix caught that cw_sentinel plain `--on-red` without `--emit` was accepted at rc=0 (the real guardrail lives in the preset path · a live probe run proved the action executes); double proof: negative-case injection self-verification + a real gap caught | **fixed in v41 and made standing** (the cw_sentinel.py:883-886 guard · matrix S2 extended to both directions) |
+| v40-② | 更新账.md:3722（§三） | flag names kept separate | `--loop-max` and `--max-rounds` belong to unclog and sentinel respectively · no alias was created (the task instruction's slip corrected as it is · boundary recorded in the docstring) | none |
+| v40-③ | 更新账.md:3723（§三） | the two-clock split continues | cw_sentinel keeps its two clocks separate (the on-red 60 s bypass cap stays as agreed in v37) | none |
+| v41-① | 更新账.md:3747（§二跨席协作） | same-file serialization | the parallelism agent and the perf agent both edited unclog.py (the parallel layer + the timing dimension) = incremental dimension-adding on a shared base (the perf agent's first read before starting already saw the parallel layer · edits extended, never overwrote): the zero-collision actual record | a worked sample of two-agent same-file collaboration |
 | v41-② | 更新账.md:3748（§二） | generation succession | the tool-produced account's generation succession recorded as it is: the audit baseline JSON was re-produced by the 07:12 true-compile run (the earlier rc=127 fast-fail record was overwritten) | perf-profile §1 DS1 reads the 07:12 version verbatim as authoritative |
 
 ## §4 The real-tree report (audit baseline 27/27 RC0 · the three-attempt history · the honest wall's refusal record) · 真实树战报（audit 基线 27/27 RC0·三发史·诚实墙拒判实录）
@@ -172,7 +172,7 @@ The original numbering of each account's register section is carried over verbat
 - **Target and candidate face**: the Set repository ConstructiveWorld_Live real tree · 27 pieces = the two placement batches of November 10, 2026
   (b48-52, thirteen + b53-57, fourteen · md5 measured and backfilled into the TSV) · the world = the runner workspace's Live APFS clone (537 vo · the active generation · zero touches to the runner's canonical copy) (更新账.md:3698,
   3727; `examples/baselines/audit-ConstructiveWorld_Live-20261111.note.md`).
-- **The three-attempt history** (更新账.md:3752-3753 · the note sidecar's "comparison history" section): attempts one and two failed at rc=127 for a tool reason (the compiler was absent — one more proof of the "bare coqc does not exist" invariant) · **the honest wall refused the ruling, correctly**
+- **The three-attempt history** (更新账.md:3752-3753 · the note sidecar's "comparison history" section): attempts one and two failed at rc=127 for a tool reason (the compiler was absent; one more proof of the "bare coqc does not exist" invariant) · **the honest wall refused the ruling, correctly**
   ("generation-gap type / tool-caused failure · no forced patching"); attempt three, carrying the `--rocq-cmd` 9.3 coqc template, went productive.
 - **The productive-run report**: **27/27 RC0 · red=0 · wall=0** · cures_planned=0 (audit is read-only) ·
   verdict audit exit 0. Timing section: manifest 1.289 s / probe_chain 190.728 s /
@@ -186,7 +186,7 @@ The original numbering of each account's register section is carried over verbat
   + the note at 7 lines). The comparator is in place: baseline_diff.py produces the three add/remove lists from two audit baselines
   · the account self-consistency check blocks hand-written accounts (v40 §1②).
 - **Generation succession, recorded as it is**: /tmp/audit_b48_b53_baseline.json was earlier the product of an rc=127 fast-fail
-  run · overwritten at 07:12 by the true-compile run's re-production — perf-profile DS1 reads the 07:12 version verbatim as
+  run · overwritten at 07:12 by the true-compile run's re-production; perf-profile DS1 reads the 07:12 version verbatim as
   authoritative (the docs/perf-profile §1 DS1 provenance note · the v41-② case).
 - **The honest-wall mechanism is on record** (the refusal record in this report is its first live use): the unclog honest wall's six causes
   self-unwashable/cure-miss/frozen-in-service/root-file-missing/exclusive-
@@ -205,24 +205,24 @@ unification assessment (v36 boundary.3 / v40 schedule → the v41 docs/push-gate
 
 **Pending execution / unfinished (v43+ candidates · each with its source noted)**:
 
-1. A real-tree measurement of probe `--jobs` > 1 (pending execution in the thermal window · the canned-mechanism evidence is complete) — v41
+1. A real-tree measurement of probe `--jobs` > 1 (pending execution in the thermal window · the canned-mechanism evidence is complete): v41
    boundary.1; the DS4 true-compile K=1/2/3 triple-run placeholder awaits backfill into docs/perf-profile §5 (the backfill makes it
    perf-profile v1.1 · docs/perf-profile §6.3).
-2. A real end-to-end CI live run of pushci (a real push → a real build → heal · for the first run, `--dry-run` first, then a real send) — v36 boundary.2 and v38 boundary.2, same as the whitepaper Appendix A not-yet-run items.
-3. Real-tree live runs of unclog `--apply` / wash_shape `--apply` (full verification at fixture level · for the first run a small `--src` subset first · the allowlist-form procedure is docs/ops-realtime-service §3.3) —
+2. A real end-to-end CI live run of pushci (a real push → a real build → heal · for the first run, `--dry-run` first, then a real send): v36 boundary.2 and v38 boundary.2, same as the whitepaper Appendix A not-yet-run items.
+3. Real-tree live runs of unclog `--apply` / wash_shape `--apply` (full verification at fixture level · for the first run a small `--src` subset first · the allowlist-form procedure is docs/ops-realtime-service §3.3):
    v37 boundary.1.
-4. A real long-resident consumption scenario for sentinel `--loop` (a workflow background bash task attached to the JSONL stream · verified together with the next work stream) — v37 boundary.2.
-5. A real-tree live run of the new cure39 pattern (`cure39_ifq_connective_qualify`) (full verification at fixture level)
-   — v39 boundary.2.
+4. A real long-resident consumption scenario for sentinel `--loop` (a workflow background bash task attached to the JSONL stream · verified together with the next work stream): v37 boundary.2.
+5. A real-tree live run of the new cure39 pattern (`cure39_ifq_connective_qualify`) (full verification at fixture level):
+   v39 boundary.2.
 6. The 9.1 compiler dependency face awaits its ruling (the `ROCWASH_ROCQ` conventional path is MISSING · point it at 9.3 CW_MAC93
-   or the restored donated copy · the CW-side cw_paths v1.1 moved-root watch table is on record) — v35 boundary.2.
-7. A ci_triage `--watch` long-running monitor mode (a standalone long monitor beyond the watch embedded in pushci) — v36
+   or the restored donated copy · the CW-side cw_paths v1.1 moved-root watch table is on record): v35 boundary.2.
+7. A ci_triage `--watch` long-running monitor mode (a standalone long monitor beyond the watch embedded in pushci): v36
    boundary.3.
-8. The wash_shape `--header-map` template library expands rolling with each effort's corpus — v37 boundary.3 (the v39
+8. The wash_shape `--header-map` template library expands rolling with each effort's corpus: v37 boundary.3 (the v39
    header_map_v1 established the first library).
 9. The residual risks of dual-door option A are on record: no mechanical check forces a workflow to rule on door B first (a single pushci run initiates on its own ·
    the window discipline rests on documentation and embedded-block constraints); if mechanical enforcement is wanted later, option B is the only path that leaves the canonical criteria unchanged,
-   but the c4 full-suite cost and the c1 first-push deadlock on new branches must be solved first — docs/push-gate-dual-
+   but the c4 full-suite cost and the c1 first-push deadlock on new branches must be solved first; docs/push-gate-dual-
    door-assessment §5 residual risks.
 
 **Remaining in the v42 close-out total-archive work stream (scheduled at v41 boundary.3)**: the three-gate final run (doc_lint --repo
@@ -230,7 +230,7 @@ drift=0 / tests/test_destructive_matrix.py 17 verdicts all passing / tests/run_t
 zero failing) = the integration agent's final-run criterion (this lane does not run it on the integration agent's behalf · see the header); the real-machine drill compilation; the v43+ roadmap
 (this section is its draft base).
 
-— Self-check at submission: after this document was written, `python3 tools/doc_lint.py --repo .`
+Self-check at submission: after this document was written, `python3 tools/doc_lint.py --repo .`
 was re-run wrapped in `bash /Users/apple/Desktop/ConstructiveWorld/
 cpu_guard.sh -MaxWaitSec 120`
-· verdict consistent, drift=0 (zero drift for this document's flag citations) — the measured record is in the handoff notes.
+· verdict consistent, drift=0 (zero drift for this document's flag citations); the measured record is in the handoff notes.
