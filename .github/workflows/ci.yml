@@ -191,13 +191,6 @@ jobs:
   # covered by the hosted faces above. Kept as its own job (not a matrix
   # entry) because GitHub job-level `if` does not accept the matrix
   # context (20261117 run 118: jobs=0 parse death).
-  # selftest-local (Windows local self-hosted) removed 20261122:
-  # the local runner shares the dev tree with active sessions - live-tree faces
-  # see parallel-session WIP causing environment-dependent reds while hosted
-  # faces run the identical suite green. Hosted Linux + Windows carry the
-  # blocking signal. Re-enable when the runner gets workspace isolation.
-  # Restored 20261122 (not-our-ref mirror-lag adjudication: local runner required, checkout-layer red was mirror lag); blocking again.
-
   selftest-local:
     name: Self-test suite (Windows (local self-hosted))
     runs-on: [self-hosted, Windows, X64]
@@ -227,4 +220,107 @@ jobs:
             echo "ROCQWASH-CI-ALL-GREEN (stable roster, Windows (local self-hosted); platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
           else
             echo "::error::self-test suite red on Windows (local self-hosted) — see the failed step log above"
+          fi
+
+  flaky-watch:
+    name: Platform-sensitive roster watch (${{ matrix.label }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+            py: python3
+            platform_roster: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+            known_red: ""
+          - os: windows-latest
+            label: Windows
+            py: python
+            # Differential watch (run #100 scoreboard at 3cfd1ea, 2026-11-16):
+            # 6 green / 5 known-red / 1 skip on the hosted Windows image.
+            # The five known-red items are the documented platform faces:
+            # checkout mtime granularity (t_verify_vo, t_verify_fresh),
+            # runs-json indirect leg (t_push_gate), absent rocq/ocamlc
+            # toolchain (t_extract_magic), probe verdict text (t_probe_engine).
+            platform_roster: "t_retrofit_dryrun t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+            known_red: "t_verify_vo t_push_gate t_verify_fresh t_extract_magic t_probe_engine"
+    env:
+      ROCWASH_PY: ${{ matrix.py }}
+      ROCWASH_TESTS_ONLY: ${{ matrix.platform_roster }}
+      # Windows runners default to an ANSI stdout codepage (charmap on the
+      # hosted image, gbk on a zh-CN host). The suite prints Chinese prose
+      # and math symbols, which raises UnicodeEncodeError and turns whole
+      # cases red. Force UTF-8 I/O plus the UTF-8 mode on every platform.
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD
+          # must be a descendant of the freeze commit) needs the freeze
+          # commit object; a depth-1 checkout false-flags DRIFT on the
+          # local self-hosted face (20261116 red evidence)
+          fetch-depth: 0
+
+      - name: Run green candidates (regressions here fail the lane)
+        id: candidates
+        run: bash tests/run_tests.sh
+
+      # Advisory quarantine (repair class E2-3): tools/flaky_guard.py
+      # --move writes an order-dependent case into tests/advisory_roster.txt
+      # (scope-checked against tools/repair_scope.py, budget-capped at two
+      # repairs per class per branch, recorded in docs/repair-ledger.jsonl).
+      # The blocking suite drops the case (ADVISORY-OUT) and this watch
+      # lane keeps running it here, so a quarantined case is observed,
+      # never silently hidden.  Green rounds here are the watch evidence
+      # the guard's --restore consumes; the exit contract of this step is
+      # advisory (continue-on-error) by design.
+      - name: Observe advisory roster (flaky quarantine)
+        id: advisory
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -s tests/advisory_roster.txt ]; then
+            names=$(grep -v '^[[:space:]]*#' tests/advisory_roster.txt | tr '\n\r' '  ')
+            if [ -n "$(echo "$names" | tr -d ' ')" ]; then
+              ROCWASH_TESTS_ONLY="$names" bash tests/run_tests.sh
+            else
+              echo "advisory roster carries no active rows - nothing to observe"
+            fi
+          else
+            echo "advisory roster absent - nothing quarantined"
+          fi
+
+      # Known-red observation lane: platform-inherent faces documented in
+      # the roster provenance above. Red here is the expected steady state
+      # and is recorded, not judged; a PASS is noteworthy (two-green
+      # evidence for roster removal).
+      - name: Observe known-red face
+        id: knownred
+        if: matrix.known_red != ''
+        continue-on-error: true
+        env:
+          ROCWASH_TESTS_ONLY: ${{ matrix.known_red }}
+        run: bash tests/run_tests.sh
+
+      - name: Watch verdict
+        if: always()
+        run: |
+          c="${{ steps.candidates.outcome }}"
+          k="${{ steps.knownred.outcome }}"
+          a="${{ steps.advisory.outcome }}"
+          echo "green-candidates lane: $c"
+          echo "known-red observation lane: $k"
+          echo "advisory-quarantine observation lane: $a"
+          if [ "$c" != "success" ]; then
+            echo "::warning::green-candidate regression on ${{ matrix.label }} (blocking for this watch lane)"
+          fi
+          if [ "$k" = "success" ]; then
+            echo "NOTE: known-red item(s) went GREEN on ${{ matrix.label }} — two-green evidence, roster-removal candidate"
+          fi
+          if [ "$a" = "success" ]; then
+            echo "NOTE: advisory-quarantined case(s) GREEN on ${{ matrix.label }} — watch evidence for the guard's --restore (repair class E2-3)"
           fi
