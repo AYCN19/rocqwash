@@ -196,6 +196,7 @@ jobs:
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 20
     if: github.ref == 'refs/heads/main'
+    continue-on-error: true  # advisory: local runner reads the shared dev tree (live-tree faces see parallel-session WIP); hosted faces carry the blocking signal (20261122 capacity/mirror-lag escalation)
     env:
       ROCWASH_PY: python
       ROCWASH_TESTS_EXCLUDE: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
