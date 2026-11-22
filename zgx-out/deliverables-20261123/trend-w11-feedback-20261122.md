@@ -1,10 +1,19 @@
 # Trend w11 judgment + PR feedback face card - rocqwash (R2-92, window w11)
 
-- Ticket: R2-92, seat: trend feedback seat (read-only judgment;
+Purpose. Session card for ticket R2-92; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
+
+- Ticket: R2-92, agent: trend feedback agent (read-only judgment;
   zero repo-tree writes; the only write faces are this card, the
   receipt, and /tmp/rqw-mcp/r2-92 staging), identity live-lumen
   (subagent, dynamic workflow)
-- Date: 2026-11-22
+- Date: 2026/11/22
 - Card artifact: this file (English ASCII; CJK names appear as
   \uXXXX escapes). Ask-named generic path
   (trend-w11-feedback-20261122.md); the anchor is carried in this
@@ -37,7 +46,7 @@ retreat, forbid three consecutive attempts - NO retry was spent,
 no backoff lane opened.
 
 Post-fetch local face: `git rev-parse origin/main` = 35c9ecf7
-(UNCHANGED - the local ref bookkeeping predates this seat);
+(UNCHANGED - the local ref bookkeeping predates this agent);
 `git rev-list --count 35c9ecf7..origin/main` = 0 AGAINST THE
 STALE LOCAL REF. Recorded as the standing "fetch failure != drift"
 branch: the 0 is NOT evidence that upstream is flat - it is

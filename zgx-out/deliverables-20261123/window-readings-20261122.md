@@ -1,11 +1,20 @@
-TICKET: R2-95 window surface reading seat - four-segment window judgment (w11 new-anchor
+TICKET: R2-95 window surface reading agent - four-segment window judgment (w11 new-anchor
+
+Purpose. Session card for ticket R2-95; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
 double scan + upstream new-surface identification + PR feedback recheck + MCP read-only
-snapshot); pure read-only, zero repo-tree writes by this seat (the only write faces are
+snapshot); pure read-only, zero repo-tree writes by this agent (the only write faces are
 this card, the receipt, and /tmp/rqw-mcp/r2-95 staging); identity live-lumen (subagent,
 dynamic workflow)
-STATEMENTS: precheck relay CONFIRMED first-hand before any seat action (main clone
+STATEMENTS: precheck relay CONFIRMED first-hand before any agent action (main clone
 origin/main = 69dd18e5, rev-list 76cdbbf..origin/main = 2 > 0, loop HEAD 76cdbbf,
-CW-Main HEAD == origin/main == 42335f0a; NO fetch spent by this seat - the precheck's
+CW-Main HEAD == origin/main == 42335f0a; NO fetch spent by this agent - the precheck's
 fetch had already moved the refs, verified locally zero-network); w11 double scan at the
 new anchor 69dd18e5 MEASURED FLAT end to end (ai_flavor rc 1 RED em 8033 / wd 263 /
 rows 343, hits 410; norm_lint rc 0 files=303 error=763 warn=1068 cjk_ratio=0.031928;
@@ -39,15 +48,15 @@ helper mcp_call.sh (pins ROCQWASH_HOME=/Users/zuguangzhao/rocqwash canonical,
 zero-network server-side default)
 COMPILE: none (zero-compile markdown card; instrument scans via python3 -I on the
 repo's own tools/ai_flavor.py + tools/norm_lint.py and two MCP stdio reads; no code
-produced or modified by this seat)
+produced or modified by this agent)
 REGISTRY: R2-84 (w9 double-scan form, FIRST DROP window), R2-91 (w10 paid window at
 35c9ecf7, the immediate comparator), R2-92 (fifteen-ring feedback ALL-EMPTY baseline
 + fetch-failed UNPAID branch), R2-94 (pilot-2 MCP equivalence, b_gate_audit 17 rows,
-pins), this receipt R2-95-receipt.md; NETRED ledger this seat: 9 network events
+pins), this receipt R2-95-receipt.md; NETRED ledger this agent: 9 network events
 (1 /rate_limit probe + 8 ask-named GETs), all HTTP 200, zero failures, zero retries,
-zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=False
+zero fetches by this agent; MCP calls: 2, both id==3 isError=false, allow-net=False
 
-# Window readings - w11 judgment + upstream surface + feedback line + MCP snapshot (R2-95, 2026-11-22)
+# Window readings - w11 judgment + upstream surface + feedback line + MCP snapshot (R2-95, 2026/11/22)
 
 ## Segment 1 - w11 window judgment: PAID window, MEASURED FLAT at new anchor 69dd18e5
 
@@ -57,7 +66,7 @@ zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=Fal
   scan branch fires); `git rev-list --count 35c9ecf7..origin/main` = 3 (the main-clone
   window span past the w10 end anchor); loop clone HEAD = 76cdbbf and its
   76cdbbf..origin/main count = 2 (both relay faces); CW-Main HEAD == origin/main ==
-  42335f0a. NO fetch was spent by this seat: the precheck's successful fetch had
+  42335f0a. NO fetch was spent by this agent: the precheck's successful fetch had
   already moved the local refs; re-fetching would be an unneeded second flight. The
   w11 window on this clone is therefore [w10 end anchor 35c9ecf7 -> tip 69dd18e5],
   3 commits (76cdbbf + the 2 new ones); the ask's count face (2 past 76cdbbf) and the
@@ -108,22 +117,22 @@ zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=Fal
   anchors. The fifteen-ring UNPAID branch (fetch-failed, carried face) is retired by
   this measurement: what was carried at w11-baseline is now confirmed by fresh reads.
 
-## Segment 2 - upstream new surface: console-side CI restoration, zero seat-surface overlap
+## Segment 2 - upstream new surface: console-side CI restoration, zero agent-surface overlap
 
 - The ask's count face: 2 commits past loop HEAD 76cdbbf, identified per-commit with
   `git show --stat`:
   | commit | author | date | subject (verbatim) | files |
-  | 10da5cb | \u738b\u5c0f\u96ea <168888@live.cn> | 2026-11-22 21:22:24 +0800 | ci: restore
+  | 10da5cb | \u738b\u5c0f\u96ea <168888@live.cn> | 2026/11/22 21:22:24 +0800 | ci: restore
   selftest-local (Windows local self-hosted) to the blocking pipeline (not-our-ref
   red adjudicated as mirror lag; local runner required) | 1 file: .github/workflows/
   ci.yml +32 |
-  | 69dd18e | \u738b\u5c0f\u96ea <168888@live.cn> | 2026-11-22 21:27:53 +0800 | ci: restore
+  | 69dd18e | \u738b\u5c0f\u96ea <168888@live.cn> | 2026/11/22 21:27:53 +0800 | ci: restore
   pipeline to the golden #260 form (c147190) - selftest-local blocking + flaky-watch
   matrix back; the day-chain (advisory/delete/partial-restore) was the misdiagnosed
-  not-our-ref mirror-lag red, adjudicated 20261122 | 1 file: .github/workflows/
+  not-our-ref mirror-lag red, adjudicated 2026/11/22 | 1 file: .github/workflows/
   ci.yml +103/-7 |
 - Shape verdict: BOTH commits are console-side (ops/CI lane) additions - authors,
-  files, and subjects name CI pipeline restoration; NEITHER touches this seat's
+  files, and subjects name CI pipeline restoration; NEITHER touches this agent's
   faces (no docs/ ledger, no tools/, no tests/, no scanned-extension file). The
   third window commit 76cdbbf (loop-side, "ci: remove selftest-local ... from the
   blocking pipeline", subject read first-hand in this session's log listing) is the
@@ -174,7 +183,7 @@ zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=Fal
   call-capability_index.jsonl.text diffed against this render's 70): +2 = tools/
   axiom_audit.py and tools/vacgen_coq.py; 0 removals. Both trace to the console-side
   registration commit caaf920 "feat(registration): close the registration lag -
-  axiom-audit + vacgen-coq routes, count faces 74/72, census re-anchor" (2026-11-22
+  axiom-audit + vacgen-coq routes, count faces 74/72, census re-anchor" (2026/11/22
   19:32:10 +0800; 9 files incl. docs/census-tools.json +440, tools/vacgen_coq.py
   +1530, tools/taxonomy-coq.json +709 - git show --stat read first-hand; the
   per-file history walk hits the clone's shallow depth for older trees, stated as a
@@ -182,7 +191,7 @@ zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=Fal
   docs/census-tools.json files array = 70 == render 70 (same shape as R2-87's
   68 == 68). Note: caaf920's own subject says "count faces 74/72" at its beat -
   different counting basis at a different time point, not reconciled here; the
-  render==master 70==70 is the face this seat measured.
+  render==master 70==70 is the face this agent measured.
 - b_gate_audit (helper, bare args, one call): id==3, isError=false, no error key,
   exit code 0, full 14-line stdout: schema rocqwash.b-gate-audit/1; threshold line;
   7 class rows (concl.real.const-lt-field-re-exists instances=1 rounds=1; jargon
@@ -223,12 +232,12 @@ zero fetches by this seat; MCP calls: 2, both id==3 isError=false, allow-net=Fal
 
 ## Not run (not named by this ask, or gated)
 
-No fetch by this seat (precheck's fetch verified sufficient locally; NETRED
+No fetch by this agent (precheck's fetch verified sufficient locally; NETRED
 single-flight); no pulls/{n}/comments thread endpoint (ask names issues comments +
 reviews); no commit/status/timeline faces; no tools/list recount (render + master
 json face measured instead; wire roster re-count not asked); no ground CLI rerun of
 b_gate_audit (the R2-94 four-link equivalence series covers the comparison; this
-seat ran the MCP face + pin legs only, as asked); no per-point commit diff counting
+agent ran the MCP face + pin legs only, as asked); no per-point commit diff counting
 (the window's only file is ci.yml, already byte-explained); no rsi-loop.log batch
 block (not named by this ask). Zero writes inside the repo tree: status pair + 3
 untracked byte-identical pre/post everything, HEAD == origin/main == 69dd18e5 at
