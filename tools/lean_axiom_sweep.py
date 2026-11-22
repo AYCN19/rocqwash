@@ -18,17 +18,22 @@ Purpose.  Make "0 sorry 0 axiom" claims mechanically reproducible per theorem:
   it is not a pass-by-absence) / UNPARSED (honest).
 Interface.  python -I tools/lean_axiom_sweep.py --root <file|dir> [--json OUT]
   [--allow-axiom NAME]... [--timeout SEC] [--snapshot OUT]
-  [--baseline SNAPSHOT] | --selftest.  stdout carries one JSON line (schema
-  rocqwash-axiom-sweep/1); --json additionally writes the same payload to
-  OUT; --snapshot additionally writes a machine closure snapshot (schema
+  [--baseline SNAPSHOT] | --toolchain-doctor --root <file|dir> | --selftest.
+  stdout carries one JSON line (schema rocqwash-axiom-sweep/1); --json
+  additionally writes the same payload to OUT; --snapshot additionally
+  writes a machine closure snapshot (schema
   rocqwash-axiom-closure-snapshot/1, deterministic); --baseline diffs the
   current closure against a previous snapshot into the closure_diff block;
+  --toolchain-doctor prints the standalone toolchain resolution-chain
+  report (schema rocqwash-toolchain-doctor/1) and exits 0 always;
   --selftest runs the frozen offline vectors and exits.
 Dependencies.  Python 3 standard library only; the probe face needs a usable
   Lean 4 toolchain (lean or lake on PATH passing a version probe, so an
   elan shim without a default toolchain does not pass), never downloaded or
-  simulated; without one the sweep exits 112 judging nothing.  The
-  snapshot and diff faces are toolchain-independent: the diff reads only
+  simulated; without one the sweep exits 112 judging nothing.  When the
+  target pins a toolchain (a lean-toolchain file), the pin must be in the
+  elan installed list (`elan toolchain list`) for the sweep to run at all.
+  The snapshot and diff faces are toolchain-independent: the diff reads only
   the two snapshot files' data, no Lean involvement.
 Evidence.  --selftest covers the parse and classify faces with canned
   `#print axioms` fixtures for all six classes, the copy-append emission
@@ -46,17 +51,30 @@ Evidence.  --selftest covers the parse and classify faces with canned
   112), the closure faces (snapshot determinism double-run
   byte-identical, all four diff verdict kinds, diff_alarm true and
   false, NEW-DEPENDENCY, baseline load error faces, the no-baseline
-  backward-compat shape); zero network, zero toolchain launch, zero
-  real-repo touch.
+  backward-compat shape), and the toolchain pin faces (upward pin
+  discovery nearest-wins, empty-pin refusal, elan list parse with
+  annotations stripped, pin membership decision, version token parses,
+  probe env injection and no-pin passthrough, toolchain-block
+  pin/target_pin/match fields, doctor payload shape over all four
+  verdicts, the pin-skip spawn face rc 112 with the doctor block and the
+  exact install command on a stripped environment, the doctor face exit
+  0, and the doctor usage-conflict faces); zero network, zero toolchain
+  launch, zero real-repo touch.
 Exit-codes.  0 green (every classified declaration CLEAN, BENIGN-STANDARD
-  or PRIVATE-COVERED, zero UNPARSED rows, zero errors); 1 red (any
-  SORRY-ALARM,
+  or PRIVATE-COVERED, zero UNPARSED rows, zero errors; also the
+  --toolchain-doctor diagnostic face, always); 1 red (any SORRY-ALARM,
   CUSTOM-AXIOM-ALARM or UNPARSED row, or any recorded error: unjudgeable is
   not green; unchanged by the diff face - diff_alarm rides the payload);
-  2 usage error (including an unreadable or wrong-schema --baseline);
-  112 no usable Lean toolchain (the honest skip names the requirement; the
-  axiom_guard rc 111 env-gate precedent family, code 112 per this tool's
-  contract).
+  2 usage error (including an unreadable or wrong-schema --baseline, and
+  --toolchain-doctor combined with scan flags);
+  112 no usable Lean toolchain (the honest skip names the requirement), or
+  the target lean-toolchain pin cannot be honored (not in the elan
+  installed list, or the pin unreadable, or the installed list
+  unavailable: running the unverified PATH default would be the toolchain
+  drift this gate exists to prevent; the pin-skip face upgrades the
+  output with a doctor block on stdout naming the exact install command);
+  the axiom_guard rc 111 env-gate precedent family, code 112 per this
+  tool's contract.
 """
 
 # Detail carried below the five-field header budget (the norm_lint
@@ -128,6 +146,39 @@ Exit-codes.  0 green (every classified declaration CLEAN, BENIGN-STANDARD
 # toolchain the shims exist and execute but exit 1, and existence alone
 # would fake a gate pass.  Neither usable -> exit 112 before any work,
 # with the requirement named on stderr (honest skip, nothing simulated).
+#
+# Toolchain pin gate.  Before any probing, the sweep resolves the target's
+# lean-toolchain pin: the nearest lean-toolchain file walking up from the
+# root (a file root starts at its own directory, a directory root at the
+# directory itself), read as its first line stripped; an existing but
+# unreadable or empty pin file is an honest refusal, never a guess.  The
+# pin is checked against the elan installed list (`elan toolchain list`,
+# trailing (default)/(overridden ...) annotations stripped).  Pin
+# installed: the probes run pinned - LEAN_TOOLCHAIN=<pin> injected into
+# every probe child environment (the elan-side injection channel) and the
+# gate probes additionally run under the pin directory (the elan proxy
+# resolves the toolchain from the cwd lean-toolchain lookup, so the
+# pinned binaries, never the PATH default, answer; elan builds that
+# ignore the environment variable still resolve the pin through that
+# cwd lookup, and every probe cwd - the project root or the target's
+# directory - always sits under the pin directory by construction).  Pin
+# missing: honest skip rc 112 upgraded with a doctor block on stdout
+# naming the exact one-line fix (`elan toolchain install <pin>`) and the
+# judged-zero-rows disclosure.  Pin unreadable, or the elan installed
+# list unavailable: the same refusal (a pin that cannot be verified must
+# not silently fall back to the PATH default - that fallback is the
+# toolchain drift, and an axiom set can drift across toolchain versions:
+# the soundness gap this gate closes).  No pin file: today's behavior
+# unchanged (PATH default resolution; the toolchain block carries
+# pin/target_pin/match all null).  The toolchain block of every report
+# carries the match conclusion as pin/target_pin/match alongside the
+# lean/lake resolutions and usability probes.  --toolchain-doctor: the
+# standalone diagnostic face - one JSON line (schema
+# rocqwash-toolchain-doctor/1, every field {value, basis}) reporting the
+# whole resolution chain (lean/lake PATH resolutions and version tokens,
+# the target pin and its directory, the elan installed-list excerpt, the
+# match verdict and the exact install command when the pin is missing)
+# and exit 0 always; it judges nothing and touches nothing.
 #
 # Output shape.  Every top-level key except "scan_face" and the plain
 # "schema" string is {"value": ..., "basis": ...} (the v2 note-5 standard,
@@ -249,6 +300,9 @@ ERROR_TAIL_LINES = 12  # per-file error tail cap (lines)
 READ_ERROR_CAP = 10    # report error list cap
 PROBE_TIMEOUT_DEFAULT = 600
 GATE_PROBE_TIMEOUT = 20
+PIN_FILE = "lean-toolchain"
+DOCTOR_SCHEMA = "rocqwash-toolchain-doctor/1"
+ELAN_LIST_TIMEOUT = 30
 
 EXIT_OK = 0
 EXIT_RED = 1
@@ -570,11 +624,15 @@ def parse_print_axioms(output, probes):
     return rows
 
 
-def probe_toolchain():
+def probe_toolchain(cwd=None, env=None):
     """Resolve and probe the toolchain; returns (lean, lake, usable_lean,
     usable_lake).  Usable = found on PATH and a `--version` probe exits 0
     (the elan-shim face: the shim executes but exits 1 with 'no default
-    toolchain configured', so existence alone is not usability)."""
+    toolchain configured', so existence alone is not usability).  cwd/env
+    pin the probes to a resolution in force: with an honored pin the gate
+    probes run under the pin directory and the injected environment so
+    the pinned binaries answer (the elan proxy resolves the toolchain
+    from the cwd lean-toolchain lookup), never the PATH default."""
     lean = shutil.which("lean")
     lake = shutil.which("lake")
 
@@ -585,12 +643,216 @@ def probe_toolchain():
             p = subprocess.run([binary, "--version"],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT,
-                               timeout=GATE_PROBE_TIMEOUT)
+                               timeout=GATE_PROBE_TIMEOUT, cwd=cwd, env=env)
         except (OSError, subprocess.TimeoutExpired):
             return False
         return p.returncode == 0
 
     return lean, lake, version_ok(lean), version_ok(lake)
+
+
+def find_lean_pin(target):
+    """(pin, pin_dir, error): the nearest lean-toolchain file walking up
+    from the target (a file target starts at its own directory, a
+    directory target at the directory itself), read as its first line
+    stripped.  error is None on success; an existing but unreadable or
+    empty pin file is an error, never a guess - a pin the sweep cannot
+    read must not silently fall back to the PATH default (that fallback
+    is exactly the toolchain drift the pin gate exists to prevent: an
+    axiom set can drift across toolchain versions)."""
+    start = os.path.abspath(target)
+    directory = start if os.path.isdir(start) else os.path.dirname(start)
+    walker = directory
+    while True:
+        pin_path = os.path.join(walker, PIN_FILE)
+        if os.path.isfile(pin_path):
+            try:
+                with open(pin_path, "r", encoding="utf-8") as fh:
+                    value = fh.readline().strip()
+            except OSError as exc:
+                return None, None, "cannot read %s: %s" % (pin_path, exc)
+            if not value:
+                return None, walker, "empty pin file %s" % pin_path
+            return value, walker, None
+        parent = os.path.dirname(walker)
+        if parent == walker:
+            return None, None, None
+        walker = parent
+
+
+def parse_toolchain_list(raw):
+    """Installed toolchain names from `elan toolchain list` stdout: one
+    name per line, any trailing parenthesized annotation stripped
+    ("(default)", "(overridden by ...)"), empty lines dropped."""
+    names = []
+    for ln in raw.splitlines():
+        ln = ln.strip()
+        if not ln:
+            continue
+        names.append(re.sub(r"\s+\([^)]*\)$", "", ln).strip())
+    return names
+
+
+def read_installed_toolchains(timeout=ELAN_LIST_TIMEOUT):
+    """(names, error) from `elan toolchain list`; names None on any
+    failure (elan absent from PATH, nonzero exit, timeout) with the
+    failure named for the doctor.  An unavailable installed list is an
+    honest refusal, never an empty list (a refusal to verify must not
+    fake a match)."""
+    elan = shutil.which("elan")
+    if not elan:
+        return None, "elan not found on PATH"
+    try:
+        p = subprocess.run([elan, "toolchain", "list"],
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, timeout=timeout)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return None, "elan toolchain list failed: %s" % exc
+    if p.returncode != 0:
+        return None, ("elan toolchain list exited %s: %s"
+                      % (p.returncode,
+                         p.stdout.decode("utf-8", "replace")
+                         .strip()[:RAW_CAP]))
+    return parse_toolchain_list(p.stdout.decode("utf-8", "replace")), None
+
+
+def pin_version_of(pin):
+    """The version component of a toolchain descriptor for evidence
+    display: the text after the last colon with a leading v stripped
+    (leanprover/lean4:v4.33.1 -> 4.33.1; v4.35.0-rc3 -> 4.35.0-rc3)."""
+    tail = pin.rsplit(":", 1)[-1]
+    return tail[1:] if tail.startswith("v") else tail
+
+
+LEAN_VERSION_RE = re.compile(r"\(version ([^,]+),")
+LAKE_VERSION_RE = re.compile(r"Lean version ([^)]+)\)")
+
+
+def lean_version_of(output):
+    """The version token of a `lean --version` line (Lean (version
+    4.33.1, ...)); None when the output does not parse (honest null)."""
+    m = LEAN_VERSION_RE.search(output)
+    return m.group(1).strip() if m else None
+
+
+def lake_version_of(output):
+    """The Lean version token of a `lake --version` line (Lake version
+    ... (Lean version 4.34.1)); None when the output does not parse."""
+    m = LAKE_VERSION_RE.search(output)
+    return m.group(1).strip() if m else None
+
+
+def build_probe_env(base, pin):
+    """The probe child environment for an honored pin: LEAN_TOOLCHAIN=<pin>
+    injected over a copy of the caller's environment (the elan-side
+    injection channel; elan builds that ignore the variable still resolve
+    the pin through the cwd lean-toolchain lookup, which the gate aligns
+    by probing under the pin directory).  With no pin the caller's
+    environment passes through unchanged (no key introduced)."""
+    if not pin:
+        return base
+    env = dict(base)
+    env["LEAN_TOOLCHAIN"] = pin
+    return env
+
+
+def probe_version_output(binary, cwd=None, env=None,
+                         timeout=GATE_PROBE_TIMEOUT):
+    """(output_text, error) of `<binary> --version` under cwd/env; error
+    None on a zero exit, else the capped merged output (the elan
+    not-installed error rides here for the doctor)."""
+    if not binary:
+        return "", "binary absent"
+    try:
+        p = subprocess.run([binary, "--version"], stdout=subprocess.PIPE,
+                           stderr=subprocess.STDOUT, timeout=timeout,
+                           cwd=cwd, env=env)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return "", str(exc)
+    text = p.stdout.decode("utf-8", "replace")
+    if p.returncode != 0:
+        return text, "exit %s: %s" % (p.returncode, text.strip()[:RAW_CAP])
+    return text, None
+
+
+def build_doctor(root, pin, pin_dir, pin_err, installed, elan_err, honored,
+                 lean, lake, lean_version, lake_version):
+    """Pure assembly of the toolchain resolution-chain doctor payload
+    (schema rocqwash-toolchain-doctor/1): every payload field is
+    {value, basis} (the v2 note-5 standard), so a consumer quoting the
+    match verdict quotes its deciding rule with it.  verdict faces:
+    matched (pin installed and honored), pin-missing (the installed list
+    is readable and the pin is not in it), pin-unverifiable (the pin
+    cannot be read, or the installed list is unavailable), no-pin (no
+    lean-toolchain file above the root).  install_command carries the
+    exact one-line fix whenever a known pin is not honored (the missing
+    and the unverifiable faces both fix the same way)."""
+    if pin_err:
+        verdict = "pin-unverifiable"
+    elif pin is None:
+        verdict = "no-pin"
+    elif elan_err:
+        verdict = "pin-unverifiable"
+    elif honored:
+        verdict = "matched"
+    else:
+        verdict = "pin-missing"
+    match = None if verdict == "no-pin" else bool(honored)
+    install_command = ("elan toolchain install %s" % pin
+                       if pin and not honored else None)
+    if pin_err:
+        pin_basis = pin_err
+    else:
+        pin_basis = ("first line of the nearest lean-toolchain file"
+                     " walking up from the root; null = none found")
+    if elan_err:
+        installed_basis = "installed list unavailable: %s" % elan_err
+    else:
+        installed_basis = ("elan toolchain list, one name per line with"
+                           " any trailing (default)/(overridden ...)"
+                           " annotation stripped; null = unavailable")
+    return {
+        "schema": DOCTOR_SCHEMA,
+        "root": {"value": root,
+                 "basis": "the root the pin resolution walked up from"},
+        "lean": {"value": lean,
+                 "basis": "lean resolved from PATH (shutil.which);"
+                          " null = absent"},
+        "lake": {"value": lake,
+                 "basis": "lake resolved from PATH (shutil.which);"
+                          " null = absent"},
+        "lean_version": {"value": lean_version,
+                         "basis": "version token of the lean --version"
+                                  " probe under the resolution in force"
+                                  " (the cwd pin lookup with"
+                                  " LEAN_TOOLCHAIN injected when the pin"
+                                  " is honored, the PATH default"
+                                  " otherwise); null = the probe failed"
+                                  " or did not parse"},
+        "lake_version": {"value": lake_version,
+                         "basis": "Lean version token of the lake"
+                                  " --version probe under the same"
+                                  " resolution; null = the probe failed"
+                                  " or did not parse"},
+        "target_pin": {"value": pin, "basis": pin_basis},
+        "pin_dir": {"value": pin_dir,
+                    "basis": "directory holding that lean-toolchain file"
+                             " (the elan cwd lookup root); null = none"
+                             " found"},
+        "installed": {"value": installed, "basis": installed_basis},
+        "match": {"value": match,
+                  "basis": "true = the pin is installed and the probes"
+                           " run pinned (LEAN_TOOLCHAIN injected over the"
+                           " cwd pin lookup); false = the pin cannot be"
+                           " honored; null = no pin file above the root"},
+        "install_command": {"value": install_command,
+                            "basis": "the exact one-line fix whenever a"
+                                     " known pin is not honored; null"
+                                     " otherwise"},
+        "verdict": {"value": verdict,
+                    "basis": "matched / pin-missing / pin-unverifiable /"
+                             " no-pin"},
+    }
 
 
 def collect_targets(root):
@@ -615,13 +877,16 @@ def error_tail(output, lines=ERROR_TAIL_LINES):
     return tail[-lines:]
 
 
-def run_probe(argv, cwd, timeout):
+def run_probe(argv, cwd, timeout, env=None):
     """Subprocess run with merged streams and a hard timeout; returns
     (rc, output, error) where error is None on a clean launch, "timeout"
-    on a timeout, or the OS launch failure string."""
+    on a timeout, or the OS launch failure string.  env pins the child
+    environment when an honored pin injects LEAN_TOOLCHAIN (None passes
+    the parent environment through, today's behavior)."""
     try:
         p = subprocess.run(argv, cwd=cwd, stdout=subprocess.PIPE,
-                           stderr=subprocess.STDOUT, timeout=timeout)
+                           stderr=subprocess.STDOUT, timeout=timeout,
+                           env=env)
         return p.returncode, p.stdout.decode("utf-8", "replace"), None
     except subprocess.TimeoutExpired as exc:
         partial = b""
@@ -668,15 +933,24 @@ def classify_decl_rows(rel, decls, parsed, allow, mode):
     return rows
 
 
-def sweep(root, allow, timeout):
+def sweep(root, allow, timeout, gate=None, pin=None):
     """The run face; returns (exit_code, report).  Every target is probed
     by the copy-append form (build_copy_checker): the file text plus the
     appended probe lines run in the target's own lake environment or
     against a direct lean binary, same cwd rules as ever.  Write faces:
     the private temp workdir (removed on exit) and the caller-named --json
     file handled by main.  The toolchain gate has already passed when this
-    runs."""
-    lean, lake, usable_lean, usable_lake = probe_toolchain()
+    runs: gate carries the precomputed (lean, lake, usable_lean,
+    usable_lake) resolution - for an honored pin, probed under the pin
+    directory with the injected environment - and None re-probes the PATH
+    default (today's behavior).  pin (an honored pin value or None) is
+    injected into every probe child environment (LEAN_TOOLCHAIN) and
+    recorded in the report's toolchain block pin/target_pin/match."""
+    if gate is None:
+        lean, lake, usable_lean, usable_lake = probe_toolchain()
+    else:
+        lean, lake, usable_lean, usable_lake = gate
+    probe_env = build_probe_env(os.environ, pin)
     targets = collect_targets(root)
     work = tempfile.mkdtemp(prefix="rocqwash_axiom_sweep_")
     file_rows = []
@@ -717,7 +991,8 @@ def sweep(root, allow, timeout):
                     argv = [lake, "env", "lean", checker_path]
                     cwd = project_root or os.path.dirname(abs_path)
                     mode = "lake-env"
-                rc, output, err = run_probe(argv, cwd, timeout)
+                rc, output, err = run_probe(argv, cwd, timeout,
+                                            env=probe_env)
                 frow["probe"] = mode
                 frow["rc"] = rc
                 if err is not None:
@@ -735,7 +1010,9 @@ def sweep(root, allow, timeout):
     report = build_report(root, file_rows, decl_rows, errors, allow,
                           {"lean": lean, "lake": lake,
                            "usable_lean": usable_lean,
-                           "usable_lake": usable_lake})
+                           "usable_lake": usable_lake,
+                           "pin": pin, "target_pin": pin,
+                           "match": True if pin else None})
     return exit_code_for(report), report
 
 
@@ -846,7 +1123,15 @@ def build_report(root, file_rows, decl_rows, errors, allow, toolchain_face,
                       "basis": "lean/lake PATH resolutions and their"
                                " --version usability probes; the probe"
                                " mode per file is lake-env or"
-                               " lean-direct"},
+                               " lean-direct; pin/target_pin carry the"
+                               " target's lean-toolchain pin resolution"
+                               " and match the honoring decision"
+                               " (true = the probes ran pinned, the"
+                               " LEAN_TOOLCHAIN injection over the cwd"
+                               " lean-toolchain lookup; false = the pin"
+                               " could not be honored and the sweep"
+                               " skipped; null = no pin file above the"
+                               " target, the PATH default ran)"},
         "verdict": {"value": verdict,
                     "basis": "RED when any SORRY-ALARM,"
                              " CUSTOM-AXIOM-ALARM or UNPARSED row exists"
@@ -1769,6 +2054,231 @@ def selftest():
             rc == 112 and out.strip() == ""
             and "toolchain" in err,
             "rc=%s stdout=%r stderr=%r" % (rc, out[:120], err[:200]))
+
+        # toolchain pin gate faces (offline: pure resolution, parse,
+        # decision and shape vectors over temporary fixtures plus the
+        # stripped-environment spawn faces; zero network, zero toolchain
+        # launch, zero real-repo touch)
+        pin_root = os.path.join(tmp, "pinrepo")
+        pin_sub = os.path.join(pin_root, "Sub", "Deep")
+        os.makedirs(pin_sub)
+        with open(os.path.join(pin_root, "lean-toolchain"), "w",
+                  encoding="utf-8", newline="\n") as fh:
+            fh.write("leanprover/lean4:v4.33.1\n")
+        got_pin, got_dir, got_err = find_lean_pin(
+            os.path.join(pin_sub, "M.lean"))
+        vec("pin-discovery-upward-file-root",
+            got_pin == "leanprover/lean4:v4.33.1" and got_err is None
+            and os.path.samefile(got_dir, pin_root),
+            "got %r %r %r" % (got_pin, got_dir, got_err))
+        got_pin_d, got_dir_d, got_err_d = find_lean_pin(pin_sub)
+        vec("pin-discovery-directory-root",
+            got_pin_d == "leanprover/lean4:v4.33.1" and got_err_d is None
+            and os.path.samefile(got_dir_d, pin_root),
+            "got %r %r %r" % (got_pin_d, got_dir_d, got_err_d))
+        pin_nested = os.path.join(pin_sub, "lean-toolchain")
+        with open(pin_nested, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("leanprover/lean4:v4.34.1\n")
+        got_pin_n, got_dir_n, got_err_n = find_lean_pin(
+            os.path.join(pin_sub, "M.lean"))
+        vec("pin-discovery-nearest-wins",
+            got_pin_n == "leanprover/lean4:v4.34.1" and got_err_n is None
+            and os.path.samefile(got_dir_n, pin_sub),
+            "got %r %r %r" % (got_pin_n, got_dir_n, got_err_n))
+        os.remove(pin_nested)
+        no_pin_root = os.path.join(tmp, "nopin")
+        os.makedirs(no_pin_root)
+        got_pin_0, got_dir_0, got_err_0 = find_lean_pin(no_pin_root)
+        vec("pin-discovery-none",
+            got_pin_0 is None and got_dir_0 is None and got_err_0 is None,
+            "got %r %r %r" % (got_pin_0, got_dir_0, got_err_0))
+        empty_pin = os.path.join(no_pin_root, "lean-toolchain")
+        with open(empty_pin, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("\n")
+        _got_pin_e, _got_dir_e, got_err_e = find_lean_pin(no_pin_root)
+        vec("pin-discovery-empty-file-refused",
+            got_err_e is not None and "empty pin file" in got_err_e,
+            "got %r" % (got_err_e,))
+        os.remove(empty_pin)
+        names = parse_toolchain_list(
+            "leanprover/lean4:v4.33.1 (default)\n"
+            "leanprover/lean4:v4.34.1\n"
+            "\n"
+            "v4.35.0-rc3 (overridden by 'leanprover/lean4:v4.33.1')\n")
+        vec("elan-list-parse-annotations-stripped",
+            names == ["leanprover/lean4:v4.33.1",
+                      "leanprover/lean4:v4.34.1", "v4.35.0-rc3"],
+            "got %s" % (names,))
+        vec("pin-decision-membership",
+            "leanprover/lean4:v4.33.1" in names
+            and "leanprover/lean4:v9.9.9" not in names
+            and parse_toolchain_list("") == [],
+            "got %s" % (names,))
+        vec("pin-version-extraction",
+            pin_version_of("leanprover/lean4:v4.33.1") == "4.33.1"
+            and pin_version_of("v4.35.0-rc3") == "4.35.0-rc3",
+            "got %r %r" % (pin_version_of("leanprover/lean4:v4.33.1"),
+                           pin_version_of("v4.35.0-rc3")))
+        vec("lean-version-token-parse",
+            lean_version_of("Lean (version 4.33.1,"
+                            " x86_64-w64-windows-gnu, commit abc,"
+                            " Release)") == "4.33.1"
+            and lean_version_of("not a version line") is None,
+            "got %r" % (lean_version_of("not a version line"),))
+        vec("lake-version-token-parse",
+            lake_version_of("Lake version 5.0.0-src+5045d00 (Lean version"
+                            " 4.34.1)") == "4.34.1"
+            and lake_version_of("Lake version 5.0.0") is None,
+            "got %r" % (lake_version_of("Lake version 5.0.0"),))
+        base_env = {"PATH": "x", "LEAN_TOOLCHAIN": "stale"}
+        injected = build_probe_env(base_env, "leanprover/lean4:v4.34.1")
+        vec("env-injection-pin",
+            injected["LEAN_TOOLCHAIN"] == "leanprover/lean4:v4.34.1"
+            and injected["PATH"] == "x" and injected is not base_env,
+            "got %s" % (injected,))
+        passthrough = build_probe_env(base_env, None)
+        vec("env-passthrough-no-pin",
+            passthrough is base_env
+            and passthrough["LEAN_TOOLCHAIN"] == "stale",
+            "got %s" % (passthrough,))
+        rep_pin = build_report("TMP", canned_files, clean_decls, [], [],
+                               {"lean": "lean", "lake": "lake",
+                                "usable_lean": True, "usable_lake": True,
+                                "pin": "leanprover/lean4:v4.33.1",
+                                "target_pin": "leanprover/lean4:v4.33.1",
+                                "match": True})
+        tf = rep_pin["toolchain"]["value"]
+        vec("toolchain-block-pin-fields",
+            tf["pin"] == "leanprover/lean4:v4.33.1"
+            and tf["target_pin"] == "leanprover/lean4:v4.33.1"
+            and tf["match"] is True,
+            "got %s" % (tf,))
+        rep_nopin = build_report("TMP", canned_files, clean_decls, [], [],
+                                 {"lean": "lean", "lake": "lake",
+                                  "usable_lean": True, "usable_lake": True,
+                                  "pin": None, "target_pin": None,
+                                  "match": None})
+        tf0 = rep_nopin["toolchain"]["value"]
+        vec("toolchain-block-no-pin-fields",
+            tf0["pin"] is None and tf0["target_pin"] is None
+            and tf0["match"] is None,
+            "got %s" % (tf0,))
+        doc = build_doctor("R", "leanprover/lean4:v9.9.9", "D", None,
+                           ["leanprover/lean4:v4.33.1"], None, False,
+                           "lean", "lake", "4.33.1", "4.33.1")
+        doc_bare = [k for k in doc
+                    if k != "schema"
+                    and not (isinstance(doc[k], dict)
+                             and "value" in doc[k] and "basis" in doc[k])]
+        vec("doctor-shape-value-basis",
+            doc_bare == [] and doc["schema"] == DOCTOR_SCHEMA
+            and doc["verdict"]["value"] == "pin-missing"
+            and doc["match"]["value"] is False
+            and doc["install_command"]["value"]
+                == "elan toolchain install leanprover/lean4:v9.9.9",
+            "bare keys: %s / %s" % (doc_bare, doc["verdict"]))
+        doc_ok = build_doctor("R", "leanprover/lean4:v4.33.1", "D", None,
+                              ["leanprover/lean4:v4.33.1"], None, True,
+                              "lean", "lake", "4.33.1", "4.33.1")
+        vec("doctor-matched-face",
+            doc_ok["verdict"]["value"] == "matched"
+            and doc_ok["match"]["value"] is True
+            and doc_ok["install_command"]["value"] is None
+            and doc_ok["installed"]["value"]
+                == ["leanprover/lean4:v4.33.1"],
+            "got %s" % (doc_ok,))
+        doc_np = build_doctor("R", None, None, None, None, None, False,
+                              None, None, None, None)
+        vec("doctor-no-pin-face",
+            doc_np["verdict"]["value"] == "no-pin"
+            and doc_np["match"]["value"] is None
+            and doc_np["install_command"]["value"] is None
+            and doc_np["target_pin"]["value"] is None,
+            "got %s" % (doc_np,))
+        doc_uv = build_doctor("R", "leanprover/lean4:v4.33.1", "D", None,
+                              None, "elan not found on PATH", False,
+                              "lean", "lake", None, None)
+        vec("doctor-unverifiable-face",
+            doc_uv["verdict"]["value"] == "pin-unverifiable"
+            and doc_uv["installed"]["value"] is None
+            and "elan not found" in doc_uv["installed"]["basis"]
+            and doc_uv["match"]["value"] is False
+            and doc_uv["install_command"]["value"]
+                == "elan toolchain install leanprover/lean4:v4.33.1",
+            "got %s" % (doc_uv,))
+        doc_ep = build_doctor("R", None, "D", "empty pin file x", None,
+                              None, False, "lean", "lake", None, None)
+        vec("doctor-empty-pin-refused",
+            doc_ep["verdict"]["value"] == "pin-unverifiable"
+            and "empty pin file" in doc_ep["target_pin"]["basis"]
+            and doc_ep["install_command"]["value"] is None,
+            "got %s" % (doc_ep,))
+
+        # pin-gate spawn faces on the stripped environment (host
+        # independent: the stripped child PATH forces the pin
+        # unverifiable, so the gate refuses through the pin face with the
+        # doctor block on stdout; a host where stripping cannot force
+        # the refusal reports red instead of passing dishonestly)
+        pin_fixture = os.path.join(tmp, "pinfixture")
+        os.makedirs(pin_fixture)
+        with open(os.path.join(pin_fixture, "lean-toolchain"), "w",
+                  encoding="utf-8", newline="\n") as fh:
+            fh.write("leanprover/lean4:v9.9.9\n")
+        with open(os.path.join(pin_fixture, "t.lean"), "wb") as fh:
+            fh.write(b"theorem t_one : True := trivial\n")
+
+        def parse_first_json_line(text):
+            for ln in text.splitlines():
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    return json.loads(ln)
+                except ValueError:
+                    return None
+            return None
+
+        rc, out, err = spawn(["--root", pin_fixture], env=gate_env,
+                             cwd=empty_dir)
+        doc_line = parse_first_json_line(out)
+        vec("pin-missing-rc112-doctor-stdout",
+            rc == 112 and doc_line is not None
+            and doc_line.get("schema") == DOCTOR_SCHEMA
+            and doc_line.get("target_pin", {}).get("value")
+                == "leanprover/lean4:v9.9.9"
+            and doc_line.get("match", {}).get("value") is False
+            and doc_line.get("install_command", {}).get("value")
+                == "elan toolchain install leanprover/lean4:v9.9.9"
+            and "elan toolchain install leanprover/lean4:v9.9.9" in err
+            and "zero rows" in err,
+            "rc=%s out=%r err=%r" % (rc, out[:200], err[:200]))
+        rc, out, err = spawn(["--toolchain-doctor", "--root", pin_fixture],
+                             env=gate_env, cwd=empty_dir)
+        doc_line2 = parse_first_json_line(out)
+        vec("doctor-flag-exit-zero-stripped-env",
+            rc == 0 and doc_line2 is not None
+            and doc_line2.get("schema") == DOCTOR_SCHEMA
+            and doc_line2.get("verdict", {}).get("value")
+                == "pin-unverifiable"
+            and doc_line2.get("install_command", {}).get("value")
+                == "elan toolchain install leanprover/lean4:v9.9.9",
+            "rc=%s out=%r err=%r" % (rc, out[:200], err[:200]))
+        rc, _out, _err = spawn(["--toolchain-doctor"], env=gate_env,
+                               cwd=empty_dir)
+        vec("exit-doctor-no-root-rc2", rc == 2,
+            "--toolchain-doctor without --root exits %s (usage error)"
+            % rc)
+        rc, _out, _err = spawn(["--toolchain-doctor", "--selftest"],
+                               env=gate_env, cwd=empty_dir)
+        vec("exit-doctor-with-selftest-rc2", rc == 2,
+            "--toolchain-doctor with --selftest exits %s (usage error)"
+            % rc)
+        parsed_flags = build_parser().parse_args(
+            ["--root", "x", "--toolchain-doctor"])
+        vec("doctor-flag-face",
+            parsed_flags.toolchain_doctor is True
+            and build_parser().parse_args([]).toolchain_doctor is False,
+            "--toolchain-doctor defaults to False and parses with --root")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("[SELFTEST] %s %s: %d vector(s), %d fail"
@@ -1807,6 +2317,16 @@ def build_parser():
                          " data, no Lean needed (the beyond-platform"
                          " closure-evolution audit face)"
                          % SNAPSHOT_SCHEMA)
+    ap.add_argument("--toolchain-doctor", action="store_true",
+                    dest="toolchain_doctor",
+                    help="print the standalone toolchain resolution-chain"
+                         " report (schema %s: lean/lake resolved paths"
+                         " and versions, the target lean-toolchain pin,"
+                         " the match verdict, the elan installed-list"
+                         " excerpt, the exact install command when the"
+                         " pin is missing; every field {value, basis})"
+                         " and exit 0 always - the diagnostic face, it"
+                         " judges nothing" % DOCTOR_SCHEMA)
     ap.add_argument("--allow-axiom", action="append", default=[],
                     dest="allow_axioms",
                     help="extra axiom name admitted into BENIGN-STANDARD"
@@ -1819,20 +2339,92 @@ def build_parser():
     return ap
 
 
+def run_toolchain_doctor(root):
+    """The --toolchain-doctor diagnostic face: resolve the pin chain
+    (target pin, elan installed list, match verdict, effective versions
+    under the resolution in force) and print one doctor JSON line;
+    exit 0 always (it judges nothing and touches nothing)."""
+    pin, pin_dir, pin_err = find_lean_pin(root)
+    installed, elan_err = None, None
+    honored = False
+    if pin and not pin_err:
+        installed, elan_err = read_installed_toolchains()
+        honored = installed is not None and pin in installed
+    lean = shutil.which("lean")
+    lake = shutil.which("lake")
+    if honored:
+        probe_cwd, probe_env = pin_dir, build_probe_env(os.environ, pin)
+    else:
+        probe_cwd, probe_env = None, os.environ
+    lv, _lv_err = probe_version_output(lean, cwd=probe_cwd, env=probe_env)
+    kv, _kv_err = probe_version_output(lake, cwd=probe_cwd, env=probe_env)
+    doctor = build_doctor(root, pin, pin_dir, pin_err, installed, elan_err,
+                          honored, lean, lake, lean_version_of(lv),
+                          lake_version_of(kv))
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    print(json.dumps(doctor, ensure_ascii=False))
+    sys.stderr.write("TOOLCHAIN-DOCTOR: verdict=%s pin=%s\n"
+                     % (doctor["verdict"]["value"],
+                        doctor["target_pin"]["value"]))
+    return EXIT_OK
+
+
+def pin_gate_skip(root, pin, pin_dir, pin_err, installed, elan_err):
+    """The pin-gate honest skip face: the doctor block on stdout (the
+    upgrade the pin face carries: the exact one-line fix and the
+    judged-zero-rows disclosure), the SKIP line on stderr, rc 112.  The
+    effective versions are probed on the PATH default resolution on
+    purpose: that is the version the sweep would have drifted to without
+    this gate, and the doctor records it as evidence."""
+    lean = shutil.which("lean")
+    lake = shutil.which("lake")
+    lv, _e1 = probe_version_output(lean)
+    kv, _e2 = probe_version_output(lake)
+    doctor = build_doctor(root, pin, pin_dir, pin_err, installed, elan_err,
+                          False, lean, lake, lean_version_of(lv),
+                          lake_version_of(kv))
+    if pin_err:
+        reason = pin_err
+    elif elan_err:
+        reason = ("the elan installed list is unavailable (%s); the pin"
+                  " cannot be verified" % elan_err)
+    else:
+        reason = "toolchain %s is not in the elan installed list" % pin
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    print(json.dumps(doctor, ensure_ascii=False))
+    fix = doctor["install_command"]["value"]
+    fix_line = ("; fix: %s" % fix) if fix else ""
+    sys.stderr.write(
+        "SKIP: the target lean-toolchain pin cannot be honored (%s)%s;"
+        " the axiom sweep honestly skips and judges nothing, zero rows"
+        " judged (rc %d)\n" % (reason, fix_line, EXIT_NO_TOOLCHAIN))
+    return EXIT_NO_TOOLCHAIN
+
+
 def main(argv=None):
     """CLI entry; returns the process exit code (0/1/2/112)."""
     args = build_parser().parse_args(argv)
     if args.selftest:
-        if args.root or args.json or args.snapshot or args.baseline:
+        if (args.root or args.json or args.snapshot or args.baseline
+                or args.toolchain_doctor):
             build_parser().error("--selftest runs standalone; combine it"
                                  " with no scan flags")
         return selftest()
     if not args.root:
-        build_parser().error("--root is required unless --selftest is given")
+        build_parser().error("--root is required unless --selftest is"
+                             " given")
     if not os.path.exists(args.root):
         sys.stderr.write("%s: --root does not exist: %s\n"
                          % (TOOL, args.root))
         return EXIT_USAGE
+    if args.toolchain_doctor:
+        if (args.json or args.snapshot or args.baseline or args.allow_axioms
+                or args.timeout != PROBE_TIMEOUT_DEFAULT):
+            build_parser().error("--toolchain-doctor runs standalone;"
+                                 " combine it with no scan flags")
+        return run_toolchain_doctor(args.root)
     if args.timeout < 1:
         build_parser().error("--timeout must be >= 1")
     # --baseline is validated up front (a missing, unparseable or
@@ -1843,7 +2435,36 @@ def main(argv=None):
         if baseline_err is not None:
             sys.stderr.write("%s: %s\n" % (TOOL, baseline_err))
             return EXIT_USAGE
-    lean, lake, usable_lean, usable_lake = probe_toolchain()
+    # Toolchain pin gate: resolve the target's lean-toolchain pin before
+    # any probing; a pin that cannot be honored refuses the run (rc 112
+    # with the doctor block on stdout) instead of drifting to the PATH
+    # default (an axiom set can drift across toolchain versions).
+    pin, pin_dir, pin_err = find_lean_pin(args.root)
+    installed, elan_err = None, None
+    honored = False
+    if pin and not pin_err:
+        installed, elan_err = read_installed_toolchains()
+        honored = installed is not None and pin in installed
+    if pin_err or (pin and not honored):
+        return pin_gate_skip(args.root, pin, pin_dir, pin_err, installed,
+                             elan_err)
+    gate = None
+    probe_env = os.environ
+    if pin:
+        probe_env = build_probe_env(os.environ, pin)
+        gate = probe_toolchain(cwd=pin_dir, env=probe_env)
+        if not (gate[2] or gate[3]):
+            sys.stderr.write(
+                "SKIP: the pinned Lean toolchain %s is not usable (need a"
+                " working `lean` or `lake` under the pinned resolution;"
+                " found lean=%r lake=%r, both unusable by the version"
+                " probe); the axiom sweep honestly skips and judges"
+                " nothing (rc %d)\n"
+                % (pin, gate[0], gate[1], EXIT_NO_TOOLCHAIN))
+            return EXIT_NO_TOOLCHAIN
+    else:
+        gate = probe_toolchain()
+    lean, lake, usable_lean, usable_lake = gate
     if not (usable_lean or usable_lake):
         sys.stderr.write(
             "SKIP: no usable Lean toolchain (need a working `lean` or"
@@ -1852,7 +2473,8 @@ def main(argv=None):
             " probe); the axiom sweep honestly skips and judges nothing"
             " (rc %d)\n" % (lean, lake, EXIT_NO_TOOLCHAIN))
         return EXIT_NO_TOOLCHAIN
-    code, report = sweep(args.root, args.allow_axioms, args.timeout)
+    code, report = sweep(args.root, args.allow_axioms, args.timeout,
+                         gate=gate, pin=pin)
     # Closure faces: build the current snapshot once when either flag is
     # given; with a baseline, attach the closure_diff + diff_alarm fields
     # (the exit code stays the sweep's own green/red face - diff_alarm

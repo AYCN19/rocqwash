@@ -231,14 +231,17 @@ EXPECTED_TREE_AUDIT_ARGS = ["root", "json_out", "selftest"]
 
 # Frozen axiom_sweep vector: the full argparse flag face of
 # tools/lean_axiom_sweep.py (root, json, allow_axiom, selftest, timeout,
-# snapshot, baseline) in the registration contract's arg_map order; the
-# axiom_sweep schema properties must match this list one-to-one, exactly
-# the EXPECTED_TREE_AUDIT_ARGS discipline (the contract order differs from
-# the argparse declaration order by the last flags; the closure-snapshot
-# increment appended snapshot/baseline, the beyond-platform
-# closure-evolution audit face).
+# snapshot, baseline, toolchain_doctor) in the registration contract's
+# arg_map order; the axiom_sweep schema properties must match this list
+# one-to-one, exactly the EXPECTED_TREE_AUDIT_ARGS discipline (the
+# contract order differs from the argparse declaration order by the last
+# flags; the closure-snapshot increment appended snapshot/baseline, the
+# beyond-platform closure-evolution audit face, and the toolchain-pin
+# increment appended toolchain_doctor, the standalone diagnostic face
+# over the pin resolution chain, exit 0 always).
 EXPECTED_AXIOM_SWEEP_ARGS = ["root", "json_out", "allow_axiom", "selftest",
-                             "timeout", "snapshot", "baseline"]
+                             "timeout", "snapshot", "baseline",
+                             "toolchain_doctor"]
 
 # Frozen claim_watch vector: the full argparse flag face of
 # tools/claim_watch.py (config, round_label, ledger, actor,
@@ -567,6 +570,21 @@ def main():
             if token not in as_desc:
                 fails.append("probe3d axiom_sweep spec description should "
                              "name the closure-evolution token %s" % token)
+        # the toolchain-pin increment: the toolchain_doctor property is
+        # the standalone diagnostic face over the pin resolution chain
+        as_doc = ((as_spec.get("inputSchema") or {})
+                  .get("properties", {}).get("toolchain_doctor") or {})
+        for token in ("rocqwash-toolchain-doctor/1", "exit 0", "--root",
+                      "elan toolchain install", "{value, basis}"):
+            if token not in as_doc.get("description", ""):
+                fails.append("probe3d axiom_sweep toolchain_doctor "
+                             "description should name the doctor-face "
+                             "token %s" % token)
+        for token in ("lean-toolchain pin", "pin/target_pin/match",
+                      "elan toolchain install", "112"):
+            if token not in as_desc:
+                fails.append("probe3d axiom_sweep spec description should "
+                             "name the pin-gate token %s" % token)
 
         # Probe 3e: claim_watch schema-face vectors (schema shape mirrors
         # the tool's real argparse flag face one-to-one; the spec

@@ -1608,10 +1608,13 @@ TOOL_SPECS = [
     # ---- the axiom_sweep registration increment: one read/plan face over
     # the landed per-theorem Lean axiom-closure classifier
     # (tools/lean_axiom_sweep.py --root/--json/--allow-axiom/--timeout/
-    # --selftest/--snapshot/--baseline, its real argparse flag face; the
-    # closure-snapshot increment adds the snapshot/baseline mappings: the
-    # beyond-platform closure-evolution audit, platform tools give
-    # today's closure, nobody gives closure evolution).  Additive after
+    # --selftest/--snapshot/--baseline/--toolchain-doctor, its real
+    # argparse flag face; the closure-snapshot increment adds the
+    # snapshot/baseline mappings: the beyond-platform closure-evolution
+    # audit, platform tools give today's closure, nobody gives closure
+    # evolution; the toolchain-pin increment appends the toolchain_doctor
+    # mapping, the standalone diagnostic face over the pin resolution
+    # chain, exit 0 always).  Additive after
     # the block above: the existing specs and schemas untouched.
     {
         "name": "axiom_sweep",
@@ -1627,6 +1630,7 @@ TOOL_SPECS = [
             ("timeout", "--timeout"),
             ("snapshot", "--snapshot"),
             ("baseline", "--baseline"),
+            ("toolchain_doctor", "--toolchain-doctor"),
         ),
         "schema": _object_schema(
             {
@@ -1637,6 +1641,7 @@ TOOL_SPECS = [
                 "timeout": {"type": "integer", "description": "per-probe subprocess timeout seconds (default 600); CLI flag --timeout"},
                 "snapshot": {"type": "string", "description": "additionally write a machine closure snapshot of the sweep to this path (schema rocqwash-axiom-closure-snapshot/1: per classified declaration the full probe name, the sorted axiom set and the class; deterministic - sorted, double-run byte-identical - so a later run can diff against it); the beyond-platform closure-evolution audit face: platform tools give today's closure, nobody gives closure evolution; CLI flag --snapshot"},
                 "baseline": {"type": "string", "description": "diff the current closure against this previously written snapshot file (schema rocqwash-axiom-closure-snapshot/1) and emit the closure_diff block: per-declaration UNCHANGED / AXIOM-SET-CHANGED (from -> to listed) / NEW-THEOREM / LOST-THEOREM, a {value, basis} summary per verdict kind, and a top-level diff_alarm true when any NEW-DEPENDENCY (a previously-clean declaration gaining an axiom) or any AXIOM-SET-CHANGED exists; the diff reads only the two snapshots' data, no Lean toolchain involvement - the closure evolution audit face of this beyond-platform increment; CLI flag --baseline"},
+                "toolchain_doctor": {"type": "boolean", "description": "print the standalone toolchain resolution-chain report (schema rocqwash-toolchain-doctor/1: lean/lake resolved paths and version tokens, the target lean-toolchain pin and its directory, the match verdict, the elan installed-list excerpt, and the exact one-line fix (elan toolchain install <pin>) when the pin is missing; every field {value, basis}) and exit 0 always - the diagnostic face, it judges nothing and touches nothing; requires --root, takes no other flag; bare CLI flag --toolchain-doctor"},
             }
         ),
         "description": (
@@ -1679,7 +1684,19 @@ TOOL_SPECS = [
             "verdict kind, top-level diff_alarm on any NEW-DEPENDENCY or "
             "AXIOM-SET-CHANGED); the diff reads only the two snapshots' "
             "data, so the snapshot and diff faces are "
-            "toolchain-independent."
+            "toolchain-independent. Toolchain pin gate: when the target "
+            "carries a lean-toolchain pin (nearest such file walking up "
+            "from the root), the pin must be in the elan installed list "
+            "(`elan toolchain list`) for the sweep to run at all; an "
+            "installed pin is honored (LEAN_TOOLCHAIN=<pin> injected into "
+            "every probe child environment over the cwd lean-toolchain "
+            "lookup, so the pinned binaries, never the PATH default, "
+            "answer) and the report's toolchain block carries the match "
+            "conclusion as pin/target_pin/match; a missing or "
+            "unverifiable pin is the honest rc 112 skip upgraded with a "
+            "doctor block on stdout naming the exact fix (`elan "
+            "toolchain install <pin>`), zero rows judged; no pin file "
+            "keeps today's PATH-default behavior."
         ),
     },
     # ---- the claim_watch registration increment (ticket 13, the
