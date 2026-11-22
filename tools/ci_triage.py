@@ -314,7 +314,7 @@ COQCHK_DONE_RE = re.compile(r"(?i)^coqchk")
 DUMP_LINE_RE = re.compile(r"\[36;1m|##\[(?:group|endgroup)\]")
 
 # step-name family regexes (step-level inference; the fallback judging face when no log is available)
-CONTENT_STEP_RE = re.compile(r"(?i)build|compile|coqchk|coqc|rocq|check|verify|make")
+CONTENT_STEP_RE = re.compile(r"(?i)build|compile|coqchk|coqc|rocq|check|verify|make|audit")
 NET_STEP_RE = re.compile(r"(?i)checkout|upload|artifact|cache|download|publish")
 UPLOAD_STEP_RE = re.compile(r"(?i)upload|artifact")
 COQCHK_STEP_RE = re.compile(r"(?i)coqchk")
@@ -1757,6 +1757,8 @@ def selftest():
              "UNRECOGNIZED"),
             ("Generate tree-stats (six-dimension counts, three-caliber breakdown)",
              "UNRECOGNIZED"),
+            ("gate8 axiom audit (per-theorem census, reverse map, thermal-guarded)",
+             "A-content-red"),
         ]
         for nm, fam in MAIN_COMPAT:
             c = classify(mkjob(id=31,
@@ -2284,7 +2286,7 @@ def selftest():
               " byte-identical determinism / CLI four codes / the backoff layer"
               " (403x3 -> [2,4,8]; Retry-After honored; 403 exhausted -> 9; 401"
               " no retry) / the Main-shape reading vector (the coq93 real form,"
-              " 16 step names pinned + the 15-row compatibility table + E with"
+              " 16 step names pinned + the 16-row compatibility table + E with"
               " both legs) / the token-dichotomy vectors (#7 fixture"
               " banner-absent canned -> E; the #8/#20/#26 shape vectors stay E;"
               " the #10 fixture attested-red canned -> the UNREC conversion"
