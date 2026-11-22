@@ -1,7 +1,7 @@
 #!/bin/bash
 # run_tests.sh — rocqwash tests/ self-test suite entry point
 #
-# Purpose.  Run the statically rostered 87-case suite one case at a time with a
+# Purpose.  Run the statically rostered 89-case suite one case at a time with a
 #   per-case PASS/FAIL/SKIP line and a final summary; all green exits 0, any red
 #   exits 1.  Idempotent: zero bytes written into the repository, byte-identical
 #   reruns; sole exception: ROCWASH_GATE_LEDGER_DIR opts into the gate-ledger
@@ -21,7 +21,7 @@
 #   and the guarded compile-arc switch (ROCWASH_ROCQ / GATE7_PROBE_SCRIPT /
 #   GATE6_SCRIPT / BORN_WORLD_ROCQ), probed by default and overridable by env.
 #
-# Evidence.  One case per t_* function below; the per-case contract tables (87
+# Evidence.  One case per t_* function below; the per-case contract tables (89
 #   rows) live in tests/README.md; the CASES roster count is pinned by
 #   tools/doc_lint.py check 2 against the tests/README.md count lines; the roster
 #   is never written at run time.
@@ -211,7 +211,9 @@ t_dual_scan \
  t_auto_merge \
  t_selfheal_guards \
  t_jargon_map_sync \
- t_tool_selftests"
+ t_tool_selftests \
+ t_axiom_audit \
+ t_lean_parity"
 NCASES=$(echo $CASES | wc -w | tr -d ' ')
 if [ "${ROCQWASH_TESTS_FAIL_PROBE:-0}" = "1" ]; then
   CASES="$CASES t_fail_probe"
@@ -1208,6 +1210,42 @@ t_tool_selftests() {
   # faces.  Per-tool subprocess cap 120 seconds; zero network; zero writes
   # (python -B child runs; offline vector faces only).
   "$PY" -B "$REPO/tests/test_tool_selftests.py"
+}
+
+t_axiom_audit() {
+  # the axiom-audit tool four-segment selftest (tests/t_axiom_audit.py).
+  # Drives tools/axiom_audit.py (the beyond-platform axiom audit:
+  # transitive per-statement census, four-grade classification, reverse
+  # provenance map, machine-readable report with a Lean parity table)
+  # through its contract: offline classification vectors and CLI
+  # exit-code faces run module-local (no toolchain); the engine-gated
+  # census and report faces assert exact axiom sets and grades over the
+  # tests/fixtures/axiom_audit corpus on a resolving compile engine and
+  # report one loud SKIP line with the reason when no engine resolves,
+  # never a silent pass.  Exit contract 0/1 only, so the suite runner
+  # reads it as PASS/FAIL with no SKIP face of its own; zero network;
+  # writes only inside temporary directories.
+  "$PY" -B "$REPO/tests/t_axiom_audit.py"
+}
+
+t_lean_parity() {
+  # the Lean/Rocq parity crosswalk three-leg suite hook
+  # (tests/t_lean_parity.py).  Drives tools/lean_parity_crosswalk.py
+  # (the crosswalk engine: both parent tools' frozen vectors crosswalked
+  # row by row on the five mirror proposition keys, the bilingual mirror
+  # fixture group under tests/fixtures/lean_parity, the grade mapping
+  # read verbatim from axiom_audit.LEAN_PARITY_ROWS) through its
+  # contract: leg A the offline frozen-vector crosswalk runs
+  # unconditionally with no engine; leg B the real axiom_audit census
+  # over the mirror .v files runs on a resolving compile engine and
+  # skips loudly otherwise; leg C the real lean_axiom_sweep over the
+  # mirror .lean files runs on a usable Lean toolchain and skips loudly
+  # otherwise ("SKIP: Lean toolchain absent - leg C not run").  Exit
+  # contract 0 (all legs ran green) / 1 (any FAIL, red outranks skip) /
+  # 111 (a gated leg skipped for its absent engine), so the suite runner
+  # renders the Lean-absent face as SKIP; zero network; writes only
+  # inside temporary directories.
+  "$PY" -B "$REPO/tests/t_lean_parity.py"
 }
 
 # ---------- summary execution ----------

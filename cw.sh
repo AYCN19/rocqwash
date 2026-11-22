@@ -151,6 +151,9 @@
 #               cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest
 #   axiom-sweep per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py
 #               cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest
+
+#   parity-crosswalk the Lean/Rocq axiom parity crosswalk (both parent tools' frozen vectors crosswalked row by row on the five mirror proposition keys clean / classical / funext / custom / sorry; the grade mapping read verbatim from axiom_audit.LEAN_PARITY_ROWS/1 plus the design-frozen Rocq Admitted <-> Lean sorryAx mirror rule; bilingual mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; engine-gated faces skip loudly, rc 0=green 1=red 2=usage; zero network) -> tools/lean_parity_crosswalk.py
+#               cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest
 #   numeric-probe numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py
 #               cw.sh numeric-probe --claim FILE [--out FILE] | --selftest
 #   statement-identity two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py
@@ -345,6 +348,9 @@ Tools:
   cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest
   axiom-sweep per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py
   cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest
+
+  parity-crosswalk the Lean/Rocq axiom parity crosswalk (both parent tools' frozen vectors crosswalked row by row on the five mirror proposition keys clean / classical / funext / custom / sorry; the grade mapping read verbatim from axiom_audit.LEAN_PARITY_ROWS/1 plus the design-frozen Rocq Admitted <-> Lean sorryAx mirror rule; bilingual mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; engine-gated faces skip loudly, rc 0=green 1=red 2=usage; zero network) -> tools/lean_parity_crosswalk.py
+  cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest
   numeric-probe numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py
   cw.sh numeric-probe --claim FILE [--out FILE] | --selftest
   statement-identity two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py
@@ -447,6 +453,8 @@ hint_for() {  # $1=tool
     release-chain) echo "cw.sh release-chain --issue N --release-title T --assets DIR [--zenodo-meta FILE] [--repo OWNER/NAME] [--stage 1|2|3|4] [--dry-run] [--confirm-publish] | --selftest   # release chain planner (issue body -> GitHub Release per-asset -> Zenodo deposit, three gated layers; dry-run by default, publish needs --confirm-publish; URLs and DOIs are taken verbatim from service responses) -> tools/release_chain.py" ;;
     claim-watch) echo "cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest   # conclusion-level claim watch (the eight RH signals + three NS/Euler triggers from the seed config; machine-readable status endpoints; heartbeat silent-death and unverifiable registration; append-only actor-namespaced round ledger; live face) -> tools/claim_watch.py" ;;
     axiom-sweep) echo "cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest   # per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py" ;;
+
+    parity-crosswalk) echo "cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest   # the Lean/Rocq axiom parity crosswalk (five mirror proposition keys crosswalked row by row; mapping verbatim from axiom_audit.LEAN_PARITY_ROWS/1; Admitted <-> sorryAx mirror rule; mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; rc 0=green 1=red 2=usage) -> tools/lean_parity_crosswalk.py" ;;
     numeric-probe) echo "cw.sh numeric-probe --claim FILE [--out FILE] | --selftest   # numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py" ;;
     statement-identity) echo "cw.sh statement-identity --claimed FILE --proven FILE [--out FILE] | --selftest   # two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py" ;;
     capability-index) echo "cw.sh capability-index [--mode full|summary] [--tool NAME] | --selftest   # capability index reader (full and summary modes plus single-tool query over the census masters; summary exists because the full index overran harness response caps) -> tools/capability_index.py" ;;
@@ -539,6 +547,8 @@ case "${1:-}" in
   release-chain) shift; run_tool release-chain "tools/release_chain.py" "$@" ;;
   claim-watch) shift; run_tool claim-watch "tools/claim_watch.py" "$@" ;;
   axiom-sweep) shift; run_tool axiom-sweep "tools/lean_axiom_sweep.py" "$@" ;;
+
+  parity-crosswalk) shift; run_tool parity-crosswalk "tools/lean_parity_crosswalk.py" "$@" ;;
   numeric-probe) shift; run_tool numeric-probe "tools/numeric_probe.py" "$@" ;;
   statement-identity) shift; run_tool statement-identity "tools/statement_identity.py" "$@" ;;
   capability-index) shift; run_tool capability-index "tools/capability_index.py" "$@" ;;

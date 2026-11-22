@@ -1,0 +1,1 @@
+mirror_custom.lean:5:0: info: 'lp_mirror_custom' depends on axioms: [lp_mirror_lean_ax]

@@ -1,0 +1,1 @@
+mirror_funext.lean:4:0: info: 'lp_mirror_funext' depends on axioms: [propext, Quot.sound]

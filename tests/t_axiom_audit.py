@@ -45,10 +45,19 @@ EXPECTED_SCHEMA = "rocqwash.b-axiom-audit/1"
 EXPECTED_SEGMENTS = ["offline_vectors", "cli_contract", "engine_census",
                      "engine_report"]
 
-# Exact fixture expectations (measured on Rocq 9.3.0).
+# Exact fixture expectations (measured on Rocq 9.3.0).  The allowlist
+# carries every fixture axiom (the census-allowed-green face judges the
+# whole corpus green); the three measured stdlib expansion families
+# (proof_irrelevance / propositional_extensionality /
+# constructive_indefinite_description, the stdlib_axiom2.v corpus) are
+# allowlisted alongside the original five, mirroring the tool's own
+# selftest live group.
 ALLOW_ALL = ["--allow-axiom", "classic",
              "--allow-axiom", "functional_extensionality_dep",
              "--allow-axiom", "Eq_rect_eq.eq_rect_eq",
+             "--allow-axiom", "proof_irrelevance",
+             "--allow-axiom", "propositional_extensionality",
+             "--allow-axiom", "constructive_indefinite_description",
              "--allow-axiom", "ax_audit_custom",
              "--allow-axiom", "ax_audit_param"]
 WANT_CENSUS = {

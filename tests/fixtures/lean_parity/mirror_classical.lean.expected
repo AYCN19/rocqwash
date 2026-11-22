@@ -1,0 +1,1 @@
+mirror_classical.lean:3:0: info: 'lp_mirror_classical' depends on axioms: [propext, Classical.choice, Quot.sound]
