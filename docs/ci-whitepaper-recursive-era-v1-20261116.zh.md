@@ -1,5 +1,11 @@
 # rocqwash CI Technical Whitepaper — The Recursive-Iteration Era (v1.0)
 
+> **同步状态（2026-11-23）**：本中文文件是 v1.0 时代（2026-11-16）的快照。英文正本
+> （`ci-whitepaper-recursive-era-v1-20261116.md`）已按每类 live case 持续增补至
+> §13（R1–R22 分类学小节 + §12 落地增补 + §13 红链收官与引擎容忍契约；分诊表
+> `docs/ci-triage-table.json` v1.9 = R1–R24）。本快照**未随增**——以英文正本为权威，
+> 本文件用于 v1.0 时代的中文阅读面；全文中文同步走 i18n 线另行排程。
+
 - **Date**: 2026-11-16
 - **Scope**: failure-class taxonomy, triage interface and repair playbook for the rocqwash CI **after** recursive self-improvement (auto_round rounds, agent waves, self-heal watch) became a normal producer of repository changes.
 - **Supersedes**: the host-mismatch era playbook (eleven root causes, 2026-11-16 assessment — code page / autocrlf / HOME override / isolated mode / shell escaping). Those classes still occur; this whitepaper covers what the old playbook **cannot**: failures caused by the iteration machinery itself and by its interaction with hosts, services and concurrent sessions.
