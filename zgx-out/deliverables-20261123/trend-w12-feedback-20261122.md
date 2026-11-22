@@ -1,12 +1,21 @@
 # Trend w12 judgment + PR feedback face card - rocqwash (R2-97, window w12 candidate)
 
-- Ticket: R2-97, seat: trend judgment seat (read-only judgment;
+Purpose. Session card for ticket R2-97; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
+
+- Ticket: R2-97, agent: trend judgment agent (read-only judgment;
   zero repo-tree writes; the only write faces are this card, the
   receipt, and /tmp/rqw-mcp/r2-97 staging), identity live-lumen
   (subagent, dynamic workflow)
-- Date: 2026-11-22 (UTC clock at seat open 2026-11-22T16:06:44Z,
-  measured; local calendar 2026-11-23; the ask-named filename
-  carries 20261122 = the UTC date and is written exactly as named)
+- Date: 2026/11/22 (UTC clock at agent open 2026-11-22T16:06:44Z,
+  measured; local calendar 2026/11/23; the ask-named filename
+  carries 2026/11/22 = the UTC date and is written exactly as named)
 - Card artifact: this file (English ASCII; CJK names appear as
   \uXXXX escapes). Ask-named generic path
   (trend-w12-feedback-20261122.md); the anchor is carried in this
@@ -107,7 +116,7 @@ read; the last first-hand count on disk is R2-95's receipt line
 window-readings-20261122.md L159); no seventh-read record was
 found in the R2-96 census/revise receipts (grep: zero hits for
 seventh / eighth). The ordinal delta 2 has no on-disk provenance
-this seat could locate; the increment judgment does not depend on
+this agent could locate; the increment judgment does not depend on
 the ordinal (bodies == baseline md5, zero increment), so this
 card records the ask's ordinal as its label and the discrepancy
 as a deviation, not as a fact correction.
@@ -128,7 +137,7 @@ capability_index '{}' /tmp/rqw-mcp/r2-97/call-capability_index.jsonl`
 - helper rc 0; isError=false; server-rc 0; jsonl 2 lines, ids 1
   and 3 (initialize + tools/call, the E-B1-09 protocol form);
   ROCQWASH_HOME pinned by the helper; ROCQWASH_MCP_ALLOW_NET never
-  set by this seat (deny faces untouched).
+  set by this agent (deny faces untouched).
 - Render face: `tools: 70` - UNCHANGED from the R2-95 face
   (68 -> 70 was the caaf920 registration of axiom_audit +
   vacgen_coq). Section-count recount run this session: 70 `###
@@ -147,7 +156,7 @@ capability_index '{}' /tmp/rqw-mcp/r2-97/call-capability_index.jsonl`
   BEFORE the helper call = c3b88ece51b8f7e9378faf5a5aac418f and
   AFTER = c3b88ece51b8f7e9378faf5a5aac418f - PRE == POST ALL
   EQUAL (the standing one-call health check per the w12 library
-  rule). No b_gate_audit MCP emission was made by this seat: the
+  rule). No b_gate_audit MCP emission was made by this agent: the
   ask names exactly one helper call, and the R-1 write-face gate
   (registered not adjudicated) forbids opening new write-face
   calls before a ruling; the capability_index render face is the
@@ -170,7 +179,7 @@ failures to retry). ROCQWASH_MCP_ALLOW_NET never set.
   (ratelimit.json, api-issues-{27,29,30,31}.json,
   api-reviews-{27,29,30,31}.json, api-pull-32.json,
   call-capability_index.jsonl).
-- NETRED ledger this seat, every event: (1) GET /rate_limit -
+- NETRED ledger this agent, every event: (1) GET /rate_limit -
   200; (2-9) the eight ask-named GETs - all 200; (10) GET
   pulls/32 (disclosed extra) - 200. Ten network events, zero
   failures, zero retries, zero git network ops. Single-flight
@@ -180,7 +189,7 @@ failures to retry). ROCQWASH_MCP_ALLOW_NET never set.
   session); R2-92 receipt-trend + trend-w11-feedback-20261122.md
   (the feedback form and ALL-EMPTY baseline, read first-hand);
   run-17 card item 6 (skip-suggestion original text, re-read);
-  handover v8.3 section 5 trend row and section 3 feedback row
+  `handover v8.3` section 5 trend row and section 3 feedback row
   (six-read baseline statement).
 - The upstream flatness beyond the local ref is NOT concluded by
   this card: no fetch; the API face shows #32 open and zero

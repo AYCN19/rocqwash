@@ -1,13 +1,22 @@
 # ai_flavor trend card - em-dash / wording / norm faces, rocqwash (R2-99, window w12)
 
-- Ticket: R2-99, seat: trend sampler w12 (read-only sampling; zero
+Purpose. Session card for ticket R2-99; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
+
+- Ticket: R2-99, agent: trend sampler w12 (read-only sampling; zero
   hand-written repo-tree content; write faces = this card, the
   receipt R2-99-receipt-w12.md, the rsi-loop.log batch block, and
   /tmp/rqw-mcp/r2-99-w12 staging), identity live-lumen (subagent,
   dynamic workflow)
-- Date: 2026-11-22 (UTC clock: seat fetch beat 2026-11-22T17:38Z,
-  card write 2026-11-22T17:44Z; local calendar 2026-11-23; the
-  ask-named filename carries 20261122 = the UTC date, written
+- Date: 2026/11/22 (UTC clock: agent fetch beat 2026-11-22T17:38Z,
+  card write 2026-11-22T17:44Z; local calendar 2026/11/23; the
+  ask-named filename carries 2026/11/22 = the UTC date, written
   exactly as named)
 - Card artifact: this file (English ASCII; CJK paths appear as
   \uXXXX escapes; non-ASCII gate = 0, measured post-write)
@@ -21,7 +30,7 @@
 
 ## 1. Anchor face: fetch rc 0, MID-WINDOW DRIFT to 1e4018a, rev-list 7 not 5
 
-- Pre-fetch face (measured at seat open, before any action): HEAD =
+- Pre-fetch face (measured at agent open, before any action): HEAD =
   69dd18e561ceece8c7b50248e5a8891ac67092e3; local origin/main was
   ALREADY 0ba62da491aeed434cb412f73bd200cc4d46e05c - i.e. the ask's
   "new anchor 0ba62da" matched the PRE-FETCH local ref, moved there
@@ -273,13 +282,13 @@ per-commit jargon counts (jargon is tree-level only); no full
 printed; the frozen cells are stated flat); no rocqwash-loop clone
 touch (the loop's own reshoot beat at 17:34:36Z ran its six steps in
 its own mktemp mirror - /tmp/rqw-mcp/r2-99/ mirror.P7oC4F + g-*
-outputs are THAT beat's artifacts, read-not-modified by this seat;
-this seat's staging is /tmp/rqw-mcp/r2-99-w12/); no retry lanes
+outputs are THAT beat's artifacts, read-not-modified by this agent;
+this agent's staging is /tmp/rqw-mcp/r2-99-w12/); no retry lanes
 (zero failures to retry). ROCQWASH_MCP_ALLOW_NET never set.
 
 ## Provenance and limitations
 
-- NETRED ledger this seat, every event: (1) git fetch origin over
+- NETRED ledger this agent, every event: (1) git fetch origin over
   HTTP/1.1 - rc 0, ONE attempt, zero retries, zero backoff spend.
   One network event total, zero failures. No other git network ops;
   no curl; no MCP network.

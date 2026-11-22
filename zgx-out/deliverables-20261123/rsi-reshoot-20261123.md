@@ -1,48 +1,57 @@
-TICKET: R2-99 reshoot seat - RSI 17:1xZ beat re-shoot (the 17:11Z ring slot
+TICKET: R2-99 reshoot agent - RSI 17:1xZ beat re-shoot (the 17:11Z ring slot
+
+Purpose. Session card for ticket R2-99; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
   did NOT run; honest re-shoot following the 16th-ring re-shoot form R2-85/
   R2-93); rsi-loop.log batch block landed (declared exception write face);
-  zero repo-tree write by this seat; identity live-lumen
-STATEMENTS: ground face = this seat's own first-hand zero-write-form rerun of
+  zero repo-tree write by this agent; identity live-lumen
+STATEMENTS: ground face = this agent's own first-hand zero-write-form rerun of
   the six pkg steps (zgx-plan-run.sh section order) at loop HEAD 69dd18e:
   steps 1-2 (b_gate_audit, learning_feedback) mktemp-mirror isolated per the
   R2-85 form (mirror /tmp/rqw-mcp/r2-99/mirror.P7oC4F, tools/ 74 files +
   docs/ three ledgers copied; run cwd = mirror); steps 3-6 (jargon_map_sync,
   pin_repair --plan, t_engines_seeds, t_engines_body) in-loop by-design
-  zero-write; all six rc=0, all readings first-hand this session 2026-11-22
+  zero-write; all six rc=0, all readings first-hand this session 2026/11/22
   17:2x-17:3xZ. MCP face = /tmp/rqw-mcp/r2-99/mcp-bgate.jsonl(.text/.err) +
   /tmp/rqw-mcp/r2-99/mcp-lf.jsonl(.text/.err) (mcp_call.sh, ROCQWASH_HOME=/
   Users/zuguangzhao/rocqwash; raw jsonl read first-hand: id==3, error=None,
   isError:false both faces)
 SOURCE ROUTING: ask (R2-99) names the helper path, the log path, this card
   path and the note-line template; beat shape read from rsi-loop.log tail 15
-  (L153-167: PILOT-2 full form + pre-seat 171727Z five-element block); pkg
+  (L153-167: PILOT-2 full form + pre-agent 171727Z five-element block); pkg
   master zgx-plan-run.sh (37 lines, read first-hand at workspace pkg-rsi-
   20261120/zgx-rsi-plan-package-20261120/05-scripts/); pin/fetch legs NOT
   run, anchor stays; re-shoot form precedents R2-93-receipt-stage2.md (L9-14)
   and R2-85-receipt-rsi.md (L10 mirror law, L13 pin_repair --plan face);
   w9 trend card ai-flavor-trend-w9-20261122.md (batch-table law context)
 COMPILE: none (zero-compile markdown card; no code produced or modified by
-  this seat; all tool runs were existing tools invoked read-only or mirror-
+  this agent; all tool runs were existing tools invoked read-only or mirror-
   isolated)
 REGISTRY: rsi-loop.log lines 168-174 (batch 20261122T173436Z anchor=69dd18e,
-  appended by this seat); R2-93 receipt (equal-form precedent, pre-seat block
+  appended by this agent); R2-93 receipt (equal-form precedent, pre-agent block
   registered-not-adjudicated law); R2-85 receipt (7/59->7/68 reversal + input
   ledger sha256 baselines); pilot card rsi-mcp-pilot-20261122.md (write-face
-  law: the write is the landing spot, not the computation); receipt
+  law: the write is the integration spot, not the computation); receipt
   R2-99-receipt-beat.md
 
-# RSI re-shoot beat 17:1xZ (R2-99, 2026-11-22 UTC / 2026-11-23 local)
+# RSI re-shoot beat 17:1xZ (R2-99, 2026/11/22 UTC / 2026/11/23 local)
 
 ## 1. Ring-slot miss (honest face)
 
 - The scheduled 17:11Z ring slot did NOT run: no block stamped 17:11Z exists
-  in rsi-loop.log; the only 17:1xZ face is the pre-seat 171727Z block
+  in rsi-loop.log; the only 17:1xZ face is the pre-agent 171727Z block
   (L162-167), positioned in the file immediately AFTER the
-  [2026-11-23 01:18:57 local = 17:18:57Z] FETCH-FAIL line (L161), carrying
+  [2026/11/23 01:18:57 local = 17:18:57Z] FETCH-FAIL line (L161), carrying
   the five elements and NO note and NO repair face.
-- Writer identity of the pre-seat 171727Z block not established from session
-  logs available to this seat: REGISTERED, NOT ADJUDICATED (R2-93 law, L151).
-- This seat's first-hand values match the pre-seat block value-for-value
+- Writer identity of the pre-agent 171727Z block not established from session
+  logs available to this agent: REGISTERED, NOT ADJUDICATED (R2-93 law, L151).
+- This agent's first-hand values match the pre-agent block value-for-value
   (verdict not-ready / VERDICT IN-SYNC / action none / seeds-skips 3 /
   TOTAL-ENGINES-BODY GREEN 60 passed 0 skipped). The re-shoot block is
   L168-174 (batch 20261122T173436Z anchor=69dd18e).
@@ -71,8 +80,8 @@ dir (R2-85 L10 law).
 
 | face | capture | protocol | fields | spot-check vs ground |
 |---|---|---|---|---|
-| b_gate_audit | /tmp/rqw-mcp/r2-99/mcp-bgate.jsonl(.text) | id==3, error=None, isError:false, server rc=0 | 14 lines (exit-code header + 13 report lines) | EQUAL: 14/14 lines, 0 diff fields vs mirror stdout (wrote-line landing spot normalized per pilot law: the write is the landing spot, not the computation) |
-| learning_feedback | /tmp/rqw-mcp/r2-99/mcp-lf.jsonl(.text) | id==3, error=None, isError:false, server rc=0 | 7 lines | EQUAL: 7/7 lines, 0 diff fields vs mirror stdout (same landing-spot normalization) |
+| b_gate_audit | /tmp/rqw-mcp/r2-99/mcp-bgate.jsonl(.text) | id==3, error=None, isError:false, server rc=0 | 14 lines (exit-code header + 13 report lines) | EQUAL: 14/14 lines, 0 diff fields vs mirror stdout (wrote-line integration spot normalized per pilot law: the write is the integration spot, not the computation) |
+| learning_feedback | /tmp/rqw-mcp/r2-99/mcp-lf.jsonl(.text) | id==3, error=None, isError:false, server rc=0 | 7 lines | EQUAL: 7/7 lines, 0 diff fields vs mirror stdout (same integration-spot normalization) |
 
 MCP faces report the same values as section 2 steps 1-2: verdict not-ready /
 remaining_to_b=3 / errors=0 / 7 class rows; triple 7/68/0.0909; rounds
@@ -108,8 +117,8 @@ computation-invariant.
 
 ## 5. NETRED and write faces
 
-- Zero network operations by this seat: no fetch attempted (the loop's own
-  fetch leg is not this seat's; anchor stays per D-3/R2-93 form). Deny faces
+- Zero network operations by this agent: no fetch attempted (the loop's own
+  fetch leg is not this agent's; anchor stays per D-3/R2-93 form). Deny faces
   untouched (ROCQWASH_MCP_ALLOW_NET not set, never forced; MCP helper is
   stdio-local).
 - Write faces exactly: rsi-loop.log L168-174 (declared exception write face)
@@ -118,7 +127,7 @@ computation-invariant.
   Zero writes inside either repo tree.
 - origin/main face (read-only observation, no action taken): canonical
   origin/main ref reads 0ba62da491aeed434cb412f73bd200cc4d46e05c, AHEAD of
-  the beat anchor 69dd18e (local ref state; not fetched by this seat). The
+  the beat anchor 69dd18e (local ref state; not fetched by this agent). The
   next scheduled beat's own fetch leg governs anchor movement.
 
 ## 6. Not run (not named by this ask)
@@ -127,6 +136,6 @@ computation-invariant.
   per-row incremental forensics beyond the digest-equality check; steps 3-6
   via MCP (roster-absent faces, R2-92/R2-93 law unchanged); W4 lane; any
   write into either repo tree; the driver-source miss-record read (driver
-  script not reachable from this seat's readable positions this session; the
+  script not reachable from this agent's readable positions this session; the
   miss face rests on the ask's premise + the log's own shape, both stated
   in section 1).

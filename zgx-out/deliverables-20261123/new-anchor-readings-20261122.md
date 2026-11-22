@@ -1,10 +1,19 @@
-# New-anchor readings - upstream 5-commit window + trend w10 + MCP b_gate_audit (R2-91, 20261122)
+# New-anchor readings - upstream 5-commit window + trend w10 + MCP b_gate_audit (R2-91, 2026/11/22)
+
+Purpose. Session card for ticket R2-91; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
 
 - Ticket: R2-91
-- seat: new-anchor reading seat (pure read-only readings; the only
+- agent: new-anchor reading agent (pure read-only readings; the only
   write faces are this card, the receipt, and /tmp/rqw-mcp/r2-91
   staging), identity live-lumen (subagent, dynamic workflow)
-- Date: 2026-11-22
+- Date: 2026/11/22
 - Card artifact: this file (English ASCII; CJK author names and
   filenames appear as \uXXXX escapes). Ask-named generic path
   (new-anchor-readings-20261122.md); the anchor is carried in this
@@ -36,7 +45,7 @@ limits the locally visible history face, see section 6).
   `git rev-list --count f75ffa0..origin/main` = 5 (> 0). Per the w9
   card's skip/scan rule, a >0 count = full window; the full double
   scan was run.
-- Dirty-face continuity (seat law: dirty faces preserved, never
+- Dirty-face continuity (agent law: dirty faces preserved, never
   overwritten): pre-status `git status --porcelain` = exactly the
   canonical pair ` M docs/b-gate-audit.json` (md5 c3b88ece... ==
   the w4-w8 pin) + ` M docs/scheduling-feedback.json` (md5 28c85e04
@@ -58,7 +67,7 @@ limits the locally visible history face, see section 6).
 - Post-scan lock: HEAD == origin/main == 35c9ecf7 (rev-parse both,
   after all scans and the MCP call); status = still exactly the
   pinned pair + 3 untracked. Zero writes inside the repo tree by
-  this seat (the MCP call's derived-report write is measured in
+  this agent (the MCP call's derived-report write is measured in
   section 5: byte-identical output, md5 unchanged - zero state
   drift materialized).
 
@@ -76,9 +85,9 @@ across all five.
 
 | # | commit | author face | theme face (subject, ASCII-glossed) | files face | em +add/-rem | cjk +lines |
 |---|---|---|---|---|---|---|
-| 1 | caaf920 | console side (git author CJK name \u738b\u5c0f\u96ea) | feat(registration): close the registration lag - axiom-audit + vacgen-coq routes in all four cw.sh places + dispatch arms, README-cw count faces 74 routes / 72 tools, census re-anchor; rides the repair_scope tolerance fix; self-reports "stacks on 8ad21fb (title 71)" | 9 (+2825/-253): README-cw.md, cw.sh, docs/census-tools.json (+440), docs/mcp.md (+23), tests/t_mcp_face.py (+55), tools/axiom_audit.py (rewrite, -224 net), tools/mcp_server.py (+65), tools/taxonomy-coq.json (+709 NEW), tools/vacgen_coq.py (+1530 NEW) | +4 / -7 | 0 |
+| 1 | caaf920 | console side (git author CJK name \u738b\u5c0f\u96ea) | `feat(registration): close the registration lag - axiom-audit + vacgen-coq routes in all four cw.sh places + dispatch arms, README-cw count faces 74 routes / 72 tools, census re-anchor`; rides the repair_scope tolerance fix; self-reports "stacks on 8ad21fb (title 71)" | 9 (+2825/-253): README-cw.md, cw.sh, docs/census-tools.json (+440), docs/mcp.md (+23), tests/t_mcp_face.py (+55), tools/axiom_audit.py (rewrite, -224 net), tools/mcp_server.py (+65), tools/taxonomy-coq.json (+709 NEW), tools/vacgen_coq.py (+1530 NEW) | +4 / -7 | 0 |
 | 2 | a3fcf0c | console side (\u738b\u5c0f\u96ea) | fix(axiom-audit): live-report-schema order/line-tolerant (names/files/forms asserted substantively, line numbers positive ints, grade counts as coverage floors); live-run-green allowlist extended; selftest 19/19 rc=0, t_mcp_face 51 capabilities PASS (cited from commit message, not re-run) | 2 (+3/-3): README-cw.md, README-cw.zh.md | +1 / -1 | 0 |
-| 3 | 3ccc947 | live-lumen (THIS strand: the supply seat's ledger commit) | feat(proposals): zgx ledger rows 28-29 (mcp roster expansion + allow-remainder closeout proposals) | 1 (+2): zgx-out/zgx-ledger-proposals.jsonl | +0 / -0 | 0 |
+| 3 | 3ccc947 | live-lumen (THIS strand: the supply agent's ledger commit) | feat(proposals): zgx ledger rows 28-29 (mcp roster expansion + allow-remainder closeout proposals) | 1 (+2): zgx-out/zgx-ledger-proposals.jsonl | +0 / -0 | 0 |
 | 4 | f38b0bc | github-actions[bot] | automerge: PR #31 (supply lane, head CI green); merge parents a3fcf0c + 3ccc947 - carries EXACTLY the +2 ledger rows of #3, nothing else | 1 (+2): zgx-out/zgx-ledger-proposals.jsonl (combined diff) | +0 / -0 | 0 |
 | 5 | 35c9ecf | console side (\u738b\u5c0f\u96ea) | ci: selftest-local face advisory - one line `continue-on-error: true` on the Windows self-hosted local face; advisory form: hosted Linux + Windows faces carry the blocking verdict; escalation context mirror-lag capacity + shared-tree coupling; structural fix (runner workspace isolation) tracked separately | 1 (+1): .github/workflows/ci.yml | +0 / -0 | 0 |
 
@@ -89,11 +98,11 @@ Console-side NEW-face identification (beyond the #31 supply face):
    one added roster entry; wire-schema grep count of "name" keys 56
    -> 57; tests/t_mcp_face.py now asserts "the 51-name roster" and
    header says "51-capability face"). Wire tools/list was NOT
-   re-emitted by this seat (ask bounds the MCP face to the one
+   re-emitted by this agent (ask bounds the MCP face to the one
    b_gate_audit call); the 51 face rests on source-face + the
    a3fcf0c commit-message CI citation.
 2. Registration face: axiom-audit + vacgen-coq routes registered in
-   all four cw.sh places plus dispatch arms; README-cw count faces
+   all four cw.sh places plus route arms; README-cw count faces
    synced to "74 routes over 72 tools" (up from 73 tools after
    2e6d160's attest_join); docs/mcp.md +23 lines; docs/
    census-tools.json re-anchored (+440).
@@ -101,8 +110,8 @@ Console-side NEW-face identification (beyond the #31 supply face):
    tools/taxonomy-coq.json (709 lines, new); tools/axiom_audit.py
    rewritten (-224 net).
 4. CI advisory face: the local self-hosted runner face demoted to
-   continue-on-error (35c9ecf, one line, comment-dated 20261122).
-5. Supply face (#31, the seat strand's own): ledger rows 28-29
+   continue-on-error (35c9ecf, one line, comment-dated 2026/11/22).
+5. Supply face (#31, the agent strand's own): ledger rows 28-29
    landed to the console side via f38b0bc - the proposal face is
    RECEIVED (see section 6).
 
@@ -272,7 +281,7 @@ unadjudicated here.
 
 ## 6. Supply-chain status line (ask-provided face + local face)
 
-- Ask-provided: nine PRs MERGED through #31; #31 = this seat
+- Ask-provided: nine PRs MERGED through #31; #31 = this agent
   strand's proposal face RECEIVED by the console side.
 - First-hand: f38b0bc (merge parents a3fcf0c + 3ccc947) carries
   exactly zgx-out/zgx-ledger-proposals.jsonl +2 (rows 28-29: mcp
@@ -330,7 +339,7 @@ emission total (b_gate_audit {} per ask item 3).
 - Zero writes inside the repo tree this session. Repo-side changes:
   HEAD moved 3ccc947 (branch supply/...) -> detached 35c9ecf7 by
   plain checkout (dirty pair carried intact, md5 identical
-  pre/post); origin/main ref bookkeeping pre-dated this seat.
+  pre/post); origin/main ref bookkeeping pre-dated this agent.
   Card + receipt written outside the repo.
 
 Receipt line:

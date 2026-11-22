@@ -1,6 +1,15 @@
-# MCP roster 50 -> 51 wire-face verification (R2-92, 20261122)
+# MCP roster 50 -> 51 wire-face verification (R2-92, 2026/11/22)
 
-- Ticket: R2-92 (expansion-verification seat; read-only ring: zero
+Purpose. Session card for ticket R2-92; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
+
+- Ticket: R2-92 (expansion-verification agent; read-only ring: zero
   repo-tree writes; write faces = this card, the receipt
   R2-92-receipt-roster.md, and /tmp/rqw-mcp/r2-92 staging only)
 - Statement faces verified: (a) wire tools/list roster count 51 ==
@@ -12,11 +21,11 @@
   ledger rows 28/29 five-face cross-check against the 51 roster.
 - Source routing: working clone /Users/zuguangzhao/rocqwash detached
   HEAD == origin/main == 35c9ecf7dda1fbc8c9c4f5c2f2669507537a2207
-  (rev-parse measured at seat start and again at close, identical);
+  (rev-parse measured at agent start and again at close, identical);
   dirty faces exactly 2 M (docs/b-gate-audit.json md5
   c3b88ece51b8f7e9378faf5a5aac418f, docs/scheduling-feedback.json md5
   28c85e049f96790aea2470188abec6f0) + 3 untracked zgx-out files,
-  byte-identical pre/post all seat actions; branch-side supply commit
+  byte-identical pre/post all agent actions; branch-side supply commit
   3ccc947 one parent-hop behind the detached tip.
 - Compile command lines: (1) `bash -c 'cd /Users/zuguangzhao/rocqwash
   && /usr/bin/python3 -I tests/t_mcp_face.py 2>&1 | tail -6; echo RC=$?'`
@@ -39,36 +48,36 @@
 ## 1. Wire tools/list emission and roster count (ask item 1)
 
 Honesty note first: the ask-named staging artifact
-/tmp/rqw-mcp/r2-92/tools-list.jsonl was ABSENT at seat start (the
+/tmp/rqw-mcp/r2-92/tools-list.jsonl was ABSENT at agent start (the
 directory /tmp/rqw-mcp/r2-92/ itself did not exist; the ask's
 pre-check transcript slot also arrived empty). No pre-check face was
-passed to this seat. Per the discipline the staging write is inside
-this seat's declared write face, and the re-emission is exactly the
+passed to this agent. Per the discipline the staging write is inside
+this agent's declared write face, and the re-emission is exactly the
 obligation R2-91 section 6 carried ("wire tools/list was NOT
 re-emitted ... carried as the next supply face's obligation"), so this
-seat emitted it fresh: driver /tmp/rqw-mcp/r2-92/emit_tools_list.py,
+agent emitted it fresh: driver /tmp/rqw-mcp/r2-92/emit_tools_list.py,
 one initialize/initialized/tools-list sequence into
 `/usr/bin/python3 -I /Users/zuguangzhao/rocqwash/tools/mcp_server.py
---stdio` with ROCQWASH_HOME pinned, raw protocol lines landing at the
+--stdio` with ROCQWASH_HOME pinned, raw protocol lines integrated at the
 ask-named path. server rc 0, id==3 response carries no error object.
 
 Readings:
 
 - WIRE_ROSTER_COUNT = 51 (parsed from the id==3 result.tools array of
-  /tmp/rqw-mcp/r2-92/tools-list.jsonl, first-hand this seat).
+  /tmp/rqw-mcp/r2-92/tools-list.jsonl, first-hand this agent).
 - Agreement against the fourteen-ring source face: 51 == 51 EXACT.
   The R2-91 card section 2.1 measured the source face (mcp_server.py
   diff f75ffa0..35c9ecf7 carries exactly one added roster entry;
   wire-schema "name"-key grep count 56 -> 57; t_mcp_face 51-name
-  assertion), and this seat's wire emission now lands on the same
+  assertion), and this agent's wire emission now lands on the same
   number from the wire side.
 - Agreement against docs/mcp.md section 3: the capability column of
   the section 3 table parses to exactly 51 rows and the ordered
   name-list comparison is EQUAL (wire list == mcp.md list, mechanical
   diff run, zero names either side); last row both sides =
   vacgen_coq_generate. Two of the three standing roster-guard sources
-  (wire == mcp.md section 3) re-measured equal this seat; the third
-  (INDEX render) was NOT re-emitted this seat (not named by the ask;
+  (wire == mcp.md section 3) re-measured equal this agent; the third
+  (INDEX render) was NOT re-emitted this agent (not named by the ask;
   carried, see section 6).
 - Roster tail (names 43-51 in wire order): tree_audit, axiom_sweep,
   claim_watch, source_fetch, sweep_verdict, release_chain,
@@ -175,15 +184,15 @@ Readings (raw capture + parsed .text + .err at the ask-named paths):
   ever started"); no batch enumeration ran, and the default out root
   never materialized (`vacgen_coq_batch_out` absent from the clone
   root, checked post-call). The selftest vector face was NOT spent
-  this seat (the ask names the empty-args form only).
+  this agent (the ask names the empty-args form only).
 - Deny face: stderr carries `allow-net=False`; ROCQWASH_MCP_ALLOW_NET
   never set this session; zero network spent by the call.
 
-## 4. Proposal landing judgment: zgx rows 28/29 vs the 51 roster (ask item 4)
+## 4. Proposal integration judgment: zgx rows 28/29 vs the 51 roster (ask item 4)
 
 Material read first-hand: zgx-out/zgx-ledger-proposals.jsonl rows 28
 and 29 (the two rows f38b0bc landed to the console side, per the
-R2-91 card section 2 commit face and this seat's ledger read).
+R2-91 card section 2 commit face and this agent's ledger read).
 
 - Row 28 (kind proposal, MCP roster expansion): the expansion set it
   lands is FOUR candidate faces - jargon_map_sync, pin_repair,
@@ -215,7 +224,7 @@ Judgment face (ask item 4, both halves):
    Family diagnosis, recorded as-is: the proposal candidates are
    plan/selftest faces of existing CLI/test files (a different family
    from the Rocq-domain batch face); vacgen_coq_generate arrived by
-   the console side's own registration line (caaf920, ticket 14 wave
+   the console side's own registration line (caaf920, ticket 14 work stream
    1, self-described as riding the repair_scope tolerance fix) - the
    console-side self-expansion and the zgx candidate lane are TWO
    PARALLEL LINES that did not meet in this window: the candidate
@@ -234,38 +243,38 @@ Judgment face (ask item 4, both halves):
    the row 28 target face is now 51==51==51 pending -> 54==54==54
    when they land, not yet.
 
-## 5. Pin and dirty-face continuity (seat discipline)
+## 5. Pin and dirty-face continuity (agent discipline)
 
-Measured pre-seat and re-measured after every repo-adjacent action
+Measured pre-agent and re-measured after every repo-adjacent action
 (tools/list emission, both t_mcp_face runs, the vacgen call):
 
 - docs/b-gate-audit.json md5 c3b88ece51b8f7e9378faf5a5aac418f -
-  IDENTICAL at seat start and at close (the c3b88ece pin holds).
+  IDENTICAL at agent start and at close (the c3b88ece pin holds).
 - docs/scheduling-feedback.json md5 28c85e049f96790aea2470188abec6f0
-  - IDENTICAL at seat start and at close (never touched; the two
+  - IDENTICAL at agent start and at close (never touched; the two
   suite runs and the MCP calls did not regenerate it - the empty-args
   call usage-errored before any write, and t_mcp_face's live-call
   spot checks are out-of-tree per the suite's own design, corroborated
   by the unchanged status face).
 - `git status --porcelain` at close: exactly
   ` M docs/b-gate-audit.json` + ` M docs/scheduling-feedback.json` +
-  the 3 untracked zgx-out files - byte-identical to seat start.
+  the 3 untracked zgx-out files - byte-identical to agent start.
 - HEAD still detached at 35c9ecf7 == origin/main at close. Zero
-  checkout, zero -f, zero tree writes by this seat.
+  checkout, zero -f, zero tree writes by this agent.
 
 ## 6. Not run (not named by this ask)
 
 - The INDEX render re-emission (the third roster-guard source): not
   named; the two-source agreement wire == mcp.md section 3 is
-  first-hand this seat, the three-source agreement stays carried.
+  first-hand this agent, the three-source agreement stays carried.
 - learning_feedback default-run {} value-equivalence measurement
   (row 28's stage-2 candidate; the P-1 gate face stays open).
 - The vacgen_coq_generate `--selftest` vector face and any real batch
-  face (the ask bounds this seat to the empty-args form; no compile
+  face (the ask bounds this agent to the empty-args form; no compile
   leg exists in the tool's design and none was sought).
 - The row 29 W-face re-measurements (awaiting the production input
   artifacts, per the row's own proposal).
-- Any network call: NETRED ledger empty this seat - zero fetches,
+- Any network call: NETRED ledger empty this agent - zero fetches,
   zero API faces; all emissions were local stdio (2 tool/list-class
   drives: the roster emission + the helper call; the t_mcp_face suite
   internally makes its own 9 live-call spot checks in-process).
@@ -275,7 +284,7 @@ Measured pre-seat and re-measured after every repo-adjacent action
 - Staging (all outside the repo tree): /tmp/rqw-mcp/r2-92/
   (tools-list.jsonl + .err, emit_tools_list.py, call-vacgen_coq_
   generate.jsonl + .text + .err, t_mcp_face.out/.err, commits.txt,
-  fetch.err [0-byte pre-seat remnant, never written by this seat]).
+  fetch.err [0-byte pre-agent remnant, never written by this agent]).
 - Comparators read first-hand: R2-91 card (source-face 51, carried
   obligations), zgx ledger rows 28/29, docs/mcp.md section 3,
   tests/t_mcp_face.py (assertion line 477, EXPECTED_TOOLS line 154),

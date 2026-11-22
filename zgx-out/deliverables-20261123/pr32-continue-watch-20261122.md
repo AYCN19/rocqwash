@@ -1,7 +1,16 @@
-TICKET: R2-98 continue-watch seat - PR#32 merge watch continuation after the
+TICKET: R2-98 continue-watch agent - PR#32 merge watch continuation after the
+
+Purpose. Session card for ticket R2-98; states the ticket's measured facts (archive copy of the deliverables batch).
+Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
+Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
+Evidence. Receipt line at the file end; anchor and scan values as cited in the body.
+Exit-codes. Not applicable (data face).
+
+## Card body
+
   R2-97 six-beat cap closed UNMERGED-DESK (20-ring judgment continuation) +
   feedback-line ninth read + MCP b_gate_audit pin assertion. Read-only:
-  desk-lane PR (hy7pc8gfmf-dotcom, NOT a seat PR), ZERO actions (no
+  desk-lane PR (hy7pc8gfmf-dotcom, NOT an agent PR), ZERO actions (no
   comment/review/merge/label/prompting); readings are API GETs + one git
   fetch + local read-only git/md5 faces; zero repo-tree writes; write
   faces = this card, the receipt, netred appends, /tmp/rqw-mcp/r2-98 staging
@@ -22,14 +31,14 @@ SOURCE ROUTING: ask R2-98; prior cards pr32-desk-i18n-20261122.md (R2-97
   /tmp/r2-97/pulls32.json url field; header form = pr32-desk card
   five-field
 COMPILE: none (zero-compile API/git/md5 card; no scans run - w12 stays
-  registered-not-ordered R2-95; this seat verifies the -104 face at
+  registered-not-ordered R2-95; this agent verifies the -104 face at
   git level only, the ask-named face)
 REGISTRY: netred_p6.md R2-98 block (14 rows; 10 network events all 200,
   zero failures, zero retries); receipt R2-98-receipt-watch.md; staging
   /tmp/rqw-mcp/r2-98/ (count set by ls below); English ASCII (CJK as
   \uXXXX)
 
-# PR#32 continue-watch: MERGED at beat 1/3, trend -104 prediction face verified, ninth read silent, pin equal (R2-98, 2026-11-22 UTC)
+# PR#32 continue-watch: MERGED at beat 1/3, trend -104 prediction face verified, ninth read silent, pin equal (R2-98, 2026/11/22 UTC)
 
 ## 1. Watch face (3-beat cap x 3 min, sleep 180 + explicit timeout 200000 ms)
 
@@ -43,10 +52,10 @@ VERDICT: MERGED-DESK. The terminal branch of the ask fired at beat 1/3;
 beats 2-3 were not spent (a merged PR state is terminal - further beats
 have zero marginal reading value; cap discipline is moot on a terminal
 state). Merge landed 17 m 09 s AFTER the R2-97 watch close (16:29:47Z),
-i.e. inside NO seat watch window - the R2-97 UNMERGED-DESK verdict was
+i.e. inside NO agent watch window - the R2-97 UNMERGED-DESK verdict was
 true at its own cap and is not rewritten. Zero actions, zero prompting,
 zero check-run reads (desk lane owns its own CI face) - held through
-this seat as well. updated_at == merged_at == closed_at ==
+this agent as well. updated_at == merged_at == closed_at ==
 2026-11-22T16:46:56Z; comments 0, review_comments 0, auto_merge None
 (none was ever armed; the desk merged manually, as #28 did).
 
@@ -61,7 +70,7 @@ this seat as well. updated_at == merged_at == closed_at ==
 | base.sha (PR-recorded) | 76cdbbf6 (stale creation-time base, as recorded at census) |
 
 Same-shape judgment (#28 precedent): desk self-open self-merge RECURRED -
-#32 created AND merged by hy7pc8gfmf-dotcom with zero seat involvement,
+#32 created AND merged by hy7pc8gfmf-dotcom with zero agent involvement,
 zero comments, zero reviews anywhere in its life. Tempo divergence
 recorded, not judged: #32 open-to-merge ~3 h 37 m (13:10:01Z ->
 16:46:56Z) vs #28 ~1 h 48 m. The desk's merge tempo governs; nothing
@@ -86,7 +95,7 @@ landed shape is a REBASE-MERGE single-parent chain:
 - Author identity preserved through the replay: all three landed commits
   authored by Apple <apple@AppledeMacBook-Air.local> with the ORIGINAL
   author dates (21:05:38 / 21:08:33 / 21:11:40 +0800); committer =
-  \u738b\u5c0f\u96ea at 2026-11-23 00:46:55 +0800 (= 16:46:55Z, the merge
+  \u738b\u5c0f\u96ea at 2026/11/23 00:46:55 +0800 (= 16:46:55Z, the merge
   moment, one second before the API merged_at 16:46:56Z); unsigned %G?=N.
 - NEW MAIN MOVE this window (R2-97 could not see it - its fetch was
   16:30:18Z): d354580 "fix(ci-realreds-final): engine-tolerant census
@@ -126,8 +135,8 @@ patch-literal net is -99, the band's floor edge); anchor - VERIFIED
 two-parent merge commit; recorded as a prediction-shape miss, values
 unaffected). The scanner-scope true reading (ai_flavor tree face, where
 the 8033 stock actually moves) remains the w12 window's business -
-registered not ordered (R2-95); this seat ran no scan. w12 face after
-this seat: the window 69dd18e5..origin/main is now 5 commits and carries
+registered not ordered (R2-95); this agent ran no scan. w12 face after
+this agent: the window 69dd18e5..origin/main is now 5 commits and carries
 non-yml paths (md/py) - by the w9 library rule the window PAYS a scan if
 ordered; the em stock 8033 stands CARRIED until that scan runs.
 
@@ -210,7 +219,7 @@ not apply.
 - Beats 2-3 of the watch cap: not spent - merged is a terminal state;
   recorded as a deliberate stop, not a skipped obligation.
 - No ai_flavor / norm_lint scan (w12 window registered not ordered,
-  R2-95; this seat verified the git-level -104 prediction face only -
+  R2-95; this agent verified the git-level -104 prediction face only -
   the ask's named face).
 - No pulls/{27,29,30,31} state re-reads, no issues/{n} faces, no
   check-runs/statuses/review threads (not ask-named; desk owns its CI
@@ -229,7 +238,7 @@ not apply.
   .json, baseline-empty.txt, api-issues-{27,29,30,31}.json, api-reviews-
   {27,29,30,31}.json, beat1.json, fetch.err, call-b_gate_audit.jsonl
   (+ .text + .err).
-- NETRED ledger this seat, every event: (1) GET /rate_limit - 200;
+- NETRED ledger this agent, every event: (1) GET /rate_limit - 200;
   (2-9) the eight feedback GETs - all 200; (10) git fetch origin - rc 0.
   Ten network events, zero failures, zero retries. MCP helper: one local
   stdio call (not a network event), logged in the ledger row form.
@@ -245,9 +254,9 @@ not apply.
   merge method field is not exposed by GET pulls/32 - "rebase-merge" is
   read from the commit-graph shape (single-parent chain, preserved author
   dates, rewritten committer), not from an API merge-method field. The
-  em stock 8033 is CARRIED, not re-measured - no scan this seat.
+  em stock 8033 is CARRIED, not re-measured - no scan this agent.
 - Zero writes inside the repo tree this session: HEAD/porcelain untouched
-  by this seat (fetch moves origin/* refs only); the only repo-side byte
+  by this agent (fetch moves origin/* refs only); the only repo-side byte
   face touched is the b-gate-audit.json derived-report rewrite, which
   measured byte-identical (pin c3b88ece pre == post). Card + receipt
   written outside the repo.
