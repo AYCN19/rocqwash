@@ -808,14 +808,32 @@ def selftest():
                 % fixture_dir)
         else:
             # judgment face, both directions: the full allowlist lands
-            # green, the empty default allowlist lands red (the fixtures
-            # deliberately carry eight axioms: the original five plus
-            # the three Stdlib families stdlib_axiom2.v exercises --
-            # proof_irrelevance / propositional_extensionality /
-            # constructive_indefinite_description, grounded to widen the
-            # census coverage -- so the allowlist must list every axiom
-            # the corpus carries or the green direction can never judge
-            # PASS; this mirrors tests/t_axiom_audit.py's ALLOW_ALL)
+            # green, the empty default allowlist lands red.  The corpus
+            # carries exactly eight axioms and the allowlist names each
+            # one with its carrier (verified by reading the fixtures;
+            # one platform axiom per census-visible statement):
+            #   classic
+            #       stdlib_axiom.v   t_axaudit_classic (Classical_Prop)
+            #   functional_extensionality_dep
+            #       stdlib_axiom.v   t_axaudit_funext (FunctionalExtensionality)
+            #   Eq_rect_eq.eq_rect_eq
+            #       stdlib_axiom.v   t_axaudit_k (Eqdep)
+            #   proof_irrelevance
+            #       stdlib_axiom2.v  t_axaudit_pi (ProofIrrelevance)
+            #   propositional_extensionality
+            #       stdlib_axiom2.v  t_axaudit_pe (PropExtensionality)
+            #   constructive_indefinite_description
+            #       stdlib_axiom2.v  t_axaudit_cid (IndefiniteDescription)
+            #   ax_audit_custom
+            #       custom_axiom.v:2 (Axiom; consumed by t_axaudit_custom)
+            #   ax_audit_param
+            #       custom_axiom.v:1 (Parameter; carried in
+            #       t_axaudit_custom's census on the CI face -- run
+            #       45039174608 job 137259541458 returned both custom
+            #       declarations for that statement)
+            # The allowlist must list every axiom the corpus carries or
+            # the green direction can never judge PASS; this mirrors
+            # tests/t_axiom_audit.py's ALLOW_ALL.
             allows = ["--allow-axiom", "classic",
                       "--allow-axiom", "functional_extensionality_dep",
                       "--allow-axiom", "Eq_rect_eq.eq_rect_eq",
