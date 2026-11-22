@@ -21,11 +21,12 @@ Dependencies.  Python 3 standard library only; the tool under test
   through the tool's own private temp workdir; zero network; writes
   only inside temporary directories.
 Evidence.  Every engine segment asserts exact census sets and exact
-  grades measured on Rocq 9.3.0 (classic / functional_extensionality_dep
-  / Eq_rect_eq.eq_rect_eq / the two custom_axiom.v declarations), the
-  reverse provenance map, both judgment directions (full allowlist
-  green rc 0, empty allowlist red rc 1), the report JSON schema
-  rocqwash.b-axiom-audit/1 and the printed parity table.
+  grades measured on Rocq 9.1.0 (classic / functional_extensionality_dep
+  / Eq_rect_eq.eq_rect_eq / the custom_axiom.v axiom; see the WANT_CENSUS
+  note below for the parameter-face caveat), the reverse provenance map,
+  both judgment directions (full allowlist green rc 0, empty allowlist
+  red rc 1), the report JSON schema rocqwash.b-axiom-audit/1 and the
+  printed parity table.
 Exit-codes.  0 = no FAIL line produced; 1 = at least one FAIL.
 """
 
@@ -45,9 +46,11 @@ EXPECTED_SCHEMA = "rocqwash.b-axiom-audit/1"
 EXPECTED_SEGMENTS = ["offline_vectors", "cli_contract", "engine_census",
                      "engine_report"]
 
-# Exact fixture expectations (measured on Rocq 9.3.0).  The allowlist
-# carries every fixture axiom (the census-allowed-green face judges the
-# whole corpus green); the three measured stdlib expansion families
+# Exact fixture expectations (measured on Rocq 9.1.0, the standing
+# engine of every engine-bearing face of this repo -- the self-hosted
+# CI lane installs no toolchain of its own).  The allowlist carries
+# every fixture axiom (the census-allowed-green face judges the whole
+# corpus green); the three measured stdlib expansion families
 # (proof_irrelevance / propositional_extensionality /
 # constructive_indefinite_description, the stdlib_axiom2.v corpus) are
 # allowlisted alongside the original five, mirroring the tool's own
@@ -60,6 +63,21 @@ ALLOW_ALL = ["--allow-axiom", "classic",
              "--allow-axiom", "constructive_indefinite_description",
              "--allow-axiom", "ax_audit_custom",
              "--allow-axiom", "ax_audit_param"]
+# t_axaudit_custom carries only ax_audit_custom in its assumption set
+# on Rocq 9.1.0: its proof term applies the opaque Axiom alone, and
+# `Print Assumptions` does not traverse that axiom's TYPE -- which is
+# where the Parameter ax_audit_param (custom_axiom.v line 1) is
+# mentioned.  Probed directly on this host: `coqc -q` over a copy of
+# custom_axiom.v with `Print Assumptions t_axaudit_custom.` appended
+# prints exactly "Axioms: / ax_audit_custom : ax_audit_param =
+# ax_audit_param", and the census row is identical under the HEAD and
+# the current tool, so this is the engine face, not a tool regression.
+# The earlier both-axioms expectation was annotated "measured on Rocq
+# 9.3.0", a face no engine-bearing run of this repo can reproduce
+# (hosted CI has no rocq at all; the local lane and the canonical
+# machine run Rocq 9.1.0).  ax_audit_param therefore has no consumer
+# statement, lands no census row and no inventory row, and stays
+# visible only through the declared-axiom sweep (WANT_DECLARED).
 WANT_CENSUS = {
     ("axaudit_clean.v", "t_axaudit_closed"): ("closed", []),
     ("stdlib_axiom.v", "t_axaudit_classic"): ("axioms", ["classic"]),
@@ -68,14 +86,13 @@ WANT_CENSUS = {
     ("stdlib_axiom.v", "t_axaudit_k"):
         ("axioms", ["Eq_rect_eq.eq_rect_eq"]),
     ("custom_axiom.v", "t_axaudit_custom"):
-        ("axioms", ["ax_audit_custom", "ax_audit_param"]),
+        ("axioms", ["ax_audit_custom"]),
 }
 WANT_GRADES = {
     "classic": "classical",
     "functional_extensionality_dep": "funext",
     "Eq_rect_eq.eq_rect_eq": "stdlib",
     "ax_audit_custom": "custom",
-    "ax_audit_param": "custom",
 }
 WANT_DECLARED = [
     {"name": "ax_audit_custom", "file": "custom_axiom.v", "line": 2,

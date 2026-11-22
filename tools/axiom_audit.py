@@ -809,10 +809,19 @@ def selftest():
         else:
             # judgment face, both directions: the full allowlist lands
             # green, the empty default allowlist lands red (the fixtures
-            # deliberately carry five axioms)
+            # deliberately carry eight axioms: the original five plus
+            # the three Stdlib families stdlib_axiom2.v exercises --
+            # proof_irrelevance / propositional_extensionality /
+            # constructive_indefinite_description, grounded to widen the
+            # census coverage -- so the allowlist must list every axiom
+            # the corpus carries or the green direction can never judge
+            # PASS; this mirrors tests/t_axiom_audit.py's ALLOW_ALL)
             allows = ["--allow-axiom", "classic",
                       "--allow-axiom", "functional_extensionality_dep",
                       "--allow-axiom", "Eq_rect_eq.eq_rect_eq",
+                      "--allow-axiom", "proof_irrelevance",
+                      "--allow-axiom", "propositional_extensionality",
+                      "--allow-axiom", "constructive_indefinite_description",
                       "--allow-axiom", "ax_audit_custom",
                       "--allow-axiom", "ax_audit_param"]
             rc, _out = spawn(["census", "--repo", fixture_dir,

@@ -1,1 +1,7 @@
-mirror_funext.lean:4:0: info: 'lp_mirror_funext' depends on axioms: [propext, Quot.sound]
+-- Reground live on Lean 4.33.1 against the binder-fixed mirror source
+-- (proof term now fun _A _B _f _g h => funext h): the statement binds
+-- five variables, the old term bound only three, so every earlier face
+-- of this declaration failed to compile and rode sorryAx instead.
+-- funext itself consumes Quot.sound only; propext (present in the old
+-- frozen text, captured from an uncompilable older face) is gone.
+mirror_funext.lean:4:0: info: 'lp_mirror_funext' depends on axioms: [Quot.sound]
