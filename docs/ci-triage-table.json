@@ -1,7 +1,7 @@
 {
   "schema": "rocqwash.ci-triage-table/1",
   "version": "1.9",
-  "updated": "2026-11-22",
+  "updated": "2026-11-23",
   "whitepaper": "docs/ci-whitepaper-recursive-era-v1-20261116.md",
   "consumer_contract": "Match the failing job's step log against markers (first match by precedence order); apply prescription; respect auto_repairable and escalation; record outcome (repaired/escalated/watch-only-guard-correct) in the repair ledger.",
   "classes": [
@@ -353,6 +353,21 @@
       "prescription": "Feed the mirror, then rerun-failed-jobs. The local job's checkout wanted the run head SHA through the insteadOf bridge (the desk dev tree IS the mirror) and the tree lacks the object: feed it (git fetch https://ghproxy.net/https://github.com/hy7pc8gfmf-dotcom/rocqwash +refs/heads/main:refs/heads/_bridge-main +refs/pull/*:refs/pull/* into the dev tree; after an API-side push also git update-ref refs/mirror-feed/main <sha>), verify the object resolves (git cat-file -e <sha>^{commit}), then rerun the failed jobs. NEVER delete or downgrade the blocking local job in response - deletion is the 20261122 misdiagnosis (advisory 35c9ecf, then removal 76cdbbf; both adjudicated and restored to the golden #260 form by 10da5cb/69dd18e), and the local face exists to escape the hosted runner's job duration wall. auto_repairable=true means desk-executable in one mechanical pass, NOT self-heal-executable: the self-heal watch is shore-side and structurally cannot feed the out-of-repo mirror (its rerun alone re-hits not-our-ref). Evidence: run 45022171306 job 137208434568 (head 35c9ecf, hosted faces green, run-level conclusion masked green by the advisory; checkout died 20261122T12:30:38Z right after the JOB_STARTED hook feed logged main=fetch-failed).",
       "guard": "Dev tree keeps uploadpack.allowAnySHA1InWant=true + uploadpack.allowReachableSHA1InWant=true (server side of the file:// bridge); every API-side push is followed by an active feed (ghproxy fetch + update-ref refs/mirror-feed/main); a feed failure must be loud and retried (never verdict=OK with main=fetch-failed silently). Discriminator vs R3/R6: R3 is the shore-side repair-push stale-target form (head moved), R6 is watch reflexivity - THIS class is the local checkout wanting an object the desk tree simply does not have yet; hosted faces green on the same head is the confirming signature, and the failing STEP is the checkout (no test step ever ran).",
       "escalation": "If the feed cannot be made to succeed (ghproxy down, disk, permissions), stop the local lane and escalate to the desk with the hook log tail - never route around it by weakening the pipeline (no advisory, no job deletion, no roster exclusion)."
+    },
+    {
+      "id": "R24",
+      "title": "engine-dependent census/expectation surface (exact-match expectations across engines = false red)",
+      "markers": [
+        "census-sets-exact mismatch",
+        "grades-exact mismatch",
+        "census engine returned ('axioms', ["
+      ],
+      "precedence": 24,
+      "family": "structural",
+      "auto_repairable": true,
+      "prescription": "Split the expectation into an engine-independent REQUIRED core plus a declared OPTIONAL extra surface (WANT_CENSUS_OPTIONAL pattern, tests/t_axiom_audit.py): the check becomes required-present AND extras-limited-to-declared-optional, never exact-equality across engines. Evidence: the LIVE-ROCQWASH runner census carries the Parameter ax_audit_param as an axiom row (run 45039174608 job 137259541458) while dev-shell engines fold it away; anchoring the expectation to either single face re-reds the other (both directions measured 20261122). Update the contract with the CI-evidence citation in an English comment; never delete the vector, never skip.",
+      "guard": "tests/t_axiom_audit.py census-sets-contract + grades-contract (core/optional split)",
+      "escalation": "engine-resolution divergence itself (which rocq answers the probe per context) is version-pin governance owned by the audit line"
     }
   ]
 }
