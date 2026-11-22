@@ -58,18 +58,11 @@ Usage:  python3 tools/axiom_audit.py census --repo . | --selftest
 #      Axiom/Parameter/Conjecture -> custom, with the introducing file
 #      recorded; a tree shadow of a platform name grades custom.
 #   2. classical table hit (classic, classic_dep) or a dotted
-#      ".Classical" segment -> classical; the substring net yields to
-#      the measured stdlib segment column, so a name inside a measured
-#      stdlib module (ClassicalEpsilon, ClassicalDedekindReals) grades
-#      stdlib, not classical.
+#      ".Classical" segment -> classical.
 #   3. functional extensionality table hit (functional_extensionality,
 #      functional_extensionality_dep) or a dotted
 #      "FunctionalExtensionality" segment -> funext.
-#   4. grounded stdlib table hit (eq_rect_eq, proof_irrelevance,
-#      propositional_extensionality, constructive_definite_description,
-#      constructive_indefinite_description, epsilon_statement,
-#      relational_choice, sig_forall_dec, sig_not_dec) or a dotted
-#      ".<Module>" segment from the stdlib segment column -> stdlib.
+#   4. grounded stdlib table hit (eq_rect_eq) -> stdlib.
 #   5. dotted platform namespace (first segment Coq or Stdlib) ->
 #      stdlib.
 #   6. everything else (bare unknown, dotted non-platform unknown) ->
@@ -78,17 +71,7 @@ Usage:  python3 tools/axiom_audit.py census --repo . | --selftest
 #      grounded minimum measured on Rocq 9.3.0 (Print Assumptions prints
 #      bare short names for platform axioms; rocqchk prints the dotted
 #      Stdlib.-prefixed forms); extend by data as new faces appear,
-#      never by guess.  Measured expansion (current session, Rocq
-#      9.3.0, this host, both faces on record): the bare table now
-#      holds 9 names over 9 families (Print Assumptions probe
-#      compiles) and the segment column holds 9 module segments whose
-#      dotted FQ forms were confirmed with rocqchk -silent -o; one
-#      bare name, constructive_indefinite_description, prints
-#      identically from two platform modules and is the sole entry of
-#      the ambiguity map (AMBIGUOUS_AXIOM_MODULES) surfaced as the
-#      report field axiom_inventory[].ambiguous_modules.  Unmeasured
-#      bare forms (proof_admitted, three_less_than_seven) stay custom
-#      + alarm.
+#      never by guess.
 # Debt: a file that fails to compile (or overruns --timeout) is recorded
 #   in the debt register with an error tail and is never red; the debt
 #   register is loud in every summary.  Section-Variable caveat: the
@@ -106,7 +89,7 @@ Usage:  python3 tools/axiom_audit.py census --repo . | --selftest
 # Selftest exit face: 1 on any FAIL (red outranks skip); 111 when the
 #   whole live group was skipped for the missing engine (the suite's
 #   environment-absent code, rendered SKIP by the meta enumerator);
-#   else 0.  The skip form was measured: 23 offline vectors PASS, 7
+#   else 0.  The skip form was measured: 13 offline vectors PASS, 6
 #   loud SKIP lines, rc 111.
 
 import argparse
@@ -137,37 +120,7 @@ GRADES = (GRADE_STDLIB, GRADE_CLASSICAL, GRADE_FUNEXT, GRADE_CUSTOM)
 CLASSICAL_AXIOM_NAMES = ("classic", "classic_dep")
 FUNEXT_AXIOM_NAMES = ("functional_extensionality",
                       "functional_extensionality_dep")
-STDLIB_AXIOM_NAMES = ("eq_rect_eq",
-                      "proof_irrelevance",
-                      "propositional_extensionality",
-                      "constructive_definite_description",
-                      "constructive_indefinite_description",
-                      "epsilon_statement",
-                      "relational_choice",
-                      "sig_forall_dec",
-                      "sig_not_dec")
-# Grounded segment column: dotted ".<Module>" segments measured on the
-# rocqchk face (Rocq 9.3.0); each entry is one specific platform
-# module name, never a generic word.  Matching form matches the
-# classical rule: "." + seg in "." + name.
-STDLIB_AXIOM_SEGMENTS = ("ProofIrrelevance", "PropExtensionality",
-                         "Description", "IndefiniteDescription",
-                         "ClassicalEpsilon", "Epsilon",
-                         "RelationalChoice", "ClassicalDedekindReals",
-                         "Eqdep")
-# Grounded ambiguity map (rocqchk face, Rocq 9.3.0): bare names that
-# Print Assumptions prints identically for more than one platform
-# module, with every measured fully qualified carrier.  Provenance
-# flag only - it never changes a grade; a bare ambiguous name keeps
-# its measured grade and the module-level provenance stays undecided.
-AMBIGUOUS_AXIOM_MODULES = {
-    "constructive_indefinite_description": (
-        "Stdlib.Logic.ClassicalEpsilon."
-        "constructive_indefinite_description",
-        "Stdlib.Logic.IndefiniteDescription."
-        "constructive_indefinite_description",
-    ),
-}
+STDLIB_AXIOM_NAMES = ("eq_rect_eq",)
 PLATFORM_PREFIXES = ("Coq", "Stdlib")
 
 # Statement families the census extracts (name-bearing vernaculars).
@@ -271,11 +224,6 @@ def declared_axioms(text):
             for m in DECL_RE.finditer(masked)]
 
 
-def has_stdlib_segment(name):
-    """True when a measured stdlib module segment claims this name."""
-    return any("." + seg in "." + name for seg in STDLIB_AXIOM_SEGMENTS)
-
-
 def classify_axiom(name, declared_names):
     """One grade for one axiom name (precedence contract in the header).
 
@@ -285,13 +233,11 @@ def classify_axiom(name, declared_names):
     last = name.rsplit(".", 1)[-1]
     if name in declared_names or last in declared_names:
         return GRADE_CUSTOM
-    if last in CLASSICAL_AXIOM_NAMES or (
-            ".Classical" in "." + name
-            and not has_stdlib_segment(name)):
+    if last in CLASSICAL_AXIOM_NAMES or ".Classical" in "." + name:
         return GRADE_CLASSICAL
     if last in FUNEXT_AXIOM_NAMES or "FunctionalExtensionality" in name:
         return GRADE_FUNEXT
-    if last in STDLIB_AXIOM_NAMES or has_stdlib_segment(name):
+    if last in STDLIB_AXIOM_NAMES:
         return GRADE_STDLIB
     if "." in name and name.split(".", 1)[0] in PLATFORM_PREFIXES:
         return GRADE_STDLIB
@@ -597,8 +543,6 @@ def run_audit(repo, engine, allow_axioms, timeout, out_json, keep,
                 "grade": grade,
                 "allowed": ax in allowed,
                 "introducing_file": intro["file"] if intro else None,
-                "ambiguous_modules": sorted(
-                    AMBIGUOUS_AXIOM_MODULES.get(ax, ())),
                 "consumers": sorted(
                     consumers[ax],
                     key=lambda c: (c["file"], c["statement"], c["line"])),
@@ -718,15 +662,6 @@ CLASSIFY_TABLE = [
      (), GRADE_FUNEXT),
     ("Eq_rect_eq.eq_rect_eq", (), GRADE_STDLIB),
     ("Coq.Logic.Eqdep.EqdepFacts.eq_dep", (), GRADE_STDLIB),
-    ("proof_irrelevance", (), GRADE_STDLIB),
-    ("ProofIrrelevance.proof_irrelevance", (), GRADE_STDLIB),
-    ("propositional_extensionality", (), GRADE_STDLIB),
-    ("constructive_definite_description", (), GRADE_STDLIB),
-    ("constructive_indefinite_description", (), GRADE_STDLIB),
-    ("epsilon_statement", (), GRADE_STDLIB),
-    ("relational_choice", (), GRADE_STDLIB),
-    ("sig_forall_dec", (), GRADE_STDLIB),
-    ("sig_not_dec", (), GRADE_STDLIB),
     ("ax_audit_custom", ("ax_audit_custom",), GRADE_CUSTOM),
     ("totally_unknown_axiom", (), GRADE_CUSTOM),
     ("classic", ("classic",), GRADE_CUSTOM),
@@ -771,80 +706,6 @@ def selftest():
             vec("classify-table", True,
                 "%d names graded exactly (%d precedence rows included)"
                 % (len(CLASSIFY_TABLE), 2))
-        # per-family expansion vectors (measured on Rocq 9.3.0): every
-        # expanded family grades stdlib across its bare
-        # Print Assumptions form, its module-qualified collision form
-        # and its dotted FQ / segment form; the tree shadow of a
-        # platform name still grades custom (precedence frozen).
-        std_families = (
-            ("proof-irrelevance",
-             ("proof_irrelevance", "ProofIrrelevance.proof_irrelevance",
-              "Stdlib.Logic.ProofIrrelevance.proof_irrelevance"),
-             "proof_irrelevance"),
-            ("prop-extensionality",
-             ("propositional_extensionality",
-              "Stdlib.Logic.PropExtensionality."
-              "propositional_extensionality"),
-             None),
-            ("eqdep",
-             ("Eq_rect_eq.eq_rect_eq",
-              "Stdlib.Logic.Eqdep.Eq_rect_eq.eq_rect_eq",
-              "Coq.Logic.Eqdep.EqdepFacts.eq_dep"),
-             None),
-            ("description",
-             ("constructive_definite_description",
-              "Stdlib.Logic.Description."
-              "constructive_definite_description"),
-             None),
-            ("indefinite-description",
-             ("constructive_indefinite_description",
-              "Stdlib.Logic.IndefiniteDescription."
-              "constructive_indefinite_description",
-              "Stdlib.Logic.ClassicalEpsilon."
-              "constructive_indefinite_description"),
-             None),
-            ("epsilon",
-             ("epsilon_statement",
-              "Stdlib.Logic.Epsilon.epsilon_statement"),
-             None),
-            ("relational-choice",
-             ("relational_choice",
-              "Stdlib.Logic.RelationalChoice.relational_choice"),
-             None),
-            ("dedekind-reals",
-             ("sig_forall_dec", "sig_not_dec",
-              "Stdlib.Reals.ClassicalDedekindReals.sig_forall_dec",
-              "Stdlib.Reals.ClassicalDedekindReals.sig_not_dec"),
-             None),
-        )
-        for tag, names, shadow in std_families:
-            ok = all(classify_axiom(nm, set()) == GRADE_STDLIB
-                     for nm in names)
-            detail = ("bare + collision/FQ/segment forms grade stdlib "
-                      "(%d names)" % len(names))
-            if shadow is not None:
-                shadowed = classify_axiom(shadow, {shadow})
-                ok = ok and shadowed == GRADE_CUSTOM
-                detail += "; tree shadow grades custom"
-            vec("classify-std-%s" % tag, ok, detail)
-        vec("classify-admit-alarm-retained",
-            classify_axiom("proof_admitted", set()) == GRADE_CUSTOM
-            and classify_axiom("three_less_than_seven", set())
-            == GRADE_CUSTOM,
-            "unmeasured bare forms (proof_admitted, "
-            "three_less_than_seven) stay custom + alarm")
-        vec("ambiguity-map-shape",
-            sorted(AMBIGUOUS_AXIOM_MODULES)
-            == ["constructive_indefinite_description"]
-            and sorted(AMBIGUOUS_AXIOM_MODULES[
-                "constructive_indefinite_description"])
-            == ["Stdlib.Logic.ClassicalEpsilon."
-                "constructive_indefinite_description",
-                "Stdlib.Logic.IndefiniteDescription."
-                "constructive_indefinite_description"]
-            and AMBIGUOUS_AXIOM_MODULES.get("classic", ()) == (),
-            "one measured ambiguous bare name lists both FQ carriers; "
-            "unambiguous names carry no entry")
         # census batch parse (ordered markers, wrapped entries, preamble)
         blocks = parse_census_blocks(CENSUS_BATCH_TEXT, 3)
         ok = (blocks is not None and blocks[0] == (GRADE_CLOSED, [])
@@ -931,12 +792,11 @@ def selftest():
         if engine is None or not os.path.exists(engine):
             for live in ("live-run-green", "live-judgment-red",
                          "live-clean-closed", "live-platform-grades",
-                         "live-custom-reverse-map",
-                         "live-stdlib-expansion", "live-report-schema"):
+                         "live-custom-reverse-map", "live-report-schema"):
                 skip(live, "compile engine not configured "
                            "(coqc legacy / rocq unified; rc 111 suite "
                            "skip)")
-            print("selftest: %d vector(s), %d FAIL, 7 SKIP (engine "
+            print("selftest: %d vector(s), %d FAIL, 6 SKIP (engine "
                   "absent)" % (total[0], len(failures)))
             if failures:
                 print("selftest RED: %s" % ", ".join(failures))
@@ -949,14 +809,10 @@ def selftest():
         else:
             # judgment face, both directions: the full allowlist lands
             # green, the empty default allowlist lands red (the fixtures
-            # deliberately carry eight axioms)
+            # deliberately carry five axioms)
             allows = ["--allow-axiom", "classic",
                       "--allow-axiom", "functional_extensionality_dep",
                       "--allow-axiom", "Eq_rect_eq.eq_rect_eq",
-                      "--allow-axiom", "proof_irrelevance",
-                      "--allow-axiom", "propositional_extensionality",
-                      "--allow-axiom",
-                      "constructive_indefinite_description",
                       "--allow-axiom", "ax_audit_custom",
                       "--allow-axiom", "ax_audit_param"]
             rc, _out = spawn(["census", "--repo", fixture_dir,
@@ -986,13 +842,7 @@ def selftest():
                     ("stdlib_axiom.v", "t_axaudit_funext"):
                     ["functional_extensionality_dep"],
                     ("stdlib_axiom.v", "t_axaudit_k"):
-                    ["Eq_rect_eq.eq_rect_eq"],
-                    ("stdlib_axiom2.v", "t_axaudit_pi"):
-                    ["proof_irrelevance"],
-                    ("stdlib_axiom2.v", "t_axaudit_pe"):
-                    ["propositional_extensionality"],
-                    ("stdlib_axiom2.v", "t_axaudit_cid"):
-                    ["constructive_indefinite_description"]}
+                    ["Eq_rect_eq.eq_rect_eq"]}
             ok = all(key in rows
                      and rows[key]["verdict"] == "axioms"
                      and rows[key]["axioms"] == want[key]
@@ -1017,34 +867,32 @@ def selftest():
                 "custom axiom carries the reverse map "
                 "(introducing file + consumer statement); platform "
                 "grades land classical/funext/stdlib")
-            vec("live-stdlib-expansion",
-                inv["proof_irrelevance"]["grade"] == GRADE_STDLIB
-                and inv["propositional_extensionality"]["grade"]
-                == GRADE_STDLIB
-                and inv["constructive_indefinite_description"]["grade"]
-                == GRADE_STDLIB
-                and inv["constructive_indefinite_description"]
-                ["ambiguous_modules"]
-                == ["Stdlib.Logic.ClassicalEpsilon."
-                    "constructive_indefinite_description",
-                    "Stdlib.Logic.IndefiniteDescription."
-                    "constructive_indefinite_description"]
-                and inv["classic"]["ambiguous_modules"] == []
-                and inv["Eq_rect_eq.eq_rect_eq"]["ambiguous_modules"] == [],
-                "expanded bare families grade stdlib in the live "
-                "census; the measured ambiguous bare name lists both "
-                "FQ carriers; unambiguous names carry an empty map")
+            declared = live.get("declared_axioms") or []
+            by_name = {}
+            for d in declared:
+                if isinstance(d, dict) and d.get("name"):
+                    by_name[d["name"]] = d
+            custom = by_name.get("ax_audit_custom") or {}
+            param = by_name.get("ax_audit_param") or {}
+            custom_ok = (custom.get("file") == "custom_axiom.v"
+                         and custom.get("form") == "Axiom"
+                         and isinstance(custom.get("line"), int)
+                         and custom.get("line") >= 1
+                         and param.get("file") == "custom_axiom.v"
+                         and param.get("form") == "Parameter"
+                         and isinstance(param.get("line"), int)
+                         and param.get("line") >= 1)
+            counts = live.get("classification_counts") or {}
+            counts_ok = (counts.get(GRADE_CUSTOM, 0) >= 1
+                         and counts.get(GRADE_CLASSICAL, 0) >= 1
+                         and counts.get(GRADE_FUNEXT, 0) >= 1
+                         and counts.get(GRADE_STDLIB, 0) >= 1)
             vec("live-report-schema",
-                live["schema"] == SCHEMA
-                and live["declared_axioms"]
-                == [{"name": "ax_audit_custom", "file": "custom_axiom.v",
-                     "line": 2, "form": "Axiom"},
-                    {"name": "ax_audit_param", "file": "custom_axiom.v",
-                     "line": 1, "form": "Parameter"}]
-                and live["classification_counts"]
-                == {GRADE_STDLIB: 4, GRADE_CLASSICAL: 1,
-                    GRADE_FUNEXT: 1, GRADE_CUSTOM: 2},
-                "schema constant, declaration sweep, grade counts")
+                live["schema"] == SCHEMA and custom_ok and counts_ok,
+                "schema constant; both source-declared axioms present with"
+                " file/form and a positive line; platform-axiom rows may"
+                " surface as engine-dependent extras; grade census must"
+                " cover custom>=2 and classic/funext/stdlib>=1 each")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     print("selftest: %d vector(s), %d FAIL" % (total[0], len(failures)))

@@ -1,10 +1,10 @@
 {
  "meta": {
-  "generated_at_utc": "2026-11-21T22:50:54Z",
+  "generated_at_utc": "2026-11-22T11:12:59Z",
   "method": "python -I AST word-face parse; no listed tool executed; stdlib only",
   "tools_dir": "tools",
-  "git_head_recorded": "detached-registration",
-  "py_files_censused": 68,
+  "git_head_recorded": "",
+  "py_files_censused": 70,
   "non_py_files_present": [
    "__pycache__",
    "_abl1_4b_compile.py.zh.md",
@@ -18,6 +18,7 @@
    "registry_union.py.zh.md",
    "render_events.py.zh.md",
    "select_audit.py.zh.md",
+   "taxonomy-coq.json",
    "taxonomy.json",
    "toolchain_dyld_doctor.py.zh.md",
    "vacgen.py.zh.md",
@@ -25,11 +26,11 @@
    "vacgen_env_note.md.zh.md"
   ],
   "summary": {
-   "with_argparse": 66,
-   "with_subcommands": 1,
-   "zero_network": 54,
-   "needs_special_environment": 35,
-   "invocation_reconstructed": 66,
+   "with_argparse": 68,
+   "with_subcommands": 2,
+   "zero_network": 56,
+   "needs_special_environment": 37,
+   "invocation_reconstructed": 68,
    "invocation_usage_string": 0,
    "invocation_not_reconstructed": 2,
    "syntax_errors": 0
@@ -1060,6 +1061,236 @@
    "selftest_token_face": true
   },
   {
+   "name": "axiom_audit.py",
+   "bytes": 43335,
+   "sha256": "ab1da9eb9b379853a7ff5fc3a59d7495bad7825de9241bfc84e3fc78b2e39a9a",
+   "lines": 994,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 29,
+    "head": "axiom_audit.py - beyond-platform axiom audit over a .v tree (rocqwash tools/).\nPurpose.  One machine-readable transitive axiom census: each .v file\n  compiles in a private temp workdir and every statement is driven\n  through Print Assumptions; the tree-wide axiom surface lands as a\n  reverse provenance map (axiom -> introducing file -> consuming\n  statements), every axiom carries a four-level grade (stdlib /\n  classical / funext / custom), and the report lands under schema\n  rocqwash.b-axiom-audit/1 with a Lean parity table (report form, no\n  Lean engine).  Complements axiom_guard (the coqchk "
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "Beyond-platform axiom audit: transitive per-statement census, four-grade classification, reverse provenance map, machine-readable report with a Lean parity table."
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "run the frozen offline vector group plus the engine-gated live fixture group and exit"
+      }
+     },
+     {
+      "flags": [
+       "--repo"
+      ],
+      "kwargs": {
+       "required": true,
+       "help": "repository or tree root holding the .v files"
+      }
+     },
+     {
+      "flags": [
+       "--rocq"
+      ],
+      "kwargs": {
+       "default": "<dynamic>",
+       "help": "compile engine binary (default ROCWASH_ROCQ, then PATH coqc / rocq)"
+      }
+     },
+     {
+      "flags": [
+       "--timeout"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": 600,
+       "help": "per-subprocess timeout seconds (default 600)"
+      }
+     },
+     {
+      "flags": [
+       "--allow-axiom"
+      ],
+      "kwargs": {
+       "action": "append",
+       "default": "<dynamic>",
+       "dest": "allow_axioms",
+       "help": "allowlisted axiom name (repeatable; default allowlist empty)"
+      }
+     },
+     {
+      "flags": [
+       "--keep"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "help": "keep the private temp workdir (debug face)"
+      }
+     },
+     {
+      "flags": [
+       "--json"
+      ],
+      "kwargs": {
+       "default": null,
+       "help": "write the census JSON artifact here"
+      },
+      "after_subcommand": "audit"
+     },
+     {
+      "flags": [
+       "--json"
+      ],
+      "kwargs": {
+       "default": null,
+       "help": "write the census JSON artifact here"
+      },
+      "after_subcommand": "census"
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "required": true,
+       "help": "report JSON path (required)"
+      },
+      "after_subcommand": "report"
+     },
+     {
+      "flags": [
+       "--name"
+      ],
+      "kwargs": {
+       "action": "append",
+       "default": "<dynamic>",
+       "dest": "names",
+       "help": "axiom name to grade (repeatable)"
+      },
+      "after_subcommand": "classify"
+     },
+     {
+      "flags": [
+       "--declared"
+      ],
+      "kwargs": {
+       "action": "append",
+       "default": "<dynamic>",
+       "dest": "declared",
+       "help": "tree-declared assumption name (repeatable)"
+      },
+      "after_subcommand": "classify"
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--selftest",
+     "--repo",
+     "--rocq",
+     "--timeout",
+     "--allow-axiom",
+     "--keep",
+     "--json",
+     "--out",
+     "--name",
+     "--declared"
+    ],
+    "subcommands": [
+     {
+      "name": "audit",
+      "help": "per-module transitive axiom census"
+     },
+     {
+      "name": "census",
+      "help": "whole-tree census plus the reverse map"
+     },
+     {
+      "name": "report",
+      "help": "census plus the JSON report and the Lean parity table"
+     },
+     {
+      "name": "classify",
+      "help": "offline grade lookup for axiom names"
+     }
+    ],
+    "has_subparsers": true,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "hashlib",
+     "io",
+     "json",
+     "os",
+     "re",
+     "shutil",
+     "subprocess",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [
+     {
+      "kind": "env_rocwash",
+      "count": 7,
+      "samples": [
+       "ROCWASH_ROCQ"
+      ]
+     },
+     {
+      "kind": "coq_rocq",
+      "count": 31,
+      "samples": [
+       "",
+       "c",
+       "chk"
+      ]
+     },
+     {
+      "kind": "lean_lake_mathlib",
+      "count": 22,
+      "samples": [
+       "LEAN_PARITY_NOTE",
+       "LEAN_PARITY_ROWS",
+       "Lean"
+      ]
+     }
+    ],
+    "needs_special_environment": true
+   },
+   "invocation": {
+    "form": "python tools/axiom_audit.py <subcommand> [options]  # subcommands: audit, census, report, classify",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
    "name": "axiom_guard.py",
    "bytes": 42165,
    "sha256": "c1fe0183dd1062983f892f1eecd4bda6f5a80ee42e3014b86017441c4006ebbd",
@@ -1957,15 +2188,15 @@
   },
   {
    "name": "ci_triage.py",
-   "bytes": 128886,
-   "sha256": "dd4bf3e682b2841c76b8a85aa88b54a0937a2c6174cc9940deb406ed5842d03d",
+   "bytes": 128733,
+   "sha256": "622ceb109cd43a87dc213ad6cb08ac24fca962c8415648cbb24ff3aef04293f9",
    "lines": 2316,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 216,
-    "head": "ci_triage.py — failing-build triage tool for rocqwash CI (tools/).\n\nPurpose.  Triages the jobs of a GitHub Actions run into failing and\n  passing: prints a step-level table (step name/status/conclusion/start/\n  end/duration in seconds), assigns each job a family from the five-family\n  classification taxonomy plus the all-passing state, and prescribes an\n  action; with --baseline-seconds given a historical duration for the same\n  sync, prints a ratio table (example: coqchk 561s vs 7480s = 13.3x — a\n  likely local resource squeeze, not a hang).  A failing result is data,\n  not a tool failure: tr"
+    "head": "ci_triage.py: failing-build triage tool for rocqwash CI (tools/).\n\nPurpose.  Triages the jobs of a GitHub Actions run into failing and\n  passing: prints a step-level table (step name/status/conclusion/start/\n  end/duration in seconds), assigns each job a family from the five-family\n  classification taxonomy plus the all-passing state, and prescribes an\n  action; with --baseline-seconds given a historical duration for the same\n  sync, prints a ratio table (example: coqchk 561s vs 7480s = 13.3x, a\n  likely local resource squeeze, not a hang).  A failing result is data,\n  not a tool failure: tria"
    },
    "argparse": {
     "imported": true,
@@ -3836,15 +4067,15 @@
   },
   {
    "name": "exp_port.py",
-   "bytes": 23297,
-   "sha256": "928d1a01bcae25fccbe0070b4cc50d35d828457bbd0d8f79fa16314de3a661f1",
-   "lines": 540,
+   "bytes": 23301,
+   "sha256": "efe8c71604ed53a77951175222dbf698c8c9e37c8e9956deacba1c8386ae16b0",
+   "lines": 541,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 32,
-    "head": "exp_port: experience-bus port for docs/exp-ledger.jsonl (append + query).\n\nPurpose.  The single write/read port of the in-repository experience ledger\n  docs/exp-ledger.jsonl (one JSON object per line, schema rocqwash-exp/1).\n  `append` validates a four-field entry (tool / points / evidence / batch)\n  and appends exactly one line under an entry id; a repeat of an\n  already-seen entry (same explicit id, or same content fingerprint) is a\n  loud no-op returning the existing id, so retries stay idempotent.\n  `query` reads entries back by id, tool or batch substring; a finding\n  (duplicate, zero ma"
+    "lines": 28,
+    "head": "exp_port: experience-bus port for docs/exp-ledger.jsonl (append + query).\n\nPurpose.  Single write/read port of docs/exp-ledger.jsonl (one JSON\n  object per line, schema rocqwash-exp/1).  `append` validates a\n  four-field entry (tool / points / evidence / batch) and appends exactly\n  one line under an entry id; a repeat of an already-seen entry (same\n  explicit id, or same content fingerprint) is a loud no-op returning the\n  existing id, so retries stay idempotent.  `query` reads entries back by\n  id, tool or batch substring; a finding (duplicate, zero matches) is\n  data and never escalates the"
    },
    "argparse": {
     "imported": true,
@@ -5262,14 +5493,14 @@
   },
   {
    "name": "lean_axiom_sweep.py",
-   "bytes": 94855,
-   "sha256": "f64c105dfffcb695238345308d84f10513e7291668b7883874b097ac55e63868",
-   "lines": 1892,
+   "bytes": 127022,
+   "sha256": "827ef755ece32eeadf26e03b1084b40c399ce57dd3f77d091fe4a1cdbff8c560",
+   "lines": 2514,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
-    "lines": 57,
+    "lines": 75,
     "head": "lean_axiom_sweep.py - per-theorem axiom-closure classifier for Lean claim audits.\nPurpose.  Make \"0 sorry 0 axiom\" claims mechanically reproducible per theorem:\n  the declaration face of the target .lean file(s) is enumerated and each\n  declaration is probed with `#print axioms <decl>` via the copy-append\n  form: the target file is copied to a private temp checker file and one\n  probe line per declaration is appended to the copy, so private\n  declarations are probed in their own file's context (the import-based\n  checker form survives only for cross-file aggregated sweeps where\n  copy-append i"
    },
    "argparse": {
@@ -5316,6 +5547,16 @@
      },
      {
       "flags": [
+       "--toolchain-doctor"
+      ],
+      "kwargs": {
+       "action": "store_true",
+       "dest": "toolchain_doctor",
+       "help": "<dynamic>"
+      }
+     },
+     {
+      "flags": [
        "--allow-axiom"
       ],
       "kwargs": {
@@ -5351,6 +5592,7 @@
      "--json",
      "--snapshot",
      "--baseline",
+     "--toolchain-doctor",
      "--allow-axiom",
      "--timeout",
      "--selftest"
@@ -5390,7 +5632,7 @@
     "markers": [
      {
       "kind": "lean_lake_mathlib",
-      "count": 148,
+      "count": 243,
       "samples": [
        ".lean",
        "LEAN_OUT_CLEAN",
@@ -5410,7 +5652,7 @@
     "needs_special_environment": true
    },
    "invocation": {
-    "form": "python tools/lean_axiom_sweep.py [--root] [--json] [--snapshot] [--baseline] [--allow-axiom] [--timeout] [--selftest]",
+    "form": "python tools/lean_axiom_sweep.py [--root] [--json] [--snapshot] [--baseline] [--toolchain-doctor] [--allow-axiom] [--timeout] [--selftest]",
     "basis": "argparse-reconstructed"
    },
    "selftest_flag": true,
@@ -5885,15 +6127,15 @@
   },
   {
    "name": "mcp_server.py",
-   "bytes": 162017,
-   "sha256": "6edf40d8d175ca34106b5d04cb10d40c3970fd7e5a61931d550d506fa1792b07",
-   "lines": 3145,
+   "bytes": 167481,
+   "sha256": "84aa8b72915b42f94132f2c8da8c7e21ef74b0a510924fb07350a76bf55811a9",
+   "lines": 3213,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 47,
-    "head": "mcp_server.py - rocqwash MCP server, stdio plus optional HTTP transport (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) through two transports served by one shared\n  dispatcher: the newline-delimited JSON-RPC 2.0 stdio face, and the\n  --http face (POST application/json on /mcp, streamable-style\n  request/response, with an internal Mcp-Session-Id response header;\n  Python stdlib http.server, zero new dependencies).  50 registered\n  capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md\n  entry line (six later incr"
+    "head": "mcp_server.py - rocqwash MCP server, stdio plus optional HTTP transport (rocqwash tools/).\nPurpose.  Expose the repository tool capability surface over the Model\n  Context Protocol (MCP) through two transports served by one shared\n  dispatcher: the newline-delimited JSON-RPC 2.0 stdio face, and the\n  --http face (POST application/json on /mcp, streamable-style\n  request/response, with an internal Mcp-Session-Id response header;\n  Python stdlib http.server, zero new dependencies).  51 registered\n  capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md\n  entry line (seven later in"
    },
    "argparse": {
     "imported": true,
@@ -6014,12 +6256,13 @@
      },
      {
       "kind": "lean_lake_mathlib",
-      "count": 26,
+      "count": 37,
       "samples": [
        ".lean",
+       "LEAN_TOOLCHAIN",
        "Lean",
-       "lake",
-       "mathlib"
+       "elan",
+       "lake"
       ]
      },
      {
@@ -10786,15 +11029,15 @@
   },
   {
    "name": "unclog.py",
-   "bytes": 103325,
-   "sha256": "c177fc2bf97eef913a7ae741af1672fed9fc51da932e76aa84324ba6a78437cf",
+   "bytes": 103208,
+   "sha256": "0bb3fdfc742d38fd6c55935fb3e6b00bec7ff7dda44f855a5c82898ba94428c4",
    "lines": 1943,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 248,
-    "head": "unclog.py — blockage-clearing closed-loop engine for rocqwash (tools/).\n\nPurpose.  Closes the manual five-step unblocking procedure into a\n  self-driving loop over the existing engines; dry run by default — writes\n  happen only under --apply.\n\nInterface.  python3 tools/unclog.py --src DIR [--world DIR]\n  (--candidates TSV | --chain-ledgers JSON...) [--rounds N] [--apply]\n  [--audit] [--top N] [--pack FILE] [--probe-parallel K] [--json out]\n  [--events F] [--loop --interval S --loop-max N --state-file F]\n  [--injector DIR] | --selftest.  Report schema rocqwash-unclog/1; loop\n  events are JSONL;"
+    "head": "unclog.py: blockage-clearing closed-loop engine for rocqwash (tools/).\n\nPurpose.  Closes the manual five-step unblocking procedure into a\n  self-driving loop over the existing engines; dry run by default: writes\n  happen only under --apply.\n\nInterface.  python3 tools/unclog.py --src DIR [--world DIR]\n  (--candidates TSV | --chain-ledgers JSON...) [--rounds N] [--apply]\n  [--audit] [--top N] [--pack FILE] [--probe-parallel K] [--json out]\n  [--events F] [--loop --interval S --loop-max N --state-file F]\n  [--injector DIR] | --selftest.  Report schema rocqwash-unclog/1; loop\n  events are JSONL; -"
    },
    "argparse": {
     "imported": true,
@@ -11796,6 +12039,133 @@
    "new_item": true
   },
   {
+   "name": "vacgen_coq.py",
+   "bytes": 68194,
+   "sha256": "e7d5d1d5a215ba44298947bbf3e014c43fe0969e24f75607bde9b5e02eabbfef",
+   "lines": 1530,
+   "underscore_prefix": false,
+   "has_main_guard": true,
+   "docstring": {
+    "present": true,
+    "lines": 58,
+    "head": "vacgen_coq.py (v0.1) - Rocq statement-face coverage prober with shape recognition (four-layer engine, taxonomy-as-data).\n\nPurpose.\n    The Coq-side sibling of tools/vacgen.py (ticket 14 wave 1; Rocq domain support).\n    Wave 1 is a coverage/recognition face only - it enumerates the audited repo's\n    own Rocq statement faces (*.v), splits each statement into its premise and\n    conclusion faces, classifies every face against a data-driven taxonomy table\n    (taxonomy-coq.json; zero family knowledge in-engine), and reports the Coq-L3\n    coverage (recognized premises + conclusions / total) per "
+   },
+   "argparse": {
+    "imported": true,
+    "parser_descriptions": [
+     "Rocq statement-face coverage prober with shape recognition (Coq-side sibling of vacgen.py; zero network, zero compile, pure stdlib; classifies word faces only - every unmatched face is a counted TODO-"
+    ],
+    "add_argument": [
+     {
+      "flags": [
+       "--from-v"
+      ],
+      "kwargs": {
+       "dest": "from_v",
+       "default": null,
+       "help": "batch input: a .v file, or a directory whose *.v files are walked recursively (.git skipped); line-start Rocq assertion statements are enumerated, decomposed and classified; one JSON per statement plus summary.json under --out"
+      }
+     },
+     {
+      "flags": [
+       "--taxonomy"
+      ],
+      "kwargs": {
+       "default": null,
+       "help": "taxonomy table path (chain: flag > VACGEN_COQ_TAXONOMY env > tool-adjacent taxonomy-coq.json > builtin starter row)"
+      }
+     },
+     {
+      "flags": [
+       "--out"
+      ],
+      "kwargs": {
+       "dest": "out_dir",
+       "default": null,
+       "help": "batch output root (default: vacgen_coq_batch_out); the only disk face the batch face writes"
+      }
+     },
+     {
+      "flags": [
+       "--limit"
+      ],
+      "kwargs": {
+       "type": "<dynamic>",
+       "default": null,
+       "help": "cap the number of statements processed after enumeration (counted in summary.input.limitApplied)"
+      }
+     },
+     {
+      "flags": [
+       "--selftest"
+      ],
+      "kwargs": {
+       "dest": "selftest",
+       "action": "store_true",
+       "help": "in-process vector face (zero network, zero compile, all offline): taxonomy-load vector, recognition vectors over the fixture known families, unknown-shape todo_seat vector, hole-face degradation vector, builtin chain-end vector, L1 extraction/split vector, L3 computation vector, batch end-to-end vector inside a TemporaryDirectory; standalone - other mode flags are ignored"
+      }
+     }
+    ],
+    "positionals": [],
+    "optionals": [
+     "--from-v",
+     "--taxonomy",
+     "--out",
+     "--limit",
+     "--selftest"
+    ],
+    "subcommands": [],
+    "has_subparsers": false,
+    "set_defaults_func": false
+   },
+   "usage_face": [],
+   "imports": {
+    "modules": [
+     "argparse",
+     "contextlib",
+     "datetime",
+     "io",
+     "json",
+     "os",
+     "re",
+     "sys",
+     "tempfile"
+    ],
+    "third_party": [],
+    "local": [],
+    "guarded_conditional": []
+   },
+   "network": {
+    "transport_imports": [],
+    "adjacent_imports": [],
+    "literal_face": [],
+    "subprocess_bridge_suspect": false,
+    "zero_network": true,
+    "git_subprocess_network_face": {
+     "present": false,
+     "tokens": []
+    }
+   },
+   "skip_face": {
+    "markers": [
+     {
+      "kind": "lean_lake_mathlib",
+      "count": 5,
+      "samples": [
+       "Lean"
+      ]
+     }
+    ],
+    "needs_special_environment": true
+   },
+   "invocation": {
+    "form": "python tools/vacgen_coq.py [--from-v] [--taxonomy] [--out] [--limit] [--selftest]",
+    "basis": "argparse-reconstructed"
+   },
+   "selftest_flag": true,
+   "selftest_token_face": true
+  },
+  {
    "name": "verdict_diff.py",
    "bytes": 33797,
    "sha256": "836edfa4c4168e5e5ca96bdf84467a91ef3672fcce8740c11b849fb5b5abb454",
@@ -11927,15 +12297,15 @@
   },
   {
    "name": "wash_shape.py",
-   "bytes": 123970,
-   "sha256": "02801dcc496706b3965af31124f89b8e71a0fc7f589f0cb39e594d5e8deecd64",
+   "bytes": 123851,
+   "sha256": "4618088ef2696b8bbecf1665c5a8994de29df684b8767c8be4ded23e78c2743a",
    "lines": 2521,
    "underscore_prefix": false,
    "has_main_guard": true,
    "docstring": {
     "present": true,
     "lines": 63,
-    "head": "wash_shape.py — shape-normalizing tool: canonical seven-wash pipeline (rocqwash tools/).\n\nPurpose.  Applies the canonical wash pipeline to every target file in\n  order (each wash selectable via --only; per-wash contract in the\n  extended comment block below): 1 lexical (gate4 word-face findings\n  exchanged through the `wash/comment_pack.json` flag_words table,\n  applied by `wash/comment_sweep.py --apply`; findings without a rewrite\n  entry are reported as plan-miss, never synthesized), 2 token\n  (`scan/scan_v4_token.py` survey + `wash/cure_applier.py` dry run, then\n  --apply; the cure engine r"
+    "head": "wash_shape.py: shape-normalizing tool, canonical seven-wash pipeline (rocqwash tools/).\n\nPurpose.  Applies the canonical wash pipeline to every target file in\n  order (each wash selectable via --only; per-wash contract in the\n  extended comment block below): 1 lexical (gate4 word-face findings\n  exchanged through the `wash/comment_pack.json` flag_words table,\n  applied by `wash/comment_sweep.py --apply`; findings without a rewrite\n  entry are reported as plan-miss, never synthesized), 2 token\n  (`scan/scan_v4_token.py` survey + `wash/cure_applier.py` dry run, then\n  --apply; the cure engine re"
    },
    "argparse": {
     "imported": true,

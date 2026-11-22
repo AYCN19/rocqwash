@@ -151,15 +151,20 @@
 #               cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest
 #   axiom-sweep per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py
 #               cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest
-
-#   parity-crosswalk the Lean/Rocq axiom parity crosswalk (both parent tools' frozen vectors crosswalked row by row on the five mirror proposition keys clean / classical / funext / custom / sorry; the grade mapping read verbatim from axiom_audit.LEAN_PARITY_ROWS/1 plus the design-frozen Rocq Admitted <-> Lean sorryAx mirror rule; bilingual mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; engine-gated faces skip loudly, rc 0=green 1=red 2=usage; zero network) -> tools/lean_parity_crosswalk.py
-#               cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest
 #   numeric-probe numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py
 #               cw.sh numeric-probe --claim FILE [--out FILE] | --selftest
 #   statement-identity two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py
 #               cw.sh statement-identity --claimed FILE --proven FILE [--out FILE] | --selftest
 #   capability-index capability index reader (full and summary modes plus single-tool query over the census masters; summary exists because the full index overran harness response caps) -> tools/capability_index.py
 #               cw.sh capability-index [--mode full|summary] [--tool NAME] | --selftest
+#   axiom-audit Coq-side axiom audit (fixture-corpus census per coqc engine; declared axioms with file/line/form, reverse map to introducing files, platform grades classical/funext/stdlib; live engine required, unconfigured skips honestly) -> tools/axiom_audit.py
+
+#               cw.sh axiom-audit census --repo DIR [--json OUT] | --selftest
+
+#   vacgen-coq Coq-side statement ingestion and probe-cast planner (Rocq vernacular extraction, premise/conclusion split, data-driven taxonomy rows, Coq-L3 coverage metric; ticket 14 wave 1; zero network zero compile) -> tools/vacgen_coq.py
+
+#               cw.sh vacgen-coq --from-v FILE|DIR [--taxonomy FILE] [--out DIR] [--limit N] | --selftest
+
 #   flaky-guard flaky quarantine guard, repair class E2-3 (detect classifies each red case by an isolation probe: suite-red + alone-green = order-dependent, red in both contexts = content red that stays visible; --move quarantines into tests/advisory_roster.txt so the default suite drops it with a loud ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget-capped at 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence) -> tools/flaky_guard.py
 #               cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest
 #   repair-scope shared repair-scope exclusion table for the E2 guard family (frozen LEDGER8/CHECKERS rows read at runtime from certify/frozen8.py, the append-only ledger document, the frozen directory families; per-class writable faces + budget registry; the single source every repair guard imports) -> tools/repair_scope.py
@@ -338,6 +343,10 @@ Tools:
               cw.sh bus-feeder feed --swap SWAP.jsonl [--ledger P] [--dry-run] | status [--ledger P] [--swap F] | --selftest
   axiom-guard repo-wide axiom guard (every .v compiled and tri-classified: compile-ok / compile-broken debt register / skip-no-toolchain; two-level detection on compile-ok files: per-theorem Print Assumptions census plus the authoritative coqchk -o kernel recheck; Closed zero axioms, empty default whitelist; env-gated, rc 111 honest skip; zero repository writes) -> tools/axiom_guard.py
               cw.sh axiom-guard --repo DIR [--out DIR] [--rocq BIN] [--coqchk BIN] [--allow-axiom NAME]... [--timeout SEC] [--keep]
+  axiom-audit Coq-side axiom audit (fixture-corpus census per coqc engine; declared axioms with file/line/form, reverse map to introducing files, platform grades classical/funext/stdlib; live engine required, unconfigured skips honestly) -> tools/axiom_audit.py
+              cw.sh axiom-audit census --repo DIR [--json OUT] | --selftest
+  vacgen-coq Coq-side statement ingestion and probe-cast planner (Rocq vernacular extraction, premise/conclusion split, data-driven taxonomy rows, Coq-L3 coverage metric; ticket 14 wave 1; zero network zero compile) -> tools/vacgen_coq.py
+              cw.sh vacgen-coq --from-v FILE|DIR [--taxonomy FILE] [--out DIR] [--limit N] | --selftest
   source-fetch audit fetch face (dual-source cross-pin, sha256 pin from caller or CI-source file, HTML-trap sniff, NETRED backoff; honest-unverified and net-gated states are data) -> tools/source_fetch.py
   cw.sh source-fetch --url URL [--sha256 HEX] [--sha256-source URL] [--mirror URL] [--trap-sniff] [--out DIR] [--timeout SEC] [--retries N] | --selftest
   sweep-verdict batch sweep judge (per-lane result ledgers union-deduped into a GREEN/EXCEPTION/MISSING verdict table; expected-red interlock with baselinediff semantics; shared-append ledgers are the anti-pattern it exists to prevent) -> tools/sweep_verdict.py
@@ -348,9 +357,6 @@ Tools:
   cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest
   axiom-sweep per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py
   cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest
-
-  parity-crosswalk the Lean/Rocq axiom parity crosswalk (both parent tools' frozen vectors crosswalked row by row on the five mirror proposition keys clean / classical / funext / custom / sorry; the grade mapping read verbatim from axiom_audit.LEAN_PARITY_ROWS/1 plus the design-frozen Rocq Admitted <-> Lean sorryAx mirror rule; bilingual mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; engine-gated faces skip loudly, rc 0=green 1=red 2=usage; zero network) -> tools/lean_parity_crosswalk.py
-  cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest
   numeric-probe numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py
   cw.sh numeric-probe --claim FILE [--out FILE] | --selftest
   statement-identity two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py
@@ -453,11 +459,11 @@ hint_for() {  # $1=tool
     release-chain) echo "cw.sh release-chain --issue N --release-title T --assets DIR [--zenodo-meta FILE] [--repo OWNER/NAME] [--stage 1|2|3|4] [--dry-run] [--confirm-publish] | --selftest   # release chain planner (issue body -> GitHub Release per-asset -> Zenodo deposit, three gated layers; dry-run by default, publish needs --confirm-publish; URLs and DOIs are taken verbatim from service responses) -> tools/release_chain.py" ;;
     claim-watch) echo "cw.sh claim-watch --config FILE [--round-label L] [--ledger FILE] [--actor A] | --offline-selftest   # conclusion-level claim watch (the eight RH signals + three NS/Euler triggers from the seed config; machine-readable status endpoints; heartbeat silent-death and unverifiable registration; append-only actor-namespaced round ledger; live face) -> tools/claim_watch.py" ;;
     axiom-sweep) echo "cw.sh axiom-sweep --root FILE|DIR [--json OUT] [--snapshot OUT] [--baseline SNAP] [--allow-axiom NAME]... | --selftest   # per-theorem Lean axiom-closure classifier (#print axioms via the target's own lake env; CLEAN / BENIGN-STANDARD trio / SORRY-ALARM / CUSTOM-AXIOM-ALARM / PRIVATE-COVERED / UNPARSED; closure snapshot plus baseline diff_alarm) -> tools/lean_axiom_sweep.py" ;;
-
-    parity-crosswalk) echo "cw.sh parity-crosswalk [--fixtures DIR] [--rocq-face] [--lean-face] [--rocq BIN] [--json OUT] [--snapshot OUT] [--baseline SNAP] | --selftest   # the Lean/Rocq axiom parity crosswalk (five mirror proposition keys crosswalked row by row; mapping verbatim from axiom_audit.LEAN_PARITY_ROWS/1; Admitted <-> sorryAx mirror rule; mirror fixtures under tests/fixtures/lean_parity; schema rocqwash.parity.lean-census/1; rc 0=green 1=red 2=usage) -> tools/lean_parity_crosswalk.py" ;;
     numeric-probe) echo "cw.sh numeric-probe --claim FILE [--out FILE] | --selftest   # numerical claim verifier (stdlib exact arithmetic executes rational-bound and interval-containment claims; transcendental plans stay honestly PLANNED) -> tools/numeric_probe.py" ;;
     statement-identity) echo "cw.sh statement-identity --claimed FILE --proven FILE [--out FILE] | --selftest   # two-face statement identity prober (claimed vs proven normalization, three-seam classification, uncast-region matrix) -> tools/statement_identity.py" ;;
     capability-index) echo "cw.sh capability-index [--mode full|summary] [--tool NAME] | --selftest   # capability index reader (full and summary modes plus single-tool query over the census masters; summary exists because the full index overran harness response caps) -> tools/capability_index.py" ;;
+    axiom-audit) echo "cw.sh axiom-audit census --repo DIR [--json OUT] | --selftest   # Coq-side axiom audit (fixture-corpus census per coqc engine; declared axioms with file/line/form, reverse map, platform grades; live engine required) -> tools/axiom_audit.py" ;;
+    vacgen-coq) echo "cw.sh vacgen-coq --from-v FILE|DIR [--taxonomy FILE] [--out DIR] [--limit N] | --selftest   # Coq-side statement ingestion and probe-cast planner (Rocq vernacular extraction, premise/conclusion split, data-driven taxonomy rows, Coq-L3 coverage; zero network zero compile) -> tools/vacgen_coq.py" ;;
     flaky-guard) echo "cw.sh flaky-guard --detect --log LOG [--json OUT] [--no-probe] | --probe CASE | --move CASE [--apply] | --restore CASE [--apply] [--green-rounds N] | --status | --selftest   # flaky quarantine guard, repair class E2-3 (isolation probe verdicts order-dependent vs content-red; --move quarantines into tests/advisory_roster.txt, the default suite drops it with ADVISORY-OUT and the CI flaky-watch lane keeps observing it; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default; --restore needs green-round evidence; findings and refusals are data, rc 0/1/2/9) -> tools/flaky_guard.py" ;;
     repair-scope) echo "cw.sh repair-scope --check PATH... | --classes | --selftest   # shared repair-scope exclusion table for the E2 guard family (runtime LEDGER8/CHECKERS read from certify/frozen8.py + the append-only ledger document + the frozen directory families; per-class writable faces and budget registry; --check exits 1 when any path is excluded, a refusal verdict is data) -> tools/repair_scope.py" ;;
     roster-resync) echo "cw.sh roster-resync [--repo DIR] [--apply] [--ledger P] [--json OUT] | --selftest   # roster count drift guard, repair class E2-2 (one-way recount from the run_tests.sh CASES roster into the doc_lint count lines of tests/README.md + README.md; the roster file is never written; scope-checked against tools/repair_scope.py, budget 2 per class per branch, ledgered in docs/repair-ledger.jsonl; dry-run by default) -> tools/roster_resync.py" ;;
@@ -547,11 +553,11 @@ case "${1:-}" in
   release-chain) shift; run_tool release-chain "tools/release_chain.py" "$@" ;;
   claim-watch) shift; run_tool claim-watch "tools/claim_watch.py" "$@" ;;
   axiom-sweep) shift; run_tool axiom-sweep "tools/lean_axiom_sweep.py" "$@" ;;
-
-  parity-crosswalk) shift; run_tool parity-crosswalk "tools/lean_parity_crosswalk.py" "$@" ;;
   numeric-probe) shift; run_tool numeric-probe "tools/numeric_probe.py" "$@" ;;
   statement-identity) shift; run_tool statement-identity "tools/statement_identity.py" "$@" ;;
   capability-index) shift; run_tool capability-index "tools/capability_index.py" "$@" ;;
+  axiom-audit) shift; run_tool axiom-audit "tools/axiom_audit.py" "$@" ;;
+  vacgen-coq) shift; run_tool vacgen-coq "tools/vacgen_coq.py" "$@" ;;
   flaky-guard) shift; run_tool flaky-guard "tools/flaky_guard.py" "$@" ;;
   repair-scope) shift; run_tool repair-scope "tools/repair_scope.py" "$@" ;;
   roster-resync) shift; run_tool roster-resync "tools/roster_resync.py" "$@" ;;

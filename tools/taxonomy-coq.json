@@ -1,0 +1,709 @@
+{
+  "schemaNote": "vacgen-coq taxonomy table (ticket 14 wave 1, Rocq domain). Row schema mirrors the Lean sibling table tools/taxonomy.json (schemaVersion / familyId / cluster / match / priority / confidence / gapKeywords / sourceLane / notes) with the mathlibAnchors anchor face replaced by mainAnchors: every row cites at least one real ConstructiveWorld-Main statement excerpt (file + line + verbatim text) as anchor, per the work order. The engine (tools/vacgen_coq.py) carries zero premise/conclusion-family knowledge; rows are data only.",
+  "censusBasis": {
+    "corpusRoot": "D:/ComplexAnalysis/ConstructiveWorld-Main/ConstructiveWorld_Live",
+    "filesScanned": 1246,
+    "statementsEnumerated": 26689,
+    "sampled": 200,
+    "console": "D:/tmp/vacgen_survey/out/census_out.txt",
+    "detail": "D:/tmp/vacgen_survey/out/detail.json",
+    "keyCounts": {
+      "declKeywords": "Lemma 154 / Theorem 45 / Corollary 1 (census_out.txt:64-67)",
+      "topHeadSymbols": "rel:= 38, rel:== 21, app:real_eq 15, app:Qle 14, app:QleT' 9, app:real_le 8, app:le 8, app:Id 7, app:sigT 6, app:real_lt 6, app:real_le_b 5, app:QeqT 5, app:req 5, rel:<@Q 4, app:Qlt 4, app:QltT 4, app:forall 3, app:lt 3, rel:<> 2, paren-app 2, not 2 (census_out.txt:69-109)",
+      "premiseShapes": "bare 121 / impl-chain 77 / mixed 2 (census_out.txt:147-150)",
+      "binderForms": "named-colon 82 / paren-group 65 per binder; statement sets named-colon 80, paren-group 65, none 55 (census_out.txt:119-127)",
+      "forallPresence": "145/200 statements carry forall; forall-binder count 0:56 1:143 2:1 (census_out.txt:114-116,129-132)",
+      "domains": "nat-type 74, Q-type/heads 39, Q-scope(%Q) 28, nat-scope(%nat) 23, Z-type 18, Z.heads 8, R-type 7, Z-scope(%Z) 4 (census_out.txt:137-146)"
+    }
+  },
+  "anchorProvenance": {
+    "handoffSamples": "three statements quoted verbatim in the ticket-14 wave-1 work order (piu_zz_tau_enclosure_bank1.v:4065, abl_z3_tail.v:618, abl_dte_core3.v:179); the work order records all eight of its sampled statements as capture-vs-source verified; sample 1 also matches the census detail.json entry at the same file:line verbatim",
+    "censusSamples": "statement excerpts transcribed verbatim from detail.json sample entries (file + line as recorded by the census walk over ConstructiveWorld_Live)",
+    "verificationNote": "row admission verifies anchor-shape (file/line/excerpt present), not source-tree drift: no Main-side anchor verifier exists in wave 1 (declared; the Lean C3.3 drift gate is not portable until one does)"
+  },
+  "rows": [
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.quantified-pointwise",
+      "cluster": "cross-chapter",
+      "match": {
+        "target": "premise.face",
+        "regex": "^\\(?forall(?![\\w'.!])[\\s\\S]*,[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 46,
+      "confidence": "MID",
+      "censusBasis": "forall token present in 145/200 sample statements (census_out.txt:114-116); forall-headed premise legs and forall-typed binder hypotheses recur across the abl/S/G/BBDBridge sample entries",
+      "mainAnchors": [
+        {
+          "file": "BBDBridgeSupply.v",
+          "line": 69,
+          "excerpt": "Theorem bbridge_sum_ext_supply : forall f g : S -> Real,\n  (forall s : S, req (f s) (g s)) -> req (sumf f) (sumf g).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "y_e1_gamma_nodes/GaC3_Z03_NonzeroLine_b.v",
+          "line": 72,
+          "excerpt": "Lemma z03_cos_peq : forall a b : Real,\n  (forall k : nat, projT1 a k == projT1 b k) ->\n  real_eq (cauchy_real_cos a) (cauchy_real_cos b).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "G08_Gibbs.v",
+          "line": 732,
+          "excerpt": "(sum_ext : forall f g : S -> R,\n            (forall s : S, req (f s) (g s)) -> req (sumf f) (sumf g))",
+          "provenance": "census-sample verbatim (detail.json; forall-typed binder hypothesis face)"
+        }
+      ],
+      "gapKeywords": ["pointwise", "forall premise"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "pointwise/quantified premise face: a forall-leading premise leg (parenthesized spellings admitted via the optional leading paren) or a forall-typed binder hypothesis. Mid-chain unparenthesized foralls are absorbed into the binder face by the L1 splitter (Rocq scope semantics; the mixa_qpow_decr census face), so only parenthesized legs and binder-typed foralls reach this row. Priority 46 orders above the applied-head rows so a pointwise face carrying Qle/req keeps its own family."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cmp.infix-Q-scope",
+      "cluster": "DTPT",
+      "match": {
+        "target": "premise.face",
+        "regex": "^\\([\\s\\S]*(?:<=|==|<)[\\s\\S]*\\)%Q$",
+        "flags": ""
+      },
+      "priority": 45,
+      "confidence": "HIGH",
+      "censusBasis": "Q-scope(%Q) domain on 28/200 sample statements (census_out.txt:140); rel:<@Q head on 4 (census_out.txt:83)",
+      "mainAnchors": [
+        {
+          "file": "DTPT_Rotation.v",
+          "line": 58,
+          "excerpt": "Lemma cyc_le_triple : forall s : Q, (0 <= s)%Q -> (s <= 3 * s)%Q.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "y_e1_gamma_nodes/DTPT_Entropy_e.v",
+          "line": 230,
+          "excerpt": "Theorem H_ms1_Hshannon0 : forall l : list Q,\n  (H_ms l == 1)%Q -> QeqT (H_devsum l) 0.",
+          "provenance": "census-sample verbatim (detail.json; ==-in-scope spelling)"
+        }
+      ],
+      "gapKeywords": ["Q scope", "%Q premise"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "scope-wrapped comparison premise leg ending in )%Q. Covers <=, < and == spellings inside the scope; a %Q-scope face whose top-level head is the setoid == usually also carries a bare ==-conclusion sibling row on the conclusion face (concl.eq.setoid-Q) - on the premise face this row is the only %Q seat, so it takes the == spellings too."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cmp.applied-Q-order",
+      "cluster": "piu",
+      "match": {
+        "target": "premise.face",
+        "regex": "^Q(?:leT'|leT|ltT|le|lt)(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 40,
+      "confidence": "HIGH",
+      "censusBasis": "app:Qle 14 + app:QleT' 9 + app:Qlt 4 + app:QltT 4 in the 200-sample head census (census_out.txt:73,74,84,85); Q-type/heads domain on 39/200 (census_out.txt:139)",
+      "mainAnchors": [
+        {
+          "file": "piu_zz_pnt_qexp.v",
+          "line": 140,
+          "excerpt": "Lemma zz_qexp_ge_0 : forall (x : Q) (m : nat),\n  Qle 0 x -> Qle 0 (exp_partial m x).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "gcl_cert.v",
+          "line": 614,
+          "excerpt": "Lemma gcl_lt_mul_cancel_r : forall a b : Q, Qlt 0 a -> Qlt 0 (a * b) -> Qlt 0 b.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "S10_KVQuantTrig.v",
+          "line": 1975,
+          "excerpt": "Lemma sc_sin_partial_lipschitz : forall (x y B : Q) (n : nat),\n  QleT' 0 B -> QleT' (Qabs x) B -> QleT' (Qabs y) B ->\n  Qle (Qabs (sin_partial n x - sin_partial n y))\n      (Qmult (Qabs (x - y)) (sc_cos_series n B)).",
+          "provenance": "census-sample verbatim (detail.json; QleT' legs)"
+        }
+      ],
+      "gapKeywords": ["Qle", "Qlt", "QleT'", "QltT"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied Q-order comparison premise legs (heads Qle, Qlt, QleT, QleT', QltT). First anchor file field carries the chapter-relative path as recorded by the census walk (piu_zz_pnt_qexp.v, chapter piu). Lookahead excludes longer heads sharing the prefix (QeqT stays with concl.eq.applied-QeqT-req; premise-side QeqT/req legs seat at prem.eq.applied-QeqT-req)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cmp.applied-real-lt",
+      "cluster": "UpReqPinskerCore",
+      "match": {
+        "target": "premise.face",
+        "regex": "^(?:@lt|real_lt|lt)(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 38,
+      "confidence": "HIGH",
+      "censusBasis": "app:real_lt 6 + app:lt 3 applied heads in the 200-sample (census_out.txt:79,87); @lt-qualified spellings recur in the G/UpAblP sample entries",
+      "mainAnchors": [
+        {
+          "file": "UpReqPinskerCore.v",
+          "line": 2645,
+          "excerpt": "Lemma pnk_log_mirror_B : forall (s : Real) (Hs : real_lt real_zero s),\n  real_le_b (real_plus real_one (real_opp (real_inv_pos s Hs)))\n            (real_log s Hs).",
+          "provenance": "census-sample verbatim (detail.json; binder-typed hypothesis face)"
+        },
+        {
+          "file": "G07_KLWall.v",
+          "line": 913,
+          "excerpt": "Theorem klcx_exp_neg_geo_break_iface : forall (d eps : Real),\n  @lt Real RealEnhancedReal real_zero d ->\n  @lt Real RealEnhancedReal real_zero eps ->\n  sigT (fun N : nat => ...",
+          "provenance": "census-sample verbatim (detail.json; @lt-qualified legs, excerpt tail elided with ... after the census-recorded sigT opening)"
+        },
+        {
+          "file": "UpAblP2WByPass.v",
+          "line": 809,
+          "excerpt": "Theorem uabp3_cmk_abs_sum_le_recent : forall (S0 : Set) (en : list S0)\n                                             (f : S0 -> Real) (eps : Real),\n  lt zero eps ->\n  le (abs (csm_sumf S0 en f))\n     (plus (csm_sumf S0 en (fun s : S0 => abs (f s))) eps).",
+          "provenance": "census-sample verbatim (detail.json; bare lt leg)"
+        }
+      ],
+      "gapKeywords": ["real_lt", "positive premise"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied strict-less-than premise faces over the Real/EnhancedReal interfaces: real_lt h x, lt zero eps, and the @lt Real RealEnhancedReal ... qualified spellings. Positive-side premises of this family are the dominant nonvacuity certificate in the abl/UpReq/G chapters (the Hs/Ht/Hq binder spellings)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cmp.applied-real-le",
+      "cluster": "S",
+      "match": {
+        "target": "premise.face",
+        "regex": "^(?:@le|real_le_b|real_le|le)(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 38,
+      "confidence": "HIGH",
+      "censusBasis": "app:real_le 8 + app:le 8 + app:real_le_b 5 applied heads in the 200-sample (census_out.txt:75,76,80)",
+      "mainAnchors": [
+        {
+          "file": "S02_CauchyComplete.v",
+          "line": 2507,
+          "excerpt": "Lemma real_le_trans : forall x y z : Real, real_le x y -> real_le y z -> real_le x z.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "G08_Gibbs.v",
+          "line": 1084,
+          "excerpt": "Lemma gibbe2_le_b_nonneg_diff : forall a b : Real,\n  real_le_b a b -> real_le_b real_zero (real_plus b (real_opp a)).",
+          "provenance": "census-sample verbatim (detail.json; real_le_b leg)"
+        }
+      ],
+      "gapKeywords": ["real_le", "reflexive chain"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied reflexive-order premise faces: real_le x y, le a b, real_le_b a b and @le Real RealEnhancedReal ... spellings. Transitivity/monotonicity plumbing legs of the S and G chapter interfaces."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.eq.applied-real_eq",
+      "cluster": "abl",
+      "match": {
+        "target": "premise.face",
+        "regex": "^real_eq(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 38,
+      "confidence": "HIGH",
+      "censusBasis": "app:real_eq 15 in the 200-sample head census (census_out.txt:72) - the third-largest head family",
+      "mainAnchors": [
+        {
+          "file": "abl_div_hellinger_twopoint.v",
+          "line": 931,
+          "excerpt": "(Hspe : real_eq (real_mult sp sp) p) (Hsq : real_eq (real_mult sq sq) q)",
+          "provenance": "census-sample verbatim (detail.json; binder-typed hypothesis faces of dhe_h2_le_kl2_pnt)"
+        },
+        {
+          "file": "UpReqEnvelopeDual.v",
+          "line": 58,
+          "excerpt": "Lemma evd_exp_inj : forall a b : Real,\n  real_eq (cauchy_real_exp a) (cauchy_real_exp b) -> real_eq a b.",
+          "provenance": "census-sample verbatim (detail.json; implication-leg spelling)"
+        },
+        {
+          "file": "y_e1_gamma_nodes/GaC3_Z03_NonzeroLine_b.v",
+          "line": 72,
+          "excerpt": "real_eq (cauchy_real_cos a) (cauchy_real_cos b).",
+          "provenance": "census-sample verbatim (detail.json; conclusion-side sibling of the same family)"
+        }
+      ],
+      "gapKeywords": ["real_eq", "setoid of Real"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied equality premise faces over the Real setoid interface (real_eq a b), in implication-leg and binder-typed hypothesis spellings. The injectivity/extensionality plumbing legs of the S/G/abl chapters."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.eq.applied-QeqT-req",
+      "cluster": "G",
+      "match": {
+        "target": "premise.face",
+        "regex": "^(?:QeqT|ZeqT|qeqT|req)(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 36,
+      "confidence": "MID",
+      "censusBasis": "app:QeqT 5 + app:req 5 applied heads in the 200-sample (census_out.txt:81,82)",
+      "mainAnchors": [
+        {
+          "file": "G08_Gibbs.v",
+          "line": 732,
+          "excerpt": "(Hp_norm : req (sumf p) one)\n         (HZ : lt zero (@Z_aud_req R RIS S sumf post_aud p))",
+          "provenance": "census-sample verbatim (detail.json; req-typed binder hypothesis faces of hzlogd_proj_min_kl_hlogzfree)"
+        },
+        {
+          "file": "abl_ln2_qpoly_consume.v",
+          "line": 386,
+          "excerpt": "Theorem lnc_residue_pole_n3 : QeqT (pint_eval (snd lnc_w3) (2 # 1))\n                                   ((-8) # 1).",
+          "provenance": "census-sample verbatim (detail.json; QeqT conclusion-side sibling of the same head family)"
+        }
+      ],
+      "gapKeywords": ["req", "QeqT", "Boolean equality carrier"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied equality premise faces over the req/QeqT decidable-equality carriers (G-chapter interface plumbing and abl numeric anchors). Lookahead keeps req_one_minus / req_r_pow spellings out (they seat nowhere yet and land in the gap feed)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.eqb-reflection",
+      "cluster": "LW",
+      "match": {
+        "target": "premise.face",
+        "regex": "^[A-Za-z_][\\w'.!]*Id(?![\\w'.!])[\\s\\S]*\\btrue$",
+        "flags": ""
+      },
+      "priority": 36,
+      "confidence": "MID",
+      "censusBasis": "app:Id 7 + app:zzId 2 in the 200-sample (census_out.txt:77,93); the true-literal reflection spellings recur in the LW/G sample entries",
+      "mainAnchors": [
+        {
+          "file": "LW5SepComplexity.v",
+          "line": 703,
+          "excerpt": "Theorem lw5n_shape_inversion : forall (q : Q) (n n0 : nat),\n  (n0 <= lw5n_bnd q)%nat -> leiblw_Id (lw5n_sep_dec q n0) true ->\n  And ((n <= lw5n_bnd q)%nat -> ...",
+          "provenance": "census-sample verbatim (detail.json; leiblw_Id ... true reflection leg, And tail elided with ...)"
+        },
+        {
+          "file": "zzm2_qpoly.v",
+          "line": 292,
+          "excerpt": "Lemma zz2_div_id_3 : zzId (plq_eqb (padd (pmul zz2_pq_3 zz2_dp_3) zz2_rem_3) zz2_np_3) true.",
+          "provenance": "census-sample verbatim (detail.json; zzId ... true conclusion-side sibling of the same family)"
+        }
+      ],
+      "gapKeywords": ["boolean reflection", "eqb", "Id ... true"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "boolean-reflection premise face: an *Id-headed application terminating in the true literal (Id x true / zzId ... / leiblw_Id ... spellings). The true discriminator is the family seat: *Id faces without it (e.g. Id (mult ...) (...) in S01_BaseRing.v:393) are plain equality spellings and stay in the gap feed until a wave-2 row claims them."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cert.NatLe-binder",
+      "cluster": "y_e1_gamma_nodes",
+      "match": {
+        "target": "premise.face",
+        "regex": "^NatLe(?![\\w'.!])[\\s\\S]+$",
+        "flags": ""
+      },
+      "priority": 34,
+      "confidence": "MID",
+      "censusBasis": "NatLe is inside the nat-type domain regex of the census (nat-type 74/200, census_out.txt:138); order-certificate binder spellings recur in the LW/y_e1_gamma_nodes sample entries",
+      "mainAnchors": [
+        {
+          "file": "y_e1_gamma_nodes/GaC2_06_AltMonoFace.v",
+          "line": 157,
+          "excerpt": "Lemma mn_rnpow_irrel : forall (n : nat) (Hn Hn' : NatLe 1 n),\n  real_eq (r_npow n Hn) (r_npow n Hn').",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "LW0PiIrrational.v",
+          "line": 13595,
+          "excerpt": "sigT (fun M : nat => forall m : nat, NatLe M m ->\n    QltT (Qabs (qpoly_eval (qpoly_deriv (lw0_sin_qp m)) q + (1 # 1)%Q)) eps).",
+          "provenance": "census-sample verbatim (detail.json; NatLe certificate inside the sigT witness tail of lw0_pitB_pair_cos_tail)"
+        }
+      ],
+      "gapKeywords": ["NatLe certificate", "order witness"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "order-certificate hypothesis face: NatLe M n binder-typed spellings that carry the bound witness for a later monotonicity leg. Word-face only: the row cannot distinguish NatLe-as-Prop from a hypothetical data carrier, so it seats the face here (fail-safe premise side, counted honestly)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "prem.cmp.infix-nat-le",
+      "cluster": "cross-chapter",
+      "match": {
+        "target": "premise.face",
+        "regex": "^(?![\\s\\S]*%[QZ])(?![\\s\\S]*%positive)[\\s\\S]*<=[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 32,
+      "confidence": "HIGH",
+      "censusBasis": "nat-scope(%nat) on 23/200 and nat-type on 74/200 (census_out.txt:141,138); <=-legs are the dominant impl-chain premise in the sample entries",
+      "mainAnchors": [
+        {
+          "file": "UpReqSqrt3Irrational.v",
+          "line": 511,
+          "excerpt": "Lemma ir2_quarter : forall n : nat, (1 <= n)%nat -> Qle (ir2_delta n) (1#4).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "cast_bridge.v",
+          "line": 235,
+          "excerpt": "Lemma mach_xl_tail : forall j n : nat, (j <= n)%nat ->\n  QleT' (Qabs (lw0m_xL n - lw0m_xL j)) (4 * pie_mag (2 * j + 2)).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "BeukersIdentity.v",
+          "line": 168,
+          "excerpt": "Lemma bi_half_not1 : forall n : nat, 1 <= n ->\n  ~ (bkQ (bk_Qn_list n) (1 # 2)%Q == 1 # 1)%Q.",
+          "provenance": "census-sample verbatim (detail.json; bare unscoped 1 <= n spelling)"
+        }
+      ],
+      "gapKeywords": ["nat bound premise", "index range"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "nat-side infix <= premise legs: (j <= n)%nat scoped, bare 1 <= n, and chained (10 <= n <= 10)%nat spellings (planb4_u4c3_freezewin_s2n10.v:41). Guards keep %Q/%Z/%positive faces out (prem.cmp.infix-Q-scope takes %Q; %Z and %positive comparison premises are unclaimed and feed the gap telemetry, as do strict < nat legs - census rel:<@nat 1, rel:<@Z 2, census_out.txt:92-94). Priority 32 orders this catch-all below every applied-head premise row."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.exists.witnessed",
+      "cluster": "piu",
+      "match": {
+        "target": "conclusion",
+        "regex": "^(?:exists|sigT)(?![\\w'.!])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 46,
+      "confidence": "MID",
+      "censusBasis": "app:sigT 6 + exists token 2 in the 200-sample (census_out.txt:78,116); the sigT witness-pack is the standard existential spelling of the G/DTPT/piu chapters",
+      "mainAnchors": [
+        {
+          "file": "piu_zz_padic_clearing.v",
+          "line": 210,
+          "excerpt": "Theorem zz_gauss_split : forall s : nat,\n  sigT (fun c : Z =>\n        sigT (fun d : Z =>\n              Bid (Z * Z) (gpow (1, 1) s)\n                (Z.pow 2 (Z.of_nat s / 2) * c,\n                 Z.pow 2 (Z.of_nat s / 2) * d))).",
+          "provenance": "census-sample verbatim (detail.json; sigT witness-pack face)"
+        },
+        {
+          "file": "y_e1_gamma_nodes/DTPT_j.v",
+          "line": 356,
+          "excerpt": "Theorem OrgDiff_nonzero_exists : exists (l : list Q) (s : nat),\n  OrgDiff l s <> 0%Q.",
+          "provenance": "census-sample verbatim (detail.json; exists-binder face carrying an inner <> disequality)"
+        },
+        {
+          "file": "G07_KLWall.v",
+          "line": 913,
+          "excerpt": "sigT (fun N : nat =>\n    @le Real RealEnhancedReal\n        (real_exp_neg\n           (real_mult (klcx_r_pow (real_plus real_one real_one) N) d))\n        eps).",
+          "provenance": "census-sample verbatim (detail.json; sigT face of klcx_exp_neg_geo_break_iface)"
+        }
+      ],
+      "gapKeywords": ["sigT", "exists witness", "constructive existence"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "witnessed-existential conclusion face: the exists-binder notation and the sigT (fun x => ...) witness-pack spelling (the same existential, two notations). Priority 46 outranks concl.eq.setoid-Q (44) and concl.neg.ne (41) so an exists face carrying inner == / <> siblings keeps this family (C_gen_attained / OrgDiff_nonzero_exists census faces)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.eq.setoid-Q",
+      "cluster": "abl",
+      "match": {
+        "target": "conclusion",
+        "regex": "^(?![\\s\\S]*(?:\\bAnd\\b|/\\\\))[\\s\\S]*==[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 44,
+      "confidence": "HIGH",
+      "censusBasis": "rel:== 21 in the 200-sample head census (census_out.txt:71) - the second-largest head family; Q-type/heads domain on 39/200 (census_out.txt:139)",
+      "mainAnchors": [
+        {
+          "file": "abl_z3_tail.v",
+          "line": 618,
+          "excerpt": "Lemma zb3_ia_W_0_anchor : zb3_ia_W 0 == (1 # 2).",
+          "provenance": "handoff-verbatim (ticket-14 wave-1 work order sample 2; capture-vs-source verified per the work order)"
+        },
+        {
+          "file": "abl_ln2_numer_int.v",
+          "line": 96,
+          "excerpt": "Lemma lni_QaddZ : forall u v : Z, ((u # 1) + (v # 1))%Q == ((u + v) # 1)%Q.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "cast_modulus.v",
+          "line": 238,
+          "excerpt": "Lemma mach_q_pow_mult_distr : forall (n : nat) (x y : Q),\n  q_pow (x * y) n == q_pow x n * q_pow y n.",
+          "provenance": "census-sample verbatim (detail.json)"
+        }
+      ],
+      "gapKeywords": ["Q setoid", "==", "rational equality"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "Q setoid equality conclusion (the == head over Q/#-division spellings). Guards keep conjunction-headed faces out (an And or /\\ face carrying inner == siblings stays unclaimed and feeds the gap telemetry - conservative fail-safe, the head symbol rules the family). Priority 44 sits above concl.cmp.infix-Q-scope (42) so a face ending )%Q with an == head keeps the setoid family (lni_QaddZ census face)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.quantified.forall",
+      "cluster": "RealIdentity",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\([\\s\\S]*\\bforall\\b[\\s\\S]*\\)$",
+        "flags": ""
+      },
+      "priority": 43,
+      "confidence": "MID",
+      "censusBasis": "app:forall 3 + paren-app 2 nearest census faces (census_out.txt:86,89); the engine's conclusion face differs from the census core-head face on absorbed-forall spellings (declared below)",
+      "mainAnchors": [
+        {
+          "file": "RealIdentity.v",
+          "line": 267,
+          "excerpt": "Theorem ri_upper_transfer : forall (Ireal : ri_Iface) (th : Q),\n  ri_identity_spec Ireal ->\n  (forall n : nat, real_le (real_mult (Ireal n) (real_const (Qinv (ri_qnorm n))))\n                           (real_const (q_pow th n))) ->\n  forall n : nat, real_le (ri_metric n) (real_const (q_pow th n)).",
+          "provenance": "census-sample verbatim (detail.json; parenthesized forall leg + trailing forall-quantified conclusion segment, census head app:forall)"
+        },
+        {
+          "file": "UpReqEntropyUniqueNeg.v",
+          "line": 320,
+          "excerpt": "real_eq (real_entropy_dist bool t22_bool_sumf p Hp)\n            (...) ->\n    forall s : bool,\n      real_eq (p s)\n              (real_boltzmann_dist_temp bool t22_bool_sumf t22_bool_sum_pos\n                 T T_pos energy s).",
+          "provenance": "census-sample verbatim (detail.json, excerpt elided with ... mid-statement; trailing forall-quantified conclusion segment, census head app:forall)"
+        }
+      ],
+      "gapKeywords": ["forall conclusion", "pointwise transfer"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "forall-quantified conclusion face. Declared divergence from the census head labels: the L1 splitter absorbs a tail-leading unparenthesized forall into the binder face (Rocq scope semantics - the binders scope over the whole remainder), so the ri_upper_transfer / t22 spellings surface their inner real_le/real_eq conclusion families in the per-statement report while this row claims the parenthesized (forall ... , ...) conclusion spellings (the census paren-app face). Absorbed spellings are not lost: the binder faces and the inner conclusion both classify and count."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.cmp.infix-Q-scope",
+      "cluster": "abl",
+      "match": {
+        "target": "conclusion",
+        "regex": "^\\([\\s\\S]*(?:<=|<)[\\s\\S]*\\)%Q$",
+        "flags": ""
+      },
+      "priority": 42,
+      "confidence": "HIGH",
+      "censusBasis": "Q-scope(%Q) domain on 28/200 + rel:<@Q 4 (census_out.txt:140,83); the dte/dtr abl chapters conclude in scope-wrapped comparisons",
+      "mainAnchors": [
+        {
+          "file": "abl_dte_core3.v",
+          "line": 179,
+          "excerpt": "Theorem dte_c3_qn_ge1_2 : (1 <= qn",
+          "provenance": "handoff-verbatim (ticket-14 wave-1 work order sample 3; excerpt carried truncated exactly as the work order quotes it - the family face is completed by the census-sampled scope-wrapped comparisons below)"
+        },
+        {
+          "file": "abl_dtr_core3.v",
+          "line": 320,
+          "excerpt": "Theorem dtr_c3_H_lam_anti_mono_real_half : forall (l : list Q) (s : nat),\n  (H_lam l s 1 <= H_lam l s (1#2))%Q.",
+          "provenance": "census-sample verbatim (detail.json; the full ( ... <= ... )%Q face of the same abl_dtr_core3 family)"
+        },
+        {
+          "file": "DTPT_Rotation.v",
+          "line": 58,
+          "excerpt": "(s <= 3 * s)%Q.",
+          "provenance": "census-sample verbatim (detail.json; conclusion of cyc_le_triple)"
+        }
+      ],
+      "gapKeywords": ["Q scope comparison", "%Q bound"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "scope-wrapped infix comparison conclusion ending )%Q (rel:<@Q / <= faces; the dte_c3_qn_ge1_2 handoff face). ==-headed spellings stay with concl.eq.setoid-Q (44); strict-< and <= both seat here (census rel:<@Q 4). %nat/%Z/%positive-scoped comparison conclusions are unclaimed in wave 1 (pql_nat_ratio_mono's ( ... )%Z face, UpReqPadeQLeg.v:194 - gap feed)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.neg.ne",
+      "cluster": "y_e1_gamma_nodes",
+      "match": {
+        "target": "conclusion",
+        "regex": "^[\\s\\S]*<>[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 41,
+      "confidence": "MID",
+      "censusBasis": "rel:<> 2 in the 200-sample head census (census_out.txt:88)",
+      "mainAnchors": [
+        {
+          "file": "y_e1_gamma_nodes/DTPT_j.v",
+          "line": 356,
+          "excerpt": "Theorem OrgDiff_nonzero_exists : exists (l : list Q) (s : nat),\n  OrgDiff l s <> 0%Q.",
+          "provenance": "census-sample verbatim (detail.json; the <> face sits under an exists head, so concl.exists.witnessed (46) claims the whole face and this row claims bare <>-headed spellings)"
+        }
+      ],
+      "gapKeywords": ["disequality", "nonzero"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "disequality conclusion face (the <> head, incl. 0%Q-scoped spellings). Bare <>-headed conclusions seat here; <> faces under exists/sigT heads keep concl.exists.witnessed by priority."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.cmp.applied-Q-order",
+      "cluster": "S",
+      "match": {
+        "target": "conclusion",
+        "regex": "^Q(?:leT'|leT|ltT|le|lt)(?![\\w'.!])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 38,
+      "confidence": "HIGH",
+      "censusBasis": "app:Qle 14 + app:QleT' 9 + app:Qlt 4 + app:QltT 4 in the 200-sample head census (census_out.txt:73,74,84,85) - the largest applied-head cluster",
+      "mainAnchors": [
+        {
+          "file": "abl_tvd_stationary.v",
+          "line": 99,
+          "excerpt": "Lemma tvs_qsum_nonneg : forall (X : Set) (f : X -> Real) (l : list X) (n : nat),\n  (forall v : X, Qle 0 (projT1 (f v) n)) ->\n  Qle 0 (projT1 (real_list_sum X f l) n).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "cast_bridge.v",
+          "line": 235,
+          "excerpt": "Lemma mach_xl_tail : forall j n : nat, (j <= n)%nat ->\n  QleT' (Qabs (lw0m_xL n - lw0m_xL j)) (4 * pie_mag (2 * j + 2)).",
+          "provenance": "census-sample verbatim (detail.json; QleT' face)"
+        },
+        {
+          "file": "UpReqSqrt3Irrational.v",
+          "line": 511,
+          "excerpt": "Lemma ir2_quarter : forall n : nat, (1 <= n)%nat -> Qle (ir2_delta n) (1#4).",
+          "provenance": "census-sample verbatim (detail.json)"
+        }
+      ],
+      "gapKeywords": ["Qle", "QleT'", "rational bound conclusion"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied Q-order comparison conclusion (heads Qle, Qlt, QleT, QleT', QltT - the nonneg-bound / tail-bound workhorse family of the abl/S/cast/UpReq chapters). Lookahead excludes QeqT (concl.eq.applied-QeqT-req) and longer Q-heads."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.eq.applied-real_eq",
+      "cluster": "LW",
+      "match": {
+        "target": "conclusion",
+        "regex": "^real_eq(?![\\w'.!])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 37,
+      "confidence": "HIGH",
+      "censusBasis": "app:real_eq 15 in the 200-sample head census (census_out.txt:72)",
+      "mainAnchors": [
+        {
+          "file": "LW2TrigBridge.v",
+          "line": 132,
+          "excerpt": "Lemma lw2_channel_f1_closed :\n  real_eq real_pi_geom cauchy_real_pi_leibniz.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "CW220_Extensions.v",
+          "line": 836,
+          "excerpt": "Lemma real_mult_zero_l : forall x : Real, real_eq (real_mult real_zero x) real_zero.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "S13_NLiveAudit.v",
+          "line": 3933,
+          "excerpt": "Lemma w_T_sum_one : forall (T : Real) (Ht : real_lt real_zero T),\n  real_eq (real_list_sum Token (w_T T Ht) vocab) real_one.",
+          "provenance": "census-sample verbatim (detail.json)"
+        }
+      ],
+      "gapKeywords": ["real_eq", "Real setoid conclusion"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied Real-setoid equality conclusion (real_eq a b): interface-identity, algebra-closure and normalization anchors across the S/LW/abl chapters."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.eq.applied-QeqT-req",
+      "cluster": "abl",
+      "match": {
+        "target": "conclusion",
+        "regex": "^(?:QeqT|ZeqT|zzZeqT|qeqT|req)(?![\\w'.!])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 36,
+      "confidence": "HIGH",
+      "censusBasis": "app:QeqT 5 + app:req 5 + app:qeqT 1 + app:zzZeqT 1 in the 200-sample (census_out.txt:81,82,101,110)",
+      "mainAnchors": [
+        {
+          "file": "abl_ln2_qpoly_consume.v",
+          "line": 386,
+          "excerpt": "Theorem lnc_residue_pole_n3 : QeqT (pint_eval (snd lnc_w3) (2 # 1))\n                                   ((-8) # 1).",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "BBDBridgeSupply.v",
+          "line": 69,
+          "excerpt": "Theorem bbridge_sum_ext_supply : forall f g : S -> Real,\n  (forall s : S, req (f s) (g s)) -> req (sumf f) (sumf g).",
+          "provenance": "census-sample verbatim (detail.json; req face)"
+        },
+        {
+          "file": "piu_zz_constants.v",
+          "line": 473,
+          "excerpt": "Lemma piu_zzc_machin_14 :\n  zzZeqT (let '(P, u, v) := piu_zzc_cfg14 in (u * u + (v + P) * (v + P))%Z)\n         (let '(P, u, v) := piu_zzc_cfg14 in (2 * (P * P))%Z).",
+          "provenance": "census-sample verbatim (detail.json; zzZeqT face over Z)"
+        }
+      ],
+      "gapKeywords": ["QeqT", "req", "ZeqT", "decidable equality carrier"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied decidable-equality carrier conclusions: QeqT / req / qeqT / ZeqT / zzZeqT heads (the let-in numeric anchor faces of the piu/abl chapters and the sumf-interface faces of the G chapter). Lookahead keeps req_minus / req_r_pow heads out (gap feed)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.cmp.applied-real-order",
+      "cluster": "S",
+      "match": {
+        "target": "conclusion",
+        "regex": "^(?:@le|@lt|real_le_b|real_le|real_lt|le|lt)(?![\\w'.!])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 35,
+      "confidence": "HIGH",
+      "censusBasis": "app:real_le 8 + app:le 8 + app:real_lt 6 + app:real_le_b 5 + app:lt 3 in the 200-sample (census_out.txt:75,76,79,80,87)",
+      "mainAnchors": [
+        {
+          "file": "S02_CauchyComplete.v",
+          "line": 2507,
+          "excerpt": "Lemma real_le_trans : forall x y z : Real, real_le x y -> real_le y z -> real_le x z.",
+          "provenance": "census-sample verbatim (detail.json; real_le face)"
+        },
+        {
+          "file": "DTPT_Truth.v",
+          "line": 113,
+          "excerpt": "Lemma ev_size_pos : forall e : Evidence,\n  le (Datatypes.S O) (ev_size e).",
+          "provenance": "census-sample verbatim (detail.json; le face)"
+        },
+        {
+          "file": "UpAblP2WByPass.v",
+          "line": 809,
+          "excerpt": "Theorem uabp3_cmk_abs_sum_le_recent : forall (S0 : Set) (en : list S0)\n                                             (f : S0 -> Real) (eps : Real),\n  lt zero eps ->\n  le (abs (csm_sumf S0 en f))\n     (plus (csm_sumf S0 en (fun s : S0 => abs (f s))) eps).",
+          "provenance": "census-sample verbatim (detail.json; le face over the abs/plus interface)"
+        }
+      ],
+      "gapKeywords": ["real_le", "le", "real_lt", "order conclusion"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "applied order-relation conclusions over the Real/EnhancedReal and generic le interfaces: real_le, le, real_lt, real_le_b, lt and @le/@lt qualified spellings. real_lim heads stay unclaimed (app:real_lim 2, census_out.txt:95 - gap feed)."
+    },
+    {
+      "schemaVersion": 2,
+      "familyId": "concl.eq.infix-rel",
+      "cluster": "piu",
+      "match": {
+        "target": "conclusion",
+        "regex": "^(?![\\s\\S]*(?:==|<=|>=|<>|:=|\\bAnd\\b|/\\\\))[\\s\\S]*(?<![<>=])=(?![>=])[\\s\\S]*$",
+        "flags": ""
+      },
+      "priority": 30,
+      "confidence": "HIGH",
+      "censusBasis": "rel:= 38 in the 200-sample head census (census_out.txt:70) - the single largest head family (also the engine's builtin fail-safe chain end)",
+      "mainAnchors": [
+        {
+          "file": "piu_zz_tau_enclosure_bank1.v",
+          "line": 4065,
+          "excerpt": "Lemma piu_zz_inPn_512_933 : zz_in_Pn 512 933 = false.",
+          "provenance": "handoff-verbatim (ticket-14 wave-1 work order sample 1) and census-sample verbatim (detail.json records the same statement at the same file:line)"
+        },
+        {
+          "file": "piu_zz_tau_enclosure_bank4.v",
+          "line": 4608,
+          "excerpt": "Lemma piu_zz_primeb_false_1914 : zz_primeb 1914 = false.",
+          "provenance": "census-sample verbatim (detail.json)"
+        },
+        {
+          "file": "UpReqIndex.v",
+          "line": 4904,
+          "excerpt": "Lemma NewGreenV45QedSum_matches : NewGreenV45QedSum = sum_ng_qed NewGreenListV45.",
+          "provenance": "census-sample verbatim (detail.json)"
+        }
+      ],
+      "gapKeywords": ["boolean verdict", "computation anchor", "infix equality"],
+      "sourceLane": "main-census-sample-20261122",
+      "notes": "bare infix = conclusion: the computation-anchor family (zz_in_Pn/zz_primeb = false verdict banks, constant-equality anchors, = true reflections). Guards (==, <=, >=, <>, :=, And, /\\) keep every other head family's faces out, so this row is the last resort of the conclusion chain: iff faces carrying a bare = alongside <-> still seat here, matching the census head labels (ev_eqb_raw_true_iff is census-head rel:=, detail.json). Unclaimed neighbors feeding the gap telemetry: bare < / >= conclusions (rel:< 2, rel:>= 1, census_out.txt:94,109), %Z-scoped comparisons, app:Empty_set vacuous discharges (1, census_out.txt), And/not/Id-headed spellings."
+    }
+  ],
+  "wave1UnclaimedFaces": {
+    "description": "census-real faces deliberately left unclaimed in wave 1 (each lands in todo_seat and feeds the gap telemetry); they are the candidate row set for wave 2",
+    "faces": [
+      "And-headed conjunction conclusions (app:And 2; anchors DTPT_Entropy_e.v:249 mkMEval_eta, LW5SepComplexity.v:703 lw5n_shape_inversion - census-sample verbatim)",
+      "not-headed negation conclusions (not 2; anchor Arch_ToyR_04.v:1249 pi_Qneq0_Zpos - census-sample verbatim)",
+      "Id-headed plain-equality conclusions without the true literal (app:Id 7 partial; anchor S01_BaseRing.v:393 two_mult - census-sample verbatim)",
+      "absorbed-forall conclusion spellings surfacing their inner heads (app:forall 3; declared divergence, see concl.quantified.forall notes)",
+      "bare < / >= conclusions, %Z / %positive-scoped comparisons, strict < nat premises, == premise legs, real_lim / Empty_set / Bdiv / tid / nle / gzeq heads (census_out.txt:87-109 singles)"
+    ]
+  },
+  "sampleVerification": "2026-11-22 census window (census_out.txt:1: corpus 1246 .v files scanned, 26689 statements enumerated, sampled 200); the three handoff sample statements are carried verbatim from the ticket-14 wave-1 work order with the work order's capture-vs-source claim; no Main-side anchor drift gate ran (declared in anchorProvenance)"
+}

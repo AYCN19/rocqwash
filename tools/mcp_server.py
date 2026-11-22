@@ -4,9 +4,9 @@ Purpose.  Expose the repository tool capability surface over the Model
   dispatcher: the newline-delimited JSON-RPC 2.0 stdio face, and the
   --http face (POST application/json on /mcp, streamable-style
   request/response, with an internal Mcp-Session-Id response header;
-  Python stdlib http.server, zero new dependencies).  50 registered
+  Python stdlib http.server, zero new dependencies).  51 registered
   capabilities, each spec transcribed from its docs/CAPABILITY-INDEX.md
-  entry line (six later increments from their tools' own CLI contract
+  entry line (seven later increments from their tools' own CLI contract
   headers).  Default deny for the network and heavy capabilities
   (sentinel_status, net_probe, ci_triage, pushci_status, claim_watch,
   source_fetch, release_chain): a failed tool result names
@@ -36,7 +36,7 @@ Dependencies.  Python 3 standard library only (argparse, http.client
   [selftest smoke only], http.server, json, os, subprocess, sys,
   threading); registered CLIs resolve under ROCQWASH_HOME.
 
-Evidence.  tests/t_mcp_face.py asserts the 50-name roster and the wire
+Evidence.  tests/t_mcp_face.py asserts the 51-name roster and the wire
   contract; --selftest self-proofs the frozen interface-shape vectors
   plus the dispatcher round-trip vectors (initialize, tools/list, one
   tools/call shape), with the socket smoke gated behind
@@ -77,10 +77,11 @@ HTTP_MAX_BODY_BYTES = 32 * 1024 * 1024
 # increment, the axiom_sweep registration increment, the claim_watch
 # registration increment, the v2-B audit-line batch of three:
 # source_fetch, sweep_verdict, release_chain, plus the numeric-probe
-# registration batch of two: numeric_probe, statement_probes); a roster
-# change re-freezes this value and EXPECTED_TOOLS in tests/t_mcp_face.py
-# in the same round.
-SELFTEST_ROSTER_COUNT = 50
+# registration batch of two: numeric_probe, statement_probes, plus the
+# vacgen-coq registration increment (ticket 14 wave 1, one face:
+# vacgen_coq_generate); a roster change re-freezes this value and
+# EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
+SELFTEST_ROSTER_COUNT = 51
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -2002,6 +2003,56 @@ TOOL_SPECS = [
             "network, zero compile: the cast writes skeletons, sources, "
             "reports and summary only; the build command line is recorded "
             "as text, never executed."
+        ),
+    },
+    # ---- the vacgen-coq registration increment (ticket 14 wave 1, the
+    # Rocq domain support): one zero-network batch coverage face over the
+    # landed Coq-side sibling CLI (tools/vacgen_coq.py --from-v/
+    # --taxonomy/--out/--limit/--selftest, exactly the tool's real
+    # argparse flag face).  Additive after the block above: the existing
+    # specs and schemas untouched.  Dual-domain coverage law: the Lean
+    # vacgen_generate face stays for the Lean domain, this face covers the
+    # Rocq domain; the sibling CLIs share no code path (architecture and
+    # report discipline only).
+    {
+        "name": "vacgen_coq_generate",
+        "kind": "cli",
+        "cli": os.path.join("tools", "vacgen_coq.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("from_v", "--from-v"),
+            ("taxonomy", "--taxonomy"),
+            ("out", "--out"),
+            ("limit", "--limit"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "from_v": {"type": "string", "description": "batch input: a .v file, or a directory whose *.v files are walked recursively (.git skipped); tool-required for the batch face; --selftest runs without it; CLI flag --from-v"},
+                "taxonomy": {"type": "string", "description": "taxonomy table path (chain: this flag, then the VACGEN_COQ_TAXONOMY environment variable, then the tool-adjacent taxonomy-coq.json, then the builtin starter row); CLI flag --taxonomy"},
+                "out": {"type": "string", "description": "batch output root (default: vacgen_coq_batch_out under the repository root); the only disk face the batch face writes, one JSON per statement plus summary.json under it; CLI flag --out"},
+                "limit": {"type": "integer", "description": "cap the number of statements processed after enumeration (must be a positive integer, usage error rc 2 otherwise; counted in summary.input.limitApplied); CLI flag --limit"},
+                "selftest": {"type": "boolean", "description": "run the in-process offline vector face and exit (takes no other flag): taxonomy-load vector, recognition vectors over the fixture known families, unknown-shape todo_seat vector, hole-face degradation vector, builtin chain-end vector, L1 extraction/split vector, L3 computation vector, batch end-to-end vector inside a TemporaryDirectory; bare CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Rocq statement-face coverage prober over the landed Coq-side "
+            "sibling CLI (tools/vacgen_coq.py, ticket 14 wave 1, the Rocq "
+            "domain support; the Lean vacgen_generate face stays for the "
+            "Lean domain - dual-domain coverage, the sibling CLIs share no "
+            "code path).  The batch face enumerates line-start Rocq "
+            "assertion statements in the --from-v .v file or *.v directory "
+            "walk (.git skipped), splits each statement into premise and "
+            "conclusion faces, classifies every face against the data-driven "
+            "taxonomy table (zero family knowledge in-engine), and reports "
+            "the Coq-L3 coverage per statement and per batch, with honest "
+            "TODO-SEAT degradation for unknown shapes (counted, never "
+            "silent): one JSON per statement plus summary.json under --out "
+            "(default vacgen_coq_batch_out).  --selftest runs the offline "
+            "in-process vector face.  Zero network face, zero compile: no "
+            "Rocq process is ever started, the only write root is the "
+            "caller-named --out directory."
         ),
     },
 ]

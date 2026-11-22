@@ -5,7 +5,7 @@
 
 Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   one newline-delimited JSON-RPC session line by line, asserting the
-  50-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
+  51-capability face: the RQW08 legacy 8, the RQW13 batch-1 zero-network 13,
   the engine-body ticket's three capabilities (graduated from
   docs/drafts/mcp-tool-specs-engine-body.md by the integration agent), the
   symbiosis ticket's one read-only capability (symbiosis_status, a
@@ -52,7 +52,12 @@ Purpose.  Spawn the expanded MCP stdio server as a child process and drive
   statement-ingestion faces over the landed vacgen v2 batch flags
   tools/vacgen.py --from-statements/--from-repo; each spec likewise
   transcribed from its tool's frozen CLI contract header, the INDEX
-  entries awaiting their own lane.
+  entries awaiting their own lane.  The vacgen-coq registration
+  increment adds the last capability: vacgen_coq_generate, the Rocq-domain
+  batch coverage face over the landed Coq-side sibling CLI
+  tools/vacgen_coq.py (ticket 14 wave 1, the Rocq domain support; the Lean
+  vacgen_generate stays for the Lean domain, dual-domain coverage; its
+  spec likewise transcribed from the tool's real argparse flag face).
 
 Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   as case t_mcp_face on 20261115, audit finding P0-6; the roster count is
@@ -64,7 +69,7 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
   of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 50 expected names in registration order,
+  3  tools/list -> exactly the 51 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -209,6 +214,11 @@ EXPECTED_TOOLS = [
     # spec transcribed from its tool's own frozen CLI contract header,
     # the INDEX entries awaiting their own lane)
     "numeric_probe", "statement_probes",
+    # the vacgen-coq registration increment (ticket 14 wave 1, the Rocq
+    # domain support: one zero-network batch coverage face over the landed
+    # Coq-side sibling CLI tools/vacgen_coq.py; the Lean vacgen_generate
+    # stays for the Lean domain, dual-domain coverage)
+    "vacgen_coq_generate",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -297,6 +307,15 @@ EXPECTED_NUMERIC_PROBE_ARGS = ["claim", "out", "selftest"]
 # outside this face, so the schema properties must match this list
 # one-to-one, exactly the EXPECTED_NUMERIC_PROBE_ARGS discipline.
 EXPECTED_STATEMENT_PROBES_ARGS = ["from_statements", "from_repo"]
+
+# Frozen vacgen_coq_generate vector: the full argparse flag face of
+# tools/vacgen_coq.py (from_v, taxonomy, out, limit, selftest) in
+# argparse declaration order; the vacgen_coq_generate schema properties
+# must match this list one-to-one, exactly the
+# EXPECTED_STATEMENT_PROBES_ARGS discipline (the tool's --selftest is a
+# real argparse store_true flag here, unlike the pre-argparse selftest
+# routes, so it belongs to this face; ticket 14 wave 1).
+EXPECTED_VACGEN_COQ_ARGS = ["from_v", "taxonomy", "out", "limit", "selftest"]
 
 
 def _child_env():
@@ -693,6 +712,36 @@ def main():
             if token not in sp_desc:
                 fails.append("probe3g statement_probes description should "
                              "declare the contract token %s" % token)
+
+        # Probe 3h: the vacgen-coq registration increment's schema-face
+        # vectors (ticket 14 wave 1; the schema shape mirrors the tool's
+        # real argparse flag face one-to-one; the spec description names
+        # the Rocq domain support, the ticket, and the dual-domain
+        # coverage law under which the Lean vacgen_generate stays for the
+        # Lean domain).
+        vc_spec = by_name.get("vacgen_coq_generate") or {}
+        vc_props = list((vc_spec.get("inputSchema") or {})
+                        .get("properties") or {})
+        if vc_props != EXPECTED_VACGEN_COQ_ARGS:
+            fails.append("probe3h vacgen_coq_generate schema flags must "
+                         "match the argparse face one-to-one"
+                         "\nexpected=%r\nactual=%r"
+                         % (EXPECTED_VACGEN_COQ_ARGS, vc_props))
+        if "from_v" in ((vc_spec.get("inputSchema") or {}).get("required")
+                        or []):
+            fails.append("probe3h vacgen_coq_generate from_v must stay "
+                         "optional (--selftest runs without it; the batch "
+                         "face usage-errors rc 2 without --from-v)")
+        if ((vc_spec.get("inputSchema") or {}).get("properties", {})
+                .get("limit", {}).get("type")) != "integer":
+            fails.append("probe3h vacgen_coq_generate limit should be an "
+                         "integer property (CLI flag --limit, type=int)")
+        vc_desc = vc_spec.get("description") or ""
+        for token in ("ticket 14", "Rocq", "vacgen_generate", "Lean",
+                      "Zero network", "TODO-SEAT"):
+            if token not in vc_desc:
+                fails.append("probe3h vacgen_coq_generate description "
+                             "should name the contract token %s" % token)
 
         # Probe 4a: http_backoff live call
         r3 = _by_id(lines, 3)
