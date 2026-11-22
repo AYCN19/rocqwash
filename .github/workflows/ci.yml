@@ -196,3 +196,35 @@ jobs:
   # see parallel-session WIP causing environment-dependent reds while hosted
   # faces run the identical suite green. Hosted Linux + Windows carry the
   # blocking signal. Re-enable when the runner gets workspace isolation.
+  # Restored 20261122 (not-our-ref mirror-lag adjudication: local runner required, checkout-layer red was mirror lag); blocking again.
+
+  selftest-local:
+    name: Self-test suite (Windows (local self-hosted))
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main'
+    env:
+      ROCWASH_PY: python
+      ROCWASH_TESTS_EXCLUDE: "t_retrofit_dryrun t_verify_vo t_push_gate t_cpu_guard_direct_smoke t_cpu_guard_direct_rc t_verify_fresh t_extract_magic t_probe_engine t_cw_entry t_registry_union t_toolchain_dyld_doctor t_contrib_intake"
+      PYTHONIOENCODING: utf-8
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # full history: the frozen8 check's git-anchor assertion (HEAD must
+          # be a descendant of the freeze commit) needs the freeze commit
+          # object; the default depth-1 fetch re-shallows the cached runner
+          # workspace every run and false-flags DRIFT (20261116 red chain)
+          fetch-depth: 0
+
+      - name: Run self-test suite (stable roster)
+        run: bash tests/run_tests.sh
+
+      - name: Suite verdict
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "ROCQWASH-CI-ALL-GREEN (stable roster, Windows (local self-hosted); platform-sensitive cases run in flaky-watch; canonical-path cases SKIP off-machine, full sweep on the canonical machine)"
+          else
+            echo "::error::self-test suite red on Windows (local self-hosted) — see the failed step log above"
+          fi
