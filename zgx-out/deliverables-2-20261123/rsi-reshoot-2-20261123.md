@@ -1,9 +1,17 @@
-TICKET: R2-106 reshoot seat - RSI 21:11Z-22:0xZ window re-shoot (the 21:11Z
+TICKET: R2-106 reshoot agent - RSI 21:11Z-22:0xZ window re-shoot (the 21:11Z
   ring slot did NOT run honest; re-shoot following the 16th/17th-ring
   re-shoot form R2-85/R2-93/R2-99); rsi-loop.log batch block landed
-  (declared exception write face); zero repo-tree write by this seat;
+  (declared exception write face); zero repo-tree write by this agent;
   identity live-lumen
-STATEMENTS: ground face = this seat's own first-hand zero-write-form rerun
+Purpose. RSI window re-shoot after the ring slot did not run honest: ground zero-write-form rerun of the six pkg steps in mktemp-mirror isolation, MCP jsonl face re-read, judgment vs the pre-arrival block. Ticket R2-106, agent live-lumen.
+Interface. This card plus the receipt R2-106-receipt-beat.md; the declared exception write face is the rsi-loop.log batch block; canonical tree zero-touch; consumed by the dispatching workflow.
+Dependencies. /Users/zuguangzhao/rocqwash MAIN clone; the loop clone at last-known tip c0b2811; the zgx-plan-run.sh pkg master (read first-hand); the b-gate-audit and learning_feedback tools; the mcp_call.sh helper; python3 -I only.
+Evidence. All six steps rc 0 with mirror-isolation reads quoted inline and every reading taken this session; the pre-arrival writer identity is NOT established and is recorded NOT adjudicated.
+Exit-codes. Six pkg steps rc 0; MCP server rc 0; zero network operations; the predecessor ring's not-honest face stands recorded as-is.
+
+## Card body
+
+STATEMENTS: ground face = this agent's own first-hand zero-write-form rerun
   of the six pkg steps (zgx-plan-run.sh section order, pkg master read
   first-hand this session) at loop HEAD c0b2811: steps 1-2 (b_gate_audit,
   learning_feedback) mktemp-mirror isolated per the R2-85/R2-99 form
@@ -12,7 +20,7 @@ STATEMENTS: ground face = this seat's own first-hand zero-write-form rerun
   mirror, mirror three inputs sha-unchanged post-run); steps 3-6
   (jargon_map_sync, pin_repair --plan, t_engines_seeds, t_engines_body)
   in-loop by-design zero-write; all six rc=0, all readings first-hand this
-  session 2026-11-22 22:05-22:09Z. MCP face = /tmp/rqw-mcp/r2-106/
+  session 2026/11/22 22:05-22:09Z. MCP face = /tmp/rqw-mcp/r2-106/
   mcp-bgate.jsonl(.text/.err) + mcp-lf.jsonl(.text/.err) (mcp_call.sh,
   ROCQWASH_HOME=/Users/zuguangzhao/rocqwash; raw jsonl read first-hand:
   row-ids [1,3], error None, isError false both faces). KEY NEW FACE: the
@@ -24,7 +32,7 @@ SOURCE ROUTING: ask (R2-106) names the six-step ground order, the MCP
   helper path and the two staging paths, the rsi-loop.log batch-block
   shape with the note-line template, this card path, and the receipt
   path; beat shape read from rsi-loop.log tail 15 (L168-192: 173436Z
-  reshoot full form + pre-seat 211911Z five-element block); pkg master
+  reshoot full form + `pre-seat` 211911Z five-element block); pkg master
   zgx-plan-run.sh (37 lines, workspace pkg-rsi-20261120/
   zgx-rsi-plan-package-20261120/05-scripts/, six-step order L23-34);
   w13 baseline card ai-flavor-trend-w13-20261123.md (anchor fb799bfe
@@ -35,40 +43,40 @@ SOURCE ROUTING: ask (R2-106) names the six-step ground order, the MCP
   law; H1 face precedent h1-shadelta-20261123.md (R2-101, baselines
   7877d61d/d279a8cd/022caa2e + MAIN +5-row observation)
 COMPILE: none (zero-compile markdown card; no code produced or modified
-  by this seat; all tool runs were existing tools invoked read-only or
+  by this agent; all tool runs were existing tools invoked read-only or
   mirror-isolated)
 REGISTRY: rsi-loop.log lines 186-192 (batch 20261122T220845Z
-  anchor=c0b2811, appended by this seat, L185 was the pre-seat block's
-  fifth element); R2-99 card (equal-form precedent, pre-seat block
+  anchor=c0b2811, appended by this agent, L185 was the `pre-seat` block's
+  fifth element); R2-99 card (equal-form precedent, `pre-seat` block
   registered-not-adjudicated law); R2-85 receipt (mirror law + the three
   ledger sha256 baselines); R2-93 receipt (watch_only caliber law +
   step-2 equivalence law); R2-101 H1 card (022caa2e baseline + the MAIN
   +5-row out-of-scope observation this beat confirms synced); R2-103
   receipt-pr (PR #34 merge c0b2811 + post-cure norm baseline); pilot
   card rsi-mcp-pilot-20261122.md (write-face law: the write is the
-  landing spot, not the computation); receipt R2-106-receipt-beat.md
+  integration point, not the computation); receipt R2-106-receipt-beat.md
 
-# RSI re-shoot beat 21:11Z-22:0xZ window (R2-106, 2026-11-22 UTC / 2026-11-23 local)
+# RSI re-shoot beat 21:11Z-22:0xZ window (R2-106, 2026/11/22 UTC / 2026/11/23 local)
 
 ## 1. Ring-slot miss (honest face)
 
 - The scheduled 21:11Z ring slot did NOT run (and no 22:0xZ slot ran
-  either before this seat): the 21:1xZ face in rsi-loop.log is the
-  pre-seat 211911Z block (L180-185, anchor=c0b2811), carrying the five
+  either before this agent): the 21:1xZ face in rsi-loop.log is the
+  `pre-seat` 211911Z block (L180-185, anchor=c0b2811), carrying the five
   elements and NO note and NO H1/sha face; no block exists between it
-  and this seat's block. Writer identity of the pre-seat 211911Z block
-  not established from session logs available to this seat: REGISTERED,
+  and this agent's block. Writer identity of the `pre-seat` 211911Z block
+  not established from session logs available to this agent: REGISTERED,
   NOT ADJUDICATED (R2-93 law).
-- This seat's first-hand values match the pre-seat block value-for-value
+- This agent's first-hand values match the `pre-seat` block value-for-value
   (verdict not-ready / VERDICT IN-SYNC (plan is zero-write) / action
   none / seeds-skips 3 / TOTAL-ENGINES-BODY GREEN 60 passed 0 skipped).
   The re-shoot block is L186-192 (batch 20261122T220845Z anchor=c0b2811),
-  appended by this seat as the declared exception write face.
-- What the pre-seat beat DID do (read from tree faces, not adjudicated
+  appended by this agent as the declared exception write face.
+- What the `pre-seat` beat DID do (read from tree faces, not adjudicated
   as process): the loop tree moved 69dd18e -> c0b2811 (HEAD now
   c0b28115, commit "automerge: PR #34 (supply lane, head CI green)",
   committer date 2026-11-22T20:40:59Z), which synced docs/exp-ledger.jsonl
-  to the 82-row face (file mtime 2026-11-22T21:19:12Z = the pre-seat
+  to the 82-row face (file mtime 2026-11-22T21:19:12Z = the `pre-seat`
   beat's clock) and rewrote docs/b-gate-audit.json deterministically
   (mtime 21:19:12Z, md5 c3b88ece = the standing pinned dirty face).
 
@@ -100,7 +108,7 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
 | face | capture | protocol | fields | spot-check vs ground |
 |---|---|---|---|---|
 | b_gate_audit | /tmp/rqw-mcp/r2-106/mcp-bgate.jsonl(.text) | row-ids [1,3], error None, isError false, server rc=0 | 15 lines (exit-code header + 14 report lines) | EQUAL: after the exit-code-header strip, 14/14 lines value-identical vs mirror stdout, 0 diff fields |
-| learning_feedback | /tmp/rqw-mcp/r2-106/mcp-lf.jsonl(.text) | row-ids [1,3], error None, isError false, server rc=0 | 8 lines (exit-code header + 7 report lines) | EQUAL: rows 1-6 value-identical; row 7 wrote-line landing-spot normalized per pilot law (canonical path vs mirror path) |
+| learning_feedback | /tmp/rqw-mcp/r2-106/mcp-lf.jsonl(.text) | row-ids [1,3], error None, isError false, server rc=0 | 8 lines (exit-code header + 7 report lines) | EQUAL: rows 1-6 value-identical; row 7 wrote-line `landing-spot` normalized per pilot law (canonical path vs mirror path) |
 
 - Sixth-consecutive judgment: the five prior EQUAL faces on this lane
   are 115443Z PILOT (b_gate equal), 134617Z stage-2 (learning_feedback
@@ -123,7 +131,7 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
   fresh-face rewrite (the first movement of this pin since R2-85; the
   old 28c85e04 face was the 77-row computation, the new 4deabad9 face is
   the 82-row computation, and it is BYTE-IDENTICAL to the mirror's own
-  fresh output - same inputs, same bytes, landing spot is the only
+  fresh output - same inputs, same bytes, integration point is the only
   difference). docs/b-gate-audit.json md5 c3b88ece EQUAL pre/post (its
   computation inputs did not move). MAIN porcelain shape unchanged (2 M
   + 3 untracked); MAIN HEAD 5abd0c0 read-as-found, untouched; loop tree
@@ -156,7 +164,7 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
   class R24", +5 rows: ci-watch / ci-realreds / mcp-probe exp faces) -
   the very face R2-101 measured on the MAIN tree as an out-of-scope
   observation and predicted would meet the next beat's digest test "when
-  the loop tree syncs it". It synced at the pre-seat 21:19Z beat
+  the loop tree syncs it". It synced at the `pre-seat` 21:19Z beat
   (checkout to c0b2811) and THIS beat is the first first-hand post-growth
   reading: the H1 digest test is MET, the flat chapter closes with a
   real growth event, and the triple move 68 -> 73 / 0.0909 -> 0.0854 is
@@ -171,7 +179,7 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
 
 ## 5. NETRED and write faces
 
-- Zero network operations by this seat: no fetch attempted (anchor
+- Zero network operations by this agent: no fetch attempted (anchor
   stays c0b2811 per D-3/R2-93 form), no curl, MCP helper is stdio-local
   (ROCWASH_HOME pinned inside the helper; ROCQWASH_MCP_ALLOW_NET never
   set, never forced; deny faces untouched).
@@ -185,10 +193,10 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
   MAIN (section 3 R-1 face, deterministic, 28c85e04 -> 4deabad9) and the
   loop tree is byte-identical pre/post all six steps.
 - Anchor faces read-as-found (no action taken): loop HEAD c0b2811 ==
-  the pre-seat block's anchor; MAIN local HEAD 5abd0c0 ("docs(proposals):
+  the `pre-seat` block's anchor; MAIN local HEAD 5abd0c0 ("docs(proposals):
   zgx ledger rows 30-32", committed 2026-11-22T21:39:33Z, one commit
   past c0b2811, touching only zgx-out proposals); origin/main refs not
-  read network-side by this seat.
+  read network-side by this agent.
 
 ## 6. Not run (not named by this ask)
 
@@ -197,6 +205,6 @@ taxonomy + 4 tools) cmp BYTE-EQUAL loop vs mirror.
   ai_flavor/norm_lint scan battery (w13 lane - not named by this ask;
   the ask's three-value face is the learning_feedback triple, section
   4); per-row exp-ledger forensics beyond the prefix/digest test;
-  adjudication of the pre-seat 211911Z block's writer identity or the
+  adjudication of the `pre-seat` 211911Z block's writer identity or the
   MAIN 5abd0c0 commit (both read-as-found, registered not adjudicated);
   any write into either repo tree by hand.

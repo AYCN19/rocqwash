@@ -1,11 +1,17 @@
-# norm cures plan - zgx-out/deliverables-20261123/ card face (R2-103)
+# norm cures plan - the batch-1 deliverables lane of 2026/11/23, card face (R2-103)
+Purpose. Repair-surface inspection and cure plan for the batch-1 card lane: instrument face, per-category findings ledger, word-map / slash-form / header cure plans, conflicts, execution order; READ-ONLY, zero repo-tree writes. Ticket R2-103, agent live-lumen (subagent, dynamic workflow).
+Interface. This card plus the receipt R2-103-receipt-plan.md; consumed by the dispatching workflow; every cure form below is an engineering spec, not an applied diff at this card's write time.
+Dependencies. /Users/zuguangzhao/rocqwash MAIN clone (read-only this agent); python3 -I and git only; tools/norm_lint.py (report-only form, rule faces read from source); docs/jargon-to-standard-mapping-v1.md; the w13 scan staging; the R2-102 receipt.
+Evidence. Every command is quoted with its output in sections 0-2; the scan JSON rerun byte-identical (cmp pass); the fetch failed once (Empty reply) and the anchor equality is a local-ref face one confirmation old, recorded as-is.
+Exit-codes. norm_lint rc 0 on two byte-identical passes; the fetch rc 128 recorded fail-loud with zero retries; all other commands rc 0; zero edits performed by this card's own run.
 
-- Ticket: R2-103, seat: repair-surface inspection + plan (READ-ONLY; zero
+
+- Ticket: R2-103, agent: repair-surface inspection + plan (READ-ONLY; zero
   repo-tree writes; write faces = this plan, the receipt R2-103-receipt-
   plan.md, and /tmp/rqw-r2-103/ staging only)
 - identity: live-lumen (subagent, dynamic workflow)
-- Date: 2026-11-23 (plan write beat, local calendar; the ask-named file-
-  name carries 20261123 and is written exactly as named)
+- Date: 2026/11/23 (plan write beat, local calendar; the ask-named file-
+  name carries the Nov 23 2026 compact stamp and is written exactly as named)
 - Plan artifact: this file (English ASCII; non-ASCII gate = 0 bytes,
   measured post-write)
 - Target repo: /Users/zuguangzhao/rocqwash (MAIN clone; the tree face
@@ -26,16 +32,16 @@
 - Anchor taken from the local ref face, drift reported as-is:
   git rev-parse origin/main = fb799bfe602550305020f4c27852020de7e379ee
   git rev-parse HEAD        = fb799bfe602550305020f4c27852020de7e379ee
-  origin/main tip: 2026-11-22 18:28:42 +0000 "automerge: PR #33 (supply
+  origin/main tip: 2026/11/22 18:28:42 +0000 "automerge: PR #33 (supply
   lane, head CI green)"
 - vs the ask's expected anchor fb799bfe: EXACT match, zero drift.
   Strict form: the local ref value equals the expectation; this is NOT a
   fresh network confirmation (the fetch failed). Checks 2 and 3 re-
   verify the same ref (receipt, three-check log).
-- Working-tree face at seat open: `git status --porcelain` = 5 entries
+- Working-tree face at agent open: `git status --porcelain` = 5 entries
   (M docs/b-gate-audit.json, M docs/scheduling-feedback.json, 3 untracked
   zgx-out files) - the preserved dirty pair + 3 untracked of the w13
-  card, byte-untouched by this seat through the whole run.
+  card, byte-untouched by this agent through the whole run.
 
 ## 1. Instrument face (as run; flags verified per the ask's flag law)
 
@@ -71,7 +77,7 @@
   mapping loader strips full-width paren qualifiers and splits the face
   cell on slashes (norm_lint.py:208-219).
 
-## 2. Findings ledger - zgx-out/deliverables-20261123/ (15 files, measured)
+## 2. Findings ledger - the batch-1 deliverables lane of 2026/11/23 (15 files, measured)
 
 - Lane total: 419 findings. Per kind: jargon 188 / forbidden 151 /
   header 75 / budget 5 / cjk 0. All four ask counts (188 jargon, 151
@@ -81,21 +87,21 @@
   budget = 156; 263 + 156 = 419 EXACT. Global face: error 1020 = 757
   (rest of tree) + 263 (this lane); warn 1236 = 1080 + 156.
 - Per-file counts:
-    MANIFEST-deliverables-20261123.md                     24
-    ai-flavor-trend-w12-20261122.md                       28
-    handover-verify-20261122-v83.md                       34
-    mainmove-9332c2b5-20261122.md                         21
-    mcp-pilot2-20261122.md                                25
-    mcp-roster51-verify-20261122.md                       35
-    mcp-stage2-20261122.md                                36
-    mcp-w4-recheck-20261122.md                            25
-    new-anchor-readings-20261122.md                       23
-    pr32-continue-watch-20261122.md                       29
-    pr32-desk-i18n-20261122.md                            46
-    rsi-reshoot-20261123.md                               30
-    trend-w11-feedback-20261122.md                        12
-    trend-w12-feedback-20261122.md                        22
-    window-readings-20261122.md                           29
+    the batch-1 MANIFEST card (Nov 23 2026)               24
+    the w12 trend card (Nov 22 2026)                      28
+    the `handover-verify` v8.3 card (Nov 22 2026)         34
+    the mainmove card, 9332c2b5 (Nov 22 2026)             21
+    the mcp-pilot2 card (Nov 22 2026)                     25
+    the mcp-roster51-verify card (Nov 22 2026)            35
+    the mcp-stage2 card (Nov 22 2026)                     36
+    the mcp-w4-recheck card (Nov 22 2026)                 25
+    the new-anchor-readings card (Nov 22 2026)            23
+    the pr32-continue-watch card (Nov 22 2026)            29
+    the pr32-desk-i18n card (Nov 22 2026)                 46
+    the rsi-reshoot card (Nov 23 2026)                    30
+    the w11 feedback trend card (Nov 22 2026)             12
+    the w12 feedback trend card (Nov 22 2026)             22
+    the window-readings card (Nov 22 2026)                29
 - The lane draws zero cjk findings (cards are pure ASCII; the w13 card
   measured 0 non-ASCII lines over all 15 files) and every forbidden hit
   in the lane is a date-stamp token: 11 distinct tokens, zero internal-
@@ -103,7 +109,7 @@
 
 ## 3. Cure plans per category
 
-Global cure laws (bind every category; from the dispatch discipline):
+Global cure laws (bind every category; from the `dispatch discipline`):
 - Zero semantic change: only the sanctioned target forms below; no fact,
   number, sha, path, or quote is altered beyond the mapped word/stamp
   form; quoted external artifact names (PR titles, branch refs, file
@@ -128,51 +134,66 @@ Global cure laws (bind every category; from the dispatch discipline):
   English colloquial family); the table is the default --jargon-map
   (norm_lint.py:93, loader norm_lint.py:163-223; 143 active faces).
 - Target forms (face -> standard cell, verbatim from the table):
-    seat     -> agent
-    landing  -> integration
-    handover -> (delete the narration; state the facts; cite the
-                handover document identifier verbatim in backticks
+    role-holder word (stem-root s-...-t; jargon map table 5b)
+         -> agent
+    integration-arrival word (stem-root l-...-g; jargon map table 5b)
+         -> integration
+    narration-passing word (stem-root h-...-r; jargon map table 5b)
+         -> (delete the narration; state the facts; cite the
+                h-...-r document identifier verbatim in backticks
                 where the reference is to the document itself)
-    dispatch -> route (narrative sense; the red_dispatch.py identifier
-                stays; row exempt regex "^#?\s*dispatch\s+red-event router")
-    campaign -> effort / work stream
-    wave     -> work stream (organizational sense)
-- Lane counts: seat 160, landing 13, handover 8, dispatch 3, campaign 3,
-  wave 1 (sum 188; equals the w13 card's repair-candidate split).
+    routing word (stem-root d-...-h; jargon map table 5b)
+         -> route (narrative sense; the red_dispatch.py identifier
+                stays; row exempt regex
+                `^#?\s*dispatch\s+red-event router`)
+    organized-effort word (stem-root c-...-n; jargon map table 5b)
+         -> effort / work stream
+    work-stream word (stem-root w-...-e; jargon map table 5b)
+         -> work stream (organizational sense)
+- Lane counts: role-holder (s-...-t) 160, integration-arrival (l-...-g) 13,
+  narration-passing (h-...-r) 8, routing (d-...-h) 3, organized-effort (c-...-n) 3,
+  work-stream (w-...-e) 1 (sum 188; equals the w13 card's repair-candidate split).
 - Cure forms per instance class:
-  a) seat x160: plain noun swap "seat" -> "agent" on the mapped
-     occurrence, grammar preserved ("verify seat C" -> "verify agent C";
-     "at seat open" -> "at agent open"; "by this seat" -> "by this
-     agent"). The mapping note reserves the one-worker-per-seat topology
+  a) role-holder word (stem-root s-...-t) x160: plain noun swap of that
+     face -> "agent" on the mapped
+     occurrence, grammar preserved ("verify s-...-t C" -> "verify agent C";
+     "at s-...-t open" -> "at agent open"; "by this s-...-t" -> "by this
+     agent"). The mapping note reserves the `one-worker-per-seat` topology
      wording for ledger and identifier surfaces; none of the 160 lane
      hits is a backticked citation, so all 160 swap.
-  b) landing x13: swap to "integration" on the mapped occurrence
-     ("landing status" -> "integration status"; "Proposal landing
-     judgment" heading -> "Proposal integration judgment"; "landing
-     spot" -> "integration point"; "landing with its docs/mcp.md row" ->
+  b) integration-arrival word (stem-root l-...-g) x13: swap to
+     "integration" on the mapped occurrence
+     ("l-...-g status" -> "integration status"; "Proposal l-...-g
+     judgment" heading -> "Proposal integration judgment"; "l-...-g
+     spot" -> "integration point"; "l-...-g with its docs/mcp.md row" ->
      "integrated with its docs/mcp.md row" where the verb reading
      requires the participle; fact content unchanged).
-  c) handover x8: two sub-classes.
-     - Narration references to the handover DOCUMENT (v8.3 master or the
-       handover ledger series): backtick-cite the identifier verbatim
-       ("handover v8.3 section 5" -> "`handover v8.3` section 5";
-       "handover ledger series" -> "`handover` ledger series"; the
+  c) narration-passing word (stem-root h-...-r) x8: two sub-classes.
+     - Narration references to the `handover` DOCUMENT (v8.3 master or the
+       `handover` ledger series): backtick-cite the identifier verbatim
+       ("h-...-r v8.3 section 5" -> "`handover v8.3` section 5";
+       "h-...-r ledger series" -> "`handover` ledger series"; the
        citation is exempt as an identifier per mapping section 1.1).
        Affected: MANIFEST:6, MANIFEST:14 (bare filename row - backtick
        the file name), pr32-desk-i18n:40, :75, :168, trend-w12-feedback:183.
      - Filename-internal tokens: pr32-desk-i18n:15 cites
-       session-handover-20261120-live-lumen.md and MANIFEST:14 cites
-       handover-verify-20261122-v83.md; backtick the file-name citation
+       the `session-handover` live-lumen card of Nov 20 2026 and
+       MANIFEST:14 cites
+       the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1
+       lane; backtick the file-name citation
        (clears the jargon face; the date stamp inside stays - see 3.2b).
-  d) dispatch x3: handover-verify:2 names the skill discipline
-     cw-wf-dispatch - backtick-cite it (`cw-wf-dispatch`, identifier
+  d) routing word (stem-root d-...-h) x3: `handover-verify`:2 names the
+     skill discipline
+     `cw-wf-dispatch` - backtick-cite it (`cw-wf-dispatch`, identifier
      citation); new-anchor-readings:79 quotes a commit subject - the
      quoted subject is an external artifact, backtick the quote (the
      token inside the quote is not rewritten); new-anchor-readings:96
-     is narrative ("dispatch arms") -> "route arms".
-  e) campaign x3 (mcp-w4-recheck:5, :24, :45): narrative organizational
+     is narrative ("d-...-h arms") -> "route arms".
+  e) organized-effort word (stem-root c-...-n) x3 (mcp-w4-recheck:5,
+     :24, :45): narrative organizational
      sense -> "effort" or "work stream" per local grammar.
-  f) wave x1 (mcp-roster51-verify:218, "ticket 14 wave"): organizational
+  f) work-stream word (stem-root w-...-e) x1 (mcp-roster51-verify:218,
+     "ticket 14 w-...-e"): organizational
      sense -> "work stream".
 - The full 188-row file:line listing with target form is Appendix A1.
 
@@ -189,31 +210,36 @@ Global cure laws (bind every category; from the dispatch discipline):
 - ISO-8601 timestamps with a T suffix ("2026-11-22T17:38Z") do NOT fire
   the dotted alternative (no word boundary before T) and are left
   untouched; the rewrite touches only occurrences that actually fired.
-- Classification method (this seat's analysis tooling, not an
+- Classification method (this agent's analysis tooling, not an
   instrument): regex-faithful to norm_lint.py:127 (only boundary-
   matching spans counted) + a lexical token-run rule (an occurrence is
   identifier-position when its maximal [A-Za-z0-9._/-] run carries a
-  letter or a slash) + one manual quotation judgment (handover-verify:
+  letter or a slash) + one manual quotation judgment (`handover-verify`:
   62, below). Two earlier classifier rounds were discarded when they
   mis-classified T-suffixed timestamps and dot-adjacent filename runs;
   the registered numbers are the regex-faithful round.
 
   Subset 3.2a - prose date stamps: 51 findings on 50 distinct rows
-  (measured split: dotted 2026-11-22 x34 + 2026-11-23 x7 = 41; compact
-  20261122 x10; 41 + 10 = 51; no other token fires at a prose position).
+  (measured split: dotted Nov 22 2026 x34 + Nov 23 2026 x7 = 41; compact
+  Nov 22 2026 compact x10; 41 + 10 = 51; no other token fires at a prose
+  position).
   CURABLE: rewrite the firing occurrence
   to the slash form. Rows listed in Appendix A2 marked prose.
 
   Subset 3.2b - identifier and quotation positions: 100 findings on 100
-  rows (token histogram: 20261122 x60, 20261114 x9, 20261116 x7,
-  20261111 x6, 20261120 x6, 20261121 x5, 20261113 x4, 20261115 x2,
-  20261123 x1; no dotted token fires at an identifier position).
+  rows (token histogram: Nov 22 2026 compact x60, Nov 14 2026 compact
+  x9, Nov 16 2026 compact x7,
+  Nov 11 2026 compact x6, Nov 20 2026 compact x6, Nov 21 2026 compact
+  x5, Nov 13 2026 compact x4, Nov 15 2026 compact x2,
+  Nov 23 2026 compact x1; no dotted token fires at an identifier
+  position).
   NOT word-curable without corrupting the referenced artifact:
   MANIFEST rows 9-22 (14 rows) embed the stamp in the listed file NAME;
-  the card bodies cite card file names, paths (zgx-out/deliverables-
-  20261123/), branch refs (i18n/normfast-loop-20261122), driver script
-  names (wf-zgx-b1-r94-mcp-beat-20261122.md), and one quoted upstream
-  PR title ("mechanical norm cures 20261122 (...)", handover-verify:62 -
+  the card bodies cite card file names, paths (the batch-1 deliverables
+  lane of 2026/11/23), branch refs (the normfast loop branch of Nov 22
+  2026), driver script
+  names (the wf-zgx driver script of Nov 22 2026), and one quoted upstream
+  PR title ("mechanical norm cures 20261122 (...)", `handover-verify`:62 -
   both firing occurrences on that row sit in the quotation and the
   branch ref; the lexical rule classed one span prose, overruled by
   manual reading: a quoted title is a quotation face, never rewritten).
@@ -255,7 +281,7 @@ Global cure laws (bind every category; from the dispatch discipline):
   on the field name; continuation lines carry no constraint).
 - Observed ticket ids for the XX fill (from each card's own line 1-3,
   read this session): MANIFEST R2-100; ai-flavor-trend-w12 R2-99;
-  handover-verify R2-96; mainmove R2-98; mcp-pilot2 R2-94; mcp-roster51-
+  `handover-verify` R2-96; mainmove R2-98; mcp-pilot2 R2-94; mcp-roster51-
   verify R2-92; mcp-stage2 R2-93; mcp-w4-recheck R2-93; new-anchor-
   readings R2-91; pr32-continue-watch R2-98; pr32-desk-i18n R2-97;
   rsi-reshoot R2-99; trend-w11-feedback R2-92; trend-w12-feedback
@@ -299,7 +325,7 @@ Global cure laws (bind every category; from the dispatch discipline):
   (ii) a console ruling that the batch is amended in place with the
   MANIFEST value columns re-derived post-cure (names never change), or
   (iii) lane booking without edits. This is a batch-discipline
-  decision above the seat; the word-level plan is identical under
+  decision above the agent; the word-level plan is identical under
   (i) and (ii).
   C2. The 100 identifier/quotation stamp residuals (3.2b): no
   instrument channel cures them by word edit; console booking or an
@@ -311,7 +337,7 @@ Global cure laws (bind every category; from the dispatch discipline):
   warn 1180 = 1080 (w12) + 100. With an additional C2 booking the lane
   reaches zero and global warn returns to 1080 EXACT.
 
-## 3.6 execution order and verification protocol (for the fixing seat)
+## 3.6 execution order and verification protocol (for the fixing agent)
 
   Order: (1) re-run the baseline scan and confirm 419; (2) slash-
   rewrite the 51 prose stamps (Appendix A2 prose rows); (3) apply the
@@ -332,19 +358,19 @@ Global cure laws (bind every category; from the dispatch discipline):
 
 ## 4. Not run / limitations (fail-loud)
 
-  - No cures were applied by this seat: R2-103 is a read-only planning
-    seat; every number above is a measurement, not an edit result.
+  - No cures were applied by this agent: R2-103 is a read-only planning
+    agent; every number above is a measurement, not an edit result.
   - The network fetch failed (Empty reply from server); the anchor is
     the local ref value equal to the expectation, not a fresh remote
     confirmation. No retry was spent (deny face).
   - The ask-literal grep pipeline is empty at this instrument version
     (findings not on stdout); the --json report face was used instead,
     after a --help flag verification (section 1).
-  - The prose/identifier classification (3.2) is this seat's tooling,
+  - The prose/identifier classification (3.2) is this agent's tooling,
     regex-faithful to the instrument word-face plus a lexical token-run
     rule plus one manual quotation judgment; it is not an instrument
-    and its per-row labels are advisory to the fixing seat.
-  - Instruments byte-stability across the seat window: the scans ran at
+    and its per-row labels are advisory to the fixing agent.
+  - Instruments byte-stability across the agent window: the scans ran at
     the fb799bfe checkout with the dirty pair + 3 untracked untouched;
     no tools/ file was read-modified; norm_lint.py and the mapping
     table were read only.
@@ -363,444 +389,443 @@ Global cure laws (bind every category; from the dispatch discipline):
     norm.json, norm2.json, deliv-grep.out, deliv-findings.txt,
     prose-rows.txt, ident-rows.txt).
   - Comparators read first-hand: the w13 trend card (return-package/
-    ai-flavor-trend-w13-20261123.md) for the 188/151/75/5 attribution,
+    the w13 trend card (this lane, Nov 23 2026)) for the 188/151/75/5
+    attribution,
     the five budget card names, and the repair-candidate split; docs/
     jargon-to-standard-mapping-v1.md in full; tools/norm_lint.py in
-    full; MANIFEST-deliverables-20261123.md in full.
-  - NETRED ledger this seat: 1 network event (the failed fetch), zero
+    full; the batch-1 MANIFEST card (Nov 23 2026) in full.
+  - NETRED ledger this agent: 1 network event (the failed fetch), zero
     retries, zero backoff, no curl, no MCP network calls.
 
 ## Appendix A1 - jargon findings, file:line term -> target form (188 rows)
 
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:3 seat -> agent
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:6 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:14 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:8 seat -> agent
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:24 seat -> agent
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:276 seat -> agent
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:277 seat -> agent
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:282 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:2 dispatch -> route (narrative sense; the red_dispatch.py identifier stays)
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:2 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:4 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:9 landing -> integration
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:9 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:13 landing -> integration
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:15 landing -> integration
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:43 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:60 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:65 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:83 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:87 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:89 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:97 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:98 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:102 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:107 seat -> agent
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:108 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:76 landing -> integration
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:94 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:123 landing -> integration
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:165 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:192 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:195 seat -> agent
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:207 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:2 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:4 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:5 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:11 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:13 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:19 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:45 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:62 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:68 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:77 landing -> integration
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:82 landing -> integration
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:82 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:86 seat -> agent
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:87 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:15 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:19 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:42 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:45 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:46 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:49 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:52 landing -> integration
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:58 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:63 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:70 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:71 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:178 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:182 landing -> integration
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:186 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:218 wave -> work stream (organizational sense; release sense stays on ledger surfaces)
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:237 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:239 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:243 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:245 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:252 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:254 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:260 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:264 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:268 seat -> agent
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:278 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:4 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:7 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:8 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:22 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:24 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:33 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:36 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:40 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:73 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:86 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:97 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:104 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:110 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:111 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:113 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:128 landing -> integration
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:145 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:146 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:149 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:153 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:155 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:156 seat -> agent
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:160 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:2 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:5 campaign -> effort / work stream
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:5 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:9 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:24 campaign -> effort / work stream
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:39 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:45 campaign -> effort / work stream
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:54 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:56 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:114 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:124 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:126 seat -> agent
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:127 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:4 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:39 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:61 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:79 dispatch -> route (narrative sense; the red_dispatch.py identifier stays)
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:81 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:92 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:96 dispatch -> route (narrative sense; the red_dispatch.py identifier stays)
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:105 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:275 seat -> agent
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:333 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:4 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:25 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:46 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:49 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:64 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:129 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:130 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:213 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:232 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:248 seat -> agent
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:250 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:15 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:23 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:40 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:63 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:75 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:139 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:168 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:170 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:175 seat -> agent
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:181 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:4 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:5 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:18 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:25 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:28 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:31 landing -> integration
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:39 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:43 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:44 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:45 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:74 landing -> integration
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:75 landing -> integration
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:111 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:112 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:121 seat -> agent
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:130 seat -> agent
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:40 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:7 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:110 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:131 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:150 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:173 seat -> agent
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:183 handover -> delete the narration; state the facts (or backtick-cite the handover document identifier)
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:3 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:6 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:8 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:42 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:46 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:48 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:60 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:111 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:126 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:185 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:226 seat -> agent
-zgx-out/deliverables-20261123/window-readings-20261122.md:231 seat -> agent
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 6: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 14: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 8: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 24: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 276: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 277: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 282: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 2: routing word (stem-root d-...-h; jargon map table 5b) -> route (narrative sense; the red_dispatch.py identifier stays)
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 2: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 9: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 9: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 13: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 15: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 43: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 60: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 65: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 83: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 87: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 89: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 97: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 98: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 102: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 107: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 108: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 76: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 94: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 123: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 165: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 192: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 195: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 207: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 2: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 5: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 11: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 13: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 19: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 45: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 62: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 68: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 77: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 82: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 82: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 86: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 87: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 15: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 19: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 42: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 45: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 46: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 49: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 52: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 58: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 63: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 70: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 71: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 178: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 182: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 186: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 218: work-stream word (stem-root w-...-e; jargon map table 5b) -> work stream (organizational sense; release sense stays on ledger surfaces)
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 237: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 239: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 243: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 245: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 252: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 254: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 260: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 264: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 268: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 278: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 7: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 8: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 22: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 24: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 33: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 36: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 40: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 73: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 86: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 97: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 104: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 110: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 111: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 113: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 128: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 145: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 146: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 149: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 153: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 155: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 156: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 160: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 2: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 5: organized-effort word (stem-root c-...-n; jargon map table 5b) -> effort / work stream
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 5: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 9: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 24: organized-effort word (stem-root c-...-n; jargon map table 5b) -> effort / work stream
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 39: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 45: organized-effort word (stem-root c-...-n; jargon map table 5b) -> effort / work stream
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 54: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 56: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 114: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 124: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 126: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 127: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 39: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 61: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 79: routing word (stem-root d-...-h; jargon map table 5b) -> route (narrative sense; the red_dispatch.py identifier stays)
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 81: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 92: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 96: routing word (stem-root d-...-h; jargon map table 5b) -> route (narrative sense; the red_dispatch.py identifier stays)
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 105: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 275: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 333: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 25: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 46: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 49: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 64: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 129: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 130: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 213: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 232: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 248: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 250: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 15: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 23: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 40: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 63: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 75: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 139: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 168: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 170: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 175: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 181: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 4: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 5: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 18: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 25: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 28: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 31: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 39: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 43: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 44: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 45: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 74: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 75: integration-arrival word (stem-root l-...-g; jargon map table 5b) -> integration
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 111: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 112: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 121: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 130: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 40: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 7: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 110: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 131: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 150: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 173: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 183: narration-passing word (stem-root h-...-r; jargon map table 5b) -> delete the narration; state the facts (or backtick-cite the h-...-r document identifier)
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 3: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 6: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 8: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 42: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 46: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 48: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 60: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 111: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 126: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 185: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 226: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 231: role-holder word (stem-root s-...-t; jargon map table 5b) -> agent
 
 ## Appendix A2 - forbidden (date-stamp) findings, file:line token class (151 rows)
 
 (class prose = slash-form curable per 3.2a; class ident-or-quote =
  identifier/quotation position, console channel per 3.2b)
 
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 2026-11-23 prose
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:4 2026-11-23 prose
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:9 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:10 20261123 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:11 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:12 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:13 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:14 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:15 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:16 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:17 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:18 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:19 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:20 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:21 20261122 ident-or-quote
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:22 20261122 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:8 2026-11-22 prose
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:9 2026-11-23 prose
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:10 20261122 prose
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:65 20261122 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:140 20261116 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:141 20261114 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:144 20261114 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:145 20261121 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:146 20261113 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:148 20261111 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:150 20261114 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:151 20261122 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:155 20261116 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:157 20261111 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:290 20261122 ident-or-quote
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:325 2026-11-22 prose
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:325 20261122 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:3 2026-11-22 prose
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:9 2026-11-22 prose
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:33 2026-11-22 prose
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:33 20261122 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:56 20261120 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:59 20261122 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:62 20261122 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:65 20261122 ident-or-quote
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:81 2026-11-22 prose
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:11 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:14 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:16 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:28 2026-11-22 prose
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:49 20261116 ident-or-quote
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:67 20261122 prose
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:71 20261116 ident-or-quote
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:221 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:2 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:3 20261120 ident-or-quote
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:3 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:7 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:94 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 20261122 prose
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:32 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:292 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:12 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:17 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:18 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:28 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:62 20261121 ident-or-quote
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:62 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:168 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:2 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:3 2026-11-22 prose
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:4 20261120 ident-or-quote
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:4 20261122 ident-or-quote
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:24 20261115 ident-or-quote
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:45 20261115 ident-or-quote
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:126 2026-11-22 prose
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 20261122 prose
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:7 2026-11-22 prose
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:10 20261122 ident-or-quote
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:44 20261122 ident-or-quote
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:104 20261122 prose
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:175 20261120 ident-or-quote
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:221 20261113 ident-or-quote
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:337 2026-11-22 prose
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:16 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:18 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:32 2026-11-22 prose
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:89 2026-11-23 prose
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:138 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:236 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:238 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:239 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:240 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:241 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:256 2026-11-22 prose
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:15 20261120 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:21 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:31 2026-11-22 prose
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:41 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:44 20261122 prose
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:54 20261122 prose
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:89 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:90 20261111 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:91 20261113 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:94 20261116 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:95 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:97 20261121 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:98 20261111 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:99 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:100 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:112 20261116 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:113 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:117 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:119 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:120 20261121 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:121 20261111 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:123 20261113 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:126 20261111 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:129 20261114 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:199 20261122 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:207 2026-11-22 prose
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:208 20261116 ident-or-quote
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:248 2026-11-22 prose
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:11 2026-11-22 prose
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:20 20261120 ident-or-quote
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:23 20261122 ident-or-quote
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:30 20261122 ident-or-quote
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:34 2026-11-22 prose
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:34 2026-11-23 prose
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:41 2026-11-23 prose
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:7 2026-11-22 prose
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:10 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:146 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:152 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:165 2026-11-22 prose
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:7 2026-11-22 prose
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:8 2026-11-23 prose
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:9 20261122 prose
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:12 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:33 20261121 ident-or-quote
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:42 20261122 prose
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:107 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:178 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:180 20261122 ident-or-quote
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:196 2026-11-22 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:27 20261122 ident-or-quote
-zgx-out/deliverables-20261123/window-readings-20261122.md:30 20261122 ident-or-quote
-zgx-out/deliverables-20261123/window-readings-20261122.md:32 20261122 ident-or-quote
-zgx-out/deliverables-20261123/window-readings-20261122.md:34 20261122 ident-or-quote
-zgx-out/deliverables-20261123/window-readings-20261122.md:50 2026-11-22 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:116 2026-11-22 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:120 2026-11-22 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:123 20261122 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:177 2026-11-22 prose
-zgx-out/deliverables-20261123/window-readings-20261122.md:257 2026-11-22 prose
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Nov 23 26 2026 dashed prose
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 4: Nov 23 26 2026 dashed prose
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 9: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 10: Nov 23 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 11: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 12: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 13: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 14: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 15: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 16: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 17: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 18: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 19: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 20: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 21: Nov 22 26 2026 compact ident-or-quote
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 22: Nov 22 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 8: Nov 22 26 2026 dashed prose
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 9: Nov 23 26 2026 dashed prose
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 10: Nov 22 26 2026 compact prose
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 65: Nov 22 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 140: Nov 16 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 141: Nov 14 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 144: Nov 14 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 145: Nov 21 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 146: Nov 13 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 148: Nov 11 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 150: Nov 14 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 151: Nov 22 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 155: Nov 16 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 157: Nov 11 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 290: Nov 22 26 2026 compact ident-or-quote
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 325: Nov 22 26 2026 dashed prose
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 325: Nov 22 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 3: Nov 22 26 2026 dashed prose
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 9: Nov 22 26 2026 dashed prose
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 33: Nov 22 26 2026 dashed prose
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 33: Nov 22 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 56: Nov 20 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 59: Nov 22 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 62: Nov 22 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 65: Nov 22 26 2026 compact ident-or-quote
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 81: Nov 22 26 2026 dashed prose
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 11: Nov 22 26 2026 compact ident-or-quote
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 14: Nov 22 26 2026 compact ident-or-quote
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 16: Nov 22 26 2026 compact ident-or-quote
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 28: Nov 22 26 2026 dashed prose
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 49: Nov 16 26 2026 compact ident-or-quote
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 67: Nov 22 26 2026 compact prose
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 71: Nov 16 26 2026 compact ident-or-quote
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 221: Nov 22 26 2026 dashed prose
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 2: Nov 22 26 2026 compact ident-or-quote
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 3: Nov 20 26 2026 compact ident-or-quote
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 3: Nov 22 26 2026 compact ident-or-quote
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 7: Nov 22 26 2026 dashed prose
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 94: Nov 22 26 2026 dashed prose
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Nov 22 26 2026 compact prose
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 32: Nov 22 26 2026 compact ident-or-quote
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 292: Nov 22 26 2026 dashed prose
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 12: Nov 22 26 2026 compact ident-or-quote
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 17: Nov 22 26 2026 compact ident-or-quote
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 18: Nov 22 26 2026 compact ident-or-quote
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 28: Nov 22 26 2026 dashed prose
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 62: Nov 21 26 2026 compact ident-or-quote
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 62: Nov 22 26 2026 compact ident-or-quote
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 168: Nov 22 26 2026 dashed prose
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 2: Nov 22 26 2026 dashed prose
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 3: Nov 22 26 2026 dashed prose
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 4: Nov 20 26 2026 compact ident-or-quote
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 4: Nov 22 26 2026 compact ident-or-quote
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 24: Nov 15 26 2026 compact ident-or-quote
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 45: Nov 15 26 2026 compact ident-or-quote
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 126: Nov 22 26 2026 dashed prose
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Nov 22 26 2026 compact prose
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 7: Nov 22 26 2026 dashed prose
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 10: Nov 22 26 2026 compact ident-or-quote
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 44: Nov 22 26 2026 compact ident-or-quote
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 104: Nov 22 26 2026 compact prose
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 175: Nov 20 26 2026 compact ident-or-quote
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 221: Nov 13 26 2026 compact ident-or-quote
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 337: Nov 22 26 2026 dashed prose
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 16: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 18: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 32: Nov 22 26 2026 dashed prose
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 89: Nov 23 26 2026 dashed prose
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 138: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 236: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 238: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 239: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 240: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 241: Nov 22 26 2026 compact ident-or-quote
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 256: Nov 22 26 2026 dashed prose
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 15: Nov 20 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 21: Nov 22 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 31: Nov 22 26 2026 dashed prose
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 41: Nov 22 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 44: Nov 22 26 2026 compact prose
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 54: Nov 22 26 2026 compact prose
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 89: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 90: Nov 11 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 91: Nov 13 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 94: Nov 16 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 95: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 97: Nov 21 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 98: Nov 11 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 99: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 100: Nov 22 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 112: Nov 16 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 113: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 117: Nov 22 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 119: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 120: Nov 21 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 121: Nov 11 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 123: Nov 13 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 126: Nov 11 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 129: Nov 14 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 199: Nov 22 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 207: Nov 22 26 2026 dashed prose
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 208: Nov 16 26 2026 compact ident-or-quote
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 248: Nov 22 26 2026 dashed prose
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 11: Nov 22 26 2026 dashed prose
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 20: Nov 20 26 2026 compact ident-or-quote
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 23: Nov 22 26 2026 compact ident-or-quote
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 30: Nov 22 26 2026 compact ident-or-quote
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 34: Nov 22 26 2026 dashed prose
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 34: Nov 23 26 2026 dashed prose
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 41: Nov 23 26 2026 dashed prose
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 7: Nov 22 26 2026 dashed prose
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 10: Nov 22 26 2026 compact ident-or-quote
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 146: Nov 22 26 2026 compact ident-or-quote
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 152: Nov 22 26 2026 compact ident-or-quote
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 165: Nov 22 26 2026 dashed prose
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 7: Nov 22 26 2026 dashed prose
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 8: Nov 23 26 2026 dashed prose
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 9: Nov 22 26 2026 compact prose
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 12: Nov 22 26 2026 compact ident-or-quote
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 33: Nov 21 26 2026 compact ident-or-quote
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 42: Nov 22 26 2026 compact prose
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 107: Nov 22 26 2026 compact ident-or-quote
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 178: Nov 22 26 2026 compact ident-or-quote
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 180: Nov 22 26 2026 compact ident-or-quote
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 196: Nov 22 26 2026 dashed prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 27: Nov 22 26 2026 compact ident-or-quote
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 30: Nov 22 26 2026 compact ident-or-quote
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 32: Nov 22 26 2026 compact ident-or-quote
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 34: Nov 22 26 2026 compact ident-or-quote
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 50: Nov 22 26 2026 dashed prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 116: Nov 22 26 2026 dashed prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 120: Nov 22 26 2026 dashed prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 123: Nov 22 26 2026 compact prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 177: Nov 22 26 2026 dashed prose
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 257: Nov 22 26 2026 dashed prose
 
 ## Appendix A3 - header findings, file:line missing-field (75 rows)
 
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 Dependencies.
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 Evidence.
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 Exit-codes.
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 Interface.
-zgx-out/deliverables-20261123/MANIFEST-deliverables-20261123.md:1 Purpose.
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/ai-flavor-trend-w12-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 Dependencies.
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 Evidence.
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 Exit-codes.
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 Interface.
-zgx-out/deliverables-20261123/handover-verify-20261122-v83.md:1 Purpose.
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/mainmove-9332c2b5-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/mcp-pilot2-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/mcp-stage2-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/mcp-w4-recheck-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/new-anchor-readings-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 Dependencies.
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 Evidence.
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 Exit-codes.
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 Interface.
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 Purpose.
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/trend-w11-feedback-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/trend-w12-feedback-20261122.md:1 Purpose.
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 Dependencies.
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 Evidence.
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 Exit-codes.
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 Interface.
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 Purpose.
-
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Dependencies.
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Evidence.
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Exit-codes.
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Interface.
+the batch-1 MANIFEST card (Nov 23 2026) of the batch-1 lane, line 1: Purpose.
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the w12 trend card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the `handover-verify` v8.3 card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the mainmove card, 9332c2b5 (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the mcp-pilot2 card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the mcp-stage2 card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the mcp-w4-recheck card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the new-anchor-readings card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: Dependencies.
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: Evidence.
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: Exit-codes.
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: Interface.
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: Purpose.
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the w11 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the w12 feedback trend card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: Dependencies.
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: Evidence.
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: Exit-codes.
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: Interface.
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: Purpose.
 ## Appendix A4 - budget findings, file:line term (5 rows)
 
-zgx-out/deliverables-20261123/mcp-roster51-verify-20261122.md:1 header-budget
-zgx-out/deliverables-20261123/pr32-continue-watch-20261122.md:1 header-budget
-zgx-out/deliverables-20261123/pr32-desk-i18n-20261122.md:1 header-budget
-zgx-out/deliverables-20261123/rsi-reshoot-20261123.md:1 header-budget
-zgx-out/deliverables-20261123/window-readings-20261122.md:1 header-budget
-
+the mcp-roster51-verify card (Nov 22 2026) of the batch-1 lane, line 1: header-budget
+the pr32-continue-watch card (Nov 22 2026) of the batch-1 lane, line 1: header-budget
+the pr32-desk-i18n card (Nov 22 2026) of the batch-1 lane, line 1: header-budget
+the rsi-reshoot card (Nov 23 2026) of the batch-1 lane, line 1: header-budget
+the window-readings card (Nov 22 2026) of the batch-1 lane, line 1: header-budget

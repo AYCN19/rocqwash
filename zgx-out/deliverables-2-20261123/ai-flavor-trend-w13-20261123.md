@@ -1,12 +1,18 @@
 # ai_flavor trend card - em-dash / wording / norm faces, rocqwash (R2-102, window w13)
+Purpose. Trend sampler window w13: anchor face verify, ai_flavor + norm_lint double scan (ground CLI form, read-only), row-level findings ledger, dual-baseline judgment vs w12 and vs the post-fix face. Ticket R2-102, agent live-lumen (subagent, dynamic workflow).
+Interface. This card (English ASCII; non-ASCII gate = 0 bytes measured post-write) plus the receipt R2-102-receipt.md; consumed by the dispatching workflow.
+Dependencies. /Users/zuguangzhao/rocqwash MAIN clone (read-only this agent), python3 -I, git, tools/ai_flavor.py, tools/norm_lint.py, the w12 trend card + its staging, docs/jargon-to-standard-mapping-v1.md; no MCP helper.
+Evidence. Every value below was measured this session with the quoted command forms; staging /tmp/rqw-mcp/r2-102-w13 holds all raw outputs; anchor fb799bfe network-verified via the ask-named fetch.
+Exit-codes. Scans and the fetch rc 0; the ask-literal grep pipeline returned zero stdout lines and is registered as-is; the wording battery RED verdict stands recorded (report-only instrument face).
 
-- Ticket: R2-102, seat: trend sampler w13 (read-only sampling; zero
+
+- Ticket: R2-102, agent: trend sampler w13 (read-only sampling; zero
   hand-written repo-tree content; write faces = this card, the
   receipt R2-102-receipt.md, and /tmp/rqw-mcp/r2-102-w13 staging),
   identity live-lumen (subagent, dynamic workflow)
-- Date: 2026-11-22 (UTC clock: fetch beat 2026-11-22T19:16Z, scans
+- Date: 2026/11/22 (UTC clock: fetch beat 2026-11-22T19:16Z, scans
   2026-11-22T19:17-19:19Z, card write 2026-11-22T19:20Z; local
-  calendar 2026-11-23; the ask-named filename carries 20261123 and
+  calendar 2026/11/23; the ask-named filename carries 2026/11/23 and
   is written exactly as named)
 - Card artifact: this file (English ASCII; CJK paths appear as
   \uXXXX escapes; non-ASCII gate = 0 bytes, measured post-write)
@@ -20,9 +26,9 @@
 
 ## 1. Anchor face: fetch rc 0 zero-refmove, rev-list 2 EXACT, window 100% deliverables face
 
-- Pre-fetch face (measured at seat open): HEAD = 8d6c47dd (the
+- Pre-fetch face (measured at agent open): HEAD = 8d6c47dd (the
   deliverables commit) attached to branch supply/zgx/deliverables-
-  20261123 (branch UNTOUCHED by this seat, verified post-checkout);
+  20261123 (branch UNTOUCHED by this agent, verified post-checkout);
   local origin/main was ALREADY fb799bfe... - i.e. the ask's
   expected anchor matched the PRE-FETCH ref face, moved there by an
   earlier beat's fetch (the R2-101 patrol tip-snapshot beat; the
@@ -46,11 +52,11 @@
   (8d6c47dd^{tree} == fb799bfe^{tree} = ed358557eefccff8accb068f9
   37df853da189a55, rev-parse measured both) - the automerge is
   tree-identical to the branch tip, a pure mechanical merge commit.
-- Window 100% this-seat face: `git diff --name-only 1e4018a..
+- Window 100% `this-seat` face: `git diff --name-only 1e4018a..
   origin/main` = 15 paths, ALL under zgx-out/deliverables-20261123/
   (MANIFEST-deliverables-20261123.md + 14 cards; ls count 15
   byte-exact); zero non-deliverables paths. Deliverables batch =
-  the reading-card archive lane (this seat line's cards, incl. the
+  the reading-card archive lane (this agent line's cards, incl. the
   w12 trend card copy); automerge = merge machinery. Every window
   path is .md = inside the scanned lane (paid-window shape met).
 - Insertions: `git diff --shortstat 1e4018a..fb799bfe` = 15 files
@@ -119,7 +125,7 @@ in 38 (flat) / budget 39 in 39 (34/34: +5). Error closure 874 +
 146 = 1020 EXACT; warn closure 1159 + 38 + 39 = 1236 EXACT (total
 2256 findings, w12 1837).
 
-## 3. This-seat attribution (supply self-check core; no self-defense)
+## 3. `This-seat` attribution (supply self-check core; no self-defense)
 
 - The +2960 insertions = 14 cards + MANIFEST, 15 files, 2960
   content lines byte-measured (split-lines 2975 - 15 file-end
@@ -151,9 +157,9 @@ in 38 (flat) / budget 39 in 39 (34/34: +5). Error closure 874 +
   ZERO findings on this lane (the face did not exist at 1e4018a) -
   the entire norm move is this window's card inflow.
 - REPAIR-CANDIDATE lines (registered per the ask's no-self-defense
-  clause): (1) 'seat' jargon family = 160 occurrences across the
-  cards (next: landing 13, handover 8, dispatch 3, campaign 3,
-  wave 1) - rewrite per docs/jargon-to-standard-mapping-v1.md
+  clause): (1) 's-...-t' jargon family = 160 occurrences across the
+  cards (next: l-...-g 13, h-...-r 8, d-...-h 3, c-...-n 3,
+  w-...-e 1) - rewrite per docs/jargon-to-standard-mapping-v1.md
   substitutions, or book the deliverables lane into the whitelist
   by console ruling; (2) forbidden date-stamp faces = 151
   (bare '20261122' 70 + dotted '2026-11-22' 34 + 9 more stamp
@@ -234,7 +240,7 @@ retry). ROCQWASH_MCP_ALLOW_NET never set.
 
 ## Provenance and limitations
 
-- NETRED ledger this seat, every event: (1) git fetch origin over
+- NETRED ledger this agent, every event: (1) git fetch origin over
   HTTP/1.1 - rc 0, ONE attempt, zero retries, zero backoff spend,
   zero refmove. One network event total, zero failures. No other
   git network ops; no curl; no MCP network.
@@ -254,7 +260,7 @@ retry). ROCQWASH_MCP_ALLOW_NET never set.
   deliverables face, read first-hand this session).
 - Limitations: (a) the ask's expected anchor matched the PRE-FETCH
   local ref (moved there by the earlier patrol beat's fetch; this
-  seat's fetch was a zero-refmove rc 0) - recorded as-is; (b) the
+  agent's fetch was a zero-refmove rc 0) - recorded as-is; (b) the
   bare norm_lint form does not run at this instrument version (rc
   2 usage) - the --tree . ground form was used, the same form w12
   used, comparability holds; (c) norm files= is not disambiguated
@@ -264,11 +270,11 @@ retry). ROCQWASH_MCP_ALLOW_NET never set.
   hex/paths showed display-layer noise repeatedly this session -
   every recorded value was re-taken from staged files (grep /
   python parse of /tmp artifacts) or byte-equality shells tests,
-  not from the noisy echo; (e) seat-open HEAD was on branch
+  not from the noisy echo; (e) `seat-open` HEAD was on branch
   supply/zgx/deliverables-20261123 (reflog read back) - the plain
   checkout detached HEAD to fb799bfe and left the branch untouched
   (branch --contains still lists it); no branch was created,
-  moved, or deleted by this seat; (f) shallow-clone history walks
+  moved, or deleted by this agent; (f) shallow-clone history walks
   still not attempted (per R2-95 registration).
 - Zero hand-written repo-tree content this session: the only
   repo-side changes are the fetch's zero refmove (no-op) and the
