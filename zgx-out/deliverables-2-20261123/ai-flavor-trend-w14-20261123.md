@@ -3,14 +3,14 @@
 Purpose. Trend sampler window w14: anchor face verify, double scan
   (ai_flavor + norm_lint, ground CLI form, read-only), dual-baseline
   judgment vs w13 and vs the post-fix face, row-level diff, counter
-  judgment. Ticket R2-106, seat live-lumen (subagent, dynamic
+  judgment. Ticket R2-106, agent live-lumen (subagent, dynamic
   workflow).
 Interface. This card (English ASCII, five-field header per the norm
   header rule; non-ASCII gate = 0 bytes measured post-write) plus
   the receipt R2-106-receipt-w14.md; consumed by the dispatching
   workflow.
 Dependencies. /Users/zuguangzhao/rocqwash MAIN clone (read-only
-  this seat), python3 -I, git, tools/ai_flavor.py,
+  this agent), python3 -I, git, tools/ai_flavor.py,
   tools/norm_lint.py, w13 card + w13 staging, R2-103 receipt + its
   staged norm-post1.json, R2-105 receipt, rsi-loop.log tail; no MCP
   helper.
@@ -25,13 +25,13 @@ Exit-codes. fetch rc 0 single-flight; ai_flavor rc 1 RED (standing
 
 ## Card body
 
-- Ticket: R2-106, seat: trend sampler w14 (read-only sampling; zero
+- Ticket: R2-106, agent: trend sampler w14 (read-only sampling; zero
   repo-tree content; write faces = this card, the receipt
   R2-106-receipt-w14.md, and /tmp/rqw-mcp/r2-106-w14 staging),
   identity live-lumen
-- Date: 2026-11-23 (UTC clock: fetch beat 2026-11-22T22:05Z window,
+- Date: 2026/11/23 (UTC clock: fetch beat 2026-11-22T22:05Z window,
   scans 2026-11-22T22:06-22:08Z, card write 2026-11-22T22:12Z; local
-  calendar 2026-11-23; the ask-named filename carries 20261123 and
+  calendar 2026/11/23; the ask-named filename carries 2026/11/23 and
   is written exactly as named)
 - Target repo: /Users/zuguangzhao/rocqwash (MAIN clone; scanned
   read-only at the working tree, which is tree-identical to the
@@ -42,10 +42,10 @@ Exit-codes. fetch rc 0 single-flight; ai_flavor rc 1 RED (standing
 
 ## 1. Anchor face: fetch rc 0 zero-refmove single-flight, rev-list 4 (ask expected 2 - transcription drift recorded), window = two supply lanes landed
 
-- Pre-fetch face (measured at seat open): HEAD = 5abd0c08d1c450ed6a
+- Pre-fetch face (measured at agent open): HEAD = 5abd0c08d1c450ed6a
   48f027cce69a0c78e669d9 attached to branch supply/zgx/eval-gap-
   proposals-20261123 (the R2-105 leave-behind, untouched by this
-  seat); porcelain = exactly 2 M canonical (docs/b-gate-audit.json,
+  agent); porcelain = exactly 2 M canonical (docs/b-gate-audit.json,
   docs/scheduling-feedback.json) + 3 untracked zgx-out files; dirty
   pins c3b88ece (b-gate-audit) + 28c85e04 (scheduling-feedback) at
   open == the canonical pins; local origin/main was ALREADY
@@ -94,19 +94,19 @@ Exit-codes. fetch rc 0 single-flight; ai_flavor rc 1 RED (standing
   ZERO checkout and ZERO repo-tree writes (stronger than the w13
   plain-checkout form: no ref move at all beyond the fetch's
   no-op).
-- Mid-seat concurrent write face (FAIL-LOUD, recorded as-is, not
+- `Mid-seat` concurrent write face (FAIL-LOUD, recorded as-is, not
   adjudicated, nothing restored): at close the dirty pins re-check
   gave b-gate-audit c3b88ece UNCHANGED but scheduling-feedback
   4deabad9... != open pin 28c85e04...; mtime of both dirty files
-  06:07:46 local (inside this seat's window). `git diff -- docs/
+  06:07:46 local (inside this agent's window). `git diff -- docs/
   scheduling-feedback.json` = 1 file, 3 insertions(+), 3 deletions
   (-), all inside repair_outcomes: repair_action_rate 0.0588 ->
   0.0854, repaired 3 -> 7, unrecorded 46 -> 73 (pure-ASCII digit
-  values). This seat ran ZERO write-capable commands against the
+  values). This agent ran ZERO write-capable commands against the
   repo tree (full command inventory: fetch, rev-parse, rev-list,
   log, diff, show, branch/status, md5, the four scan passes, staging
   parses) - the writer is a concurrent beat; identity not
-  established from this seat's vantage. Scan-invisibility PROVEN
+  established from this agent's vantage. Scan-invisibility PROVEN
   both instruments (section 2), so scan comparability is UNAFFECTED
   regardless of change timing.
 
@@ -153,7 +153,7 @@ pass1, stdout differs by exactly the one json-path echo line.
   w14 findings set (1952 rows: path/line/kind/term tuples from
   norm_lint.json) is SET-EQUAL to R2-103's staged post-fix
   norm-post1.json findings set (1952 rows) - row-for-row equality,
-  not just summary equality. The PR#35 landing introduced ZERO norm
+  not just summary equality. The PR#35 integration introduced ZERO norm
   drift onto origin/main; the post-fix face IS the live tree face.
 - Per-kind closure (w14 json, aggregated this session): jargon 686
   in 17 files == the w12 face / header 71 in 15 == the w12 face /
@@ -167,7 +167,7 @@ pass1, stdout differs by exactly the one json-path echo line.
   face at all; `ai_flavor --file docs/scheduling-feedback.json` rc
   0 CLEAN with batteries 0/0/0/0 and em 0 - and the file has NO row
   in the row map (omission rule) and NO findings entry in either
-  the w13 or the w14 norm json. The mid-seat digit change is
+  the w13 or the w14 norm json. The `mid-seat` digit change is
   invisible to both instruments regardless of when it landed.
 
 ## 3. This-window attribution (supply self-check core; no self-defense)
@@ -193,7 +193,7 @@ pass1, stdout differs by exactly the one json-path echo line.
   precedent does NOT recur).
 - EM face: ZERO increment through TWO landed PRs, verified not
   assumed: R2-103 measured em 7936 post-cure at its check 3; this
-  seat measured 7936 @f8cc0e53; row closure 7936 - 7936 = 0 EXACT
+  agent measured 7936 @f8cc0e53; row closure 7936 - 7936 = 0 EXACT
   with every window added line em-free (cards cured word-level
   ASCII-only; jsonl measured 0). THE ASCII GATE STAYS CLOSED on
   the em lane through the whole window.
@@ -216,7 +216,7 @@ pass1, stdout differs by exactly the one json-path echo line.
   warn from 1195 to 1080 (the pre-cards w12 face).
 - R4 norm-gate rebase face (tree-level re-check): error leg
   RECOVERED - 757 < 1001 plan-era again (w13 state 1020 > 1001 was
-  the breach; the PR#34 landing cured it; SET-EQUAL proof above).
+  the breach; the PR#34 integration cured it; SET-EQUAL proof above).
   Warn leg STILL BREACHED: 1195 > 1045 by +150 (decomposed: +35 is
   the pre-cards w12-era breach 1080 - 1045; +115 is the card-lane
   residual forbidden). w13 was +191; the cures recovered -41.
@@ -249,7 +249,7 @@ pass1, stdout differs by exactly the one json-path echo line.
   411 = 173/196/42 (== w13 exactly), but ONE detail entry moved:
   mainmove-9332c2b5-20261122.md en-word-08, after-text " this seat
   adds" -> " this agent adds", line 174 -> 165 - the R2-103
-  seat->agent word cure on that line plus line reflow. Count-zero
+  s-...-t->agent word cure on that line plus line reflow. Count-zero
   movement; registered as data.
 
 ## 5. Counter judgment: em 2-degree FLAT (counter 1 -> 2), window PAID
@@ -297,7 +297,7 @@ ROCQWASH_MCP_ALLOW_NET never set.
 
 ## Provenance and limitations
 
-- NETRED ledger this seat, every event: (1) git fetch origin over
+- NETRED ledger this agent, every event: (1) git fetch origin over
   HTTP/1.1 - rc 0, ONE attempt, zero retries, zero backoff spend,
   zero refmove. One network event total, zero failures. No other
   git network ops; no curl; no MCP network.
@@ -319,9 +319,9 @@ ROCQWASH_MCP_ALLOW_NET never set.
 - Limitations: (a) rev-list 4 vs the ask's expected 2 - recorded
   as ask transcription drift with the full per-commit enumeration
   (w12 precedent); the two heads the ask named ARE in the window
-  and ARE exactly as described; (b) the mid-seat concurrent
+  and ARE exactly as described; (b) the `mid-seat` concurrent
   modification of docs/scheduling-feedback.json - writer identity
-  not established from this seat's vantage; scan-invisibility
+  not established from this agent's vantage; scan-invisibility
   proven; dirty pins NOT equal at close (28c85e04 -> 4deabad9) -
   recorded fail-loud, nothing restored (zero-tree-write
   discipline); b-gate-audit mtime touched 06:07 with md5 UNCHANGED
@@ -339,7 +339,7 @@ ROCQWASH_MCP_ALLOW_NET never set.
 - Zero hand-written repo-tree content this session: no checkout,
   no writes, no branch moves; the only repo-side change is the
   fetch's zero refmove (no-op) plus the concurrent beat's
-  scheduling-feedback edit (not this seat's, recorded above).
+  scheduling-feedback edit (not this agent's, recorded above).
   Card + receipt + staging written OUTSIDE the repo. The branch
   supply/zgx/eval-gap-proposals-20261123 remains checked out,
   untouched; HEAD 5abd0c0, origin/main f8cc0e53 at close.
