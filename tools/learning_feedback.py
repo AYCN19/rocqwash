@@ -20,11 +20,12 @@ Dependencies.  Python 3 stdlib only (argparse/json/os/re/shutil/sys/tempfile);
   zero network by design; zero eval/exec; deterministic: the runtime clock
   never enters the logic, and reruns over identical inputs are
   byte-identical.
-Evidence.  --selftest on temporary fixtures, seven vectors: two rounds one
+Evidence.  --selftest on temporary fixtures, eight vectors: two rounds one
   auto one human-approved; corrupt-line tolerance plus an absent round-state
-  file; empty ledgers; every repair row outside the four-state vocabulary;
-  and the three calibration forms (populated account, empty or absent
-  ledger, unreadable row).  Vectors never touch repository paths.
+  file; empty ledgers; unknown tokens and token-less rows stay unrecorded
+  while the mechanical-fix family classifies repaired; the three calibration
+  forms (populated account, empty or absent ledger, unreadable row); and
+  the expanded writer-set vector.  Vectors never touch repository paths.
 Exit-codes.  0 = face produced, every account error-free; 1 = at least one
   account error (missing input, invalid JSON, non-round row, unreadable
   calibration row) or a write failure, named on stdout; 2 = usage error.
@@ -48,12 +49,17 @@ Exit-codes.  0 = face produced, every account error-free; 1 = at least one
 #   null stays null, never guessed.
 # - repair_outcomes classify each valid experience-ledger row by the action
 #   vocabulary inside its points text: "action=fix-content" -> repaired;
+#   "action=restore-toolchain" or "action=rerun-after-stable-window" ->
+#   repaired (the mechanical-fix family: a toolchain restore and the
+#   post-window rerun are repairs of the red run, not observations);
 #   "action=escalated" or "action=escalate" -> escalated;
-#   "action=watch-only" -> watch_only_guard_correct.  Any other row
-#   (including "action=rerun-after-stable-window" and rows without an
-#   action token) stays unrecorded.  The vocabulary mirrors the outcome
-#   words the repair ledger already uses; a row outside it is never forced
-#   into a state (honest unrecorded, no filling).
+#   "action=watch-only" or "action=queue-etiquette" ->
+#   watch_only_guard_correct (queue-etiquette: the D-queue-wall run
+#   never executed its steps, nothing content-level was repaired).  Any
+#   other row (including rows without an action token) stays unrecorded.
+#   The vocabulary mirrors the outcome words the repair ledger already
+#   uses; a row outside it is never forced into a state (honest
+#   unrecorded, no filling).
 # - repair_action_rate = repaired / total valid rows; None when total is 0.
 # - calibration (optional section): the rows of the experience ledger whose
 #   tool field equals "calibration_ledger" (the calibration writer
@@ -99,9 +105,12 @@ NOTE = ("approval-rate now readable; scheduling does not yet consume it"
 # The action-token table, in priority order (first match wins).
 REPAIR_TOKENS = (
     ("action=fix-content", "repaired"),
+    ("action=restore-toolchain", "repaired"),
+    ("action=rerun-after-stable-window", "repaired"),
     ("action=escalated", "escalated"),
     ("action=escalate", "escalated"),
     ("action=watch-only", "watch_only_guard_correct"),
+    ("action=queue-etiquette", "watch_only_guard_correct"),
 )
 
 
@@ -405,7 +414,7 @@ def _check(failures, vector, name, cond, detail):
 
 
 def selftest():
-    """Four offline vectors on temporary fixtures; never touches repository paths."""
+    """Eight offline vectors on temporary fixtures; never touches repository paths."""
     root = tempfile.mkdtemp(prefix="learning_feedback_selftest_")
     failures = []
     try:
@@ -534,8 +543,9 @@ def selftest():
         _check(failures, 3, "face", face3 == expect3,
                "face %r != expected %r" % (face3, expect3))
 
-        # Vector 4: every repair row outside the four-state vocabulary stays
-        # unrecorded; no row is forced into a state.
+        # Vector 4: the mechanical-fix family classifies as repaired; unknown
+        # tokens and token-less rows stay unrecorded; no row is forced into
+        # a state.
         v4 = os.path.join(root, "v4")
         os.mkdir(v4)
         rounds4 = os.path.join(v4, "round-ledger.jsonl")
@@ -560,9 +570,9 @@ def selftest():
                        sort_keys=True),
         ])
         face4 = build_face(rounds4, state4, exp4)
-        expect4_repair = {"repaired": 0, "escalated": 0,
-                          "watch_only_guard_correct": 0, "unrecorded": 3,
-                          "repair_action_rate": 0.0, "errors": []}
+        expect4_repair = {"repaired": 1, "escalated": 0,
+                          "watch_only_guard_correct": 0, "unrecorded": 2,
+                          "repair_action_rate": 0.3333, "errors": []}
         _check(failures, 4, "repair", face4["repair_outcomes"] == expect4_repair,
                "repair face %r != expected %r"
                % (face4["repair_outcomes"], expect4_repair))
@@ -700,16 +710,55 @@ def selftest():
                and "line 1" in cal7["errors"][0]
                and "calibration" in cal7["errors"][0],
                "calibration errors %r" % cal7["errors"])
+
+        # Vector 8: the expanded writer set end to end; the two mechanical-fix
+        # tokens classify repaired, queue-etiquette lands in the
+        # watch_only_guard_correct slot (the D-queue-wall run never executed
+        # its steps), and a token outside the table stays unrecorded (no row
+        # forced into a state).
+        v8 = os.path.join(root, "v8")
+        os.mkdir(v8)
+        rounds8 = os.path.join(v8, "round-ledger.jsonl")
+        state8 = os.path.join(v8, "round-state.json")
+        _write_fixture(rounds8, [
+            json.dumps({"round_id": 8, "mode": "auto", "verify_rc": 0,
+                        "classes_applied": [], "admissions": []},
+                       sort_keys=True),
+        ])
+        _write_fixture(state8, [json.dumps(
+            {"schema": "rocqwash.round-state/1", "admitted_classes": []},
+            sort_keys=True)])
+        exp8 = os.path.join(v8, "exp-ledger.jsonl")
+        _write_fixture(exp8, [
+            json.dumps({"id": "EXP-8-0001", "points": "run 1: family=C"
+                        " action=restore-toolchain"}, sort_keys=True),
+            json.dumps({"id": "EXP-8-0002", "points": "run 2: family=B"
+                        " action=rerun-after-stable-window"}, sort_keys=True),
+            json.dumps({"id": "EXP-8-0003", "points": "run 3: family=D"
+                        " action=queue-etiquette"}, sort_keys=True),
+            json.dumps({"id": "EXP-8-0004", "points": "action=unknown-thing"},
+                       sort_keys=True),
+        ])
+        face8 = build_face(rounds8, state8, exp8)
+        expect8_repair = {"repaired": 2, "escalated": 0,
+                          "watch_only_guard_correct": 1, "unrecorded": 1,
+                          "repair_action_rate": 0.5, "errors": []}
+        _check(failures, 8, "repair", face8["repair_outcomes"] == expect8_repair,
+               "repair face %r != expected %r"
+               % (face8["repair_outcomes"], expect8_repair))
+        _check(failures, 8, "rounds", face8["rounds"]["total"] == 1
+               and not face8["rounds"]["errors"],
+               "rounds face %r" % face8["rounds"])
     finally:
         shutil.rmtree(root, ignore_errors=True)
     for line in failures:
         sys.stdout.write("FAIL %s\n" % line)
     if failures:
         red_vectors = len(set(line.split()[1] for line in failures))
-        sys.stdout.write("selftest: %d of 7 vectors red (%d assertions)\n"
+        sys.stdout.write("selftest: %d of 8 vectors red (%d assertions)\n"
                          % (red_vectors, len(failures)))
         return 1
-    sys.stdout.write("selftest: 7/7 vectors green (temp fixtures only,"
+    sys.stdout.write("selftest: 8/8 vectors green (temp fixtures only,"
                      " zero repository paths)\n")
     return 0
 
@@ -724,7 +773,7 @@ def main(argv=None):
                      " read-only; writes docs/scheduling-feedback.json)"
                      % SCHEMA))
     parser.add_argument("--selftest", action="store_true",
-                        help="run the seven selftest vectors on temporary"
+                        help="run the eight selftest vectors on temporary"
                              " fixtures (zero repository paths)")
     args = parser.parse_args(argv)
     if args.selftest:
