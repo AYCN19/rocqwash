@@ -3,7 +3,7 @@
 Purpose. Trend sampler window w17: anchor face (ask-named fetch
   HTTP/1.1, NETRED single-flight), rev-parse origin/main vs the
   expected 6af8067, rev-list 6af8067..origin/main count, skip-branch
-  judgment. Ticket R2-111, seat live-lumen (subagent, dynamic
+  judgment. Ticket R2-111, agent live-lumen (subagent, dynamic
   workflow). First window eligible to take the skip form declared at
   w16 (counter = 4, anchor for w17 = 6af8067).
 Interface. This card (English ASCII, five-field header per the norm
@@ -11,7 +11,7 @@ Interface. This card (English ASCII, five-field header per the norm
   the receipt R2-111-receipt-skip.md; consumed by the dispatching
   workflow.
 Dependencies. /Users/zuguangzhao/rocqwash MAIN clone (read-only
-  this seat), git only; w16 card (FINAL anchor, counter face, skip
+  this agent), git only; w16 card (FINAL anchor, counter face, skip
   declaration, baseline values), read first-hand; NO scan
   instruments run this window (skip form); no MCP helper.
 Evidence. Every value below was measured this session with the
@@ -28,12 +28,12 @@ Exit-codes. fetch attempt 1 rc 128 (Empty reply from server);
 
 ## Card body
 
-- Ticket: R2-111, seat: trend sampler w17 skip-branch first window
+- Ticket: R2-111, agent: trend sampler w17 skip-branch first window
   (read-only; zero repo-tree content; write faces = this card, the
   receipt R2-111-receipt-skip.md, and /tmp/rqw-mcp/r2-111 staging),
   identity live-lumen
-- Date: 2026-11-23 (local calendar; the ask-named filename carries
-  20261123 and is written exactly as named)
+- Date: 2026/11/23 (local calendar; the ask-named filename carries
+  2026/11/23 and is written exactly as named)
 - Target repo: /Users/zuguangzhao/rocqwash (MAIN clone; NO checkout,
   NO scan, zero repo-tree writes this window)
 - FINAL anchor: 6af8067ebf21ebe33a923500fea9cd6934c2e148 =
@@ -43,10 +43,10 @@ Exit-codes. fetch attempt 1 rc 128 (Empty reply from server);
 
 ## 1. Anchor face: fetch FAILED x2 (rc 128 Empty reply; retry hang-aborted), single-flight honored (2 flights, cap 3), local ref did NOT move
 
-- Pre-fetch face (measured at seat open): HEAD =
+- Pre-fetch face (measured at agent open): HEAD =
   71803083016e7deaf13881e7f11a271aac6a25a3 attached to branch
   supply/zgx/deliverables-2-norm-cures-20261123 (the R2-109
-  leave-behind, untouched by this seat); porcelain = 3 M
+  leave-behind, untouched by this agent); porcelain = 3 M
   (docs/b-gate-audit.json, docs/scheduling-feedback.json,
   zgx-out/zgx-ledger-proposals.jsonl) + 3 untracked zgx-out files =
   6 entries == the w16 CLOSE face EXACT; local origin/main
@@ -56,7 +56,7 @@ Exit-codes. fetch attempt 1 rc 128 (Empty reply from server);
   102 bytes = "fatal: unable to access 'https://github.com/
   hy7pc8gfmf-dotcom/rocqwash.git/': Empty reply from server" - the
   SAME Empty-reply failure mode R2-109 recorded on its two
-  post-merge fetches (the failure mode that hid the PR#37 landing
+  post-merge fetches (the failure mode that hid the PR#37 integration
   from the local ref until w16's successful fetch).
 - Backoff 20 s, then attempt 2 (the single allowed backoff retry;
   2 < 3 flights): HUNG - no rc, 0 bytes stderr, aborted at the 90 s
@@ -71,7 +71,7 @@ Exit-codes. fetch attempt 1 rc 128 (Empty reply from server);
   6 entries unchanged.
 - Anchor-stays face recorded AS-IS (fail-loud): the count-0 is
   measured on the LOCAL ref whose last network-verified sync was
-  w16's successful fetch earlier today. Anything landing upstream
+  w16's successful fetch earlier today. Anything that landed upstream
   AFTER that sync was INVISIBLE to this window (both attempts
   failed). This is NOT a network-verified zero-new-anchor; it is
   an anchor-stays under fetch failure.
@@ -124,7 +124,7 @@ ALLOW_NET never set.
 
 ## Provenance and limitations
 
-- NETRED ledger this seat, every event: (1) git fetch origin over
+- NETRED ledger this agent, every event: (1) git fetch origin over
   HTTP/1.1, attempt 1 - rc 128, Empty reply from server (102 bytes
   stderr); (2) 20 s backoff; (3) git fetch origin over HTTP/1.1,
   attempt 2 - hang, aborted at the 90 s tool cap, 0 bytes stderr.
@@ -148,8 +148,8 @@ ALLOW_NET never set.
   FACE, recorded as-is, not adjudicated: another writer used
   /tmp/rqw-mcp/r2-111/ concurrently this window (pr34.json,
   pr35.json, pr36.json, call-b_gate_audit.jsonl + .err + .text,
-  netred-ledger.txt, timestamps 10:31-10:33, NOT this seat's
-  outputs), and this seat's fetch.err went from 102 bytes
+  netred-ledger.txt, timestamps 10:31-10:33, NOT this agent's
+  outputs), and this agent's fetch.err went from 102 bytes
   (attempt-1 stderr, read back in-session right after the run) to
   0 bytes by the post-write listing - an overwrite by the
   concurrent writer; ALL measured values survived (rc 128 and the

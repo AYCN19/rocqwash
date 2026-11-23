@@ -4,26 +4,26 @@ TICKET: R2-110 reshoot agent - RSI 21:11Z/01:11Z two-slot ring-period
   R2-106 form; rsi-loop.log batch block landed (declared exception
   write face); zero repo-tree write by this agent; identity live-lumen
 Purpose. RSI two-slot make-up after the ring-period runs did not run honest: ground zero-write-form rerun of the six pkg steps (steps 1-2 in mktemp-mirror isolation, steps 3-6 in-loop by-design zero-write), MCP stage-1/2 re-read with the seventh-consecutive equal-value judgment, learning_feedback triple delta vs the 7/73/0.0854 baseline, H1 exp-ledger sha delta vs the 057e9cad baseline. Ticket R2-110, agent live-lumen.
-Interface. This card plus the receipt R2-110-receipt-beat.md; the declared exception write face is the rsi-loop.log batch block (L199-205); canonical trees zero-touch by this agent (the MCP helper's R-1 landing spot at MAIN docs/scheduling-feedback.json is helper-designed and measured, not a seat write); consumed by the dispatching workflow.
-Dependencies. The loop clone /Users/zuguangzhao/ComplexAnalysis/rocqwash-loop (HEAD 6af8067 first-hand at seat open); MAIN clone /Users/zuguangzhao/rocqwash (MCP ROCQWASH_HOME by helper design, HEAD 7180308 read post-MCP as-found); the zgx-plan-run.sh pkg master (37 lines, read first-hand, six-step order L23-34); the b_gate_audit + learning_feedback tools; the mcp_call.sh helper; python3 -I only; mktemp-mirror isolation per R2-85/R2-93/R2-106 form.
-Evidence. Every value below was measured this session (2026-11-23T02:03-02:09Z UTC) with the quoted commands; raw outputs staged under /tmp/rqw-mcp/r2-110/ (mirror.efjsqILG, g-step1..6.out/.err, mcp-bgate.jsonl/.jsonl.text, mcp-lf.jsonl/.jsonl.text, mirror-inputs-sha-pre/post.txt, mirror-path.txt); the pre-seat 011926Z writer identity is NOT established and is recorded NOT adjudicated.
+Interface. This card plus the receipt R2-110-receipt-beat.md; the declared exception write face is the rsi-loop.log batch block (L199-205); canonical trees zero-touch by this agent (the MCP helper's R-1 integration point at MAIN docs/scheduling-feedback.json is helper-designed and measured, not an agent write); consumed by the dispatching workflow.
+Dependencies. The loop clone /Users/zuguangzhao/ComplexAnalysis/rocqwash-loop (HEAD 6af8067 first-hand at agent open); MAIN clone /Users/zuguangzhao/rocqwash (MCP ROCQWASH_HOME by helper design, HEAD 7180308 read post-MCP as-found); the zgx-plan-run.sh pkg master (37 lines, read first-hand, six-step order L23-34); the b_gate_audit + learning_feedback tools; the mcp_call.sh helper; python3 -I only; mktemp-mirror isolation per R2-85/R2-93/R2-106 form.
+Evidence. Every value below was measured this session (2026-11-23T02:03-02:09Z UTC) with the quoted commands; raw outputs staged under /tmp/rqw-mcp/r2-110/ (mirror.efjsqILG, g-step1..6.out/.err, mcp-bgate.jsonl/.jsonl.text, mcp-lf.jsonl/.jsonl.text, mirror-inputs-sha-pre/post.txt, mirror-path.txt); the `pre-seat` 011926Z writer identity is NOT established and is recorded NOT adjudicated.
 Exit-codes. Six pkg steps rc 0 (1-2 in mirror, 3-6 in-loop); MCP b_gate_audit server-rc 0 isError false; MCP learning_feedback server-rc 0 isError false; log append 198 -> 205 lines rc 0; card non-ASCII gate 0 bytes measured post-write.
 
 ## 1. Slot face (double-recorded honest, as found in rsi-loop.log)
 
-- 21:11Z slot (2026-11-22): pre-seat block 211911Z (five elements, no
+- 21:11Z slot (2026/11/22): `pre-seat` block 211911Z (five elements, no
   note, log L180-185) + the R2-106 make-up block 220845Z with note
   (L186-192) already in-log - both read this session.
-- 01:11Z slot (2026-11-23): pre-seat block 011926Z anchor=7b183ed
+- 01:11Z slot (2026/11/23): `pre-seat` block 011926Z anchor=7b183ed
   (five elements, no note, log L193-198), full beat ABSENT until this
-  seat - read this session at lines 193-198 of the pre-append log.
-- This seat: ONE make-up run covers both slots per the ask (complete
+  agent - read this session at lines 193-198 of the pre-append log.
+- This agent: ONE make-up run covers both slots per the ask (complete
   in one pass); the batch block note names both slots.
-- Anchor drift declared: pre-seat block anchor=7b183ed vs this beat
+- Anchor drift declared: `pre-seat` block anchor=7b183ed vs this beat
   loop HEAD 6af8067ebf21ebe33a923500fea9cd6934c2e148 - PR #37
-  (automerge, supply lane) landed between the pre-seat and this beat;
+  (automerge, supply lane) landed between the `pre-seat` and this beat;
   the ask names anchor=<LOOP HEAD> = live HEAD 6af8067, used.
-- Pre-seat 011926Z five elements vs this seat's first-hand values:
+- `Pre-seat` 011926Z five elements vs this agent's first-hand values:
   verdict not-ready / VERDICT IN-SYNC (plan is zero-write) /
   "action": "none" / seeds-skips: 3 / TOTAL-ENGINES-BODY GREEN
   (60 passed, 0 skipped) - value-for-value EQUAL; writer identity
@@ -50,7 +50,7 @@ Exit-codes. Six pkg steps rc 0 (1-2 in mirror, 3-6 in-loop); MCP b_gate_audit se
 - Zero-write assertions (measured pre and post all six steps): loop
   HEAD 6af8067ebf21ebe33a923500fea9cd6934c2e148 unchanged; porcelain
   exactly the 2 as-found M lines (docs/b-gate-audit.json +
-  docs/scheduling-feedback.json, carried dirty pair from the pre-seat
+  docs/scheduling-feedback.json, carried dirty pair from the `pre-seat`
   beats) unchanged; pins c3b88ece / 4deabad9 equal pre/post.
 
 ## 3. MCP stage-1/2 + seventh-consecutive equal-value judgment
@@ -67,14 +67,14 @@ Exit-codes. Six pkg steps rc 0 (1-2 in mirror, 3-6 in-loop); MCP b_gate_audit se
   strip (wrapper line "exit code: 0" stripped per pilot law).
   learning_feedback: 7 MCP lines vs 7 ground lines - rows 1-6
   verbatim equal + the wrote-line normalized per pilot law
-  (landing-spot only: MCP wrote /Users/zuguangzhao/rocqwash/docs/
+  (integration-point only: MCP wrote /Users/zuguangzhao/rocqwash/docs/
   scheduling-feedback.json vs mirror wrote /private/tmp/rqw-mcp/
   r2-110/mirror.efjsqILG/docs/scheduling-feedback.json).
 - R-1 face (helper ROCQWASH_HOME pin, helper-designed): canonical
   MAIN docs/scheduling-feedback.json post-MCP md5 4deabad9 ==
   mirror fresh bytes 4deabad9 (determinism byte-proof, same-input
-  same-bytes; the R2-106 landing face holds); pre-MCP canonical md5
-  NOT captured this seat (prior pin 4deabad9 per R2-106 receipt);
+  same-bytes; the R2-106 integration face holds); pre-MCP canonical md5
+  NOT captured this agent (prior pin 4deabad9 per R2-106 receipt);
   MAIN docs/b-gate-audit.json md5 c3b88ece == pin (flat); MAIN HEAD
   7180308 + porcelain 3M+3untracked read post-MCP as-found; loop
   tree untouched by MCP (pins equal pre/post).
@@ -101,9 +101,9 @@ Exit-codes. Six pkg steps rc 0 (1-2 in mirror, 3-6 in-loop); MCP b_gate_audit se
 ## 5. Not run / limitations
 
 - pin_repair --apply (apply never in scope); the pkg pin/fetch legs
-  (L19-20: NETRED zero network ops this seat, no fetch attempted,
+  (L19-20: NETRED zero network ops this agent, no fetch attempted,
   anchor stays); steps 3-6 via MCP (ground form only, per form);
   ai_flavor/norm_lint scan battery (not named by this ask); MAIN
   pre-MCP porcelain/pin capture (post-MCP as-found only, declared
-  above); adjudication of the pre-seat 011926Z or 211911Z writer
+  above); adjudication of the `pre-seat` 011926Z or 211911Z writer
   identity (registered, not adjudicated).

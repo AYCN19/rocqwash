@@ -3,14 +3,14 @@
 Purpose. Session card for ticket R2-112; states the ticket's measured facts (archive copy of the deliverables batch 3).
 Interface. Data face (markdown); not executable; read by the trend reader and the norm scanner.
 Dependencies. Documents and staging paths cited in the body; no runtime dependencies.
-Evidence. Anchor and md5 values first-hand measured this session (source census in seat R2-112 receipt-plan section 2, re-verified at assembly); supply receipt R2-112-receipt-pr.md; per-item post-copy md5 equals the return-package source md5 (4/4).
+Evidence. Anchor and md5 values first-hand measured this session (source census in agent R2-112 receipt-plan section 2, re-verified at assembly); supply receipt R2-112-receipt-pr.md; per-item post-copy md5 equals the return-package source md5 (4/4).
 Exit-codes. Not applicable (data face).
 
 ## Card body
 
 Ticket: R2-112
 Seat: assembly supply agent (green-path PR face, R2-112)
-Anchor: origin/main = 6af8067ebf21ebe33a923500fea9cd6934c2e148 (full sha re-verified by fresh fetch at assembly, 2026/11/23; fetch attempt 1 failed rc=128 empty reply, attempt 2 after 120s backoff confirmed the anchor unchanged - no drift, matches seat A receipt-plan anchor exactly)
+Anchor: origin/main = 6af8067ebf21ebe33a923500fea9cd6934c2e148 (full sha re-verified by fresh fetch at assembly, 2026/11/23; fetch attempt 1 failed rc=128 empty reply, attempt 2 after 120s backoff confirmed the anchor unchanged - no drift, matches `seat A` receipt-plan anchor exactly)
 Mode: original-name copy, zero content modification; post-copy md5 must equal source md5 (verified 4/4); ASCII gate (bytes above 0x7F) = 0 for all 4 items, re-run post-copy
 Excluded: MANIFEST itself self-excluded from this list (its md5 is recorded in the supply receipt, batch-1/2 precedent)
 
