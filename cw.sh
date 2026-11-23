@@ -189,6 +189,8 @@
 #               cw.sh b-gate [--selftest]
 #   tree-audit  read-only tree health audit over .lean/.v source trees (one JSON-line census: totals, declarations, the unsound-feature sweep, comment faces, per-directory and largest-file tables, import roots; byte-literal counting calibrated to the census oracle; zero subprocess, zero network, zero tree writes) -> tools/tree_audit.py
 #               cw.sh tree-audit --root DIR [--json OUT] | --selftest
+#   pipeline-lite  gap-to-admission pipeline executor, D2-2 data layer (scheduler_lite plan verdict imported, never re-derived; gap_cluster clusters transformed to row_render gap rows with the layer-law policyPrecheckRef stamped; emit packet then ingest a backfill into a draft whose rows enter at tenpointVerdict PENDING; quiet and blocked write nothing; pending-backfill and pending-human stops are data; code-layer faces (ten-point verdicts, taxonomy row integration, apply pass, auto_round commit and approve) stay human-gated and are never composed; b-gate audit counter carried read-only; zero network) -> tools/pipeline_lite.py
+#               cw.sh pipeline-lite [--plan F] [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--gap-out F] [--render-gaps F] [--packet-out F] [--backfill F] [--draft-out F] [--b-gate-audit P] [--policy-ref S] [--stop-at {data,human}] [--json] | --selftest
 #   help        this help (help <tool> = the tool's one-line usage hint)
 #
 # Routing contract:
@@ -388,6 +390,8 @@ Tools:
               cw.sh b-gate [--selftest]
   tree-audit  read-only tree health audit over .lean/.v source trees (one JSON-line census: totals, declarations, the unsound-feature sweep, comment faces, per-directory and largest-file tables, import roots; byte-literal counting calibrated to the census oracle; zero subprocess, zero network, zero tree writes) -> tools/tree_audit.py
               cw.sh tree-audit --root DIR [--json OUT] | --selftest
+  pipeline-lite  gap-to-admission pipeline executor, D2-2 data layer (scheduler_lite plan verdict imported, never re-derived; gap_cluster clusters transformed to row_render gap rows with the layer-law policyPrecheckRef stamped; emit packet then ingest a backfill into a draft whose rows enter at tenpointVerdict PENDING; quiet and blocked write nothing; pending-backfill and pending-human stops are data; code-layer faces (ten-point verdicts, taxonomy row integration, apply pass, auto_round commit and approve) stay human-gated and are never composed; b-gate audit counter carried read-only; zero network) -> tools/pipeline_lite.py
+              cw.sh pipeline-lite [--plan F] [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--gap-out F] [--render-gaps F] [--packet-out F] [--backfill F] [--draft-out F] [--b-gate-audit P] [--policy-ref S] [--stop-at {data,human}] [--json] | --selftest
 
   help        this help (help <tool> = the tool's one-line usage hint)
 
@@ -476,6 +480,7 @@ hint_for() {  # $1=tool
     learning-feedback) echo "cw.sh learning-feedback [--selftest]   # scheduling feedback face over the three standing ledgers (round ledger, round state, experience ledger read-only; casts schema rocqwash.scheduling-feedback/1 into docs/scheduling-feedback.json: the auto versus human-approved round split, the approval rate, the per-class breakdown, and the four-state repair outcome tally; missing or corrupt inputs land in the errors field, never guessed) -> tools/learning_feedback.py" ;;
     b-gate) echo "cw.sh b-gate [--selftest]   # B-level generalization threshold audit over the round records (3 instances, each grounded in at least 1 executed round; per-class instance and round counts, a per-class readiness verdict, and an explicit gap list into docs/b-gate-audit.json, schema rocqwash.b-gate-audit/1; counts are measured from the records, never inflated) -> tools/b_gate_audit.py" ;;
     tree-audit) echo "cw.sh tree-audit --root DIR [--json OUT] | --selftest   # read-only tree health audit over .lean/.v source trees (one JSON-line census; zero subprocess, zero network, zero tree writes) -> tools/tree_audit.py" ;;
+    pipeline-lite) echo "cw.sh pipeline-lite [--plan F] [--gap-ledger P]... [--reports P]... [--rounds P] [--autonomy P] [--state P] [--ef-marker P] [--threshold N] [--interval-seconds N] [--now-utc ISO8601Z] [--gap-out F] [--render-gaps F] [--packet-out F] [--backfill F] [--draft-out F] [--b-gate-audit P] [--policy-ref S] [--stop-at {data,human}] [--json] | --selftest   # gap-to-admission pipeline executor, D2-2 data layer (verdict imported from scheduler_lite; rows enter PENDING; code-layer faces stay human-gated; zero network) -> tools/pipeline_lite.py" ;;
     *) return 1 ;;
   esac
 }
@@ -570,6 +575,7 @@ case "${1:-}" in
   learning-feedback) shift; run_tool learning-feedback "tools/learning_feedback.py" "$@" ;;
   b-gate) shift; run_tool b-gate "tools/b_gate_audit.py" "$@" ;;
   tree-audit) shift; run_tool tree-audit "tools/tree_audit.py" "$@" ;;
+  pipeline-lite) shift; run_tool pipeline-lite "tools/pipeline_lite.py" "$@" ;;
   help|-h|--help)
     if [ "$#" -ge 2 ]; then
       if hint_for "$2"; then
