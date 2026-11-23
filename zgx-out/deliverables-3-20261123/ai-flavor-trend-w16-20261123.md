@@ -1,20 +1,20 @@
 # ai_flavor trend card - em-dash / wording / norm faces, rocqwash (R2-110, window w16)
 
 Purpose. Trend sampler window w16: anchor face verify (new anchor
-  6af8067 = the PR#37 norm-cures landing composition), PAID re-scan
+  6af8067 = the PR#37 norm-cures integration composition), PAID re-scan
   (skip branch open but NOT taken - the new anchor landed, rev-list
   2 > 0), double scan (ai_flavor + norm_lint, ground CLI form,
   read-only), tree-level recheck of the fix face, row-level diff,
-  counter judgment. Ticket R2-110, seat live-lumen (subagent,
+  counter judgment. Ticket R2-110, agent live-lumen (subagent,
   dynamic workflow).
 Interface. This card (English ASCII, five-field header per the norm
   header rule; non-ASCII gate = 0 bytes measured post-write) plus
   the receipt R2-110-receipt-w16.md; consumed by the dispatching
   workflow.
 Dependencies. /Users/zuguangzhao/rocqwash MAIN clone (read-only
-  this seat), python3 -I, git, tools/ai_flavor.py,
+  this agent), python3 -I, git, tools/ai_flavor.py,
   tools/norm_lint.py, w15 card + w15 staging, R2-109-receipt-pr.md
-  (the fix landing face), rsi-loop.log tail 15; no MCP helper.
+  (the fix integration face), rsi-loop.log tail 15; no MCP helper.
 Evidence. Every value below was measured this session with the
   quoted command forms; staging /tmp/rqw-mcp/r2-110-w16/ holds all
   raw outputs; anchor 6af8067 network-verified via the ask-named
@@ -27,12 +27,12 @@ Exit-codes. fetch rc 0 single-flight (refmove 7b183ed..6af8067
 
 ## Card body
 
-- Ticket: R2-110, seat: trend sampler w16 (read-only sampling; zero
+- Ticket: R2-110, agent: trend sampler w16 (read-only sampling; zero
   repo-tree content; write faces = this card, the receipt
   R2-110-receipt-w16.md, and /tmp/rqw-mcp/r2-110-w16 staging),
   identity live-lumen
-- Date: 2026-11-23 (local calendar; the ask-named filename carries
-  20261123 and is written exactly as named)
+- Date: 2026/11/23 (local calendar; the ask-named filename carries
+  2026/11/23 and is written exactly as named)
 - Target repo: /Users/zuguangzhao/rocqwash (MAIN clone; scanned
   read-only at the working tree, which is tree-identical to the
   anchor - see section 1; NO checkout performed at all this window)
@@ -41,21 +41,21 @@ Exit-codes. fetch rc 0 single-flight (refmove 7b183ed..6af8067
   R2-109's recorded merge_commit_sha EXACT, network-confirmed; the
   scans sampled THIS tip's tree)
 
-## 1. Anchor face: fetch rc 0 single-flight, the refmove CARRIED by this fetch, rev-list 2 == the ask's expected 2 EXACT, window = the PR#37 norm-cures landing
+## 1. Anchor face: fetch rc 0 single-flight, the refmove CARRIED by this fetch, rev-list 2 == the ask's expected 2 EXACT, window = the PR#37 norm-cures integration
 
-- Pre-fetch face (measured at seat open): HEAD =
+- Pre-fetch face (measured at agent open): HEAD =
   71803083016e7deaf13881e7f11a271aac6a25a3 (the R2-109 fix head)
   attached to branch supply/zgx/deliverables-2-norm-cures-20261123
-  (the R2-109 leave-behind, untouched by this seat); porcelain =
+  (the R2-109 leave-behind, untouched by this agent); porcelain =
   exactly 3 M (docs/b-gate-audit.json, docs/scheduling-feedback.json,
   zgx-out/zgx-ledger-proposals.jsonl) + 3 untracked zgx-out files -
   ONE M MORE than the w15 face (2 M + 3 untracked): the third M is
   the zgx-ledger-proposals.jsonl concurrent-append face R2-109
-  recorded mid-seat, still standing dirty at this window's open;
+  recorded `mid-seat`, still standing dirty at this window's open;
   as-recorded, not adjudicated. Local origin/main was 7b183ed
   (pre-fetch) - R2-109's check-3 and post-merge fetches both FAILED
   (Empty reply, rc 128, recorded in its receipt), so the local ref
-  never saw the merge; THIS seat's ask-named fetch carries the
+  never saw the merge; THIS agent's ask-named fetch carries the
   move.
 - The ask-named fetch ran exactly once: `git -C /Users/zuguangzhao/
   rocqwash -c http.version=HTTP/1.1 fetch origin` - rc 0, ONE
@@ -99,7 +99,7 @@ Exit-codes. fetch rc 0 single-flight (refmove 7b183ed..6af8067
   c3b88ece (b-gate-audit, == the w15 canonical pin EXACT),
   4deabad9 (scheduling-feedback, == the w15/w14 CLOSE pin EXACT),
   b61b7d26 (ledger-proposals, the R2-109 leave-behind) - no
-  mid-seat movement this window.
+  `mid-seat` movement this window.
 
 ## 2. Double scan vs the w15 baseline AND vs the R2-109 post-fix face (every value judged)
 
@@ -141,7 +141,7 @@ Form note: ground CLI form, cwd = clone root: `python3 -I tools/
 - TREE-LEVEL RECHECK CLOSURE (the ask's bolded line): the merged
   tree's norm summary `files=329 error=763 warn=1263
   cjk_ratio=0.028635` == R2-109's after face on the fix branch
-  EXACT on ALL FOUR values - the PR#37 landing face is confirmed
+  EXACT on ALL FOUR values - the PR#37 integration face is confirmed
   present in the merged main tree, first-hand, this window. THE
   FIX-FACE RECHECK LOOP IS CLOSED.
 - Per-kind closure (w16 json, aggregated this session): jargon 692
@@ -155,7 +155,7 @@ Form note: ground CLI form, cwd = clone root: `python3 -I tools/
 
 ## 3. Landing-face attribution: the PR#37 norm cures, 100% lane-attributed, +/-72 pure-insert face
 
-- Window content: exactly ONE face - the PR#37 norm-cures landing,
+- Window content: exactly ONE face - the PR#37 norm-cures integration,
   9 files +685/-612 numstat, all under zgx-out/deliverables-2-20261123/.
   No other tree delta (no instrument change; the .jsonl concurrent
   face is outside the scan lanes and uncommitted anyway).
@@ -192,7 +192,7 @@ Form note: ground CLI form, cwd = clone root: `python3 -I tools/
   per file, TOTAL hi 0 / em 0 (10/10 == R2-109's G4, re-measured
   live at the merged tree); (c) the 7180308 subject em-dash is
   commit METADATA, outside the scan face (w15/89acc8a precedent).
-  THE ASCII GATE STAYS CLOSED through the fix landing.
+  THE ASCII GATE STAYS CLOSED through the fix integration.
 
 ## 4. Row-level diff vs the w15 face: EMPTY (added 0 / removed 0 / changed 0)
 
@@ -212,13 +212,13 @@ Form note: ground CLI form, cwd = clone root: `python3 -I tools/
 - Window payment: the w15 card declared the SKIP BRANCH OPEN for
   the em lane from w16 (counter = 3). The skip form's precondition
   is a window whose count leg says skip (rev-list --count 0); THIS
-  window's count leg = 2 > 0 (the PR#37 landing arrived), so the
+  window's count leg = 2 > 0 (the PR#37 integration arrived), so the
   FULL WINDOW rule fires and the full double scan RUN - as the ask
   itself directs (new anchor present = PAID re-scan, not a skip).
   The skip branch stays OPEN, unused.
 - em stock: w16 == w15 == w14 == w13 == w12 (7936 x5, delta 0) = a
   TRUE 4-degree flat on the em lane: three-flat counter 3 -> 4.
-  THE CHAIN HOLDS THROUGH A CURE PASS: the +72-line fix landing,
+  THE CHAIN HOLDS THROUGH A CURE PASS: the +72-line fix integration,
   1362 norm findings cured, em stock moved ZERO - the strongest
   flat evidence yet that the em lane is fully decoupled from the
   norm lane's cure cycle.
@@ -261,10 +261,10 @@ walks (per R2-95 registration). ROCQWASH_MCP_ALLOW_NET never set.
 
 ## Provenance and limitations
 
-- NETRED ledger this seat, every event: (1) git fetch origin over
+- NETRED ledger this agent, every event: (1) git fetch origin over
   HTTP/1.1 - rc 0, ONE attempt, zero retries, zero backoff spend;
   the fetch CARRIED the refmove 7b183ed..6af8067 (expected: R2-109's
-  two post-landing fetches failed Empty reply, so the move was
+  two post-integration fetches failed Empty reply, so the move was
   pending). One network event total, zero failures. No other git
   network ops; no curl; no MCP network.
 - Staging (all outside the repo tree): /tmp/rqw-mcp/r2-110-w16/
@@ -286,7 +286,7 @@ walks (per R2-95 registration). ROCQWASH_MCP_ALLOW_NET never set.
   authoritative accounting is the per-kind counters + the non-lane
   set-equality, both exact; (c) the 68 warn residuals keep the
   warn leg above the 1045 line (+218) - a policy question (C-1
-  whitelist channel), not this seat's to adjudicate; (d) the
+  whitelist channel), not this agent's to adjudicate; (d) the
   third M (zgx-ledger-proposals.jsonl) is the R2-109-recorded
   concurrent face, outside both scan lanes, unadjudicated; (e)
   pass-2 comparators are same-session artifacts, re-verified by
