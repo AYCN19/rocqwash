@@ -223,3 +223,27 @@ __marimo__/
 # ROCWASH_GATE_LEDGER_DIR opts the run in (runtime accounting data, never
 # tree state; tools/evolve.py --gate-ledger-dir is the standing reader).
 gate-ledgers/
+
+# Worktree hygiene (D5-3; 24h unattended prerequisite: git status carries
+# only intentional changes). Tool caches and runtime/batch outputs below
+# are data dropped by tools, never tree state.
+
+# Lean lia/nia tactic caches (written beside compiled .lean sources while
+# tactics run; tool state, never tree state).
+.lia.cache
+.nia.cache
+
+# vacgen batch-output directory (vacgen batch runs dump artifacts here;
+# runtime output, never tree state).
+vacgen_batch_out/
+
+# claim-watch runtime ledger (the claim-watch tool appends findings under
+# docs/; runtime accounting data, never tree state).
+docs/claim-watch-ledger.jsonl
+
+# zgx-out timestamped tool snapshots and seat working drafts (seat lanes
+# export timestamped copies of the docs/ audit JSON faces and local PR
+# drafts here; runtime accounting data, never tree state).
+zgx-out/b-gate-audit.*.json
+zgx-out/scheduling-feedback.*.json
+zgx-out/pr-description-draft-*.md
