@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """learning_feedback.py - scheduling feedback face over the three standing ledgers.
-Purpose.  Read the round ledger, the round state, and the experience ledger
-  (schemas rocqwash-round/1, rocqwash.round-state/1, rocqwash-exp/1)
+Purpose.  Read the round ledger, the round state, and the experience
+  ledger (rocqwash-round/1, rocqwash.round-state/1, rocqwash-exp/1)
   strictly read-only, and cast the scheduling feedback face (schema
   rocqwash.scheduling-feedback/1) into docs/scheduling-feedback.json: the
   round admission face, the repair outcome face, and the optional
-  calibration reading (entry count, agreement rate, per-grade breakdown).
-  The approval rate becomes a readable number here; scheduling does not
-  yet consume it (the feedback_edge face declares that boundary).  Missing
-  or corrupt inputs are recorded per account in the "errors" list and
-  named on stdout, never guessed: the run continues on the remaining
-  valid rows and exits 1 so the red name is loud.
-Interface.  `python -I tools/learning_feedback.py [--selftest]`; the default
-  zero-argument run resolves the three inputs and the output against the
-  repository root (the parent of tools/) and writes exactly one file,
-  docs/scheduling-feedback.json (the three inputs are never written).
-Dependencies.  Python 3 stdlib only (argparse/json/os/re/shutil/sys/tempfile);
-  zero network by design; zero eval/exec; deterministic: the runtime clock
-  never enters the logic, and reruns over identical inputs are
-  byte-identical.
-Evidence.  --selftest on temporary fixtures, eight vectors: two rounds one
-  auto one human-approved; corrupt-line tolerance plus an absent round-state
-  file; empty ledgers; unknown tokens and token-less rows stay unrecorded
-  while the mechanical-fix family classifies repaired; the three calibration
-  forms (populated account, empty or absent ledger, unreadable row); and
-  the expanded writer-set vector.  Vectors never touch repository paths.
-Exit-codes.  0 = face produced, every account error-free; 1 = at least one
-  account error (missing input, invalid JSON, non-round row, unreadable
-  calibration row) or a write failure, named on stdout; 2 = usage error.
+  calibration reading.  The opt-in --promote scan is the only writing
+  mode: it appends promotion event rows (rocqwash-exp/1+promotion,
+  kind=promotion; one per round admission, one per b-gate-ready class)
+  into docs/exp-ledger.jsonl through the sibling exp_port seen set, so
+  reruns skip recorded events (append-only, idempotent).  Missing or
+  corrupt inputs land in the
+  per-account "errors" list, never guessed; the run continues on the
+  remaining valid rows and exits 1.
+Interface.  `python -I tools/learning_feedback.py [--selftest]
+  [--promote] [--ledger P] [--ts TS] [--actor A] [--dry-run]`; the
+  default run writes exactly one file, docs/scheduling-feedback.json
+  (the three inputs are never written); --promote appends the promotion
+  event rows (extended contract below).
+Dependencies.  Python 3 stdlib only; zero network; zero eval/exec;
+  deterministic default run (the runtime clock never enters its logic;
+  --promote stamps the supplied or current UTC time); sibling imports
+  exp_port (seen set, ledger resolution, line form) and b_gate_audit
+  (the ready verdict, imported, never re-implemented).
+Evidence.  --selftest on temporary fixtures, ten vectors: the eight
+  standing faces plus the promotion row lock and the exp_port interop.
+Exit-codes.  0 = face produced / promotion scan clean (appends and skips
+  are both clean); 1 = at least one account error or a write failure,
+  named on stdout; 2 = usage error.
 """
 
 # Field notes (the reading rules this tool implements; consumers of the
@@ -81,7 +81,61 @@ Exit-codes.  0 = face produced, every account error-free; 1 = at least one
 # - errors: per-account strings in deterministic order; an empty list is a
 #   clean account.
 
+# Extended contract (kept outside the five-field block so the header stays
+# within the 30-line budget of the annotation standard):
+#
+# Event model (--promote; the promotion event output face).  One event per
+#   admitted (round, class) pair, walked in round-ledger file order
+#   (same-round duplicate admission entries collapse), then one event per
+#   class whose b-gate count verifies ready (instances >= 3 and
+#   rounds >= 1), sorted by class.  The ready verdict comes from the
+#   sibling b_gate_audit build_report (imported, never re-implemented),
+#   so the promotion face moves exactly with the gate.  Event ids are
+#   deterministic: promotion-round-<round_id>-<class> and
+#   promotion-class-ready-<class>.  A rescan of an unchanged ledger
+#   recasts the same ids and every one lands on the exp_port seen set as
+#   a duplicate-skip (id axis first, then the four-carrier fingerprint
+#   axis), so reruns are append-only no-ops.
+#
+# Row shape (schema increment rocqwash-exp/1+promotion, the D1-1
+#   "+reading" form; the base envelope matches exp_port so the seen set
+#   owns dedupe on both axes):
+#   schema       constant "rocqwash-exp/1+promotion"
+#   kind         constant "promotion"
+#   id           the deterministic event id above
+#   ts           the scan stamp (caller-supplied or current UTC)
+#   tool         constant "learning_feedback" (the writer)
+#   points       one-line mechanical takeaway of the event
+#   evidence     the grounding pointers: "round-ledger line N (round_id
+#                R)" for admissions (one pointer); for a ready class the
+#                admitting-row pointers joined with "; "
+#   batch        constant "promotion-events"
+#   fingerprint  exp_port.fingerprint over tool/points/evidence/batch,
+#                byte-compatible with the exp_port seen set (the interop
+#                vector appends through exp_port itself)
+#   source_sha   md5 of the round-ledger bytes at scan time (the moving
+#                grounding; state and taxonomy are named in basis)
+#   basis        the derivation sentence (the source_sha/basis
+#                self-certifying contract per D1-1/D3-3)
+#   actor        carried verbatim when provided, omitted when empty
+#                (exp_port schema increment; outside the fingerprint)
+#
+# Failure face.  Any read error (missing input, invalid JSON, non-round
+#   row) or a corrupt exp-ledger line fails loud: nothing is appended,
+#   exit 1.  --dry-run casts the events and prints the would-be ids,
+#   writing nothing.  The default run never writes the three inputs;
+#   only --promote writes, and it only appends.
+#
+# Consumer note.  Promotion rows are rows of the experience ledger, so
+#   the repair outcome face counts them (no action token in their points
+#   text, so the unrecorded state); the calibration section is unaffected
+#   (the tool field differs from calibration_ledger).
+
 import argparse
+import contextlib
+import datetime
+import hashlib
+import io
 import json
 import os
 import re
@@ -89,18 +143,39 @@ import shutil
 import sys
 import tempfile
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+try:
+    import exp_port
+except ImportError as exc:
+    sys.stderr.write("learning_feedback: the sibling exp_port module is"
+                     " required (%s)\n" % exc)
+    sys.exit(9)
+try:
+    import b_gate_audit
+except ImportError as exc:
+    sys.stderr.write("learning_feedback: the sibling b_gate_audit module"
+                     " is required (%s)\n" % exc)
+    sys.exit(9)
+
 PROG = "learning_feedback"
 SCHEMA = "rocqwash.scheduling-feedback/1"
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.2.0"
 ROUNDS_DEFAULT = ("docs", "round-ledger.jsonl")
 STATE_DEFAULT = ("docs", "round-state.json")
 EXP_DEFAULT = ("docs", "exp-ledger.jsonl")
 OUT_DEFAULT = ("docs", "scheduling-feedback.json")
+TAXONOMY_DEFAULT = ("tools", "taxonomy.json")
 CALIB_TOOL = "calibration_ledger"
 CALIB_GRADES = ("HIGH", "MID")
 CALIB_FACES = ("PASS", "FAIL")
 NOTE = ("approval-rate now readable; scheduling does not yet consume it"
         " (declared blank)")
+
+# Promotion face constants (the opt-in --promote writer; the default run
+# never touches these).
+PROMOTION_SCHEMA = "rocqwash-exp/1+promotion"
+PROMOTION_KIND = "promotion"
+PROMOTION_BATCH = "promotion-events"
 
 # The action-token table, in priority order (first match wins).
 REPAIR_TOKENS = (
@@ -401,6 +476,238 @@ def run(rounds_path, state_path, exp_path, out_path):
     return 0 if clean else 1
 
 
+def _file_md5(path):
+    """md5 hex digest of the file bytes (the promotion source_sha form)."""
+    with open(path, "rb") as fh:
+        return hashlib.md5(fh.read()).hexdigest()
+
+
+def _utcnow_ts():
+    """Current UTC time in the exp_port stamp form."""
+    return datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
+
+
+def collect_admission_events(rounds_path):
+    """Walk the round ledger in file order -> (events, errors).
+
+    One event per admitted (round, class) pair; same-round duplicate
+    admission entries collapse.  Each event carries round_id, cls,
+    lineno, the grounding pointer, and the admission confidence.
+    """
+    rows, errors = _read_jsonl(rounds_path, "round-ledger")
+    events = []
+    for lineno, row in rows:
+        round_id = row.get("round_id")
+        if round_id is None or "mode" not in row:
+            errors.append("round-ledger line %d: not a round row (missing"
+                          " round_id or mode)" % lineno)
+            continue
+        seen_in_row = set()
+        for adm in row.get("admissions") or []:
+            if not isinstance(adm, dict):
+                errors.append("round-ledger line %d: admission is not an"
+                              " object, skipped" % lineno)
+                continue
+            cls = adm.get("class")
+            if not cls:
+                errors.append("round-ledger line %d: admission without a"
+                              " class, skipped" % lineno)
+                continue
+            if adm.get("decision") != "admitted" or cls in seen_in_row:
+                continue
+            seen_in_row.add(cls)
+            events.append({"round_id": round_id, "cls": cls,
+                           "lineno": lineno,
+                           "pointer": "round-ledger line %d (round_id %s)"
+                                      % (lineno, round_id),
+                           "confidence": adm.get("confidence")})
+    return events, errors
+
+
+def collect_ready_events(rounds_path, state_path, taxonomy_path):
+    """Cast the ready events through the sibling b_gate_audit verdict.
+
+    One event per class whose report row verifies ready; returns
+    (events, errors).  The verdict is imported, never re-implemented.
+    """
+    report, errors = b_gate_audit.build_report(rounds_path, state_path,
+                                               taxonomy_path)
+    events = []
+    for row in report["classes"]:
+        if not row["ready"]:
+            continue
+        events.append({"cls": row["class"], "instances": row["instances"],
+                       "rounds": row["rounds"]})
+    return events, errors
+
+
+def _promotion_entry(eid, ts, points, evidence, basis, ledger_md5, actor):
+    """One promotion entry dict (exp_port envelope + promotion fields)."""
+    entry = {
+        "schema": PROMOTION_SCHEMA,
+        "id": eid,
+        "ts": ts,
+        "tool": PROG,
+        "points": points,
+        "evidence": evidence,
+        "batch": PROMOTION_BATCH,
+        "fingerprint": exp_port.fingerprint(PROG, points, evidence,
+                                            PROMOTION_BATCH),
+        "kind": PROMOTION_KIND,
+        "source_sha": ledger_md5,
+        "basis": basis,
+    }
+    if actor:
+        entry["actor"] = actor
+    return entry
+
+
+def promotion_rows(rounds_path, state_path, taxonomy_path, ts, actor):
+    """Cast the promotion event rows -> (rows, errors).
+
+    Admission events first (round-ledger file order), then ready events
+    (sorted by class, the b_gate_audit report order).  Row shape in the
+    extended contract above.
+    """
+    errors = []
+    ledger_md5 = _file_md5(rounds_path)
+    admissions, adm_errors = collect_admission_events(rounds_path)
+    errors.extend(adm_errors)
+    pointers_by_class = {}
+    for ev in admissions:
+        pointers_by_class.setdefault(ev["cls"], []).append(ev["pointer"])
+    ready, ready_errors = collect_ready_events(rounds_path, state_path,
+                                               taxonomy_path)
+    errors.extend(ready_errors)
+    rows = []
+    for ev in admissions:
+        points = ("promotion event: round admission, class %s admitted in"
+                  " round %s (decision=admitted)"
+                  % (ev["cls"], ev["round_id"]))
+        basis = ("%s records the admission; promotion row cast by the"
+                 " learning_feedback --promote scan over round-ledger md5"
+                 " %s" % (ev["pointer"], ledger_md5))
+        rows.append(_promotion_entry(
+            "promotion-round-%s-%s" % (ev["round_id"], ev["cls"]), ts,
+            points, ev["pointer"], basis, ledger_md5, actor))
+    for ev in ready:
+        points = ("promotion event: class ready, class %s verifies the"
+                  " b-gate ready threshold (instances=%d, rounds=%d)"
+                  % (ev["cls"], ev["instances"], ev["rounds"]))
+        pointers = pointers_by_class.get(ev["cls"], [])
+        evidence = "; ".join(pointers) if pointers else (
+            "b-gate class row instances=%d rounds=%d"
+            % (ev["instances"], ev["rounds"]))
+        basis = ("ready predicate instances >= %d and rounds >= %d per"
+                 " tools/b_gate_audit.py (imported, never re-implemented);"
+                 " derived from round-ledger md5 %s plus round-state and"
+                 " taxonomy at scan"
+                 % (b_gate_audit.THRESHOLD_INSTANCES,
+                    b_gate_audit.THRESHOLD_ROUNDS, ledger_md5))
+        rows.append(_promotion_entry(
+            "promotion-class-ready-%s" % ev["cls"], ts, points, evidence,
+            basis, ledger_md5, actor))
+    return rows, errors
+
+
+def append_promotion_rows(rows, ledger_path, dry_run):
+    """Append rows through the exp_port seen set.
+
+    Returns (appended_ids, skipped_pairs, lines); skipped pairs carry
+    (id, axis).  Duplicates and dry-run rows write nothing.  A corrupt
+    ledger returns (None, None, [error lines]) - the caller fails loud.
+    """
+    try:
+        existing = exp_port.read_ledger(ledger_path)
+    except exp_port.CorruptLedger as exc:
+        return None, None, ["exp-ledger: %s" % exc]
+    existing = existing if existing is not None else []
+    seen_ids = set()
+    seen_fps = set()
+    for entry in existing:
+        eid = entry.get("id")
+        if isinstance(eid, str) and eid:
+            seen_ids.add(eid)
+        mark = entry.get("fingerprint")
+        if isinstance(mark, str) and mark:
+            seen_fps.add(mark)
+    appended = []
+    skipped = []
+    lines = []
+    parent = os.path.dirname(os.path.abspath(ledger_path))
+    if not dry_run and parent and not os.path.isdir(parent):
+        try:
+            os.makedirs(parent, exist_ok=True)
+        except OSError as exc:
+            return None, None, ["exp-ledger parent mkdir failed: %s" % exc]
+    for row in rows:
+        if row["id"] in seen_ids:
+            skipped.append((row["id"], "id"))
+            lines.append("duplicate-skip id=%s axis=id ledger=%s"
+                         % (row["id"], ledger_path))
+            continue
+        if row["fingerprint"] in seen_fps:
+            skipped.append((row["id"], "fingerprint"))
+            lines.append("duplicate-skip id=%s axis=fingerprint ledger=%s"
+                         % (row["id"], ledger_path))
+            continue
+        if dry_run:
+            lines.append("dry-run id=%s would-append ledger=%s"
+                         % (row["id"], ledger_path))
+            continue
+        line = json.dumps(row, ensure_ascii=False, sort_keys=True,
+                          separators=(",", ":"))
+        try:
+            with open(ledger_path, "a", encoding="utf-8", newline="\n") as fh:
+                fh.write(line + "\n")
+        except OSError as exc:
+            return None, None, ["exp-ledger append failed: %s" % exc]
+        seen_ids.add(row["id"])
+        seen_fps.add(row["fingerprint"])
+        appended.append(row["id"])
+        lines.append("appended id=%s ledger=%s" % (row["id"], ledger_path))
+    return appended, skipped, lines
+
+
+def run_promotion(rounds_path, state_path, taxonomy_path, exp_path, ts,
+                  actor, dry_run):
+    """--promote scan: cast rows, append through the seen set, report."""
+    if not exp_port.valid_ts(ts):
+        sys.stderr.write("learning_feedback --promote: --ts must be an ISO"
+                         " date or timestamp: %s\n" % ts)
+        return 2
+    try:
+        rows, errors = promotion_rows(rounds_path, state_path,
+                                      taxonomy_path, ts, actor)
+    except OSError as exc:
+        sys.stdout.write("ERROR promotion scan cannot read its inputs:"
+                         " %s\n" % exc)
+        return 1
+    if errors:
+        for msg in errors:
+            sys.stdout.write("ERROR %s\n" % msg)
+        sys.stdout.write("promotion scan: %d error(s); nothing appended"
+                         " (fail loud)\n" % len(errors))
+        return 1
+    appended, skipped, lines = append_promotion_rows(rows, exp_path,
+                                                     dry_run)
+    if appended is None:
+        for msg in lines:
+            sys.stdout.write("ERROR %s\n" % msg)
+        sys.stdout.write("promotion scan: the experience ledger could not"
+                         " be read or written; nothing appended"
+                         " (fail loud)\n")
+        return 1
+    for line in lines:
+        sys.stdout.write(line + "\n")
+    sys.stdout.write("promotion scan: events=%d appended=%d skipped=%d"
+                     " dry_run=%s ledger=%s\n"
+                     % (len(rows), len(appended), len(skipped),
+                        str(bool(dry_run)).lower(), exp_path))
+    return 0
+
+
 def _write_fixture(path, lines):
     """Write one fixture file (JSONL or JSON document) into the temp root."""
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
@@ -414,7 +721,7 @@ def _check(failures, vector, name, cond, detail):
 
 
 def selftest():
-    """Eight offline vectors on temporary fixtures; never touches repository paths."""
+    """Ten offline vectors on temp fixtures; zero repository paths."""
     root = tempfile.mkdtemp(prefix="learning_feedback_selftest_")
     failures = []
     try:
@@ -749,36 +1056,277 @@ def selftest():
         _check(failures, 8, "rounds", face8["rounds"]["total"] == 1
                and not face8["rounds"]["errors"],
                "rounds face %r" % face8["rounds"])
+
+        # Vector 9: the promotion row lock.  A three-round alpha (ready),
+        # a one-round beta, and a taxonomy-only gamma cast exactly four
+        # admission rows plus one ready row with deterministic ids in
+        # ledger order then class order; each row carries the full
+        # rocqwash-exp/1+promotion shape with an exp_port-compatible
+        # fingerprint; the append lands all five, and a rescan of the
+        # unchanged ledger skips all five on the id axis with zero
+        # writes (append-only, idempotent); --dry-run writes nothing.
+        v9 = os.path.join(root, "v9")
+        os.mkdir(v9)
+        rounds9 = os.path.join(v9, "round-ledger.jsonl")
+        rows9 = []
+        for rid, classes9 in ((1, ("alpha", "beta")), (2, ("alpha",)),
+                              (3, ("alpha",))):
+            rows9.append(json.dumps(
+                {"round_id": rid, "mode": "auto", "verify_rc": 0,
+                 "classes_applied": list(classes9),
+                 "admissions": [{"class": cls, "decision": "admitted",
+                                 "confidence": 0.9} for cls in classes9]},
+                sort_keys=True))
+        _write_fixture(rounds9, rows9)
+        state9 = os.path.join(v9, "round-state.json")
+        _write_fixture(state9, [json.dumps(
+            {"schema": "rocqwash.round-state/1",
+             "admitted_classes": [{"class": "alpha", "confidence": 0.9,
+                                   "basis": "gear auto"},
+                                  {"class": "beta", "confidence": 0.9,
+                                   "basis": "gear auto"}]},
+            sort_keys=True)])
+        taxonomy9 = os.path.join(v9, "taxonomy.json")
+        _write_fixture(taxonomy9, [json.dumps(
+            {"rows": [{"familyId": "alpha"}, {"familyId": "beta"},
+                      {"familyId": "gamma"}]}, sort_keys=True)])
+        exp9 = os.path.join(v9, "exp-ledger.jsonl")
+        _write_fixture(exp9, [
+            json.dumps({"id": "EXP-V9-0001", "tool": "fixture",
+                        "points": "run 1: family=A action=fix-content"},
+                       sort_keys=True),
+        ])
+        ts9 = "2026-11-23T00:00:00Z"
+        promo_rows, errors9 = promotion_rows(rounds9, state9, taxonomy9,
+                                             ts9, "")
+        expect_ids = ["promotion-round-1-alpha", "promotion-round-1-beta",
+                      "promotion-round-2-alpha", "promotion-round-3-alpha",
+                      "promotion-class-ready-alpha"]
+        _check(failures, 9, "cast errors", not errors9,
+               "errors %r" % (errors9,))
+        _check(failures, 9, "event ids",
+               [row["id"] for row in promo_rows] == expect_ids,
+               "ids %r != %r"
+               % ([row["id"] for row in promo_rows], expect_ids))
+        shape = {"schema", "id", "ts", "tool", "points", "evidence",
+                 "batch", "fingerprint", "kind", "source_sha", "basis"}
+        _check(failures, 9, "row shape",
+               all(set(row) == shape for row in promo_rows),
+               "field sets %r"
+               % [sorted(set(row) - shape) for row in promo_rows])
+        _check(failures, 9, "envelope",
+               all(row["schema"] == PROMOTION_SCHEMA
+                   and row["kind"] == PROMOTION_KIND
+                   and row["tool"] == PROG
+                   and row["batch"] == PROMOTION_BATCH
+                   and row["ts"] == ts9 for row in promo_rows),
+               "envelope %r"
+               % [(row["schema"], row["kind"], row["tool"], row["batch"],
+                   row["ts"]) for row in promo_rows])
+        _check(failures, 9, "fingerprint compat",
+               all(row["fingerprint"] == exp_port.fingerprint(
+                   row["tool"], row["points"], row["evidence"],
+                   row["batch"]) for row in promo_rows),
+               "fingerprint mismatch on some row")
+        ledger_md5 = _file_md5(rounds9)
+        _check(failures, 9, "source_sha",
+               all(row["source_sha"] == ledger_md5 for row in promo_rows),
+               "source_sha %r != %r"
+               % (promo_rows[0]["source_sha"], ledger_md5))
+        _check(failures, 9, "admission row face",
+               promo_rows[0]["points"] == (
+                   "promotion event: round admission, class alpha"
+                   " admitted in round 1 (decision=admitted)")
+               and promo_rows[0]["evidence"]
+               == "round-ledger line 1 (round_id 1)"
+               and "round-ledger line 1 (round_id 1) records the"
+                   " admission" in promo_rows[0]["basis"],
+               "admission row %r / %r" % (promo_rows[0]["points"],
+                                          promo_rows[0]["evidence"]))
+        ready_row = promo_rows[-1]
+        _check(failures, 9, "ready row face",
+               ready_row["points"] == (
+                   "promotion event: class ready, class alpha verifies"
+                   " the b-gate ready threshold (instances=3, rounds=3)")
+               and ready_row["evidence"] == (
+                   "round-ledger line 1 (round_id 1); round-ledger line"
+                   " 2 (round_id 2); round-ledger line 3 (round_id 3)")
+               and "instances >= 3 and rounds >= 1" in ready_row["basis"],
+               "ready row %r / %r" % (ready_row["points"],
+                                      ready_row["evidence"]))
+        appended9, skipped9, _lines9 = append_promotion_rows(
+            promo_rows, exp9, False)
+        _check(failures, 9, "append all",
+               appended9 == expect_ids and not skipped9,
+               "appended %r skipped %r" % (appended9, skipped9))
+        with open(exp9, "r", encoding="utf-8") as fh:
+            lines9 = [raw for raw in fh if raw.strip()]
+        _check(failures, 9, "ledger grew",
+               len(lines9) == 6
+               and json.loads(lines9[-1])["id"] == expect_ids[-1],
+               "ledger lines %d" % len(lines9))
+        bytes9 = open(exp9, "rb").read()
+        promo_again, _errors9 = promotion_rows(rounds9, state9, taxonomy9,
+                                               ts9, "")
+        appended9b, skipped9b, _lines9b = append_promotion_rows(
+            promo_again, exp9, False)
+        _check(failures, 9, "idempotent rescan",
+               not appended9b
+               and [pair[1] for pair in skipped9b] == ["id"] * 5,
+               "rescan appended %r skipped %r"
+               % (appended9b, skipped9b))
+        _check(failures, 9, "rescan wrote nothing",
+               open(exp9, "rb").read() == bytes9,
+               "ledger bytes changed on rescan")
+        dry9 = os.path.join(v9, "dry", "exp-ledger.jsonl")
+        appended9c, _skipped9c, lines9c = append_promotion_rows(
+            promo_rows, dry9, True)
+        _check(failures, 9, "dry-run writes nothing",
+               appended9c == [] and not os.path.exists(dry9)
+               and all(line.startswith("dry-run id=") for line in lines9c),
+               "dry-run appended %r" % (appended9c,))
+
+        # Vector 10: the exp_port seen-set interop.  A promotion row
+        # already in the ledger makes an exp_port append with the same
+        # explicit id skip on the id axis and an exp_port append with the
+        # same four carrier fields (different id) skip on the fingerprint
+        # axis; exp_port still appends fresh content, and the mixed
+        # ledger reads back through exp_port.read_ledger (one parse
+        # surface).
+        v10 = os.path.join(root, "v10")
+        os.mkdir(v10)
+        rounds10 = os.path.join(v10, "round-ledger.jsonl")
+        _write_fixture(rounds10, [
+            json.dumps({"round_id": 1, "mode": "auto", "verify_rc": 0,
+                        "classes_applied": ["solo"],
+                        "admissions": [{"class": "solo",
+                                        "decision": "admitted",
+                                        "confidence": 0.9}]},
+                       sort_keys=True),
+        ])
+        state10 = os.path.join(v10, "round-state.json")
+        _write_fixture(state10, [json.dumps(
+            {"schema": "rocqwash.round-state/1", "admitted_classes": []},
+            sort_keys=True)])
+        taxonomy10 = os.path.join(v10, "taxonomy.json")
+        _write_fixture(taxonomy10, [json.dumps(
+            {"rows": [{"familyId": "solo"}]}, sort_keys=True)])
+        exp10 = os.path.join(v10, "exp-ledger.jsonl")
+        rows10, errors10 = promotion_rows(rounds10, state10, taxonomy10,
+                                          "2026-11-23T00:00:00Z", "")
+        _check(failures, 10, "single event",
+               not errors10 and len(rows10) == 1
+               and rows10[0]["id"] == "promotion-round-1-solo",
+               "events %r errors %r"
+               % ([r["id"] for r in rows10], errors10))
+        appended10, _skipped10, _lines10 = append_promotion_rows(
+            rows10, exp10, False)
+        _check(failures, 10, "append one",
+               appended10 == ["promotion-round-1-solo"],
+               "appended %r" % (appended10,))
+        bytes10 = open(exp10, "rb").read()
+        sink = io.StringIO()
+        with contextlib.redirect_stdout(sink):
+            rc_a = exp_port.main(["append", "--id",
+                                  "promotion-round-1-solo",
+                                  "--tool", "unrelated", "--points",
+                                  "unrelated", "--ledger", exp10])
+        _check(failures, 10, "id-axis skip",
+               rc_a == 0
+               and ("duplicate-skip id=promotion-round-1-solo axis=id"
+                    in sink.getvalue()),
+               "rc %d out %r" % (rc_a, sink.getvalue()))
+        _check(failures, 10, "id-axis no write",
+               open(exp10, "rb").read() == bytes10,
+               "ledger bytes changed on id-axis probe")
+        promo10 = rows10[0]
+        sink = io.StringIO()
+        with contextlib.redirect_stdout(sink):
+            rc_b = exp_port.main(["append", "--id", "EXP-V10-OTHER",
+                                  "--tool", promo10["tool"], "--points",
+                                  promo10["points"], "--evidence",
+                                  promo10["evidence"], "--batch",
+                                  promo10["batch"], "--ledger", exp10])
+        _check(failures, 10, "fingerprint-axis skip",
+               rc_b == 0 and "axis=fingerprint" in sink.getvalue(),
+               "rc %d out %r" % (rc_b, sink.getvalue()))
+        _check(failures, 10, "fingerprint-axis no write",
+               open(exp10, "rb").read() == bytes10,
+               "ledger bytes changed on fingerprint-axis probe")
+        sink = io.StringIO()
+        with contextlib.redirect_stdout(sink):
+            rc_c = exp_port.main(["append", "--tool", "interop",
+                                  "--points", "fresh row", "--ledger",
+                                  exp10])
+        _check(failures, 10, "fresh append still lands",
+               rc_c == 0
+               and sink.getvalue().startswith("appended id=EXP-"),
+               "rc %d out %r" % (rc_c, sink.getvalue()))
+        entries10 = exp_port.read_ledger(exp10)
+        _check(failures, 10, "one parse surface",
+               entries10 is not None and len(entries10) == 2
+               and entries10[0]["id"] == "promotion-round-1-solo",
+               "entries %r"
+               % ([e.get("id") for e in (entries10 or [])],))
     finally:
         shutil.rmtree(root, ignore_errors=True)
     for line in failures:
         sys.stdout.write("FAIL %s\n" % line)
     if failures:
         red_vectors = len(set(line.split()[1] for line in failures))
-        sys.stdout.write("selftest: %d of 8 vectors red (%d assertions)\n"
+        sys.stdout.write("selftest: %d of 10 vectors red (%d assertions)\n"
                          % (red_vectors, len(failures)))
         return 1
-    sys.stdout.write("selftest: 8/8 vectors green (temp fixtures only,"
+    sys.stdout.write("selftest: 10/10 vectors green (temp fixtures only,"
                      " zero repository paths)\n")
     return 0
 
 
 def main(argv=None):
-    """CLI entry: --selftest or the default zero-argument run."""
+    """CLI entry: --selftest, the --promote scan, or the default run."""
     parser = argparse.ArgumentParser(
         prog=PROG,
         description=("scheduling feedback face over the three standing"
                      " ledgers (schema %s; reads docs/round-ledger.jsonl,"
                      " docs/round-state.json, docs/exp-ledger.jsonl"
-                     " read-only; writes docs/scheduling-feedback.json)"
-                     % SCHEMA))
+                     " read-only; writes docs/scheduling-feedback.json;"
+                     " --promote appends promotion event rows into the"
+                     " experience ledger)" % SCHEMA))
     parser.add_argument("--selftest", action="store_true",
-                        help="run the eight selftest vectors on temporary"
+                        help="run the ten selftest vectors on temporary"
                              " fixtures (zero repository paths)")
+    parser.add_argument("--promote", action="store_true",
+                        help="scan the standing ledgers and append the"
+                             " promotion event rows into the experience"
+                             " ledger (append-only, idempotent; the only"
+                             " writing mode)")
+    parser.add_argument("--ledger", default="",
+                        help="promote: experience-ledger path override"
+                             " (default: docs/exp-ledger.jsonl)")
+    parser.add_argument("--ts", default="",
+                        help="promote: ISO date/timestamp stamped on the"
+                             " appended rows (default: now UTC)")
+    parser.add_argument("--actor", default="",
+                        help="promote: optional actor carried verbatim as"
+                             " the actor field (schema increment, outside"
+                             " the fingerprint seen set)")
+    parser.add_argument("--dry-run", action="store_true", dest="dry_run",
+                        help="promote: cast the events and report, write"
+                             " nothing")
     args = parser.parse_args(argv)
     if args.selftest:
+        if args.promote:
+            parser.error("--selftest takes no other mode")
         return selftest()
     root = _repo_root()
+    if args.promote:
+        ts = args.ts or _utcnow_ts()
+        exp_path = exp_port.resolve_ledger(args.ledger)
+        return run_promotion(
+            os.path.join(root, *ROUNDS_DEFAULT),
+            os.path.join(root, *STATE_DEFAULT),
+            os.path.join(root, *TAXONOMY_DEFAULT),
+            exp_path, ts, args.actor, args.dry_run)
     return run(os.path.join(root, *ROUNDS_DEFAULT),
                os.path.join(root, *STATE_DEFAULT),
                os.path.join(root, *EXP_DEFAULT),
