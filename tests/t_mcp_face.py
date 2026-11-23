@@ -219,6 +219,16 @@ EXPECTED_TOOLS = [
     # Coq-side sibling CLI tools/vacgen_coq.py; the Lean vacgen_generate
     # stays for the Lean domain, dual-domain coverage)
     "vacgen_coq_generate",
+    # the R2-122 formal-audit trust-face registration increment of four
+    # (wiring existing differentiated CLIs, zero new tool code:
+    # attest_join = tools/attest_join.py join-table face, frozen8 =
+    # certify/frozen8.py exposure-list gate carrying only --selftest/
+    # --ledger with every write and network leg withheld, verify_vo =
+    # verify/verify_vo.py four-piece green-verdict check with
+    # --require-fresh withheld, gate4_comment_guard =
+    # verify/gate4_comment_guard.py scan face with the ledger-emit
+    # write faces withheld; registration order as listed)
+    "attest_join", "frozen8", "verify_vo", "gate4_comment_guard",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of

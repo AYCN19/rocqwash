@@ -79,9 +79,13 @@ HTTP_MAX_BODY_BYTES = 32 * 1024 * 1024
 # source_fetch, sweep_verdict, release_chain, plus the numeric-probe
 # registration batch of two: numeric_probe, statement_probes, plus the
 # vacgen-coq registration increment (ticket 14 wave 1, one face:
-# vacgen_coq_generate); a roster change re-freezes this value and
+# vacgen_coq_generate, plus the formal-audit trust-face registration
+# increment of four: attest_join, frozen8, verify_vo, gate4_comment_guard
+# (R2-122; the MCP faces wire existing differentiated CLIs, zero new tool
+# code; the frozen8 face is an exposure-list gate carrying only its two
+# read-only top-level flags); a roster change re-freezes this value and
 # EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 51
+SELFTEST_ROSTER_COUNT = 55
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -2053,6 +2057,189 @@ TOOL_SPECS = [
             "in-process vector face.  Zero network face, zero compile: no "
             "Rocq process is ever started, the only write root is the "
             "caller-named --out directory."
+        ),
+    },
+    # R2-122 formal-audit trust-face registration increment of four:
+    # attest_join, frozen8, verify_vo, gate4_comment_guard.  These faces
+    # wire existing differentiated CLI tools (tools/attest_join.py,
+    # certify/frozen8.py, verify/verify_vo.py,
+    # verify/gate4_comment_guard.py) - zero new tool code, pure MCP-face
+    # registration.  Danger gates are baked into the exposure lists
+    # themselves: every write-bearing or network-capable flag of frozen8
+    # (freeze --out/--tier2, check --json/--attest/--gpg-sig/--tsr, the
+    # timestamp subcommand with its freetsa.org TSA leg) is unreachable
+    # through the face because no subcommand token or such flag can be
+    # formed from the arg_map; gate4_comment_guard's ledger-emit write
+    # faces (--emit-ledger/--ledger-tsv, the latter with a script-dir
+    # default) stay CLI-side; verify_vo's nargs=2 --require-fresh flag is
+    # mechanically unexposable through the repeat-per-item argv builder
+    # and stays CLI-side with its constituent judgments already carried
+    # by the four-piece face.
+    {
+        "name": "attest_join",
+        "kind": "cli",
+        "cli": os.path.join("tools", "attest_join.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("attest", "--attest"),
+            ("report", "--report"),
+            ("out", "--out"),
+            ("basename_fallback", "--basename-fallback"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "attest": {"type": "string", "description": "cw.attest/v1 module archive JSON (read-only input); the run face requires all three of attest/report/out (usage error rc 2 otherwise); CLI flag --attest"},
+                "report": {"type": "string", "description": "rocqwash.b-axiom-audit/1 audit report JSON (read-only input); required for the run face; CLI flag --report"},
+                "out": {"type": "string", "description": "join table JSON output path (the only disk face this tool writes; written atomically via tmp + rename, sorted keys, byte-identical reruns); required for the run face; CLI flag --out"},
+                "basename_fallback": {"type": "boolean", "description": "join on basename + .v for misaligned roots; ambiguous basenames fail loud rc 2 with the ambiguity enumeration (never merged silently); CLI flag --basename-fallback"},
+                "selftest": {"type": "boolean", "description": "run the frozen offline vector group (29 vectors) and exit; standalone law: --selftest rejects any run flag with usage error rc 2, and the run face rejects a missing input flag rc 2; CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Side-by-side join table of the cw.attest/v1 module archive "
+            "and the rocqwash.b-axiom-audit/1 audit report "
+            "(tools/attest_join.py).  Juxtaposition, never an equality "
+            "check: rows are placed side by side for human audit, no "
+            "merge verdict is emitted.  Exit contract: 0 joined / 2 "
+            "usage or structural ambiguity or invalid audit / 3 archive "
+            "trouble degrades to the empty table (rc 3 never weakens the "
+            "audit, it only reports the archive side unreadable).  Zero "
+            "network face (the frozen-vector selftest self-spawns the "
+            "script itself with -I -B, nothing else); the only disk "
+            "write is the caller-named --out path.  --selftest runs the "
+            "29-vector offline frozen vector group."
+        ),
+    },
+    {
+        "name": "frozen8",
+        "kind": "cli",
+        "cli": os.path.join("certify", "frozen8.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("selftest", "--selftest"),
+            ("ledger", "--ledger"),
+        ),
+        "schema": _object_schema(
+            {
+                "selftest": {"type": "boolean", "description": "nine-judgment self-proof on offline scratch trees (checked before --ledger when both are passed); CLI flag --selftest"},
+                "ledger": {"type": "boolean", "description": "print the ten-entry roster as md5 + relpath rows (LEDGER8 eight + CHECKERS two) and exit 0; a file missing in-roster fails loud rc 9; CLI flag --ledger"},
+            }
+        ),
+        "description": (
+            "Frozen-roster certification tool face "
+            "(certify/frozen8.py) carrying ONLY its two read-only "
+            "top-level faces: --selftest (nine offline judgments over "
+            "temporary scratch trees) and --ledger (stdout print of the "
+            "ten-entry md5 roster).  This is an exposure-list gate: the "
+            "write faces (freeze --out manifest and --tier2 side "
+            "roster, check --json reconciliation) and every "
+            "network-capable leg (the timestamp subcommand with its "
+            "freetsa.org RFC 3161 TSA request, check --attest shelling "
+            "to gh, check --gpg-sig shelling to gpg) are NOT reachable "
+            "through this face - no subcommand token or such flag can "
+            "be formed from the exposed argument set - so the face is "
+            "zero-network by construction with no environment gate "
+            "needed; those rings (manifest, side roster, disk, git "
+            "anchor, gpg, gh attestation, RFC 3161) stay CLI-side.  "
+            "With neither flag the child prints usage to stderr and "
+            "exits 2 (honest usage error).  The tool's own NETRED "
+            "whitelist for its timestamp face covers the CLI lane, not "
+            "this MCP face."
+        ),
+    },
+    {
+        "name": "verify_vo",
+        "kind": "cli",
+        "cli": os.path.join("verify", "verify_vo.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("v", "--v"),
+            ("vo", "--vo"),
+            ("rc", "--rc"),
+            ("exit_file", "--exit-file"),
+            ("log", "--log"),
+            ("magic", "--magic"),
+            ("json_out", "--json"),
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "v": {"type": "string", "description": "source .v path (read-only input); required together with vo (usage error rc 2 otherwise; --selftest runs without them); CLI flag --v"},
+                "vo": {"type": "string", "description": "compiled .vo path (read-only input); required together with v; CLI flag --vo"},
+                "rc": {"type": "integer", "description": "compile exit code (mutually exclusive with exit_file, rc 2 if both passed); CLI flag --rc"},
+                "exit_file": {"type": "string", "description": "file whose first line holds the compile exit code (mutually exclusive with rc, rc 2 if both passed); CLI flag --exit-file"},
+                "log": {"type": "string", "description": "compile log path (read-only; judged for zero Error lines); CLI flag --log"},
+                "magic": {"type": "string", "description": "expected .vo magic bytes in hex (default 436f712100015ff4, the frozen Rocq 9.1 header); CLI flag --magic"},
+                "json_out": {"type": "string", "description": "per-piece ledger JSON output path (the only disk face this tool writes, caller-named); CLI flag --json"},
+                "selftest": {"type": "boolean", "description": "run the embedded frozen vector group (thirteen judgments) and exit; standalone, checked first; CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Four-piece green-verdict machine check over a .v/.vo pair "
+            "(verify/verify_vo.py): compile exit code (from --rc or "
+            "--exit-file), compile log with zero Error lines, .vo "
+            "leading 8-byte magic equal to the frozen Rocq 9.1 header, "
+            "and .vo mtime strictly fresher than .v.  Exit contract: 0 "
+            "PASS / 1 FAIL / 2 usage / 9 missing path or fresh-compile "
+            "reject (rc 9 is fail-loud and never merged into ordinary "
+            "FAIL).  Zero network, zero subprocess face; probed files "
+            "are never written; the only write is the caller-named "
+            "--json ledger.  Withheld from this face and CLI-side: "
+            "--require-fresh (an nargs=2 flag the repeat-per-item argv "
+            "mechanics cannot express; its two constituent judgments - "
+            "magic and mtime freshness - are already carried by the "
+            "four-piece face).  --selftest runs the thirteen-judgment "
+            "embedded vector group."
+        ),
+    },
+    {
+        "name": "gate4_comment_guard",
+        "kind": "cli",
+        "cli": os.path.join("verify", "gate4_comment_guard.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("file", "--file"),
+            ("tree", "--tree"),
+            ("tree_recursive", "--tree-recursive"),
+            ("baseline", "--baseline"),
+            ("length_cap", "--length-cap"),
+            ("length_fail", "--length-fail"),
+            ("no_principle", "--no-principle"),
+            ("json_out", "--json"),
+        ),
+        "schema": _object_schema(
+            {
+                "file": {"type": "array", "description": "single-file scan targets, repeatable (flag repeated per item); at least one of file/tree/tree_recursive is required (usage error rc 2 otherwise); CLI flag --file"},
+                "tree": {"type": "array", "description": "flat directory scan targets (non-recursive), repeatable; CLI flag --tree"},
+                "tree_recursive": {"type": "array", "description": "deep directory scan targets (recursive, the v2.1 blind-spot upgrade), repeatable; CLI flag --tree-recursive"},
+                "baseline": {"type": "string", "description": "survey-result JSON to compare against (baseline compare mode, read-only); CLI flag --baseline"},
+                "length_cap": {"type": "integer", "description": "header comment line-count cap (default 30); over-cap items are review-level unless length_fail is set; CLI flag --length-cap"},
+                "length_fail": {"type": "boolean", "description": "promote over-cap findings to hard FAIL (default keeps them review-level, never hard-red); CLI flag --length-fail"},
+                "no_principle": {"type": "boolean", "description": "skip the principle-sentence presence judgment; CLI flag --no-principle"},
+                "json_out": {"type": "string", "description": "scan report JSON output path (caller-named, the only disk face this face writes); CLI flag --json"},
+            }
+        ),
+        "description": (
+            "Five-field header guard and comment-hygiene scanner "
+            "(verify/gate4_comment_guard.py v2.1 EXT) over caller-named "
+            "files, flat trees, or recursive trees (three domains), "
+            "with optional baseline compare mode.  Exit contract: 0 "
+            "clean / 1 any FAIL / 2 REVIEW or UNREADABLE or usage - "
+            "review items are never hard-red unless --length-fail is "
+            "passed.  Zero network, zero subprocess face; scanning is "
+            "read-only (one open per file for the header parse); the "
+            "only write is the caller-named --json report.  Withheld "
+            "from this face and CLI-side (write-bearing): --emit-ledger "
+            "(writes the exemption-ledger JSON) and --ledger-tsv (a "
+            "write face whose default lands beside the tool itself).  "
+            "No --selftest flag exists in the CLI (usage-proven); the "
+            "verification face of record is the scan itself on "
+            "caller-named inputs."
         ),
     },
 ]
