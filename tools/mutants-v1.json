@@ -61,6 +61,24 @@
    "replacement": "\\+ (((?:rsT_)?qpow_nat) t \\(2 \\* [kK] \\+ 1\\) \\* ((?:rsT_)?(?:recipQ|rcp)) \\(2 \\* [kK]\\))",
    "evidence": "Odd partial sums are built by one addend per successor step (cwb_rs_weighted.v:370-376 rsT_atanhQ_sum; cwb_cp89_lnkit.v:479-483 atanhQ_sum). Zeroing the addend keeps the module compiling and underestimates every partial sum at K >= 1.",
    "expected_effect": "All lower-bracket checks at K >= 1 flip; upper-only or positivity certificates do not and are exposed as VACUOUS."
+  },
+  {
+   "id": "LEM-001",
+   "class": "semantic",
+   "name": "lemma-form parity mismatch (odd-power shape to even)",
+   "pattern": "\\1 t (2 * \\2)",
+   "replacement": "((?:rsT_)?qpow_nat) t \\(2 \\* ([kK]) \\+ 1\\)",
+   "evidence": "R2-131 expansion. Parity-shape face of the suspect series power term: canonical correct form qpow_nat t (2 * k + 1) (recorded verbatim inside the frozen DROP-001/DEN-001 evidence citing cwb_rs_weighted.v:370-382 and cwb_cp89_lnkit.v:472-486). The defect states the lemma/certificate shape with the even power 2*k where the certified bound is the odd power 2*k+1. Distinct from OB1-001 (reciprocal argument), DEN-001 (geometric divisor), DEP-001 (call-site depth), DROP-001 (addend drop). Direction frozen (2*k+1) -> (2*k); a module needing the inverse direction declares the mirror copy in its own manifest.",
+   "expected_effect": "For 0 < t < 1 the even power exceeds the odd power, so tail-inclusive upper bounds overstate; upper-bound and tight-boundary certificates flip at depth >= 1 sample points; lower-bracket-only and positivity-only certificates do not flip and are exposed as VACUOUS."
+  },
+  {
+   "id": "PROJ-001",
+   "class": "semantic",
+   "name": "projection swap (proj1 to proj2, frozen direction; author-narrowed site)",
+   "pattern": "proj2",
+   "replacement": "\\bproj1\\b",
+   "evidence": "R2-131 expansion, CONST-001 author-narrowing precedent: manifest authors copy this entry and narrow the search regex to their module's compute-face consumption sites (for example 'proj1 \\\\(bracket_pair half\\\\)'), keeping class semantic; the defect is the whole-match span replay 'proj2 (bracket_pair half)' so the argument is not swallowed (re.sub replaces the entire match). The blanket form is proven fragile by the R2-131 live probe: on a module whose record declares a proj1 field the generic swap breaks the declaration (duplicate field name, compile rc 1, stillborn, debt register). Proof-position (tactic-level) proj swaps remain out of v1 scope per the frozen excluded_classes note. Direction frozen proj1 -> proj2; a module whose certificates consume proj2 natively declares the inverse copy in its own manifest.",
+   "expected_effect": "Swapping the projection at a compute-face site exchanges the pair components the certificate consumes, so sample-point checks consuming the first component flip wherever the two components differ; certificates consuming both components symmetrically or neither do not flip and are exposed as VACUOUS."
   }
  ],
  "excluded_classes": [
