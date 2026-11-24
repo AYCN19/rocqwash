@@ -65,11 +65,12 @@ Interface.  `python3 tests/t_mcp_face.py` (rostered in tests/run_tests.sh
   second check).
 
 Probes (zero network; probes 1-6 run one session in order, probe 7 is a
-  separate --help invocation and probes 8-9 separate allow-net sessions
-  of the same child shape):
+  separate --help invocation, probe 4h a separate child session with the
+  two ROCWASH toolchain keys stripped, and probes 8-9 separate allow-net
+  sessions of the same child shape):
   1  initialize -> protocolVersion echo plus serverInfo name rocqwash-mcp
   2  notifications/initialized -> no response line
-  3  tools/list -> exactly the 51 expected names in registration order,
+  3  tools/list -> exactly the 56 expected names in registration order,
      each with a description and a closed-object inputSchema; plus the
      micro-ticket schema-face vectors over three faces (schema-only):
      exp_append carries the optional actor string
@@ -101,6 +102,13 @@ Probes (zero network; probes 1-6 run one session in order, probe 7 is a
         "[SELFTEST] numeric_probe green: 42 vector(s), 0 fail"; the
         numeric-probe registration increment's face vector; zero
         network, zero repository writes)
+     4h anchor_guard {"selftest": true} on a separate child session
+        whose environment has ROCWASH_ROCQ and ROCWASH_COQCHK removed
+        -> the honest skip face: isError true carrying "exit code: 111"
+        and the "SKIP:" line (the toolchain tier unconfigured, rc 111
+        honest skip deterministic on any host; the anchor-guard
+        registration increment's face vector; zero network, the child
+        writes only its own removed temporary directory)
   5  default deny -> tools/call net_probe returns isError true and names
      ROCQWASH_MCP_ALLOW_NET (the env is removed from the child); the
      same deny face is asserted for claim_watch (probe 5b), the net-gated
@@ -229,6 +237,14 @@ EXPECTED_TOOLS = [
     # verify/gate4_comment_guard.py scan face with the ledger-emit
     # write faces withheld; registration order as listed)
     "attest_join", "frozen8", "verify_vo", "gate4_comment_guard",
+    # the R2-129 anchor-guard registration increment (one exposure-list
+    # gate face over the landed anchor/certificate guard CLI
+    # tools/anchor_guard.py: the read-only standalone --selftest vector
+    # suite only; the guard run itself (--repo/--manifest), its --out
+    # report write, its --keep workdir retention, and every rocq/coqchk
+    # toolchain leg stay CLI-side - no such token can be formed from the
+    # exposed argument set)
+    "anchor_guard",
 ]
 
 # Frozen micro-ticket vector (mu-3): the full argparse flag face of
@@ -1024,12 +1040,56 @@ def main():
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
+    # Probe 4h: anchor_guard selftest live call (the anchor-guard
+    # registration increment's face vector, the read-only standalone
+    # selftest face only): a separate child session whose environment
+    # has ROCWASH_ROCQ and ROCWASH_COQCHK removed, so the embedded
+    # toolchain tier is unconfigured and the tool answers its honest
+    # rc 111 skip deterministically on any host (the SKIP line rides
+    # stderr; the fail-loud result shape surfaces the non-zero exit as
+    # isError true, docs/mcp.md table note 4; zero network, the child
+    # writes only its own removed temporary directory).
+    h_env = _child_env()
+    h_env.pop("ROCWASH_ROCQ", None)
+    h_env.pop("ROCWASH_COQCHK", None)
+    h_payload = "".join(
+        json.dumps(r) + "\n" for r in [
+            {"jsonrpc": "2.0", "id": 1, "method": "initialize",
+             "params": {"protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "t_mcp_face"}}},
+            {"jsonrpc": "2.0", "method": "notifications/initialized"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "anchor_guard",
+                        "arguments": {"selftest": True}}},
+        ]
+    )
+    h_run = subprocess.run(
+        [sys.executable, "-I", "-X", "utf8", "-B", SERVER],
+        input=h_payload.encode("utf-8"),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        cwd=REPO, env=h_env, timeout=120,
+    )
+    h_lines = []
+    for raw in h_run.stdout.decode("utf-8", errors="replace").splitlines():
+        raw = raw.strip()
+        if raw:
+            h_lines.append(json.loads(raw))
+    h2 = _by_id(h_lines, 2)
+    h2_text = _result_text(h2)
+    if not h2 or not h2.get("result", {}).get("isError"):
+        fails.append("probe4h anchor_guard honest skip should surface "
+                     "isError true (exit 111)\n%s" % h2_text)
+    elif "exit code: 111" not in h2_text or "SKIP:" not in h2_text:
+        fails.append("probe4h anchor_guard exit 111 + SKIP honest-skip "
+                     "face missing\n%s" % h2_text)
+
     if fails:
         for line in fails:
             sys.stderr.write("T_MCP_FACE FAIL %s\n" % line)
         return 1
     sys.stdout.write("T-MCP-FACE SUITE SHELL PASS (9 probe groups, "
-                     "%d capabilities, 9 live-call spot checks)\n"
+                     "%d capabilities, 10 live-call spot checks)\n"
                      % len(EXPECTED_TOOLS))
     return 0
 

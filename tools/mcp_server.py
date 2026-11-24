@@ -85,7 +85,7 @@ HTTP_MAX_BODY_BYTES = 32 * 1024 * 1024
 # code; the frozen8 face is an exposure-list gate carrying only its two
 # read-only top-level flags); a roster change re-freezes this value and
 # EXPECTED_TOOLS in tests/t_mcp_face.py in the same round.
-SELFTEST_ROSTER_COUNT = 55
+SELFTEST_ROSTER_COUNT = 56
 
 PARSE_ERROR = -32700
 INVALID_REQUEST = -32600
@@ -2240,6 +2240,47 @@ TOOL_SPECS = [
             "No --selftest flag exists in the CLI (usage-proven); the "
             "verification face of record is the scan itself on "
             "caller-named inputs."
+        ),
+    },
+    {
+        "name": "anchor_guard",
+        "kind": "cli",
+        "cli": os.path.join("tools", "anchor_guard.py"),
+        "net_gated": False,
+        "fixed_args": [],
+        "arg_map": (
+            ("selftest", "--selftest"),
+        ),
+        "schema": _object_schema(
+            {
+                "selftest": {"type": "boolean", "description": "run the embedded two-tier vector suite and exit (tier a pure Python always; the toolchain tier only when BOTH ROCWASH_ROCQ and ROCWASH_COQCHK are present in the child environment, unconfigured = honest skip exit 111 with the SKIP line); takes no other flag (combined flags are refused exit 2 by the tool before argparse); CLI flag --selftest"},
+            }
+        ),
+        "description": (
+            "Anchor and certificate guard face (tools/anchor_guard.py) "
+            "carrying ONLY its one read-only standalone top-level face: "
+            "--selftest, the embedded vector suite on private temporary "
+            "fixtures (tier a pure-Python vectors, tier b the guarded "
+            "pipeline double-run; exits 0 all pass / 2 assertion failure "
+            "/ 111 toolchain tier not configured / 9 configured binary "
+            "missing).  This is an exposure-list gate: the guard run "
+            "itself (--repo, --manifest) and with it the --out report "
+            "write, the private temporary workdir with its --keep "
+            "retention face, and every rocq/coqchk toolchain leg are NOT "
+            "reachable through this face - no such argument token can be "
+            "formed from the exposed argument set - so judging stays "
+            "CLI-side (wrapped in tools/cpu_guard.sh there); the CLI has "
+            "no standalone census/plan/report-render flags (the census "
+            "rules and the stdout summary are internal faces of the "
+            "run).  Zero network by construction (import scan zero hits, "
+            "stdlib only; binaries resolve from flags or environment, "
+            "never downloaded, never simulated); the selftest writes "
+            "only its own private temporary directory and removes it.  "
+            "If the operator exports both ROCWASH_ROCQ and ROCWASH_COQCHK "
+            "into the server environment the selftest's embedded "
+            "toolchain tier engages (still zero network, still "
+            "private-temporary only).  Combined with any other flag the "
+            "tool exits 2 before argparse (honest usage)."
         ),
     },
 ]

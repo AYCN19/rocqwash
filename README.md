@@ -321,7 +321,7 @@ tree, repairs its own failing cases, and verifies its own verifiers.
 - **Methodology canon**: [docs/recursive-evolution-whitepaper-v1.0-20261121.md](docs/recursive-evolution-whitepaper-v1.0-20261121.md) — the seven laws, the seven pillars, and the section 7 live walk-through of the November 19–21, 2026 chain.
 - **CI failing-case classification**: [docs/ci-triage-table.json](docs/ci-triage-table.json) v1.5 — the 19-class table (R1–R19) behind the recursive-era CI whitepaper badge above.
 - **Per-tool contract surface**: [docs/CAPABILITY-INDEX.md](docs/CAPABILITY-INDEX.md) — one entry per tool, seven fields each (path, one-line purpose, invocation form, copyable example, imports, network face, SKIP face).
-- **MCP stdio server**: `tools/mcp_server.py` — newline-delimited JSON-RPC 2.0 over stdio, three methods, a 55-capability roster (frozen `SELFTEST_ROSTER_COUNT`; machine-checked by `tests/t_mcp_face.py` `EXPECTED_TOOLS = 55`); protocol and security face in [docs/mcp.md](docs/mcp.md).
+- **MCP stdio server**: `tools/mcp_server.py` — newline-delimited JSON-RPC 2.0 over stdio, three methods, a 56-capability roster (frozen `SELFTEST_ROSTER_COUNT`; machine-checked by `tests/t_mcp_face.py` `EXPECTED_TOOLS = 56`); protocol and security face in [docs/mcp.md](docs/mcp.md).
 
 ## Quick Start
 
