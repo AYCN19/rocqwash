@@ -1,0 +1,74 @@
+{
+ "schema": "rocqwash.mutants/1",
+ "version": "v1",
+ "frozen": "2026-11-24",
+ "injection_rule": {
+  "semantics": "Each entry is a defect-dictionary row. `pattern` is the DEFECT text (a substitution template, backreferences \\1..\\9 allowed); `replacement` is the CORRECT text (a Python re search pattern). The mutant applier injects the defect into a pristine copy of the module by: re.sub(entry['replacement'], entry['pattern'], module_text). The search side is therefore the CORRECT form and the write side the DEFECT form. Site count = len(re.findall(entry['replacement'], module_text)). Zero sites => mutant classified not-applicable (recorded in the report debt register; judged per the contract exit-code matrix). All occurrences are substituted in one pass.",
+  "applier_scope": "Whole-file text (module bytes decoded utf-8), single re.sub pass, re patterns must be single-line safe (no cross-line matches required in v1).",
+  "direction_rationale": "The correct reciprocal pairing is power index 2*k+1 with reciprocal argument 2*k, because rsT_recipQ k = 1/(k+1) (cwb_rs_weighted.v:339-342) and rcp (k : nat) : Q := recip1 (rpn k) (cwb_cp89_lnkit.v:194) both add the +1 internally; the incident defect was writing the reciprocal argument as 2*k+1, double-shifting the denominator to 2*k+2."
+ },
+ "mutants": [
+  {
+   "id": "OB1-001",
+   "class": "semantic",
+   "name": "off-by-one reciprocal index (canonical star, first-class)",
+   "pattern": "\\1 (2 * \\2 + 1)",
+   "replacement": "((?:rsT_)?(?:recipQ|rcp)) \\(2 \\* ([kK])\\)",
+   "evidence": "face-T incident of cwb_rs_weighted.v: the odd term of index 2*k+1 must take its denominator through reciprocal argument 2*k (prose discipline at cwb_rs_weighted.v:339-341 'takes its denominator 2 * j + 1 through rsT_recipQ (2 * j)'; correct sites at cwb_rs_weighted.v:375 and :381; gated kit correct form at cwb_cp89_lnkit.v:479-486, sites :482 and :486; wrappers rsT_recipQ k = 1/(k+1) at cwb_rs_weighted.v:342 and rcp at cwb_cp89_lnkit.v:194). The defect turns the denominator 2*k+1 into 2*k+2, one off, matching the incident class.",
+   "expected_effect": "Every odd series term evaluates smaller than declared (denominator 2*k+2 instead of 2*k+1); bracket/tail certificates computed over the suspect series flip at small-depth and boundary sample points; positivity-only certificates do NOT flip and are thereby exposed as VACUOUS."
+  },
+  {
+   "id": "DEN-001",
+   "class": "semantic",
+   "name": "denominator shift (geometric tail denominator perturbed)",
+   "pattern": "/ (1 - \\1 t 2 + (1 # 100))%Q",
+   "replacement": "/ \\(1 - ((?:rsT_)?qpow_nat) t 2\\)",
+   "evidence": "Tail bounds in the corpus end in the geometric divisor '/ (1 - qpow_nat t 2)' (cwb_rs_weighted.v:380-382 rsT_atanhQ_tail; cwb_cp89_lnkit.v:485-486 atanhQ_tail). Shrinking the divisor's value by a constant understates the certified tail remainder.",
+   "expected_effect": "Tail-inclusive brackets go under; certificates that check the bracket at the boundary corner flip; certificates ignoring the tail do not and are exposed as VACUOUS."
+  },
+  {
+   "id": "CONST-001",
+   "class": "semantic",
+   "name": "constant last-place perturbation (numerator +1, denominator pinned)",
+   "pattern": "(2 # 2)%Q",
+   "replacement": "\\(1 # 2\\)%Q",
+   "evidence": "Canonical midpoint constant (1 # 2)%Q in Q-literal form; the v1 perturbation rule is numerator+1 with the denominator pinned (one ulp at fixed denominator). Manifest authors copy this entry and narrow the search regex to their own constant with the same numerator+1 rule.",
+   "expected_effect": "Any certificate consuming the constant at a sample point computes a shifted value; exact-equality and tight-tolerance checks flip."
+  },
+  {
+   "id": "CMP-001",
+   "class": "semantic",
+   "name": "comparator swap (Qle_bool to Qlt_bool)",
+   "pattern": "Qlt_bool",
+   "replacement": "Qle_bool",
+   "evidence": "Non-strict vs strict rational comparators in gate faces; the boundary corner sample point (equality at the edge) is the designated catcher. Swap direction is frozen as Qle_bool -> Qlt_bool; a module whose certificates use Qlt_bool natively takes the inverse copy of this entry (pattern Qle_bool, replacement Qlt_bool) declared in its own manifest.",
+   "expected_effect": "Gates that accept equality flip exactly at the boundary corner; certificates without a boundary point do not flip and are exposed as VACUOUS (this is why the coverage rule mandates a boundary case)."
+  },
+  {
+   "id": "DEP-001",
+   "class": "semantic",
+   "name": "depth shift (K to pred K at evaluation sites)",
+   "pattern": "\\1 (pred \\2)",
+   "replacement": "\\b((?:rsT_)?atanhQ_tail) ([kK]|[0-9]+)\\b",
+   "evidence": "Certified tail after depth K is t^(2K+1)/(2K+1)/(1-t^2) (cwb_rs_weighted.v:378-382; cwb_cp89_lnkit.v:472-477,485-486). Evaluating the tail at pred K claims a deeper-certified bracket than computed. Numeral call sites in certificate check terms make the shift visible to vm_compute; symbolic-K sites in lemma statements may stillborn (recorded, judged per the contract matrix).",
+   "expected_effect": "Closed check terms with a numeral depth compute the shallower tail; tight brackets flip. Statement-site stillbirths are honest debt, not kills."
+  },
+  {
+   "id": "DROP-001",
+   "class": "semantic",
+   "name": "series-term drop (one odd addend zeroed)",
+   "pattern": "+ 0%Q (* DROP-001: dropped \\1 *)",
+   "replacement": "\\+ (((?:rsT_)?qpow_nat) t \\(2 \\* [kK] \\+ 1\\) \\* ((?:rsT_)?(?:recipQ|rcp)) \\(2 \\* [kK]\\))",
+   "evidence": "Odd partial sums are built by one addend per successor step (cwb_rs_weighted.v:370-376 rsT_atanhQ_sum; cwb_cp89_lnkit.v:479-483 atanhQ_sum). Zeroing the addend keeps the module compiling and underestimates every partial sum at K >= 1.",
+   "expected_effect": "All lower-bracket checks at K >= 1 flip; upper-only or positivity certificates do not and are exposed as VACUOUS."
+  }
+ ],
+ "excluded_classes": [
+  {
+   "class": "build",
+   "examples": ["proj swap", "intros order", "scope drop"],
+   "reason": "Proof-tactic defects change how a statement is proven, not what the certificate computes; they are out of v1 scope and recorded as future work. Only class \"semantic\" is accepted in manifests; any other class value is a usage error (exit 2)."
+  }
+ ],
+ "independence_note": "Anchors must derive their certificate independently of the suspect series (atanh vs Mercator is the named exemplar). This library carries no mechanical independence check in v1; the requirement is an authoring obligation verified by review and recorded verbatim in the report."
+}
