@@ -39,6 +39,15 @@ import sys
 
 SCHEMA = "rocqwash.dep-map/1"
 
+# Classification sets for the optional --classify leg (derived queue
+# ticket DQ-1).  Rule order: in-repo stem match first (a local file
+# shadows the library), then dotted stdlib prefixes, then the curated
+# bare-name set, and everything else is honestly missing-provider.
+STDLIB_PREFIXES = ("Coq.", "Stdlib.", "Rocq.")
+STDLIB_BARE = frozenset((
+    "List", "Arith", "QArith", "Reals", "Int", "ZArith", "Floats",
+    "String", "Ascii", "PeanoNat", "Ring", "Field"))
+
 # ---------------------------------------------------------------------------
 # Require-line extraction
 # ---------------------------------------------------------------------------
@@ -133,6 +142,40 @@ def build_dep_map(vfiles):
     return dep_map
 
 
+def classify_edges(dep_map):
+    """Classify every Require edge: in-repo / stdlib / missing-provider.
+
+    Returns {module: {"class": str, "refs": int}} sorted by module.  The
+    in-repo test matches the required module's last segment against the
+    stems of the scanned files (the same projection the consumer map
+    uses); it cannot see module hierarchies, which is why a stem match
+    is trusted first and a miss is reported as missing-provider rather
+    than guessed away.
+    """
+    stems = set()
+    for consumer in dep_map:
+        stem = os.path.splitext(os.path.basename(consumer))[0]
+        stems.add(stem)
+    edges = {}
+    for mods in dep_map.values():
+        for mod in mods:
+            if mod not in edges:
+                edges[mod] = 0
+            edges[mod] += 1
+    classification = {}
+    for mod in sorted(edges):
+        if mod.split(".")[-1] in stems:
+            cls = "in-repo"
+        elif mod.startswith(STDLIB_PREFIXES):
+            cls = "stdlib"
+        elif "." not in mod and mod in STDLIB_BARE:
+            cls = "stdlib"
+        else:
+            cls = "missing-provider"
+        classification[mod] = {"class": cls, "refs": edges[mod]}
+    return classification
+
+
 # ---------------------------------------------------------------------------
 # Selftest
 # ---------------------------------------------------------------------------
@@ -180,8 +223,41 @@ def _selftest():
     if t1 != t2:
         print("SELFTEST FAIL determinism", file=sys.stderr)
         ok = False
+
+    # classify leg vectors (DQ-1): rule order in-repo > stdlib > missing
+    cmap = {"local/Ring.v": ["Ring", "Coq.Lists.List"],
+            "local/other.v": ["List", "Ghost"]}
+    cls = classify_edges(cmap)
+    if cls.get("Ring", {}).get("class") != "in-repo":
+        print("SELFTEST FAIL classify in-repo %s" % cls.get("Ring"),
+              file=sys.stderr)
+        ok = False
+    if cls.get("Coq.Lists.List", {}).get("class") != "stdlib":
+        print("SELFTEST FAIL classify stdlib-dotted %s"
+              % cls.get("Coq.Lists.List"), file=sys.stderr)
+        ok = False
+    if cls.get("List", {}).get("class") != "stdlib":
+        # no List.v stem in the map, so the bare curated stdlib set wins
+        print("SELFTEST FAIL classify bare-stdlib %s" % cls.get("List"),
+              file=sys.stderr)
+        ok = False
+    if cls.get("Ghost", {}).get("class") != "missing-provider":
+        print("SELFTEST FAIL classify missing %s" % cls.get("Ghost"),
+              file=sys.stderr)
+        ok = False
+    shadow = classify_edges({"local/List.v": ["List"]})
+    if shadow.get("List", {}).get("class") != "in-repo":
+        print("SELFTEST FAIL classify shadow-precedence %s"
+              % shadow.get("List"), file=sys.stderr)
+        ok = False
+    cls_again = classify_edges(cmap)
+    if json.dumps(cls, sort_keys=True) != json.dumps(cls_again,
+                                                     sort_keys=True):
+        print("SELFTEST FAIL classify determinism", file=sys.stderr)
+        ok = False
     if ok:
-        print("DEP-CENSUS-SELFTEST PASS (%d vectors)" % len(_SELFTEST_FIXTURES))
+        print("DEP-CENSUS-SELFTEST PASS (%d vectors + %d classify groups)"
+              % (len(_SELFTEST_FIXTURES), 6))
     return 0 if ok else 1
 
 
@@ -204,6 +280,9 @@ def main(argv):
                     help="comma-separated directories or .v files to scan")
     ap.add_argument("--out", default=None, help="output JSON file")
     ap.add_argument("--format", choices=["json", "text"], default="json")
+    ap.add_argument("--classify", action="store_true",
+                    help="add the edge_classification table (in-repo / "
+                         "stdlib / missing-provider per module; DQ-1)")
     ap.add_argument("--selftest", action="store_true",
                     help="run the in-process fixture vector group")
     args = ap.parse_args(argv)
@@ -230,6 +309,8 @@ def main(argv):
             vf for vf, deps in dep_map.items() if not deps
         ),
     }
+    if args.classify:
+        doc["edge_classification"] = classify_edges(dep_map)
 
     text = json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
     if args.out:
