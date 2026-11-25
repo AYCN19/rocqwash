@@ -53,6 +53,14 @@ _EXTR_LIB_RE = re.compile(
     r"^\s*Extraction\s+Library\s+(" + _IDENT + r")\s*\.\s*$")
 _EXTR_INLINE_RE = re.compile(
     r"^\s*Extraction\s+(NoInline|Inline)\s+(" + _QUALIDS + r")\s*\.\s*$")
+_EXTR_FILE_RE = re.compile(
+    r"^\s*Extraction\s+(" + _STRING + r")\s+(" + _QUALIDS + r")\s*\.\s*$")
+_REC_FILE_RE = re.compile(
+    r"^\s*Recursive\s+Extraction\s+(" + _STRING + r")\s+(" + _QUALIDS +
+    r")\s*\.\s*$")
+_SEP_FILE_RE = re.compile(
+    r"^\s*Separate\s+Extraction\s+(" + _STRING + r")\s+(" + _QUALIDS +
+    r")\s*\.\s*$")
 _EXTR_PLAIN_RE = re.compile(
     r"^\s*Extraction\s+(" + _QUALIDS + r")\s*\.\s*$")
 _REC_LIB_RE = re.compile(
@@ -316,16 +324,48 @@ def analyze_source(text, filename):
                                language=language, payload_hint=_payload_hint(unq),
                                is_safe_primitive=safe, safe_class=cls))
             continue
-        m = _EXTR_PLAIN_RE.match(stmt)
+        m = _EXTR_FILE_RE.match(stmt)
         if m:
             points.append(dict(point_base, command="Extraction",
-                               targets=_split_qualids(m.group(1)),
+                               targets=_split_qualids(m.group(2)),
+                               output_file=_unquote(m.group(1)),
                                target_payload=None, language=language,
                                payload_hint="none",
                                **dict(zip(("is_safe_primitive", "safe_class"),
                                           classify_payload(None)))))
             continue
+        m = _REC_FILE_RE.match(stmt)
+        if m:
+            points.append(dict(point_base, command="Recursive Extraction",
+                               targets=_split_qualids(m.group(2)),
+                               output_file=_unquote(m.group(1)),
+                               target_payload=None, language=language,
+                               payload_hint="none",
+                               **dict(zip(("is_safe_primitive", "safe_class"),
+                                          classify_payload(None)))))
+            continue
+        m = _SEP_FILE_RE.match(stmt)
+        if m:
+            points.append(dict(point_base, command="Separate Extraction",
+                               targets=_split_qualids(m.group(2)),
+                               output_file=_unquote(m.group(1)),
+                               target_payload=None, language=language,
+                               payload_hint="none",
+                               **dict(zip(("is_safe_primitive", "safe_class"),
+                                          classify_payload(None)))))
+            continue
+        m = _EXTR_PLAIN_RE.match(stmt)
+        if m:
+            points.append(dict(point_base, command="Extraction",
+                               targets=_split_qualids(m.group(1)),
+                               output_file=None, target_payload=None,
+                               language=language, payload_hint="none",
+                               **dict(zip(("is_safe_primitive", "safe_class"),
+                                          classify_payload(None)))))
+            continue
         unparsed.append(dict(point_base, text=stmt[:200]))
+    for p in points:
+        p.setdefault("output_file", None)
     return {
         "points": points,
         "language_declarations": lang_decls,
@@ -500,6 +540,31 @@ def _selftest():
     check(len(r["points"]) == 2, "v10 two points")
     check(r["points"][0]["command"] == "Extraction Inline", "v10 inline first")
     check(r["points"][1]["command"] == "Extraction", "v10 plain second")
+
+    # v11 (XD1): quoted-output-path forms capture output_file
+    r = analyze_source('Extraction "out/mod.ml" add mul.\n', "f11.v")
+    check(len(r["points"]) == 1, "v11 one point")
+    p = r["points"][0]
+    check(p["command"] == "Extraction", "v11 command")
+    check(p["output_file"] == "out/mod.ml", "v11 output file")
+    check(p["targets"] == ["add", "mul"], "v11 targets")
+    r = analyze_source('Recursive Extraction "rec_out.ml" f g.\n', "f11b.v")
+    p = r["points"][0]
+    check(p["command"] == "Recursive Extraction" and
+          p["output_file"] == "rec_out.ml" and
+          p["targets"] == ["f", "g"], "v11 recursive file form")
+    r = analyze_source('Separate Extraction "sep_dir" h.\n', "f11c.v")
+    p = r["points"][0]
+    check(p["command"] == "Separate Extraction" and
+          p["output_file"] == "sep_dir", "v11 separate dir form")
+
+    # v12 (XD1): plain forms still carry output_file None (uniform shape)
+    r = analyze_source("Extraction plain.\n", "f12.v")
+    check(r["points"][0]["output_file"] is None, "v12 uniform shape")
+
+    # v13 (XD1): commented quoted form is never counted
+    r = analyze_source('(* Extraction "fake.ml" nope. *)\n', "f13.v")
+    check(len(r["points"]) == 0, "v13 comment masked")
 
     if failures:
         sys.stdout.write("%s FAIL: %s\n" % (SELFTEST_MARKER, failures[0]))
